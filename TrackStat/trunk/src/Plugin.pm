@@ -2,6 +2,9 @@
 #
 #    Copyright (c) 2006 Erland Isaksson (erland_i@hotmail.com)
 #
+#    Portions of code derived from the iTunes plugin included in slimserver
+#    Copyright (C) 2001-2004 Sean Adams, Slim Devices Inc.
+#
 #    Portions of code derived from the iTunesUpdate 1.5 plugin
 #    Copyright (c) 2004-2006 James Craig (james.craig@london.com)
 #
@@ -42,6 +45,8 @@ use File::Spec::Functions qw(:ALL);
 
 use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
+use Plugins::TrackStat::iTunes::Import;
+use Plugins::TrackStat::Backup::File;
 
 use vars qw($VERSION);
 $VERSION = substr(q$Revision$,10);
@@ -97,38 +102,6 @@ sub getDisplayName()
 {
 	return $::VERSION =~ m/6\./ ? 'PLUGIN_TRACKSTAT' : string('PLUGIN_TRACKSTAT'); 
 }
-
-sub strings() 
-{ 
-	return '
-PLUGIN_TRACKSTAT
-	EN	TrackStat
-
-PLUGIN_TRACKSTAT_ACTIVATED
-	EN	TrackStat Activated...
-
-PLUGIN_TRACKSTAT_NOTACTIVATED
-	EN	TrackStat Not Activated...
-
-PLUGIN_TRACKSTAT_RATING
-	EN	Rating:
-	
-PLUGIN_TRACKSTAT_LAST_PLAYED
-	EN	Played:
-	
-PLUGIN_TRACKSTAT_PLAY_COUNT
-	EN	Play Count:
-	
-PLUGIN_TRACKSTAT_SETUP_GROUP
-	EN	TrackStat
-
-PLUGIN_TRACKSTAT_SETUP_GROUP_DESC
-	EN	Choose whether the TrackStat plugin will log debug messages.
-
-PLUGIN_TRACKSTAT_SHOW_MESSAGES
-	EN	Write messages to log
-
-'};
 
 our %menuSelection;
 
@@ -241,16 +214,14 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
 	 GroupSub  => 1,
 	 Suppress_PrefSub  => 1,
-	 Suppress_PrefLine => 1,
-	 Suppress_PrefHead => 1
+	 Suppress_PrefLine => 1
 	);
-
 	my %setupPrefs =
 	(
 	plugin_trackstat_showmessages => {
@@ -261,8 +232,73 @@ sub setupGroup
 					 '1' => string('ON')
 					,'0' => string('OFF')
 				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages");}
-			},		
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
+		},		
+	plugin_trackstat_backup_file => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_BACKUP_FILE')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_BACKUP_FILE')
+			,'rejectMsg' => string('SETUP_BAD_FILE')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_backup_file"); }
+		},
+	plugin_trackstat_backup => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { backupToFile(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MAKING_BACKUP')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_BACKUP')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_restore => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { restoreFromFile(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RESTORING_BACKUP')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_RESTORE')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_clear => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { clearAllData(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_CLEARING')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_CLEAR')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_itunes_library_file => {
+			'validate' => \&Slim::Web::Setup::validateIsFile
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
+			,'rejectMsg' => string('SETUP_BAD_FILE')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_file"); }
+		},
+	plugin_trackstat_itunes_library_music_path => {
+			'validate' => \&Slim::Web::Setup::validateIsDir
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_music_path"); }
+		},
+	plugin_trackstat_itunes_replace_extension => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_replace_extension"); }
+		},
+	plugin_trackstat_itunes_import => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { importFromiTunes(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORTING')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
 	);
 	return (\%setupGroup,\%setupPrefs);
 }
@@ -317,7 +353,6 @@ sub initPlugin
 			debugMsg("First run - setting showmessages OFF\n");
 			Slim::Utils::Prefs::set("plugin_trackstat_showmessages", 0 ); 
 		}
-		
 		installHook();
 
 		#Check if tables exists and create them if not
@@ -1055,6 +1090,8 @@ sub searchTrackInStorage {
 	my $track_url = shift;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($track_url);
+	
+	return 0 unless $track;
 	debugMsg("URL: ".$track->url."\n");
 
 	# create searchString and remove duplicate/trailing whitespace as well.
@@ -1182,4 +1219,159 @@ sub getMusicInfoSCRCustomItem()
 	return $formattedString;
 }
 
+sub importFromiTunes()
+{
+	Plugins::TrackStat::iTunes::Import::startScan();
+}
+
+sub backupToFile() 
+{
+	my $backupfile = Slim::Utils::Prefs::get("plugin_trackstat_backup_file");
+	if($backupfile) {
+		Plugins::TrackStat::Backup::File::backupToFile($backupfile);
+	}
+}
+
+sub restoreFromFile()
+{
+	my $backupfile = Slim::Utils::Prefs::get("plugin_trackstat_backup_file");
+	if($backupfile) {
+		Plugins::TrackStat::Backup::File::restoreFromFile($backupfile);
+	}
+}
+sub clearAllData()
+{
+	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $sth = $dbh->prepare( "delete from track_statistics" );
+	
+	$sth->execute();
+	$dbh->commit();
+
+	$sth->finish();
+	msg("TrackStat: Clear all data finished at: ".time()."\n");
+}
+
+sub strings() 
+{ 
+	return <<EOF
+PLUGIN_TRACKSTAT
+	EN	TrackStat
+
+PLUGIN_TRACKSTAT_ACTIVATED
+	EN	TrackStat Activated...
+
+PLUGIN_TRACKSTAT_NOTACTIVATED
+	EN	TrackStat Not Activated...
+
+PLUGIN_TRACKSTAT_RATING
+	EN	Rating:
+	
+PLUGIN_TRACKSTAT_LAST_PLAYED
+	EN	Played:
+	
+PLUGIN_TRACKSTAT_PLAY_COUNT
+	EN	Play Count:
+	
+PLUGIN_TRACKSTAT_SETUP_GROUP
+	EN	TrackStat settings
+
+PLUGIN_TRACKSTAT_SETUP_GROUP_DESC
+	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes.
+
+PLUGIN_TRACKSTAT_SHOW_MESSAGES
+	EN	Write messages to log
+
+SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES
+	EN	Debug logging
+
+SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES_DESC
+	EN	This will turn on/off debug logging of the TrackStat plugin
+
+PLUGIN_TRACKSTAT_ITUNES_IMPORTING
+	EN	Importing from iTunes...
+
+PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON
+	EN	Import from iTunes
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT
+	EN	Import from iTunes
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT_DESC
+	EN	Import information from the specified iTunes Music Library.xml file. This means that any existing rating, play counts or last played information in iTunes will overwrite any existing information.
+
+PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
+	EN	Path to iTunes Music Library.xml
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
+	EN	iTunes Music Library file
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE_DESC
+	EN	This parameter shall be the full path to the iTunes Music Library.xml file that should be used when importing information from iTunes.
+
+PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY
+	EN	Path to iTunes Music
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH
+	EN	Music directory
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH_DESC
+	EN	The begining of the paths of the music imported from iTunes will be replaced with this path. This makes it possible to have the music in a different directory in iTunes compared to the directory where the music is accessible on the slimserver computer.
+
+PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
+	EN	File extension to use in files imported from iTunes
+	
+SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
+	EN	iTunes import extension
+	
+SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION_DESC
+	EN	The file extensions of the music files i imported from iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
+	
+PLUGIN_TRACKSTAT_BACKUP_FILE
+	EN	Backup file
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE
+	EN	Backup file
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE_DESC
+	EN	File used for TrackStat information backup. This file must be in a place where the user which is running slimserver has read/write access.
+
+PLUGIN_TRACKSTAT_BACKUP
+	EN	Backup to file
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP
+	EN	Backup to file
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_DESC
+	EN	Do backup of all TrackStat information to the file specified as backup file
+
+PLUGIN_TRACKSTAT_MAKING_BACKUP
+	EN	Making TrackStat backup to file...
+
+PLUGIN_TRACKSTAT_RESTORE
+	EN	Restore from file
+
+SETUP_PLUGIN_TRACKSTAT_RESTORE
+	EN	Restore from file
+
+SETUP_PLUGIN_TRACKSTAT_RESTORE_DESC
+	EN	Restore TrackStat information from the file specified as backup file.<br><b>Warning!</b> This will overwrite any TrackStat information that exist with the information in the file
+
+PLUGIN_TRACKSTAT_RESTORING_BACKUP
+	EN	Restoring TrackStat backup from file...
+
+PLUGIN_TRACKSTAT_CLEAR
+	EN	Remove all data
+
+SETUP_PLUGIN_TRACKSTAT_CLEAR
+	EN	Remove all data
+
+SETUP_PLUGIN_TRACKSTAT_CLEAR_DESC
+	EN	This will remove all existing TrackStat data.<br><b>Warning!</b> if you have not made an backup of the information it will be lost forever.
+
+PLUGIN_TRACKSTAT_CLEARING
+	EN	Removing all TrackStat data
+
+EOF
+
+}
 1;
