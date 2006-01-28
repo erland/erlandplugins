@@ -1,18 +1,21 @@
---- MusicInfoSCR.pm	2005-12-19 08:46:00.000000000 +0100
-+++ MusicInfoSCR.pm.new	2006-01-14 16:37:29.900889888 +0100
-@@ -44,6 +44,8 @@
+--- MusicInfoSCR.pm	2006-01-28 18:19:17.000000000 +0100
++++ MusicInfoSCR.pm.new	2006-01-28 18:40:04.000000000 +0100
+@@ -45,6 +45,10 @@
  use vars qw($VERSION);
  $VERSION = substr( q$Revision$, 10 );
  
++# Start plugin patch
 +my %customitems = ();
++# End plugin patch
 +
  sub getDisplayName() {
  	return 'PLUGIN_SCREENSAVER_MUSICINFO';
  }
-@@ -267,6 +269,19 @@
+@@ -268,6 +272,22 @@
  	$formatStrings{'(X_OF_Y)'} = '(X_OF_Y)';
  	$formatStrings{'PROGRESSBAR'} = 'PROGRESSBAR';
  
++	# Start plugin patch
 +	no strict 'refs';
 +	my @plugins = Slim::Buttons::Plugins::enabledPlugins();
 +	for my $plugin (@plugins) {
@@ -25,32 +28,39 @@
 +			}
 +		}
 +	}
++	use strict 'refs';
++	# End plugin patch
 +
  	my %setupGroup = (
  		PrefOrder => [
  			'plugin_musicinfo_lineA', 'plugin_musicinfo_overlayA',
-@@ -351,6 +366,8 @@
+@@ -352,6 +372,10 @@
  sub setScreensaverMusicInfoMode() {
  	my $client = shift;
  	
++	# Start plugin patch
 +	clearCustomItemCache($client);
++	# End plugin patch
 +	
  	# initialize settings if they don't exist yet
  	if (not ($client->prefGet('plugin_musicinfo_lineA') || $client->prefGet('plugin_musicinfo_overlayA') ||
  			$client->prefGet('plugin_musicinfo_lineB') || $client->prefGet('plugin_musicinfo_overlayB') ||
-@@ -551,6 +568,8 @@
- #			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: '$formattedString'\n");
+@@ -556,6 +580,10 @@
+ 			$formattedString = $titleOnly;
  		}
  		
++		# Start plugin patch
 +		$formattedString = getCustomItem($client,$formattedString);
++		# End plugin patch
 +			
  		# if ARTIST/ALBUM etc. is empty, replace them by some "Now playing..."
  		if ($albumOrArtist) {
  			my $tmpFormattedString = $formattedString;
-@@ -652,6 +671,35 @@
+@@ -654,6 +682,37 @@
  	return ($displayCache{$client}->{'icons'}, $line . ("\x00" x ($displayCache{$client}->{'width'})));
  }
  
++# Start plugin patch
 +sub getCustomItem()
 +{
 +	my $client = shift;
@@ -80,6 +90,7 @@
 +		};
 +	}
 +}
++# End plugin patch
  
  sub strings { return q^
  PLUGIN_SCREENSAVER_MUSICINFO

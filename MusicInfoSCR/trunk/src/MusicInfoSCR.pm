@@ -8,7 +8,8 @@
 # version 2.
 #
 # Changelog
-# 2.02- prepare plugin for use with slimserver 6.5
+# 2.06- add Italian translation - thanks Riccardo!
+# 2.04- fix an issue when radio stations would display a blank value for tags like "TITLE (ARTIST)"
 # 2.01- fixed some issues with too aggressive caching and added one pixel before the icons
 # 2.0 - add icons for shuffle and repeat modes - thanks to Felix Müller
 #     - remove 6.1 stuff
@@ -521,6 +522,7 @@ sub getFormatString {
 	my $formattedString = $formatString;
 	my $isRemote;
 	my $songKey;
+	my $titleOnly;
 
 	my $ref = $displayCache{$client}->{$formatString} ||= {
 		'songkey' => '',
@@ -565,14 +567,17 @@ sub getFormatString {
 	
 		# Title: as infoFormat() seems to give us some problems with internet radio stations, we'll handle this manually...
 		if (($formatString =~ /TITLE/) && Slim::Music::Info::isRemoteURL($song)) {
-			$string = Slim::Music::Info::getCurrentTitle($client, $song);
-			$formattedString =~ s/TITLE/$string/g;
+			$titleOnly = Slim::Music::Info::getCurrentTitle($client, $song);
+			$formattedString =~ s/TITLE/$titleOnly/g;
 		}
 		
 		if ($formatString !~ /(PLAYLIST|PLAYTIME|NOW_PLAYING)/) {
-#			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: format '$formattedString'\n");
-			$formattedString = Slim::Music::TitleFormatter::infoFormat($song, $formattedString);
-#			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: '$formattedString'\n");
+			$formattedString = Slim::Music::Info::infoFormat($song, $formattedString);
+		}
+	
+		# one more special case... ARTIST with a radio stream results in... nothing. Replace by TITLE		
+		if ((!$formattedString) && ($formatString =~ /TITLE/) && $titleOnly) {
+			$formattedString = $titleOnly;
 		}
 		
 		# Start plugin patch
@@ -586,14 +591,11 @@ sub getFormatString {
 			my $noAlbum = string('NO_ALBUM');
 			$tmpFormattedString =~ s/($noAlbum|$noArtist|No Album|No Artist)//ig;
 			$tmpFormattedString =~ s/\W//g;
-#			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): empty artist/album? '$tmpFormattedString'\n");
+			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): empty artist/album? '$tmpFormattedString'\n");
 	
 			if (! $tmpFormattedString) {
 				# Fallback for streams: display playlist name (if available)
 				if ($client->currentPlaylist() && $client->prefGet('plugin_musicinfo_stream_fallback') && ($string = Slim::Music::Info::standardTitle($client, $client->currentPlaylist()))) {
-#					$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): " . $client->currentPlaylist() . "\n");
-#					$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): " . Slim::Music::Info::standardTitle($client, $client->currentPlaylist()) . "\n");
-#					$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): let's try to get the playlist name '$string'\n");
 					$formattedString = $string;
 				}
 				else {
@@ -722,11 +724,13 @@ PLUGIN_SCREENSAVER_MUSICINFO_ENABLE
 	DE	PLAY drücken zum Aktivieren des Bildschirmschoners
 	EN	Press PLAY to enable this screensaver
 	FR	Appuyer sur PLAY pour activer
+	IT	Premi PLAY per abilitare questo salvaschermo
 
 PLUGIN_SCREENSAVER_MUSICINFO_DISABLE
 	DE	PLAY drücken zum Deaktivieren dieses Bildschirmschoners 
 	EN	Press PLAY to disable this screensaver
 	FR	Appuyer sur PLAY pour désactiver
+	IT	Premi PLAY per disabilitare questo salvaschermo
 	
 PLUGIN_SCREENSAVER_MUSICINFO_ENABLING
 	DE	Musik-Info Bildschirmschoner aktivieren
@@ -742,10 +746,12 @@ PLUGIN_SCREENSAVER_MUSICINFO_CURRENTTIME
 	DE	Aktuelle Uhrzeit
 	EN	Current Time
 	FR	Heure actuelle
+	IT	Ora attuale
 
 PLUGIN_SCREENSAVER_MUSICINFO_ICON_ALWAYS
 	DE	(immer zeigen)
 	EN	(show always)
+	IT	(mostra sempre)
 
 PLUGIN_SCREENSAVER_MUSICINFO_DONT_SHOW
 	DE	Nicht anzeigen
@@ -765,52 +771,63 @@ SETUP_PLUGIN_MUSICINFO_LINE_DBL
 	DE	Doppelte Höhe (eine Zeile), links
 	EN	Huge font (single line), left
 	FR	Large police (une seule ligne), gauche
+	IT	Font molto grande (singola linea) a sinistra
 
 SETUP_PLUGIN_MUSICINFO_OVERLAY_DBL
 	DE	Doppelte Höhe (eine Zeile), rechts
 	EN	Huge font (single line), right
 	FR	Large police (une seule ligne), droite
+	IT	Font molto grande (singola linea) a destra
 
 SETUP_PLUGIN_MUSICINFO_LINEA
 	DE	Oben links
 	EN	Top left
 	FR	Ligne 1, gauche
+	IT	In alto a sinistra
 
 SETUP_PLUGIN_MUSICINFO_OVERLAYA
 	DE	Oben rechts
 	EN	Top right
 	FR	Ligne 1, droite
+	IT	In alto a destra
 
 SETUP_PLUGIN_MUSICINFO_LINEB
 	DE	Unten links
 	EN	Bottom left
 	FR	Ligne 2, gauche
+	IT	In basso a sinistra
 
 SETUP_PLUGIN_MUSICINFO_OVERLAYB
 	DE	Unten rechts
 	EN	Bottom right
 	FR	Ligne 1, droite
+	IT	In basso a destra
 
 SETUP_PLUGIN_MUSICINFO_JUMP_BACK
 	DE	Beim Aufwachen zurückspringen
 	EN	Jump back on wake
 	FR	Retour veille
+	IT	Torna indietro al menu' precedente
 
 SETUP_PLUGIN_MUSICINFO_JUMP_BACK_DESC
 	DE	Legen Sie fest, ob das Display beim Aufwachen dorthin zurückspringen soll, wo Sie sich zuletzt befanden. Falls dies deaktiviert ist, landen Sie automatisch im Playlist-Bereich ("Es läuft gerade...").
 	EN	Define whether you want to jump back on wake. If you disable this you will be brought to the "Now playing..." menu.
+	IT	Stabilisce se vuoi tornare indietro al menu' precedente. Se disabilitato riporta al menu' principale "Riproduzione in corso".
 
 SETUP_PLUGIN_MUSICINFO_STREAM_FALLBACK
 	DE	Bei Online Streams Playlist-Name anzeigen
 	EN	Display playlist name for radio stations
+	IT	Visualizza il nome della lista di esecuzione per le stazioni radio.
 
 SETUP_PLUGIN_MUSICINFO_STREAM_FALLBACK_DESC
 	DE	Bei Online Streams stehen Interpreten- und Albumname oft nicht zur Verfügung. Soll in einem solchen Fall an Stelle eines leeren Feldes versucht werden, den Playlist-Namen anzuzeigen?
 	EN	Online streams often don't differentiate song-, album- or artistname. This can result in an empty string. Should empty strings be replaced by the playlist name (if available)?
+	IT	I canali online spesso non differenziano tra brano, album o artista. Il risultato e' una stringa vuota. In questo caso deve essere sostituita dal nome della lista di esecuzione (se presente)?
 
 SETUP_PLUGIN_MUSICINFO_SHOW_ICONS
 	DE	Symbole für zufällige/wiederholte Wiedergabe anzeigen
 	EN	Show icons for Repeat/Shuffle
+	IT	Mostra icone per Ripetizione/Casuale
 ^;
 }
 
