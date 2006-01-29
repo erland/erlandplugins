@@ -279,11 +279,19 @@ sub restoreTrack
 	my $sql;
 	
 	if ($playCount) {
-		debugMsg("Marking as played in storage: $playCount, $lastPlayed\n");
+		debugMsg("Marking as played in storage: $playCount\n");
 		if($trackHandle) {
-			$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+			if($lastPlayed) {
+				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+			}else {
+				$sql = ("UPDATE track_statistics set playCount=$playCount where url='$url'");
+			}
 		}else {
-			$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+			if($lastPlayed) {
+				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+			}else {
+				$sql = ("INSERT INTO track_statistics (url,playCount) values ('$url',$playCount)");
+			}
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );

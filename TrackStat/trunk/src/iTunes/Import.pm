@@ -696,16 +696,24 @@ sub sendTrackToStorage()
 	my $lastPlayed = $attributes->{'LASTPLAYED'};
 	
 	if ($playCount) {
-		debugMsg("Marking as played in storage: $playCount, $lastPlayed\n");
+		debugMsg("Marking as played in storage: $playCount\n");
 		if($trackHandle && (!$trackHandle->playCount || ($trackHandle->playCount && $trackHandle->playCount<$playCount))) {
 			if($trackHandle->lastPlayed && $trackHandle->lastPlayed>$lastPlayed) {
 				$lastPlayed = $trackHandle->lastPlayed;
 			}
-			$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+			if($lastPlayed) {
+				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+			}else {
+				$sql = ("UPDATE track_statistics set playCount=$playCount where url='$url'");
+			}
 		}elsif($trackHandle) {
 			$sql = undef;
 		}else {
-			$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+			if($lastPlayed) {
+				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+			}else {
+				$sql = ("INSERT INTO track_statistics (url,playCount) values ('$url',$playCount)");
+			}
 		}
 		if($sql) {
 			my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
