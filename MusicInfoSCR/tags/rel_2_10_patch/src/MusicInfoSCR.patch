@@ -1,0 +1,103 @@
+--- MusicInfoSCR.pm	2006-02-05 14:20:22.000000000 +0100
++++ MusicInfoSCR.pm.new	2006-02-05 14:50:54.000000000 +0100
+@@ -47,7 +47,11 @@
+ 
+ use Slim::Utils::Strings qw (string);
+ use vars qw($VERSION);
+-$VERSION = substr( q$Revision$, 10 );
++$VERSION = substr( q$Revision$, 10 );
++
++# Start plugin patch
++my %customitems = ();
++# End plugin patch
+ 
+ sub getDisplayName() {
+ 	return 'PLUGIN_SCREENSAVER_MUSICINFO';
+@@ -272,6 +276,27 @@
+ 	$formatStrings{'(X_OF_Y)'} = '(X_OF_Y)';
+ 	$formatStrings{'PROGRESSBAR'} = 'PROGRESSBAR';
+ 
++	# Start plugin patch
++	no strict 'refs';
++	my @plugins;
++	if ($::VERSION ge '6.5') {
++		@plugins = Slim::Utils::PluginManager::enabledPlugins();
++	}else {
++		@plugins = Slim::Buttons::Plugins::enabledPlugins();
++	}
++	for my $plugin (@plugins) {
++		if(UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItems") && UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItem")) {
++			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: Getting items for: $plugin\n");
++			my $items = eval { &{"Plugins::${plugin}::getMusicInfoSCRCustomItems"}() };
++			for my $item (keys %$items) {
++				$customitems{$item} = "Plugins::${plugin}::getMusicInfoSCRCustomItem";
++				$formatStrings{$item} = $items->{$item};
++			}
++		}
++	}
++	use strict 'refs';
++	# End plugin patch
++
+ 	my %setupGroup = (
+ 		PrefOrder => [
+ 			'plugin_musicinfo_lineA', 'plugin_musicinfo_overlayA',
+@@ -358,6 +383,10 @@
+ sub setScreensaverMusicInfoMode() {
+ 	my $client = shift;
+ 	
++	# Start plugin patch
++	clearCustomItemCache($client);
++	# End plugin patch
++	
+ 	# initialize settings if they don't exist yet
+ 	if (not ($client->prefGet('plugin_musicinfo_lineA') || $client->prefGet('plugin_musicinfo_overlayA') ||
+ 			$client->prefGet('plugin_musicinfo_lineB') || $client->prefGet('plugin_musicinfo_overlayB') ||
+@@ -567,6 +596,10 @@
+ 			$formattedString = $titleOnly;
+ 		}
+ 		
++		# Start plugin patch
++		$formattedString = getCustomItem($client,$formattedString);
++		# End plugin patch
++			
+ 		# if ARTIST/ALBUM etc. is empty, replace them by some "Now playing..."
+ 		if ($albumOrArtist) {
+ 			my $tmpFormattedString = $formattedString;
+@@ -671,6 +704,37 @@
+ 	return ($displayCache{$client}->{'icons'}, $line . ("\x00" x ($displayCache{$client}->{'width'})));
+ }
+ 
++# Start plugin patch
++sub getCustomItem()
++{
++	my $client = shift;
++	my $formattedString = shift;
++
++	no strict 'refs';
++
++	for my $item (keys %customitems) {
++		my $method = %customitems->{$item};
++		if ($formattedString =~ /$item/) {
++			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR ($client): Getting custom info for $item from: $method\n");
++			$formattedString = eval { &{"${method}"}($client,$formattedString) };
++		}
++	}
++	return $formattedString;
++}
++sub clearCustomItemCache()
++{
++	my $client = shift;
++
++	no strict 'refs';
++
++	for my $item (keys %customitems) {
++		$displayCache{$client}->{$item} = {
++			'songkey' => '',
++			'formattedString' => ''
++		};
++	}
++}
++# End plugin patch
+ 
+ sub strings { return q^
+ PLUGIN_SCREENSAVER_MUSICINFO
