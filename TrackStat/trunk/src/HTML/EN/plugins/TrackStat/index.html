@@ -1,17 +1,6 @@
-[% pageicon = 'SONGINFO' %]
+[% pageicon = 'SongInfo' %]
 [% PROCESS pageheader.html %]
 <!-- start plugins output -->
-[% IF refresh %]
-<SCRIPT>
-<!--
-setTimeout("aReload()", [% refresh %]);
-
-function aReload() {
-  location.replace("index.html?player=[% player | uri %]");
-}
--->
-</SCRIPT>
-[% END %]
 <tr height="44">
 	<td width="4" height="44"><img src="[% webroot %]html/images/spacer.gif" width="8" height="39" alt=""></td>
 	<td valign="top" class="medgrey" height="44">
@@ -45,33 +34,43 @@ function aReload() {
 	<tr height="100%">
 		<td width="4" height="100%"></td>
 		<td valign="top" height="100%">
-			[% IF playing %]  
-			Now Playing: 
+			[% IF playing == 'true' %]  
+			[% 'NOW_PLAYING' | string %]
 			<table width="100%">
 			<tr height="5">
-				<td height="5">Track:</td>
-				<td height="5">[% track %]</td>
+				<td height="5" width="30%">[% 'PLUGIN_TRACKSTAT_TRACK' | string %]</td>
+				<td height="5" width="70%">[% track %]</td>
 			</tr>
 			<tr height="5">
-				<td height="5">Rating:</td>
+				<td height="5">[% 'PLUGIN_TRACKSTAT_RATING' | string %]</td>
 				<td height="5">
-					[% WHILE rating > 0 %]
-					[% rating = rating - 1 %] * 
-					[% END %]</td>
-				<td height="5" width="13"><a href="index.html?player=[% player | uri %]&p0=rating&p1=down"><img src="[% webroot %]html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
-				<td height="5" width="13"><a href="index.html?player=[% player | uri %]&p0=rating&p1=up"><img src="[% webroot %]html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
+				[% loop = 0 %]
+				[% WHILE loop < 5 %]
+					[% loop = loop + 1 %]
+					[% IF loop <= rating %]
+					<a href="index.html?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+					[% ELSE %]
+					<a href="index.html?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+					[% END %]
+				[% END %]
+				</td>
+				<td width="100%"<img src="[% webroot %]html/images/spacer.gif" width="4" height="13" alt=""></td>
+				<td height="5" width="100%"><a href="index.html?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=down"><img src="[% webroot %]html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
+				<td height="5" width="13"><a href="index.html?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=up"><img src="[% webroot %]html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
 			</tr>
 			<tr height="5">
-				<td height="5">Play Count:</td>
+				<td height="5">[% 'PLUGIN_TRACKSTAT_PLAY_COUNT' | string %]</td>
 				<td height="5">[% playCount %]</td>
 			</tr>
 			<tr height="5">
-				<td height="5">Last Played:</td>
+				<td height="5">[% 'PLUGIN_TRACKSTAT_LAST_PLAYED' | string %]</td>
 				<td height="5">[% lastPlayed %]</td>
 			</tr>
 			</table>
+			[% ELSIF playing == 'notfound' %]
+				[% 'PLUGIN_TRACKSTAT_NOT_FOUND' | string %]
 			[% ELSE %]  
-				Nothing being timed
+				[% 'PLUGIN_TRACKSTAT_NO_TRACK' | string %]
 			[% END %]
 		</td>	
 		<td width="4" height="19"><img src="[% webroot %]html/images/spacer.gif" width="4" height="19" alt=""></td>
