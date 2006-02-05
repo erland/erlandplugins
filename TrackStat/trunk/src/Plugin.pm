@@ -91,7 +91,19 @@ my %mapping = (
 	'2.hold' => 'saveRating_2',
 	'3.hold' => 'saveRating_3',
 	'4.hold' => 'saveRating_4',
-	'5.hold' => 'saveRating_5'
+	'5.hold' => 'saveRating_5',
+	'0.single' => 'numberScroll_0',
+	'1.single' => 'numberScroll_1',
+	'2.single' => 'numberScroll_2',
+	'3.single' => 'numberScroll_3',
+	'4.single' => 'numberScroll_4',
+	'5.single' => 'numberScroll_5',
+	'0' => 'dead',
+	'1' => 'dead',
+	'2' => 'dead',
+	'3' => 'dead',
+	'4' => 'dead',
+	'5' => 'dead'
 );
 
 sub defaultMap { 
@@ -171,32 +183,41 @@ sub lines()
 	$line1 = $client->string('PLUGIN_TRACKSTAT');
 
 	if (my $playStatus = getTrackInfo($client)) {
-		my @items = (
-		$client->string('PLUGIN_TRACKSTAT_RATING')
-			.($playStatus->currentSongRating()?' *' x $playStatus->currentSongRating():''),
-		,$client->string('PLUGIN_TRACKSTAT_LAST_PLAYED')
-			.' '.($playStatus->lastPlayed()?$playStatus->lastPlayed():''),
-		,$client->string('PLUGIN_TRACKSTAT_PLAY_COUNT')
-			.' '.($playStatus->playCount()?$playStatus->playCount():''),
-		);
-		$playStatus->listitem($playStatus->listitem % scalar(@items));
-		$line2 = $items[$playStatus->listitem];
+		if ($playStatus->trackAlreadyLoaded() eq 'true') {
+			my @items = (
+			$client->string('PLUGIN_TRACKSTAT_RATING')
+				.($playStatus->currentSongRating()?' *' x $playStatus->currentSongRating():''),
+			,$client->string('PLUGIN_TRACKSTAT_LAST_PLAYED')
+				.' '.($playStatus->lastPlayed()?$playStatus->lastPlayed():''),
+			,$client->string('PLUGIN_TRACKSTAT_PLAY_COUNT')
+				.' '.($playStatus->playCount()?$playStatus->playCount():''),
+			);
+			$playStatus->listitem($playStatus->listitem % scalar(@items));
+			$line2 = $items[$playStatus->listitem];
+		} else {
+			$line2 = $client->string('PLUGIN_TRACKSTAT_NOT_FOUND');
+		}
+	} else {
+		$line2 = $client->string('PLUGIN_TRACKSTAT_NO_TRACK');
 	}
 	return ($line1, $line2);
 }
 
 sub getTrackInfo {
 		my $client = shift;
-		my $playStatus = $playerStatusHash{$client};
+		my $playStatus = getPlayerStatusForClient($client);
 		if ($playStatus->isTiming() eq 'true') {
 			if ($playStatus->trackAlreadyLoaded() eq 'false') {
-				my($playedCount, $playedDate, $rating) = getTrackFromStorage($playStatus);
-				$playStatus->trackAlreadyLoaded('true');
-				$playStatus->lastPlayed($playedDate);
-				$playStatus->playCount($playedCount);
-				#don't overwrite the user's rating
-				if ($playStatus->currentSongRating() eq '') {
-					$playStatus->currentSongRating($rating);
+				if (my($playedCount, $playedDate, $rating) = getTrackFromStorage($playStatus)) {
+					$playStatus->trackAlreadyLoaded('true');
+					$playStatus->lastPlayed($playedDate);
+					$playStatus->playCount($playedCount);
+					#don't overwrite the user's rating
+					if ($playStatus->currentSongRating() eq '') {
+						$playStatus->currentSongRating($rating);
+					}
+				} else {
+					$playStatus->trackAlreadyLoaded('notfound');
 				}
 			}
 		} else { 
@@ -312,27 +333,32 @@ sub webPages {
 sub handleWebIndex {
 	my ($client, $params) = @_;
 
-
 	# without a player, don't do anything
-
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
-
 		if (my $playStatus = getTrackInfo($client)) {
-			if ($params->{p0} and $params->{p0} eq 'rating') {
-				if ($params->{p1} eq 'up' and $playStatus->currentSongRating() < 5) {
+			if ($params->{trackstatcmd} and $params->{trackstatcmd} eq 'rating') {
+				if (!$playStatus->currentSongRating()) {
+					$playStatus->currentSongRating(0);
+				}
+				if ($params->{trackstatrating} eq 'up' and $playStatus->currentSongRating() < 5) {
 					$playStatus->currentSongRating($playStatus->currentSongRating() + 1);
-				} elsif ($params->{p1} eq 'down' and $playStatus->currentSongRating() > 0) {
+				} elsif ($params->{trackstatrating} eq 'down' and $playStatus->currentSongRating() > 0) {
 					$playStatus->currentSongRating($playStatus->currentSongRating() - 1);
+				} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
+					$playStatus->currentSongRating($params->{trackstatrating});
 				}
 			}
-			$params->{playing} = 1;
-			$params->{refresh} = $playStatus->currentTrackLength() * 1000;
+			$params->{playing} = $playStatus->trackAlreadyLoaded();
+			$params->{refresh} = $playStatus->currentTrackLength();
 			$params->{track} = $playStatus->currentSongTrack();
 			$params->{rating} = $playStatus->currentSongRating();
 			$params->{lastPlayed} = $playStatus->lastPlayed();
 			$params->{playCount} = $playStatus->playCount();
+		} else {
+			$params->{refresh} = 60;
 		}
 	}
+	$params->{refresh} = 60 if ($params->{refresh} > 60);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 
 }
@@ -527,7 +553,11 @@ sub debugMsg
 sub installHook()
 {  
 	debugMsg("Hook activated.\n");
-	Slim::Control::Command::setExecuteCallback(\&commandCallback);
+	if ($::VERSION ge '6.5') {
+		Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist']]);
+	} else {
+		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
+	}
 	$TRACKSTAT_HOOK=1;
 }
 
@@ -536,7 +566,11 @@ sub installHook()
 sub uninstallHook()
 {
 	debugMsg("Hook deactivated.\n");
-	Slim::Control::Command::clearExecuteCallback(\&commandCallback);
+	if ($::VERSION ge '6.5') {
+		Slim::Control::Request::unsubscribe(\&Plugins::TrackStat::Plugin::commandCallback65);
+	} else {
+		Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
+	}
 	$TRACKSTAT_HOOK=0;
 }
 
@@ -649,7 +683,7 @@ sub stopCommand($)
 # This gets called during playback events.
 # We look for events we are interested in, and start and stop our various
 # timers accordingly.
-sub commandCallback($) 
+sub commandCallback62($) 
 {
 	# These are the two passed parameters
 	my $client = shift;
@@ -673,6 +707,7 @@ sub commandCallback($)
 	my $paramOne = @$paramsRef[1];
 
 	return unless $slimCommand;
+
 	######################################
 	### Open command
 	######################################
@@ -750,6 +785,83 @@ sub commandCallback($)
 	# softsqueeze doesn't seem to send a 2nd param on power on/off
 	# might as well stop timing regardless of type
 	if ( ($slimCommand eq "power") || (($slimCommand eq "mode") && ($paramOne eq "off")) )
+	{
+		stopCommand($playStatus);
+	}
+}
+
+
+# This gets called during playback events.
+# We look for events we are interested in, and start and stop our various
+# timers accordingly.
+sub commandCallback65($) 
+{
+	# These are the two passed parameters
+	my $request=shift;
+	my $client = $request->client();
+
+	# Get the PlayerStatus
+	my $playStatus = getPlayerStatusForClient($client);
+
+	######################################
+	### Open command
+	######################################
+
+	# This is the chief way we detect a new song being played, NOT play.
+	# should be using playlist,newsong now...
+	if ($request->isCommand([['playlist'],['open']]) )
+	{
+		openCommand($playStatus,$request->getParam('_path'));
+	}
+
+	######################################
+	### Play command
+	######################################
+
+	if( ($request->isCommand([['playlist'],['play']])) or ($request->isCommand([['mode','play']])) )
+	{
+		playCommand($playStatus);
+	}
+
+	######################################
+	### Pause command
+	######################################
+
+	if ($request->isCommand([['pause']]))
+	{
+		pauseCommand($playStatus,$request->getParam('_newValue'));
+	}
+
+	if ($request->isCommand([['mode'],['pause']]))
+	{  
+		# "mode pause" will always put us into pause mode, so fake a "pause 1".
+		pauseCommand($playStatus, 1);
+	}
+
+	######################################
+	### Stop command
+	######################################
+
+	if ( ($request->isCommand([["stop"]])) or ($request->isCommand([['mode'],['stop']])) )
+	{
+		stopCommand($playStatus);
+	}
+
+	######################################
+	### Stop command
+	######################################
+
+	if ( $request->isCommand([['playlist'],['sync']]) )
+	{
+		# If this player syncs with another, we treat it as a stop,
+		# since whatever it is presently playing (if anything) will end.
+		stopCommand($playStatus);
+	}
+
+	######################################
+	## Power command
+	######################################
+	if ( $request->isCommand([['power']]))
 	{
 		stopCommand($playStatus);
 	}
@@ -1072,6 +1184,7 @@ sub getTrackFromStorage
 			}
 		}
 		debugMsg("Track: ", $playStatus->currentTrackOriginalFilename()," not found\n");
+		return undef;
 	}
 	return $playedCount, $playedDate,$rating;
 }
@@ -1263,6 +1376,9 @@ PLUGIN_TRACKSTAT_ACTIVATED
 PLUGIN_TRACKSTAT_NOTACTIVATED
 	EN	TrackStat Not Activated...
 
+PLUGIN_TRACKSTAT_TRACK
+	EN	Track:
+	
 PLUGIN_TRACKSTAT_RATING
 	EN	Rating:
 	
@@ -1367,6 +1483,12 @@ SETUP_PLUGIN_TRACKSTAT_CLEAR
 
 SETUP_PLUGIN_TRACKSTAT_CLEAR_DESC
 	EN	This will remove all existing TrackStat data.<br><b>Warning!</b> if you have not made an backup of the information it will be lost forever.
+
+PLUGIN_TRACKSTAT_NO_TRACK
+	EN	No statistics found
+
+PLUGIN_TRACKSTAT_NOT_FOUND
+	EN	No statistics found
 
 PLUGIN_TRACKSTAT_CLEARING
 	EN	Removing all TrackStat data
