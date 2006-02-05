@@ -1,23 +1,30 @@
---- MusicInfoSCR.pm	2006-01-28 18:19:17.000000000 +0100
-+++ MusicInfoSCR.pm.new	2006-01-28 18:40:04.000000000 +0100
-@@ -45,6 +45,10 @@
- use vars qw($VERSION);
- $VERSION = substr( q$Revision$, 10 );
+--- MusicInfoSCR.pm	2006-02-05 14:20:22.000000000 +0100
++++ MusicInfoSCR.pm.new	2006-02-05 14:50:54.000000000 +0100
+@@ -47,7 +47,11 @@
  
+ use Slim::Utils::Strings qw (string);
+ use vars qw($VERSION);
+-$VERSION = substr( q$Revision$, 10 );
++$VERSION = substr( q$Revision$, 10 );
++
 +# Start plugin patch
 +my %customitems = ();
 +# End plugin patch
-+
+ 
  sub getDisplayName() {
  	return 'PLUGIN_SCREENSAVER_MUSICINFO';
- }
-@@ -268,6 +272,22 @@
+@@ -272,6 +276,27 @@
  	$formatStrings{'(X_OF_Y)'} = '(X_OF_Y)';
  	$formatStrings{'PROGRESSBAR'} = 'PROGRESSBAR';
  
 +	# Start plugin patch
 +	no strict 'refs';
-+	my @plugins = Slim::Buttons::Plugins::enabledPlugins();
++	my @plugins;
++	if ($::VERSION ge '6.5') {
++		@plugins = Slim::Utils::PluginManager::enabledPlugins();
++	}else {
++		@plugins = Slim::Buttons::Plugins::enabledPlugins();
++	}
 +	for my $plugin (@plugins) {
 +		if(UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItems") && UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItem")) {
 +			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: Getting items for: $plugin\n");
@@ -34,7 +41,7 @@
  	my %setupGroup = (
  		PrefOrder => [
  			'plugin_musicinfo_lineA', 'plugin_musicinfo_overlayA',
-@@ -352,6 +372,10 @@
+@@ -358,6 +383,10 @@
  sub setScreensaverMusicInfoMode() {
  	my $client = shift;
  	
@@ -45,7 +52,7 @@
  	# initialize settings if they don't exist yet
  	if (not ($client->prefGet('plugin_musicinfo_lineA') || $client->prefGet('plugin_musicinfo_overlayA') ||
  			$client->prefGet('plugin_musicinfo_lineB') || $client->prefGet('plugin_musicinfo_overlayB') ||
-@@ -556,6 +580,10 @@
+@@ -567,6 +596,10 @@
  			$formattedString = $titleOnly;
  		}
  		
@@ -56,7 +63,7 @@
  		# if ARTIST/ALBUM etc. is empty, replace them by some "Now playing..."
  		if ($albumOrArtist) {
  			my $tmpFormattedString = $formattedString;
-@@ -654,6 +682,37 @@
+@@ -671,6 +704,37 @@
  	return ($displayCache{$client}->{'icons'}, $line . ("\x00" x ($displayCache{$client}->{'width'})));
  }
  

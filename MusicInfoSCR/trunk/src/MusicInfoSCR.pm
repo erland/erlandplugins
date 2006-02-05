@@ -8,8 +8,12 @@
 # version 2.
 #
 # Changelog
-# 2.06- add Italian translation - thanks Riccardo!
-# 2.04- fix an issue when radio stations would display a blank value for tags like "TITLE (ARTIST)"
+# 2.10- re-unite versions for 6.2.x and 6.5
+#     - try to better handle button presses when jumping to the playlist
+# 2.09- add LONGDATE/SHORTDATE variables - thanks Urs Zurbuchen
+# 2.07- add Italian translation - thanks Riccardo!
+# 2.05- fix an issue when radio stations would display a blank value for tags like "TITLE (ARTIST)"
+# 2.02- prepare plugin for use with slimserver 6.5
 # 2.01- fixed some issues with too aggressive caching and added one pixel before the icons
 # 2.0 - add icons for shuffle and repeat modes - thanks to Felix Müller
 #     - remove 6.1 stuff
@@ -274,7 +278,12 @@ sub setupGroup {
 
 	# Start plugin patch
 	no strict 'refs';
-	my @plugins = Slim::Buttons::Plugins::enabledPlugins();
+	my @plugins;
+	if ($::VERSION ge '6.5') {
+		@plugins = Slim::Utils::PluginManager::enabledPlugins();
+	}else {
+		@plugins = Slim::Buttons::Plugins::enabledPlugins();
+	}
 	for my $plugin (@plugins) {
 		if(UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItems") && UNIVERSAL::can("Plugins::$plugin","getMusicInfoSCRCustomItem")) {
 			$::d_plugins && Slim::Utils::Misc::msg("MusicInfoSCR: Getting items for: $plugin\n");
@@ -352,9 +361,11 @@ my %screensaverMusicInfoFunctions = (
 		my ( $client, $funct, $functarg ) = @_;
 		Slim::Buttons::Common::popMode($client);
   		if (not $client->prefGet('plugin_musicinfo_jump_back')) {	
-			if (Slim::Buttons::Common::mode($client) ne 'playlist') {
-  				Slim::Buttons::Common::pushMode( $client, 'playlist' );
+			if (Slim::Buttons::Common::mode($client) eq 'playlist') {
+				Slim::Buttons::Common::popMode($client);
 			}
+			Slim::Buttons::Common::pushMode( $client, 'playlist' );
+			Slim::Hardware::IR::resendButton($client);
   		}
 		$client->update();
 
@@ -572,9 +583,14 @@ sub getFormatString {
 		}
 		
 		if ($formatString !~ /(PLAYLIST|PLAYTIME|NOW_PLAYING)/) {
-			$formattedString = Slim::Music::Info::infoFormat($song, $formattedString);
+			# make this compatible with both development branches
+			if ($::VERSION ge '6.5') {
+				$formattedString = Slim::Music::TitleFormatter::infoFormat($song, $formattedString);
+			} else {
+				$formattedString = Slim::Music::Info::infoFormat($song, $formattedString);
+			}
 		}
-	
+
 		# one more special case... ARTIST with a radio stream results in... nothing. Replace by TITLE		
 		if ((!$formattedString) && ($formatString =~ /TITLE/) && $titleOnly) {
 			$formattedString = $titleOnly;
@@ -619,6 +635,12 @@ sub getFormatString {
 	elsif ($formattedString eq 'CURRTIME') {
 		$ref->{'formattedString'} = Slim::Utils::Misc::timeF();
 	}
+	elsif ($formattedString eq 'LONGDATE') {
+		$ref->{'formattedString'} = Slim::Utils::Misc::longDateF();
+	}
+	elsif ($formattedString eq 'SHORTDATE') {
+		$ref->{'formattedString'} = Slim::Utils::Misc::shortDateF();
+	}	
 	
 	return $ref->{'formattedString'};
 }
