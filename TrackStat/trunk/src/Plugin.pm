@@ -396,6 +396,15 @@ sub initPlugin
 			executeSQLFile("dbcreate.sql");
 		}
 	}
+	if ($::VERSION ge '6.5') {
+		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
+		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
+		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
+	}else {
+		Slim::Music::Info::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
+		Slim::Music::Info::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
+		Slim::Music::Info::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
+	}
 }
 
 sub shutdownPlugin {
@@ -1330,6 +1339,47 @@ sub getMusicInfoSCRCustomItem()
 		$formattedString =~ s/TRACKSTAT_RATING_NUMBER/$string/g;
 	}
 	return $formattedString;
+}
+
+sub getRatingDynamicCustomItem
+{
+	my $track = shift;
+	my $trackHandle = searchTrackInStorage( $track->url);
+	my $string = '';
+	if($trackHandle) {
+		my $rating = $trackHandle->rating / 20;
+		$string = ($rating?' *' x $rating:'');
+	}
+	return $string;
+}
+
+sub getRatingStaticCustomItem
+{
+	my $track = shift;
+	my $trackHandle = searchTrackInStorage( $track->url);
+	my $string = '  ' x 5;
+	if($trackHandle) {
+		my $rating = $trackHandle->rating / 20;
+		debugMsg("rating = $rating\n");
+		if($rating) {
+			$string = ($rating?' *' x $rating:'');
+			my $left = 5 - $rating;
+			$string = $string . ('  ' x $left);
+		}
+	}
+	return $string;
+}
+
+sub getRatingNumberCustomItem
+{
+	my $track = shift;
+	my $trackHandle = searchTrackInStorage( $track->url);
+	my $string = '';
+	if($trackHandle) {
+		my $rating = $trackHandle->rating / 20;
+		$string = ($rating?$rating:'');
+	}
+	return $string;
 }
 
 sub importFromiTunes()
