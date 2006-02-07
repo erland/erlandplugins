@@ -49,7 +49,9 @@ which will not be cleared during a complete rescan of the music library. Ratings
 be imported from an iTunes Music Library xml-file. You can make backup/restore of your ratings and statistic data
 to a separate xml file to make it easier to backup the information to other storages. To be able to view the ratings
 when listening to music it is recomended to install the latest version of MusicInfoSCR plugin provided at http://www.herger.net/slim-plugins/, 
-you will need version 2.20 or later.
+you will need version 2.20 or later. It is also possible to view the ratings as a title format as described separately
+below, the disadvantage of title format compared to MusicInfoSCR is that they will only be updated when the track changes. 
+This means that if you change the rating it will not be possible to see the new rating until next time the track is played.
 
 The play count and last playing time algoritm is based on the same logic in iTunes Update plugin, this means that play count
 will not be increased if you just listen on the first secondes of a track, you have to listen to most of the track to update
@@ -79,3 +81,17 @@ to create smart playlists using SQL queries. This can be used toghether with the
 - All 4-5 rated songs
 - All 4-5 rated songs in genre pop or rock
 - All not rated songs
+
+If you want to use title format to view the rating in MusicInfoSCR or Now Playing screen do as below, note that if you use
+MusicInfoSCR it will work better if you use the builtin custom item support in MusicInfoSCR to show the rating instead of title formats.
+
+1. Add a title format string in the web interface for server settings section for formatting, the strings can contain several 
+   items and the TrackStat plugin will replace the following with rating information:
+   TRACKSTATRATINGNUMBER
+   TRACKSTATRATINGSTATIC
+   TRACKSTATRATINGDYNAMIC
+2. If you want to show the ratings on the Now Playing screen goto the web interface client settings section for title format and select
+   the title formats you registered in a previous step.
+3. If you want to show the ratings on the MusicInfoSCR goto the web interface client settings section for plugins and select the title
+   formats you registered in a previous step. Observe that there will also be the custom items added automatically available in the
+   settings for MusicInfoSCR.
