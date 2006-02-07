@@ -48,7 +48,8 @@ play counts and last played time. The ratings and statistic data is stored in a 
 which will not be cleared during a complete rescan of the music library. Ratings and statistic data can also
 be imported from an iTunes Music Library xml-file. You can make backup/restore of your ratings and statistic data
 to a separate xml file to make it easier to backup the information to other storages. To be able to view the ratings
-when listening to music it is recomended to install the patched MusicInfoSCR plugin provided at http://erland.homeip.net/download.
+when listening to music it is recomended to install the latest version of MusicInfoSCR plugin provided at http://www.herger.net/slim-plugins/, 
+you will need version 2.20 or later.
 
 The play count and last playing time algoritm is based on the same logic in iTunes Update plugin, this means that play count
 will not be increased if you just listen on the first secondes of a track, you have to listen to most of the track to update
@@ -58,8 +59,8 @@ To rate a track just press the numbers 1-5 on the remote, you will see a message
 that the rating has been set.
 
 The TrackStat plugin will add a number of items to the MusicInfoSCR screensaver plugin which makes it possible to show
-the rating information for the current playing track directly on the screen on the Squeezebox. This requires a patched
-version of the MusicInfoSCR plugin provided at http://erland.homeip.net/download.
+the rating information for the current playing track directly on the screen on the Squeezebox. This requires the 2.20 or
+later version of the MusicInfoSCR plugin provided at http://www.herger.net/slim-plugins/.
 
 The ratings, play count and last play time information will be stored in a track_statistics table, see sql files in SQL
 directory for exact layout of the table. If running slimserver under mysql, the database user configured for slimserver
