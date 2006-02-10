@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 This archive should contain the following files:
 - readme.txt (this file)
 - license.txt (the license)
-- TrackStat/* (The application itself)
+- *.pm (The application itself)
 
 4. INSTALLATION
 ===============
