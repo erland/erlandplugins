@@ -30,6 +30,7 @@ use POSIX qw(strftime);
 use File::Spec::Functions qw(:ALL);
 use File::Basename;
 use XML::Parser;
+use DBI qw(:sql_types);
 
 use Slim::Utils::Misc;
 
@@ -63,24 +64,29 @@ sub backupToFile
 	print $output "<TrackStat>\n";
 
 	my( $url, $playCount, $lastPlayed, $rating );
-	$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
-	my $result;
-	while( $sth->fetch() ) {
-		if($url) {
-			$url = escape($url);
-			debugMsg("Backing up: $url\n");
-			print $output "	<track>\n		<url>$url</url>\n";
-			if($playCount) {
-				print $output "		<playCount>$playCount</playCount>\n";
+	eval {
+		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
+		my $result;
+		while( $sth->fetch() ) {
+			if($url) {
+				$url = escape($url);
+				debugMsg("Backing up: $url\n");
+				print $output "	<track>\n		<url>$url</url>\n";
+				if($playCount) {
+					print $output "		<playCount>$playCount</playCount>\n";
+				}
+				if($lastPlayed) {
+					print $output "		<lastPlayed>$lastPlayed</lastPlayed>\n";
+				}
+				if($rating) {
+					print $output "		<rating>$rating</rating>\n";
+				}
+				print $output "	</track>\n";
 			}
-			if($lastPlayed) {
-				print $output "		<lastPlayed>$lastPlayed</lastPlayed>\n";
-			}
-			if($rating) {
-				print $output "		<rating>$rating</rating>\n";
-			}
-			print $output "	</track>\n";
 		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
 	}
 
 	print $output "</TrackStat>\n";
@@ -282,22 +288,28 @@ sub restoreTrack
 		debugMsg("Marking as played in storage: $playCount\n");
 		if($trackHandle) {
 			if($lastPlayed) {
-				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
 			}else {
-				$sql = ("UPDATE track_statistics set playCount=$playCount where url='$url'");
+				$sql = ("UPDATE track_statistics set playCount=$playCount where url=?");
 			}
 		}else {
 			if($lastPlayed) {
-				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
 			}else {
-				$sql = ("INSERT INTO track_statistics (url,playCount) values ('$url',$playCount)");
+				$sql = ("INSERT INTO track_statistics (url,playCount) values (?,$playCount)");
 			}
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
-		
-		$sth->execute();
-		$dbh->commit();
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			$dbh->commit();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    $dbh->rollback(); #just die if rollback is failing
+		}
 
 		$sth->finish();
 	}
@@ -309,16 +321,21 @@ sub restoreTrack
 	    #ratings are 0-5 stars, 100 = 5 stars
 
 		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url='$url'");
+			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
 		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values ('$url',$rating)");
+			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
-		
-		$sth->execute();
-		$dbh->commit();
-
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			$dbh->commit();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    $dbh->rollback(); #just die if rollback is failing
+		}
 		$sth->finish();
 	}
 }

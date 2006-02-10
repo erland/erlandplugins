@@ -29,6 +29,7 @@ use Fcntl ':flock'; # import LOCK_* constants
 use File::Spec::Functions qw(:ALL);
 use File::Basename;
 use XML::Parser;
+use DBI qw(:sql_types);
 
 if ($] > 5.007) {
 	require Encode;
@@ -702,25 +703,31 @@ sub sendTrackToStorage()
 				$lastPlayed = $trackHandle->lastPlayed;
 			}
 			if($lastPlayed) {
-				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
 			}else {
-				$sql = ("UPDATE track_statistics set playCount=$playCount where url='$url'");
+				$sql = ("UPDATE track_statistics set playCount=$playCount where url=?");
 			}
 		}elsif($trackHandle) {
 			$sql = undef;
 		}else {
 			if($lastPlayed) {
-				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
 			}else {
-				$sql = ("INSERT INTO track_statistics (url,playCount) values ('$url',$playCount)");
+				$sql = ("INSERT INTO track_statistics (url,playCount) values (?,$playCount)");
 			}
 		}
 		if($sql) {
 			my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 			my $sth = $dbh->prepare( $sql );
-			
-			$sth->execute();
-			$dbh->commit();
+			eval {
+				$sth->bind_param(1, $url , SQL_VARCHAR);
+				$sth->execute();
+				$dbh->commit();
+			};
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr\n";
+			    $dbh->rollback(); #just die if rollback is failing
+			}
 
 			$sth->finish();
 		}
@@ -734,16 +741,21 @@ sub sendTrackToStorage()
 	    #ratings are 0-5 stars, 100 = 5 stars
 
 		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url='$url'");
+			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
 		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values ('$url',$rating)");
+			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
-		
-		$sth->execute();
-		$dbh->commit();
-
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			$dbh->commit();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    $dbh->rollback(); #just die if rollback is failing
+		}
 		$sth->finish();
 	}
 }

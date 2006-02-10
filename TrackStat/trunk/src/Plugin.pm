@@ -42,6 +42,7 @@ use Time::HiRes;
 use Class::Struct;
 use POSIX qw(strftime);
 use File::Spec::Functions qw(:ALL);
+use DBI qw(:sql_types);
 
 use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
@@ -1123,16 +1124,21 @@ sub sendTrackToStorage($$)
 		my $lastPlayed = $track->lastPlayed;
 
 		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url='$url'");
+			$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
 		}else {
-			$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values ('$url',$playCount,$lastPlayed)");
+			$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
-		
-		$sth->execute();
-		$dbh->commit();
-
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			$dbh->commit();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    $dbh->rollback(); #just die if rollback is failing
+		}
 		$sth->finish();
 	}
 	
@@ -1145,15 +1151,21 @@ sub sendTrackToStorage($$)
 		$rating = $rating * 20;
 
 		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url='$url'");
+			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
 		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values ('$url',$rating)");
+			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
-		
-		$sth->execute();
-		$dbh->commit();
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			$dbh->commit();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    $dbh->rollback(); #just die if rollback is failing
+		}
 
 		$sth->finish();
 	}
@@ -1222,17 +1234,23 @@ sub searchTrackInStorage {
 
 	return 0 unless length($searchString) >= 1;
 
-	my $sql = ("SELECT url, playCount, lastPlayed, rating FROM track_statistics where url='$searchString'");
+	my $sql = ("SELECT url, playCount, lastPlayed, rating FROM track_statistics where url=?");
 
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
-	$sth->execute();
+	my $result = undef;
+	eval {
+		$sth->bind_param(1, $searchString , SQL_VARCHAR);
+		$sth->execute();
 
-	my( $url, $playCount, $lastPlayed, $rating );
-	$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
-	my $result;
-	while( $sth->fetch() ) {
-	  $result = TrackInfo->new( url => $url, playCount => $playCount, lastPlayed => $lastPlayed, rating => $rating );
+		my( $url, $playCount, $lastPlayed, $rating );
+		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
+		while( $sth->fetch() ) {
+		  $result = TrackInfo->new( url => $url, playCount => $playCount, lastPlayed => $lastPlayed, rating => $rating );
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
 	}
 
 	$sth->finish();
