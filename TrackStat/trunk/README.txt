@@ -50,8 +50,10 @@ be imported from an iTunes Music Library xml-file. You can make backup/restore o
 to a separate xml file to make it easier to backup the information to other storages. To be able to view the ratings
 when listening to music it is recomended to install the latest version of MusicInfoSCR plugin provided at http://www.herger.net/slim-plugins/, 
 you will need version 2.20 or later. It is also possible to view the ratings as a title format as described separately
-below, the disadvantage of title format compared to MusicInfoSCR is that they will only be updated when the track changes. 
-This means that if you change the rating it will not be possible to see the new rating until next time the track is played.
+below, note that if you choose to view title formats in MusicInfoSCR they will currently only be updated when the track changes. 
+This means that if you change the rating it will not be possible to see the new rating until next time the track is played. 
+An advantage of using title format is that you can view the rating in the slimserver web interface together with the track name
+in track listings.
 
 The play count and last playing time algoritm is based on the same logic in iTunes Update plugin, this means that play count
 will not be increased if you just listen on the first secondes of a track, you have to listen to most of the track to update
@@ -82,16 +84,29 @@ to create smart playlists using SQL queries. This can be used toghether with the
 - All 4-5 rated songs in genre pop or rock
 - All not rated songs
 
-If you want to use title format to view the rating in MusicInfoSCR or Now Playing screen do as below, note that if you use
-MusicInfoSCR it will work better if you use the builtin custom item support in MusicInfoSCR to show the rating instead of title formats.
+If you want to use title format to view the rating in web interface, MusicInfoSCR or Now Playing screen do as below, note that if you use
+MusicInfoSCR it will work better if you use the builtin custom item support in MusicInfoSCR to show the rating instead of title formats. 
+It is also possible to combine both title formats and MusicInfoSCR custom items.
 
 1. Add a title format string in the web interface for server settings section for formatting, the strings can contain several 
    items and the TrackStat plugin will replace the following with rating information:
    TRACKSTATRATINGNUMBER
    TRACKSTATRATINGSTATIC
    TRACKSTATRATINGDYNAMIC
+   A number of title formats is automatically added by the plugin so if you what to use one of them you can jump to the next step.
+   Note that the current version of slimserver 6.2.* only supports these title formats toghether with other information if they are
+   specified within () or {}, for example "TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)". In slimserver 6.5 it also works to specify them
+   without () such as: "TRACKNUM. TITLE TRACKSTATRATINGDYNAMIC"
+
 2. If you want to show the ratings on the Now Playing screen goto the web interface client settings section for title format and select
    the title formats you registered in a previous step.
+
 3. If you want to show the ratings on the MusicInfoSCR goto the web interface client settings section for plugins and select the title
    formats you registered in a previous step. Observe that there will also be the custom items added automatically available in the
-   settings for MusicInfoSCR.
+   settings for MusicInfoSCR. The custom items for rating information contains the following text:
+   TRACKSTAT_RATING_NUMBER
+   TRACKSTAT_RATING_STATIC
+   TRACKSTAT_RATING_DYNAMIC
+
+4. If you want to show the ratings in the track listings in the web user interface goto the server settings section for formatting and
+   select one of the title formats that contains rating information.
