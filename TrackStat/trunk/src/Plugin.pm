@@ -168,12 +168,29 @@ my %functions = (
 		my $client = shift;
 		my $button = shift;
 		my $digit = shift;
-		debugMsg("saveRating: $client, $button, $digit\n");
-		Slim::Display::Animation::showBriefly( $client,
-			$client->string( 'PLUGIN_TRACKSTAT'),
-			$client->string( 'PLUGIN_TRACKSTAT_RATING').(' *' x $digit),
-			3);
-		rateSong($client,$digit);
+		my $playStatus = getPlayerStatusForClient($client);
+		if ($playStatus->isTiming() eq 'true') {
+			# see if the string is already in the cache
+			my $songKey;
+	        my $song = $songKey = Slim::Player::Playlist::song($client);
+	        if (Slim::Music::Info::isRemoteURL($song)) {
+	                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
+	        }
+	        if($playStatus->currentTrackOriginalFilename() eq $songKey) {
+				$playStatus->currentSongRating($digit);
+			}
+        	debugMsg("saveRating: $client, $songKey, $digit\n");
+			Slim::Display::Animation::showBriefly( $client,
+				$client->string( 'PLUGIN_TRACKSTAT'),
+				$client->string( 'PLUGIN_TRACKSTAT_RATING').(' *' x $digit),
+				3);
+			rateSong($client,$songKey,$digit);
+		}else {
+			Slim::Display::Animation::showBriefly( $client,
+				$client->string( 'PLUGIN_TRACKSTAT'),
+				$client->string( 'PLUGIN_TRACKSTAT_RATING_NO_SONG'),
+				3);
+		}
 	},
 );
 	
@@ -996,15 +1013,8 @@ sub stopTimingSong($)
 		if (trackWasPlayedEnoughToCountAsAListen($playStatus, $totalElapsedTimeDuringPlay) )
 		{
 			#debugMsg("Track was played long enough to count as listen\n");
-			sendTrackToStorage($playStatus,'played');
+			sendTrackToStorage($playStatus);
 			# We could also log to history at this point as well...
-		} else {
-			#debugMsg("Track was NOT played long enough to count as listen\n");
-
-			if ($playStatus->currentSongRating && $playStatus->currentSongRating ne "") {
-				debugMsg("Track WAS rated\n");
-				sendTrackToStorage($playStatus,'rated');
-			} 
 		}
 	} else {
 		debugMsg("That wasn't a file - ignoring\n");
@@ -1101,9 +1111,9 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 	return $wasLongEnough;
 }
 
-sub sendTrackToStorage($$)
+sub sendTrackToStorage($)
 {
-	my ($playStatus,$action) = @_;
+	my ($playStatus) = @_;
 
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
@@ -1111,64 +1121,64 @@ sub sendTrackToStorage($$)
 	my $sql;
 	my $url = $track->url;
 
-	if ($action eq 'played') {
-		debugMsg("Marking as played in storage\n");
-		my $playCount;
-		if($trackHandle && $trackHandle->playCount) {
-			$playCount = $trackHandle->playCount + 1;
-		}elsif($track->playCount){
-			$playCount = $track->playCount;
-		}else {
-			$playCount = 1;
-		}
-		my $lastPlayed = $track->lastPlayed;
-
-		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
-		}else {
-			$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
-		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $sth = $dbh->prepare( $sql );
-		eval {
-			$sth->bind_param(1, $url , SQL_VARCHAR);
-			$sth->execute();
-			$dbh->commit();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
-		}
-		$sth->finish();
+	debugMsg("Marking as played in storage\n");
+	my $playCount;
+	if($trackHandle && $trackHandle->playCount) {
+		$playCount = $trackHandle->playCount + 1;
+	}elsif($track->playCount){
+		$playCount = $track->playCount;
+	}else {
+		$playCount = 1;
 	}
+	my $lastPlayed = $track->lastPlayed;
+
+	if ($trackHandle) {
+		$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
+	}else {
+		$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
+	}
+	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $sth = $dbh->prepare( $sql );
+	eval {
+		$sth->bind_param(1, $url , SQL_VARCHAR);
+		$sth->execute();
+		$dbh->commit();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    $dbh->rollback(); #just die if rollback is failing
+	}
+	$sth->finish();
+}
+
+sub sendRatingToStorage {
+	my ($url,$rating) = @_;
+	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $trackHandle = searchTrackInStorage( $url);
+	my $sql;
 	
-	#Lookup again since the row can have been created above
-	$trackHandle = searchTrackInStorage( $playStatus->currentTrackOriginalFilename());
-	my $rating = $playStatus->currentSongRating();
-	if ($rating && $rating ne "") {
-		debugMsg("Store rating\n");
-	    #ratings are 0-5 stars, 100 = 5 stars
-		$rating = $rating * 20;
+	debugMsg("Store rating\n");
+    #ratings are 0-5 stars, 100 = 5 stars
+	$rating = $rating * 20;
 
-		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
-		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
-		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $sth = $dbh->prepare( $sql );
-		eval {
-			$sth->bind_param(1, $url , SQL_VARCHAR);
-			$sth->execute();
-			$dbh->commit();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
-		}
-
-		$sth->finish();
+	if ($trackHandle) {
+		$sql = ("UPDATE track_statistics set rating=$rating where url=?");
+	} else {
+		$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
 	}
+	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $sth = $dbh->prepare( $sql );
+	eval {
+		$sth->bind_param(1, $url , SQL_VARCHAR);
+		$sth->execute();
+		$dbh->commit();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    $dbh->rollback(); #just die if rollback is failing
+	}
+
+	$sth->finish();
 }
 
 sub getTrackFromStorage
@@ -1204,20 +1214,19 @@ sub getTrackFromStorage
 				$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
 			}
 		}
-		debugMsg("Track: ", $playStatus->currentTrackOriginalFilename()," not found\n");
+		debugMsg("Track: ", $playStatus->currentTrackOriginalFilename," not found\n");
 		return undef;
 	}
 	return $playedCount, $playedDate,$rating;
 }
 
 
-sub rateSong($$) {
-	my ($client,$digit)=@_;
-	my $playStatus = getPlayerStatusForClient($client);
+sub rateSong($$$) {
+	my ($client,$url,$digit)=@_;
 
 	debugMsg("Changing song rating to: $digit\n");
-
-	$playStatus->currentSongRating($digit);
+	sendRatingToStorage($url,$digit);
+	Slim::Music::Info::clearFormatDisplayCache();
 }
 
 sub searchTrackInStorage {
@@ -1364,7 +1373,7 @@ sub getRatingDynamicCustomItem
 	my $track = shift;
 	my $trackHandle = searchTrackInStorage( $track->url);
 	my $string = '';
-	if($trackHandle) {
+	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		$string = ($rating?' *' x $rating:'');
 	}
@@ -1376,7 +1385,7 @@ sub getRatingStaticCustomItem
 	my $track = shift;
 	my $trackHandle = searchTrackInStorage( $track->url);
 	my $string = '  ' x 5;
-	if($trackHandle) {
+	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		debugMsg("rating = $rating\n");
 		if($rating) {
@@ -1393,7 +1402,7 @@ sub getRatingNumberCustomItem
 	my $track = shift;
 	my $trackHandle = searchTrackInStorage( $track->url);
 	my $string = '';
-	if($trackHandle) {
+	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		$string = ($rating?$rating:'');
 	}
@@ -1560,6 +1569,9 @@ PLUGIN_TRACKSTAT_NOT_FOUND
 
 PLUGIN_TRACKSTAT_CLEARING
 	EN	Removing all TrackStat data
+
+PLUGIN_TRACKSTAT_RATING_NO_SONG
+	EN	No song playing
 
 EOF
 
