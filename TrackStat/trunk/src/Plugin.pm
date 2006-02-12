@@ -414,7 +414,14 @@ sub initPlugin
 			executeSQLFile("dbcreate.sql");
 		}
 	}
+	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
+	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
+	addTitleFormat('PLAYING (X_OF_Y) (TRACKSTATRATINGSTATIC)');
+	addTitleFormat('PLAYING (X_OF_Y) TRACKSTATRATINGSTATIC');
+	addTitleFormat('TRACKSTATRATINGNUMBER');
+
 	if ($::VERSION ge '6.5') {
+		
 		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
 		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
 		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
@@ -423,6 +430,20 @@ sub initPlugin
 		Slim::Music::Info::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
 		Slim::Music::Info::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
 	}
+}
+
+sub addTitleFormat
+{
+	my $titleformat = shift;
+	foreach my $format ( Slim::Utils::Prefs::getArray('titleFormat') ) {
+		debugMsg("Comparing: $titleformat WITH $format\n");
+		if($titleformat eq $format) {
+			return;
+		}
+	}
+	my $arrayMax = Slim::Utils::Prefs::getArrayMax('titleFormat');
+	debugMsg("Adding at $arrayMax: $titleformat");
+	Slim::Utils::Prefs::set('titleFormat',$titleformat,$arrayMax+1);
 }
 
 sub shutdownPlugin {
