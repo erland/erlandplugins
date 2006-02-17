@@ -253,7 +253,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_web_list_length','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -272,6 +272,12 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
+		},		
+	plugin_trackstat_web_list_length => {
+			'validate'     => \&Slim::Web::Setup::validateInt
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"); }
 		},		
 	plugin_trackstat_backup_file => {
 			'validate' => \&Slim::Web::Setup::validateAcceptAll
@@ -343,14 +349,18 @@ sub setupGroup
 }
 
 sub webPages {
-	my %pages = ( "index\.htm" => \&handleWebIndex);
+	my %pages = (
+		"index\.htm" => \&handleWebIndex,
+		"mostplayed\.htm" => \&handleWebMostPlayed,
+		"lastplayed\.htm" => \&handleWebLastPlayed,
+		"toprated\.htm" => \&handleWebTopRated
+	);
 
 	return (\%pages,"index.html");
 }
 
-sub handleWebIndex {
+sub baseWebPage {
 	my ($client, $params) = @_;
-
 	# without a player, don't do anything
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
 		if (my $playStatus = getTrackInfo($client)) {
@@ -377,8 +387,129 @@ sub handleWebIndex {
 		}
 	}
 	$params->{refresh} = 60 if ($params->{refresh} > 60);
-	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+	$params->{'pluginTrackStatVersion'} = $::VERSION;
+}
+	
+sub handleWebIndex {
+	my ($client, $params) = @_;
 
+	baseWebPage($client, $params);
+    my $ds     = Slim::Music::Info::getCurrentDataStore();
+
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayed {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+    collectWebSongs($client,$params,$sql);
+	$params->{'songlist'} = 'MOSTPLAYED';
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub collectWebSongs {
+	my $client = shift;
+	my $params = shift;
+	my $sql = shift;
+    my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $dbh = $ds->dbh();
+	my $sth = $dbh->prepare( $sql );
+	eval {
+		$sth->execute();
+
+		my( $url, $playCount, $lastPlayed, $rating );
+		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
+		my $itemNumber = 0;
+		while( $sth->fetch() ) {
+			my $track = $ds->objectForUrl($url);
+		  	my %trackInfo = ();
+			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
+            my $levelInfo = $fieldInfo->{'track'};
+			
+            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $track);
+		  	$trackInfo{'title'} = Slim::Music::Info::standardTitle(undef,$track);
+		  	$trackInfo{'lastPlayed'} = $lastPlayed;
+		  	$trackInfo{'rating'} = ($rating && $rating>0?$rating/20:0);
+		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
+			$trackInfo{'player'} = $params->{'player'};
+            $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
+            $trackInfo{'song_count'}       = $playCount;
+            $trackInfo{'attributes'}       = '&track='.$track->id;
+            $trackInfo{'itemobj'}          = $track;
+		  	
+		  	push @{$params->{'browse_items'}},\%trackInfo;
+		  	$itemNumber++;
+		  
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
+}
+
+sub handleWebLastPlayed {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
+    collectWebSongs($client,$params,$sql);
+	$params->{'songlist'} = 'LASTPLAYED';
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRated {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+    collectWebSongs($client,$params,$sql);
+	$params->{'songlist'} = 'TOPRATED';
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
 sub initPlugin
@@ -396,6 +527,10 @@ sub initPlugin
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_showmessages"))) { 
 			debugMsg("First run - setting showmessages OFF\n");
 			Slim::Utils::Prefs::set("plugin_trackstat_showmessages", 0 ); 
+		}
+		# set default web list length to same as items per page
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",Slim::Utils::Prefs::get("itemsPerPage"));
 		}
 		installHook();
 
@@ -1561,6 +1696,15 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_DESC
 PLUGIN_TRACKSTAT_MAKING_BACKUP
 	EN	Making TrackStat backup to file...
 
+SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
+	EN	Number of songs on web
+
+SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH_DESC
+	EN	Number songs that should be shown in the web interface for TrackStat when choosing to view statistic information
+
+PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
+	EN	Number of songs
+
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
 
@@ -1593,6 +1737,18 @@ PLUGIN_TRACKSTAT_CLEARING
 
 PLUGIN_TRACKSTAT_RATING_NO_SONG
 	EN	No song playing
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATED
+	EN	Top rated songs
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED
+	EN	Most played songs
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED
+	EN	Last played songs
+
+PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER
+	EN	Choose statistics to view
 
 EOF
 
