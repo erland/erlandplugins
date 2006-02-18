@@ -73,6 +73,14 @@
 		<a href="mostplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED" | string %]</a><br>
 		<a href="lastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED" | string %]</a><br>
 		<a href="toprated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATED" | string %]</a><br>
+		<br>
+		<form action="[% webroot %][% path %].html" name="settingsForm">
+			<input type="hidden" name="trackstatcmd" value="listlength">
+			<input type="hidden" name="player" value="[% player %]">
+			[% "PLUGIN_TRACKSTAT_WEB_LIST_LENGTH" | string %]
+			<input class="stdedit" type="text" size="2" name="listlength" value="[% pluginTrackStatListLength %]">
+			<input type="submit" value="[% "CHANGE" | string %]">
+		</form>
 	</div>
 	<tr>
 		<td>&nbsp;</td>
