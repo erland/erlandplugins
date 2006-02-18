@@ -361,6 +361,9 @@ sub webPages {
 
 sub baseWebPage {
 	my ($client, $params) = @_;
+	if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'listlength') {
+		Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",$params->{listlength});
+	}	
 	# without a player, don't do anything
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
 		if (my $playStatus = getTrackInfo($client)) {
@@ -395,7 +398,8 @@ sub baseWebPage {
 			$params->{refresh} = 60;
 		}
 	}
-	$params->{refresh} = 60 if ($params->{refresh} > 60);
+	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+	$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
 }
 	
