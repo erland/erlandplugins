@@ -58,11 +58,19 @@
 		</div>
 	[% ELSIF playing == 'notfound' %]
 		<div>
-			[% 'PLUGIN_TRACKSTAT_NOT_FOUND' | string %]
+			<table>
+				<tr height="5">
+					[% 'PLUGIN_TRACKSTAT_NOT_FOUND' | string %]
+				</tr>
+			</table>
 		</div>
 	[% ELSE %]  
 		<div>
+			<table>
+				<tr height="5">
 			[% 'PLUGIN_TRACKSTAT_NO_TRACK' | string %]
+				</tr>
+			</table>
 		</div>
 	[% END %]
 	<tr>
@@ -70,9 +78,13 @@
 	</tr>
 	<div>
 		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong><br>
+		<a href="toprated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATED" | string %]</a><br>
+		<a href="topratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS" | string %]</a><br>
+		<a href="topratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS" | string %]</a><br>
 		<a href="mostplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED" | string %]</a><br>
 		<a href="lastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED" | string %]</a><br>
-		<a href="toprated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATED" | string %]</a><br>
+		<a href="leastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED" | string %]</a><br>
+		<a href="firstplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED" | string %]</a><br>
 		<br>
 		<form action="[% webroot %][% path %].html" name="settingsForm">
 			<input type="hidden" name="trackstatcmd" value="listlength">
@@ -104,12 +116,23 @@
 							<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=13 height=13>
 						[% END %]
 					[% END %]
-					[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
-					[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
+					[% IF item.listtype == 'track' %]
+						[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
+						[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
+					[% ELSE %]
+						[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+						[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+					[% END %]
 				[% END %]
 				[%- WRAPPER contentitem controls='controls' %]
 					<div style="width:77%">
-					[% PROCESS trackinfo %]
+					[% IF item.listtype == 'track' %]
+						[% PROCESS trackinfo %]
+					[% ELSIF item.listtype == 'album' %]
+						<a [% PROCESS albumItemHRef %] target="browser">[% item.itemobj.album.title | html %]</a>
+					[% ELSIF item.listtype == 'artist' %]
+						<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+					[% END %]
 					</div>
 				[% END %]
 				[% odd = (not odd) %]
