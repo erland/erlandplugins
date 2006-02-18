@@ -365,15 +365,24 @@ sub baseWebPage {
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
 		if (my $playStatus = getTrackInfo($client)) {
 			if ($params->{trackstatcmd} and $params->{trackstatcmd} eq 'rating') {
-				if (!$playStatus->currentSongRating()) {
-					$playStatus->currentSongRating(0);
-				}
-				if ($params->{trackstatrating} eq 'up' and $playStatus->currentSongRating() < 5) {
-					$playStatus->currentSongRating($playStatus->currentSongRating() + 1);
-				} elsif ($params->{trackstatrating} eq 'down' and $playStatus->currentSongRating() > 0) {
-					$playStatus->currentSongRating($playStatus->currentSongRating() - 1);
-				} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
-					$playStatus->currentSongRating($params->{trackstatrating});
+				my $songKey;
+		        my $song = $songKey = Slim::Player::Playlist::song($client);
+		        if (Slim::Music::Info::isRemoteURL($song)) {
+		                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
+		        }
+		        if($playStatus->currentTrackOriginalFilename() eq $songKey) {
+					if (!$playStatus->currentSongRating()) {
+						$playStatus->currentSongRating(0);
+					}
+					if ($params->{trackstatrating} eq 'up' and $playStatus->currentSongRating() < 5) {
+						$playStatus->currentSongRating($playStatus->currentSongRating() + 1);
+					} elsif ($params->{trackstatrating} eq 'down' and $playStatus->currentSongRating() > 0) {
+						$playStatus->currentSongRating($playStatus->currentSongRating() - 1);
+					} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
+						$playStatus->currentSongRating($params->{trackstatrating});
+					}
+					
+					rateSong($client,$songKey,$playStatus->currentSongRating());
 				}
 			}
 			$params->{playing} = $playStatus->trackAlreadyLoaded();
