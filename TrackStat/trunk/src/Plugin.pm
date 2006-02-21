@@ -1481,6 +1481,9 @@ sub sendTrackToStorage($)
 		$playCount = 1;
 	}
 	my $lastPlayed = $track->lastPlayed;
+	if(!$lastPlayed) {
+		$lastPlayed = time();
+	}
 
 	if ($trackHandle) {
 		$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
