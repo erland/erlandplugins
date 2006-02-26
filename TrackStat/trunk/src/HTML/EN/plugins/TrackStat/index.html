@@ -20,6 +20,14 @@
 	[% PROCESS plugins/TrackStat/pageheaderinfo65 %]
 [% END %]
 	[% IF playing == 'true' %]  
+		[%# Reload status and playlist to reflect any new mixes %]
+		<script type="text/javascript">
+			for (var i=0; i < parent.frames.length; i++) {
+				if (parent.frames[i].name == "status") {
+					parent.frames[i].location.replace(parent.frames[i].location.pathname + "?player=[% player | uri %]&amp;refresh=1");
+				}
+			}
+		</script>
 		<div>
 			<table>
 				<tr height="5">
@@ -64,14 +72,6 @@
 				</tr>
 			</table>
 		</div>
-	[% ELSE %]  
-		<div>
-			<table>
-				<tr height="5">
-			[% 'PLUGIN_TRACKSTAT_NO_TRACK' | string %]
-				</tr>
-			</table>
-		</div>
 	[% END %]
 	<tr>
 		<td>&nbsp;</td>
@@ -82,8 +82,12 @@
 		<a href="topratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS" | string %]</a><br>
 		<a href="topratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS" | string %]</a><br>
 		<a href="mostplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED" | string %]</a><br>
+		<a href="mostplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS" | string %]</a><br>
+		<a href="mostplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS" | string %]</a><br>
 		<a href="lastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED" | string %]</a><br>
 		<a href="leastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED" | string %]</a><br>
+		<a href="leastplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS" | string %]</a><br>
+		<a href="leastplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS" | string %]</a><br>
 		<a href="firstplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED" | string %]</a><br>
 		<br>
 		<form action="[% webroot %][% path %].html" name="settingsForm">
@@ -99,7 +103,9 @@
 	</tr>
 	[% IF songlist %]
 		<div>
-			<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_" _ songlist | string %]</strong>
+			<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_" _ songlist | string %]</strong>&nbsp;&nbsp;&nbsp;
+			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=play"[% END %]
+			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=add"[% END %]
 		</div>
 		[% WRAPPER contentcontainer %]
 			[% odd = 1 %]
