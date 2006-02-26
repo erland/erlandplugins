@@ -40,7 +40,7 @@ use Slim::Utils::Strings qw(string);
 
 use Time::HiRes;
 use Class::Struct;
-use POSIX qw(strftime);
+use POSIX qw(strftime ceil);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 
@@ -352,11 +352,15 @@ sub webPages {
 	my %pages = (
 		"index\.htm" => \&handleWebIndex,
 		"mostplayed\.htm" => \&handleWebMostPlayed,
+		"mostplayedalbums\.htm" => \&handleWebMostPlayedAlbums,
+		"mostplayedartists\.htm" => \&handleWebMostPlayedArtists,
 		"lastplayed\.htm" => \&handleWebLastPlayed,
 		"toprated\.htm" => \&handleWebTopRated,
 		"topratedalbums\.htm" => \&handleWebTopRatedAlbums,
 		"topratedartists\.htm" => \&handleWebTopRatedArtists,
 		"leastplayed\.htm" => \&handleWebLeastPlayed,
+		"leastplayedalbums\.htm" => \&handleWebLeastPlayedAlbums,
+		"leastplayedartists\.htm" => \&handleWebLeastPlayedArtists,
 		"firstplayed\.htm" => \&handleWebFirstPlayed
 	);
 
@@ -407,6 +411,55 @@ sub baseWebPage {
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
 }
 	
+sub handlePlayAddWebPage {
+	my ($client, $params) = @_;
+
+	if ($client = Slim::Player::Client::getClient($params->{player})) {
+		my $first = 1;
+		if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'play') {
+			$client->execute(['stop']);
+			$client->execute(['power', '1']);
+		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'add') {
+			$first = 0;
+		}else {
+			return;
+		}
+		my $objs = $params->{'browse_items'};
+		
+		for my $item (@$objs) {
+			if($item->{'listtype'} eq 'track') {
+				my $track = $item->{'itemobj'};
+				if($first==1) {
+					debugMsg("Loading track = ".$track->title."\n");
+					$client->execute(['playlist', 'loadtracks', sprintf('track=%d', $track->id)]);
+				}else {
+					debugMsg("Adding track = ".$track->title."\n");
+					$client->execute(['playlist', 'addtracks', sprintf('track=%d', $track->id)]);
+				}
+			}elsif($item->{'listtype'} eq 'album') {
+				my $album = $item->{'itemobj'}{'album'};
+				if($first==1) {
+					debugMsg("Loading album = ".$album->title."\n");
+					$client->execute(['playlist', 'loadtracks', sprintf('album=%d', $album->id)]);
+				}else {
+					debugMsg("Adding album = ".$album->title."\n");
+					$client->execute(['playlist', 'addtracks', sprintf('album=%d', $album->id)]);
+				}
+			}elsif($item->{'listtype'} eq 'artist') {
+				my $artist = $item->{'itemobj'}{'artist'};
+				if($first==1) {
+					debugMsg("Loading artist = ".$artist->name."\n");
+					$client->execute(['playlist', 'loadtracks', sprintf('artist=%d', $artist->id)]);
+				}else {
+					debugMsg("Adding artist = ".$artist->name."\n");
+					$client->execute(['playlist', 'addtracks', sprintf('artist=%d', $artist->id)]);
+				}
+			}
+			$first = 0;
+		}
+	}
+}
+
 sub handleWebIndex {
 	my ($client, $params) = @_;
 
@@ -437,6 +490,7 @@ sub handleWebMostPlayed {
     my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
     collectWebSongs($client,$params,$sql);
 	$params->{'songlist'} = 'MOSTPLAYED';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -461,6 +515,7 @@ sub handleWebLeastPlayed {
     my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
     collectWebSongs($client,$params,$sql);
 	$params->{'songlist'} = 'LEASTPLAYED';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -516,8 +571,8 @@ sub collectWebAlbums {
 	eval {
 		$sth->execute();
 
-		my( $id, $rating );
-		$sth->bind_columns( undef, \$id, \$rating );
+		my( $id, $rating, $playCount );
+		$sth->bind_columns( undef, \$id, \$rating, \$playCount );
 		my $itemNumber = 0;
 		while( $sth->fetch() ) {
 			my $album = $ds->objectForId('album',$id);
@@ -531,6 +586,7 @@ sub collectWebAlbums {
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
+            $trackInfo{'song_count'}       = ceil($playCount);
             $trackInfo{'attributes'}       = '&album='.$album->id;
             $trackInfo{'itemobj'}{'album'} = $album;
             $trackInfo{'listtype'} = 'album';
@@ -556,8 +612,8 @@ sub collectWebArtists {
 	eval {
 		$sth->execute();
 
-		my( $id, $rating );
-		$sth->bind_columns( undef, \$id, \$rating );
+		my( $id, $rating, $playCount );
+		$sth->bind_columns( undef, \$id, \$rating, \$playCount );
 		my $itemNumber = 0;
 		while( $sth->fetch() ) {
 			my $artist = $ds->objectForId('artist',$id);
@@ -571,6 +627,7 @@ sub collectWebArtists {
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
+            $trackInfo{'song_count'}       = ceil($playCount);
             $trackInfo{'attributes'}       = '&artist='.$artist->id;
             $trackInfo{'itemobj'}{'artist'} = $artist;
             $trackInfo{'listtype'} = 'artist';
@@ -607,6 +664,7 @@ sub handleWebLastPlayed {
     my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
     collectWebSongs($client,$params,$sql);
 	$params->{'songlist'} = 'LASTPLAYED';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -631,6 +689,7 @@ sub handleWebFirstPlayed {
     my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed asc,tracks.lastPlayed asc,$orderBy limit $listLength;";
     collectWebSongs($client,$params,$sql);
 	$params->{'songlist'} = 'FIRSTPLAYED';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -655,6 +714,7 @@ sub handleWebTopRated {
     my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
     collectWebSongs($client,$params,$sql);
 	$params->{'songlist'} = 'TOPRATED';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -676,9 +736,60 @@ sub handleWebTopRatedAlbums {
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,$orderBy limit $listLength;";
+    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,$orderBy limit $listLength;";
     collectWebAlbums($client,$params,$sql);
 	$params->{'songlist'} = 'TOPRATEDALBUMS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,$orderBy limit $listLength;";
+    collectWebAlbums($client,$params,$sql);
+	$params->{'songlist'} = 'MOSTPLAYEDALBUMS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebLeastPlayedAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,$orderBy limit $listLength;";
+    collectWebAlbums($client,$params,$sql);
+	$params->{'songlist'} = 'LEASTPLAYEDALBUMS';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -700,9 +811,60 @@ sub handleWebTopRatedArtists {
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,$orderBy limit $listLength;";
+    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,$orderBy limit $listLength;";
     collectWebArtists($client,$params,$sql);
 	$params->{'songlist'} = 'TOPRATEDARTISTS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,$orderBy limit $listLength;";
+    collectWebArtists($client,$params,$sql);
+	$params->{'songlist'} = 'MOSTPLAYEDARTISTS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebLeastPlayedArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,$orderBy limit $listLength;";
+    collectWebArtists($client,$params,$sql);
+	$params->{'songlist'} = 'LEASTPLAYEDARTISTS';
+	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -1894,13 +2056,13 @@ PLUGIN_TRACKSTAT_MAKING_BACKUP
 	EN	Making TrackStat backup to file...
 
 SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
-	EN	Number of songs on web
+	EN	Number of songs/albums/artists on web
 
 SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH_DESC
-	EN	Number songs that should be shown in the web interface for TrackStat when choosing to view statistic information
+	EN	Number songs/albums/artists that should be shown in the web interface for TrackStat when choosing to view statistic information
 
 PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
-	EN	Number of songs
+	EN	Number of songs/albums/artists
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
@@ -1927,7 +2089,7 @@ PLUGIN_TRACKSTAT_NO_TRACK
 	EN	No statistics found
 
 PLUGIN_TRACKSTAT_NOT_FOUND
-	EN	No statistics found
+	EN	Can't find current track
 
 PLUGIN_TRACKSTAT_CLEARING
 	EN	Removing all TrackStat data
@@ -1941,6 +2103,12 @@ PLUGIN_TRACKSTAT_SONGLIST_TOPRATED
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED
 	EN	Most played songs
 
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS
+	EN	Most played albums
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS
+	EN	Most played artists
+
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED
 	EN	Last played songs
 
@@ -1949,6 +2117,12 @@ PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED
 
 PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED
 	EN	Least played songs
+
+PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS
+	EN	Least played albums
+
+PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS
+	EN	Least played artists
 
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS
 	EN	Top rated albums
