@@ -995,6 +995,7 @@ struct TrackStatus => {
 
 struct TrackInfo => {
 		url => '$',
+		mbId => '$',
 		playCount => '$',
 		lastPlayed => '$',
 		rating => '$'
@@ -1635,6 +1636,7 @@ sub sendTrackToStorage($)
 
 	debugMsg("Marking as played in storage\n");
 	my $playCount;
+
 	if($trackHandle && $trackHandle->playCount) {
 		$playCount = $trackHandle->playCount + 1;
 	}elsif($track->playCount){
@@ -1642,20 +1644,39 @@ sub sendTrackToStorage($)
 	}else {
 		$playCount = 1;
 	}
+
 	my $lastPlayed = $track->lastPlayed;
 	if(!$lastPlayed) {
 		$lastPlayed = time();
 	}
 
+	my $mbId;
 	if ($trackHandle) {
-		$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
-	}else {
-		$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
+		$mbId = $trackHandle->mbId;
 	}
+
+	my $key = $url;
+	$key = $mbId if (defined($mbId));
+
+	if ($trackHandle) {
+		if (defined($mbId)) {
+			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where musicbrainz_id = ?";
+		} else {
+			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url = ?";
+		}
+	}else {
+		$mbId = $track->{musicbrainz_id};
+		if (defined($mbId)) {
+			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, '$mbId', $playCount, $lastPlayed)";
+		} else {
+			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, NULL, $playCount, $lastPlayed)";
+		}
+	}
+
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->bind_param(1, $url , SQL_VARCHAR);
+		$sth->bind_param(1, $key , SQL_VARCHAR);
 		$sth->execute();
 		$dbh->commit();
 	};
@@ -1746,20 +1767,31 @@ sub rateSong($$$) {
 
 sub searchTrackInStorage {
 	my $track_url = shift;
+	my $mbId      = shift;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($track_url);
+	my $searchString = "";
+	my $queryAttribute = "";
 	
 	return 0 unless $track;
-	debugMsg("URL: ".$track->url."\n");
+
+	$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
+
+	debugMsg("searchTrackInStorage(): URL: ".$track->url."\n");
+	debugMsg("searchTrackInStorage(): mbId: ". $mbId ."\n") if (defined($mbId));
 
 	# create searchString and remove duplicate/trailing whitespace as well.
-    my $searchString = "";
-	$searchString .= $track->url;
+	if (defined($mbId)) {
+		$searchString = $mbId;
+		$queryAttribute = "musicbrainz_id";
+	} else {
+		$searchString = $track->url;
+		$queryAttribute = "url";
+	}
 
 	return 0 unless length($searchString) >= 1;
 
-	my $sql = ("SELECT url, playCount, lastPlayed, rating FROM track_statistics where url=?");
-
+	my $sql = "SELECT url, musicbrainz_id, playCount, lastPlayed, rating FROM track_statistics where $queryAttribute = ?";
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
 	my $result = undef;
@@ -1767,10 +1799,10 @@ sub searchTrackInStorage {
 		$sth->bind_param(1, $searchString , SQL_VARCHAR);
 		$sth->execute();
 
-		my( $url, $playCount, $lastPlayed, $rating );
-		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
+		my( $url, $mbId, $playCount, $lastPlayed, $rating );
+		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$lastPlayed, \$rating );
 		while( $sth->fetch() ) {
-		  $result = TrackInfo->new( url => $url, playCount => $playCount, lastPlayed => $lastPlayed, rating => $rating );
+		  $result = TrackInfo->new( url => $url, mbId => $mbId, playCount => $playCount, lastPlayed => $lastPlayed, rating => $rating );
 		}
 	};
 	if( $@ ) {

@@ -49,7 +49,7 @@ sub backupToFile
 {
 	my $filename = shift;
 
-	my $sql = ("SELECT url, playCount, lastPlayed, rating FROM track_statistics");
+	my $sql = "SELECT url, musicbrainz_id, playCount, lastPlayed, rating FROM track_statistics";
 
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
@@ -63,15 +63,18 @@ sub backupToFile
 	print $output '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 	print $output "<TrackStat>\n";
 
-	my( $url, $playCount, $lastPlayed, $rating );
+	my( $url, $mbId, $playCount, $lastPlayed, $rating );
 	eval {
-		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
+		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$lastPlayed, \$rating );
 		my $result;
 		while( $sth->fetch() ) {
 			if($url) {
 				$url = escape($url);
 				debugMsg("Backing up: $url\n");
 				print $output "	<track>\n		<url>$url</url>\n";
+				if($mbId) {
+					print $output "		<musicbrainzId>$mbId</musicbrainzId>\n";
+				}
 				if($playCount) {
 					print $output "		<playCount>$playCount</playCount>\n";
 				}
@@ -272,6 +275,7 @@ sub restoreTrack
 	my $curTrack = shift;
 	
 	my $url       = $curTrack->{'url'};
+	my $mbId      = $curTrack->{'musicbrainzId'};
 	my $playCount = $curTrack->{'playCount'};
 	my $lastPlayed = $curTrack->{'lastPlayed'};
 	my $rating   = $curTrack->{'rating'};
@@ -281,28 +285,35 @@ sub restoreTrack
 
 	return unless $track;
 
-	my $trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage($url);
+	my $trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage($url, $mbId);
 	my $sql;
 	
 	if ($playCount) {
 		debugMsg("Marking as played in storage: $playCount\n");
+
+		my $key = $url;
+
+		$lastPlayed = '0' if (!(defined($lastPlayed)));
+
 		if($trackHandle) {
-			if($lastPlayed) {
-				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
-			}else {
-				$sql = ("UPDATE track_statistics set playCount=$playCount where url=?");
+			my $queryParameter = "url";
+			if (defined($mbId)) {
+			    $queryParameter = "musicbrainz_id";
+			    $key = $mbId;
 			}
+
+			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where $queryParameter = ?";
 		}else {
-			if($lastPlayed) {
-				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
+			if (defined($mbId)) {
+				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, '$mbId', $playCount, $lastPlayed)";
 			}else {
-				$sql = ("INSERT INTO track_statistics (url,playCount) values (?,$playCount)");
+				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, NULL, $playCount, $lastPlayed)";
 			}
 		}
 		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 		my $sth = $dbh->prepare( $sql );
 		eval {
-			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->bind_param(1, $key , SQL_VARCHAR);
 			$sth->execute();
 			$dbh->commit();
 		};
