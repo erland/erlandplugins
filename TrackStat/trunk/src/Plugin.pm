@@ -904,6 +904,11 @@ sub initPlugin
 			debugMsg("Create database table\n");
 			executeSQLFile("dbcreate.sql");
 		}
+		eval { $dbh->do("select musicbrainz_id from track_statistics limit 1;") };
+		if ($@) {
+			debugMsg("Create database table column musicbrainz_id\n");
+			executeSQLFile("dbupgrade_musicbrainz.sql");
+		}
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -927,7 +932,6 @@ sub addTitleFormat
 {
 	my $titleformat = shift;
 	foreach my $format ( Slim::Utils::Prefs::getArray('titleFormat') ) {
-		debugMsg("Comparing: $titleformat WITH $format\n");
 		if($titleformat eq $format) {
 			return;
 		}
@@ -1845,7 +1849,7 @@ sub executeSQLFile {
                 next if $line =~ /^--/;
                 next if $line =~ /^\s*$/;
 
-                if ($line =~ /^\s*(?:CREATE|SET|INSERT|UPDATE|DELETE|DROP|SELECT)\s+/oi) {
+                if ($line =~ /^\s*(?:CREATE|SET|INSERT|UPDATE|DELETE|DROP|SELECT|ALTER|DROP)\s+/oi) {
                         $inStatement = 1;
                 }
 
