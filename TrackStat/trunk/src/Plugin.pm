@@ -48,6 +48,7 @@ use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
 use Plugins::TrackStat::iTunes::Import;
 use Plugins::TrackStat::Backup::File;
+use Plugins::TrackStat::Storage;
 
 use vars qw($VERSION);
 $VERSION = substr(q$Revision$,10);
@@ -226,16 +227,44 @@ sub getTrackInfo {
 		my $playStatus = getPlayerStatusForClient($client);
 		if ($playStatus->isTiming() eq 'true') {
 			if ($playStatus->trackAlreadyLoaded() eq 'false') {
-				if (my($playedCount, $playedDate, $rating) = getTrackFromStorage($playStatus)) {
-					$playStatus->trackAlreadyLoaded('true');
-					$playStatus->lastPlayed($playedDate);
-					$playStatus->playCount($playedCount);
-					#don't overwrite the user's rating
-					if ($playStatus->currentSongRating() eq '') {
-						$playStatus->currentSongRating($rating);
+				my $ds = Slim::Music::Info::getCurrentDataStore();
+				my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
+				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename());
+				my $playedCount = 0;
+				my $playedDate = "";
+				my $rating = 0;
+				if ($trackHandle) {
+						if($trackHandle->playCount) {
+							$playedCount = $trackHandle->playCount;
+						}elsif($track->playCount){
+							$playedCount = $track->playCount;
+						}
+						if($trackHandle->lastPlayed) {
+							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $trackHandle->lastPlayed);
+						}elsif($track->lastPlayed) {
+							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
+						}
+						if($trackHandle->rating) {
+							$rating = $trackHandle->rating;
+							if($rating) {
+								$rating = $rating / 20;
+							}
+						}
+				}else {
+					if($track) {
+						$playedCount = $track->playCount;
+						if($track->lastPlayed) {
+							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
+						}
 					}
-				} else {
-					$playStatus->trackAlreadyLoaded('notfound');
+				}
+				
+				$playStatus->trackAlreadyLoaded('true');
+				$playStatus->lastPlayed($playedDate);
+				$playStatus->playCount($playedCount);
+				#don't overwrite the user's rating
+				if ($playStatus->currentSongRating() eq '') {
+					$playStatus->currentSongRating($rating);
 				}
 			}
 		} else { 
@@ -253,7 +282,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_web_list_length','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -273,11 +302,33 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
 		},		
+	plugin_trackstat_dynamicplaylist => {
+			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist"); }
+		},		
 	plugin_trackstat_web_list_length => {
 			'validate'     => \&Slim::Web::Setup::validateInt
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"); }
+		},		
+	plugin_trackstat_playlist_length => {
+			'validate'     => \&Slim::Web::Setup::validateInt
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYLIST_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYLIST_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_playlist_length"); }
+		},		
+	plugin_trackstat_playlist_per_artist_length => {
+			'validate'     => \&Slim::Web::Setup::validateInt
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"); }
 		},		
 	plugin_trackstat_backup_file => {
 			'validate' => \&Slim::Web::Setup::validateAcceptAll
@@ -296,6 +347,24 @@ sub setupGroup
 			,'dontSet' => 1
 			,'changeMsg' => ''
 		},
+	plugin_trackstat_refresh_tracks => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { Plugins::TrackStat::Storage::refreshTracks(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESHING_TRACKS')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_REFRESH_TRACKS')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_purge_tracks => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { Plugins::TrackStat::Storage::purgeTracks(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_PURGING_TRACKS')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_PURGE_TRACKS')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
 	plugin_trackstat_restore => {
 			'validate' => \&Slim::Web::Setup::validateAcceptAll
 			,'onChange' => sub { restoreFromFile(); }
@@ -307,7 +376,7 @@ sub setupGroup
 		},
 	plugin_trackstat_clear => {
 			'validate' => \&Slim::Web::Setup::validateAcceptAll
-			,'onChange' => sub { clearAllData(); }
+			,'onChange' => sub { Plugins::TrackStat::Storage::deleteAllTracks(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_CLEARING')
 			,'ChangeButton' => string('PLUGIN_TRACKSTAT_CLEAR')
@@ -474,21 +543,11 @@ sub handleWebMostPlayed {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
-    collectWebSongs($client,$params,$sql);
+    Plugins::TrackStat::Storage::getMostPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYED';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -499,170 +558,28 @@ sub handleWebLeastPlayed {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
-    collectWebSongs($client,$params,$sql);
+    Plugins::TrackStat::Storage::getLeastPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYED';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
-sub collectWebSongs {
-	my $client = shift;
-	my $params = shift;
-	my $sql = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
-	my $sth = $dbh->prepare( $sql );
-	eval {
-		$sth->execute();
 
-		my( $url, $playCount, $lastPlayed, $rating );
-		$sth->bind_columns( undef, \$url, \$playCount, \$lastPlayed, \$rating );
-		my $itemNumber = 0;
-		while( $sth->fetch() ) {
-			my $track = $ds->objectForUrl($url);
-		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'track'};
-			
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $track);
-		  	$trackInfo{'title'} = Slim::Music::Info::standardTitle(undef,$track);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
-			$trackInfo{'player'} = $params->{'player'};
-            $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-            $trackInfo{'song_count'}       = $playCount;
-            $trackInfo{'attributes'}       = '&track='.$track->id;
-            $trackInfo{'itemobj'}          = $track;
-            $trackInfo{'listtype'} = 'track';
-            		  	
-		  	push @{$params->{'browse_items'}},\%trackInfo;
-		  	$itemNumber++;
-		  
-		}
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	}
-	$sth->finish();
-}
-
-sub collectWebAlbums {
-	my $client = shift;
-	my $params = shift;
-	my $sql = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
-	my $sth = $dbh->prepare( $sql );
-	eval {
-		$sth->execute();
-
-		my( $id, $rating, $playCount );
-		$sth->bind_columns( undef, \$id, \$rating, \$playCount );
-		my $itemNumber = 0;
-		while( $sth->fetch() ) {
-			my $album = $ds->objectForId('album',$id);
-		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'album'};
-			
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $album);
-		  	$trackInfo{'title'} = undef;
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
-			$trackInfo{'player'} = $params->{'player'};
-            $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-            $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&album='.$album->id;
-            $trackInfo{'itemobj'}{'album'} = $album;
-            $trackInfo{'listtype'} = 'album';
-		  	
-		  	push @{$params->{'browse_items'}},\%trackInfo;
-		  	$itemNumber++;
-		  
-		}
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	}
-	$sth->finish();
-}
-
-sub collectWebArtists {
-	my $client = shift;
-	my $params = shift;
-	my $sql = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
-	my $sth = $dbh->prepare( $sql );
-	eval {
-		$sth->execute();
-
-		my( $id, $rating, $playCount );
-		$sth->bind_columns( undef, \$id, \$rating, \$playCount );
-		my $itemNumber = 0;
-		while( $sth->fetch() ) {
-			my $artist = $ds->objectForId('artist',$id);
-		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'artist'};
-			
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $artist);
-		  	$trackInfo{'title'} = undef;
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
-			$trackInfo{'player'} = $params->{'player'};
-            $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-            $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&artist='.$artist->id;
-            $trackInfo{'itemobj'}{'artist'} = $artist;
-            $trackInfo{'listtype'} = 'artist';
-            		  	
-		  	push @{$params->{'browse_items'}},\%trackInfo;
-		  	$itemNumber++;
-		  
-		}
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	}
-	$sth->finish();
-}
 
 sub handleWebLastPlayed {
 	my ($client, $params) = @_;
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
-    collectWebSongs($client,$params,$sql);
+    Plugins::TrackStat::Storage::getLastPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'LASTPLAYED';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -673,21 +590,11 @@ sub handleWebFirstPlayed {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed asc,tracks.lastPlayed asc,$orderBy limit $listLength;";
-    collectWebSongs($client,$params,$sql);
+    Plugins::TrackStat::Storage::getFirstPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'FIRSTPLAYED';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -701,18 +608,11 @@ sub handleWebTopRated {
 	my $driver = Slim::Utils::Prefs::get('dbsource');
     $driver =~ s/dbi:(.*?):(.*)$/$1/;
     
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
-    collectWebSongs($client,$params,$sql);
+    Plugins::TrackStat::Storage::getTopRatedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATED';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -723,21 +623,11 @@ sub handleWebTopRatedAlbums {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,$orderBy limit $listLength;";
-    collectWebAlbums($client,$params,$sql);
+    Plugins::TrackStat::Storage::getTopRatedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATEDALBUMS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -748,21 +638,11 @@ sub handleWebMostPlayedAlbums {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,$orderBy limit $listLength;";
-    collectWebAlbums($client,$params,$sql);
+    Plugins::TrackStat::Storage::getMostPlayedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDALBUMS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -773,21 +653,11 @@ sub handleWebLeastPlayedAlbums {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,$orderBy limit $listLength;";
-    collectWebAlbums($client,$params,$sql);
+    Plugins::TrackStat::Storage::getLeastPlayedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYEDALBUMS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -798,21 +668,11 @@ sub handleWebTopRatedArtists {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,$orderBy limit $listLength;";
-    collectWebArtists($client,$params,$sql);
+    Plugins::TrackStat::Storage::getTopRatedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATEDARTISTS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -823,21 +683,11 @@ sub handleWebMostPlayedArtists {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,$orderBy limit $listLength;";
-    collectWebArtists($client,$params,$sql);
+    Plugins::TrackStat::Storage::getMostPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDARTISTS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -848,21 +698,11 @@ sub handleWebLeastPlayedArtists {
 
 	baseWebPage($client, $params);
 
-	my $driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    my $orderBy;
-    if($driver eq 'mysql') {
-    	$orderBy = "rand()";
-    }else {
-    	$orderBy = "random()";
-    }
     my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
     if(!defined $listLength || $listLength==0) {
     	$listLength = 20;
     }
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,$orderBy limit $listLength;";
-    collectWebArtists($client,$params,$sql);
+    Plugins::TrackStat::Storage::getLeastPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYEDARTISTS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -884,31 +724,27 @@ sub initPlugin
 			debugMsg("First run - setting showmessages OFF\n");
 			Slim::Utils::Prefs::set("plugin_trackstat_showmessages", 0 ); 
 		}
+
+		# this will enable DynamicPlaylist integration by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist"))) { 
+			debugMsg("First run - setting dynamicplaylist ON\n");
+			Slim::Utils::Prefs::set("plugin_trackstat_dynamicplaylist", 1 ); 
+		}
 		# set default web list length to same as items per page
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",Slim::Utils::Prefs::get("itemsPerPage"));
 		}
+		# set default playlist length to same as items per page
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_playlist_length"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_playlist_length",Slim::Utils::Prefs::get("itemsPerPage"));
+		}
+		# set default playlist per artist/album length to 10
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_playlist_per_artist_length",10);
+		}
 		installHook();
-
-		#Check if tables exists and create them if not
-		debugMsg("Checking if database table exists\n");
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $st = $dbh->table_info();
-		my $tblexists;
-		while (my ( $qual, $owner, $table, $type ) = $st->fetchrow_array()) {
-			if($table eq "track_statistics") {
-				$tblexists=1;
-			}
-		}
-		unless ($tblexists) {
-			debugMsg("Create database table\n");
-			executeSQLFile("dbcreate.sql");
-		}
-		eval { $dbh->do("select musicbrainz_id from track_statistics limit 1;") };
-		if ($@) {
-			debugMsg("Create database table column musicbrainz_id\n");
-			executeSQLFile("dbupgrade_musicbrainz.sql");
-		}
+		
+		Plugins::TrackStat::Storage::init();
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -995,14 +831,6 @@ struct TrackStatus => {
 	# menu list item
 	listitem => '$',
 
-};
-
-struct TrackInfo => {
-		url => '$',
-		mbId => '$',
-		playCount => '$',
-		lastPlayed => '$',
-		rating => '$'
 };
 
 # Set the appropriate default values for this playerStatus struct
@@ -1440,6 +1268,7 @@ sub startTimingNewSong($$$$)
 		$playStatus->currentSongArtist($artistName);
 		$playStatus->currentSongTrack($trackTitle);
 		$playStatus->currentSongAlbum($albumName);
+		
 
 		if ($playStatus->isTiming() eq "true")
 		{
@@ -1530,7 +1359,7 @@ sub stopTimingSong($)
 		if (trackWasPlayedEnoughToCountAsAListen($playStatus, $totalElapsedTimeDuringPlay) )
 		{
 			#debugMsg("Track was played long enough to count as listen\n");
-			sendTrackToStorage($playStatus);
+			Plugins::TrackStat::Storage::markedAsPlayed($playStatus->currentTrackOriginalFilename);
 			# We could also log to history at this point as well...
 		}
 	} else {
@@ -1628,255 +1457,26 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 	return $wasLongEnough;
 }
 
-sub sendTrackToStorage($)
-{
-	my ($playStatus) = @_;
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
-	my $trackHandle = searchTrackInStorage( $playStatus->currentTrackOriginalFilename());
-	my $sql;
-	my $url = $track->url;
-
-	debugMsg("Marking as played in storage\n");
-	my $playCount;
-
-	if($trackHandle && $trackHandle->playCount) {
-		$playCount = $trackHandle->playCount + 1;
-	}elsif($track->playCount){
-		$playCount = $track->playCount;
-	}else {
-		$playCount = 1;
-	}
-
-	my $lastPlayed = $track->lastPlayed;
-	if(!$lastPlayed) {
-		$lastPlayed = time();
-	}
-
-	my $mbId;
-	if ($trackHandle) {
-		$mbId = $trackHandle->mbId;
-	}
-
-	my $key = $url;
-	$key = $mbId if (defined($mbId));
-
-	if ($trackHandle) {
-		if (defined($mbId)) {
-			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where musicbrainz_id = ?";
-		} else {
-			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url = ?";
-		}
-	}else {
-		$mbId = $track->{musicbrainz_id};
-		if (defined($mbId)) {
-			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, '$mbId', $playCount, $lastPlayed)";
-		} else {
-			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, NULL, $playCount, $lastPlayed)";
-		}
-	}
-
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-	my $sth = $dbh->prepare( $sql );
-	eval {
-		$sth->bind_param(1, $key , SQL_VARCHAR);
-		$sth->execute();
-		$dbh->commit();
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
-	}
-	$sth->finish();
-}
-
-sub sendRatingToStorage {
-	my ($url,$rating) = @_;
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $trackHandle = searchTrackInStorage( $url);
-	my $sql;
-	
-	debugMsg("Store rating\n");
-    #ratings are 0-5 stars, 100 = 5 stars
-	$rating = $rating * 20;
-
-	if ($trackHandle) {
-		$sql = ("UPDATE track_statistics set rating=$rating where url=?");
-	} else {
-		$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
-	}
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-	my $sth = $dbh->prepare( $sql );
-	eval {
-		$sth->bind_param(1, $url , SQL_VARCHAR);
-		$sth->execute();
-		$dbh->commit();
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
-	}
-
-	$sth->finish();
-}
-
-sub getTrackFromStorage
-{
-	my ($playStatus) = shift;
-	my ($playedCount, $playedDate,$rating);
-
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
-	my $trackHandle = searchTrackInStorage( $playStatus->currentTrackOriginalFilename());
-
-	if ($trackHandle) {
-			if($trackHandle->playCount) {
-				$playedCount = $trackHandle->playCount;
-			}elsif($track->playCount){
-				$playedCount = $track->playCount;
-			}
-			if($trackHandle->lastPlayed) {
-				$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $trackHandle->lastPlayed);
-			}elsif($track->lastPlayed) {
-				$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
-			}
-			if($trackHandle->rating) {
-				$rating = $trackHandle->rating;
-				if($rating) {
-					$rating = $rating / 20;
-				}
-			}
-	}else {
-		if($track) {
-			$playedCount = $track->playCount;
-			if($track->lastPlayed) {
-				$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
-			}
-		}
-		debugMsg("Track: ", $playStatus->currentTrackOriginalFilename," not found\n");
-		return undef;
-	}
-	return $playedCount, $playedDate,$rating;
-}
 
 
 sub rateSong($$$) {
 	my ($client,$url,$digit)=@_;
 
 	debugMsg("Changing song rating to: $digit\n");
-	sendRatingToStorage($url,$digit);
+	my $rating = $digit * 20;
+	Plugins::TrackStat::Storage::saveRating($url,undef,$rating);
+	if ($::VERSION ge '6.5') {
+		my $ds = Slim::Music::Info::getCurrentDataStore();
+		my $track = $ds->objectForUrl($url);
+		# Run this within eval for now so it hides all errors until this is standard
+		eval {
+			$track->set('rating' => $rating);
+			$track->update();
+			$ds->forceCommit();
+		};
+	}
 	Slim::Music::Info::clearFormatDisplayCache();
-}
-
-sub searchTrackInStorage {
-	my $track_url = shift;
-	my $mbId      = shift;
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($track_url);
-	my $searchString = "";
-	my $queryAttribute = "";
-	
-	return 0 unless $track;
-
-	$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
-
-	debugMsg("searchTrackInStorage(): URL: ".$track->url."\n");
-	debugMsg("searchTrackInStorage(): mbId: ". $mbId ."\n") if (defined($mbId));
-
-	# create searchString and remove duplicate/trailing whitespace as well.
-	if (defined($mbId)) {
-		$searchString = $mbId;
-		$queryAttribute = "musicbrainz_id";
-	} else {
-		$searchString = $track->url;
-		$queryAttribute = "url";
-	}
-
-	return 0 unless length($searchString) >= 1;
-
-	my $sql = "SELECT url, musicbrainz_id, playCount, lastPlayed, rating FROM track_statistics where $queryAttribute = ?";
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-	my $sth = $dbh->prepare( $sql );
-	my $result = undef;
-	eval {
-		$sth->bind_param(1, $searchString , SQL_VARCHAR);
-		$sth->execute();
-
-		my( $url, $mbId, $playCount, $lastPlayed, $rating );
-		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$lastPlayed, \$rating );
-		while( $sth->fetch() ) {
-		  $result = TrackInfo->new( url => $url, mbId => $mbId, playCount => $playCount, lastPlayed => $lastPlayed, rating => $rating );
-		}
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	}
-
-	$sth->finish();
-
-	return $result;
-}
-
-sub executeSQLFile {
-        my $file  = shift;
-
-		my $driver = Slim::Utils::Prefs::get('dbsource');
-        $driver =~ s/dbi:(.*?):(.*)$/$1/;
-        
-        my $sqlFile = catdir($Bin, "Plugins", "TrackStat", "SQL", $driver, $file);
-
-        debugMsg("Executing SQL file $sqlFile\n");
-
-        open(my $fh, $sqlFile) or do {
-
-                msg("Couldn't open: $sqlFile : $!\n");
-                return;
-        };
-
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-
-        my $statement   = '';
-        my $inStatement = 0;
-
-        for my $line (<$fh>) {
-                chomp $line;
-
-                # skip and strip comments & empty lines
-                $line =~ s/\s*--.*?$//o;
-                $line =~ s/^\s*//o;
-
-                next if $line =~ /^--/;
-                next if $line =~ /^\s*$/;
-
-                if ($line =~ /^\s*(?:CREATE|SET|INSERT|UPDATE|DELETE|DROP|SELECT|ALTER|DROP)\s+/oi) {
-                        $inStatement = 1;
-                }
-
-                if ($line =~ /;/ && $inStatement) {
-
-                        $statement .= $line;
-
-
-                        debugMsg("Executing SQL statement: [$statement]\n");
-
-                        eval { $dbh->do($statement) };
-
-                        if ($@) {
-                                msg("Couldn't execute SQL statement: [$statement] : [$@]\n");
-                        }
-
-                        $statement   = '';
-                        $inStatement = 0;
-                        next;
-                }
-
-                $statement .= $line if $inStatement;
-        }
-
-        $dbh->commit;
-
-        close $fh;
 }
 
 my %musicInfoSCRItems = (
@@ -1922,7 +1522,7 @@ sub getMusicInfoSCRCustomItem()
 sub getRatingDynamicCustomItem
 {
 	my $track = shift;
-	my $trackHandle = searchTrackInStorage( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
 	my $string = '';
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
@@ -1934,7 +1534,7 @@ sub getRatingDynamicCustomItem
 sub getRatingStaticCustomItem
 {
 	my $track = shift;
-	my $trackHandle = searchTrackInStorage( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
 	my $string = '  ' x 5;
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
@@ -1951,7 +1551,7 @@ sub getRatingStaticCustomItem
 sub getRatingNumberCustomItem
 {
 	my $track = shift;
-	my $trackHandle = searchTrackInStorage( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
 	my $string = '';
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
@@ -1980,16 +1580,132 @@ sub restoreFromFile()
 		Plugins::TrackStat::Backup::File::restoreFromFile($backupfile);
 	}
 }
-sub clearAllData()
-{
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-	my $sth = $dbh->prepare( "delete from track_statistics" );
-	
-	$sth->execute();
-	$dbh->commit();
 
-	$sth->finish();
-	msg("TrackStat: Clear all data finished at: ".time()."\n");
+sub getDynamicPlayLists {
+	my ($client) = @_;
+	my %result = ();
+
+	return \%result unless Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist");
+	
+	my %currentResultMostPlayedTrack = (
+		'id' => 'mostplayed',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED'),
+	);
+	my $id = "trackstat_mostplayed";
+	$result{$id} = \%currentResultMostPlayedTrack;
+
+	my %currentResultLeastPlayedTrack = (
+		'id' => 'leastplayed',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED'),
+	);
+	$id = "trackstat_leastplayed";
+	$result{$id} = \%currentResultLeastPlayedTrack;
+
+	my %currentResultLastPlayedTrack = (
+		'id' => 'lastplayed',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED'),
+	);
+	$id = "trackstat_lastplayed";
+	$result{$id} = \%currentResultLastPlayedTrack;
+
+	my %currentResultFirstPlayedTrack = (
+		'id' => 'firstplayed',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED'),
+	);
+	$id = "trackstat_firstplayed";
+	$result{$id} = \%currentResultFirstPlayedTrack;
+
+	my %currentResultTopRatedTrack = (
+		'id' => 'toprated',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED'),
+	);
+	$id = "trackstat_toprated";
+	$result{$id} = \%currentResultTopRatedTrack;
+
+	my %currentResultTopRatedAlbum = (
+		'id' => 'topratedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS'),
+	);
+	$id = "trackstat_topratedalbums";
+	$result{$id} = \%currentResultTopRatedAlbum;
+
+	my %currentResultLeastPlayedAlbum = (
+		'id' => 'leastplayedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS'),
+	);
+	$id = "trackstat_leastplayedalbums";
+	$result{$id} = \%currentResultLeastPlayedAlbum;
+
+	my %currentResultMostPlayedAlbum = (
+		'id' => 'mostplayedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS'),
+	);
+	$id = "trackstat_mostplayedalbums";
+	$result{$id} = \%currentResultMostPlayedAlbum;
+
+	my %currentResultTopRatedArtist = (
+		'id' => 'topratedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS'),
+	);
+	$id = "trackstat_topratedartists";
+	$result{$id} = \%currentResultTopRatedArtist;
+
+	my %currentResultLeastPlayedArtist = (
+		'id' => 'leastplayedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS'),
+	);
+	$id = "trackstat_leastplayedartists";
+	$result{$id} = \%currentResultLeastPlayedArtist;
+
+	my %currentResultMostPlayedArtist = (
+		'id' => 'mostplayedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS'),
+	);
+	$id = "trackstat_mostplayedartists";
+	$result{$id} = \%currentResultMostPlayedArtist;
+
+	return \%result;
+}
+
+sub getNextDynamicPlayListTracks {
+	my ($client,$dynamicplaylist,$limit,$offset) = @_;
+
+	my @result = ();
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    my $artistListLength = Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length");
+    if(!defined $artistListLength || $artistListLength==0) {
+    	$artistListLength = 10;
+    }
+	debugMsg("Got: ".$dynamicplaylist->{'id'}.", $limit\n");
+	if($dynamicplaylist->{'id'} eq 'mostplayed') {
+		return Plugins::TrackStat::Storage::getMostPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'leastplayed') {
+		return Plugins::TrackStat::Storage::getLeastPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'lastplayed') {
+		return Plugins::TrackStat::Storage::getLastPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'firstplayed') {
+		return Plugins::TrackStat::Storage::getFirstPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'toprated') {
+		return Plugins::TrackStat::Storage::getTopRatedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedalbums') {
+		return Plugins::TrackStat::Storage::getTopRatedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedalbums') {
+		return Plugins::TrackStat::Storage::getMostPlayedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'leastplayedalbums') {
+		return Plugins::TrackStat::Storage::getLeastPlayedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedartists') {
+		return Plugins::TrackStat::Storage::getTopRatedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedartists') {
+		return Plugins::TrackStat::Storage::getMostPlayedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'leastplayedartists') {
+		return Plugins::TrackStat::Storage::getLeastPlayedArtistTracks($listLength,$artistListLength);
+	}
+	debugMsg("Got ".scalar(@result)." tracks\n");
+	return \@result;
 }
 
 sub strings() 
@@ -2030,6 +1746,15 @@ SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES
 
 SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES_DESC
 	EN	This will turn on/off debug logging of the TrackStat plugin
+
+PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
+	EN	Enable Dynamic Playlists
+
+SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
+	EN	Dynamic Playlists integration 
+
+SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_DESC
+	EN	This will turn on/off integration with Dynamic Playlists plugin making the statistics available as playlists
 
 PLUGIN_TRACKSTAT_ITUNES_IMPORTING
 	EN	Importing from iTunes...
@@ -2098,7 +1823,25 @@ SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH_DESC
 	EN	Number songs/albums/artists that should be shown in the web interface for TrackStat when choosing to view statistic information
 
 PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
-	EN	Number of songs/albums/artists
+	EN	Number of songs/albums/artists on web
+
+SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
+	EN	Number of songs/albums/artists in playlists
+
+SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH_DESC
+	EN	Number songs/albums/artists that should be used when selecting tracks in DynamicPlaylist plugin
+
+PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
+	EN	Number of songs/albums/artists in playlists
+
+SETUP_PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH
+	EN	Number of songs per artist in playlists
+
+SETUP_PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH_DESC
+	EN	Number songs for each artists used when selecting artist playlists in DynamicPlaylist plugin. This means that selecting "Top rated artist" will play this number of tracks for an artist before changing to next artist.
+
+PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH
+	EN	Number of songs for each artist in playlists
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
@@ -2107,7 +1850,7 @@ SETUP_PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
 
 SETUP_PLUGIN_TRACKSTAT_RESTORE_DESC
-	EN	Restore TrackStat information from the file specified as backup file.<br><b>Warning!</b> This will overwrite any TrackStat information that exist with the information in the file
+	EN	Restore TrackStat information from the file specified as backup file.<br><b>WARNING!</b><br>This will overwrite any TrackStat information that exist with the information in the file
 
 PLUGIN_TRACKSTAT_RESTORING_BACKUP
 	EN	Restoring TrackStat backup from file...
@@ -2119,7 +1862,7 @@ SETUP_PLUGIN_TRACKSTAT_CLEAR
 	EN	Remove all data
 
 SETUP_PLUGIN_TRACKSTAT_CLEAR_DESC
-	EN	This will remove all existing TrackStat data.<br><b>Warning!</b> if you have not made an backup of the information it will be lost forever.
+	EN	This will remove all existing TrackStat data.<br><b>WARNING!</b><br>If you have not made an backup of the information it will be lost forever.
 
 PLUGIN_TRACKSTAT_NO_TRACK
 	EN	No statistics found
@@ -2168,6 +1911,30 @@ PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS
 
 PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER
 	EN	Choose statistics to view
+
+PLUGIN_TRACKSTAT_PURGING_TRACKS
+	EN	Delete unused statistic
+
+PLUGIN_TRACKSTAT_PURGE_TRACKS
+	EN	Delete unused statistic
+
+SETUP_PLUGIN_TRACKSTAT_PURGE_TRACKS
+	EN	Delete unused statistic after rescan
+
+SETUP_PLUGIN_TRACKSTAT_PURGE_TRACKS_DESC
+	EN	This deletes statistic data for all tracks that no longer exists in a database after a rescan, note that if you have changed filename of a track and performed a rescan it till be detected as a completely new track if it does not contain MusicBrainz Id's. Due to this the old file in statistic data will be deleted if you perform this operation. <br><b>WARNING!</b><br>Deleted statistic data will not be possible to get back, so perform a backup of statistic data before you perform this operation.
+
+PLUGIN_TRACKSTAT_REFRESHING_TRACKS
+	EN	Refresh statistic data
+
+PLUGIN_TRACKSTAT_REFRESH_TRACKS
+	EN	Refresh statistic
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS
+	EN	Refresh statistic after rescan
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS_DESC
+	EN	Refresh TrackStat information after a complete rescan, this is only neccesary if you have changed some filenames or directory names. As long as you only have added new files you don't need to perform a refresh. The refresh operation will not destroy or remove any data, it will just make sure the TrackStat information is synchronized with the standard slimserver database.
 
 EOF
 
