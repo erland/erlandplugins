@@ -64,7 +64,7 @@ will not be increased if you just listen on the first secondes of a track, you h
 play counts and last played time.
 
 To rate a track just press the numbers 1-5 on the remote, you will see a message on the Squeezebox display which confirms
-that the rating has been set.
+that the rating has been set. 
 
 The TrackStat plugin will add a number of title formats which makes it possible to show the rating information for the current 
 playing track directly on the screen on the Squeezebox in either Now Playing or MusicInfoSCR. Version 2.30 or
@@ -81,6 +81,8 @@ a number of parameters for the TrackStat plugin in the plugins section of the sl
 You can take a backup of the ratings, play counts, last play time information to an xml-file using the buttons provided in 
 the plugins section of the slimserver settings web interface. This information can later be restored which makes this a suitable
 way to store backups of the information on an external media.
+
+If you want to make sure your statistic data survives filename changes you have to make sure your files contains musicbrainz id tags.
 
 At last you may also want to look at the SQLPlayList plugin provided at http://erland.homeip.net/download which makes it possible
 to create smart playlists using SQL queries. This can be used toghether with the TrackStat plugin to setup playlists such as:
