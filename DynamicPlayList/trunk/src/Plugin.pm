@@ -94,7 +94,7 @@ sub findAndAdd {
 # Add random tracks to playlist if necessary
 sub playRandom {
 	# If addOnly, then track(s) are appended to end.  Otherwise, a new playlist is created.
-	my ($client, $type, $addOnly, $showFeedback) = @_;
+	my ($client, $type, $addOnly, $showFeedback, $forcedAdd) = @_;
 
 	# disable this during the course of this function, since we don't want
 	# to retrigger on commands we send from here.
@@ -132,7 +132,7 @@ sub playRandom {
 			$numItems = $numRandomTracks;
 		} elsif ($songsRemaining < $numRandomTracks - 1) {
 			$numItems = $numRandomTracks - 1 - $songsRemaining;
-		} elsif( $addOnly ) {
+		} elsif( $addOnly && $forcedAdd ) {
 			# Add a single track if add button is pushed when the playlist is full
 			$numItems = 1;
 		} else {
@@ -279,7 +279,7 @@ sub handlePlayOrAdd {
 	$mixInfo{$client} = undef;
 
 	# Go go go!
-	playRandom($client, $item, $add, 1);
+	playRandom($client, $item, $add, 1, 1);
 }
 
 sub getPlayList {
@@ -422,7 +422,7 @@ sub commandCallback62 {
 			Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 		}
 
-		playRandom($client, $mixInfo{$client}->{'type'}, 1);
+		playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
 	} elsif (($slimCommand eq 'playlist') && exists $stopcommands{$paramsRef->[1]}) {
 
 		debugMsg("cyclic mode ending due to playlist: ".(join(' ', @$paramsRef))." command\n");
@@ -478,7 +478,7 @@ sub commandCallback65 {
 			}
 		}
 
-		playRandom($client, $mixInfo{$client}->{'type'}, 1);
+		playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
 	} elsif ($request->isCommand([['playlist'], [keys %stopcommands]])) {
 
 		debugMsg("cyclic mode ending due to playlist: ".($request->getRequestString())." command\n");
@@ -560,7 +560,7 @@ sub handleWebList {
 sub handleWebMix {
 	my ($client, $params) = @_;
 	if (defined $client && $params->{'type'}) {
-		playRandom($client, $params->{'type'}, $params->{'addOnly'});
+		playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1);
 	}
 	handleWebList($client, $params);
 }
