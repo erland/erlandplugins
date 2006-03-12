@@ -279,78 +279,9 @@ sub restoreTrack
 	my $playCount = $curTrack->{'playCount'};
 	my $lastPlayed = $curTrack->{'lastPlayed'};
 	my $rating   = $curTrack->{'rating'};
-	
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
 
-	return unless $track;
-
-	my $trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage($url, $mbId);
-	my $sql;
-	
-	if ($playCount) {
-		debugMsg("Marking as played in storage: $playCount\n");
-
-		my $key = $url;
-
-		$lastPlayed = '0' if (!(defined($lastPlayed)));
-
-		if($trackHandle) {
-			my $queryParameter = "url";
-			if (defined($mbId)) {
-			    $queryParameter = "musicbrainz_id";
-			    $key = $mbId;
-			}
-
-			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where $queryParameter = ?";
-		}else {
-			if (defined($mbId)) {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, '$mbId', $playCount, $lastPlayed)";
-			}else {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, NULL, $playCount, $lastPlayed)";
-			}
-		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $sth = $dbh->prepare( $sql );
-		eval {
-			$sth->bind_param(1, $key , SQL_VARCHAR);
-			$sth->execute();
-			$dbh->commit();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
-		}
-
-		$sth->finish();
-	}
-	
-	#Lookup again since the row can have been created above
-	$trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage( $url);
-	if ($rating && $rating ne "") {
-		debugMsg("Store rating: $rating\n");
-	    #ratings are 0-5 stars, 100 = 5 stars
-
-		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
-		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
-		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $sth = $dbh->prepare( $sql );
-		eval {
-			$sth->bind_param(1, $url , SQL_VARCHAR);
-			$sth->execute();
-			$dbh->commit();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
-		}
-		$sth->finish();
-	}
+	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$lastPlayed,$rating);	
 }
-
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg
 {

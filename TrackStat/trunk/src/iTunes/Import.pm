@@ -684,80 +684,11 @@ sub sendTrackToStorage()
 	my $url = shift;
 	my $attributes = shift;
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
-
-	return unless $track;
-
-	my $trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage($url);
-	my $sql;
-	
-
 	my $playCount = $attributes->{'PLAYCOUNT'};
 	my $lastPlayed = $attributes->{'LASTPLAYED'};
-	
-	if ($playCount) {
-		debugMsg("Marking as played in storage: $playCount\n");
-		if($trackHandle && (!$trackHandle->playCount || ($trackHandle->playCount && $trackHandle->playCount<$playCount))) {
-			if($trackHandle->lastPlayed && $trackHandle->lastPlayed>$lastPlayed) {
-				$lastPlayed = $trackHandle->lastPlayed;
-			}
-			if($lastPlayed) {
-				$sql = ("UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where url=?");
-			}else {
-				$sql = ("UPDATE track_statistics set playCount=$playCount where url=?");
-			}
-		}elsif($trackHandle) {
-			$sql = undef;
-		}else {
-			if($lastPlayed) {
-				$sql = ("INSERT INTO track_statistics (url,playCount,lastPlayed) values (?,$playCount,$lastPlayed)");
-			}else {
-				$sql = ("INSERT INTO track_statistics (url,playCount) values (?,$playCount)");
-			}
-		}
-		if($sql) {
-			my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-			my $sth = $dbh->prepare( $sql );
-			eval {
-				$sth->bind_param(1, $url , SQL_VARCHAR);
-				$sth->execute();
-				$dbh->commit();
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			    $dbh->rollback(); #just die if rollback is failing
-			}
-
-			$sth->finish();
-		}
-	}
-	
-	#Lookup again since the row can have been created above
-	$trackHandle = Plugins::TrackStat::Plugin::searchTrackInStorage( $url);
 	my $rating = $attributes->{'RATING'};
-	if ($rating && $rating ne "") {
-		debugMsg("Store rating: $rating\n");
-	    #ratings are 0-5 stars, 100 = 5 stars
-
-		if ($trackHandle) {
-			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
-		} else {
-			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
-		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
-		my $sth = $dbh->prepare( $sql );
-		eval {
-			$sth->bind_param(1, $url , SQL_VARCHAR);
-			$sth->execute();
-			$dbh->commit();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
-		}
-		$sth->finish();
-	}
+	
+	Plugins::TrackStat::Storage::mergeTrack($url,undef,$playCount,$lastPlayed,$rating);
 }
 
 # A wrapper to allow us to uniformly turn on & off debug messages
