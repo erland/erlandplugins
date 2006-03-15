@@ -145,13 +145,17 @@ sub saveRating {
 	if ($trackHandle) {
 		$sql = ("UPDATE track_statistics set rating=$rating where $queryAttribute = ? or url = ?");
 	} else {
-		$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
+		if(defined($mbId)) {
+			$sql = ("INSERT INTO track_statistics (musicbrainz_id,url,rating) values (?,?,$rating)");
+		}else {
+			$sql = ("INSERT INTO track_statistics (url,rating) values (?,$rating)");
+		}
 	}
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $searchString , SQL_VARCHAR);
-		if ($trackHandle) {
+		if ($trackHandle || defined(mbId)) {
 			$sth->bind_param(2, $url , SQL_VARCHAR);
 		}
 		$sth->execute();
