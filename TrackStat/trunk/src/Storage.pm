@@ -169,9 +169,9 @@ sub saveRating {
 	$sth->finish();
 }
 
-sub markedAsPlayed
+sub savePlayCountAndLastPlayed
 {
-	my ($url) = @_;
+	my ($url,$mbId,$playCount,$lastPlayed) = @_;
 
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($url);
@@ -180,25 +180,7 @@ sub markedAsPlayed
 	$url = $track->url;
 
 	debugMsg("Marking as played in storage\n");
-	my $playCount;
 
-	if($trackHandle && $trackHandle->playCount) {
-		$playCount = $trackHandle->playCount + 1;
-	}elsif($track->playCount){
-		$playCount = $track->playCount;
-	}else {
-		$playCount = 1;
-	}
-
-	my $lastPlayed = $track->lastPlayed;
-	if(!$lastPlayed) {
-		$lastPlayed = time();
-	}
-
-	my $mbId;
-	if ($trackHandle) {
-		$mbId = $trackHandle->mbId;
-	}
 	my $trackmbId = $track->musicbrainz_id;
 
 	my $key = $url;
