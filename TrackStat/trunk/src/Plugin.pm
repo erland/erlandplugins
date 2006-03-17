@@ -47,6 +47,8 @@ use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
 use Plugins::TrackStat::iTunes::Import;
+use Plugins::TrackStat::MusicMagic::Import;
+use Plugins::TrackStat::MusicMagic::Export;
 use Plugins::TrackStat::Backup::File;
 use Plugins::TrackStat::Storage;
 
@@ -82,6 +84,12 @@ my $TRACKSTAT_HOOK = 0;
 
 # Each client's playStatus structure. 
 my %playerStatusHash = ();
+
+# Plugins that supports ratings
+my %ratingPlugins = ();
+
+# Plugins that supports play count/last played time
+my %playCountPlugins = ();
 
 ##################################################
 ### SLIMP3 Plugin API                          ###
@@ -282,7 +290,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -404,12 +412,72 @@ sub setupGroup
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_replace_extension"); }
 		},
+	plugin_trackstat_musicmagic_enabled => {
+			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"); }
+		},		
+	plugin_trackstat_musicmagic_host => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"); }
+		},
+	plugin_trackstat_musicmagic_port => {
+			'validate' => \&Slim::Web::Setup::validateInt
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"); }
+		},
+	plugin_trackstat_musicmagic_library_music_path => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path"); }
+		},
+	plugin_trackstat_musicmagic_replace_extension => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_replace_extension"); }
+		},
+	plugin_trackstat_musicmagic_slimserver_replace_extension => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_slimserver_replace_extension"); }
+		},
 	plugin_trackstat_itunes_import => {
 			'validate' => \&Slim::Web::Setup::validateAcceptAll
 			,'onChange' => sub { importFromiTunes(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORTING')
 			,'ChangeButton' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_musicmagic_import => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { importFromMusicMagic(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_BUTTON')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
+	plugin_trackstat_musicmagic_export => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { exportToMusicMagic(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON')
 			,'dontSet' => 1
 			,'changeMsg' => ''
 		},
@@ -742,9 +810,48 @@ sub initPlugin
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_playlist_per_artist_length",10);
 		}
+		# disable music magic integration by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
+		}
+
+		# set default music magic port
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_port",Slim::Utils::Prefs::get('MMSport'));
+		}
+
+		# set default music magic host
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_host",Slim::Utils::Prefs::get('MMSHost'));
+		}
+
+		# disable music magic integration by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
+		}
+
 		installHook();
 		
 		Plugins::TrackStat::Storage::init();
+
+		no strict 'refs';
+		my @enabledplugins;
+		if ($::VERSION ge '6.5') {
+			@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+		}else {
+			@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+		}
+		for my $plugin (@enabledplugins) {
+			if(UNIVERSAL::can("Plugins::$plugin","setTrackStatRating")) {
+				debugMsg("Added rating support for $plugin\n");
+				$ratingPlugins{$plugin} = "Plugins::${plugin}::setTrackStatRating";
+			}
+			if(UNIVERSAL::can("Plugins::$plugin","setTrackStatStatistic")) {
+				debugMsg("Added play count support for $plugin\n");
+				$playCountPlugins{$plugin} = "Plugins::${plugin}::setTrackStatStatistic";
+			}
+		}
+		use strict 'refs';
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -790,6 +897,9 @@ sub shutdownPlugin {
 ##################################################
 
 struct TrackStatus => {
+
+	# Artist's name for current song
+	client => '$',
 
 	# Artist's name for current song
 	currentSongArtist => '$',
@@ -843,6 +953,8 @@ sub setPlayerStatusDefaults($$)
 	# Uses pass-by-reference
 	my $playerStatusToSetRef = shift;
 
+	# Client reference
+	$playerStatusToSetRef->client($client);
 	# Artist's name for current song
 	$playerStatusToSetRef->currentSongArtist("");
 
@@ -1359,7 +1471,7 @@ sub stopTimingSong($)
 		if (trackWasPlayedEnoughToCountAsAListen($playStatus, $totalElapsedTimeDuringPlay) )
 		{
 			#debugMsg("Track was played long enough to count as listen\n");
-			Plugins::TrackStat::Storage::markedAsPlayed($playStatus->currentTrackOriginalFilename);
+			markedAsPlayed($playStatus->client,$playStatus->currentTrackOriginalFilename);
 			# We could also log to history at this point as well...
 		}
 	} else {
@@ -1374,6 +1486,49 @@ sub stopTimingSong($)
 
 	$playStatus->isPaused("false");
 	$playStatus->isTiming("false");
+}
+
+sub markedAsPlayed {
+	my $client = shift;
+	my $url = shift;
+	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $track     = $ds->objectForUrl($url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+
+	my $playCount;
+	if($trackHandle && $trackHandle->playCount) {
+		$playCount = $trackHandle->playCount + 1;
+	}elsif($track->playCount){
+		$playCount = $track->playCount;
+	}else {
+		$playCount = 1;
+	}
+
+	my $lastPlayed = $track->lastPlayed;
+	if(!$lastPlayed) {
+		$lastPlayed = time();
+	}
+	my $mbId = undef;
+	my $rating = undef;
+	if ($trackHandle) {
+		$mbId = $trackHandle->mbId;
+		$rating = $trackHandle->rating;
+	}
+	 
+	Plugins::TrackStat::Storage::savePlayCountAndLastPlayed($url,$mbId,$playCount,$lastPlayed);
+	my %statistic = (
+		'url' => $url,
+		'playCount' => $playCount,
+		'lastPlayed' => $lastPlayed,
+		'rating' => $rating,
+		'mbId' => $mbId,
+	);
+	no strict 'refs';
+	for my $item (keys %playCountPlugins) {
+		debugMsg("Calling $item\n");
+		eval { &{$playCountPlugins{$item}}($client,$url,\%statistic) };
+	}
+	use strict 'refs';
 }
 
 # Debugging routine - shows current variable values for the given playStatus
@@ -1466,6 +1621,18 @@ sub rateSong($$$) {
 	debugMsg("Changing song rating to: $digit\n");
 	my $rating = $digit * 20;
 	Plugins::TrackStat::Storage::saveRating($url,undef,$rating);
+	no strict 'refs';
+	for my $item (keys %ratingPlugins) {
+		debugMsg("Calling $item\n");
+		eval { &{$ratingPlugins{$item}}($client,$url,$rating) };
+	}
+	use strict 'refs';
+	Slim::Music::Info::clearFormatDisplayCache();
+}
+
+sub setTrackStatRating {
+	my ($client,$url,$rating)=@_;
+	$rating = $rating / 20;
 	if ($::VERSION ge '6.5') {
 		my $ds = Slim::Music::Info::getCurrentDataStore();
 		my $track = $ds->objectForUrl($url);
@@ -1476,9 +1643,100 @@ sub rateSong($$$) {
 			$ds->forceCommit();
 		};
 	}
-	Slim::Music::Info::clearFormatDisplayCache();
+
+	$url = getMusicMagicURL($url);
+	
+	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
+	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+	my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
+	debugMsg("Calling: $musicmagicurl\n");
+	my $http = Slim::Player::Protocols::HTTP->new({
+        'url'    => "$musicmagicurl",
+        'create' => 0,
+    });
+    if(defined($http)) {
+    	my $result = $http->content;
+    	chomp $result;
+    	if($result eq "1") {
+			debugMsg("Success setting Music Magic rating\n");
+		}else {
+			debugMsg("Error setting Music Magic rating, error code = $result\n");
+		}
+    	$http->close();
+    }else {
+		debugMsg("Failure setting Music Magic rating\n");
+    }
 }
 
+sub setTrackStatStatistic {
+	my ($client,$url,$statistic)=@_;
+	
+	my $playCount = $statistic->{'playCount'};
+	my $lastPlayed = $statistic->{'lastPlayed'};	
+	$url = getMusicMagicURL($url);
+	
+	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
+	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+	my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
+	debugMsg("Calling: $musicmagicurl\n");
+	my $http = Slim::Player::Protocols::HTTP->new({
+        'url'    => "$musicmagicurl",
+        'create' => 0,
+    });
+    if(defined($http)) {
+    	my $result = $http->content;
+    	chomp $result;
+    	if($result eq "1") {
+			debugMsg("Success setting Music Magic play count\n");
+		}else {
+			debugMsg("Error setting Music Magic play count, error code = $result\n");
+		}
+    	$http->close();
+    }else {
+		debugMsg("Failure setting Music Magic play count\n");
+    }
+
+	$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
+	debugMsg("Calling: $musicmagicurl\n");
+	$http = Slim::Player::Protocols::HTTP->new({
+        'url'    => "$musicmagicurl",
+        'create' => 0,
+    });
+    if(defined($http)) {
+    	my $result = $http->content;
+    	chomp $result;
+    	if($result eq "1") {
+			debugMsg("Success setting Music Magic last played\n");
+		}else {
+			debugMsg("Error setting Music Magic last played, error code = $result\n");
+		}
+    	$http->close();
+    }else {
+		debugMsg("Failure setting Music Magic last played\n");
+    }
+}
+	
+sub getMusicMagicURL {
+	my $url = shift;
+	my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
+	if(defined(!$replacePath) && $replacePath ne '') {
+		$replacePath = escape($replacePath);
+		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
+		$url =~ s/$nativeUrl/$replacePath/isg;
+	}else {
+		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
+		$url =~ s/$nativeUrl/$nativeRoot/isg;
+	}
+
+	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_musicmagic_replace_extension');;
+	if($replaceExtension) {
+		$url =~ s/\.[^.]*$/$replaceExtension/isg;
+	}
+	$url =~ s/\\/\//isg;
+	return $url;
+}	
 my %musicInfoSCRItems = (
 	'TRACKSTAT_RATING_DYNAMIC' => 'TRACKSTAT_RATING_DYNAMIC',
 	'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC' => 'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC',
@@ -1562,7 +1820,17 @@ sub getRatingNumberCustomItem
 
 sub importFromiTunes()
 {
-	Plugins::TrackStat::iTunes::Import::startScan();
+	Plugins::TrackStat::iTunes::Import::startImport();
+}
+
+sub importFromMusicMagic()
+{
+	Plugins::TrackStat::MusicMagic::Import::startImport();
+}
+
+sub exportToMusicMagic()
+{
+	Plugins::TrackStat::MusicMagic::Export::startExport();
 }
 
 sub backupToFile() 
@@ -1708,6 +1976,9 @@ sub getNextDynamicPlayListTracks {
 	return \@result;
 }
 
+# other people call us externally.
+*escape   = \&URI::Escape::uri_escape_utf8;
+
 sub strings() 
 { 
 	return <<EOF
@@ -1795,6 +2066,84 @@ SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
 SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION_DESC
 	EN	The file extensions of the music files i imported from iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
 	
+PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
+	EN	Enable Music Magic integration
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
+	EN	Music Magic Integration
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED_DESC
+	EN	Enable ratings, play counts and last played time to be sent to Music Magic
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
+	EN	Hostname
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
+	EN	Music Magic server hostname
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST_DESC
+	EN	Hostname of Music Magic server, default is localhost
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
+	EN	Port
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
+	EN	Music Magic server port
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT_DESC
+	EN	Port on Music Magic server, default is 10002
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY
+	EN	Music directory
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH
+	EN	Music Magic music path
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH_DESC
+	EN	The begining of the paths of the music will be replaced with this path when calling Music Magic for setting ratings and play counts. This makes it possible to have the music in a different directory in Music Magic compared to the directory where the music is accessible on the slimserver computer.
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
+	EN	File extension to use when calling Music Magic
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
+	EN	Music Magic export extension
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION_DESC
+	EN	The file extensions of to use when sending ratings and play counts to Music Magic, this is the extension used for files in Music Magic. This makes it possible to have .mp3 files in Music Magic and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with Music Magic.
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
+	EN	File extension to use when importing from Music Magic
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
+	EN	Music Magic import extension
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION_DESC
+	EN	The file extensions of to use when importing tracks from Music Magic, this is the extension used for files in slimserver. This makes it possible to have .mp3 files in Music Magic and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with Music Magic.
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING
+	EN	Importing from Music Magic...
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_BUTTON
+	EN	Import from Music Magic
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT
+	EN	Music Magic import
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_DESC
+	EN	Import information from the specified Music Magic server. This means that any existing rating, play counts or last played information in Music Magic will overwrite any existing information. 
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING
+	EN	Exporting to Music Magic...
+
+PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON
+	EN	Export to Music Magic
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT
+	EN	Music Magic export
+
+SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_DESC
+	EN	Export information from TrackStat to the specified Music Magic server. This means that any existing rating, play counts or last played information in TrackStat will overwrite any existing information in Music Magic. Note that an export to Music Magic might take some time.
+
 PLUGIN_TRACKSTAT_BACKUP_FILE
 	EN	Backup file
 
