@@ -69,7 +69,7 @@ sub startExport {
 		while( $sth->fetch() ) {
 			my $track = TrackExportInfo->new();
 			$track->url($url);
-			$track->rating($rating);
+			$track->rating($rating/20);
 			$track->playCount($playCount);
 			$track->lastPlayed($lastPlayed);
 			push @songs, $track;
