@@ -189,6 +189,7 @@ sub handleTrack {
 	    });
 	    if(defined($http)) {
 	    	my $result = $http->content;
+	    	$http->close();
 	    	chomp $result;
 	    	
 	    	if($result && $result>0) {
@@ -204,6 +205,7 @@ sub handleTrack {
 	    });
 	    if(defined($http)) {
 	    	my $result = $http->content;
+	    	$http->close();
 	    	chomp $result;
 	    	
 	    	if($result && $result>0) {
@@ -219,6 +221,7 @@ sub handleTrack {
 	    });
 	    if(defined($http)) {
 	    	my $result = $http->content;
+	    	$http->close();
 	    	chomp $result;
 	    	
 	    	if($result && $result>0) {
