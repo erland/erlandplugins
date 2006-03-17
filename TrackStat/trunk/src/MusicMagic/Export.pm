@@ -182,7 +182,7 @@ sub handleTrack {
 	$url =~ s/\\/\//isg;
 	
 	if($rating && $rating>0) {
-		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url";
+		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
 		my $http = Slim::Player::Protocols::HTTP->new({
 	        'url'    => "$musicmagicurl",
 	        'create' => 0,
