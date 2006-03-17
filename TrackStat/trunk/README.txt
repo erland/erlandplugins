@@ -110,3 +110,41 @@ If you want to view the rating in web interface, MusicInfoSCR or Now Playing scr
 
 4. If you want to show the ratings in the track listings in the web user interface goto the server settings section for formatting and
    select one of the title formats that contains rating information.
+
+6. PLUGIN DEVELOPERS
+====================
+TrackStat has a plugin interface for other plugin developers making it possible to attach your plugin to TrackStat so
+it will get information about changed ratings, play counts and last played time. To do this you will need to implement
+one or both of the following methods in your plugin. The method implementations below is just sample methods to show the
+usage.
+
+
+# This method will be called each time a rating value in TrackStat is changed by the user
+# url = The url of the track on which the rating is changed
+# rating = The new rating, a value between 0 - 100
+sub setTrackStatRating {
+	my ($client, $url, $rating) = @_;
+
+	#
+	# Call your own methods and do some interesting stuff here
+	#
+}
+
+
+# This method will be called at the end of each played song
+# url = The url of the track
+# 
+sub setTrackStatStatistic {
+	my ($client,$url,$statistic)=@_;
+	
+	my $playCount = $statistic->{'playCount'};
+	my $lastPlayed = $statistic->{'lastPlayed'};	
+	my $musicbrainz_id = $statistic->{'mbId'};
+	my $rating = $statistic->{'rating'};
+
+	#
+	# Call your own methods and do some interesting stuff here
+	#
+}
+
+
