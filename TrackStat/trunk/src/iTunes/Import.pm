@@ -102,7 +102,7 @@ sub isMusicLibraryFileChanged {
 	# just starting, lastITunesMusicLibraryDate is undef, so both $fileMTime
 	# will be greater than 0 and time()-0 will be greater than 180 :-)
 	if ($file && $fileMTime > $lastITunesMusicLibraryDate) {
-		debugMsg("iTunes: music library has changed: %s\n", scalar localtime($lastITunesMusicLibraryDate));
+		debugMsg("music library has changed: %s\n", scalar localtime($lastITunesMusicLibraryDate));
 		
 		return 1 if (!$lastMusicLibraryFinishTime);
 
@@ -112,7 +112,7 @@ sub isMusicLibraryFileChanged {
 	return 0;
 }
 
-sub startScan {
+sub startImport {
 	$iTunesLibraryFile = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_file');;
 	$replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_itunes_replace_extension');;
 
@@ -122,7 +122,7 @@ sub startScan {
 		
 	my $file = findMusicLibraryFile();
 
-	debugMsg("iTunes: startScan on file: $file\n");
+	debugMsg("startScan on file: $file\n");
 
 	if (!defined($file)) {
 		warn "Trying to scan an iTunes file that doesn't exist.";
@@ -154,7 +154,7 @@ sub stopScan {
 
 	if (stillScanning()) {
 
-		debugMsg("iTunes: Was stillScanning - stopping old scan.\n");
+		debugMsg("Was stillScanning - stopping old scan.\n");
 
 		Slim::Utils::Scheduler::remove_task(\&scanFunction);
 		$isScanning = 0;
@@ -172,7 +172,7 @@ sub stillScanning {
 }
 
 sub doneScanning {
-	debugMsg("iTunes: done Scanning: unlocking and closing\n");
+	debugMsg("done Scanning: unlocking and closing\n");
 
 	if (defined $iTunesParserNB) {
 
@@ -198,7 +198,7 @@ sub doneScanning {
 
 	$lastITunesMusicLibraryDate = $mtime;
 
-	msg("TrackStat:iTunes: Scan completed in".(time() - $iTunesScanStartTime)."seconds.\n");
+	msg("TrackStat:iTunes: Import completed in ".(time() - $iTunesScanStartTime)." seconds.\n");
 
 	Slim::Utils::Prefs::set('plugin_trackstat_lastITunesMusicLibraryDate', $lastITunesMusicLibraryDate);
 
@@ -210,7 +210,7 @@ sub scanFunction {
 	# this assumes that iTunes uses file locking when writing the xml file out.
 	if (!$opened) {
 
-		debugMsg("iTunes: opening iTunes Library XML file.\n");
+		debugMsg("opening iTunes Library XML file.\n");
 
 		open(ITUNESLIBRARY, $iTunesLibraryFile) || do {
 			$::d_itunes && warn "iTunes: Couldn't open iTunes Library: $iTunesLibraryFile";
@@ -226,26 +226,26 @@ sub scanFunction {
 
 	if ($opened && !$locked) {
 
-		debugMsg("iTunes: Attempting to get lock on iTunes Library XML file.\n");
+		debugMsg("Attempting to get lock on iTunes Library XML file.\n");
 
 		$locked = 1;
 		$locked = flock(ITUNESLIBRARY, LOCK_SH | LOCK_NB) unless ($^O eq 'MSWin32'); 
 
 		if ($locked) {
 
-			debugMsg("iTunes: Got file lock on iTunes Library\n");
+			debugMsg("Got file lock on iTunes Library\n");
 
 			$locked = 1;
 
 			if (defined $iTunesParser) {
 
-				debugMsg("iTunes: Created a new Non-blocking XML parser.\n");
+				debugMsg("Created a new Non-blocking XML parser.\n");
 
 				$iTunesParserNB = $iTunesParser->parse_start();
 
 			} else {
 
-				debugMsg("iTunes: No iTunesParser was defined!\n");
+				debugMsg("No iTunesParser was defined!\n");
 			}
 
 		} else {
@@ -258,7 +258,7 @@ sub scanFunction {
 	# parse a little more from the stream.
 	if (defined $iTunesParserNB) {
 
-		debugMsg("iTunes: Parsing next bit of XML..\n");
+		debugMsg("Parsing next bit of XML..\n");
 
 		local $/ = '</dict>';
 		my $line;
@@ -274,7 +274,7 @@ sub scanFunction {
 		return 1;
 	}
 
-	debugMsg("iTunes: No iTunesParserNB defined!\n");
+	debugMsg("No iTunesParserNB defined!\n");
 
 	return 0;
 }
@@ -355,7 +355,7 @@ sub handleTrack {
 
 		# Reuse the stat from above.
 		if (!$file || !-r _) { 
-			debugMsg("iTunes: file not found: $file\n");
+			debugMsg("file not found: $file\n");
 
 			# Tell the database to cleanup.
 			#$ds->markEntryAsInvalid($url);
@@ -369,7 +369,7 @@ sub handleTrack {
 	# skip track if Disabled in iTunes
 	if ($curTrack->{'Disabled'} && !Slim::Utils::Prefs::get('plugin_trackstat_ignoredisableditunestracks')) {
 
-		debugMsg("iTunes: deleting disabled track $url\n");
+		debugMsg("deleting disabled track $url\n");
 
 		#$ds->markEntryAsInvalid($url);
 
@@ -379,7 +379,7 @@ sub handleTrack {
 		return 1;
 	}
 
-	debugMsg("iTunes: got a track named " . $curTrack->{'Name'} . " location: $url\n");
+	debugMsg("got a track named " . $curTrack->{'Name'} . " location: $url\n");
 
 	if ($filetype) {
 
@@ -451,7 +451,7 @@ sub handleTrack {
 		sendTrackToStorage($url,\%cacheEntry);
 	} else {
 
-		debugMsg("iTunes: unknown file type " . ($curTrack->{'Kind'} || '') . " " . ($url || 'Unknown URL') . "\n");
+		debugMsg("unknown file type " . ($curTrack->{'Kind'} || '') . " " . ($url || 'Unknown URL') . "\n");
 
 	}
 }
@@ -501,7 +501,7 @@ sub handleCharElement {
 		#$iBase = Slim::Utils::Misc::pathFromFileURL($iBase);
 		$iBase = strip_automounter($value);
 		
-		debugMsg("iTunes: found the music folder: $iBase\n");
+		debugMsg("found the music folder: $iBase\n");
 
 		return;
 	}
@@ -547,7 +547,7 @@ sub handleEndElement {
 
 		if ($currentKey eq 'Tracks') {
 
-			debugMsg("iTunes: starting track parsing\n");
+			debugMsg("starting track parsing\n");
 
 			$inTracks = 1;
 		}
@@ -556,7 +556,7 @@ sub handleEndElement {
 
 			#Slim::Music::Info::clearPlaylists('itunesplaylist:');
 
-			debugMsg("iTunes: starting playlist parsing, cleared old playlists\n");
+			debugMsg("starting playlist parsing, cleared old playlists\n");
 
 			$inTracks = 0;
 			$inPlaylists = 1;
@@ -585,7 +585,7 @@ sub handleEndElement {
 
 	# Finish up
 	if ($element eq 'plist') {
-		debugMsg("iTunes: Finished scanning iTunes XML\n");
+		debugMsg("Finished scanning iTunes XML\n");
 
 		doneScanning();
 
@@ -595,7 +595,7 @@ sub handleEndElement {
 
 sub resetScanState {
 
-	debugMsg("iTunes: Resetting scan state.\n");
+	debugMsg("Resetting scan state.\n");
 
 	$inPlaylists = 0;
 	$inTracks = 0;
@@ -639,7 +639,7 @@ sub normalize_location {
 	}
 
 	$url =~ s/file:\/\/localhost\//file:\/\/\//;
-	debugMsg("iTunes: normalized $location to $url\n");
+	debugMsg("normalized $location to $url\n");
 
 	return $url;
 }
