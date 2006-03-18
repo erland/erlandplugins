@@ -1670,6 +1670,25 @@ sub setTrackStatRating {
     }
 }
 
+sub gotViaHTTP {
+	my $http  = shift;
+	my $params = $http->params;
+	my $result = $http->content;
+	chomp $result;
+	if($result eq "1") {
+		debugMsg("Success setting Music Magic ".$params->{'command'}."\n");
+	}else {
+		debugMsg("Error setting Music Magic ".$params->{'command'}.", error code = $result\n");
+	}
+	$http->close();
+}
+
+sub gotErrorViaHTTP {
+	my $http  = shift;
+	my $params = $http->params;
+	debugMsg("Failure setting Music Magic ".$params->{'command'}."\n");
+}
+
 sub setTrackStatStatistic {
 	my ($client,$url,$statistic)=@_;
 	
@@ -1681,41 +1700,12 @@ sub setTrackStatStatistic {
 	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
 	my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
 	debugMsg("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
-    if(defined($http)) {
-    	my $result = $http->content;
-    	chomp $result;
-    	if($result eq "1") {
-			debugMsg("Success setting Music Magic play count\n");
-		}else {
-			debugMsg("Error setting Music Magic play count, error code = $result\n");
-		}
-    	$http->close();
-    }else {
-		debugMsg("Failure setting Music Magic play count\n");
-    }
-
+	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
+	$http->get($musicmagicurl);
 	$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
 	debugMsg("Calling: $musicmagicurl\n");
-	$http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
-    if(defined($http)) {
-    	my $result = $http->content;
-    	chomp $result;
-    	if($result eq "1") {
-			debugMsg("Success setting Music Magic last played\n");
-		}else {
-			debugMsg("Error setting Music Magic last played, error code = $result\n");
-		}
-    	$http->close();
-    }else {
-		debugMsg("Failure setting Music Magic last played\n");
-    }
+	$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
+	$http->get($musicmagicurl);
 }
 	
 sub getMusicMagicURL {
