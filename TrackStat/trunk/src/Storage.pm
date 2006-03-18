@@ -398,12 +398,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
+		$dbh->commit();
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	}
 
-	$dbh->commit();
 	$sth->finish();
 	$sthupdate->finish();
 	debugMsg("Finished updating urls in statistic data based on musicbrainz ids, updated $count items\n");
@@ -427,12 +427,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
+		$dbh->commit();
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	}
 
-	$dbh->commit();
 	$sth->finish();
 	$sthupdate->finish();
 	debugMsg("Finished updating musicbrainz id's in statistic data based on urls, updated $count items\n");
@@ -457,12 +457,12 @@ sub refreshTracks
 				};
 				$count++;
 			}
+			$dbh->commit();
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		}
 
-		$dbh->commit();
 		$sth->finish();
 		debugMsg("Finished updating ratings in standard slimserver database based on urls, updated $count items\n");
 	}
@@ -493,12 +493,12 @@ sub purgeTracks {
 			$sthupdate->execute();
 			$count++;
 		}
+		$dbh->commit();
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	}
 
-	$dbh->commit();
 	$sth->finish();
 	$sthupdate->finish();
 	debugMsg("Finished removing statistic data which no longer exists, removed $count items\n");
@@ -509,8 +509,10 @@ sub deleteAllTracks()
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( "delete from track_statistics" );
 	
-	$sth->execute();
-	$dbh->commit();
+	eval {
+		$sth->execute();
+		$dbh->commit();
+	};
 
 	$sth->finish();
 	msg("TrackStat: Clear all data finished at: ".time()."\n");
