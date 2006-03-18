@@ -1466,6 +1466,8 @@ sub stopTimingSong($)
 		my $totalElapsedTimeDuringPlay = $playStatus->currentSongStopwatch()->getElapsedTime();
 		debugMsg("Stopping timing ",$playStatus->currentTrackOriginalFilename,"\n");
 		debugMsg("Total elapsed time in seconds: $totalElapsedTimeDuringPlay \n");
+		# We wan't to stop timing here since there is a risk that we will get a recursion loop else
+		$playStatus->isTiming("false");
 
 		# If the track was played long enough to count as a listen..
 		if (trackWasPlayedEnoughToCountAsAListen($playStatus, $totalElapsedTimeDuringPlay) )
