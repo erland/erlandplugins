@@ -244,13 +244,13 @@ sub getTrackInfo {
 				if ($trackHandle) {
 						if($trackHandle->playCount) {
 							$playedCount = $trackHandle->playCount;
-						}elsif($track->playCount){
-							$playedCount = $track->playCount;
+						}elsif(getPlayCount($track)>0){
+							$playedCount = getPlayCount($track);
 						}
 						if($trackHandle->lastPlayed) {
 							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $trackHandle->lastPlayed);
-						}elsif($track->lastPlayed) {
-							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
+						}elsif(getLastPlayed($track)) {
+							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime getLastPlayed($track));
 						}
 						if($trackHandle->rating) {
 							$rating = $trackHandle->rating;
@@ -260,9 +260,9 @@ sub getTrackInfo {
 						}
 				}else {
 					if($track) {
-						$playedCount = $track->playCount;
-						if($track->lastPlayed) {
-							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $track->lastPlayed);
+						$playedCount = getPlayCount($track);
+						if(getLastPlayed($track)) {
+							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime getLastPlayed($track));
 						}
 					}
 				}
@@ -774,6 +774,23 @@ sub handleWebLeastPlayedArtists {
 	$params->{'songlist'} = 'LEASTPLAYEDARTISTS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+sub getPlayCount {
+	my $track = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '6550') {
+		return $track->playcount;
+	}else {
+		return $track->playCount;
+	}
+}
+
+sub getLastPlayed {
+	my $track = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '6550') {
+		return $track->lastplayed;
+	}else {
+		return $track->lastPlayed;
+	}
 }
 
 sub initPlugin
@@ -1500,13 +1517,13 @@ sub markedAsPlayed {
 	my $playCount;
 	if($trackHandle && $trackHandle->playCount) {
 		$playCount = $trackHandle->playCount + 1;
-	}elsif($track->playCount){
-		$playCount = $track->playCount;
+	}elsif(getPlayCount($track)>0){
+		$playCount = getPlayCount($track);
 	}else {
 		$playCount = 1;
 	}
 
-	my $lastPlayed = $track->lastPlayed;
+	my $lastPlayed = getLastPlayed($track);
 	if(!$lastPlayed) {
 		$lastPlayed = time();
 	}
