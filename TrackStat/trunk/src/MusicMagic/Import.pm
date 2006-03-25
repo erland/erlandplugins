@@ -65,12 +65,14 @@ sub isMusicLibraryFileChanged {
 		# just starting, lastMusicMagicDate is undef, so both $fileMTime
 		# will be greater than 0 and time()-0 will be greater than 180 :-)
 		if ($modificationTime > $lastMusicMagicDate) {
-			debugMsg("music library has changed: %s\n", scalar localtime($lastMusicMagicDate));
+			debugMsg("music library has changed: ".scalar localtime($lastMusicMagicDate)."\n");
 			
 			return 1 if (!$lastMusicMagicFinishTime);
 
 			return 1;
 		}
+	}else {
+		msg("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 	return 0;
 }
@@ -88,21 +90,32 @@ sub startImport {
 	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
 	my $musicmagicurl = "http://$hostname:$port/api/songs?extended";
 	debugMsg("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
+	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'songs' });
+	stopScan();
+	$MusicMagicScanStartTime = time();
+	$http->get($musicmagicurl);
 
-    if(defined($http)) {
-		stopScan();
-		@songs = split(/\n\n/, $http->content);
-		$http->close();
+}
 
-		$isScanning = 1;
-		$MusicMagicScanStartTime = time();
+sub gotErrorViaHTTP {
+	my $http  = shift;
+	my $params = $http->params;
+	msg("Failure answer from Music Magic ".$params->{'command'}."\n");
+}
 
-		Slim::Utils::Scheduler::add_task(\&scanFunction);
-	}
+sub gotViaHTTP {
+	my $http  = shift;
+	my $params = $http->params;
+
+	debugMsg("Got answer from Music Magic:".$params->{'command'}." in ".(time() - $MusicMagicScanStartTime)." seconds\n");
+
+	@songs = split(/\n\n/, $http->content);
+	debugMsg("Got ".scalar(@songs)." number of songs\n");
+	$http->close();
+
+	$isScanning = 1;
+
+	Slim::Utils::Scheduler::add_task(\&scanFunction);
 }
 
 sub stopScan {
@@ -142,6 +155,8 @@ sub doneScanning {
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
+	}else {
+		msg("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 
 	msg("TrackStat:MusicMagic: Import completed in ".(time() - $MusicMagicScanStartTime)." seconds.\n");
@@ -173,7 +188,7 @@ sub scanFunction {
 
 sub handleTrack {
 	my $trackData = shift;
-	
+	debugMsg("Start handling next track\n");
 	my @rows = split(/\n/, $trackData);
 	
 	my $url;
@@ -202,6 +217,28 @@ sub handleTrack {
 		}
 	}
 	
+	debugMsg("Handling track: $url\n");
+	my $debugString = undef;
+	if($rating) {
+		$debugString.="Got: ";
+		$debugString.=", Rating: $rating";
+	}
+	if($playCount) {
+		if(!$debugString) {
+			$debugString.="Got: ";
+		}
+		$debugString.=", PlayCount: $playCount";
+	}
+	if($lastPlayed) {
+		if(!$debugString) {
+			$debugString.="Got: ";
+		}
+		$debugString.=", LastPlayed: $lastPlayed";
+	}
+	if($debugString) {
+		debugMsg($debugString."\n");
+	}
+
 	if($url && ($playCount || $rating)) {
 		my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
 		if(defined(!$replacePath) && $replacePath ne '') {
