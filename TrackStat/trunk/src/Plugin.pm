@@ -392,7 +392,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_itunes_library_file => {
-			'validate' => \&Slim::Web::Setup::validateIsFile
+			'validate' => \&validateIsFileOrEmpty
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
 			,'rejectMsg' => string('SETUP_BAD_FILE')
@@ -400,7 +400,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_file"); }
 		},
 	plugin_trackstat_itunes_library_music_path => {
-			'validate' => \&Slim::Web::Setup::validateIsDir
+			'validate' => \&validateIsDirOrEmpty
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
 			,'PrefSize' => 'large'
@@ -1985,6 +1985,24 @@ sub getNextDynamicPlayListTracks {
 	return \@result;
 }
 
+sub validateIsDirOrEmpty {
+	my $arg = shift;
+	if(!$arg || $arg eq '') {
+		return $arg;
+	}else {
+		return Slim::Web::Setup::validateIsDir($arg);
+	}
+}
+
+sub validateIsFileOrEmpty {
+	my $arg = shift;
+	if(!$arg || $arg eq '') {
+		return $arg;
+	}else {
+		return Slim::Web::Setup::validateIsFile($arg);
+	}
+}
+
 # other people call us externally.
 *escape   = \&URI::Escape::uri_escape_utf8;
 
@@ -2109,7 +2127,7 @@ SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH
 	EN	Music Magic music path
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH_DESC
-	EN	The begining of the paths of the music will be replaced with this path when calling Music Magic for setting ratings and play counts. This makes it possible to have the music in a different directory in Music Magic compared to the directory where the music is accessible on the slimserver computer.
+	EN	The begining of the paths of the music will be replaced with this path when calling Music Magic for setting ratings and play counts. This makes it possible to have the music in a different directory in Music Magic compared to the directory where the music is accessible on the slimserver computer. During import/export this path will also be used to convert slimserver paths to Music Magic paths.
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
 	EN	File extension to use when calling Music Magic
