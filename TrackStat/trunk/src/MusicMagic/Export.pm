@@ -124,6 +124,8 @@ sub doneScanning {
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
+	}else {
+		msg("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 
 	msg("TrackStat:MusicMagic: Export completed in ".(time() - $MusicMagicScanStartTime)." seconds.\n");
@@ -198,7 +200,11 @@ sub handleTrack {
 	    	
 	    	if($result && $result>0) {
 	    		debugMsg("Set Rating=$rating for $url\n");
+	    	}else {
+	    		debugMsg("Failure setting Rating=$rating for $url\n");
 	    	}
+		}else {
+			msg("Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 	if($playCount) {
@@ -214,8 +220,12 @@ sub handleTrack {
 	    	
 	    	if($result && $result>0) {
 	    		debugMsg("Set PlayCount=$playCount for $url\n");
+	    	}else {
+	    		debugMsg("Failure setting PlayCount=$playCount for $url\n");
 	    	}
-	    }
+		}else {
+			msg("Failed to call MusicMagic at: $musicmagicurl\n");
+		}
 	}
 	if($lastPlayed) {
 		my $musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
@@ -230,8 +240,12 @@ sub handleTrack {
 	    	
 	    	if($result && $result>0) {
 	    		debugMsg("Set LastPlayed=$lastPlayed for $url\n");
+	    	}else {
+	    		debugMsg("Failure setting LastPlayed=$lastPlayed for $url\n");
 	    	}
-	    }
+		}else {
+			msg("Failed to call MusicMagic at: $musicmagicurl\n");
+		}
 	}
 }
 
