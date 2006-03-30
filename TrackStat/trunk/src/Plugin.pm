@@ -82,6 +82,9 @@ my $TRACKSTAT_TIME_PLAY_THRESHOLD = 1800;
 # 1= Yes
 my $TRACKSTAT_HOOK = 0;
 
+my $RATING_CHARACTER = ' *';
+my $NO_RATING_CHARACTER = '  ';
+	
 # Each client's playStatus structure. 
 my %playerStatusHash = ();
 
@@ -191,7 +194,7 @@ my %functions = (
         	debugMsg("saveRating: $client, $songKey, $digit\n");
 			Slim::Display::Animation::showBriefly( $client,
 				$client->string( 'PLUGIN_TRACKSTAT'),
-				$client->string( 'PLUGIN_TRACKSTAT_RATING').(' *' x $digit),
+				$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
 				3);
 			rateSong($client,$songKey,$digit);
 		}else {
@@ -213,7 +216,7 @@ sub lines()
 		if ($playStatus->trackAlreadyLoaded() eq 'true') {
 			my @items = (
 			$client->string('PLUGIN_TRACKSTAT_RATING')
-				.($playStatus->currentSongRating()?' *' x $playStatus->currentSongRating():''),
+				.($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():''),
 			,$client->string('PLUGIN_TRACKSTAT_LAST_PLAYED')
 				.' '.($playStatus->lastPlayed()?$playStatus->lastPlayed():''),
 			,$client->string('PLUGIN_TRACKSTAT_PLAY_COUNT')
@@ -290,7 +293,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -480,6 +483,13 @@ sub setupGroup
 			,'ChangeButton' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON')
 			,'dontSet' => 1
 			,'changeMsg' => ''
+		},
+	plugin_trackstat_ratingchar => {
+			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			,'onChange' => sub { initRatingChar(); }
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATINGCHAR')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATINGCHAR')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_ratingchar"); }
 		},
 	);
 	return (\%setupGroup,\%setupPrefs);
@@ -793,6 +803,19 @@ sub getLastPlayed {
 	}
 }
 
+sub initRatingChar {
+	# set rating character
+	if (defined(Slim::Utils::Prefs::get("plugin_trackstat_ratingchar"))) {
+		my $str = Slim::Utils::Prefs::get("plugin_trackstat_ratingchar");
+		if($str ne '') {
+			$RATING_CHARACTER = $str;
+			$NO_RATING_CHARACTER = ' ' x length($RATING_CHARACTER);
+		}
+	}else {
+		Slim::Utils::Prefs::set("plugin_trackstat_ratingchar",$RATING_CHARACTER);
+	}
+}
+
 sub initPlugin
 {
     debugMsg("initialising\n");
@@ -847,6 +870,8 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
 		}
 
+		initRatingChar();
+		
 		installHook();
 		
 		Plugins::TrackStat::Storage::init();
@@ -875,6 +900,7 @@ sub initPlugin
 	addTitleFormat('PLAYING (X_OF_Y) (TRACKSTATRATINGSTATIC)');
 	addTitleFormat('PLAYING (X_OF_Y) TRACKSTATRATINGSTATIC');
 	addTitleFormat('TRACKSTATRATINGNUMBER');
+
 
 	if ($::VERSION ge '6.5') {
 		
@@ -1744,6 +1770,8 @@ sub getMusicMagicURL {
 		$url =~ s/\.[^.]*$/$replaceExtension/isg;
 	}
 	$url =~ s/\\/\//isg;
+	$url = unescape($url);
+	$url = URI::Escape::uri_escape($url);
 	return $url;
 }	
 my %musicInfoSCRItems = (
@@ -1765,17 +1793,17 @@ sub getMusicInfoSCRCustomItem()
     my $formattedString  = shift;
 	if ($formattedString =~ /TRACKSTAT_RATING_STATIC/) {
 		my $playStatus = getTrackInfo($client);
-		my $string = '  ' x 5;
+		my $string = $NO_RATING_CHARACTER x 5;
 		if($playStatus->currentSongRating()) {
-			$string = ($playStatus->currentSongRating()?' *' x $playStatus->currentSongRating():'');
+			$string = ($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():'');
 			my $left = 5 - $playStatus->currentSongRating();
-			$string = $string . ('  ' x $left);
+			$string = $string . ($NO_RATING_CHARACTER x $left);
 		}
 		$formattedString =~ s/TRACKSTAT_RATING_STATIC/$string/g;
 	}
 	if ($formattedString =~ /TRACKSTAT_RATING_DYNAMIC/) {
 		my $playStatus = getTrackInfo($client);
-		my $string = ($playStatus->currentSongRating()?' *' x $playStatus->currentSongRating():'');
+		my $string = ($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():'');
 		$formattedString =~ s/TRACKSTAT_RATING_DYNAMIC/$string/g;
 	}
 	if ($formattedString =~ /TRACKSTAT_RATING_NUMBER/) {
@@ -1793,7 +1821,7 @@ sub getRatingDynamicCustomItem
 	my $string = '';
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
-		$string = ($rating?' *' x $rating:'');
+		$string = ($rating?$RATING_CHARACTER x $rating:'');
 	}
 	return $string;
 }
@@ -1802,14 +1830,14 @@ sub getRatingStaticCustomItem
 {
 	my $track = shift;
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
-	my $string = '  ' x 5;
+	my $string = $NO_RATING_CHARACTER x 5;
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		debugMsg("rating = $rating\n");
 		if($rating) {
-			$string = ($rating?' *' x $rating:'');
+			$string = ($rating?$RATING_CHARACTER x $rating:'');
 			my $left = 5 - $rating;
-			$string = $string . ('  ' x $left);
+			$string = $string . ($NO_RATING_CHARACTER x $left);
 		}
 	}
 	return $string;
@@ -2006,6 +2034,19 @@ sub validateIsFileOrEmpty {
 # other people call us externally.
 *escape   = \&URI::Escape::uri_escape_utf8;
 
+# don't use the external one because it doesn't know about the difference
+# between a param and not...
+#*unescape = \&URI::Escape::unescape;
+sub unescape {
+        my $in      = shift;
+        my $isParam = shift;
+
+        $in =~ s/\+/ /g if $isParam;
+        $in =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
+
+        return $in;
+}
+
 sub strings() 
 { 
 	return <<EOF
@@ -2170,6 +2211,15 @@ SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_DESC
 	EN	Export information from TrackStat to the specified Music Magic server. This means that any existing rating, play counts or last played information in TrackStat will overwrite any existing information in Music Magic. Note that an export to Music Magic might take some time.
+
+PLUGIN_TRACKSTAT_RATINGCHAR
+	EN	Character
+
+SETUP_PLUGIN_TRACKSTAT_RATINGCHAR
+	EN	Rating display character
+
+SETUP_PLUGIN_TRACKSTAT_RATINGCHAR_DESC
+	EN	The character used to display ratings
 
 PLUGIN_TRACKSTAT_BACKUP_FILE
 	EN	Backup file
