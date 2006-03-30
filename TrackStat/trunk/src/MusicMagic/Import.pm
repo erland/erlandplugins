@@ -201,6 +201,7 @@ sub handleTrack {
 			$url = substr($row,4);
 			$url =~ s/^\s+//;
 			$url =~ s/\s+$//;
+			$url = Slim::Utils::Unicode::utf8decode($url,'utf8');
 		}elsif(substr($row,0,6) eq "rating") {
 			$rating = substr($row,6);
 			$url =~ s/^\s+//;

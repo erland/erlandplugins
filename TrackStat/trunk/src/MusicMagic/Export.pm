@@ -186,7 +186,8 @@ sub handleTrack {
 		$url =~ s/\.[^.]*$/$replaceExtension/isg;
 	}
 	$url =~ s/\\/\//isg;
-	
+	$url = unescape($url);
+	$url = URI::Escape::uri_escape($url);
 	if($rating && $rating>0) {
 		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
 		my $http = Slim::Player::Protocols::HTTP->new({
