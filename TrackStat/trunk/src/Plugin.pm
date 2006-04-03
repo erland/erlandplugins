@@ -1757,7 +1757,7 @@ sub setTrackStatStatistic {
 sub getMusicMagicURL {
 	my $url = shift;
 	my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
-	if(!defined$replacePath && $replacePath ne '') {
+	if(defined $replacePath && $replacePath ne '') {
 		$replacePath = escape($replacePath);
 		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
 		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
