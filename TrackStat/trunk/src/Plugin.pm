@@ -1688,29 +1688,30 @@ sub setTrackStatRating {
 			$ds->forceCommit();
 		};
 	}
-
-	$url = getMusicMagicURL($url);
-	
-	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-	my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
-	debugMsg("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
-    if(defined($http)) {
-    	my $result = $http->content;
-    	chomp $result;
-    	if($result eq "1") {
-			debugMsg("Success setting Music Magic rating\n");
-		}else {
-			debugMsg("Error setting Music Magic rating, error code = $result\n");
-		}
-    	$http->close();
-    }else {
-		debugMsg("Failure setting Music Magic rating\n");
-    }
+	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
+		$url = getMusicMagicURL($url);
+		
+		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
+		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
+		debugMsg("Calling: $musicmagicurl\n");
+		my $http = Slim::Player::Protocols::HTTP->new({
+	        'url'    => "$musicmagicurl",
+	        'create' => 0,
+	    });
+	    if(defined($http)) {
+	    	my $result = $http->content;
+	    	chomp $result;
+	    	if($result eq "1") {
+				debugMsg("Success setting Music Magic rating\n");
+			}else {
+				debugMsg("Error setting Music Magic rating, error code = $result\n");
+			}
+	    	$http->close();
+	    }else {
+			debugMsg("Failure setting Music Magic rating\n");
+	    }
+	}
 }
 
 sub gotViaHTTP {
@@ -1737,24 +1738,26 @@ sub setTrackStatStatistic {
 	
 	my $playCount = $statistic->{'playCount'};
 	my $lastPlayed = $statistic->{'lastPlayed'};	
-	$url = getMusicMagicURL($url);
-	
-	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-	my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
-	debugMsg("Calling: $musicmagicurl\n");
-	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
-	$http->get($musicmagicurl);
-	$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
-	debugMsg("Calling: $musicmagicurl\n");
-	$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
-	$http->get($musicmagicurl);
+	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
+		$url = getMusicMagicURL($url);
+		
+		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
+		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
+		debugMsg("Calling: $musicmagicurl\n");
+		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
+		$http->get($musicmagicurl);
+		$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
+		debugMsg("Calling: $musicmagicurl\n");
+		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
+		$http->get($musicmagicurl);
+	}
 }
 	
 sub getMusicMagicURL {
 	my $url = shift;
 	my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
-	if(defined(!$replacePath) && $replacePath ne '') {
+	if(!defined$replacePath && $replacePath ne '') {
 		$replacePath = escape($replacePath);
 		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
 		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
