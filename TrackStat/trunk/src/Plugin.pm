@@ -1082,6 +1082,8 @@ sub installHook()
 	debugMsg("Hook activated.\n");
 	if ($::VERSION ge '6.5') {
 		Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist']]);
+		Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
+		Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
 	} else {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
@@ -1677,7 +1679,7 @@ sub rateSong($$$) {
 
 sub setTrackStatRating {
 	my ($client,$url,$rating)=@_;
-	$rating = $rating / 20;
+	my $lowrating = $rating / 20;
 	if ($::VERSION ge '6.5') {
 		my $ds = Slim::Music::Info::getCurrentDataStore();
 		my $track = $ds->objectForUrl($url);
@@ -1693,7 +1695,7 @@ sub setTrackStatRating {
 		
 		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
 		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
+		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$lowrating";
 		debugMsg("Calling: $musicmagicurl\n");
 		my $http = Slim::Player::Protocols::HTTP->new({
 	        'url'    => "$musicmagicurl",
@@ -1712,6 +1714,94 @@ sub setTrackStatRating {
 			debugMsg("Failure setting Music Magic rating\n");
 	    }
 	}
+}
+
+sub getCLIRating {
+	my $request = shift;
+	
+	if ($request->isNotQuery([['trackstat'],['getrating']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	# get our parameters
+  	my $trackId    = $request->getParam('_trackid');
+  	if(!defined $trackId || $trackId eq '') {
+		debugMsg("_trackid not defined\n");
+		$request->setStatusBadParams();
+		return;
+  	}
+  	
+	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $track;
+	if($trackId !~ /^-?\d+$/) {
+		if($trackId =~ /^\/.+$/) {
+			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
+		}
+		$track = $ds->objectForUrl($trackId);
+	}else {
+		$track = $ds->objectForId('track',$trackId);
+	}
+	
+	if(!defined $track || !defined $track->audio) {
+		debugMsg("Track $trackId not found\n");
+		$request->setStatusBadParams();
+		return;
+	}
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
+	my $result = 0;
+	if($trackHandle && $trackHandle->rating) {
+		$result = $trackHandle->rating/20;
+	}
+	$request->addResult('rating', $result);
+	$request->setStatusDone();
+}
+
+sub setCLIRating {
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['trackstat'],['setrating']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		return;
+	}
+
+	# get our parameters
+  	my $trackId    = $request->getParam('_trackid');
+  	my $rating    = $request->getParam('_rating');
+  	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
+		debugMsg("_trackid and _rating not defined\n");
+		$request->setStatusBadParams();
+		return;
+  	}
+  	
+	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $track;
+	if($trackId !~ /^-?\d+$/) {
+		if($trackId =~ /^\/.+$/) {
+			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
+		}
+		$track = $ds->objectForUrl($trackId);
+	}else {
+		$track = $ds->objectForId('track',$trackId);
+	}
+	
+	if(!defined $track || !defined $track->audio) {
+		debugMsg("Track $trackId not found\n");
+		$request->setStatusBadParams();
+		return;
+	}
+	
+	rateSong($client,$track->url,$rating);
+	
+	$request->addResult('rating', $rating);
+	$request->setStatusDone();
 }
 
 sub gotViaHTTP {
