@@ -110,7 +110,7 @@ sub playRandom {
 	
 	# If this is a new mix, store the start time
 	my $startTime = undef;
-	if ($continuousMode && $mixInfo{$client}->{'type'} ne $type) {
+	if ($continuousMode && $mixInfo{$client}->{'type'} ne $type && !$addOnly) {
 		$startTime = time();
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
@@ -504,6 +504,9 @@ sub initPlugin {
 		# set up our subscription
 		Slim::Control::Request::subscribe(\&commandCallback65, 
 			[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists'], [1, 1, 0, \&cliGetPlaylists]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
 	}
 }
 
@@ -560,7 +563,7 @@ sub handleWebList {
 sub handleWebMix {
 	my ($client, $params) = @_;
 	if (defined $client && $params->{'type'}) {
-		playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1);
+		playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1, 1);
 	}
 	handleWebList($client, $params);
 }
@@ -726,6 +729,88 @@ sub getTracksForPlaylist {
 	 
 	use strict 'refs';
 	return $result;
+}
+
+sub cliGetPlaylists {
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotQuery([['dynamicplaylist'],['playlists']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		return;
+	}
+	
+  	my $all    = $request->getParam('_all');
+  	my $playLists;
+  	if(!defined $all || $all eq '') {
+		$playLists = getPlayLists($client);
+  	}else {
+		$playLists = getPlayLists($client);
+  	}
+  	my $count = 0;
+	foreach my $playlist (sort keys %$playLists) {
+		$count++;
+	}
+  	$request->addResult('count',$count);
+  	$count = 0;
+	foreach my $playlist (sort keys %$playLists) {
+		$request->addResultLoop('@playlists', $count,'playlist', $playlist);
+		my $p = $playLists->{$playlist};
+		my $name = $p->{'name'};
+		$request->addResultLoop('@playlists', $count,'name', $name);
+		$count++;
+	}
+	$request->setStatusDone();
+}
+
+sub cliPlayPlaylist {
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['play']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		return;
+	}
+	
+  	my $playlistId    = $request->getParam('_playlistid');
+
+	playRandom($client, $playlistId, 0, 1);
+	
+	$request->setStatusDone();
+}
+
+sub cliAddPlaylist {
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['add']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		return;
+	}
+	
+  	my $playlistId    = $request->getParam('_playlistid');
+
+	playRandom($client, $playlistId, 1, 1, 1);
+	
+	$request->setStatusDone();
 }
 
 sub getDynamicPlayLists {
