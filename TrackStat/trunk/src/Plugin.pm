@@ -234,13 +234,21 @@ sub lines()
 }
 
 sub getTrackInfo {
+		debugMsg("Entering getTrackInfo\n");
 		my $client = shift;
 		my $playStatus = getPlayerStatusForClient($client);
 		if ($playStatus->isTiming() eq 'true') {
 			if ($playStatus->trackAlreadyLoaded() eq 'false') {
 				my $ds = Slim::Music::Info::getCurrentDataStore();
-				my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
-				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename());
+				my $track;
+				# The encapsulation with eval is just to make it more crash safe
+				eval {
+					$track = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
+				};
+				if ($@) {
+					debugMsg("Error retrieving track: ".$playStatus->currentTrackOriginalFilename()."\n");
+				}
+				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename(),undef,$track);
 				my $playedCount = 0;
 				my $playedDate = "";
 				my $rating = 0;
@@ -279,8 +287,10 @@ sub getTrackInfo {
 				}
 			}
 		} else { 
+			debugMsg("Exiting getTrackInfo\n");
 			return undef;
 		}
+		debugMsg("Exiting getTrackInfo\n");
 		return $playStatus;
 }
 
@@ -516,6 +526,7 @@ sub webPages {
 
 sub baseWebPage {
 	my ($client, $params) = @_;
+	debugMsg("Entering baseWebPage\n");
 	if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'listlength') {
 		Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",$params->{listlength});
 	}	
@@ -556,6 +567,7 @@ sub baseWebPage {
 	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
 	$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
+	debugMsg("Exiting baseWebPage\n");
 }
 	
 sub handlePlayAddWebPage {
@@ -1400,12 +1412,12 @@ sub commandCallback65($)
 # timer and set new Artist and Track.
 sub startTimingNewSong($$$$)
 {
+	debugMsg("Starting a new song\n");
 	# Parameter - TrackStatus for current client
 	my $playStatus = shift;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename);
 
-	debugMsg("Starting a new song\n");
 	if (Slim::Music::Info::isFile($playStatus->currentTrackOriginalFilename)) {
 		# Get new song data
 		$playStatus->currentTrackLength($track->durationSeconds);
@@ -1536,11 +1548,12 @@ sub stopTimingSong($)
 }
 
 sub markedAsPlayed {
+	debugMsg("Entering markedAsPlayed\n");
 	my $client = shift;
 	my $url = shift;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($url);
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 
 	my $playCount;
 	if($trackHandle && $trackHandle->playCount) {
@@ -1576,6 +1589,7 @@ sub markedAsPlayed {
 		eval { &{$playCountPlugins{$item}}($client,$url,\%statistic) };
 	}
 	use strict 'refs';
+	debugMsg("Exiting markedAsPlayed\n");
 }
 
 # Debugging routine - shows current variable values for the given playStatus
@@ -1678,17 +1692,26 @@ sub rateSong($$$) {
 }
 
 sub setTrackStatRating {
+	debugMsg("Entering setTrackStatRating\n");
 	my ($client,$url,$rating)=@_;
 	my $lowrating = $rating / 20;
 	if ($::VERSION ge '6.5') {
 		my $ds = Slim::Music::Info::getCurrentDataStore();
-		my $track = $ds->objectForUrl($url);
-		# Run this within eval for now so it hides all errors until this is standard
+		my $track;
 		eval {
-			$track->set('rating' => $rating);
-			$track->update();
-			$ds->forceCommit();
+			$track = $ds->objectForUrl($url);
 		};
+		if ($@) {
+			debugMsg("Error retrieving track: $url\n");
+		}
+		if($track) {
+			# Run this within eval for now so it hides all errors until this is standard
+			eval {
+				$track->set('rating' => $rating);
+				$track->update();
+				$ds->forceCommit();
+			};
+		}
 	}
 	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
 		$url = getMusicMagicURL($url);
@@ -1714,14 +1737,17 @@ sub setTrackStatRating {
 			debugMsg("Failure setting Music Magic rating\n");
 	    }
 	}
+	debugMsg("Exiting setTrackStatRating\n");
 }
 
 sub getCLIRating {
+	debugMsg("Entering getCLIRating\n");
 	my $request = shift;
 	
 	if ($request->isNotQuery([['trackstat'],['getrating']])) {
 		debugMsg("Incorrect command\n");
 		$request->setStatusBadDispatch();
+		debugMsg("Exiting getCLIRating\n");
 		return;
 	}
 	# get our parameters
@@ -1729,6 +1755,7 @@ sub getCLIRating {
   	if(!defined $trackId || $trackId eq '') {
 		debugMsg("_trackid not defined\n");
 		$request->setStatusBadParams();
+		debugMsg("Exiting getCLIRating\n");
 		return;
   	}
   	
@@ -1738,37 +1765,54 @@ sub getCLIRating {
 		if($trackId =~ /^\/.+$/) {
 			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
 		}
-		$track = $ds->objectForUrl($trackId);
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForUrl($trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
 	}else {
-		$track = $ds->objectForId('track',$trackId);
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForId('track',$trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
 	}
 	
 	if(!defined $track || !defined $track->audio) {
 		debugMsg("Track $trackId not found\n");
 		$request->setStatusBadParams();
+		debugMsg("Exiting getCLIRating\n");
 		return;
 	}
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $result = 0;
 	if($trackHandle && $trackHandle->rating) {
 		$result = $trackHandle->rating/20;
 	}
 	$request->addResult('rating', $result);
 	$request->setStatusDone();
+	debugMsg("Exiting getCLIRating\n");
 }
 
 sub setCLIRating {
+	debugMsg("Entering setCLIRating\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['trackstat'],['setrating']])) {
 		debugMsg("Incorrect command\n");
 		$request->setStatusBadDispatch();
+		debugMsg("Exiting setCLIRating\n");
 		return;
 	}
 	if(!defined $client) {
 		debugMsg("Client required\n");
 		$request->setStatusNeedsClient();
+		debugMsg("Exiting setCLIRating\n");
 		return;
 	}
 
@@ -1778,6 +1822,7 @@ sub setCLIRating {
   	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
 		debugMsg("_trackid and _rating not defined\n");
 		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIRating\n");
 		return;
   	}
   	
@@ -1787,14 +1832,27 @@ sub setCLIRating {
 		if($trackId =~ /^\/.+$/) {
 			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
 		}
-		$track = $ds->objectForUrl($trackId);
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForUrl($trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
 	}else {
-		$track = $ds->objectForId('track',$trackId);
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForId('track',$trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
 	}
 	
 	if(!defined $track || !defined $track->audio) {
 		debugMsg("Track $trackId not found\n");
 		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIRating\n");
 		return;
 	}
 	
@@ -1802,6 +1860,7 @@ sub setCLIRating {
 	
 	$request->addResult('rating', $rating);
 	$request->setStatusDone();
+	debugMsg("Exiting setCLIRating\n");
 }
 
 sub gotViaHTTP {
@@ -1824,6 +1883,7 @@ sub gotErrorViaHTTP {
 }
 
 sub setTrackStatStatistic {
+	debugMsg("Entering setTrackStatStatistic\n");
 	my ($client,$url,$statistic)=@_;
 	
 	my $playCount = $statistic->{'playCount'};
@@ -1842,6 +1902,7 @@ sub setTrackStatStatistic {
 		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 		$http->get($musicmagicurl);
 	}
+	debugMsg("Exiting setTrackStatStatistic\n");
 }
 	
 sub getMusicMagicURL {
@@ -1882,6 +1943,7 @@ sub getMusicInfoSCRCustomItems()
 
 sub getMusicInfoSCRCustomItem()
 {
+	debugMsg("Entering getMusicInfoSCRCustomItem\n");
 	my $client = shift;
     my $formattedString  = shift;
 	if ($formattedString =~ /TRACKSTAT_RATING_STATIC/) {
@@ -1904,25 +1966,29 @@ sub getMusicInfoSCRCustomItem()
 		my $string = ($playStatus->currentSongRating()?$playStatus->currentSongRating():'');
 		$formattedString =~ s/TRACKSTAT_RATING_NUMBER/$string/g;
 	}
+	debugMsg("Exiting getMusicInfoSCRCustomItem\n");
 	return $formattedString;
 }
 
 sub getRatingDynamicCustomItem
 {
+	debugMsg("Entering getRatingDynamicCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = '';
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		$string = ($rating?$RATING_CHARACTER x $rating:'');
 	}
+	debugMsg("Exiting getRatingDynamicCustomItem\n");
 	return $string;
 }
 
 sub getRatingStaticCustomItem
 {
+	debugMsg("Entering getRatingStaticCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = $NO_RATING_CHARACTER x 5;
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
@@ -1933,18 +1999,21 @@ sub getRatingStaticCustomItem
 			$string = $string . ($NO_RATING_CHARACTER x $left);
 		}
 	}
+	debugMsg("Exiting getRatingStaticCustomItem\n");
 	return $string;
 }
 
 sub getRatingNumberCustomItem
 {
+	debugMsg("Entering getRatingNumberCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = '';
 	if($trackHandle && $trackHandle->rating) {
 		my $rating = $trackHandle->rating / 20;
 		$string = ($rating?$rating:'');
 	}
+	debugMsg("Exiting getRatingNumberCustomItem\n");
 	return $string;
 }
 
