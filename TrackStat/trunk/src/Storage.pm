@@ -74,13 +74,28 @@ sub findTrack {
 	my $track_url = shift;
 	my $mbId      = shift;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($track_url);
+	my $track = shift;
+	
+	if(!defined($track)) {
+		# The encapsulation with eval is just to make it crash safe
+		eval {
+			debugMsg("Reading slimserver track: $track_url\n");
+			$track = $ds->objectForUrl($track_url);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $track_url\n");
+		}
+	}
 	my $searchString = "";
 	my $queryAttribute = "";
 	
 	return 0 unless $track;
 
 	$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
+	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
+	if(defined $mbId && $mbId !~ /.*-.*/) {
+		$mbId = undef;
+	}
 
 	debugMsg("findTrack(): URL: ".$track->url."\n");
 	debugMsg("findTrack(): mbId: ". $mbId ."\n") if (defined($mbId));
@@ -124,12 +139,16 @@ sub saveRating {
 	my ($url,$mbId,$rating) = @_;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($url);
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $searchString = "";
 	my $queryAttribute = "";
 	my $sql;
 	
 	$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
+	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
+	if(defined $mbId && $mbId !~ /.*-.*/) {
+		$mbId = undef;
+	}
 
 	# create searchString and remove duplicate/trailing whitespace as well.
 	if (defined($mbId)) {
@@ -175,13 +194,17 @@ sub savePlayCountAndLastPlayed
 
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
 	my $track     = $ds->objectForUrl($url);
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $sql;
 	$url = $track->url;
 
 	debugMsg("Marking as played in storage\n");
 
 	my $trackmbId = $track->musicbrainz_id;
+	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
+	if(defined $trackmbId && $trackmbId !~ /.*-.*/) {
+		$trackmbId = undef;
+	}
 
 	my $key = $url;
 	$key = $mbId if (defined($mbId));
@@ -198,6 +221,10 @@ sub savePlayCountAndLastPlayed
 		}
 	}else {
 		$mbId = $track->{musicbrainz_id};
+		#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
+		if(defined $mbId && $mbId !~ /.*-.*/) {
+			$mbId = undef;
+		}
 		if (defined($mbId)) {
 			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, lastPlayed) values (?, '$mbId', $playCount, $lastPlayed)";
 		} else {
@@ -232,7 +259,7 @@ sub saveTrack
 
 	return unless $track;
 
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId,$track);
 	my $sql;
 	
 	if ($playCount) {
@@ -273,7 +300,7 @@ sub saveTrack
 	}
 	
 	#Lookup again since the row can have been created above
-	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url,$mbId,$track);
 	if ($rating && $rating ne "") {
 		debugMsg("Store rating: $rating\n");
 	    #ratings are 0-5 stars, 100 = 5 stars
@@ -307,7 +334,7 @@ sub mergeTrack()
 
 	return unless $track;
 
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url,undef,$track);
 	my $sql;
 	
 	if ($playCount) {
@@ -348,7 +375,7 @@ sub mergeTrack()
 	}
 	
 	#Lookup again since the row can have been created above
-	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url);
+	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	if ($rating && $rating ne "") {
 		debugMsg("Store rating: $rating\n");
 	    #ratings are 0-5 stars, 100 = 5 stars
@@ -411,7 +438,7 @@ sub refreshTracks
 	
 	debugMsg("Starting to update musicbrainz id's in statistic data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
-	$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.url=track_statistics.url and tracks.musicbrainz_id is not null and track_statistics.musicbrainz_id is null";
+	$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
 	$sth = $dbh->prepare( $sql );
 	$sqlupdate = "UPDATE track_statistics set musicbrainz_id=? where url=?";
 	$sthupdate = $dbh->prepare( $sqlupdate );
