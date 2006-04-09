@@ -1589,6 +1589,9 @@ sub markedAsPlayed {
 		eval { &{$playCountPlugins{$item}}($client,$url,\%statistic) };
 	}
 	use strict 'refs';
+	if ($::VERSION ge '6.5') {
+		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'setstatistic', $url, $track->id, $playCount, $lastPlayed]);
+	}
 	debugMsg("Exiting markedAsPlayed\n");
 }
 
@@ -1680,14 +1683,23 @@ sub rateSong($$$) {
 	my ($client,$url,$digit)=@_;
 
 	debugMsg("Changing song rating to: $digit\n");
+	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $track = $ds->objectForUrl($url);
+	if(!defined $track) {
+		debugMsg("Failure setting rating, track does not exist: $url\n");
+		return;
+	}
 	my $rating = $digit * 20;
-	Plugins::TrackStat::Storage::saveRating($url,undef,$rating);
+	Plugins::TrackStat::Storage::saveRating($url,undef,$track,$rating);
 	no strict 'refs';
 	for my $item (keys %ratingPlugins) {
 		debugMsg("Calling $item\n");
 		eval { &{$ratingPlugins{$item}}($client,$url,$rating) };
 	}
 	use strict 'refs';
+	if ($::VERSION ge '6.5') {
+		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'setrating', $url, $track->id, $rating]);
+	}
 	Slim::Music::Info::clearFormatDisplayCache();
 }
 
