@@ -149,21 +149,29 @@ sub setTrackStatStatistic {
 
 7. CLI DEVELOPERS
 =================
-If you are using slimserver 6.5 TrackStat offers a CLI interface with the following commands
+If you are using slimserver 6.5 TrackStat offers a CLI interface with the following commands and notifications
 
-Retreive rating for a track:
-----------------------------
+Command: Retreive rating for a track:
+-------------------------------------
 trackstat getrating 94
 trackstat getrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 trackstat getrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 
 If the command succeeds it returns a "rating" parameter with the rating for the selected track
 
-Set rating for a track to 4:
-----------------------------
+Command: Set rating for a track to 4:
+-------------------------------------
 trackstat setrating 94 4
 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
 
 If the command succeeds it returns a "rating" parameter with the newly set rating
+
+Notification: Rating changed for a track with trackid 94 and rating 4
+----------------------------------------------------------------------
+trackstat changedrating file%3A%2F%2F%2Fmp3music_small%2FThe%20Bodyguard%2F12%20Trust%20In%20Me.mp3 94 4
+
+Notification: Statistic about playcount=18 and lastplayed=1144572357 changed
+----------------------------------------------------------------------------
+trackstat changedstatistic file%3A%2F%2F%2Fmp3music_small%2FThe%20Bodyguard%2F12%20Trust%20In%20Me.mp3 94 18 1144572357
 
