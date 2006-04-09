@@ -136,9 +136,11 @@ sub findTrack {
 }
 
 sub saveRating {
-	my ($url,$mbId,$rating) = @_;
+	my ($url,$mbId,$track,$rating) = @_;
 	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
+	if(!defined($track)) {
+		$track     = $ds->objectForUrl($url);
+	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $searchString = "";
 	my $queryAttribute = "";
@@ -703,7 +705,7 @@ sub getTopRatedAlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     getAlbumsWeb($sql,$params);
 }
 
@@ -711,7 +713,7 @@ sub getTopRatedAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     return getAlbumTracks($sql,$limit);
 }
 
@@ -719,7 +721,7 @@ sub getMostPlayedAlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
     getAlbumsWeb($sql,$params);
 }
 
@@ -727,7 +729,7 @@ sub getMostPlayedAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
     return getAlbumTracks($sql,$limit);
 }
 
@@ -735,7 +737,7 @@ sub getLeastPlayedAlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,avgrating asc,$orderBy limit $listLength";
     getAlbumsWeb($sql,$params);
 }
 
@@ -743,7 +745,7 @@ sub getLeastPlayedAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select albums.id,avg(track_statistics.rating) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by avgcount asc,avgrating asc,$orderBy limit $listLength";
     return getAlbumTracks($sql,$limit);
 }
 
@@ -752,7 +754,7 @@ sub getTopRatedArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     getArtistsWeb($sql,$params);
 }
 
@@ -760,7 +762,7 @@ sub getTopRatedArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     return getArtistTracks($sql,$limit);
 }
 
@@ -768,7 +770,7 @@ sub getMostPlayedArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
     getArtistsWeb($sql,$params);
 }
 
@@ -776,7 +778,7 @@ sub getMostPlayedArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
     return getArtistTracks($sql,$limit);
 }
 
@@ -784,7 +786,7 @@ sub getLeastPlayedArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
     getArtistsWeb($sql,$params);
 }
 
@@ -792,7 +794,7 @@ sub getLeastPlayedArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
 	my $orderBy = getRandomString();
-    my $sql = "select contributors.id,avg(track_statistics.rating) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
     return getArtistTracks($sql,$limit);
 }
 
