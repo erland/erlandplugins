@@ -97,3 +97,11 @@ Get both enabled and disabled playlists
 ---------------------------------------
 dynamicplaylist playlists all
 
+Start playing playlist dynamicplaylist_random_track
+---------------------------------------------------
+dynamicplaylist playlist play dynamicplaylist_random_track
+
+Add songs from playlist dynamicplaylist_random_track to currently playing playlist
+----------------------------------------------------------------------------------
+dynamicplaylist playlist add dynamicplaylist_random_track
+
