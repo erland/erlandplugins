@@ -43,6 +43,8 @@ Squeezebox and in the same list in the slimserver web interface. The plugin toda
 Random Mix playlists connection and a connection to saved playlists so they are
 showed among the dynamic playlists.
 
+6. PLUGIN DEVELOPERS
+====================
 You can implement your own dynamic playlists by implementing the methods described below
 in your plugin. The plugin must be enabled for it to be detected by DynamicPlaylist plugin.
 
@@ -82,3 +84,16 @@ sub getNextDynamicPlayListTracks {
 	}
 	return \@result;
 }
+
+7. CLI DEVELOPERS
+=================
+If you are using slimserver 6.5 DynamicPlaylist plugin offers a CLI interfase with the following commands
+
+Get all enabled playlists
+-------------------------
+dynamicplaylist playlists
+
+Get both enabled and disabled playlists
+---------------------------------------
+dynamicplaylist playlists all
+
