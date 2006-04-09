@@ -1,6 +1,8 @@
 [%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
 [% IF pluginSQLPlayListVersion < '6.5' %]
+	[% PROCESS plugins/DynamicPlayList/hreftemplate65 %]
 	[% PROCESS plugins/DynamicPlayList/cmdwrappers65 %]
+	[% PROCESS plugins/DynamicPlayList/css65 %]
 [% END %]
 
 [%- pwd_list = BLOCK -%]/
