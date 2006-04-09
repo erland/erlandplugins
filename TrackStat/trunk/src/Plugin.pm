@@ -1590,7 +1590,7 @@ sub markedAsPlayed {
 	}
 	use strict 'refs';
 	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'setstatistic', $url, $track->id, $playCount, $lastPlayed]);
+		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
 	}
 	debugMsg("Exiting markedAsPlayed\n");
 }
@@ -1698,7 +1698,7 @@ sub rateSong($$$) {
 	}
 	use strict 'refs';
 	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'setrating', $url, $track->id, $rating]);
+		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}
 	Slim::Music::Info::clearFormatDisplayCache();
 }
