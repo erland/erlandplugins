@@ -320,6 +320,13 @@ sub getPlayLists {
 				my $playlist = $items->{$item};
 				debugMsg("Got dynamic playlists: ".$playlist->{'name'}."\n");
 				$playlist->{'dynamicplaylistid'} = $item;
+				$playlist->{'dynamicplaylistplugin'} = $plugin;
+				my $enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_enabled_playlist_'.$item);
+				if(!defined $enabled || $enabled==1) {
+					$playlist->{'dynamicplaylistenabled'} = 1;
+				}else {
+					$playlist->{'dynamicplaylistenabled'} = 0;
+				}
 				$playLists{$item} = $playlist;
 			}
 		}
@@ -341,7 +348,9 @@ sub setMode {
 	my @listRef = ();
 	$playLists = getPlayLists($client);
 	foreach my $playlist (sort keys %$playLists) {
-		push @listRef, $playLists->{$playlist};
+		if($playLists->{$playlist}->{'dynamicplaylistenabled'}) {
+			push @listRef, $playLists->{$playlist};
+		}
 	}
 
 	# use INPUT.Choice to display the list of feeds
@@ -504,7 +513,7 @@ sub initPlugin {
 		# set up our subscription
 		Slim::Control::Request::subscribe(\&commandCallback65, 
 			[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
-		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists'], [1, 1, 0, \&cliGetPlaylists]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
 	}
@@ -524,6 +533,8 @@ sub webPages {
 		"dynamicplaylist_list\.(?:htm|xml)"     => \&handleWebList,
 		"dynamicplaylist_mix\.(?:htm|xml)"      => \&handleWebMix,
 		"dynamicplaylist_settings\.(?:htm|xml)" => \&handleWebSettings,
+		"dynamicplaylist_selectplaylists\.(?:htm|xml)" => \&handleWebSelectPlaylists,
+		"dynamicplaylist_saveselectplaylists\.(?:htm|xml)" => \&handleWebSaveSelectPlaylists,
 	);
 
 	my $value = $htmlTemplate;
@@ -586,6 +597,43 @@ sub handleWebSettings {
 
 	# Pass on to check if the user requested a new mix as well
 	handleWebMix($client, $params);
+}
+
+# Draws the plugin's select playlist web page
+sub handleWebSelectPlaylists {
+	my ($client, $params) = @_;
+
+	# Pass on the current pref values and now playing info
+	$playLists = getPlayLists($client);
+	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	my $name = undef;
+	if($playlist) {
+		$name = $playlist->{'name'};
+	}
+	$params->{'pluginDynamicPlayListPlayLists'} = $playLists;
+	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
+	$params->{'pluginDynamicPlayListVersion'} = $::VERSION;
+	
+	return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_selectplaylists.html', $params);
+}
+
+# Draws the plugin's web page
+sub handleWebSaveSelectPlaylists {
+	my ($client, $params) = @_;
+
+	$playLists = getPlayLists($client);
+	my $first = 1;
+	my $sql = '';
+	foreach my $playlist (keys %$playLists) {
+		my $playlistid = "playlist_".$playLists->{$playlist}{'dynamicplaylistid'};
+		if($params->{$playlistid}) {
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_enabled_playlist_'.$playlist,1);
+		}else {
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_enabled_playlist_'.$playlist,0);
+		}
+	}
+	
+	handleWebList($client, $params);
 }
 
 sub getFunctions {
@@ -746,25 +794,27 @@ sub cliGetPlaylists {
 		return;
 	}
 	
-  	my $all    = $request->getParam('_all');
-  	my $playLists;
-  	if(!defined $all || $all eq '') {
-		$playLists = getPlayLists($client);
-  	}else {
-		$playLists = getPlayLists($client);
+  	my $all = $request->getParam('_all');
+  	my $playLists = getPlayLists($client);
+  	if(!defined $all && $all ne 'all') {
+  		$all = undef;
   	}
   	my $count = 0;
 	foreach my $playlist (sort keys %$playLists) {
-		$count++;
+		if($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all) {
+			$count++;
+		}
 	}
   	$request->addResult('count',$count);
   	$count = 0;
 	foreach my $playlist (sort keys %$playLists) {
-		$request->addResultLoop('@playlists', $count,'playlist', $playlist);
-		my $p = $playLists->{$playlist};
-		my $name = $p->{'name'};
-		$request->addResultLoop('@playlists', $count,'name', $name);
-		$count++;
+		if($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all) {
+			$request->addResultLoop('@playlists', $count,'playlistid', $playlist);
+			my $p = $playLists->{$playlist};
+			my $name = $p->{'name'};
+			$request->addResultLoop('@playlists', $count,'playlistname', $name);
+			$count++;
+		}
 	}
 	$request->setStatusDone();
 }
@@ -1130,6 +1180,18 @@ PLUGIN_DYNAMICPLAYLIST_CONTINUOUS_MODE
 
 PLUGIN_DYNAMICPLAYLIST_NOW_PLAYING_FAILED
 	EN	Failed 
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS
+	EN	Enable/Disable playlists 
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE
+	EN	Select enabled playlists
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_NONE
+	EN	No Playlists
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_ALL
+	EN	All Playlists
 
 EOF
 

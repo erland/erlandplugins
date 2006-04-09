@@ -63,14 +63,16 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type
 
 			[% odd = 1 %]
 			[% FOREACH type IN pluginDynamicPlayListPlayLists.keys.sort %]
-				[% BLOCK controls %]
-					[% PROCESS dynamicPlayListLink type="$type" addOnly="0" %]
-					[% PROCESS dynamicPlayListLink type="$type" addOnly="1" %]
+				[% IF pluginDynamicPlayListPlayLists.$type.dynamicplaylistenabled %]
+					[% BLOCK controls %]
+						[% PROCESS dynamicPlayListLink type="$type" addOnly="0" %]
+						[% PROCESS dynamicPlayListLink type="$type" addOnly="1" %]
+					[% END %]
+					[%- WRAPPER contentitem controls='controls' %]
+						[% pluginDynamicPlayListPlayLists.$type.name %]
+					[% END %]
+					[% odd = (not odd) %]
 				[% END %]
-				[%- WRAPPER contentitem controls='controls' %]
-					[% pluginDynamicPlayListPlayLists.$type.name %]
-				[% END %]
-			[% odd = (not odd) %]
 			[% END %]
 			[% odd = 0 %]
 			[% IF pluginDynamicPlayListNowPlaying != '' %]
@@ -101,6 +103,10 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type
 
 		<tr>
 			<td colspan="4"><hr></td>
+		</tr>
+
+		<tr>
+			<td colspan="4"><br><a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_selectplaylists.html?player=[% player | uri %]">[% "PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS" | string %]</a></td>
 		</tr>
 
 		[%- WRAPPER contentitem %]
