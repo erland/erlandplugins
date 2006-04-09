@@ -813,6 +813,9 @@ sub cliGetPlaylists {
 			my $p = $playLists->{$playlist};
 			my $name = $p->{'name'};
 			$request->addResultLoop('@playlists', $count,'playlistname', $name);
+			if(defined $all) {
+				$request->addResultLoop('@playlists', $count,'playlistenabled', $playLists->{$playlist}->{'dynamicplaylistenabled'});
+			}
 			$count++;
 		}
 	}
