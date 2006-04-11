@@ -303,7 +303,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -322,6 +322,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
+		},		
+	plugin_trackstat_fast_queries => {
+			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_FAST_QUERIES')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_FAST_QUERIES')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_fast_queries"); }
 		},		
 	plugin_trackstat_dynamicplaylist => {
 			'validate'     => \&Slim::Web::Setup::validateTrueFalse
@@ -843,6 +853,12 @@ sub initPlugin
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_showmessages"))) { 
 			debugMsg("First run - setting showmessages OFF\n");
 			Slim::Utils::Prefs::set("plugin_trackstat_showmessages", 0 ); 
+		}
+
+		# this will fast queries off by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries"))) { 
+			debugMsg("First run - setting simple queries OFF\n");
+			Slim::Utils::Prefs::set("plugin_trackstat_fast_queries", 0 ); 
 		}
 
 		# this will enable DynamicPlaylist integration by default
@@ -2259,6 +2275,15 @@ SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES
 
 SETUP_PLUGIN_TRACKSTAT_SHOWMESSAGES_DESC
 	EN	This will turn on/off debug logging of the TrackStat plugin
+
+PLUGIN_TRACKSTAT_FAST_QUERIES
+	EN	Simple queries
+
+SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES
+	EN	Performance optimization
+
+SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES_DESC
+	EN	This will turn on/off simple queries, simple queries will work faster but it will only be based on statistics handled by TrackStat. The standard statistics in slimserver will not be used at all if simple queries are enabled.
 
 PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
 	EN	Enable Dynamic Playlists
