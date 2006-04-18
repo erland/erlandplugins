@@ -49,7 +49,7 @@ sub backupToFile
 {
 	my $filename = shift;
 
-	my $sql = "SELECT url, musicbrainz_id, playCount, lastPlayed, rating FROM track_statistics";
+	my $sql = "SELECT url, musicbrainz_id, playCount, added, lastPlayed, rating FROM track_statistics";
 
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
@@ -63,9 +63,9 @@ sub backupToFile
 	print $output '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 	print $output "<TrackStat>\n";
 
-	my( $url, $mbId, $playCount, $lastPlayed, $rating );
+	my( $url, $mbId, $playCount, $added, $lastPlayed, $rating );
 	eval {
-		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$lastPlayed, \$rating );
+		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$added, \$lastPlayed, \$rating );
 		my $result;
 		while( $sth->fetch() ) {
 			if($url) {
@@ -80,6 +80,9 @@ sub backupToFile
 				}
 				if($lastPlayed) {
 					print $output "		<lastPlayed>$lastPlayed</lastPlayed>\n";
+				}
+				if($added) {
+					print $output "		<added>$added</added>\n";
 				}
 				if($rating) {
 					print $output "		<rating>$rating</rating>\n";
@@ -278,9 +281,10 @@ sub restoreTrack
 	my $mbId      = $curTrack->{'musicbrainzId'};
 	my $playCount = $curTrack->{'playCount'};
 	my $lastPlayed = $curTrack->{'lastPlayed'};
+	my $added = $curTrack->{'added'};
 	my $rating   = $curTrack->{'rating'};
 
-	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$lastPlayed,$rating);	
+	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating);	
 }
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg

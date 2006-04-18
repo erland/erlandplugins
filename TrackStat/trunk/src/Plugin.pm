@@ -528,6 +528,9 @@ sub webPages {
 		"leastplayed\.htm" => \&handleWebLeastPlayed,
 		"leastplayedalbums\.htm" => \&handleWebLeastPlayedAlbums,
 		"leastplayedartists\.htm" => \&handleWebLeastPlayedArtists,
+		"lastadded\.htm" => \&handleWebLastAdded,
+		"lastaddedalbums\.htm" => \&handleWebLastAddedAlbums,
+		"lastaddedartists\.htm" => \&handleWebLastAddedArtists,
 		"firstplayed\.htm" => \&handleWebFirstPlayed
 	);
 
@@ -653,6 +656,21 @@ sub handleWebMostPlayed {
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
+sub handleWebLastAdded {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getLastAddedTracksWeb($params,$listLength);
+	$params->{'songlist'} = 'LASTADDED';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
 sub handleWebLeastPlayed {
 	my ($client, $params) = @_;
 
@@ -748,6 +766,21 @@ sub handleWebMostPlayedAlbums {
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
+sub handleWebLastAddedAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getLastAddedAlbumsWeb($params,$listLength);
+	$params->{'songlist'} = 'LASTADDEDALBUMS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
 sub handleWebLeastPlayedAlbums {
 	my ($client, $params) = @_;
 
@@ -789,6 +822,21 @@ sub handleWebMostPlayedArtists {
     }
     Plugins::TrackStat::Storage::getMostPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDARTISTS';
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebLastAddedArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getLastAddedArtistsWeb($params,$listLength);
+	$params->{'songlist'} = 'LASTADDEDARTISTS';
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -2089,6 +2137,13 @@ sub getDynamicPlayLists {
 	my $id = "trackstat_mostplayed";
 	$result{$id} = \%currentResultMostPlayedTrack;
 
+	my %currentResultLastAddedTrack = (
+		'id' => 'lastadded',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDED'),
+	);
+	$id = "trackstat_lastadded";
+	$result{$id} = \%currentResultLastAddedTrack;
+
 	my %currentResultLeastPlayedTrack = (
 		'id' => 'leastplayed',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED'),
@@ -2138,6 +2193,13 @@ sub getDynamicPlayLists {
 	$id = "trackstat_mostplayedalbums";
 	$result{$id} = \%currentResultMostPlayedAlbum;
 
+	my %currentResultLastAddedAlbum = (
+		'id' => 'lastaddedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDALBUMS'),
+	);
+	$id = "trackstat_lastaddedalbums";
+	$result{$id} = \%currentResultLastAddedAlbum;
+
 	my %currentResultTopRatedArtist = (
 		'id' => 'topratedartists',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS'),
@@ -2159,6 +2221,13 @@ sub getDynamicPlayLists {
 	$id = "trackstat_mostplayedartists";
 	$result{$id} = \%currentResultMostPlayedArtist;
 
+	my %currentResultLastAddedArtist = (
+		'id' => 'lastaddedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS'),
+	);
+	$id = "trackstat_lastaddedartists";
+	$result{$id} = \%currentResultLastAddedArtist;
+
 	return \%result;
 }
 
@@ -2178,6 +2247,8 @@ sub getNextDynamicPlayListTracks {
 	debugMsg("Got: ".$dynamicplaylist->{'id'}.", $limit\n");
 	if($dynamicplaylist->{'id'} eq 'mostplayed') {
 		return Plugins::TrackStat::Storage::getMostPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'lastadded') {
+		return Plugins::TrackStat::Storage::getLastAddedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayed') {
 		return Plugins::TrackStat::Storage::getLeastPlayedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'lastplayed') {
@@ -2190,12 +2261,16 @@ sub getNextDynamicPlayListTracks {
 		return Plugins::TrackStat::Storage::getTopRatedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedalbums') {
 		return Plugins::TrackStat::Storage::getMostPlayedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'lastaddedalbums') {
+		return Plugins::TrackStat::Storage::getLastAddedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedalbums') {
 		return Plugins::TrackStat::Storage::getLeastPlayedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'topratedartists') {
 		return Plugins::TrackStat::Storage::getTopRatedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedartists') {
 		return Plugins::TrackStat::Storage::getMostPlayedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'lastaddedartists') {
+		return Plugins::TrackStat::Storage::getLastAddedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedartists') {
 		return Plugins::TrackStat::Storage::getLeastPlayedArtistTracks($listLength,$artistListLength);
 	}
@@ -2512,6 +2587,15 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS
 	EN	Most played artists
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTADDED
+	EN	Last added songs
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDALBUMS
+	EN	Last added albums
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS
+	EN	Last added artists
 
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED
 	EN	Last played songs
