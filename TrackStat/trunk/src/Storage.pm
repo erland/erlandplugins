@@ -501,7 +501,7 @@ sub refreshTracks
 	if ($::VERSION ge '6.5') {
 		debugMsg("Starting to update ratings in standard slimserver database based on urls\n");
 		# Now lets set all ratings not already set in the slimserver standards database
-		$sql = "SELECT track_statistics.url,track_statistics.rating from tracks,track_statistics where tracks.url=track_statistics.url and track_statistics.rating is not null and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
+		$sql = "SELECT track_statistics.url,track_statistics.rating from tracks,track_statistics where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -582,6 +582,34 @@ sub refreshTracks
 
 	$sth->finish();
 	debugMsg("Finished adding tracks without added times in statistic data based on urls, added $count items\n");
+
+	debugMsg("Starting to update ratings in statistic data based on urls\n");
+	# Now lets set all added times not already set
+	$sql = "SELECT tracks.url,tracks.rating from tracks,track_statistics where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
+	$sth = $dbh->prepare( $sql );
+	$sqlupdate = "UPDATE track_statistics set rating=? where url=?";
+	$sthupdate = $dbh->prepare( $sqlupdate );
+	$count = 0;
+	eval {
+		$sth->execute();
+
+		my( $url,$rating );
+		$sth->bind_columns( undef, \$url, \$rating );
+		while( $sth->fetch() ) {
+			$sthupdate->bind_param(1, $rating, SQL_VARCHAR);
+			$sthupdate->bind_param(2, $url, SQL_VARCHAR);
+			$sthupdate->execute();
+			$count++;
+		}
+		$dbh->commit();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+
+	$sth->finish();
+	$sthupdate->finish();
+	debugMsg("Finished updating ratings in statistic data based on urls, updated $count items\n");
 }
 
 sub purgeTracks {
@@ -639,7 +667,16 @@ sub executeSQLFile {
 		my $driver = Slim::Utils::Prefs::get('dbsource');
         $driver =~ s/dbi:(.*?):(.*)$/$1/;
         
-        my $sqlFile = catdir($Bin, "Plugins", "TrackStat", "SQL", $driver, $file);
+        my $sqlFile;
+		if ($::VERSION ge '6.5') {
+			for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
+				opendir(DIR, catdir($plugindir,"TrackStat")) || next;
+        		$sqlFile = catdir($plugindir,"TrackStat", "SQL", $driver, $file);
+        		closedir(DIR);
+        	}
+        }else {
+         	$sqlFile = catdir($Bin, "Plugins", "TrackStat", "SQL", $driver, $file);
+        }
 
         debugMsg("Executing SQL file $sqlFile\n");
 
@@ -817,6 +854,28 @@ sub getLeastPlayedTracks {
     return getTracks($sql,$limit);
 }
 
+sub getNotPlayedTracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks, track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+    }
+    getTracksWeb($sql,$params);
+}
+
+sub getNotPlayedTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select tracks.url from tracks, track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+    }
+    return getTracks($sql,$limit);
+}
+
 sub getTopRatedTracksWeb {
 	my $params = shift;
 	my $listLength = shift;
@@ -858,6 +917,38 @@ sub getTopRatedAlbumTracks {
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
     	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded  from tracks, track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     }
+    return getAlbumTracks($sql,$limit);
+}
+
+sub getNotRatedTracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+    getTracksWeb($sql,$params);
+}
+
+sub getNotRatedTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select tracks.url from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+    return getTracks($sql,$limit);
+}
+
+sub getNotRatedAlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
+    getAlbumsWeb($sql,$params);
+}
+
+sub getNotRatedAlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
     return getAlbumTracks($sql,$limit);
 }
 
@@ -927,6 +1018,27 @@ sub getLeastPlayedAlbumTracks {
     return getAlbumTracks($sql,$limit);
 }
 
+sub getNotPlayedAlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgcount=0 order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks, track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgcount=0 order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    }
+    getAlbumsWeb($sql,$params);
+}
+
+sub getNotPlayedAlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgcount=0 order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks, track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgcount=0 order by avgcount asc,avgrating asc,$orderBy limit $listLength";
+    }
+    return getAlbumTracks($sql,$limit);
+}
 
 sub getTopRatedArtistsWeb {
 	my $params = shift;
@@ -947,6 +1059,22 @@ sub getTopRatedArtistTracks {
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
     	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics, contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     }
+    return getArtistTracks($sql,$limit);
+}
+
+sub getNotRatedArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
+    getArtistsWeb($sql,$params);
+}
+
+sub getNotRatedArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
     return getArtistTracks($sql,$limit);
 }
 
@@ -1012,6 +1140,28 @@ sub getLeastPlayedArtistTracks {
     my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
     	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    }
+    return getArtistTracks($sql,$limit);
+}
+
+sub getNotPlayedArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having sumcount=0 order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having sumcount=0 order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    }
+    getArtistsWeb($sql,$params);
+}
+
+sub getNotPlayedArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	my $orderBy = getRandomString();
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having sumcount=0 order by sumcount asc,avgrating asc,$orderBy limit $listLength";
+    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then case when tracks.playCount is null then 0 else tracks.playCount end else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having sumcount=0 order by sumcount asc,avgrating asc,$orderBy limit $listLength";
     }
     return getArtistTracks($sql,$limit);
 }
@@ -1160,16 +1310,18 @@ sub getAlbumTracks {
 		my( $id, $rating, $playCount, $lastPlayed, $added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount, \$lastPlayed, \$added );
 		my @albums;
-		while( scalar(@result)<=1 && $sth->fetch() ) {
+		while( $sth->fetch() ) {
 			push @albums, $id;
 		}
-		fisher_yates_shuffle(\@albums);
-		$id = shift @albums;
-		my $album = $ds->objectForId('album',$id);
-		debugMsg("Getting tracks for album: ".$album->title."\n");
-		my $iterator = $album->tracks;
-		for my $item ($iterator->slice(0,$iterator->count)) {
-			push @result, $item;
+		if(scalar(@albums)>0) {
+			fisher_yates_shuffle(\@albums);
+			$id = shift @albums;
+			my $album = $ds->objectForId('album',$id);
+			debugMsg("Getting tracks for album: ".$album->title."\n");
+			my $iterator = $album->tracks;
+			for my $item ($iterator->slice(0,$iterator->count)) {
+				push @result, $item;
+			}
 		}
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
@@ -1248,29 +1400,32 @@ sub getArtistTracks {
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added);
 		my @artists;
-		while( scalar(@result)<=1 && $sth->fetch() ) {
+		while( $sth->fetch() ) {
 			push @artists, $id;
 		}
-		fisher_yates_shuffle(\@artists);
-		for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-			$id = shift @artists;
-			my $artist = $ds->objectForId('artist',$id);
+		if(scalar(@artists)>0) {
+			fisher_yates_shuffle(\@artists);
+			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
+				$id = shift @artists;
+				my $artist = $ds->objectForId('artist',$id);
 
-			debugMsg("Getting tracks for artist: ".$artist->name."\n");
-			my $artistFind = {'artist' => $artist->id };
+				debugMsg("Getting tracks for artist: ".$artist->name."\n");
+				my $artistFind = {'artist' => $artist->id };
 
-			my $items = $ds->find({
-				'field'  => 'track',
-				'find'   => $artistFind,
-				'sortBy' => 'random',
-				'limit'  => $limit,
-				'cache'  => 0,
-			});
-			for my $item (@$items) {
-				push @result, $item;
+				my $items = $ds->find({
+					'field'  => 'track',
+					'find'   => $artistFind,
+					'sortBy' => 'random',
+					'limit'  => $limit,
+					'cache'  => 0,
+				});
+				for my $item (@$items) {
+					push @result, $item;
+				}
+				debugMsg("Got ".scalar(@result)." tracks for ".$artist->name."\n");
 			}
-			debugMsg("Got ".scalar(@result)." tracks\n");
 		}
+		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
