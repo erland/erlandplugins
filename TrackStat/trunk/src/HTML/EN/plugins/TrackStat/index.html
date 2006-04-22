@@ -78,28 +78,66 @@
 	</tr>
 	<div>
 		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong><br>
+		<table width="100%">
+		<tr><td>
 		<a href="toprated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATED" | string %]</a><br>
+		</td><td>
+		<a href="notrated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATED" | string %]</a><br>
+		</td></tr><tr><td>
 		<a href="topratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS" | string %]</a><br>
+		</td><td>
+		<a href="notratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS" | string %]</a><br>
+		</td></tr><tr><td>
 		<a href="topratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS" | string %]</a><br>
+		</td><td>
+		<a href="notratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS" | string %]</a><br>
+		</td></tr><tr><td>
 		<a href="mostplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED" | string %]</a><br>
-		<a href="mostplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS" | string %]</a><br>
-		<a href="mostplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS" | string %]</a><br>
-		<a href="lastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED" | string %]</a><br>
+		</td><td>
 		<a href="leastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="mostplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS" | string %]</a><br>
+		</td><td>
 		<a href="leastplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="mostplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS" | string %]</a><br>
+		</td><td>
 		<a href="leastplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS" | string %]</a><br>
-		<a href="lastadded.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDED" | string %]</a><br>
-		<a href="lastaddedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDALBUMS" | string %]</a><br>
-		<a href="lastaddedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="lastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED" | string %]</a><br>
+		</td><td>
 		<a href="firstplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="lastadded.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDED" | string %]</a><br>
+		</td><td>
+		<a href="notplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="lastaddedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDALBUMS" | string %]</a><br>
+		</td><td>
+		<a href="notplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDALBUMS" | string %]</a><br>
+		</td></tr><tr><td>
+		<a href="lastaddedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS" | string %]</a><br>
+		</td><td>
+		<a href="notplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS" | string %]</a><br>
+		</td></tr>
+		</table>
 		<br>
-		<form action="[% webroot %][% path %].html" name="settingsForm">
+		<form action="[% webroot %][% path %].html" name="webSettingsForm">
 			<input type="hidden" name="trackstatcmd" value="listlength">
 			<input type="hidden" name="player" value="[% player %]">
 			[% "PLUGIN_TRACKSTAT_WEB_LIST_LENGTH" | string %]
 			<input class="stdedit" type="text" size="2" name="listlength" value="[% pluginTrackStatListLength %]">
 			<input type="submit" value="[% "CHANGE" | string %]">
 		</form>
+		[% IF dynamicplaylist %]
+			<form action="[% webroot %][% path %].html" name="playlistSettingsForm">
+				<input type="hidden" name="trackstatcmd" value="playlistlength">
+				<input type="hidden" name="player" value="[% player %]">
+				[% "PLUGIN_TRACKSTAT_PLAYLIST_LENGTH" | string %]
+				<input class="stdedit" type="text" size="2" name="playlistlength" value="[% pluginTrackStatPlayListLength %]">
+				<input type="submit" value="[% "CHANGE" | string %]">
+			</form>
+		[% END %]
 	</div>
 	<tr>
 		<td>&nbsp;</td>
@@ -109,6 +147,9 @@
 			<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_" _ songlist | string %]</strong>&nbsp;&nbsp;&nbsp;
 			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=play"[% END %]
 			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=add"[% END %]
+			[% IF dynamicplaylist %]
+				<a href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=playdynamic&amp;dynamicplaylist=[% dynamicplaylist %]">[% "PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK" | string %]</a>
+			[% END %]
 		</div>
 		[% WRAPPER contentcontainer %]
 			[% odd = 1 %]
