@@ -531,7 +531,13 @@ sub webPages {
 		"lastadded\.htm" => \&handleWebLastAdded,
 		"lastaddedalbums\.htm" => \&handleWebLastAddedAlbums,
 		"lastaddedartists\.htm" => \&handleWebLastAddedArtists,
-		"firstplayed\.htm" => \&handleWebFirstPlayed
+		"firstplayed\.htm" => \&handleWebFirstPlayed,
+		"notrated\.htm" => \&handleWebNotRated,
+		"notratedalbums\.htm" => \&handleWebNotRatedAlbums,
+		"notratedartists\.htm" => \&handleWebNotRatedArtists,
+		"notplayed\.htm" => \&handleWebNotPlayed,
+		"notplayedalbums\.htm" => \&handleWebNotPlayedAlbums,
+		"notplayedartists\.htm" => \&handleWebNotPlayedArtists
 	);
 
 	return (\%pages,"index.html");
@@ -542,7 +548,9 @@ sub baseWebPage {
 	debugMsg("Entering baseWebPage\n");
 	if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'listlength') {
 		Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",$params->{listlength});
-	}	
+	}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playlistlength') {
+		Slim::Utils::Prefs::set("plugin_trackstat_playlist_length",$params->{playlistlength});
+	}
 	# without a player, don't do anything
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
 		if (my $playStatus = getTrackInfo($client)) {
@@ -578,6 +586,7 @@ sub baseWebPage {
 		}
 	}
 	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+	$params->{'pluginTrackStatPlayListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
 	$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
 	debugMsg("Exiting baseWebPage\n");
@@ -593,6 +602,15 @@ sub handlePlayAddWebPage {
 			$client->execute(['power', '1']);
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'add') {
 			$first = 0;
+		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playdynamic') {
+			debugMsg("Checking if DynamicPlayList plugin is enabled and method exists\n");
+			if(UNIVERSAL::can("Plugins::DynamicPlayList::Plugin","playRandom")) {
+				debugMsg("Calling DynamicPlayList with ".$params->{'dynamicplaylist'}."\n");
+				no strict 'refs';
+				&{"Plugins::DynamicPlayList::Plugin::playRandom"}($client,$params->{'dynamicplaylist'},0,1);
+				use strict 'refs';
+			}
+			return;
 		}else {
 			return;
 		}
@@ -652,6 +670,7 @@ sub handleWebMostPlayed {
     }
     Plugins::TrackStat::Storage::getMostPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -667,6 +686,7 @@ sub handleWebLastAdded {
     }
     Plugins::TrackStat::Storage::getLastAddedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'LASTADDED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -682,11 +702,26 @@ sub handleWebLeastPlayed {
     }
     Plugins::TrackStat::Storage::getLeastPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
+sub handleWebNotPlayed {
+	my ($client, $params) = @_;
 
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotPlayedTracksWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTPLAYED';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
 
 sub handleWebLastPlayed {
 	my ($client, $params) = @_;
@@ -699,6 +734,7 @@ sub handleWebLastPlayed {
     }
     Plugins::TrackStat::Storage::getLastPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'LASTPLAYED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -714,6 +750,7 @@ sub handleWebFirstPlayed {
     }
     Plugins::TrackStat::Storage::getFirstPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'FIRSTPLAYED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -732,6 +769,7 @@ sub handleWebTopRated {
     }
     Plugins::TrackStat::Storage::getTopRatedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATED';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -747,6 +785,42 @@ sub handleWebTopRatedAlbums {
     }
     Plugins::TrackStat::Storage::getTopRatedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebNotRated {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotRatedTracksWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTRATED';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebNotRatedAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotRatedAlbumsWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTRATEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -762,6 +836,7 @@ sub handleWebMostPlayedAlbums {
     }
     Plugins::TrackStat::Storage::getMostPlayedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -777,6 +852,7 @@ sub handleWebLastAddedAlbums {
     }
     Plugins::TrackStat::Storage::getLastAddedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'LASTADDEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -792,6 +868,23 @@ sub handleWebLeastPlayedAlbums {
     }
     Plugins::TrackStat::Storage::getLeastPlayedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebNotPlayedAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotPlayedAlbumsWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTPLAYEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -807,6 +900,23 @@ sub handleWebTopRatedArtists {
     }
     Plugins::TrackStat::Storage::getTopRatedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'TOPRATEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebNotRatedArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotRatedArtistsWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTRATEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -822,6 +932,7 @@ sub handleWebMostPlayedArtists {
     }
     Plugins::TrackStat::Storage::getMostPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -837,6 +948,7 @@ sub handleWebLastAddedArtists {
     }
     Plugins::TrackStat::Storage::getLastAddedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'LASTADDEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -852,8 +964,39 @@ sub handleWebLeastPlayedArtists {
     }
     Plugins::TrackStat::Storage::getLeastPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'LEASTPLAYEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebNotPlayedArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getNotPlayedArtistsWeb($params,$listLength);
+	$params->{'songlist'} = 'NOTPLAYEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub setDynamicPlaylistParams {
+	my ($client, $params) = @_;
+
+	my $dynamicPlaylist;
+	if ($::VERSION ge '6.5') {
+		$dynamicPlaylist = Slim::Utils::PluginManager::enabledPlugin("DynamicPlayList",$client);
+	}else {
+		$dynamicPlaylist = grep(/DynamicPlayList/,Slim::Buttons::Plugins::enabledPlugins($client));
+    }
+	if($dynamicPlaylist && Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist")) {
+		$params->{'dynamicplaylist'} = "trackstat_".lc($params->{'songlist'});
+	}
 }
 sub getPlayCount {
 	my $track = shift;
@@ -1157,7 +1300,7 @@ sub installHook()
 {  
 	debugMsg("Hook activated.\n");
 	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist']]);
+		Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
 		Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
 		Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
 	} else {
@@ -1401,9 +1544,23 @@ sub commandCallback62($)
 # timers accordingly.
 sub commandCallback65($) 
 {
+	debugMsg("Entering commandCallback65\n");
 	# These are the two passed parameters
 	my $request=shift;
 	my $client = $request->client();
+
+	######################################
+	## Rescan finished
+	######################################
+	if ( $request->isCommand([['rescan'],['done']]) )
+	{
+		Plugins::TrackStat::Storage::refreshTracks();
+	}
+
+	if(!defined $client) {
+		debugMsg("Exiting commandCallback65\n");
+		return;
+	}
 
 	# Get the PlayerStatus
 	my $playStatus = getPlayerStatusForClient($client);
@@ -1470,6 +1627,7 @@ sub commandCallback65($)
 	{
 		stopCommand($playStatus);
 	}
+	debugMsg("Exiting commandCallback65\n");
 }
 
 # A new song has begun playing. Reset the current song
@@ -2151,6 +2309,13 @@ sub getDynamicPlayLists {
 	$id = "trackstat_leastplayed";
 	$result{$id} = \%currentResultLeastPlayedTrack;
 
+	my %currentResultNotPlayedTrack = (
+		'id' => 'notplayed',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED'),
+	);
+	$id = "trackstat_notplayed";
+	$result{$id} = \%currentResultNotPlayedTrack;
+
 	my %currentResultLastPlayedTrack = (
 		'id' => 'lastplayed',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED'),
@@ -2179,12 +2344,33 @@ sub getDynamicPlayLists {
 	$id = "trackstat_topratedalbums";
 	$result{$id} = \%currentResultTopRatedAlbum;
 
+	my %currentResultNotRatedTrack = (
+		'id' => 'notrated',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED'),
+	);
+	$id = "trackstat_notrated";
+	$result{$id} = \%currentResultNotRatedTrack;
+
+	my %currentResultNotRatedAlbum = (
+		'id' => 'notratedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS'),
+	);
+	$id = "trackstat_notratedalbums";
+	$result{$id} = \%currentResultNotRatedAlbum;
+
 	my %currentResultLeastPlayedAlbum = (
 		'id' => 'leastplayedalbums',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS'),
 	);
 	$id = "trackstat_leastplayedalbums";
 	$result{$id} = \%currentResultLeastPlayedAlbum;
+
+	my %currentResultNotPlayedAlbum = (
+		'id' => 'notplayedalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDALBUMS'),
+	);
+	$id = "trackstat_notplayedalbums";
+	$result{$id} = \%currentResultNotPlayedAlbum;
 
 	my %currentResultMostPlayedAlbum = (
 		'id' => 'mostplayedalbums',
@@ -2207,12 +2393,26 @@ sub getDynamicPlayLists {
 	$id = "trackstat_topratedartists";
 	$result{$id} = \%currentResultTopRatedArtist;
 
+	my %currentResultNotRatedArtist = (
+		'id' => 'notratedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS'),
+	);
+	$id = "trackstat_notratedartists";
+	$result{$id} = \%currentResultNotRatedArtist;
+
 	my %currentResultLeastPlayedArtist = (
 		'id' => 'leastplayedartists',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS'),
 	);
 	$id = "trackstat_leastplayedartists";
 	$result{$id} = \%currentResultLeastPlayedArtist;
+
+	my %currentResultNotPlayedArtist = (
+		'id' => 'notplayedartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS'),
+	);
+	$id = "trackstat_notplayedartists";
+	$result{$id} = \%currentResultNotPlayedArtist;
 
 	my %currentResultMostPlayedArtist = (
 		'id' => 'mostplayedartists',
@@ -2251,6 +2451,8 @@ sub getNextDynamicPlayListTracks {
 		return Plugins::TrackStat::Storage::getLastAddedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayed') {
 		return Plugins::TrackStat::Storage::getLeastPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'notplayed') {
+		return Plugins::TrackStat::Storage::getNotPlayedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'lastplayed') {
 		return Plugins::TrackStat::Storage::getLastPlayedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'firstplayed') {
@@ -2259,20 +2461,30 @@ sub getNextDynamicPlayListTracks {
 		return Plugins::TrackStat::Storage::getTopRatedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'topratedalbums') {
 		return Plugins::TrackStat::Storage::getTopRatedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'notrated') {
+		return Plugins::TrackStat::Storage::getNotRatedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'notratedalbums') {
+		return Plugins::TrackStat::Storage::getNotRatedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedalbums') {
 		return Plugins::TrackStat::Storage::getMostPlayedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'lastaddedalbums') {
 		return Plugins::TrackStat::Storage::getLastAddedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedalbums') {
 		return Plugins::TrackStat::Storage::getLeastPlayedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'notplayedalbums') {
+		return Plugins::TrackStat::Storage::getNotPlayedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'topratedartists') {
 		return Plugins::TrackStat::Storage::getTopRatedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'notratedartists') {
+		return Plugins::TrackStat::Storage::getNotRatedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedartists') {
 		return Plugins::TrackStat::Storage::getMostPlayedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'lastaddedartists') {
 		return Plugins::TrackStat::Storage::getLastAddedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedartists') {
 		return Plugins::TrackStat::Storage::getLeastPlayedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'notplayedartists') {
+		return Plugins::TrackStat::Storage::getNotPlayedArtistTracks($listLength,$artistListLength);
 	}
 	debugMsg("Got ".scalar(@result)." tracks\n");
 	return \@result;
@@ -2526,13 +2738,13 @@ PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
 	EN	Number of songs/albums/artists on web
 
 SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
-	EN	Number of songs/albums/artists in playlists
+	EN	Number of songs/albums/artists to use in dynamic playlists
 
 SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH_DESC
 	EN	Number songs/albums/artists that should be used when selecting tracks in DynamicPlaylist plugin
 
 PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
-	EN	Number of songs/albums/artists in playlists
+	EN	Number of songs/albums/artists to use in dynamic playlists
 
 SETUP_PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH
 	EN	Number of songs per artist in playlists
@@ -2579,6 +2791,9 @@ PLUGIN_TRACKSTAT_RATING_NO_SONG
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATED
 	EN	Top rated songs
 
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATED
+	EN	Not rated songs
+
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED
 	EN	Most played songs
 
@@ -2612,11 +2827,26 @@ PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDALBUMS
 PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDARTISTS
 	EN	Least played artists
 
+PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED
+	EN	Never played songs
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDALBUMS
+	EN	Never played albums
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS
+	EN	Never played artists
+
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS
 	EN	Top rated albums
 
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS
 	EN	Top rated artists
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS
+	EN	Not rated albums
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS
+	EN	Not rated artists
 
 PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER
 	EN	Choose statistics to view
@@ -2643,7 +2873,10 @@ SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS
 	EN	Refresh statistic after rescan
 
 SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS_DESC
-	EN	Refresh TrackStat information after a complete rescan, this is only neccesary if you have changed some filenames or directory names. As long as you only have added new files you don't need to perform a refresh. The refresh operation will not destroy or remove any data, it will just make sure the TrackStat information is synchronized with the standard slimserver database.
+	EN	Refresh TrackStat information after a complete rescan, this is only neccesary if you have changed some filenames or directory names. As long as you only have added new files you don't need to perform a refresh. The refresh operation will not destroy or remove any data, it will just make sure the TrackStat information is synchronized with the standard slimserver database.<br>In slimserver 6.5 this operation is performed automatically after each slimserver rescan.
+
+PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK
+	EN	Play as dynamic playlist
 
 EOF
 
