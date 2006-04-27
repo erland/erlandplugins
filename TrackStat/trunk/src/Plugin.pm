@@ -1536,6 +1536,18 @@ sub commandCallback62($)
 	{
 		stopCommand($playStatus);
 	}
+	
+	######################################
+	## CLI commands
+	######################################
+	if ( ($slimCommand eq "trackstat") ) 
+	{
+		if($paramOne eq "getrating") {
+			getCLIRating62($client,\@$paramsRef);
+		}elsif($paramOne eq "setrating") {
+			setCLIRating62($client,\@$paramsRef);
+		}
+	}
 }
 
 
@@ -2032,6 +2044,66 @@ sub getCLIRating {
 	debugMsg("Exiting getCLIRating\n");
 }
 
+sub getCLIRating62 {
+	debugMsg("Entering getCLIRating62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 3) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting getCLIRating62\n");
+		return;
+	}
+	if (@$paramsRef[1] ne "getrating") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting getCLIRating62\n");
+		return;
+	}
+	# get our parameters
+  	my $trackId    = @$paramsRef[2];
+  	if(!defined $trackId || $trackId eq '') {
+		debugMsg("_trackid not defined\n");
+		debugMsg("Exiting getCLIRating62\n");
+		return;
+  	}
+  	
+	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $track;
+	if($trackId !~ /^-?\d+$/) {
+		if($trackId =~ /^\/.+$/) {
+			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
+		}
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForUrl($trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}else {
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForId('track',$trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}
+	
+	if(!defined $track || !defined $track->audio) {
+		debugMsg("Track $trackId not found\n");
+		debugMsg("Exiting getCLIRating62\n");
+		return;
+	}
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+	my $result = 0;
+	if($trackHandle && $trackHandle->rating) {
+		$result = $trackHandle->rating/20;
+	}
+	push @$paramsRef,"rating:$result";
+	debugMsg("Exiting getCLIRating62\n");
+}
+
 sub setCLIRating {
 	debugMsg("Entering setCLIRating\n");
 	my $request = shift;
@@ -2095,6 +2167,71 @@ sub setCLIRating {
 	$request->addResult('rating', $rating);
 	$request->setStatusDone();
 	debugMsg("Exiting setCLIRating\n");
+}
+
+sub setCLIRating62 {
+	debugMsg("Entering setCLIRating62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 4) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting setCLIRating62\n");
+		return;
+	}
+	if (@$paramsRef[1] ne "setrating") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting setCLIRating62\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		debugMsg("Exiting setCLIRating62\n");
+		return;
+	}
+
+	# get our parameters
+  	my $trackId    = @$paramsRef[2];
+  	my $rating    = @$paramsRef[3];
+  	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
+		debugMsg("_trackid and _rating not defined\n");
+		debugMsg("Exiting setCLIRating62\n");
+		return;
+  	}
+  	
+	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $track;
+	if($trackId !~ /^-?\d+$/) {
+		if($trackId =~ /^\/.+$/) {
+			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
+		}
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForUrl($trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}else {
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = $ds->objectForId('track',$trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}
+	
+	if(!defined $track || !defined $track->audio) {
+		debugMsg("Track $trackId not found\n");
+		debugMsg("Exiting setCLIRating62\n");
+		return;
+	}
+	
+	rateSong($client,$track->url,$rating);
+	
+	push @$paramsRef,"rating:$rating";
+	debugMsg("Exiting setCLIRating62\n");
 }
 
 sub gotViaHTTP {
