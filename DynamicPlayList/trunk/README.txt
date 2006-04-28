@@ -87,21 +87,25 @@ sub getNextDynamicPlayListTracks {
 
 7. CLI DEVELOPERS
 =================
-If you are using slimserver 6.5 DynamicPlaylist plugin offers a CLI interfase with the following commands
+DynamicPlaylist plugin offers a CLI interfase with the following commands.
+If you want the answers to look the same in both slimserver 6.5 and 6.2 you will
+need to use the version of the commands with a MAC address of the SqueezeBox first.
 
 Get all enabled playlists
 -------------------------
 dynamicplaylist playlists
+00:04:20:06:22:b3 dynamicplaylist playlists
 
 Get both enabled and disabled playlists
 ---------------------------------------
 dynamicplaylist playlists all
+00:04:20:06:22:b3 dynamicplaylist playlists all
 
 Start playing playlist dynamicplaylist_random_track
 ---------------------------------------------------
-dynamicplaylist playlist play dynamicplaylist_random_track
+00:04:20:06:22:b3 dynamicplaylist playlist play dynamicplaylist_random_track
 
 Add songs from playlist dynamicplaylist_random_track to currently playing playlist
 ----------------------------------------------------------------------------------
-dynamicplaylist playlist add dynamicplaylist_random_track
+00:04:20:06:22:b3 dynamicplaylist playlist add dynamicplaylist_random_track
 
