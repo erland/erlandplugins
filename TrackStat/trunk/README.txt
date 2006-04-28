@@ -149,21 +149,30 @@ sub setTrackStatStatistic {
 
 7. CLI DEVELOPERS
 =================
-If you are using slimserver 6.5 TrackStat offers a CLI interface with the following commands and notifications
+TrackStat offers a CLI interface with the following commands and notifications.
+The notifications are only available in slimserver 6.5.
+If you want the same answers in both 6.5 and 6.2 you will need to use the versions of the command
+with a MAC address first.
 
 Command: Retreive rating for a track:
 -------------------------------------
 trackstat getrating 94
 trackstat getrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 trackstat getrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
+00:04:20:06:22:b3 trackstat getrating 94
+00:04:20:06:22:b3 trackstat getrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
+00:04:20:06:22:b3 trackstat getrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 
-If the command succeeds it returns a "rating" parameter with the rating for the selected track
+If the command succeeds it returns a "rating" parameter with the rating for the selected track.
 
 Command: Set rating for a track to 4:
 -------------------------------------
 trackstat setrating 94 4
 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+00:04:20:06:22:b3 trackstat setrating 94 4
+00:04:20:06:22:b3 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+00:04:20:06:22:b3 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
 
 If the command succeeds it returns a "rating" parameter with the newly set rating
 
