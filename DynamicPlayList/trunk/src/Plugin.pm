@@ -189,11 +189,11 @@ sub playRandom {
 		$client->currentPlaylistModified(0);		
 	}
 	
+	if ($::VERSION ge '6.5') {
+	}else {
+		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
+	}
 	if ($type eq 'disable') {
-		if ($::VERSION ge '6.5') {
-		}else {
-			Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
-		}
 		debugMsg("cyclic mode ended\n");
 		# Don't do showBrieflys if visualiser screensavers are running as the display messes up
 		if (Slim::Buttons::Common::mode($client) !~ /^SCREENSAVER./) {
@@ -201,10 +201,6 @@ sub playRandom {
 		}
 		$mixInfo{$client} = undef;
 	} else {
-		if ($::VERSION ge '6.5') {
-		}else {
-			Slim::Control::Command::setExecuteCallback(\&commandCallback62);
-		}
 		if(!$numItems || $numItems==0 || $count>0) {
 			debugMsg("Playing ".($continuousMode ? 'continuous' : 'static')." $type with ".Slim::Player::Playlist::count($client)." items\n");
 			# $startTime will only be defined if this is a new (or restarted) mix
@@ -393,10 +389,12 @@ sub commandCallback62 {
 
 	# we dont care about generic ir blasts
 	return if $slimCommand eq 'ir';
-
+	
+	return if $slimCommand ne "dynamicplaylist" && !defined $mixInfo{$client}->{'type'};
+	
 	debugMsg("received command ".(join(' ', @$paramsRef))."\n");
 
-	if (!defined $client || !defined $mixInfo{$client}->{'type'}) {
+	if (!defined $client) {
 
 		if ($::d_plugins) {
 			debugMsg("No client!\n");
@@ -411,32 +409,55 @@ sub commandCallback62 {
 	if ($slimCommand eq 'newsong'
 		|| $slimCommand eq 'playlist' && $paramsRef->[1] eq 'delete' && $paramsRef->[2] > $songIndex) {
 
-        if ($::d_plugins) {
-			if ($slimCommand eq 'newsong') {
-				debugMsg("new song detected ($songIndex)\n");
-			} else {
-				debugMsg("deletion detected ($paramsRef->[2]");
+		if(defined $mixInfo{$client}->{'type'}) {
+	        if ($::d_plugins) {
+				if ($slimCommand eq 'newsong') {
+					debugMsg("new song detected ($songIndex)\n");
+				} else {
+					debugMsg("deletion detected ($paramsRef->[2]");
+				}
 			}
-		}
-		
-		my $songsToKeep = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_old_tracks');
-		if ($songIndex && $songsToKeep ne '') {
-			debugMsg("Stripping off completed track(s)\n");
+			
+			my $songsToKeep = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_old_tracks');
+			if ($songIndex && $songsToKeep ne '') {
+				debugMsg("Stripping off completed track(s)\n");
 
-			Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
-			# Delete tracks before this one on the playlist
-			for (my $i = 0; $i < $songIndex - $songsToKeep; $i++) {
-				Slim::Control::Command::execute($client, ['playlist', 'delete', 0]);
+				Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
+				# Delete tracks before this one on the playlist
+				for (my $i = 0; $i < $songIndex - $songsToKeep; $i++) {
+					Slim::Control::Command::execute($client, ['playlist', 'delete', 0]);
+				}
+				Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 			}
-			Slim::Control::Command::setExecuteCallback(\&commandCallback62);
-		}
 
-		playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
+			playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
+		}else {
+			debugMsg("Ignoring command, no dynamic playlist is playing\n");
+		}
 	} elsif (($slimCommand eq 'playlist') && exists $stopcommands{$paramsRef->[1]}) {
-
-		debugMsg("cyclic mode ending due to playlist: ".(join(' ', @$paramsRef))." command\n");
-		playRandom($client, 'disable');
+		if(defined $mixInfo{$client}->{'type'}) {
+			debugMsg("cyclic mode ending due to playlist: ".(join(' ', @$paramsRef))." command\n");
+			playRandom($client, 'disable');
+		}else {
+			debugMsg("Ignoring command, no dynamic playlist is playing\n");
+		}
+	} elsif ( ($slimCommand eq "dynamicplaylist") ) 
+	{	
+		if(scalar(@$paramsRef) ge 2) {
+			if($paramsRef->[1] eq "playlists") {
+				cliGetPlaylists62($client,\@$paramsRef);
+			}elsif($paramsRef->[1] eq "playlist") {
+				if(scalar(@$paramsRef) ge 3) {
+					if($paramsRef->[2] eq "play") {
+						cliPlayPlaylist62($client,\@$paramsRef);
+					}elsif($paramsRef->[2] eq "add") {
+						cliAddPlaylist62($client,\@$paramsRef);
+					}
+				}
+			}
+		}
 	}
+
 }
 
 sub commandCallback65 {
@@ -516,7 +537,10 @@ sub initPlugin {
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
+	}else {
+		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
+
 }
 
 sub shutdownPlugin {
@@ -780,17 +804,20 @@ sub getTracksForPlaylist {
 }
 
 sub cliGetPlaylists {
+	debugMsg("Entering cliGetPlaylists\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotQuery([['dynamicplaylist'],['playlists']])) {
 		debugMsg("Incorrect command\n");
 		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliGetPlaylists\n");
 		return;
 	}
 	if(!defined $client) {
 		debugMsg("Client required\n");
 		$request->setStatusNeedsClient();
+		debugMsg("Exiting cliGetPlaylists\n");
 		return;
 	}
 	
@@ -820,20 +847,78 @@ sub cliGetPlaylists {
 		}
 	}
 	$request->setStatusDone();
+	debugMsg("Exiting cliGetPlaylists\n");
+}
+
+sub cliGetPlaylists62 {
+	debugMsg("Entering cliGetPlaylists62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 2) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting cliGetPlaylists62\n");
+		return;
+	}
+	
+	if (@$paramsRef[1] ne "playlists") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting cliGetPlaylists62\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		debugMsg("Exiting cliGetPlaylists62\n");
+		return;
+	}
+	
+  	my $all = undef;
+  	if (scalar(@$paramsRef) ge 3) {
+  		$all = @$paramsRef[2];
+  	}
+  	
+  	my $playLists = getPlayLists($client);
+  	if(!defined $all && $all ne 'all') {
+  		$all = undef;
+  	}
+  	my $count = 0;
+	foreach my $playlist (sort keys %$playLists) {
+		if($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all) {
+			$count++;
+		}
+	}
+	push @$paramsRef,"count:$count";
+  	$count = 0;
+	foreach my $playlist (sort keys %$playLists) {
+		if($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all) {
+			push @$paramsRef,"playlistid:$playlist";
+			my $p = $playLists->{$playlist};
+			my $name = $p->{'name'};
+			push @$paramsRef,"playlistname:$name";
+			if(defined $all) {
+				push @$paramsRef,"playlistenabled:".$playLists->{$playlist}->{'dynamicplaylistenabled'};
+			}
+			$count++;
+		}
+	}
+	debugMsg("Exiting cliGetPlaylists62\n");
 }
 
 sub cliPlayPlaylist {
+	debugMsg("Entering cliPlayPlaylist\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['play']])) {
 		debugMsg("Incorrect command\n");
 		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliPlayPlaylist\n");
 		return;
 	}
 	if(!defined $client) {
 		debugMsg("Client required\n");
 		$request->setStatusNeedsClient();
+		debugMsg("Exiting cliPlayPlaylist\n");
 		return;
 	}
 	
@@ -842,20 +927,53 @@ sub cliPlayPlaylist {
 	playRandom($client, $playlistId, 0, 1);
 	
 	$request->setStatusDone();
+	debugMsg("Exiting cliPlayPlaylist\n");
+}
+
+sub cliPlayPlaylist62 {
+	debugMsg("Entering cliPlayPlaylist62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 4) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting cliPlayPlaylists62\n");
+		return;
+	}
+	
+	if (@$paramsRef[1] ne "playlist" || @$paramsRef[2] ne "play") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting cliPlayPlaylist62\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		debugMsg("Exiting cliPlayPlaylist62\n");
+		return;
+	}
+	
+  	my $playlistId    = @$paramsRef[3];
+
+	playRandom($client, $playlistId, 0, 1);
+	
+	debugMsg("Exiting cliPlayPlaylist62\n");
 }
 
 sub cliAddPlaylist {
+	debugMsg("Entering cliAddPlaylist\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['add']])) {
 		debugMsg("Incorrect command\n");
 		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliAddPlaylist\n");
 		return;
 	}
 	if(!defined $client) {
 		debugMsg("Client required\n");
 		$request->setStatusNeedsClient();
+		debugMsg("Exiting cliAddPlaylist\n");
 		return;
 	}
 	
@@ -864,6 +982,36 @@ sub cliAddPlaylist {
 	playRandom($client, $playlistId, 1, 1, 1);
 	
 	$request->setStatusDone();
+	debugMsg("Exiting cliAddPlaylist\n");
+}
+
+sub cliAddPlaylist62 {
+	debugMsg("Entering cliAddPlaylist62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 4) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting cliPlayPlaylists62\n");
+		return;
+	}
+	
+	if (@$paramsRef[1] ne "playlist" || @$paramsRef[2] ne "add") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting cliAddPlaylist62\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		debugMsg("Exiting cliAddPlaylist62\n");
+		return;
+	}
+	
+  	my $playlistId    = @$paramsRef[3];
+
+	playRandom($client, $playlistId, 1, 1, 1);
+	
+	debugMsg("Exiting cliAddPlaylist62\n");
 }
 
 sub getDynamicPlayLists {
