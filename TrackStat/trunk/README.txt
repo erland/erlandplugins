@@ -63,7 +63,7 @@ The play count and last playing time algoritm is based on the same logic in iTun
 will not be increased if you just listen on the first secondes of a track, you have to listen to most of the track to update
 play counts and last played time.
 
-To rate a track just press the numbers 1-5 on the remote, you will see a message on the Squeezebox display which confirms
+To rate a track just hold the numbers 1-5 on the remote down for a while, you will see a message on the Squeezebox display which confirms
 that the rating has been set. 
 
 The TrackStat plugin will add a number of title formats which makes it possible to show the rating information for the current 
