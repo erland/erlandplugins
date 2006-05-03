@@ -94,6 +94,8 @@ sub init {
 		}
 		$sth->finish();
     }
+    # Only perform refresh at startup if this has been activated
+    return unless Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup");
 	refreshTracks();
 }
 
