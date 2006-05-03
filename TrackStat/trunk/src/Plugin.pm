@@ -303,7 +303,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -332,6 +332,26 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_fast_queries"); }
+		},		
+	plugin_trackstat_refresh_startup => {
+			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_REFRESH_STARTUP')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESH_STARTUP')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup"); }
+		},		
+	plugin_trackstat_refresh_rescan => {
+			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_REFRESH_RESCAN')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESH_RESCAN')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_refresh_rescan"); }
 		},		
 	plugin_trackstat_dynamicplaylist => {
 			'validate'     => \&Slim::Web::Setup::validateTrueFalse
@@ -1089,6 +1109,16 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
 		}
 
+		# disable refresh at startup by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_refresh_startup",0);
+		}
+
+		# disable refresh after rescan by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_refresh_rescan"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_refresh_rescan",0);
+		}
+
 		initRatingChar();
 		
 		installHook();
@@ -1566,7 +1596,9 @@ sub commandCallback65($)
 	######################################
 	if ( $request->isCommand([['rescan'],['done']]) )
 	{
-		Plugins::TrackStat::Storage::refreshTracks();
+		if(Slim::Utils::Prefs::get("plugin_trackstat_refresh_rescan")) {
+			Plugins::TrackStat::Storage::refreshTracks();
+		}
 	}
 
 	if(!defined $client) {
@@ -2708,6 +2740,24 @@ SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES
 
 SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES_DESC
 	EN	This will turn on/off simple queries, simple queries will work faster but it will only be based on statistics handled by TrackStat. The standard statistics in slimserver will not be used at all if simple queries are enabled.
+
+PLUGIN_TRACKSTAT_REFRESH_STARTUP
+	EN	Refresh statistics at startup
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_STARTUP
+	EN	Startup refresh
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_STARTUP_DESC
+	EN	This will activate/deactivate the refresh statistic operation at slimserver startup, the only reason to turn this if is if you get performance issues with refresh statistics
+
+PLUGIN_TRACKSTAT_REFRESH_RESCAN
+	EN	Rescan refresh
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN
+	EN	Rescan refresh (slimserver 6.5 only)
+
+SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN_DESC
+	EN	This will activate/deactivate the automatic refresh statistic operation after a rescan has been performed in slimserver, the only reason to turn this if is if you get performance issues with refresh statistics.<br>Note! This parameter does only have effect if you run slimserver 6.5
 
 PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
 	EN	Enable Dynamic Playlists
