@@ -232,7 +232,7 @@ sub savePlayCountAndLastPlayed
 
 	debugMsg("Marking as played in storage\n");
 
-	my $trackmbId = $track->musicbrainz_id;
+	my $trackmbId = $track->{musicbrainz_id};
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $trackmbId && $trackmbId !~ /.*-.*/) {
 		$trackmbId = undef;
@@ -1440,9 +1440,9 @@ sub getArtistTracks {
 sub getAddedTime {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		return $track->timestamp;
+		return $track->{timestamp};
 	}else {
-		return $track->age;
+		return $track->{age};
 	}
 }
 # A wrapper to allow us to uniformly turn on & off debug messages
