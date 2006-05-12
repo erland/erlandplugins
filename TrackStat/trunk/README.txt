@@ -35,6 +35,7 @@ This archive should contain the following files:
 - readme.txt (this file)
 - license.txt (the license)
 - *.pm (The application itself)
+- TrackStatiTunesUpdateWin.pl (Perl script to update ratings in iTunes based on history files from TrackStat)
 
 4. INSTALLATION
 ===============
@@ -76,7 +77,20 @@ have privileges to create the table it will be created automatically at startup.
 create the table it must be created manually with the SQL scripts provided in the SQL directory toghether with the plugin.
 
 The plugin supports import of ratings, play counts and last play time from iTunes. To do this you will have to configure
-a number of parameters for the TrackStat plugin in the plugins section of the slimserver settings web interface.
+a number of parameters for the TrackStat plugin in the plugins section of the slimserver settings web interface. The plugin can 
+also generate text files that can be exported to iTunes by running the TrackStatiTunesUpdateWin.pl script with the history file
+as parameter. The TrackStatiTunesUpdateWin.pl script is a patched version of the original iTunesUpdateWin.pl script delivered with
+the iTunesUpdate plugin. The TrackStat plugin provides the following difference regarding export to iTunes compared to the original 
+iTunesUpdate plugin:
+- TrackStat can generate a history file with all tracks in the slimserver database
+- TrackStat can do simple re-mapping of paths before writing them to the history file, this is useful if you are running slimserver on 
+  Linux and iTunes on Windows.
+- TrackStat only support history files, there are no direct writing of statistics from TrackStat to iTunes directly
+
+The plugin supports import of ratings, play counts and last played time from MusicIP Mixer(http://www.musicip.com). To do this you
+will have to configure a number of parameters for the TrackStat plugin in the plugins section of the slimserver settings web interface.
+The plugin can also export statistics to MusicIP Mixer, this can be done both by exporting all tracks with statistics in slimserver but
+also by enabling dynamic export of a track every time it has been played or rated.
 
 You can take a backup of the ratings, play counts, last play time information to an xml-file using the buttons provided in 
 the plugins section of the slimserver settings web interface. This information can later be restored which makes this a suitable
