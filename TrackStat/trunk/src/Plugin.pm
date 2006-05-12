@@ -47,6 +47,7 @@ use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
 use Plugins::TrackStat::iTunes::Import;
+use Plugins::TrackStat::iTunes::Export;
 use Plugins::TrackStat::MusicMagic::Import;
 use Plugins::TrackStat::MusicMagic::Export;
 use Plugins::TrackStat::Backup::File;
@@ -58,24 +59,6 @@ $VERSION = substr(q$Revision$,10);
 #################################################
 ### Global constants - do not change casually ###
 #################################################
-
-# There are multiple different conditions which
-# influence whether a track is considered played:
-#
-#  - A minimum number of seconds a track must be 
-#    played to be considered a play. Note that
-#    if set too high it can prevent a track from
-#    ever being noted as played - it is effectively
-#    a minimum track length. Overrides other conditions!
-#
-#  - A percentage play threshold. For example, if 50% 
-#    of a track is played, it will be considered played.
-#
-#  - A time played threshold. After this number of
-#    seconds playing, the track will be considered played.
-my $TRACKSTAT_MINIMUM_PLAY_TIME = 5;
-my $TRACKSTAT_PERCENT_PLAY_THRESHOLD = .50;
-my $TRACKSTAT_TIME_PLAY_THRESHOLD = 1800;
 
 # Indicator if hooked or not
 # 0= No
@@ -255,7 +238,7 @@ sub getTrackInfo {
 				if ($trackHandle) {
 						if($trackHandle->playCount) {
 							$playedCount = $trackHandle->playCount;
-						}elsif(getPlayCount($track)>0){
+						}elsif(getPlayCount($track)){
 							$playedCount = getPlayCount($track);
 						}
 						if($trackHandle->lastPlayed) {
@@ -303,7 +286,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -314,7 +297,7 @@ sub setupGroup
 	my %setupPrefs =
 	(
 	plugin_trackstat_showmessages => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_SHOW_MESSAGES')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_SHOW_MESSAGES')
 			,'options' => {
@@ -324,7 +307,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
 		},		
 	plugin_trackstat_fast_queries => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_FAST_QUERIES')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_FAST_QUERIES')
 			,'options' => {
@@ -334,7 +317,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_fast_queries"); }
 		},		
 	plugin_trackstat_refresh_startup => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_REFRESH_STARTUP')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESH_STARTUP')
 			,'options' => {
@@ -343,8 +326,18 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup"); }
 		},		
+	plugin_trackstat_history_enabled => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_HISTORY_ENABLED')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_HISTORY_ENABLED')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_history_enabled"); }
+		},		
 	plugin_trackstat_refresh_rescan => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_REFRESH_RESCAN')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESH_RESCAN')
 			,'options' => {
@@ -354,7 +347,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_refresh_rescan"); }
 		},		
 	plugin_trackstat_dynamicplaylist => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST')
 			,'options' => {
@@ -364,25 +357,49 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist"); }
 		},		
 	plugin_trackstat_web_list_length => {
-			'validate'     => \&Slim::Web::Setup::validateInt
+			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"); }
 		},		
 	plugin_trackstat_playlist_length => {
-			'validate'     => \&Slim::Web::Setup::validateInt
+			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYLIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYLIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_playlist_length"); }
 		},		
+	plugin_trackstat_recent_number_of_days => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_recent_number_of_days"); }
+		},		
+	plugin_trackstat_song_threshold_length => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_song_threshold_length"); }
+		},		
+	plugin_trackstat_min_song_length => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_MIN_SONG_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MIN_SONG_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_min_song_length"); }
+		},		
+	plugin_trackstat_min_song_percent => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_MIN_SONG_PERCENT')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MIN_SONG_PERCENT')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_min_song_percent"); }
+		},		
 	plugin_trackstat_playlist_per_artist_length => {
-			'validate'     => \&Slim::Web::Setup::validateInt
+			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"); }
 		},		
 	plugin_trackstat_backup_file => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_BACKUP_FILE')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_BACKUP_FILE')
 			,'rejectMsg' => string('SETUP_BAD_FILE')
@@ -390,7 +407,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_backup_file"); }
 		},
 	plugin_trackstat_backup => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { backupToFile(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MAKING_BACKUP')
@@ -399,7 +416,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_refresh_tracks => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { Plugins::TrackStat::Storage::refreshTracks(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_REFRESHING_TRACKS')
@@ -408,7 +425,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_purge_tracks => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { Plugins::TrackStat::Storage::purgeTracks(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_PURGING_TRACKS')
@@ -417,7 +434,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_restore => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { restoreFromFile(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_RESTORING_BACKUP')
@@ -426,7 +443,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_clear => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { Plugins::TrackStat::Storage::deleteAllTracks(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_CLEARING')
@@ -442,6 +459,21 @@ sub setupGroup
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_file"); }
 		},
+	plugin_trackstat_itunes_export_dir => {
+			'validate' => \&validateIsDirOrEmpty
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR')
+			,'rejectMsg' => string('SETUP_BAD_FILE')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"); }
+		},
+	plugin_trackstat_itunes_export_library_music_path => {
+			'validate' => \&validateAcceptAllWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_library_music_path"); }
+		},
 	plugin_trackstat_itunes_library_music_path => {
 			'validate' => \&validateIsDirOrEmpty
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
@@ -450,13 +482,29 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_music_path"); }
 		},
 	plugin_trackstat_itunes_replace_extension => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_replace_extension"); }
 		},
+	plugin_trackstat_itunes_export_replace_extension => {
+			'validate' => \&validateAcceptAllWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_replace_extension"); }
+		},
+	plugin_trackstat_itunes_enabled => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_ENABLED')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_ENABLED')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled"); }
+		},		
 	plugin_trackstat_musicmagic_enabled => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
 			,'options' => {
@@ -466,39 +514,39 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"); }
 		},		
 	plugin_trackstat_musicmagic_host => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"); }
 		},
 	plugin_trackstat_musicmagic_port => {
-			'validate' => \&Slim::Web::Setup::validateInt
+			'validate' => \&validateIntWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"); }
 		},
 	plugin_trackstat_musicmagic_library_music_path => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path"); }
 		},
 	plugin_trackstat_musicmagic_replace_extension => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_replace_extension"); }
 		},
 	plugin_trackstat_musicmagic_slimserver_replace_extension => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_slimserver_replace_extension"); }
 		},
 	plugin_trackstat_itunes_import => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { importFromiTunes(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORTING')
@@ -506,8 +554,17 @@ sub setupGroup
 			,'dontSet' => 1
 			,'changeMsg' => ''
 		},
+	plugin_trackstat_itunes_export => {
+			'validate' => \&validateAcceptAllWrapper
+			,'onChange' => sub { exportToiTunes(); }
+			,'inputTemplate' => 'setup_input_submit.html'
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORTING')
+			,'ChangeButton' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_BUTTON')
+			,'dontSet' => 1
+			,'changeMsg' => ''
+		},
 	plugin_trackstat_musicmagic_import => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { importFromMusicMagic(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING')
@@ -516,7 +573,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_musicmagic_export => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { exportToMusicMagic(); }
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING')
@@ -525,7 +582,7 @@ sub setupGroup
 			,'changeMsg' => ''
 		},
 	plugin_trackstat_ratingchar => {
-			'validate' => \&Slim::Web::Setup::validateAcceptAll
+			'validate' => \&validateAcceptAllWrapper
 			,'onChange' => sub { initRatingChar(); }
 			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATINGCHAR')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATINGCHAR')
@@ -557,7 +614,23 @@ sub webPages {
 		"notratedartists\.htm" => \&handleWebNotRatedArtists,
 		"notplayed\.htm" => \&handleWebNotPlayed,
 		"notplayedalbums\.htm" => \&handleWebNotPlayedAlbums,
-		"notplayedartists\.htm" => \&handleWebNotPlayedArtists
+		"notplayedartists\.htm" => \&handleWebNotPlayedArtists,
+		"topratedgenres\.htm" => \&handleWebTopRatedGenres,
+		"mostplayedgenres\.htm" => \&handleWebMostPlayedGenres,
+		"topratedyears\.htm" => \&handleWebTopRatedYears,
+		"mostplayedyears\.htm" => \&handleWebMostPlayedYears,
+		"topratedrecent\.htm" => \&handleWebTopRatedRecent,
+		"topratedrecentalbums\.htm" => \&handleWebTopRatedRecentAlbums,
+		"topratedrecentartists\.htm" => \&handleWebTopRatedRecentArtists,
+		"mostplayedrecent\.htm" => \&handleWebMostPlayedRecent,
+		"mostplayedrecentalbums\.htm" => \&handleWebMostPlayedRecentAlbums,
+		"mostplayedrecentartists\.htm" => \&handleWebMostPlayedRecentArtists,
+		"topratednotrecent\.htm" => \&handleWebTopRatedNotRecent,
+		"topratednotrecentalbums\.htm" => \&handleWebTopRatedNotRecentAlbums,
+		"topratednotrecentartists\.htm" => \&handleWebTopRatedNotRecentArtists,
+		"mostplayednotrecent\.htm" => \&handleWebMostPlayedNotRecent,
+		"mostplayednotrecentalbums\.htm" => \&handleWebMostPlayedNotRecentAlbums,
+		"mostplayednotrecentartists\.htm" => \&handleWebMostPlayedNotRecentArtists
 	);
 
 	return (\%pages,"index.html");
@@ -609,6 +682,7 @@ sub baseWebPage {
 	$params->{'pluginTrackStatPlayListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
 	$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
+	$params->{'pluginTrackStatHistoryEnabled'} = Slim::Utils::Prefs::get("plugin_trackstat_history_enabled");
 	debugMsg("Exiting baseWebPage\n");
 }
 	
@@ -664,6 +738,24 @@ sub handlePlayAddWebPage {
 					debugMsg("Adding artist = ".$artist->name."\n");
 					$client->execute(['playlist', 'addtracks', sprintf('artist=%d', $artist->id)]);
 				}
+			}elsif($item->{'listtype'} eq 'genre') {
+				my $genre = $item->{'itemobj'}{'genre'};
+				if($first==1) {
+					debugMsg("Loading genre = ".$genre->name."\n");
+					$client->execute(['playlist', 'loadtracks', sprintf('genre=%d', $genre->id)]);
+				}else {
+					debugMsg("Adding artist = ".$genre->name."\n");
+					$client->execute(['playlist', 'addtracks', sprintf('genre=%d', $genre->id)]);
+				}
+			}elsif($item->{'listtype'} eq 'year') {
+				my $year = $item->{'itemobj'}{'year'};
+				if($first==1) {
+					debugMsg("Loading year = ".$year."\n");
+					$client->execute(['playlist', 'loadtracks', sprintf('year=%d', $year)]);
+				}else {
+					debugMsg("Adding year = ".$year."\n");
+					$client->execute(['playlist', 'addtracks', sprintf('year=%d', $year)]);
+				}
 			}
 			$first = 0;
 		}
@@ -690,6 +782,38 @@ sub handleWebMostPlayed {
     }
     Plugins::TrackStat::Storage::getMostPlayedTracksWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYED';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedRecent {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryTracksWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDRECENT';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedNotRecent {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryTracksWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDNOTRECENT';
 	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -810,6 +934,76 @@ sub handleWebTopRatedAlbums {
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
+sub handleWebTopRatedRecent {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryTracksWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDRECENT';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedRecentAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryAlbumsWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDRECENTALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedNotRecent {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+	my $driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryTracksWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDNOTRECENT';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedNotRecentAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryAlbumsWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDNOTRECENTALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
 sub handleWebNotRated {
 	my ($client, $params) = @_;
 
@@ -856,6 +1050,38 @@ sub handleWebMostPlayedAlbums {
     }
     Plugins::TrackStat::Storage::getMostPlayedAlbumsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedRecentAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryAlbumsWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDRECENTALBUMS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedNotRecentAlbums {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryAlbumsWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDNOTRECENTALBUMS';
 	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -925,6 +1151,70 @@ sub handleWebTopRatedArtists {
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
+sub handleWebTopRatedGenres {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedGenresWeb($params,$listLength);
+	$params->{'songlist'} = 'TOPRATEDGENRES';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedRecentArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryArtistsWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDRECENTARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedNotRecentArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedHistoryArtistsWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'TOPRATEDNOTRECENTARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebTopRatedYears {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getTopRatedYearsWeb($params,$listLength);
+	$params->{'songlist'} = 'TOPRATEDYEARS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
 sub handleWebNotRatedArtists {
 	my ($client, $params) = @_;
 
@@ -952,6 +1242,70 @@ sub handleWebMostPlayedArtists {
     }
     Plugins::TrackStat::Storage::getMostPlayedArtistsWeb($params,$listLength);
 	$params->{'songlist'} = 'MOSTPLAYEDARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedRecentArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryArtistsWeb($params,$listLength,">",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDRECENTARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedNotRecentArtists {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedHistoryArtistsWeb($params,$listLength,"<",getRecentTime());
+	$params->{'songlist'} = 'MOSTPLAYEDNOTRECENTARTISTS';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedGenres {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedGenresWeb($params,$listLength);
+	$params->{'songlist'} = 'MOSTPLAYEDGENRES';
+	setDynamicPlaylistParams($client,$params);
+	handlePlayAddWebPage($client,$params);
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebMostPlayedYears {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
+    }
+    Plugins::TrackStat::Storage::getMostPlayedYearsWeb($params,$listLength);
+	$params->{'songlist'} = 'MOSTPLAYEDYEARS';
 	setDynamicPlaylistParams($client,$params);
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -1020,19 +1374,19 @@ sub setDynamicPlaylistParams {
 }
 sub getPlayCount {
 	my $track = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '6550') {
-		return $track->playcount;
+	if ($::VERSION ge '6.5') {
+		return $track->{playcount};
 	}else {
-		return $track->playCount;
+		return $track->{playCount};
 	}
 }
 
 sub getLastPlayed {
 	my $track = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '6550') {
-		return $track->lastplayed;
+	if ($::VERSION ge '6.5') {
+		return $track->{lastplayed};
 	}else {
-		return $track->lastPlayed;
+		return $track->{lastPlayed};
 	}
 }
 
@@ -1094,6 +1448,11 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
 		}
 
+		# disable iTunes integration by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_itunes_enabled",0);
+		}
+
 		# set default music magic port
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_port",Slim::Utils::Prefs::get('MMSport'));
@@ -1104,19 +1463,44 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_host",Slim::Utils::Prefs::get('MMSHost'));
 		}
 
-		# disable music magic integration by default
-		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
+		# enable history by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_history_enabled",1);
 		}
 
-		# disable refresh at startup by default
+		# Set default recent number of days to 30
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_recent_number_of_days"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_recent_number_of_days",30);
+		}
+
+		# enable refresh at startup by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_refresh_startup",0);
+			Slim::Utils::Prefs::set("plugin_trackstat_refresh_startup",1);
 		}
 
-		# disable refresh after rescan by default
+		# enable refresh after rescan by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_refresh_rescan"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_refresh_rescan",0);
+			Slim::Utils::Prefs::set("plugin_trackstat_refresh_rescan",1);
+		}
+
+		# set default song threshold to 1800
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_song_threshold_length"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_song_threshold_length",1800);
+		}
+
+		# set default min song length to 5
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_min_song_length"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_min_song_length",5);
+		}
+
+		# set default min song percent
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_min_song_percent"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_min_song_percent",50);
+		}
+		
+		#setup default iTunes history file
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_itunes_export_dir",Slim::Utils::Prefs::get('playlistdir'));
 		}
 
 		initRatingChar();
@@ -1824,7 +2208,7 @@ sub markedAsPlayed {
 	my $playCount;
 	if($trackHandle && $trackHandle->playCount) {
 		$playCount = $trackHandle->playCount + 1;
-	}elsif(getPlayCount($track)>0){
+	}elsif(getPlayCount($track)){
 		$playCount = getPlayCount($track);
 	}else {
 		$playCount = 1;
@@ -1839,9 +2223,13 @@ sub markedAsPlayed {
 	if ($trackHandle) {
 		$mbId = $trackHandle->mbId;
 		$rating = $trackHandle->rating;
+	}elsif ($::VERSION ge '6.5') {
+		$rating = $track->{rating};
 	}
 	 
 	Plugins::TrackStat::Storage::savePlayCountAndLastPlayed($url,$mbId,$playCount,$lastPlayed);
+	Plugins::TrackStat::Storage::addToHistory($url,$mbId,$lastPlayed,$rating);
+	
 	my %statistic = (
 		'url' => $url,
 		'playCount' => $playCount,
@@ -1891,22 +2279,37 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 	my $currentTrackLength = $playStatus->currentTrackLength();
 	my $tmpCurrentSongTrack = $playStatus->currentSongTrack();
 
-	# The minimum play time the % minimum requires
-	my $minimumPlayLengthFromPercentPlayThreshold = $TRACKSTAT_PERCENT_PLAY_THRESHOLD * $currentTrackLength;
+	my $minPlayedTime = Slim::Utils::Prefs::get("plugin_trackstat_min_song_length");
+	if(!defined $minPlayedTime) {
+		$minPlayedTime = 5;
+	}
 
-	my $printableDisplayThreshold = $TRACKSTAT_PERCENT_PLAY_THRESHOLD * 100;
+	my $thresholdTime = Slim::Utils::Prefs::get("plugin_trackstat_song_threshold_length");
+	if(!defined $thresholdTime) {
+		$thresholdTime = 1800;
+	}
+
+	my $minPlayedPercent = Slim::Utils::Prefs::get("plugin_trackstat_min_song_percent");
+	if(!defined $minPlayedPercent) {
+		$minPlayedPercent = 50;
+	}
+
+	# The minimum play time the % minimum requires
+	my $minimumPlayLengthFromPercentPlayThreshold = $minPlayedPercent * $currentTrackLength / 100;
+
+	my $printableDisplayThreshold = $minPlayedPercent;
 	debugMsg("Time actually played in track: $totalTimeElapsedDuringPlay\n");
 	#debugMsg("Current play threshold is $printableDisplayThreshold%.\n");
-	#debugMsg("Minimum play time is $TRACKSTAT_MINIMUM_PLAY_TIME seconds.\n");
-	#debugMsg("Time play threshold is $TRACKSTAT_TIME_PLAY_THRESHOLD seconds.\n");
+	#debugMsg("Minimum play time is $minPlayedTime seconds.\n");
+	#debugMsg("Time play threshold is $thresholdTime seconds.\n");
 	#debugMsg("Percentage play threshold calculation:\n");
-	#debugMsg("$TRACKSTAT_PERCENT_PLAY_THRESHOLD * $currentTrackLength =$minimumPlayLengthFromPercentPlayThreshold\n");	
+	#debugMsg("$minPlayedPercent * $currentTrackLength / 100 = $minimumPlayLengthFromPercentPlayThreshold\n");	
 
 	# Did it play at least the absolute minimum amount?
-	if ($totalTimeElapsedDuringPlay < $TRACKSTAT_MINIMUM_PLAY_TIME ) 
+	if ($totalTimeElapsedDuringPlay < $minPlayedTime ) 
 	{
 		# No. This condition overrides the others.
-		debugMsg("\"$tmpCurrentSongTrack\" NOT played long enough: Played $totalTimeElapsedDuringPlay; needed to play $TRACKSTAT_MINIMUM_PLAY_TIME seconds.\n");
+		debugMsg("\"$tmpCurrentSongTrack\" NOT played long enough: Played $totalTimeElapsedDuringPlay; needed to play $minPlayedTime seconds.\n");
 		$wasLongEnough = 0;   
 	}
 	# Did it play past the percent-of-track played threshold?
@@ -1918,21 +2321,21 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 		$wasLongEnough = 1;
 	}
 	# Did it play past the number-of-seconds played threshold?
-	elsif ($totalTimeElapsedDuringPlay >= $TRACKSTAT_TIME_PLAY_THRESHOLD)
+	elsif ($totalTimeElapsedDuringPlay >= $thresholdTime)
 	{
 		# Yes. We have a play.
 		debugMsg("\"$tmpCurrentSongTrack\" was played long enough to count as played.\n");
-		debugMsg("Played past time threshold of $TRACKSTAT_TIME_PLAY_THRESHOLD seconds.\n");
+		debugMsg("Played past time threshold of $thresholdTime seconds.\n");
 		$wasLongEnough = 1;
 	} else {
 		# We *could* do this calculation above, but I wanted to make it clearer
 		# exactly why a play was too short, if it was too short, with explicit
 		# debug messages.
 		my $minimumPlayTimeNeeded;
-		if ($minimumPlayLengthFromPercentPlayThreshold < $TRACKSTAT_TIME_PLAY_THRESHOLD) {
+		if ($minimumPlayLengthFromPercentPlayThreshold < $thresholdTime) {
 			$minimumPlayTimeNeeded = $minimumPlayLengthFromPercentPlayThreshold;
 		} else {
-			$minimumPlayTimeNeeded = $TRACKSTAT_TIME_PLAY_THRESHOLD;
+			$minimumPlayTimeNeeded = $thresholdTime;
 		}
 		# Otherwise, it played above the minimum 
 		#, but below the thresholds, so, no play.
@@ -1973,9 +2376,9 @@ sub setTrackStatRating {
 	debugMsg("Entering setTrackStatRating\n");
 	my ($client,$url,$rating)=@_;
 	my $lowrating = $rating / 20;
+	my $track = undef;
+	my $ds = Slim::Music::Info::getCurrentDataStore();
 	if ($::VERSION ge '6.5') {
-		my $ds = Slim::Music::Info::getCurrentDataStore();
-		my $track;
 		eval {
 			$track = $ds->objectForUrl($url);
 		};
@@ -1992,11 +2395,11 @@ sub setTrackStatRating {
 		}
 	}
 	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
-		$url = getMusicMagicURL($url);
+		my $mmurl = getMusicMagicURL($url);
 		
 		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
 		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$lowrating";
+		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
 		debugMsg("Calling: $musicmagicurl\n");
 		my $http = Slim::Player::Protocols::HTTP->new({
 	        'url'    => "$musicmagicurl",
@@ -2014,6 +2417,21 @@ sub setTrackStatRating {
 	    }else {
 			debugMsg("Failure setting Music Magic rating\n");
 	    }
+	}
+	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
+		my $itunesurl = getiTunesURL($url);
+		my $dir = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_dir');
+		my $filename = catfile($dir,"TrackStat_iTunes_Hist.txt");
+		my $output = FileHandle->new($filename, ">>") or do {
+			warn "Could not open $filename for writing.";
+			return;
+		};
+		if(!defined($track)) {
+			$track = $ds->objectForUrl($url);
+		}
+		
+		print $output "".$track->title."|||$itunesurl|rated||$rating\n";
+		close $output;
 	}
 	debugMsg("Exiting setTrackStatRating\n");
 }
@@ -2291,6 +2709,7 @@ sub setTrackStatStatistic {
 	
 	my $playCount = $statistic->{'playCount'};
 	my $lastPlayed = $statistic->{'lastPlayed'};	
+	my $rating = $statistic->{'rating'};
 	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
 		$url = getMusicMagicURL($url);
 		
@@ -2304,6 +2723,22 @@ sub setTrackStatStatistic {
 		debugMsg("Calling: $musicmagicurl\n");
 		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 		$http->get($musicmagicurl);
+	}
+	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
+		my $itunesurl = getiTunesURL($url);
+		my $dir = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_dir');
+		my $filename = catfile($dir,"TrackStat_iTunes_Hist.txt");
+		my $output = FileHandle->new($filename, ">>") or do {
+			warn "Could not open $filename for writing.";
+			return;
+		};
+		my $ds = Slim::Music::Info::getCurrentDataStore();
+		my $track = $ds->objectForUrl($url);
+		if(!defined $rating) {
+			$rating = '';
+		}
+		print $output "".$track->title."|||$itunesurl|played||$rating\n";
+		close $output;
 	}
 	debugMsg("Exiting setTrackStatStatistic\n");
 }
@@ -2331,6 +2766,30 @@ sub getMusicMagicURL {
 	$url = URI::Escape::uri_escape($url);
 	return $url;
 }	
+
+sub getiTunesURL {
+	my $url = shift;
+	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_replace_extension');
+	my $replacePath = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_library_music_path');
+	my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+	$nativeRoot =~ s/\\/\//isg;
+	if(defined($replacePath) && $replacePath ne '') {
+		$replacePath =~ s/\\/\//isg;
+	}
+
+	my $path = Slim::Utils::Misc::pathFromFileURL($url);
+	if($replaceExtension) {
+		$path =~ s/\.[^.]*$/$replaceExtension/isg;
+	}
+
+	if(defined($replacePath) && $replacePath ne '') {
+		$path =~ s/\\/\//isg;
+		$path =~ s/$nativeRoot/$replacePath/isg;
+	}
+
+	return $path;
+}	
+
 my %musicInfoSCRItems = (
 	'TRACKSTAT_RATING_DYNAMIC' => 'TRACKSTAT_RATING_DYNAMIC',
 	'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC' => 'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC',
@@ -2425,6 +2884,11 @@ sub importFromiTunes()
 	Plugins::TrackStat::iTunes::Import::startImport();
 }
 
+sub exportToiTunes()
+{
+	Plugins::TrackStat::iTunes::Export::startExport();
+}
+
 sub importFromMusicMagic()
 {
 	Plugins::TrackStat::MusicMagic::Import::startImport();
@@ -2463,6 +2927,20 @@ sub getDynamicPlayLists {
 	);
 	my $id = "trackstat_mostplayed";
 	$result{$id} = \%currentResultMostPlayedTrack;
+
+	my %currentResultMostPlayedRecentTrack = (
+		'id' => 'mostplayedrecent',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT'),
+	);
+	$id = "trackstat_mostplayedrecent";
+	$result{$id} = \%currentResultMostPlayedRecentTrack;
+
+	my %currentResultMostPlayedNotRecentTrack = (
+		'id' => 'mostplayednotrecent',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT'),
+	);
+	$id = "trackstat_mostplayednotrecent";
+	$result{$id} = \%currentResultMostPlayedNotRecentTrack;
 
 	my %currentResultLastAddedTrack = (
 		'id' => 'lastadded',
@@ -2513,6 +2991,34 @@ sub getDynamicPlayLists {
 	$id = "trackstat_topratedalbums";
 	$result{$id} = \%currentResultTopRatedAlbum;
 
+	my %currentResultTopRatedRecentTrack = (
+		'id' => 'topratedrecent',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT'),
+	);
+	$id = "trackstat_topratedrecent";
+	$result{$id} = \%currentResultTopRatedRecentTrack;
+
+	my %currentResultTopRatedRecentAlbum = (
+		'id' => 'topratedrecentalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS'),
+	);
+	$id = "trackstat_topratedrecentalbums";
+	$result{$id} = \%currentResultTopRatedRecentAlbum;
+
+	my %currentResultTopRatedNotRecentTrack = (
+		'id' => 'topratednotrecent',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT'),
+	);
+	$id = "trackstat_topratednotrecent";
+	$result{$id} = \%currentResultTopRatedNotRecentTrack;
+
+	my %currentResultTopRatedNotRecentAlbum = (
+		'id' => 'topratednotrecentalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS'),
+	);
+	$id = "trackstat_topratednotrecentalbums";
+	$result{$id} = \%currentResultTopRatedNotRecentAlbum;
+
 	my %currentResultNotRatedTrack = (
 		'id' => 'notrated',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED'),
@@ -2548,6 +3054,20 @@ sub getDynamicPlayLists {
 	$id = "trackstat_mostplayedalbums";
 	$result{$id} = \%currentResultMostPlayedAlbum;
 
+	my %currentResultMostPlayedRecentAlbum = (
+		'id' => 'mostplayedrecentalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS'),
+	);
+	$id = "trackstat_mostplayedrecentalbums";
+	$result{$id} = \%currentResultMostPlayedRecentAlbum;
+
+	my %currentResultMostPlayedNotRecentAlbum = (
+		'id' => 'mostplayednotrecentalbums',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS'),
+	);
+	$id = "trackstat_mostplayednotrecentalbums";
+	$result{$id} = \%currentResultMostPlayedNotRecentAlbum;
+
 	my %currentResultLastAddedAlbum = (
 		'id' => 'lastaddedalbums',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDALBUMS'),
@@ -2561,6 +3081,34 @@ sub getDynamicPlayLists {
 	);
 	$id = "trackstat_topratedartists";
 	$result{$id} = \%currentResultTopRatedArtist;
+
+	my %currentResultTopRatedRecentArtist = (
+		'id' => 'topratedrecentartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS'),
+	);
+	$id = "trackstat_topratedrecentartists";
+	$result{$id} = \%currentResultTopRatedRecentArtist;
+
+	my %currentResultTopRatedNotRecentArtist = (
+		'id' => 'topratednotrecentartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS'),
+	);
+	$id = "trackstat_topratednotrecentartists";
+	$result{$id} = \%currentResultTopRatedNotRecentArtist;
+
+	my %currentResultTopRatedGenre = (
+		'id' => 'topratedgenres',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDGENRES'),
+	);
+	$id = "trackstat_topratedgenres";
+	$result{$id} = \%currentResultTopRatedGenre;
+
+	my %currentResultTopRatedYear = (
+		'id' => 'topratedyears',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDYEARS'),
+	);
+	$id = "trackstat_topratedyears";
+	$result{$id} = \%currentResultTopRatedYear;
 
 	my %currentResultNotRatedArtist = (
 		'id' => 'notratedartists',
@@ -2590,6 +3138,34 @@ sub getDynamicPlayLists {
 	$id = "trackstat_mostplayedartists";
 	$result{$id} = \%currentResultMostPlayedArtist;
 
+	my %currentResultMostPlayedRecentArtist = (
+		'id' => 'mostplayedrecentartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS'),
+	);
+	$id = "trackstat_mostplayedrecentartists";
+	$result{$id} = \%currentResultMostPlayedRecentArtist;
+
+	my %currentResultMostPlayedNotRecentArtist = (
+		'id' => 'mostplayednotrecentartists',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS'),
+	);
+	$id = "trackstat_mostplayednotrecentartists";
+	$result{$id} = \%currentResultMostPlayedNotRecentArtist;
+
+	my %currentResultMostPlayedGenre = (
+		'id' => 'mostplayedgenres',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDGENRES'),
+	);
+	$id = "trackstat_mostplayedgenres";
+	$result{$id} = \%currentResultMostPlayedGenre;
+
+	my %currentResultMostPlayedYear = (
+		'id' => 'mostplayedyears',
+		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDYEARS'),
+	);
+	$id = "trackstat_mostplayedyears";
+	$result{$id} = \%currentResultMostPlayedYear;
+
 	my %currentResultLastAddedArtist = (
 		'id' => 'lastaddedartists',
 		'name' => $client->string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS'),
@@ -2616,6 +3192,10 @@ sub getNextDynamicPlayListTracks {
 	debugMsg("Got: ".$dynamicplaylist->{'id'}.", $limit\n");
 	if($dynamicplaylist->{'id'} eq 'mostplayed') {
 		return Plugins::TrackStat::Storage::getMostPlayedTracks($listLength,$limit);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedrecent') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryTracks($listLength,$limit,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayednotrecent') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryTracks($listLength,$limit,"<",getRecentTime());
 	}elsif($dynamicplaylist->{'id'} eq 'lastadded') {
 		return Plugins::TrackStat::Storage::getLastAddedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayed') {
@@ -2630,12 +3210,24 @@ sub getNextDynamicPlayListTracks {
 		return Plugins::TrackStat::Storage::getTopRatedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'topratedalbums') {
 		return Plugins::TrackStat::Storage::getTopRatedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedrecent') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryTracks($listLength,$limit,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'topratedrecentalbums') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryAlbumTracks($listLength,undef,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'topratednotrecent') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryTracks($listLength,$limit,"<",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'topratednotrecentalbums') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryAlbumTracks($listLength,undef,"<",getRecentTime());
 	}elsif($dynamicplaylist->{'id'} eq 'notrated') {
 		return Plugins::TrackStat::Storage::getNotRatedTracks($listLength,$limit);
 	}elsif($dynamicplaylist->{'id'} eq 'notratedalbums') {
 		return Plugins::TrackStat::Storage::getNotRatedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedalbums') {
 		return Plugins::TrackStat::Storage::getMostPlayedAlbumTracks($listLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedrecentalbums') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryAlbumTracks($listLength,undef,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayednotrecentalbums') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryAlbumTracks($listLength,undef,"<",getRecentTime());
 	}elsif($dynamicplaylist->{'id'} eq 'lastaddedalbums') {
 		return Plugins::TrackStat::Storage::getLastAddedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedalbums') {
@@ -2644,19 +3236,43 @@ sub getNextDynamicPlayListTracks {
 		return Plugins::TrackStat::Storage::getNotPlayedAlbumTracks($listLength);
 	}elsif($dynamicplaylist->{'id'} eq 'topratedartists') {
 		return Plugins::TrackStat::Storage::getTopRatedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedrecentartists') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryArtistTracks($listLength,$artistListLength,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'topratednotrecentartists') {
+		return Plugins::TrackStat::Storage::getTopRatedHistoryArtistTracks($listLength,$artistListLength,"<",getRecentTime());
 	}elsif($dynamicplaylist->{'id'} eq 'notratedartists') {
 		return Plugins::TrackStat::Storage::getNotRatedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'mostplayedartists') {
 		return Plugins::TrackStat::Storage::getMostPlayedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedrecentartists') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryArtistTracks($listLength,$artistListLength,">",getRecentTime());
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayednotrecentartists') {
+		return Plugins::TrackStat::Storage::getMostPlayedHistoryArtistTracks($listLength,$artistListLength,"<",getRecentTime());
 	}elsif($dynamicplaylist->{'id'} eq 'lastaddedartists') {
 		return Plugins::TrackStat::Storage::getLastAddedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'leastplayedartists') {
 		return Plugins::TrackStat::Storage::getLeastPlayedArtistTracks($listLength,$artistListLength);
 	}elsif($dynamicplaylist->{'id'} eq 'notplayedartists') {
 		return Plugins::TrackStat::Storage::getNotPlayedArtistTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedgenres') {
+		return Plugins::TrackStat::Storage::getTopRatedGenreTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedgenres') {
+		return Plugins::TrackStat::Storage::getMostPlayedGenreTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'topratedyears') {
+		return Plugins::TrackStat::Storage::getTopRatedYearTracks($listLength,$artistListLength);
+	}elsif($dynamicplaylist->{'id'} eq 'mostplayedyears') {
+		return Plugins::TrackStat::Storage::getMostPlayedYearTracks($listLength,$artistListLength);
 	}
 	debugMsg("Got ".scalar(@result)." tracks\n");
 	return \@result;
+}
+
+sub getRecentTime() {
+	my $days = Slim::Utils::Prefs::get("plugin_trackstat_recent_number_of_days");
+	if(!defined($days)) {
+		$days = 30;
+	}
+	return time() - 24*3600*$days;
 }
 
 sub validateIsDirOrEmpty {
@@ -2664,7 +3280,38 @@ sub validateIsDirOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		return Slim::Web::Setup::validateIsDir($arg);
+		if ($::VERSION ge '6.5') {
+			return Slim::Utils::Validate::isDir($arg);
+		}else {
+			return Slim::Web::Setup::validateIsDir($arg);
+		}
+	}
+}
+
+sub validateAcceptAllWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::acceptAll($arg);
+	}else {
+		return Slim::Web::Setup::validateAcceptAll($arg);
+	}
+}
+
+sub validateIntWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::isInt($arg);
+	}else {
+		return Slim::Web::Setup::validateInt($arg);
+	}
+}
+
+sub validateTrueFalseWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::trueFalse($arg);
+	}else {
+		return Slim::Web::Setup::validateTrueFalse($arg);
 	}
 }
 
@@ -2673,7 +3320,11 @@ sub validateIsFileOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		return Slim::Web::Setup::validateIsFile($arg);
+		if ($::VERSION ge '6.5') {
+			return Slim::Utils::Validate::isFile($arg);
+		}else {
+			return Slim::Web::Setup::validateIsFile($arg);
+		}
 	}
 }
 
@@ -2759,6 +3410,15 @@ SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN
 SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN_DESC
 	EN	This will activate/deactivate the automatic refresh statistic operation after a rescan has been performed in slimserver, the only reason to turn this if is if you get performance issues with refresh statistics.<br>Note! This parameter does only have effect if you run slimserver 6.5
 
+PLUGIN_TRACKSTAT_HISTORY_ENABLED
+	EN	Enable/disable History
+
+SETUP_PLUGIN_TRACKSTAT_HISTORY_ENABLED
+	EN	History
+
+SETUP_PLUGIN_TRACKSTAT_HISTORY_ENABLED_DESC
+	EN	This will activate/deactivate history logging in TrackStat. With history logging enabled TrackStat will store the exact time each time a track is played and can with this information calculate statistics such as "Most played tracks in last month". With history disabled TrackStat will only have information about the last time a specific track was played. You might want to try to disable history logging if you get performance problems with TrackStat.
+
 PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
 	EN	Enable Dynamic Playlists
 
@@ -2771,6 +3431,9 @@ SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_DESC
 PLUGIN_TRACKSTAT_ITUNES_IMPORTING
 	EN	Importing from iTunes...
 
+PLUGIN_TRACKSTAT_ITUNES_EXPORTING
+	EN	Exporting to iTunes...
+
 PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON
 	EN	Import from iTunes
 
@@ -2779,6 +3442,15 @@ SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT
 
 SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT_DESC
 	EN	Import information from the specified iTunes Music Library.xml file. This means that any existing rating, play counts or last played information in iTunes will overwrite any existing information.
+
+PLUGIN_TRACKSTAT_ITUNES_EXPORT_BUTTON
+	EN	Export to iTunes
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT
+	EN	Export to iTunes
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DESC
+	EN	Export information from TrackStat to the iTunes history file(TrackStat_iTunes_Complete.txt). Note that the generated iTunes history file must be run with the TrackStatiTunesUpdateWin.pl script to actually export the data to iTunes.
 
 PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
 	EN	Path to iTunes Music Library.xml
@@ -2789,14 +3461,32 @@ SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
 SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE_DESC
 	EN	This parameter shall be the full path to the iTunes Music Library.xml file that should be used when importing information from iTunes.
 
+PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR
+	EN	iTunes history file directory
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR
+	EN	iTunes history file directory
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR_DESC
+	EN	This parameter shall be the full path to the directory where the iTunes history file should be written when exporting to iTunes. Note that the generated iTunes history file must be run with the TrackStatiTunesUpdate.pl script to actually export the data to iTunes.<br>A complete export will generate a TrackStat_iTunes_Complete.txt file, continously export when playing will generate a TrackStat_iTunes_Hist.txt file<br>Note! the TrackStatiTunesUpdateWin.pl script is only supported for iTunes on Windows.
+
 PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY
-	EN	Path to iTunes Music
+	EN	Path to iTunes Music (import)
 
 SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH
-	EN	Music directory
+	EN	Music directory (iTunes import)
 
 SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH_DESC
 	EN	The begining of the paths of the music imported from iTunes will be replaced with this path. This makes it possible to have the music in a different directory in iTunes compared to the directory where the music is accessible on the slimserver computer.
+
+PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY
+	EN	Path to iTunes Music (export)
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_LIBRARY_MUSIC_PATH
+	EN	Music directory (iTunes export)
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_LIBRARY_MUSIC_PATH_DESC
+	EN	The begining of the paths of the music exported to iTunes will be replaced with this path. This makes it possible to have the music in a different directory in iTunes compared to the directory where the music is accessible on the slimserver computer.
 
 PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
 	EN	File extension to use in files imported from iTunes
@@ -2805,85 +3495,103 @@ SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
 	EN	iTunes import extension
 	
 SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION_DESC
-	EN	The file extensions of the music files i imported from iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
+	EN	The file extensions of the music files imported from iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
+	
+PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION
+	EN	File extension to use in files exported to iTunes
+	
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION
+	EN	iTunes export extension
+	
+SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION_DESC
+	EN	The file extensions of the music files exported to iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
 	
 PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
-	EN	Enable Music Magic integration
+	EN	Enable dynamic MusicIP Mixer integration
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
-	EN	Music Magic Integration
+	EN	MusicIP Mixer Dynamic Integration
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED_DESC
-	EN	Enable ratings, play counts and last played time to be sent to Music Magic
+	EN	Enable ratings, play counts and last played time to be sent continously to MusicIP Mixer as songs are played and rated
+
+PLUGIN_TRACKSTAT_ITUNES_ENABLED
+	EN	Enable dynamic iTunes integration
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_ENABLED
+	EN	iTunes Dynamic Integration
+
+SETUP_PLUGIN_TRACKSTAT_ITUNES_ENABLED_DESC
+	EN	Enable ratings, play counts and last played time to be sent to a iTunes history file as songs are played and rated. The iTunes history file will be called TrackStat_iTunes_Hist.txt and has to be run with the TrackStatiTunesUpdateWin.pl script to actually write the information to iTunes.
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
 	EN	Hostname
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
-	EN	Music Magic server hostname
+	EN	MusicIP Mixer server hostname
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST_DESC
-	EN	Hostname of Music Magic server, default is localhost
+	EN	Hostname of MusicIP Mixer server, default is localhost
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
 	EN	Port
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
-	EN	Music Magic server port
+	EN	MusicIP Mixer server port
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT_DESC
-	EN	Port on Music Magic server, default is 10002
+	EN	Port on MusicIP Mixer server, default is 10002
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY
 	EN	Music directory
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH
-	EN	Music Magic music path
+	EN	MusicIP Mixer music path
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH_DESC
-	EN	The begining of the paths of the music will be replaced with this path when calling Music Magic for setting ratings and play counts. This makes it possible to have the music in a different directory in Music Magic compared to the directory where the music is accessible on the slimserver computer. During import/export this path will also be used to convert slimserver paths to Music Magic paths.
+	EN	The begining of the paths of the music will be replaced with this path when calling MusicIP Mixer for setting ratings and play counts. This makes it possible to have the music in a different directory in MusicIP Mixer compared to the directory where the music is accessible on the slimserver computer. During import/export this path will also be used to convert slimserver paths to MusicIP Mixer paths.
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
-	EN	File extension to use when calling Music Magic
+	EN	File extension to use when calling MusicIP Mixer
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
-	EN	Music Magic export extension
+	EN	MusicIP Mixer export extension
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION_DESC
-	EN	The file extensions of to use when sending ratings and play counts to Music Magic, this is the extension used for files in Music Magic. This makes it possible to have .mp3 files in Music Magic and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with Music Magic.
+	EN	The file extensions of to use when sending ratings and play counts to MusicIP Mixer, this is the extension used for files in MusicIP Mixer. This makes it possible to have .mp3 files in MusicIP Mixer and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with MusicIP Mixer.
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
-	EN	File extension to use when importing from Music Magic
+	EN	File extension to use when importing from MusicIP Mixer
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
-	EN	Music Magic import extension
+	EN	MusicIP Mixer import extension
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION_DESC
-	EN	The file extensions of to use when importing tracks from Music Magic, this is the extension used for files in slimserver. This makes it possible to have .mp3 files in Music Magic and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with Music Magic.
+	EN	The file extensions of to use when importing tracks from MusicIP Mixer, this is the extension used for files in slimserver. This makes it possible to have .mp3 files in MusicIP Mixer and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with MusicIP Mixer.
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING
-	EN	Importing from Music Magic...
+	EN	Importing from MusicIP Mixer...
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_BUTTON
-	EN	Import from Music Magic
+	EN	Import from MusicIP Mixer
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT
-	EN	Music Magic import
+	EN	MusicIP Mixer import
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_DESC
-	EN	Import information from the specified Music Magic server. This means that any existing rating, play counts or last played information in Music Magic will overwrite any existing information. 
+	EN	Import information from the specified MusicIP Mixer server. This means that any existing rating, play counts or last played information in MusicIP Mixer will overwrite any existing information. 
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING
-	EN	Exporting to Music Magic...
+	EN	Exporting to MusicIP Mixer...
 
 PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON
-	EN	Export to Music Magic
+	EN	Export to MusicIP Mixer
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT
-	EN	Music Magic export
+	EN	MusicIP Mixer export
 
 SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_DESC
-	EN	Export information from TrackStat to the specified Music Magic server. This means that any existing rating, play counts or last played information in TrackStat will overwrite any existing information in Music Magic. Note that an export to Music Magic might take some time.
+	EN	Export information from TrackStat to the specified MusicIP Mixer server. This means that any existing rating, play counts or last played information in TrackStat will overwrite any existing information in MusicIP Mixer. Note that an export to MusicIP Mixer might take some time.
 
 PLUGIN_TRACKSTAT_RATINGCHAR
 	EN	Character
@@ -2915,6 +3623,15 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_DESC
 PLUGIN_TRACKSTAT_MAKING_BACKUP
 	EN	Making TrackStat backup to file...
 
+SETUP_PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS
+	EN	Number of days to use for recently played
+
+SETUP_PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS_DESC
+	EN	Number of days to use for recently played in statistics, this option only has effect if history is enabled. Its used when calculating statistics that ignores recently played or only uses recently played tracks.
+
+PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS
+	EN	Number of days to use for recently played in statistics
+
 SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
 	EN	Number of songs/albums/artists on web
 
@@ -2941,6 +3658,33 @@ SETUP_PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH_DESC
 
 PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH
 	EN	Number of songs for each artist in playlists
+
+SETUP_PLUGIN_TRACKSTAT_MIN_SONG_LENGTH
+	EN	Minimum song length to count
+
+SETUP_PLUGIN_TRACKSTAT_MIN_SONG_LENGTH_DESC
+	EN	A minimum number of seconds a track must be played to be considered a play. Note that if set too high it can prevent a track from ever being noted as played - it is effectively a minimum track length. Tracks shorter than this time will never be considered played even if they fullfill the percent and threshold limits.
+
+PLUGIN_TRACKSTAT_MIN_SONG_LENGTH
+	EN	Minumum song length to count
+
+SETUP_PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH
+	EN	Played length to always count
+
+SETUP_PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH_DESC
+	EN	A time played threshold. After this number of seconds playing, the track will be considered played. This is useful for long recordings which are several hours and you want them to be considered as played every time you have played them for at least 30 minutes.
+
+PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH
+	EN	Played length to always count
+
+SETUP_PLUGIN_TRACKSTAT_MIN_SONG_PERCENT
+	EN	Minumum played percent
+
+SETUP_PLUGIN_TRACKSTAT_MIN_SONG_PERCENT_DESC
+	EN	A percentage play threshold. For example, if 50% of a track is played, it will be considered played else it will never be added to the statistics as played.
+
+PLUGIN_TRACKSTAT_MIN_SONG_PERCENT
+	EN	Minimum played percent
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
@@ -2978,6 +3722,12 @@ PLUGIN_TRACKSTAT_RATING_NO_SONG
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATED
 	EN	Top rated songs
 
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT
+	EN	Top rated songs recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT
+	EN	Top rated songs not recently played
+
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATED
 	EN	Not rated songs
 
@@ -2989,6 +3739,30 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDARTISTS
 	EN	Most played artists
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT
+	EN	Most played songs recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS
+	EN	Most played albums recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS
+	EN	Most played artists recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT
+	EN	Most played songs not recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS
+	EN	Most played albums not recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS
+	EN	Most played artists not recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDGENRES
+	EN	Most played genres
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDYEARS
+	EN	Most played years
 
 PLUGIN_TRACKSTAT_SONGLIST_LASTADDED
 	EN	Last added songs
@@ -3026,8 +3800,26 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS
 	EN	Top rated albums
 
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS
+	EN	Top rated albums recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS
+	EN	Top rated albums not recently played
+
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS
 	EN	Top rated artists
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS
+	EN	Top rated artists recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS
+	EN	Top rated artists not recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDGENRES
+	EN	Top rated genres
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDYEARS
+	EN	Top rated years
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS
 	EN	Not rated albums
