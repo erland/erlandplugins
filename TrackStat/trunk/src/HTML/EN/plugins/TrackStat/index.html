@@ -4,6 +4,7 @@
 	[% PROCESS plugins/TrackStat/cmdwrappers65 %]
 	[% PROCESS plugins/TrackStat/css65 %]
 [% END %]
+[% PROCESS plugins/TrackStat/css %]
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %][% path %]?player=[% player | uri %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
@@ -83,18 +84,26 @@
 		<a href="toprated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATED" | string %]</a><br>
 		</td><td>
 		<a href="notrated.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATED" | string %]</a><br>
+		</td><td>
+		<a href="topratedgenres.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDGENRES" | string %]</a><br>
 		</td></tr><tr><td>
 		<a href="topratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS" | string %]</a><br>
 		</td><td>
 		<a href="notratedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS" | string %]</a><br>
+		</td><td>
+		<a href="mostplayedgenres.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDGENRES" | string %]</a><br>
 		</td></tr><tr><td>
 		<a href="topratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDARTISTS" | string %]</a><br>
 		</td><td>
 		<a href="notratedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS" | string %]</a><br>
+		</td><td>
+		<a href="topratedyears.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDYEARS" | string %]</a><br>
 		</td></tr><tr><td>
 		<a href="mostplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED" | string %]</a><br>
 		</td><td>
 		<a href="leastplayed.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED" | string %]</a><br>
+		</td><td>
+		<a href="mostplayedyears.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDYEARS" | string %]</a><br>
 		</td></tr><tr><td>
 		<a href="mostplayedalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDALBUMS" | string %]</a><br>
 		</td><td>
@@ -119,6 +128,38 @@
 		<a href="lastaddedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS" | string %]</a><br>
 		</td><td>
 		<a href="notplayedartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS" | string %]</a><br>
+		</td></tr>
+		[%IF pluginTrackStatHistoryEnabled %]
+			<tr><td>
+			<a href="topratedrecent.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT" | string %]</a><br>
+			</td><td colspan="2">
+			<a href="mostplayedrecent.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT" | string %]</a><br>
+			</td></tr>
+			<tr><td>
+			<a href="topratedrecentalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS" | string %]</a><br>
+			</td><td colspan="2">
+			<a href="mostplayedrecentalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS" | string %]</a><br>
+			</td></tr>
+			<tr><td>
+			<a href="topratedrecentartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS" | string %]</a><br>
+			</td><td colspan="2">
+			<a href="mostplayedrecentartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS" | string %]</a><br>
+			</td></tr>
+		[% END %]
+		<tr><td>
+		<a href="topratednotrecent.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT" | string %]</a><br>
+		</td><td colspan="2">
+		<a href="mostplayednotrecent.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT" | string %]</a><br>
+		</td></tr>
+		<tr><td>
+		<a href="topratednotrecentalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS" | string %]</a><br>
+		</td><td colspan="2">
+		<a href="mostplayednotrecentalbums.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS" | string %]</a><br>
+		</td></tr>
+		<tr><td>
+		<a href="topratednotrecentartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS" | string %]</a><br>
+		</td><td colspan="2">
+		<a href="mostplayednotrecentartists.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS" | string %]</a><br>
 		</td></tr>
 		</table>
 		<br>
@@ -155,23 +196,39 @@
 			[% odd = 1 %]
             [% FOREACH item = browse_items %]
 				[% BLOCK controls %]
+					[% IF pluginTrackStatVersion >= '6.5' %]
+						<div id="trackstat_resultlist_controls">
+						<div id="trackstat_resultlist_controls_inner">
+						[% IF item.listtype == 'track' %]
+							[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
+							[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
+						[% ELSE %]
+							[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+							[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+						[% END %]
+						</div>
+					[% END %]
 				    [% IF item.song_count %]([% item.song_count %])[% END %]
 					&nbsp;
 					[% loop = 0 %]
 					[% WHILE loop < 5 %]
 						[% loop = loop + 1 %]
 						[% IF loop <= item.rating %]
-							<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13>
+							<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 title="[% item.ratingnumber %]">
 						[% ELSE %]
 							<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=13 height=13>
 						[% END %]
 					[% END %]
-					[% IF item.listtype == 'track' %]
-						[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
-						[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
+					[% IF pluginTrackStatVersion >= '6.5' %]
+						</div>
 					[% ELSE %]
-						[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
-						[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+						[% IF item.listtype == 'track' %]
+							[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
+							[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
+						[% ELSE %]
+							[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+							[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
+						[% END %]
 					[% END %]
 				[% END %]
 				[%- WRAPPER contentitem controls='controls' %]
@@ -182,6 +239,10 @@
 						<a [% PROCESS albumItemHRef %] target="browser">[% item.itemobj.album.title | html %]</a>
 					[% ELSIF item.listtype == 'artist' %]
 						<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+					[% ELSIF item.listtype == 'genre' %]
+						<a href="[% webroot %]browsedb.html?hierarchy=genre,artist,album,track&amp;level=1&amp;genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
+					[% ELSIF item.listtype == 'year' %]
+						<a href="[% webroot %]browsedb.html?hierarchy=year,album,track&amp;level=1&amp;year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
 					[% END %]
 					</div>
 				[% END %]
