@@ -38,9 +38,7 @@ sub canUseMusicMagic {
 
 	checkDefaults();
 
-	my $enabled = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled");
-		
-	return $enabled;
+	return 1;
 }
 
 sub isMusicLibraryFileChanged {
