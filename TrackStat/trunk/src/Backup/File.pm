@@ -41,6 +41,7 @@ my $backupFile;
 my $isScanning = 0;
 my $opened = 0;
 my $inTrack;
+my $inHistory;
 my $inValue;
 my %item;
 my $currentKey;
@@ -49,13 +50,15 @@ sub backupToFile
 {
 	my $filename = shift;
 
+	debugMsg("Backup to: $filename\n");
+	debugMsg("Backuping up statistic...\n");
+
 	my $sql = "SELECT url, musicbrainz_id, playCount, added, lastPlayed, rating FROM track_statistics";
 
 	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
 	my $sth = $dbh->prepare( $sql );
 	$sth->execute();
 
-	debugMsg("Backup to: $filename\n");
 	my $output = FileHandle->new($filename, ">") or do {
 		warn "Could not open $filename for writing.";
 		return;
@@ -63,14 +66,15 @@ sub backupToFile
 	print $output '<?xml version="1.0" encoding="UTF-8"?>'."\n";
 	print $output "<TrackStat>\n";
 
+	my $count = 0;
 	my( $url, $mbId, $playCount, $added, $lastPlayed, $rating );
 	eval {
 		$sth->bind_columns( undef, \$url, \$mbId, \$playCount, \$added, \$lastPlayed, \$rating );
 		my $result;
 		while( $sth->fetch() ) {
 			if($url) {
+				$count++;
 				$url = escape($url);
-				debugMsg("Backing up: $url\n");
 				print $output "	<track>\n		<url>$url</url>\n";
 				if($mbId) {
 					print $output "		<musicbrainzId>$mbId</musicbrainzId>\n";
@@ -94,10 +98,47 @@ sub backupToFile
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	}
+	$sth->finish();
+	debugMsg("Backed up totally $count statistic entries\n");
+	$sql = "SELECT url, musicbrainz_id, played, rating FROM track_history";
+	$sth = $dbh->prepare( $sql );
+	$sth->execute();
+
+	debugMsg("Backuping up history...\n");
+	$url = undef;
+	$mbId = undef;
+	$rating = undef;
+	my $played;
+	$count = 0;
+	eval {
+		$sth->bind_columns( undef, \$url, \$mbId, \$played, \$rating );
+		my $result;
+		while( $sth->fetch() ) {
+			if($url) {
+				$count++;
+				$url = escape($url);
+				print $output "	<historyentry>\n		<url>$url</url>\n";
+				if($mbId) {
+					print $output "		<musicbrainzId>$mbId</musicbrainzId>\n";
+				}
+				if($played) {
+					print $output "		<played>$played</played>\n";
+				}
+				if($rating) {
+					print $output "		<rating>$rating</rating>\n";
+				}
+				print $output "	</historyentry>\n";
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
+	debugMsg("Backed up totally $count history entries\n");
 
 	print $output "</TrackStat>\n";
 	close $output;
-	$sth->finish();
 	msg("TrackStat:Backup: Backup completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
 }
 
@@ -171,6 +212,7 @@ sub resetScanState {
 	debugMsg("Resetting scan state.\n");
 
 	$inTrack = 0;
+	$inHistory = 0;
 	$inValue = 0;
 	%item = ();
 	$currentKey = undef;
@@ -228,7 +270,7 @@ sub handleStartElement {
 	my ($p, $element) = @_;
 
 	# Don't care about the outer <dict> right after <plist>
-	if ($inTrack) {
+	if ($inTrack || $inHistory) {
 		$currentKey = $element;
 		$inValue = 1;
 	}
@@ -236,6 +278,9 @@ sub handleStartElement {
 		$inTrack = 1;
 	}
 	
+	if ($element eq 'historyentry') {
+		$inHistory = 1;
+	}
 
 }
 
@@ -263,6 +308,16 @@ sub handleEndElement {
 		%item = ();
 	}
 
+	if ($inHistory && $element eq 'historyentry') {
+
+		$inHistory = 0;
+
+		$item{'url'} = unescape($item{'url'});
+		restoreHistory(\%item);
+
+		%item = ();
+	}
+
 	# Finish up
 	if ($element eq 'TrackStat') {
 		debugMsg("iTunes: Finished scanning iTunes XML\n");
@@ -285,7 +340,38 @@ sub restoreTrack
 	my $rating   = $curTrack->{'rating'};
 
 	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating);	
+	if ($::VERSION ge '6.5') {
+		my $ds = Slim::Music::Info::getCurrentDataStore();
+		my $track;
+		eval {
+			$track = $ds->objectForUrl($url);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $url\n");
+		}
+		if($track) {
+			# Run this within eval for now so it hides all errors until this is standard
+			eval {
+				$track->set('rating' => $rating);
+				$track->update();
+				$ds->forceCommit();
+			};
+		}
+	}
 }
+
+sub restoreHistory 
+{
+	my $curTrack = shift;
+	
+	my $url       = $curTrack->{'url'};
+	my $mbId      = $curTrack->{'musicbrainzId'};
+	my $played = $curTrack->{'played'};
+	my $rating   = $curTrack->{'rating'};
+
+	Plugins::TrackStat::Storage::addToHistory($url,$mbId,$played,$rating,1);	
+}
+
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg
 {
