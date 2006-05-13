@@ -2711,15 +2711,15 @@ sub setTrackStatStatistic {
 	my $lastPlayed = $statistic->{'lastPlayed'};	
 	my $rating = $statistic->{'rating'};
 	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
-		$url = getMusicMagicURL($url);
+		my $mmurl = getMusicMagicURL($url);
 		
 		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
 		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
+		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$mmurl&count=$playCount";
 		debugMsg("Calling: $musicmagicurl\n");
 		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
 		$http->get($musicmagicurl);
-		$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
+		$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$mmurl&time=$lastPlayed";
 		debugMsg("Calling: $musicmagicurl\n");
 		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 		$http->get($musicmagicurl);
