@@ -2737,7 +2737,10 @@ sub setTrackStatStatistic {
 		if(!defined $rating) {
 			$rating = '';
 		}
-		print $output "".$track->title."|||$itunesurl|played||$rating\n";
+		if(defined $lastPlayed) {
+			my $timestr = strftime ("%Y%m%d%H%M%S", localtime $lastPlayed);
+			print $output "".$track->title."|||$itunesurl|played|$timestr|$rating\n";
+		}
 		close $output;
 	}
 	debugMsg("Exiting setTrackStatStatistic\n");
