@@ -85,7 +85,8 @@ sub startExport
 					$path =~ s/\\/\//isg;
 					$path =~ s/$nativeRoot/$replacePath/isg;
 				}
-
+				$title = Slim::Utils::Unicode::utf8decode($title,'utf8');
+				
 				if($lastPlayed) {
 					my $timestr = strftime ("%Y%m%d%H%M%S", localtime $lastPlayed);
 					print $output "$title|||$path|played|$timestr|$rating|$playCount\n";
