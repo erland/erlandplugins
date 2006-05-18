@@ -338,8 +338,10 @@ sub saveRating {
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
-	}
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
+   	}
 
 	$sth->finish();
 }
@@ -407,7 +409,9 @@ sub savePlayCountAndLastPlayed
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 	$sth->finish();
 }
@@ -506,7 +510,9 @@ sub addToHistory
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 		$sth->finish();
 	}
@@ -563,7 +569,9 @@ sub saveTrack
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 
 		$sth->finish();
@@ -589,7 +597,9 @@ sub saveTrack
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 		$sth->finish();
 	}
@@ -643,7 +653,9 @@ sub mergeTrack()
 			};
 			if( $@ ) {
 			    warn "Database error: $DBI::errstr\n";
-			    $dbh->rollback(); #just die if rollback is failing
+			    eval {
+			    	$dbh->rollback(); #just die if rollback is failing
+			    };
 			}
 
 			$sth->finish();
@@ -671,7 +683,9 @@ sub mergeTrack()
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 		$sth->finish();
 	}
@@ -697,7 +711,9 @@ sub refreshTracks
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 		debugMsg("Finished analyzing indexes : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		$timeMeasure->stop();
@@ -731,7 +747,9 @@ sub refreshTracks
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -763,7 +781,9 @@ sub refreshTracks
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -832,7 +852,9 @@ sub refreshTracks
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -866,7 +888,9 @@ sub refreshTracks
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -897,7 +921,9 @@ sub refreshTracks
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -933,7 +959,9 @@ sub refreshTracks
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 
 		$sth->finish();
@@ -965,7 +993,9 @@ sub refreshTracks
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 
 		$sth->finish();
@@ -992,7 +1022,9 @@ sub refreshTracks
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
-		    $dbh->rollback(); #just die if rollback is failing
+		    eval {
+		    	$dbh->rollback(); #just die if rollback is failing
+		    };
 		}
 
 		$sth->finish();
@@ -1031,7 +1063,9 @@ sub purgeTracks {
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -1059,7 +1093,9 @@ sub purgeTracks {
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
-	    $dbh->rollback(); #just die if rollback is failing
+	    eval {
+	    	$dbh->rollback(); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
