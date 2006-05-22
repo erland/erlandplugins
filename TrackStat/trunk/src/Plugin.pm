@@ -803,10 +803,10 @@ sub handleWebSaveSelectStatistics {
 	foreach my $statistic (keys %$statistics) {
 		my $statisticid = "statistic_".$statistics->{$statistic}->{'id'};
 		if($params->{$statisticid}) {
-			Slim::Utils::Prefs::set('plugin_trackstat_statistics_enabled_'.$statistic,1);
+			Slim::Utils::Prefs::set('plugin_trackstat_statistics_'.$statistic.'_enabled',1);
 			$statistics->{$statistic}->{'trackstat_statistic_enabled'} = 1;
 		}else {
-			Slim::Utils::Prefs::set('plugin_trackstat_statistics_enabled_'.$statistic,0);
+			Slim::Utils::Prefs::set('plugin_trackstat_statistics_'.$statistic.'_enabled',0);
 			$statistics->{$statistic}->{'trackstat_statistic_enabled'} = 0;
 		}
 	}
@@ -883,7 +883,7 @@ sub initStatisticPlugins {
 						my $pluginStatistics = &{$fullname . "::getStatisticItems"}();
 						debugMsg("Calling: ".$fullname."::getStatisticItems\n");
 						for my $item (keys %$pluginStatistics) {
-							my $enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistics_enabled_'.$item);
+							my $enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistics_'.$item.'_enabled');
 							debugMsg("Statistic plugin loaded: $item from $plugin.pm\n");
 							my $subitems = $pluginStatistics->{$item};
 							my %items = ();
