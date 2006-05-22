@@ -203,8 +203,29 @@ sub init {
 		    warn "Database error: $DBI::errstr\n";
 		}
 		$sth->finish();
+		
     }
     
+    if($driver eq 'SQLite') {
+		my $sth = $dbh->prepare("select sql from sqlite_master where name='track_history'");
+		eval {
+			debugMsg("Checking if track_history contains autoincrement column\n");
+			$sth->execute();
+			my $sql = undef;
+			$sth->bind_col( 1, \$sql);
+			if( $sth->fetch() ) {
+				if(defined($sql) && ($sql =~ /.*autoincrement.*/)) {
+					debugMsg("Altering track_history table to remove autoincrement\n");
+					Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_history_noautoincrement.sql");
+				}
+			}
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		}
+		$sth->finish();
+    }
+
     # Only perform refresh at startup if this has been activated
     return unless Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup");
 	refreshTracks();
