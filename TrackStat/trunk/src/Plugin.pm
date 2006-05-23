@@ -627,6 +627,7 @@ sub baseWebPage {
 	my $playStatus = undef;
 	# without a player, don't do anything
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
+		$playStatus = getTrackInfo($client);
 		if ($params->{trackstatcmd} and $params->{trackstatcmd} eq 'rating') {
 			my $songKey;
 	        if ($params->{trackstattrackid}) {
@@ -635,7 +636,7 @@ sub baseWebPage {
 				if(defined($track)) {
 					$songKey = $track->{url};
 				}
-	        }elsif ($playStatus = getTrackInfo($client)) {
+	        }elsif ($playStatus) {
 		        my $song  = $songKey = Slim::Player::Playlist::song($client);
 		        if (Slim::Music::Info::isRemoteURL($song)) {
 		                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
