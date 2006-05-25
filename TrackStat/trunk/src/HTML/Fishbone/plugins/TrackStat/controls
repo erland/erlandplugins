@@ -11,9 +11,9 @@
 [% BLOCK statisticitemcontrols65 %]
 	<div id="trackstat_resultlist_controls">
 	<div id="trackstat_resultlist_controls_inner">
+		[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+		[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 		[% IF item.listtype == 'track' %]
-			[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
-			[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
 			<a href=""><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13 border="0"></a>
 			[% loop = 5 %]
 			[% WHILE loop > 0 %]
@@ -28,9 +28,6 @@
 				[% END %]
 				[% loop = loop - 1 %]
 			[% END %]
-		[% ELSE %]
-			[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
-			[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
 		[% END %]
 	</div>
 	    [% IF item.song_count %]([% item.song_count %])[% END %]
@@ -79,13 +76,8 @@
 		[% END %]
 	[% END %]
 	<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13>
-	[% IF item.listtype == 'track' %]
-		[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' %][% END %]
-		[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' %][% END %]
-	[% ELSE %]
-		[% WRAPPER playlink   %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='play' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
-		[% WRAPPER addlink    %]href="[% webroot %][% statusroot %]?[% PROCESS cmdLocalQuery cmdType='add' target='status' %][% item.attributes | html %]&amp;player=[% playerURI %]"[% END %]
-	[% END %]
+	[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+	[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 [% END %]
 
 [% END -%]
