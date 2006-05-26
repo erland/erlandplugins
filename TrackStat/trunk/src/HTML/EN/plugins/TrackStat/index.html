@@ -7,7 +7,7 @@
 [% PROCESS plugins/TrackStat/css %]
 [% PROCESS plugins/TrackStat/controls %]
 [%- pwd_list = BLOCK -%]/
-	<a href="[% webroot %][% path %]?player=[% player | uri %]">
+	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
 	</a>
 [% END -%]
@@ -27,7 +27,7 @@
 	setTimeout("aReload()", [% refresh %] * 1000);
 
 	function aReload() {
-	  location.replace("[% webroot %][% path %]?player=[% player | uri %]");
+	  location.replace("[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]");
 	}
 	-->
 	</SCRIPT>
@@ -57,15 +57,15 @@
 					[% WHILE loop < 5 %]
 						[% loop = loop + 1 %]
 						[% IF loop <= rating %]
-							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 						[% ELSE %]
-							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 						[% END %]
 					[% END %]
 					</td>
 					<td width="100%"<img src="[% webroot %]html/images/spacer.gif" width="4" height="13" alt=""></td>
-					<td height="5" width="100%"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=down"><img src="[% webroot %]plugins/TrackStat/html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
-					<td height="5" width="13"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=up"><img src="[% webroot %]plugins/TrackStat/html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
+					<td height="5" width="100%"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=down[% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
+					<td height="5" width="13"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=up[% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
 				</tr>
 				<tr height="5">
 					<td height="5">[% 'PLUGIN_TRACKSTAT_PLAY_COUNT' | string %]</td>
@@ -128,10 +128,10 @@
 	[% IF songlist %]
 		<div>
 			<strong>[% songlist %]</strong>&nbsp;&nbsp;&nbsp;
-			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=play"[% END %]
-			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=add"[% END %]
+			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=play"[% END %]
+			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=add"[% END %]
 			[% IF dynamicplaylist %]
-				<a href="[% webroot %][% path %]?player=[% player | uri %]&amp;trackstatcmd=playdynamic&amp;dynamicplaylist=[% dynamicplaylist %]">[% "PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK" | string %]</a>
+				<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=playdynamic&amp;dynamicplaylist=[% dynamicplaylist %]">[% "PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK" | string %]</a>
 			[% END %]
 		</div>
 		[% WRAPPER contentcontainer %]
@@ -146,12 +146,48 @@
 						[% PROCESS trackinfo %]
 					[% ELSIF item.listtype == 'album' %]
 						<a [% PROCESS albumItemHRef %] target="browser">[% item.itemobj.album.title | html %]</a>
+						[% IF substatisticitems.size>0 %]
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
+						[% END %]
+						[% FOREACH statisticlink = substatisticitems %]
+							<a href="[% statisticlink.id %].html?album=[% item.itemobj.album.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+						[% END %]
+						[% IF substatisticitems.size>0 %]
+							)
+						[% END %]
 					[% ELSIF item.listtype == 'artist' %]
 						<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+						[% IF substatisticitems.size>0 %]
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
+						[% END %]
+						[% FOREACH statisticlink = substatisticitems %]
+							<a href="[% statisticlink.id %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+						[% END %]
+						[% IF substatisticitems.size>0 %]
+							)
+						[% END %]
 					[% ELSIF item.listtype == 'genre' %]
 						<a href="[% webroot %]browsedb.html?hierarchy=genre,artist,album,track&amp;level=1&amp;genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
+						[% IF substatisticitems.size>0 %]
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
+						[% END %]
+						[% FOREACH statisticlink = substatisticitems %]
+							<a href="[% statisticlink.id %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+						[% END %]
+						[% IF substatisticitems.size>0 %]
+							)
+						[% END %]
 					[% ELSIF item.listtype == 'year' %]
 						<a href="[% webroot %]browsedb.html?hierarchy=year,album,track&amp;level=1&amp;year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
+						[% IF substatisticitems.size>0 %]
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
+						[% END %]
+						[% FOREACH statisticlink = substatisticitems %]
+							<a href="[% statisticlink.id %].html?year=[% item.itemobj.year %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+						[% END %]
+						[% IF substatisticitems.size>0 %]
+							)
+						[% END %]
 					[% END %]
 					</div>
 				[% END %]
