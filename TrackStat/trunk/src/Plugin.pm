@@ -691,7 +691,11 @@ sub baseWebPage {
 		if($statistics->{$item}->{'trackstat_statistic_enabled'}) {
 			my %itemData = ();
 			$itemData{'id'} = $statistics->{$item}->{'id'};
-			$itemData{'name'} = $statistics->{$item}->{'name'};
+			if(defined($statistics->{$item}->{'namefunction'})) {
+				$itemData{'name'} = eval { &{$statistics->{$item}->{'namefunction'}}() };
+			}else {
+				$itemData{'name'} = $statistics->{$item}->{'name'};
+			}
 			push @statisticItems, \%itemData;
 		}
 	}
@@ -800,7 +804,11 @@ sub handleWebSelectStatistics {
 	for my $item (keys %$statistics) {
 		my %itemData = ();
 		$itemData{'id'} = $statistics->{$item}->{'id'};
-		$itemData{'name'} = $statistics->{$item}->{'name'};
+		if(defined($statistics->{$item}->{'namefunction'})) {
+			$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
+		}else {
+			$itemData{'name'} = $statistics->{$item}->{'name'};
+		}
 		$itemData{'enabled'} = $statistics->{$item}->{'trackstat_statistic_enabled'};
 		push @statisticItems, \%itemData;
 	}
@@ -946,7 +954,11 @@ sub handleWebStatistics {
 	debugMsg("Calling webfunction for $id\n");
 	eval {
 		&{$function}($params,$listLength);
-		$params->{'songlist'} = $statistics->{$id}->{'name'};
+		if(defined($statistics->{$id}->{'namefunction'})) {
+			$params->{'songlist'} = &{$statistics->{$id}->{'namefunction'}}($params);
+		}else {
+			$params->{'songlist'} = $statistics->{$id}->{'name'};
+		}
 		$params->{'songlistid'} = $statistics->{$id}->{'id'};
 		setDynamicPlaylistParams($client,$params);
 	};
@@ -965,7 +977,9 @@ sub setDynamicPlaylistParams {
 		$dynamicPlaylist = grep(/DynamicPlayList/,Slim::Buttons::Plugins::enabledPlugins($client));
     }
 	if($dynamicPlaylist && Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist")) {
-		$params->{'dynamicplaylist'} = "trackstat_".$params->{'songlistid'};
+		if(!defined($params->{'artist'}) && !defined($params->{'album'}) && !defined($params->{'genre'}) && !defined($params->{'year'})) {
+			$params->{'dynamicplaylist'} = "trackstat_".$params->{'songlistid'};
+		}
 	}
 }
 sub getPlayCount {
