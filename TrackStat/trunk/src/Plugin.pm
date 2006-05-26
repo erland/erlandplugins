@@ -290,7 +290,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -401,6 +401,16 @@ sub setupGroup
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"); }
+		},		
+	plugin_trackstat_web_refresh => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_REFRESH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_REFRESH')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_refresh"); }
 		},		
 	plugin_trackstat_backup_file => {
 			'validate' => \&validateAcceptAllWrapper
@@ -664,14 +674,17 @@ sub baseWebPage {
 	}
 	if(defined($playStatus)) {
 		$params->{playing} = $playStatus->trackAlreadyLoaded();
-		$params->{refresh} = $playStatus->currentTrackLength();
+		if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
+			$params->{refresh} = $playStatus->currentTrackLength()-$playStatus->currentSongStopwatch()->getElapsedTime()+30;
+			if($params->{refresh}<0){
+				$params->{refresh} = 30;
+			}
+		}
 		$params->{track} = $playStatus->currentSongTrack();
 		$params->{rating} = $playStatus->currentSongRating();
 		$params->{lastPlayed} = $playStatus->lastPlayed();
 		$params->{playCount} = $playStatus->playCount();
-	} else {
-		$params->{refresh} = 60;
-	}
+	} 
 	my @statisticItems = ();
 	my $statistics = getStatisticPlugins();
 	for my $item (keys %$statistics) {
@@ -687,7 +700,9 @@ sub baseWebPage {
 	$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/3;
 	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
 	$params->{'pluginTrackStatPlayListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
-	$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
+	if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
+		$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
+	}
 	$params->{'pluginTrackStatVersion'} = $::VERSION;
 	debugMsg("Exiting baseWebPage\n");
 }
@@ -1082,6 +1097,11 @@ sub initPlugin
 		#setup default iTunes history file
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_itunes_export_dir",Slim::Utils::Prefs::get('playlistdir'));
+		}
+
+		# enable web auto refresh by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_web_refresh",1);
 		}
 
 		initRatingChar();
@@ -1517,7 +1537,7 @@ sub commandCallback62($)
 	### Stop command
 	######################################
 
-	if ( ($slimCommand eq "playlist") && ($paramOne eq "sync") )
+	if ( ($slimCommand eq "playlist") && (($paramOne eq "sync") || ($paramOne eq "clear")) )
 	{
 		# If this player syncs with another, we treat it as a stop,
 		# since whatever it is presently playing (if anything) will end.
@@ -1624,7 +1644,7 @@ sub commandCallback65($)
 	### Stop command
 	######################################
 
-	if ( $request->isCommand([['playlist'],['sync']]) )
+	if ( $request->isCommand([['playlist'],['sync']]) or $request->isCommand([['playlist'],['clear']]) )
 	{
 		# If this player syncs with another, we treat it as a stop,
 		# since whatever it is presently playing (if anything) will end.
@@ -2962,6 +2982,15 @@ SETUP_PLUGIN_TRACKSTAT_MIN_SONG_PERCENT_DESC
 
 PLUGIN_TRACKSTAT_MIN_SONG_PERCENT
 	EN	Minimum played percent
+
+SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH
+	EN	Automatic refresh of web page
+
+SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH_DESC
+	EN	Automatic refresh of web page every 60'th second and at each track change
+
+PLUGIN_TRACKSTAT_WEB_REFRESH
+	EN	Automatic refresh of web page
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
