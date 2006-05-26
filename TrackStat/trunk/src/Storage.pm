@@ -179,31 +179,6 @@ sub init {
 		    warn "Database error: $DBI::errstr\n";
 		}
 		$sth->finish();
-		$sth = $dbh->prepare("show index from tracks;");
-		eval {
-			debugMsg("Checking if additional indexes are needed for tracks\n");
-			$sth->execute();
-			my $keyname;
-			$sth->bind_col( 3, \$keyname );
-			my $found = 0;
-			while( $sth->fetch() ) {
-				if($keyname eq "trackStatMBIndex") {
-					$found = 1;
-				}
-			}
-			if(!$found) {
-				msg("TrackStat::Storage: No trackStatMBIndex index found in tracks, creating index...\n");
-				eval { $dbh->do("create index trackStatMBIndex on tracks (musicbrainz_id);") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
-			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		}
-		$sth->finish();
-		
     }
     
     if($driver eq 'SQLite') {
@@ -722,6 +697,32 @@ sub refreshTracks
     if($driver eq 'mysql') {
     	my $dbh = $ds->dbh();
 		$timeMeasure->clear();
+		$timeMeasure->start();
+		my $sth = $dbh->prepare("show index from tracks;");
+		eval {
+			debugMsg("Checking if additional indexes are needed for tracks\n");
+			$sth->execute();
+			my $keyname;
+			$sth->bind_col( 3, \$keyname );
+			my $found = 0;
+			while( $sth->fetch() ) {
+				if($keyname eq "trackStatMBIndex") {
+					$found = 1;
+				}
+			}
+			if(!$found) {
+				msg("TrackStat::Storage: No trackStatMBIndex index found in tracks, creating index...\n");
+				eval { $dbh->do("create index trackStatMBIndex on tracks (musicbrainz_id);") };
+				if ($@) {
+					debugMsg("Couldn't add index: $@\n");
+				}
+			}
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		}
+		$sth->finish();
+		$timeMeasure->stop();
 		$timeMeasure->start();
 		debugMsg("Starting to analyze indexes\n");
 		eval {
