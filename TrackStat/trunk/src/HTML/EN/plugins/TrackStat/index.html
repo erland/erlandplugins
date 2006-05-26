@@ -21,6 +21,17 @@
 [% IF pluginTrackStatVersion < '6.5' %]
 	[% PROCESS plugins/TrackStat/pageheaderinfo65 %]
 [% END %]
+[% IF refresh > 0 %]  
+	<SCRIPT>
+	<!--
+	setTimeout("aReload()", [% refresh %] * 1000);
+
+	function aReload() {
+	  location.replace("[% webroot %][% path %]?player=[% player | uri %]");
+	}
+	-->
+	</SCRIPT>
+[% END %]
 	[% IF playing == 'true' %]  
 		[%# Reload status and playlist to reflect any new mixes %]
 		<script type="text/javascript">
