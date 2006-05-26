@@ -56,31 +56,31 @@ sub getStatisticItems {
 			'webfunction' => \&getRated1TracksWeb,
 			'playlistfunction' => \&getRated1Tracks,
 			'id' =>  'rated1',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED1')
+			'namefunction' => \&getRated1TracksName
 		},
 		rated2 => {
 			'webfunction' => \&getRated2TracksWeb,
 			'playlistfunction' => \&getRated2Tracks,
 			'id' =>  'rated2',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED2')
+			'namefunction' => \&getRated2TracksName
 		},
 		rated3 => {
 			'webfunction' => \&getRated3TracksWeb,
 			'playlistfunction' => \&getRated3Tracks,
 			'id' =>  'rated3',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED3')
+			'namefunction' => \&getRated3TracksName
 		},
 		rated4 => {
 			'webfunction' => \&getRated4TracksWeb,
 			'playlistfunction' => \&getRated4Tracks,
 			'id' =>  'rated4',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED4')
+			'namefunction' => \&getRated4TracksName
 		},
 		rated5 => {
 			'webfunction' => \&getRated5TracksWeb,
 			'playlistfunction' => \&getRated5Tracks,
 			'id' =>  'rated5',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED5')
+			'namefunction' => \&getRated5TracksName
 		},
 		rated1artists => {
 			'webfunction' => \&getRated1ArtistsWeb,
@@ -116,34 +116,109 @@ sub getStatisticItems {
 			'webfunction' => \&getRated1AlbumsWeb,
 			'playlistfunction' => \&getRated1AlbumTracks,
 			'id' =>  'rated1albums',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS')
+			'namefunction' => \&getRated1AlbumsName
 		},
 		rated2albums => {
 			'webfunction' => \&getRated2AlbumsWeb,
 			'playlistfunction' => \&getRated2AlbumTracks,
 			'id' =>  'rated2albums',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS')
+			'namefunction' => \&getRated2AlbumsName
 		},
 		rated3albums => {
 			'webfunction' => \&getRated3AlbumsWeb,
 			'playlistfunction' => \&getRated3AlbumTracks,
 			'id' =>  'rated3albums',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS')
+			'namefunction' => \&getRated3AlbumsName
 		},
 		rated4albums => {
 			'webfunction' => \&getRated4AlbumsWeb,
 			'playlistfunction' => \&getRated4AlbumTracks,
 			'id' =>  'rated4albums',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS')
+			'namefunction' => \&getRated4AlbumsName
 		},
 		rated5albums => {
 			'webfunction' => \&getRated5AlbumsWeb,
 			'playlistfunction' => \&getRated5AlbumTracks,
 			'id' =>  'rated5albums',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS')
+			'namefunction' => \&getRated5AlbumsName
 		}
 	);
 	return \%statistics;
+}
+
+sub getRated1TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST')." ".$artist->{name};
+	}elsif(defined($params->{'album'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $album = $ds->objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORALBUM')." ".$album->{title};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1');
+	}
+}
+
+sub getRated2TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORARTIST')." ".$artist->{name};
+	}elsif(defined($params->{'album'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $album = $ds->objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM')." ".$album->{title};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2');
+	}
+}
+
+sub getRated3TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORARTIST')." ".$artist->{name};
+	}elsif(defined($params->{'album'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $album = $ds->objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORALBUM')." ".$album->{title};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3');
+	}
+}
+
+sub getRated4TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORARTIST')." ".$artist->{name};
+	}elsif(defined($params->{'album'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $album = $ds->objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORALBUM')." ".$album->{title};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4');
+	}
+}
+
+sub getRated5TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORARTIST')." ".$artist->{name};
+	}elsif(defined($params->{'album'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $album = $ds->objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORALBUM')." ".$album->{title};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5');
+	}
 }
 
 sub getRated1TracksWeb {
@@ -207,10 +282,67 @@ sub getRated5Tracks {
 }
 
 
+sub getRated1AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORARTIST')." ".$artist->{name};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS');
+	}
+}
+
+sub getRated2AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORARTIST')." ".$artist->{name};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS');
+	}
+}
+sub getRated3AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORARTIST')." ".$artist->{name};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS');
+	}
+}
+sub getRated4AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORARTIST')." ".$artist->{name};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS');
+	}
+}
+sub getRated5AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $ds = Slim::Music::Info::getCurrentDataStore();
+	    my $artist = $ds->objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORARTIST')." ".$artist->{name};
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS');
+	}
+}
 sub getRated1AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedAlbumsWeb($params,$listLength,0,29);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated1AlbumTracks {
@@ -223,6 +355,12 @@ sub getRated2AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedAlbumsWeb($params,$listLength,29,49);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated2AlbumTracks {
@@ -235,6 +373,12 @@ sub getRated3AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedAlbumsWeb($params,$listLength,49,69);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated3AlbumTracks {
@@ -247,6 +391,12 @@ sub getRated4AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedAlbumsWeb($params,$listLength,69,89);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated4AlbumTracks {
@@ -259,6 +409,12 @@ sub getRated5AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedAlbumsWeb($params,$listLength,89,100);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated5AlbumTracks {
@@ -272,6 +428,16 @@ sub getRated1ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedArtistsWeb($params,$listLength,0,29);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated1ArtistTracks {
@@ -284,6 +450,16 @@ sub getRated2ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedArtistsWeb($params,$listLength,29,49);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => '´topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated2ArtistTracks {
@@ -296,6 +472,16 @@ sub getRated3ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedArtistsWeb($params,$listLength,49,69);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated3ArtistTracks {
@@ -308,6 +494,16 @@ sub getRated4ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedArtistsWeb($params,$listLength,69,89);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated4ArtistTracks {
@@ -320,6 +516,16 @@ sub getRated5ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedArtistsWeb($params,$listLength,89,100);
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
 }
 
 sub getRated5ArtistTracks {
@@ -335,10 +541,27 @@ sub getMostPlayedTracksWeb {
 	my $minrating = shift;
 	my $maxrating = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
-    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
-    }
+	my $sql;
+	if(defined($params->{'artist'})) {
+		my $artist = $params->{'artist'};
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics,contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    }
+	    $params->{'statisticparameters'} = "&artist=$artist";
+	}elsif(defined($params->{'album'})) {
+		my $album = $params->{'album'};
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    }
+	    $params->{'statisticparameters'} = "&album=$album";
+	}else {
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    }
+	}
     Plugins::TrackStat::Statistics::Base::getTracksWeb($sql,$params);
 }
 
@@ -361,10 +584,20 @@ sub getMostPlayedAlbumsWeb {
 	my $minrating = shift;
 	my $maxrating = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
-    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
-    }
+	my $sql;
+	if(defined($params->{'artist'})) {
+		my $artist = $params->{'artist'};
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums,contributor_track where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.id=contributor_track.track and contributor_track.contributor=$artist group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&artist=$artist";
+	}else {
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    }
+	}
     Plugins::TrackStat::Statistics::Base::getAlbumsWeb($sql,$params);
 }
 
@@ -374,9 +607,9 @@ sub getMostPlayedAlbumTracks {
 	my $minrating = shift;
 	my $maxrating = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     }
     return Plugins::TrackStat::Statistics::Base::getAlbumTracks($sql,$limit);
 }
@@ -387,9 +620,9 @@ sub getMostPlayedArtistsWeb {
 	my $minrating = shift;
 	my $maxrating = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     }
     Plugins::TrackStat::Statistics::Base::getArtistsWeb($sql,$params);
 }
@@ -400,9 +633,9 @@ sub getMostPlayedArtistTracks {
 	my $minrating = shift;
 	my $maxrating = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, min(track_statistics.added) as minadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
     }
     return Plugins::TrackStat::Statistics::Base::getArtistTracks($sql,$limit);
 }
@@ -413,32 +646,122 @@ sub strings()
 PLUGIN_TRACKSTAT_SONGLIST_RATED1
 	EN	Songs rated *
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORALBUM
+	EN	Songs rated * from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST
+	EN	Songs rated * by: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED2
 	EN	Songs rated **
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM
+	EN	Songs rated ** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORARTIST
+	EN	Songs rated ** by: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED3
 	EN	Songs rated ***
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORALBUM
+	EN	Songs rated *** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORARTIST
+	EN	Songs rated *** by: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED4
 	EN	Songs rated ****
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORALBUM
+	EN	Songs rated **** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORARTIST
+	EN	Songs rated **** by: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED5
 	EN	Songs rated *****
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORALBUM
+	EN	Songs rated ***** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORARTIST
+	EN	Songs rated ***** by: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS
 	EN	Albums rated *
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORARTIST
+	EN	Albums rated * by: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS
 	EN	Albums rated **
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORARTIST
+	EN	Albums rated ** by: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS
 	EN	Albums rated ***
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORARTIST
+	EN	Albums rated *** by: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS
 	EN	Albums rated ****
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORARTIST
+	EN	Albums rated **** by: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS
 	EN	Albums rated *****
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORARTIST
+	EN	Albums rated ***** by: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS
 	EN	Artists rated *
