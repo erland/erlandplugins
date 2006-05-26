@@ -6,7 +6,7 @@
 
                 <p>
                         /
-                        <a href="[% webroot %][% path %]?player=[% player | uri %]">
+                        <a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]">
                           [% "PLUGIN_TRACKSTAT" | string %]
                         </a>
                 </p>
