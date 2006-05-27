@@ -79,11 +79,11 @@ sub getNotRatedTracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED');
 	}
@@ -121,7 +121,7 @@ sub getNotRatedAlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS');
 	}

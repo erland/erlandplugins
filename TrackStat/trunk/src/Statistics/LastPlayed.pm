@@ -79,11 +79,11 @@ sub getLastPlayedTracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED');
 	}
@@ -133,7 +133,7 @@ sub getLastPlayedAlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS');
 	}

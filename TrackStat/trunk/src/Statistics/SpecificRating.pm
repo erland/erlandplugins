@@ -151,11 +151,11 @@ sub getRated1TracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1');
 	}
@@ -166,11 +166,11 @@ sub getRated2TracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2');
 	}
@@ -181,11 +181,11 @@ sub getRated3TracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3');
 	}
@@ -196,11 +196,11 @@ sub getRated4TracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4');
 	}
@@ -211,11 +211,11 @@ sub getRated5TracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5');
 	}
@@ -287,7 +287,7 @@ sub getRated1AlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS');
 	}
@@ -298,7 +298,7 @@ sub getRated2AlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS');
 	}
@@ -308,7 +308,7 @@ sub getRated3AlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS');
 	}
@@ -318,7 +318,7 @@ sub getRated4AlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS');
 	}
@@ -328,7 +328,7 @@ sub getRated5AlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS');
 	}

@@ -101,15 +101,15 @@ sub getMostPlayedRecentTracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}elsif(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORYEAR')." ".$params->{'year'};
 	}else {
@@ -122,15 +122,15 @@ sub getMostPlayedNotRecentTracksName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'album'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORALBUM')." ".$album->{title};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
 	}elsif(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORYEAR')." ".$params->{'year'};
 	}else {
@@ -155,11 +155,11 @@ sub getMostPlayedRecentAlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORYEAR')." ".$params->{'year'};
 	}else {
@@ -172,11 +172,11 @@ sub getMostPlayedNotRecentAlbumsName {
 	if(defined($params->{'artist'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORARTIST')." ".$artist->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
 	}elsif(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORYEAR')." ".$params->{'year'};
 	}else {
@@ -207,7 +207,7 @@ sub getMostPlayedRecentArtistsName {
 	if(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORYEAR')." ".$params->{'year'};
 	}else {
@@ -220,7 +220,7 @@ sub getMostPlayedNotRecentArtistsName {
 	if(defined($params->{'genre'})) {
 	    my $ds = Slim::Music::Info::getCurrentDataStore();
 	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORGENRE')." ".$genre->{name};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORYEAR')." ".$params->{'year'};
 	}else {
