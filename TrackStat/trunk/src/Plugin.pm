@@ -2576,9 +2576,14 @@ sub getDynamicPlayLists {
 		my $id = $statistics->{$item}->{'id'};
 		my $playlistid = "trackstat_".$id;
 		my %playlistItem = (
-			'id' => $id,
-			'name' => $statistics->{$item}->{'name'}
+			'id' => $id
 		);
+		if(defined($statistics->{$item}->{'namefunction'})) {
+			$playlistItem{'name'} = eval { &{$statistics->{$item}->{'namefunction'}}() };
+		}else {
+			$playlistItem{'name'} = $statistics->{$item}->{'name'};
+		}
+
 		$result{$playlistid} = \%playlistItem;
 	}
 
