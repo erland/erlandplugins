@@ -317,7 +317,14 @@ sub getPlayLists {
 				debugMsg("Got dynamic playlists: ".$playlist->{'name'}."\n");
 				$playlist->{'dynamicplaylistid'} = $item;
 				$playlist->{'dynamicplaylistplugin'} = $plugin;
-				my $enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_enabled_playlist_'.$item);
+				my $enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_playlist_'.$item.'_enabled');
+				if(!defined $enabled) {
+					$enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_enabled_playlist_'.$item);
+					if(defined $enabled) {
+						Slim::Utils::Prefs::delete('plugin_dynamicplaylist_enabled_playlist_'.$item);
+						Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$item.'_enabled',$enabled);
+					}
+				}
 				if(!defined $enabled || $enabled==1) {
 					$playlist->{'dynamicplaylistenabled'} = 1;
 				}else {
@@ -651,9 +658,9 @@ sub handleWebSaveSelectPlaylists {
 	foreach my $playlist (keys %$playLists) {
 		my $playlistid = "playlist_".$playLists->{$playlist}{'dynamicplaylistid'};
 		if($params->{$playlistid}) {
-			Slim::Utils::Prefs::set('plugin_dynamicplaylist_enabled_playlist_'.$playlist,1);
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$playlist.'_enabled',1);
 		}else {
-			Slim::Utils::Prefs::set('plugin_dynamicplaylist_enabled_playlist_'.$playlist,0);
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$playlist.'_enabled',0);
 		}
 	}
 	
@@ -737,7 +744,7 @@ sub setupGroup
 	my %setupPrefs =
 	(
 	plugin_dynamicplaylist_showmessages => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES')
 			,'options' => {
@@ -747,7 +754,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_showmessages"); }
 		},		
 	plugin_dynamicplaylist_includerandomplaylists => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_RANDOM_PLAYLISTS')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_RANDOM_PLAYLISTS')
 			,'options' => {
@@ -757,7 +764,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_includerandomplaylists"); }
 		},		
 	plugin_dynamicplaylist_includesavedplaylists => {
-			'validate'     => \&Slim::Web::Setup::validateTrueFalse
+			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS')
 			,'options' => {
@@ -767,7 +774,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_includesavedplaylists"); }
 		},		
 	plugin_dynamicplaylist_number_of_tracks => {
-			'validate' => \&Slim::Web::Setup::validateInt
+			'validate' => \&validateIntWrapper
 			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_number_of_tracks"); }
@@ -780,6 +787,24 @@ sub setupGroup
 		}
 	);
 	return (\%setupGroup,\%setupPrefs);
+}
+
+sub validateIntWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::isInt($arg);
+	}else {
+		return Slim::Web::Setup::validateInt($arg);
+	}
+}
+
+sub validateTrueFalseWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::trueFalse($arg);
+	}else {
+		return Slim::Web::Setup::validateTrueFalse($arg);
+	}
 }
 
 sub getTracksForPlaylist {
