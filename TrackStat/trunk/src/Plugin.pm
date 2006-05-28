@@ -290,7 +290,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -411,6 +411,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_refresh"); }
+		},		
+	plugin_trackstat_web_show_mixerlinks => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks"); }
 		},		
 	plugin_trackstat_backup_file => {
 			'validate' => \&validateAcceptAllWrapper
@@ -704,6 +714,7 @@ sub baseWebPage {
 	$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/3;
 	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
 	$params->{'pluginTrackStatPlayListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
+	$params->{'pluginTrackStatShowMixerLinks'} = Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks");
 	if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
 		$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	}
@@ -862,9 +873,15 @@ sub getStatisticPluginsStrings {
 				no strict 'refs';
 				eval {
 					eval "use $fullname";
+					if ($@) {
+	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+	                }
 					if(UNIVERSAL::can("${fullname}","strings")) {
 						debugMsg("Calling: ".$fullname."::strings\n");
 						my $str = eval { &{$fullname . "::strings"}(); };
+						if ($@) {
+		                	msg("TrackStat: Failed call strings on statistic plugin $plugin: $@\n");
+		                }
 						if(defined $str) {
 							$statisticPluginsStrings = "$statisticPluginsStrings$str";
 						}
@@ -899,12 +916,21 @@ sub initStatisticPlugins {
 				no strict 'refs';
 				eval {
 					eval "use $fullname";
+					if ($@) {
+	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+	                }
 					if(UNIVERSAL::can("${fullname}","init")) {
 						debugMsg("Calling: ".$fullname."::init\n");
 						eval { &{$fullname . "::init"}(); };
+						if ($@) {
+		                	msg("TrackStat: Failed to call init on statistic plugin $plugin: $@\n");
+		                }
 					}
 					if(UNIVERSAL::can("${fullname}","getStatisticItems")) {
-						my $pluginStatistics = &{$fullname . "::getStatisticItems"}();
+						my $pluginStatistics = eval { &{$fullname . "::getStatisticItems"}() };
+						if ($@) {
+		                	msg("TrackStat: Failed to call getStatisticItems on statistic plugin $plugin: $@\n");
+		                }
 						debugMsg("Calling: ".$fullname."::getStatisticItems\n");
 						for my $item (keys %$pluginStatistics) {
 							my $enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistics_'.$item.'_enabled');
@@ -1116,6 +1142,10 @@ sub initPlugin
 		# enable web auto refresh by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_refresh",1);
+		}
+		# enable mixer links by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_web_show_mixerlinks",1);
 		}
 
 		initRatingChar();
@@ -3005,6 +3035,15 @@ SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH_DESC
 
 PLUGIN_TRACKSTAT_WEB_REFRESH
 	EN	Automatic refresh of web page
+
+SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS
+	EN	Show MusicIP mixer links
+
+SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS_DESC
+	EN	Show MusicIP mixer links in TrackStat pages, requires that MusicMagic plugin is enabled and configured to be used in SlimServer
+
+PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS
+	EN	Show MusicIP mixer links
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
