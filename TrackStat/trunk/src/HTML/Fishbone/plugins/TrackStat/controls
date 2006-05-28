@@ -13,8 +13,17 @@
 	<div id="trackstat_resultlist_controls_inner">
 		[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 		[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
-		[% IF item.listtype == 'track' %]
+		[% IF pluginTrackStatShowMixerLinks %]
+			[% IF !item.mixerlinks %]
+				<a href=""><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=7 height=13 border="0"></a>
+			[% END %]
+			[% FOREACH mixer = item.mixerlinks.values.sort %]
+				[% PROCESS $mixer %]
+			[% END %]
+		[% ELSIF item.listtype == 'track' %]
 			<a href=""><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13 border="0"></a>
+		[% END %]
+		[% IF item.listtype == 'track' %]
 			[% loop = 5 %]
 			[% WHILE loop > 0 %]
 				[% IF loop > item.rating %]
@@ -27,6 +36,9 @@
 					[% END %]
 				[% END %]
 				[% loop = loop - 1 %]
+			[% END %]
+			[% IF !pluginTrackStatShowMixerLinks %]
+				<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13>
 			[% END %]
 		[% END %]
 	</div>
@@ -46,7 +58,6 @@
 					<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=13 height=13>
 				[% END %]
 			[% END %]
-			<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13>
 		[% END %]
 	</div>
 [% END %]
@@ -75,7 +86,16 @@
 			[% END %]
 		[% END %]
 	[% END %]
-	<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13>
+	[% IF pluginTrackStatShowMixerLinks %]
+		[% IF !item.mixerlinks %]
+			<a href=""><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=7 height=13 border="0"></a>
+		[% END %]
+		[% FOREACH mixer = item.mixerlinks.values.sort %]
+	                [% PROCESS $mixer odd=item.odd item=item.item genre=item.genre artist=item.artist album=item.album %]
+	        [% END %]
+	[% ELSE %]
+		<a href=""><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13 border="0"></a>
+	[% END %]
 	[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 	[% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 [% END %]

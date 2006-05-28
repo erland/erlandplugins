@@ -75,6 +75,17 @@ sub getNumberOfTypeTracks() {
     }
     return $artistListLength;
 }	
+
+sub saveMixerLinks {
+	my $item = shift;
+    if(defined($item->{'mixerlinks'})) {
+        my $mixerlinks = $item->{'mixerlinks'};
+        $item->{'mixerlinks'} = ();
+        for my $it (keys %$mixerlinks) {
+        	$item->{'mixerlinks'}{$it}=$mixerlinks->{$it};
+        }
+    }
+}
 sub getTracksWeb {
 	my $sql = shift;
 	my $params = shift;
@@ -112,7 +123,10 @@ sub getTracksWeb {
             $trackInfo{'attributes'}       = '&track='.$track->id;
             $trackInfo{'itemobj'}          = $track;
             $trackInfo{'listtype'} = 'track';
+            $trackInfo{'levelName'}  = 'track';
             		  	
+            saveMixerLinks(\%trackInfo);
+
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
 		  
@@ -177,6 +191,7 @@ sub getAlbumsWeb {
 			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
             my $levelInfo = $fieldInfo->{'album'};
 			
+		  	$trackInfo{'album'} = $album->{id};
             &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $album);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -190,7 +205,10 @@ sub getAlbumsWeb {
             $trackInfo{'attributes'}       = '&album='.$album->id;
             $trackInfo{'itemobj'}{'album'} = $album;
             $trackInfo{'listtype'} = 'album';
+            $trackInfo{'levelName'}  = 'album';
 		  	
+            saveMixerLinks(\%trackInfo);
+
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
 		  
@@ -269,6 +287,7 @@ sub getArtistsWeb {
 			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
             my $levelInfo = $fieldInfo->{'artist'};
 			
+		  	$trackInfo{'artist'} = $artist->{id};
             &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $artist);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -282,14 +301,17 @@ sub getArtistsWeb {
             $trackInfo{'attributes'}       = '&artist='.$artist->id;
             $trackInfo{'itemobj'}{'artist'} = $artist;
             $trackInfo{'listtype'} = 'artist';
-            		  	
+            $trackInfo{'levelName'}  = 'artist';
+            
+            saveMixerLinks(\%trackInfo);
+            
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
 		  
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+	    warn "Database error: $DBI::errstr\n$@\n";
 	}
 	$sth->finish();
 }
@@ -366,6 +388,7 @@ sub getGenresWeb {
 			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
             my $levelInfo = $fieldInfo->{'genre'};
 			
+		  	$trackInfo{'genre'} = $id;
             &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $genre);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -379,7 +402,10 @@ sub getGenresWeb {
             $trackInfo{'attributes'}       = '&genre='.$genre->id;
             $trackInfo{'itemobj'}{'genre'} = $genre;
             $trackInfo{'listtype'} = 'genre';
+            $trackInfo{'levelName'}  = 'genre';
             		  	
+            saveMixerLinks(\%trackInfo);
+
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
 		  
@@ -475,6 +501,7 @@ sub getYearsWeb {
             $trackInfo{'attributes'}       = '&year='.$year;
             $trackInfo{'itemobj'}{'year'} = $year;
             $trackInfo{'listtype'} = 'year';
+            $trackInfo{'levelName'}  = 'year';
             		  	
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
