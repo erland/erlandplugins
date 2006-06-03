@@ -36,6 +36,9 @@ use POSIX qw(strftime ceil);
 if ($] > 5.007) {
 	require Encode;
 }
+if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	eval "use Slim::Schema";
+}
 
 use Slim::Utils::Misc;
 
@@ -51,6 +54,75 @@ struct TrackInfo => {
 my $driver;
 my $distinct = '';
 
+sub getCurrentDBH {
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return Slim::Schema->storage->dbh();
+	}else {
+		return Slim::Music::Info::getCurrentDataStore()->dbh();
+	}
+}
+
+sub getCurrentDS {
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return 'Slim::Schema';
+	}else {
+		return Slim::Music::Info::getCurrentDataStore();
+	}
+}
+
+sub getMusicBrainzId {
+	my $track = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return $track->musicbrainz_id;
+	}else {
+		return $track->{musicbrainz_id};
+	}
+}
+
+sub commit {
+	my $dbh = shift;
+	if (!$dbh->{'AutoCommit'}) {
+		$dbh->commit();
+	}
+}
+
+sub rollback {
+	my $dbh = shift;
+	if (!$dbh->{'AutoCommit'}) {
+		$dbh->rollback();
+	}
+}
+
+sub objectForId {
+	my $type = shift;
+	my $id = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if($type eq 'artist') {
+			$type = 'Contributor';
+		}elsif($type eq 'album') {
+			$type = 'Album';
+		}elsif($type eq 'genre') {
+			$type = 'Genre';
+		}elsif($type eq 'track') {
+			$type = 'Track';
+		}
+		return Slim::Schema->resultset($type)->find($id);
+	}else {
+		return getCurrentDS()->objectForId($type,$id);
+	}
+}
+
+sub objectForUrl {
+	my $url = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return Slim::Schema->objectForUrl({
+			'url' => $url
+		});
+	}else {
+		return getCurrentDS()->objectForUrl($url,undef,undef,1);
+	}
+}
+
 sub init {
 	$driver = Slim::Utils::Prefs::get('dbsource');
     $driver =~ s/dbi:(.*?):(.*)$/$1/;
@@ -61,7 +133,7 @@ sub init {
     
 	#Check if tables exists and create them if not
 	debugMsg("Checking if track_statistics database table exists\n");
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $st = $dbh->table_info();
 	my $tblexists;
 	while (my ( $qual, $owner, $table, $type ) = $st->fetchrow_array()) {
@@ -209,7 +281,7 @@ sub init {
 sub findTrack {
 	my $track_url = shift;
 	my $mbId      = shift;
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
 	my $track = shift;
 	my $ignoreTrackInSlimserver = shift;
 	
@@ -217,7 +289,7 @@ sub findTrack {
 		# The encapsulation with eval is just to make it crash safe
 		eval {
 			debugMsg("Reading slimserver track: $track_url\n");
-			$track = $ds->objectForUrl($track_url);
+			$track = objectForUrl($track_url);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $track_url\n");
@@ -229,7 +301,7 @@ sub findTrack {
 	if(!$ignoreTrackInSlimserver) {
 		return 0 unless $track;
 
-		$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
+		$mbId = getMusicBrainzId($track) if (!(defined($mbId)));
 	}
 
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
@@ -255,7 +327,7 @@ sub findTrack {
 	return 0 unless length($searchString) >= 1;
 
 	my $sql = "SELECT url, musicbrainz_id, playCount, added,lastPlayed, rating FROM track_statistics where $queryAttribute = ? or url = ?";
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my $result = undef;
 	eval {
@@ -286,16 +358,16 @@ sub saveRating {
 		return;
 	}
 	
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
 	if(!defined($track)) {
-		$track     = $ds->objectForUrl($url);
+		$track     = objectForUrl($url);
 	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $searchString = "";
 	my $queryAttribute = "";
 	my $sql;
 	
-	$mbId = $track->{musicbrainz_id} if (!(defined($mbId)));
+	$mbId = getMusicBrainzId($track) if (!(defined($mbId)));
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $mbId && $mbId !~ /.*-.*/) {
 		$mbId = undef;
@@ -322,7 +394,7 @@ sub saveRating {
 			$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
 		}
 	}
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $searchString , SQL_VARCHAR);
@@ -330,12 +402,12 @@ sub saveRating {
 			$sth->bind_param(2, $url , SQL_VARCHAR);
 		}
 		$sth->execute();
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
    	}
 
@@ -351,15 +423,15 @@ sub savePlayCountAndLastPlayed
 		return;
 	}
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
+	my $ds        = getCurrentDS();
+	my $track     = objectForUrl($url);
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $sql;
 	$url = $track->url;
 
 	debugMsg("Marking as played in storage\n");
 
-	my $trackmbId = $track->{musicbrainz_id};
+	my $trackmbId = getMusicBrainzId($track);
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $trackmbId && $trackmbId !~ /.*-.*/) {
 		$trackmbId = undef;
@@ -379,7 +451,7 @@ sub savePlayCountAndLastPlayed
 			}
 		}
 	}else {
-		$mbId = $track->{musicbrainz_id};
+		$mbId = getMusicBrainzId($track);
 		#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 		if(defined $mbId && $mbId !~ /.*-.*/) {
 			$mbId = undef;
@@ -396,17 +468,17 @@ sub savePlayCountAndLastPlayed
 		}
 	}
 
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $key , SQL_VARCHAR);
 		$sth->execute();
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+	    warn "Database error: $DBI::errstr\n while executing:\n$sql\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 	$sth->finish();
@@ -424,18 +496,18 @@ sub addToHistory
 		return;
 	}
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
 	my $track     = undef;
 	if(!$ignoreTrackInSlimserver) {
-		$track = $ds->objectForUrl($url);
+		$track = objectForUrl($url);
 		return unless $track;
 	}
 
 	my $sql;
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	if(defined $track) {
 		$url = $track->url;
-		$mbId = $track->{musicbrainz_id};
+		$mbId = getMusicBrainzId($track);
 	}
 
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
@@ -502,12 +574,12 @@ sub addToHistory
 		eval {
 			$sth->bind_param(1, $key , SQL_VARCHAR);
 			$sth->execute();
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 		$sth->finish();
@@ -524,10 +596,10 @@ sub saveTrack
 		return;
 	}
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
 	my $track     = undef;
 	if(!$ignoreTrackInSlimserver) {
-		$track = $ds->objectForUrl($url);
+		$track = objectForUrl($url);
 		return unless $track;
 	}
 
@@ -556,17 +628,17 @@ sub saveTrack
 				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, NULL, $playCount, $added, $lastPlayed)";
 			}
 		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+		my $dbh = getCurrentDBH();
 		my $sth = $dbh->prepare( $sql );
 		eval {
 			$sth->bind_param(1, $key , SQL_VARCHAR);
 			$sth->execute();
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 
@@ -584,17 +656,17 @@ sub saveTrack
 		} else {
 			$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
 		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+		my $dbh = getCurrentDBH();
 		my $sth = $dbh->prepare( $sql );
 		eval {
 			$sth->bind_param(1, $url , SQL_VARCHAR);
 			$sth->execute();
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 		$sth->finish();
@@ -610,13 +682,21 @@ sub mergeTrack()
 		return;
 	}
 
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
+	my $ds        = getCurrentDS();
+	my $track     = objectForUrl($url);
 
 	return unless $track;
 
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url,undef,$track);
 	my $sql;
+	
+	if(!defined($mbId)) {
+		$mbId = getMusicBrainzId($track);
+	}
+	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
+	if(defined $mbId && $mbId !~ /.*-.*/) {
+		$mbId = undef;
+	}
 	
 	if ($playCount) {
 		debugMsg("Marking as played in storage: $playCount\n");
@@ -634,23 +714,31 @@ sub mergeTrack()
 		}else {
 			my $added = getAddedTime($track);
 			if($lastPlayed) {
-				$sql = ("INSERT INTO track_statistics (url,playCount,added,lastPlayed) values (?,$playCount,$added,$lastPlayed)");
+				if (defined($mbId)) {
+					$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,playCount,added,lastPlayed) values (?,'$mbId',$playCount,$added,$lastPlayed)");
+				}else {
+					$sql = ("INSERT INTO track_statistics (url,playCount,added,lastPlayed) values (?,$playCount,$added,$lastPlayed)");
+				}
 			}else {
-				$sql = ("INSERT INTO track_statistics (url,playCount,added) values (?,$playCount,$added)");
+				if (defined($mbId)) {
+					$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,playCount,added) values (?,'$mbId',$playCount,$added)");
+				}else {
+					$sql = ("INSERT INTO track_statistics (url,playCount,added) values (?,$playCount,$added)");
+				}
 			}
 		}
 		if($sql) {
-			my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+			my $dbh = getCurrentDBH();
 			my $sth = $dbh->prepare( $sql );
 			eval {
 				$sth->bind_param(1, $url , SQL_VARCHAR);
 				$sth->execute();
-				$dbh->commit();
+				commit($dbh);
 			};
 			if( $@ ) {
 			    warn "Database error: $DBI::errstr\n";
 			    eval {
-			    	$dbh->rollback(); #just die if rollback is failing
+			    	rollback($dbh); #just die if rollback is failing
 			    };
 			}
 
@@ -668,19 +756,23 @@ sub mergeTrack()
 			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
 		} else {
 			my $added = getAddedTime($track);
-			$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
+			if (defined($mbId)) {
+				$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,added,rating) values (?,'$mbId',$added,$rating)");
+			}else {
+				$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
+			}
 		}
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+		my $dbh = getCurrentDBH();
 		my $sth = $dbh->prepare( $sql );
 		eval {
 			$sth->bind_param(1, $url , SQL_VARCHAR);
 			$sth->execute();
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 		$sth->finish();
@@ -691,11 +783,11 @@ sub mergeTrack()
 sub refreshTracks 
 {
 		
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
     
 	my $timeMeasure = Time::Stopwatch->new();
     if($driver eq 'mysql') {
-    	my $dbh = $ds->dbh();
+    	my $dbh = getCurrentDBH();
 		$timeMeasure->clear();
 		$timeMeasure->start();
 		my $sth = $dbh->prepare("show index from tracks;");
@@ -729,12 +821,12 @@ sub refreshTracks
 	    	$dbh->do("analyze table tracks;");
 	    	$dbh->do("analyze table track_statistics;");
 	    	$dbh->do("analyze table track_history;");
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 		debugMsg("Finished analyzing indexes : It took ".$timeMeasure->getElapsedTime()." seconds\n");
@@ -749,7 +841,7 @@ sub refreshTracks
     if($driver eq 'mysql') {
     	$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<256";
 	}
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my $sqlupdate = "UPDATE track_statistics set url=? where musicbrainz_id = ?";
 	my $sthupdate = $dbh->prepare( $sqlupdate );
@@ -765,12 +857,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -799,12 +891,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -827,7 +919,7 @@ sub refreshTracks
 			my( $url,$rating );
 			$sth->bind_columns( undef, \$url, \$rating );
 			while( $sth->fetch() ) {
-				my $track = $ds->objectForUrl($url);
+				my $track = objectForUrl($url);
 				# Run this within eval for now so it hides all errors until this is standard
 				eval {
 					$track->set('rating' => $rating);
@@ -835,7 +927,7 @@ sub refreshTracks
 				};
 				$count++;
 			}
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
@@ -870,12 +962,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -903,7 +995,7 @@ sub refreshTracks
 	$count = 0;
 	eval {
 		$count = $sth->execute();
-		$dbh->commit();
+		commit($dbh);
 		if($count eq '0E0') {
 			$count = 0;
 		}
@@ -911,7 +1003,7 @@ sub refreshTracks
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -939,12 +1031,12 @@ sub refreshTracks
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -977,12 +1069,12 @@ sub refreshTracks
 				$sthupdate->execute();
 				$count++;
 			}
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 
@@ -1011,12 +1103,12 @@ sub refreshTracks
 				$sthupdate->execute();
 				$count++;
 			}
-			$dbh->commit();
+			commit($dbh);
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 
@@ -1037,7 +1129,7 @@ sub refreshTracks
 		$count = 0;
 		eval {
 			$count = $sth->execute();
-			$dbh->commit();
+			commit($dbh);
 			if($count eq '0E0') {
 				$count = 0;
 			}
@@ -1045,7 +1137,7 @@ sub refreshTracks
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
 		    eval {
-		    	$dbh->rollback(); #just die if rollback is failing
+		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
 
@@ -1058,7 +1150,7 @@ sub refreshTracks
 }
 
 sub purgeTracks {
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
+	my $ds        = getCurrentDS();
 
 	# First perform a refresh so we know we have correct data
 	refreshTracks();
@@ -1066,7 +1158,7 @@ sub purgeTracks {
 	debugMsg("Starting to remove statistic data from track_statistics which no longer exists\n");
 	# Remove all tracks from track_statistics if they don't exist in tracks table
 	my $sql = "select track_statistics.url from track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my $sqlupdate = "DELETE FROM track_statistics where url=?";
 	my $sthupdate = $dbh->prepare( $sqlupdate );
@@ -1081,12 +1173,12 @@ sub purgeTracks {
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -1111,12 +1203,12 @@ sub purgeTracks {
 			$sthupdate->execute();
 			$count++;
 		}
-		$dbh->commit();
+		commit($dbh);
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
-	    	$dbh->rollback(); #just die if rollback is failing
+	    	rollback($dbh); #just die if rollback is failing
 	    };
 	}
 
@@ -1127,19 +1219,19 @@ sub purgeTracks {
 
 sub deleteAllTracks()
 {
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( "delete from track_statistics" );
 	
 	eval {
 		$sth->execute();
-		$dbh->commit();
+		commit($dbh);
 	};
 	$sth->finish();
 
 	$sth = $dbh->prepare( "delete from track_history" );
 	eval {
 		$sth->execute();
-		$dbh->commit();
+		commit($dbh);
 	};
 
 	$sth->finish();
@@ -1168,7 +1260,7 @@ sub executeSQLFile {
                 return;
         };
 
-		my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+		my $dbh = getCurrentDBH();
 
         my $statement   = '';
         my $inStatement = 0;
@@ -1208,7 +1300,7 @@ sub executeSQLFile {
                 $statement .= $line if $inStatement;
         }
 
-        $dbh->commit;
+        commit($dbh);
 
         close $fh;
 }
@@ -1226,7 +1318,11 @@ sub getRandomString {
 sub getAddedTime {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		return $track->{timestamp};
+		if($::REVISION ge '7505') {
+			return $track->timestamp;
+		}else {
+			return $track->{timestamp};
+		}
 	}else {
 		return $track->{age};
 	}
