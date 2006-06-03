@@ -56,19 +56,22 @@ sub getStatisticItems {
 			'webfunction' => \&getLastPlayedTracksWeb,
 			'playlistfunction' => \&getLastPlayedTracks,
 			'id' =>  'lastplayed',
-			'namefunction' => \&getLastPlayedTracksName
+			'namefunction' => \&getLastPlayedTracksName,
+			'contextfunction' => \&isLastPlayedTracksValidInContext
 		},
 		lastplayedalbums => {
 			'webfunction' => \&getLastPlayedAlbumsWeb,
 			'playlistfunction' => \&getLastPlayedAlbumTracks,
 			'id' =>  'lastplayedalbums',
-			'namefunction' => \&getLastPlayedAlbumsName
+			'namefunction' => \&getLastPlayedAlbumsName,
+			'contextfunction' => \&isLastPlayedAlbumsValidInContext
 		},
 		lastplayedartists => {
 			'webfunction' => \&getLastPlayedArtistsWeb,
 			'playlistfunction' => \&getLastPlayedArtistTracks,
 			'id' =>  'lastplayedartists',
-			'name' => string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS')
+			'namefunction' => \&getLastPlayedArtistsName,
+			'contextfunction' => \&isLastPlayedArtistsValidInContext
 		}
 	);
 	return \%statistics;
@@ -77,16 +80,34 @@ sub getStatisticItems {
 sub getLastPlayedTracksName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
 	}elsif(defined($params->{'album'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORYEAR')." ".$year;
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED');
 	}
+}
+
+sub isLastPlayedTracksValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'album'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
 }
 
 sub getLastPlayedTracksWeb {
@@ -108,6 +129,20 @@ sub getLastPlayedTracksWeb {
 	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url=track_statistics.url and tracks.audio=1 and tracks.album=$album order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
 	    }
 	    $params->{'statisticparameters'} = "&album=$album";
+	}elsif(defined($params->{'genre'})) {
+		my $genre = $params->{'genre'};
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics,genre_track where tracks.url=track_statistics.url and tracks.id=genre_track.track and genre_track.genre=$genre and tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
+	    }
+	    $params->{'statisticparameters'} = "&genre=$genre";
+	}elsif(defined($params->{'year'})) {
+		my $year = $params->{'year'};
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.year=$year and tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url=track_statistics.url and tracks.year=$year and tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
+	    }
+	    $params->{'statisticparameters'} = "&year=$year";
 	}else {
 	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 order by track_statistics.lastPlayed desc,tracks.lastPlayed desc,$orderBy limit $listLength;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
@@ -131,12 +166,28 @@ sub getLastPlayedTracks {
 sub getLastPlayedAlbumsName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORYEAR')." ".$year;
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS');
 	}
+}
+sub isLastPlayedAlbumsValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
 }
 
 sub getLastPlayedAlbumsWeb {
@@ -151,6 +202,20 @@ sub getLastPlayedAlbumsWeb {
 	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums,contributor_track where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.id=contributor_track.track and contributor_track.contributor=$artist group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
+	}elsif(defined($params->{'genre'})) {
+		my $genre = $params->{'genre'};
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums,genre_track where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.id=genre_track.track and genre_track.genre=$genre group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&genre=$genre";
+	}elsif(defined($params->{'year'})) {
+		my $year = $params->{'year'};
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id where tracks.year=$year group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.year=$year group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&year=$year";
 	}else {
 	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album order by maxlastplayed desc, $orderBy limit $listLength";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
@@ -177,14 +242,53 @@ sub getLastPlayedAlbumTracks {
     return Plugins::TrackStat::Statistics::Base::getAlbumTracks($sql,$limit);
 }
 
+sub getLastPlayedArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORYEAR')." ".$year;
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS');
+	}
+}
+sub isLastPlayedArtistsValidInContext {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 sub getLastPlayedArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
-    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
-    }
+	my $sql;
+	if(defined($params->{'genre'})) {
+		my $genre = $params->{'genre'};
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track, genre_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.id=genre_track.track and genre_track.genre=$genre group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&genre=$genre";
+	}elsif(defined($params->{'year'})) {
+		my $year = $params->{'year'};
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor where tracks.year=$year group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.year=$year group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&year=$year";
+	}else {
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as maxlastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor group by contributors.id order by maxlastplayed desc, $orderBy limit $listLength";
+	    }
+	}
     Plugins::TrackStat::Statistics::Base::getArtistsWeb($sql,$params);
     my @statisticlinks = ();
     push @statisticlinks, {
@@ -227,6 +331,18 @@ PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORARTIST
 	EN	Last played songs by: 
 
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORGENRE
+	EN	Last played songs in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_FORYEAR
+	EN	Last played songs from: 
+
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS
 	EN	Last played albums
 
@@ -236,8 +352,32 @@ PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORARTIST
 	EN	Last played albums by: 
 
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORGENRE
+	EN	Last played albums in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDALBUMS_FORYEAR
+	EN	Last played albums from: 
+
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS
 	EN	Last played artists
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORGENRE
+	EN	Last played artists in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORYEAR
+	EN	Last played artists from: 
 ";
 }
 

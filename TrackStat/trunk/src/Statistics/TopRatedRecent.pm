@@ -56,19 +56,22 @@ sub getStatisticItems {
 			'webfunction' => \&getTopRatedNotRecentTracksWeb,
 			'playlistfunction' => \&getTopRatedNotRecentTracks,
 			'id' =>  'topratednotrecent',
-			'namefunction' => \&getTopRatedNotRecentTracksName
+			'namefunction' => \&getTopRatedNotRecentTracksName,
+			'contextfunction' => \&isTopRatedNotRecentTracksValidInContext
 		},
 		topratednotrecentartists => {
 			'webfunction' => \&getTopRatedNotRecentArtistsWeb,
 			'playlistfunction' => \&getTopRatedNotRecentArtistTracks,
 			'id' =>  'topratednotrecentartists',
-			'namefunction' => \&getTopRatedNotRecentArtistsName
+			'namefunction' => \&getTopRatedNotRecentArtistsName,
+			'contextfunction' => \&isTopRatedNotRecentArtistsValidInContext
 		},
 		topratednotrecentalbums => {
 			'webfunction' => \&getTopRatedNotRecentAlbumsWeb,
 			'playlistfunction' => \&getTopRatedNotRecentAlbumTracks,
 			'id' =>  'topratednotrecentalbums',
-			'namefunction' => \&getTopRatedNotRecentAlbumsName
+			'namefunction' => \&getTopRatedNotRecentAlbumsName,
+			'contextfunction' => \&isTopRatedNotRecentAlbumsValidInContext
 		}
 	);
 	if(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled")) {
@@ -76,19 +79,22 @@ sub getStatisticItems {
 			'webfunction' => \&getTopRatedRecentTracksWeb,
 			'playlistfunction' => \&getTopRatedRecentTracks,
 			'id' =>  'topratedrecent',
-			'namefunction' => \&getTopRatedRecentTracksName
+			'namefunction' => \&getTopRatedRecentTracksName,
+			'contextfunction' => \&isTopRatedRecentTracksValidInContext
 		};
 		$statistics{topratedrecentartists} = {
 			'webfunction' => \&getTopRatedRecentArtistsWeb,
 			'playlistfunction' => \&getTopRatedRecentArtistTracks,
 			'id' =>  'topratedrecentartists',
-			'namefunction' => \&getTopRatedRecentArtistsName
+			'namefunction' => \&getTopRatedRecentArtistsName,
+			'contextfunction' => \&isTopRatedRecentArtistsValidInContext
 		};
 		$statistics{topratedrecentalbums} = {
 			'webfunction' => \&getTopRatedRecentAlbumsWeb,
 			'playlistfunction' => \&getTopRatedRecentAlbumTracks,
 			'id' =>  'topratedrecentalbums',
-			'namefunction' => \&getTopRatedRecentAlbumsName
+			'namefunction' => \&getTopRatedRecentAlbumsName,
+			'contextfunction' => \&isTopRatedRecentAlbumsValidInContext
 		};
 	}
 	return \%statistics;
@@ -97,43 +103,65 @@ sub getStatisticItems {
 sub getTopRatedRecentTracksName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
 	}elsif(defined($params->{'album'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
 	}elsif(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT');
 	}
 }
+sub isTopRatedRecentTracksValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'album'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 
 sub getTopRatedNotRecentTracksName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
 	}elsif(defined($params->{'album'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $album = $ds->objectForId('album',$params->{'album'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->{title},'utf8');
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
 	}elsif(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT');
 	}
+}
+
+sub isTopRatedNotRecentTracksValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'album'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
 }
 
 sub getTopRatedRecentTracksWeb {
@@ -151,36 +179,56 @@ sub getTopRatedRecentTracks {
 sub getTopRatedRecentAlbumsName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
 	}elsif(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTALBUMS');
 	}
 }
+sub isTopRatedRecentAlbumsValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 
 sub getTopRatedNotRecentAlbumsName {
 	my $params = shift;
 	if(defined($params->{'artist'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $artist = $ds->objectForId('artist',$params->{'artist'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->{name},'utf8');
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
 	}elsif(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTALBUMS');
 	}
 }
+sub isTopRatedNotRecentAlbumsValidInContext {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+		return 1;
+	}elsif(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 sub getTopRatedRecentAlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
@@ -203,28 +251,46 @@ sub getTopRatedRecentAlbumTracks {
 sub getTopRatedRecentArtistsName {
 	my $params = shift;
 	if(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTARTISTS');
 	}
 }
+sub isTopRatedRecentArtistsValidInContext {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 
 sub getTopRatedNotRecentArtistsName {
 	my $params = shift;
 	if(defined($params->{'genre'})) {
-	    my $ds = Slim::Music::Info::getCurrentDataStore();
-	    my $genre = $ds->objectForId('genre',$params->{'genre'});
-		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->{name},'utf8');
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS_FORYEAR')." ".$params->{'year'};
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTARTISTS');
 	}
 }
+sub isTopRatedNotRecentArtistsValidInContext {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+		return 1;
+	}elsif(defined($params->{'year'})) {
+		return 1;
+	}
+	return 0;
+}
+
 
 sub getTopRatedRecentArtistsWeb {
 	my $params = shift;
@@ -309,7 +375,7 @@ sub getTopRatedHistoryTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,count(tracks.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks, track_history,contributor_track where tracks.url = track_history.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist tracks.audio=1 and played$beforeAfter$beforeAfterTime group by tracks.url order by avgrating desc,playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(tracks.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks, track_history,contributor_track where tracks.url = track_history.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by tracks.url order by avgrating desc,playCount desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.rating desc,track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    }
