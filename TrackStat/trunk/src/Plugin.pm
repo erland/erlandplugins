@@ -171,7 +171,9 @@ my %functions = (
 		if ($playStatus->isTiming() eq 'true') {
 			# see if the string is already in the cache
 			my $songKey;
-	        my $song = $songKey = Slim::Player::Playlist::song($client);
+	        my $song = Slim::Player::Playlist::song($client);
+        	$song = $song->url;
+	        $songKey = $song;
 	        if (Slim::Music::Info::isRemoteURL($song)) {
 	                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
 	        }
@@ -226,11 +228,11 @@ sub getTrackInfo {
 		my $playStatus = getPlayerStatusForClient($client);
 		if ($playStatus->isTiming() eq 'true') {
 			if ($playStatus->trackAlreadyLoaded() eq 'false') {
-				my $ds = Slim::Music::Info::getCurrentDataStore();
+				my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 				my $track;
 				# The encapsulation with eval is just to make it more crash safe
 				eval {
-					$track = $ds->objectForUrl($playStatus->currentTrackOriginalFilename());
+					$track = Plugins::TrackStat::Storage::objectForUrl($playStatus->currentTrackOriginalFilename());
 				};
 				if ($@) {
 					debugMsg("Error retrieving track: ".$playStatus->currentTrackOriginalFilename()."\n");
@@ -651,13 +653,15 @@ sub baseWebPage {
 		if ($params->{trackstatcmd} and $params->{trackstatcmd} eq 'rating') {
 			my $songKey;
 	        if ($params->{trackstattrackid}) {
-				my $ds = Slim::Music::Info::getCurrentDataStore();
-				my $track     = $ds->objectForId('track',$params->{trackstattrackid});
+				my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+				my $track     = Plugins::TrackStat::Storage::objectForId('track',$params->{trackstattrackid});
 				if(defined($track)) {
-					$songKey = $track->{url};
+					$songKey = $track->url;
 				}
 	        }elsif ($playStatus) {
-		        my $song  = $songKey = Slim::Player::Playlist::song($client);
+		        my $song  = Slim::Player::Playlist::song($client);
+	        	$song = $song->url;
+		        $songKey = $song;
 		        if (Slim::Music::Info::isRemoteURL($song)) {
 		                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
 		        }
@@ -718,7 +722,9 @@ sub baseWebPage {
 	if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
 		$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	}
-	$params->{'pluginTrackStatVersion'} = $::VERSION;
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginTrackStatSlimserver65'} = 1;
+	}
 	debugMsg("Exiting baseWebPage\n");
 }
 	
@@ -989,6 +995,32 @@ sub handleWebStatistics {
 		setDynamicPlaylistParams($client,$params);
 	};
 	
+	my @statisticItems = ();
+	for my $item (keys %$statistics) {
+		if($statistics->{$item}->{'trackstat_statistic_enabled'}) {
+			if(defined($statistics->{$item}->{'contextfunction'})) {
+				my $valid = eval {&{$statistics->{$item}->{'contextfunction'}}($params)};
+				if($valid) {
+					my %itemData = ();
+					$itemData{'id'} = $statistics->{$item}->{'id'};
+					if(defined($statistics->{$item}->{'namefunction'})) {
+						$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
+					}else {
+						$itemData{'name'} = $statistics->{$item}->{'name'};
+					}
+					$itemData{'enabled'} = $statistics->{$item}->{'trackstat_statistic_enabled'};
+					push @statisticItems, \%itemData;
+				}
+			}
+		}
+	}
+	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
+	if(scalar(@statisticItems)) {
+		$params->{'pluginTrackStatStatisticItems'} = \@statisticItems;
+		$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/3;
+		$params->{'pluginTrackStatFilteredStatistic'} = 1;
+	}
+
 	handlePlayAddWebPage($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
@@ -1011,7 +1043,11 @@ sub setDynamicPlaylistParams {
 sub getPlayCount {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		return $track->{playcount};
+		if($::REVISION ge '7505') {
+			return $track->playcount;
+		}else {
+			return $track->{playcount};
+		}
 	}else {
 		return $track->{playCount};
 	}
@@ -1020,7 +1056,11 @@ sub getPlayCount {
 sub getLastPlayed {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		return $track->{lastplayed};
+		if($::REVISION ge '7505') {
+			return $track->lastplayed;
+		}else {
+			return $track->{lastplayed};
+		}
 	}else {
 		return $track->{lastPlayed};
 	}
@@ -1041,6 +1081,7 @@ sub initRatingChar {
 
 sub initPlugin
 {
+	my $class = shift;
     debugMsg("initialising\n");
 	#if we haven't already started, do so
 	if ( !$TRACKSTAT_HOOK ) {
@@ -1174,6 +1215,16 @@ sub initPlugin
 			}
 		}
 		use strict 'refs';
+		
+		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			Slim::Music::Import::addImporter($class,'TRACKSTAT', {
+	            'mixerlink' => \&mixerlink});
+        	Slim::Music::Import::useImporter($class, 1);
+        }else {
+			Slim::Music::Import::addImporter('TRACKSTAT', {
+	            'mixerlink' => \&mixerlink});
+        	Slim::Music::Import::useImporter('TRACKSTAT', 1);
+        }
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -1194,6 +1245,42 @@ sub initPlugin
 	}
 }
 
+sub mixerlink {
+        my $item = shift;
+        my $form = shift;
+        my $descend = shift;
+#		debugMsg("***********************************\n");
+#		for my $it (keys %$form) {
+#			debugMsg("Got $it=".$form->{$it}."\n");
+#		}
+#		debugMsg("***********************************\n");
+		my $levelName = $form->{'levelName'};
+		if(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'year') && !$form->{'noTrackStatButton'}) {
+			if ($::VERSION ge '6.5') {
+	        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+	        }else {
+        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
+	        }
+        }elsif(!$form->{'noTrackStatButton'}){
+    		my $album = $item->{'album'};
+    		if(defined($album)) {
+    			$form->{'albumid'} = $album->{'id'};
+    		}
+        	if(defined($form->{'albumid'})) {
+				if ($::VERSION ge '6.5') {
+        			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+        		}else {
+        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
+        		}
+        	}
+        }else {
+			if ($::VERSION lt '6.5') {
+        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => undef});
+        	}
+        }
+        return $form;
+}
+	
 sub addTitleFormat
 {
 	my $titleformat = shift;
@@ -1211,6 +1298,10 @@ sub shutdownPlugin {
         debugMsg("disabling\n");
         if ($TRACKSTAT_HOOK) {
                 uninstallHook();
+				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		        }else {
+		        	Slim::Music::Import::useImporter('TRACKSTAT', 0);
+		        }
         }
 }
 
@@ -1712,8 +1803,8 @@ sub startTimingNewSong($$$$)
 	debugMsg("Starting a new song\n");
 	# Parameter - TrackStatus for current client
 	my $playStatus = shift;
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($playStatus->currentTrackOriginalFilename);
+	my $ds        = Plugins::TrackStat::Storage::getCurrentDS();
+	my $track     = Plugins::TrackStat::Storage::objectForUrl($playStatus->currentTrackOriginalFilename);
 
 	if (Slim::Music::Info::isFile($playStatus->currentTrackOriginalFilename)) {
 		# Get new song data
@@ -1848,8 +1939,8 @@ sub markedAsPlayed {
 	debugMsg("Entering markedAsPlayed\n");
 	my $client = shift;
 	my $url = shift;
-	my $ds        = Slim::Music::Info::getCurrentDataStore();
-	my $track     = $ds->objectForUrl($url);
+	my $ds        = Plugins::TrackStat::Storage::getCurrentDS();
+	my $track     = Plugins::TrackStat::Storage::objectForUrl($url);
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 
 	my $playCount;
@@ -1999,8 +2090,8 @@ sub rateSong($$$) {
 	my ($client,$url,$digit)=@_;
 
 	debugMsg("Changing song rating to: $digit\n");
-	my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $track = $ds->objectForUrl($url);
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 	if(!defined $track) {
 		debugMsg("Failure setting rating, track does not exist: $url\n");
 		return;
@@ -2024,10 +2115,10 @@ sub setTrackStatRating {
 	my ($client,$url,$rating)=@_;
 	my $lowrating = $rating / 20;
 	my $track = undef;
-	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	if ($::VERSION ge '6.5') {
 		eval {
-			$track = $ds->objectForUrl($url);
+			$track = Plugins::TrackStat::Storage::objectForUrl($url);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $url\n");
@@ -2074,7 +2165,7 @@ sub setTrackStatRating {
 			return;
 		};
 		if(!defined($track)) {
-			$track = $ds->objectForUrl($url);
+			$track = Plugins::TrackStat::Storage::objectForUrl($url);
 		}
 		
 		print $output "".$track->title."|||$itunesurl|rated||$rating\n";
@@ -2102,7 +2193,7 @@ sub getCLIRating {
 		return;
   	}
   	
-	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
 	if($trackId !~ /^-?\d+$/) {
 		if($trackId =~ /^\/.+$/) {
@@ -2110,7 +2201,7 @@ sub getCLIRating {
 		}
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForUrl($trackId);
+			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2118,7 +2209,7 @@ sub getCLIRating {
 	}else {
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForId('track',$trackId);
+			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2164,7 +2255,7 @@ sub getCLIRating62 {
 		return;
   	}
   	
-	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
 	if($trackId !~ /^-?\d+$/) {
 		if($trackId =~ /^\/.+$/) {
@@ -2172,7 +2263,7 @@ sub getCLIRating62 {
 		}
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForUrl($trackId);
+			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2180,7 +2271,7 @@ sub getCLIRating62 {
 	}else {
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForId('track',$trackId);
+			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2229,7 +2320,7 @@ sub setCLIRating {
 		return;
   	}
   	
-	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
 	if($trackId !~ /^-?\d+$/) {
 		if($trackId =~ /^\/.+$/) {
@@ -2237,7 +2328,7 @@ sub setCLIRating {
 		}
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForUrl($trackId);
+			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2245,7 +2336,7 @@ sub setCLIRating {
 	}else {
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForId('track',$trackId);
+			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2296,7 +2387,7 @@ sub setCLIRating62 {
 		return;
   	}
   	
-	my $ds = Slim::Music::Info::getCurrentDataStore();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
 	if($trackId !~ /^-?\d+$/) {
 		if($trackId =~ /^\/.+$/) {
@@ -2304,7 +2395,7 @@ sub setCLIRating62 {
 		}
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForUrl($trackId);
+			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2312,7 +2403,7 @@ sub setCLIRating62 {
 	}else {
 		# The encapsulation with eval is just to make it more crash safe
 		eval {
-			$track = $ds->objectForId('track',$trackId);
+			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $trackId\n");
@@ -2379,8 +2470,8 @@ sub setTrackStatStatistic {
 			warn "Could not open $filename for writing.";
 			return;
 		};
-		my $ds = Slim::Music::Info::getCurrentDataStore();
-		my $track = $ds->objectForUrl($url);
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+		my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 		if(!defined $rating) {
 			$rating = '';
 		}
@@ -2693,6 +2784,9 @@ sub unescape {
 sub strings() { 
 	my $pluginStrings = getStatisticPluginsStrings();
 	my $str = "
+TRACKSTAT
+	EN	TrackStat
+
 PLUGIN_TRACKSTAT
 	EN	TrackStat
 
@@ -3124,6 +3218,9 @@ PLUGIN_TRACKSTAT_SELECT_STATISTICS_ALL
 
 PLUGIN_TRACKSTAT_SELECT_STATISTICS_NONE
 	EN	Select none
+
+PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS
+	EN	Show all
 $pluginStrings";
 return $str;
 }
