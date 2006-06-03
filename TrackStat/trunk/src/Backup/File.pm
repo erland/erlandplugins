@@ -55,7 +55,7 @@ sub backupToFile
 
 	my $sql = "SELECT url, musicbrainz_id, playCount, added, lastPlayed, rating FROM track_statistics";
 
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	$sth->execute();
 
@@ -146,6 +146,7 @@ sub restoreFromFile
 {
 	$backupFile = shift;
 	debugMsg("Restore from: $backupFile\n");
+	$isScanning = 1;
 	$backupParser = XML::Parser->new(
 		'ErrorContext'     => 2,
 		'ProtocolEncoding' => 'UTF-8',
@@ -159,7 +160,13 @@ sub restoreFromFile
 		},
 	);
 
-	Slim::Utils::Scheduler::add_task(\&scanFunction);
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		while($isScanning) {
+			scanFunction();
+		}
+	}else {
+		Slim::Utils::Scheduler::add_task(\&scanFunction);
+	}
 }
 
 sub stopScan {
@@ -168,7 +175,9 @@ sub stopScan {
 
 		debugMsg("Was stillScanning - stopping old scan.\n");
 
-		Slim::Utils::Scheduler::remove_task(\&scanFunction);
+		if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+			Slim::Utils::Scheduler::remove_task(\&scanFunction);
+		}
 		$isScanning = 0;
 		$opened = 0;
 		
@@ -204,7 +213,9 @@ sub doneScanning {
 	msg("TrackStat:Backup: Restore completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
 
 	# Take the scanner off the scheduler.
-	Slim::Utils::Scheduler::remove_task(\&scanFunction);
+	if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+		Slim::Utils::Scheduler::remove_task(\&scanFunction);
+	}
 }
 
 sub resetScanState {
@@ -341,10 +352,10 @@ sub restoreTrack
 
 	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating);	
 	if ($::VERSION ge '6.5') {
-		my $ds = Slim::Music::Info::getCurrentDataStore();
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 		my $track;
 		eval {
-			$track = $ds->objectForUrl($url);
+			$track = Plugins::TrackStat::Storage::objectForUrl($url);
 		};
 		if ($@) {
 			debugMsg("Error retrieving track: $url\n");

@@ -1,5 +1,5 @@
 [%- pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' -%]
-[% IF pluginTrackStatVersion < '6.5' %]
+[% IF pluginTrackStatSlimserver65 %]
 	[% PROCESS plugins/TrackStat/hreftemplate65 %]
 	[% PROCESS plugins/TrackStat/cmdwrappers65 %]
 	[% PROCESS plugins/TrackStat/css65 %]
@@ -18,7 +18,7 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF pluginTrackStatVersion < '6.5' %]
+[% IF pluginTrackStatSlimserver65 %]
 	[% PROCESS plugins/TrackStat/pageheaderinfo65 %]
 [% END %]
 

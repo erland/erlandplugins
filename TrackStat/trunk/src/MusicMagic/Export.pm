@@ -57,7 +57,7 @@ sub startExport {
 	
 	my $sql = "SELECT url, playCount, lastPlayed, rating FROM track_statistics";
 
-	my $dbh = Slim::Music::Info::getCurrentDataStore()->dbh();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	$sth->execute();
 	@songs = ();
@@ -82,7 +82,13 @@ sub startExport {
 	$isScanning = 1;
 	$MusicMagicScanStartTime = time();
 
-	Slim::Utils::Scheduler::add_task(\&scanFunction);
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		while($isScanning) {
+			scanFunction();
+		}
+	}else {
+		Slim::Utils::Scheduler::add_task(\&scanFunction);
+	}
 }
 
 sub stopScan {
@@ -91,7 +97,9 @@ sub stopScan {
 
 		debugMsg("Was stillScanning - stopping old scan.\n");
 
-		Slim::Utils::Scheduler::remove_task(\&scanFunction);
+		if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+			Slim::Utils::Scheduler::remove_task(\&scanFunction);
+		}
 		$isScanning = 0;
 		
 		resetScanState();
@@ -130,8 +138,10 @@ sub doneScanning {
 
 	Slim::Utils::Prefs::set('plugin_trackstat_lastMusicMagicDate', $lastMusicMagicDate);
 
-	# Take the scanner off the scheduler.
-	Slim::Utils::Scheduler::remove_task(\&scanFunction);
+	if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+		# Take the scanner off the scheduler.
+		Slim::Utils::Scheduler::remove_task(\&scanFunction);
+	}
 }
 
 sub scanFunction {

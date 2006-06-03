@@ -86,11 +86,37 @@ sub saveMixerLinks {
         }
     }
 }
+
+sub displayAsHTML {
+	my $type = shift;
+	my $form = shift;
+	my $item = shift;
+	
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		$item->displayAsHTML($form);
+	}else {
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+		my $fieldInfo = Slim::DataStores::Base->fieldInfo;
+        my $levelInfo = $fieldInfo->{$type};
+        &{$levelInfo->{'listItem'}}($ds, $form, $item);
+	}
+}
+
+sub getLinkAttribute {
+	my $attr = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if($attr eq 'artist') {
+			$attr = 'contributor';
+		}
+		return $attr.'.id';
+	}
+}
+
 sub getTracksWeb {
 	my $sql = shift;
 	my $params = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
@@ -104,13 +130,12 @@ sub getTracksWeb {
 			$added = 0 if (!(defined($added)));
 			$playCount = 0 if (!(defined($playCount)));
 			$rating = 0 if (!(defined($rating)));
-			my $track = $ds->objectForUrl($url);
+			my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 			next unless defined $track;
 		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'track'};
 			
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $track);
+            $trackInfo{'noTrackStatButton'} = 1;
+            displayAsHTML('track', \%trackInfo, $track);
 		  	$trackInfo{'title'} = Slim::Music::Info::standardTitle(undef,$track);
 		  	$trackInfo{'lastPlayed'} = $lastPlayed;
 		  	$trackInfo{'added'} = $added;
@@ -120,7 +145,7 @@ sub getTracksWeb {
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
             $trackInfo{'song_count'}       = $playCount;
-            $trackInfo{'attributes'}       = '&track='.$track->id;
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('track').'='.$track->id;
             $trackInfo{'itemobj'}          = $track;
             $trackInfo{'listtype'} = 'track';
             $trackInfo{'levelName'}  = 'track';
@@ -133,7 +158,11 @@ sub getTracksWeb {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 }
@@ -141,8 +170,8 @@ sub getTracksWeb {
 sub getTracks {
 	my $sql = shift;
 	my $limit = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my @result;
@@ -151,12 +180,16 @@ sub getTracks {
 		my $url;
 		$sth->bind_columns( undef, \$url );
 		while( $sth->fetch() ) {
-			my $track = $ds->objectForUrl($url);
+			my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 		  	push @result, $track;
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 	fisher_yates_shuffle(\@result);
@@ -170,8 +203,8 @@ sub getTracks {
 sub getAlbumsWeb {
 	my $sql = shift;
 	my $params = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
@@ -185,14 +218,13 @@ sub getAlbumsWeb {
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $album = $ds->objectForId('album',$id);
+			my $album = Plugins::TrackStat::Storage::objectForId('album',$id);
 			next unless defined $album;
 		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'album'};
 			
-		  	$trackInfo{'album'} = $album->{id};
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $album);
+		  	$trackInfo{'album'} = $album->id;
+            $trackInfo{'noTrackStatButton'} = 1;
+            displayAsHTML('album', \%trackInfo, $album);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
@@ -202,7 +234,7 @@ sub getAlbumsWeb {
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
             $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&album='.$album->id;
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('album').'='.$album->id;
             $trackInfo{'itemobj'}{'album'} = $album;
             $trackInfo{'listtype'} = 'album';
             $trackInfo{'levelName'}  = 'album';
@@ -215,7 +247,11 @@ sub getAlbumsWeb {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 }
@@ -223,8 +259,8 @@ sub getAlbumsWeb {
 sub getAlbumTracks {
 	my $sql = shift;
 	my $limit = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my @result;
@@ -239,7 +275,7 @@ sub getAlbumTracks {
 		if(scalar(@albums)>0) {
 			fisher_yates_shuffle(\@albums);
 			$id = shift @albums;
-			my $album = $ds->objectForId('album',$id);
+			my $album = Plugins::TrackStat::Storage::objectForId('album',$id);
 			debugMsg("Getting tracks for album: ".$album->title."\n");
 			my $iterator = $album->tracks;
 			for my $item ($iterator->slice(0,$iterator->count)) {
@@ -249,7 +285,11 @@ sub getAlbumTracks {
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 	if(defined($limit)) {
@@ -266,8 +306,8 @@ sub getAlbumTracks {
 sub getArtistsWeb {
 	my $sql = shift;
 	my $params = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
@@ -281,14 +321,13 @@ sub getArtistsWeb {
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $artist = $ds->objectForId('artist',$id);
+			my $artist = Plugins::TrackStat::Storage::objectForId('artist',$id);
 			next unless defined $artist;
 		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'artist'};
 			
-		  	$trackInfo{'artist'} = $artist->{id};
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $artist);
+		  	$trackInfo{'artist'} = $artist->id;
+            $trackInfo{'noTrackStatButton'} = 1;
+            displayAsHTML('artist', \%trackInfo, $artist);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
@@ -298,7 +337,7 @@ sub getArtistsWeb {
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
             $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&artist='.$artist->id;
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('artist').'='.$artist->id;
             $trackInfo{'itemobj'}{'artist'} = $artist;
             $trackInfo{'listtype'} = 'artist';
             $trackInfo{'levelName'}  = 'artist';
@@ -311,7 +350,11 @@ sub getArtistsWeb {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n$@\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 }
@@ -319,8 +362,8 @@ sub getArtistsWeb {
 sub getArtistTracks {
 	my $sql = shift;
 	my $limit = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my @result;
@@ -336,7 +379,7 @@ sub getArtistTracks {
 			fisher_yates_shuffle(\@artists);
 			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
 				$id = shift @artists;
-				my $artist = $ds->objectForId('artist',$id);
+				my $artist = Plugins::TrackStat::Storage::objectForId('artist',$id);
 
 				debugMsg("Getting tracks for artist: ".$artist->name."\n");
 				my $artistFind = {'artist' => $artist->id };
@@ -357,7 +400,11 @@ sub getArtistTracks {
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 	debugMsg("Returning ".scalar(@result)." tracks\n");
@@ -367,8 +414,8 @@ sub getArtistTracks {
 sub getGenresWeb {
 	my $sql = shift;
 	my $params = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
@@ -382,14 +429,13 @@ sub getGenresWeb {
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $genre = $ds->objectForId('genre',$id);
+			my $genre = Plugins::TrackStat::Storage::objectForId('genre',$id);
 			next unless defined $genre;
 		  	my %trackInfo = ();
-			my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            my $levelInfo = $fieldInfo->{'genre'};
 			
 		  	$trackInfo{'genre'} = $id;
-            &{$levelInfo->{'listItem'}}($ds, \%trackInfo, $genre);
+            $trackInfo{'noTrackStatButton'} = 1;
+            displayAsHTML('genre', \%trackInfo, $genre);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
@@ -399,7 +445,7 @@ sub getGenresWeb {
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
             $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&genre='.$genre->id;
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('genre').'='.$genre->id;
             $trackInfo{'itemobj'}{'genre'} = $genre;
             $trackInfo{'listtype'} = 'genre';
             $trackInfo{'levelName'}  = 'genre';
@@ -412,7 +458,11 @@ sub getGenresWeb {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 }
@@ -420,8 +470,8 @@ sub getGenresWeb {
 sub getGenreTracks {
 	my $sql = shift;
 	my $limit = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my @result;
@@ -437,7 +487,7 @@ sub getGenreTracks {
 			fisher_yates_shuffle(\@genres);
 			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
 				$id = shift @genres;
-				my $genre = $ds->objectForId('genre',$id);
+				my $genre = Plugins::TrackStat::Storage::objectForId('genre',$id);
 
 				debugMsg("Getting tracks for genre: ".$genre->name."\n");
 				my $genreFind = {'genre' => $genre->id };
@@ -458,7 +508,11 @@ sub getGenreTracks {
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 	debugMsg("Returning ".scalar(@result)." tracks\n");
@@ -468,8 +522,8 @@ sub getGenreTracks {
 sub getYearsWeb {
 	my $sql = shift;
 	my $params = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
@@ -485,6 +539,7 @@ sub getYearsWeb {
 			$rating = 0 if (!(defined($rating)));
 			my $year = $id;
 		  	my %trackInfo = ();
+            $trackInfo{'noTrackStatButton'} = 1;
 			#my $fieldInfo = Slim::DataStores::Base->fieldInfo;
             #my $levelInfo = $fieldInfo->{'genre'};
 			
@@ -498,7 +553,7 @@ sub getYearsWeb {
 			$trackInfo{'player'} = $params->{'player'};
             $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
             $trackInfo{'song_count'}       = ceil($playCount);
-            $trackInfo{'attributes'}       = '&year='.$year;
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('year').'='.$year;
             $trackInfo{'itemobj'}{'year'} = $year;
             $trackInfo{'listtype'} = 'year';
             $trackInfo{'levelName'}  = 'year';
@@ -509,7 +564,11 @@ sub getYearsWeb {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 }
@@ -517,8 +576,8 @@ sub getYearsWeb {
 sub getYearTracks {
 	my $sql = shift;
 	my $limit = shift;
-    my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my @result;
@@ -555,7 +614,11 @@ sub getYearTracks {
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
 	}
 	$sth->finish();
 	debugMsg("Returning ".scalar(@result)." tracks\n");

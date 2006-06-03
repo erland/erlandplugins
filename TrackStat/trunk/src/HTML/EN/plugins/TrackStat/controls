@@ -1,7 +1,7 @@
 [%- FILTER null %]
 
 [% BLOCK statisticitemcontrols %]
-	[% IF pluginTrackStatVersion >= '6.5' %]
+	[% IF pluginTrackStatSlimserver65 %]
 		[% PROCESS statisticitemcontrols65 %]
 	[% ELSE %]
 		[% PROCESS statisticitemcontrols62 %]

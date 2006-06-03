@@ -54,8 +54,8 @@ sub startExport
 
 	my $sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.lastPlayed is not null or track_statistics.rating>0)";
 
-	my $ds = Slim::Music::Info::getCurrentDataStore();
-	my $dbh = $ds->dbh();
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 
 	my $output = FileHandle->new($filename, ">") or do {
