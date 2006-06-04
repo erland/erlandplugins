@@ -753,51 +753,56 @@ sub handlePlayAddWebPage {
 		my $objs = $params->{'browse_items'};
 		
 		for my $item (@$objs) {
+			my $request;
 			if($item->{'listtype'} eq 'track') {
 				my $track = $item->{'itemobj'};
 				if($first==1) {
 					debugMsg("Loading track = ".$track->title."\n");
-					$client->execute(['playlist', 'loadtracks', sprintf('track=%d', $track->id)]);
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('track'),$track->id)]);
 				}else {
 					debugMsg("Adding track = ".$track->title."\n");
-					$client->execute(['playlist', 'addtracks', sprintf('track=%d', $track->id)]);
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('track'),$track->id)]);
 				}
 			}elsif($item->{'listtype'} eq 'album') {
 				my $album = $item->{'itemobj'}{'album'};
 				if($first==1) {
 					debugMsg("Loading album = ".$album->title."\n");
-					$client->execute(['playlist', 'loadtracks', sprintf('album=%d', $album->id)]);
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('album'),$album->id)]);
 				}else {
 					debugMsg("Adding album = ".$album->title."\n");
-					$client->execute(['playlist', 'addtracks', sprintf('album=%d', $album->id)]);
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('album'),$album->id)]);
 				}
 			}elsif($item->{'listtype'} eq 'artist') {
 				my $artist = $item->{'itemobj'}{'artist'};
 				if($first==1) {
 					debugMsg("Loading artist = ".$artist->name."\n");
-					$client->execute(['playlist', 'loadtracks', sprintf('artist=%d', $artist->id)]);
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('artist'),$artist->id)]);
 				}else {
 					debugMsg("Adding artist = ".$artist->name."\n");
-					$client->execute(['playlist', 'addtracks', sprintf('artist=%d', $artist->id)]);
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('artist'),$artist->id)]);
 				}
 			}elsif($item->{'listtype'} eq 'genre') {
 				my $genre = $item->{'itemobj'}{'genre'};
 				if($first==1) {
 					debugMsg("Loading genre = ".$genre->name."\n");
-					$client->execute(['playlist', 'loadtracks', sprintf('genre=%d', $genre->id)]);
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('genre'),$genre->id)]);
 				}else {
 					debugMsg("Adding artist = ".$genre->name."\n");
-					$client->execute(['playlist', 'addtracks', sprintf('genre=%d', $genre->id)]);
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('genre'),$genre->id)]);
 				}
 			}elsif($item->{'listtype'} eq 'year') {
 				my $year = $item->{'itemobj'}{'year'};
 				if($first==1) {
 					debugMsg("Loading year = ".$year."\n");
-					$client->execute(['playlist', 'loadtracks', sprintf('year=%d', $year)]);
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('year'),$year)]);
 				}else {
 					debugMsg("Adding year = ".$year."\n");
-					$client->execute(['playlist', 'addtracks', sprintf('year=%d', $year)]);
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('year'),$year)]);
 				}
+			}
+			if ($::VERSION ge '6.5') {
+				# indicate request source
+				$request->source('PLUGIN_TRACKSTAT');
 			}
 			$first = 0;
 		}
@@ -2763,6 +2768,17 @@ sub validateIsFileOrEmpty {
 			return Slim::Web::Setup::validateIsFile($arg);
 		}
 	}
+}
+
+sub getLinkAttribute {
+	my $attr = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if($attr eq 'artist') {
+			$attr = 'contributor';
+		}
+		return $attr.'.id';
+	}
+	return $attr;
 }
 
 # other people call us externally.
