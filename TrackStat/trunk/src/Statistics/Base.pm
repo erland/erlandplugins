@@ -110,6 +110,7 @@ sub getLinkAttribute {
 		}
 		return $attr.'.id';
 	}
+	return $attr;
 }
 
 sub getTracksWeb {
