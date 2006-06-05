@@ -35,7 +35,7 @@ my %stopcommands = ();
 # Information on each clients dynamicplaylist
 my %mixInfo      = ();
 my $htmlTemplate = 'plugins/DynamicPlayList/dynamicplaylist_list.html';
-my $ds = Slim::Music::Info::getCurrentDataStore();
+my $ds = getCurrentDS();
 my $playLists = undef;
 my %plugins = ();
 
@@ -67,11 +67,11 @@ sub findAndAdd {
 
 	if ($item && ref($item)) {
 		my $string = $item->title;
-		debugMsg("".($addOnly ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n",
+		debugMsg("".($addOnly ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n");
 
 		# Replace the current playlist with the first item / track or add it to end
 		my $request = $client->execute(['playlist', $addOnly ? 'addtracks' : 'loadtracks',
-		                  sprintf('track=%d', $item->id)]));
+		                  sprintf('%s=%d', getLinkAttribute('track'),$item->id)]);
 		
 		if ($::VERSION ge '6.5') {
 			# indicate request source
@@ -81,7 +81,7 @@ sub findAndAdd {
 		# Add the remaining items to the end
 		if (! defined $limit || $limit > 1 || $noOfItems>1) {
 			debugMsg("Adding ".(scalar @$items)." tracks to end of playlist\n");
-			$client->execute(['playlist', 'addtracks', 'listRef', $items]);
+			$request = $client->execute(['playlist', 'addtracks', 'listRef', $items]);
 			if ($::VERSION ge '6.5') {
 				$request->source('PLUGIN_DYNAMICPLAYLIST');
 			}
@@ -110,11 +110,11 @@ sub playRandom {
 	
 	# If this is a new mix, store the start time
 	my $startTime = undef;
-	if ($continuousMode && $mixInfo{$client}->{'type'} ne $type && !$addOnly) {
+	if ($continuousMode && (!$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) && !$addOnly) {
 		$startTime = time();
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
-	if ($mixInfo{$client}->{'type'} ne $type) {
+	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type) {
 		$offset = 0;
 	}
 
@@ -311,6 +311,9 @@ sub getPlayLists {
 		if(UNIVERSAL::can("Plugins::$plugin","getDynamicPlayLists") && UNIVERSAL::can("Plugins::$plugin","getNextDynamicPlayListTracks")) {
 			debugMsg("Getting dynamic playlists for: $plugin\n");
 			my $items = eval { &{"Plugins::${plugin}::getDynamicPlayLists"}($client) };
+			if ($@) {
+				debugMsg("Error getting playlists from $plugin: $@\n");
+			}
 			for my $item (keys %$items) {
 				$plugins{$item} = "Plugins::${plugin}";
 				my $playlist = $items->{$item};
@@ -596,7 +599,9 @@ sub handleWebList {
 	$params->{'pluginDynamicPlayListNumOldTracks'} = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_old_tracks');
 	$params->{'pluginDynamicPlayListContinuousMode'} = Slim::Utils::Prefs::get('plugin_dynamicplaylist_keep_adding_tracks');
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
-	$params->{'pluginDynamicPlayListVersion'} = $::VERSION;
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
+	}
 	
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
@@ -643,7 +648,9 @@ sub handleWebSelectPlaylists {
 	}
 	$params->{'pluginDynamicPlayListPlayLists'} = $playLists;
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
-	$params->{'pluginDynamicPlayListVersion'} = $::VERSION;
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
+	}
 	
 	return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_selectplaylists.html', $params);
 }
@@ -822,6 +829,9 @@ sub getTracksForPlaylist {
 	if(UNIVERSAL::can("$plugin","getNextDynamicPlayListTracks")) {
 		debugMsg("Calling: $plugin :: getNextDynamicPlayListTracks\n");
 		$result =  eval { &{"${plugin}::getNextDynamicPlayListTracks"}($client,$playlist,$limit,$offset) };
+		if ($@) {
+			debugMsg("Error tracks from $plugin: $@\n");
+		}
 	}
 	 
 	use strict 'refs';
@@ -1046,7 +1056,15 @@ sub getDynamicPlayLists {
 	my %result = ();
 	
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_includesavedplaylists")) {
-		$playLists = Slim::DataStores::DBI::DBIStore->getPlaylists();
+		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			my @result;
+			for my $playlist (Slim::Schema->rs('Playlist')->getPlaylists) {
+				push @result, $playlist;
+			}
+			$playLists = \@result;
+		}else {
+			$playLists = Slim::DataStores::DBI::DBIStore->getPlaylists();
+		}
 		debugMsg("Got: ".scalar(@$playLists)." number of playlists\n");
 
 		foreach my $playlist (@$playLists) {
@@ -1083,7 +1101,7 @@ sub getDynamicPlayLists {
 				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_ALBUM'),
 				'type' => 'random'
 			);
-			my $id = "dynamicplaylist_random_album";
+			$id = "dynamicplaylist_random_album";
 			$result{$id} = \%currentResultAlbum;
 			
 			my %currentResultYear = (
@@ -1091,7 +1109,7 @@ sub getDynamicPlayLists {
 				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_YEAR'),
 				'type' => 'random'
 			);
-			my $id = "dynamicplaylist_random_year";
+			$id = "dynamicplaylist_random_year";
 			$result{$id} = \%currentResultYear;
 
 			my %currentResultArtist = (
@@ -1099,12 +1117,110 @@ sub getDynamicPlayLists {
 				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_ARTIST'),
 				'type' => 'random'
 			);
-			my $id = "dynamicplaylist_random_artist";
+			$id = "dynamicplaylist_random_artist";
 			$result{$id} = \%currentResultArtist;
 		}
 	}
 	
 	return \%result;
+}
+
+sub getRandomYear {
+	my $filteredGenres = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		 my @joins = qw(genreTracks);
+		 push @joins, 'genreTracks';
+		 my $rs = Slim::Schema->rs('Track')->search(
+                { 'genreTracks.genre' => $filteredGenres },
+                { 'order_by' => \'RAND()', 'join' => \@joins }
+        	)->slice(0,1);
+        my $year = $rs->next;
+        if($year) {
+        	$year = $year->year;
+        }else {
+        	$year = undef;
+        }
+        if(!$year) {
+        	$year = $rs->next;
+	        if($year) {
+	        	$year = $year->year;
+	        }else {
+	        	$year = undef;
+	        }
+        }
+        return $year;
+	}else {
+	   	my $items = $ds->find({
+			'field'  => 'year',
+			'find'   => {
+				'genre.name' => $filteredGenres,
+			},
+			'sortBy' => 'random',
+			'limit'  => 2,
+			'cache'  => 0,
+		});
+		my $year = shift @$items;
+		if(!defined($year)) {
+			$year = shift @$items;
+		}
+		return $year;
+	}
+}
+
+sub getFilteredGenres {
+	my $client = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	    # Should use genre.name in following find, but a bug in find() doesn't allow this
+	    # XXXX - how does the above comment translate into DBIx::Class world?
+	    my $rs = Slim::Schema->search('Genre');
+
+	    # Extract each genre name into a hash
+	    my @filteredGenres = ();
+	    my @exclude      = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
+
+	    for my $genre ($rs->all) {
+
+	            # Put the name here as well so the hash can be passed to
+	            # INPUT.Choice as part of listRef later on
+	            my $name = $genre->name;
+	            my $id   = $genre->id;
+	            my $ena  = 1;
+
+	            if (grep { $_ eq $name } @exclude) {
+	                    $ena = 0;
+	            }
+
+	            if($ena) {
+	            	push @filteredGenres, $id;
+	            }
+	    }
+	    return \@filteredGenres;
+	}else {
+        # Should use genre.name in following find, but a bug in find() doesn't allow this
+        my $items = $ds->find({
+                'field'  => 'genre',
+                'cache'  => 0,
+        });
+
+        # Extract each genre name into a hash
+	    my @filteredGenres = ();
+        my @exclude = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
+        foreach my $genre (@$items) {
+	            # Put the name here as well so the hash can be passed to
+	            # INPUT.Choice as part of listRef later on
+	            my $name = $genre->name;
+	            my $id   = $genre->id;
+	            my $ena  = 1;
+
+	            if (grep { $_ eq $name } @exclude) {
+	                    $ena = 0;
+	            }
+	            if($ena) {
+	            	push @filteredGenres, $name;
+	            }
+        }
+	    return \@filteredGenres;
+	}
 }
 
 sub getNextDynamicPlayListTracks {
@@ -1114,7 +1230,7 @@ sub getNextDynamicPlayListTracks {
 
 	if($dynamicplaylist->{'type'} eq 'standard') {
 		debugMsg("Getting tracks for standard playlist: ".$dynamicplaylist->{'name'}."\n");
-		my $playlist = $ds->objectForId('track',$dynamicplaylist->{'id'});
+		my $playlist = objectForId('playlist',$dynamicplaylist->{'id'});
 		my $iterator = $playlist->tracks;
 		my $count = 0;
 		for my $item ($iterator->slice(0,$iterator->count)) {
@@ -1126,49 +1242,36 @@ sub getNextDynamicPlayListTracks {
 		debugMsg("Got ".scalar(@result)." tracks\n");
 	}elsif($dynamicplaylist->{'type'} eq 'random') {
 		my $type = $dynamicplaylist->{'id'};
-		#We need to call getGenres to initialize RandomPlay
-		Plugins::RandomPlay::Plugin->getGenres($client);
-		my @filteredGenres = Plugins::RandomPlay::Plugin->getFilteredGenres($client);
-		debugMsg("Got ".scalar(@filteredGenres)." filtered genres\n");
-		my $find = {'genre.name' => \@filteredGenres};
+		my $filteredGenres = getFilteredGenres($client);
+		debugMsg("Got ".scalar(@$filteredGenres)." filtered genres\n");
+		my $find;
+		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			$find = {'genreTracks.genre' =>  { 'in' => $filteredGenres }};
+		}else {
+			$find = {'genre.name' => $filteredGenres};
+		}
 		if ($type eq 'track' || $type eq 'year') {
 			# Find only tracks, not albums etc
 			$find->{'audio'} = 1;
 		}
-		if($type eq 'year') {
-		   	my $items = $ds->find({
-				'field'  => 'year',
-				'find'   => {
-					'genre.name' => \@filteredGenres,
-				},
-				'sortBy' => 'random',
-				'limit'  => 1,
-				'cache'  => 0,
-			});
-			my $year = @$items[0];
-			$find->{'year'} = $year;
-			debugMsg("Finding tracks for year $year\n");
-		}
+		my $items;
 		if($type eq 'track') {
-			my $items = $ds->find({
-				'field'  => 'track',
-				'find'   => $find,
-				'sortBy' => 'random',
-				'limit'  => $limit,
-				'cache'  => 0,
-			});
-			for my $track (@$items) {
-				push @result, $track;
-			}
-			debugMsg("Got ".scalar(@result)." tracks\n");
-		}if($type eq 'year') {
-			# We want to do this twice to make sure the playlist will continue if only one track exists for the selected year
-			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-				my $items = $ds->find({
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				 my @joins  = ();
+				 push @joins, 'genreTracks';
+				 my $rs = Slim::Schema->rs('Track')->search($find, {
+	                'order_by' => \'RAND()',
+    	            'join'     => \@joins,
+    	            });
+				for my $track ($rs->slice(0, ($limit-1))) {
+					push @result, $track;
+				}
+			}else {
+				$items = $ds->find({
 					'field'  => 'track',
 					'find'   => $find,
 					'sortBy' => 'random',
-					'limit'  => undef,
+					'limit'  => $limit,
 					'cache'  => 0,
 				});
 				for my $track (@$items) {
@@ -1176,15 +1279,57 @@ sub getNextDynamicPlayListTracks {
 				}
 			}
 			debugMsg("Got ".scalar(@result)." tracks\n");
+		}elsif($type eq 'year') {
+			# We want to do this twice to make sure the playlist will continue if only one track exists for the selected year
+			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
+				my $year = getRandomYear($filteredGenres);
+				$find->{'year'} = $year;
+				debugMsg("Finding tracks for year $year\n");
+				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+					 my @joins  = ();
+					 push @joins, 'genreTracks';
+					 my $rs = Slim::Schema->rs('Track')->search($find, {
+		                'order_by' => \'RAND()',
+	    	            'join'     => \@joins,
+	    	            });
+						for my $track ($rs->all) {
+							push @result, $track;
+						}
+				}else {
+					$items = $ds->find({
+						'field'  => 'track',
+						'find'   => $find,
+						'sortBy' => 'random',
+						'limit'  => undef,
+						'cache'  => 0,
+					});
+					for my $track (@$items) {
+						push @result, $track;
+					}
+				}
+			}
+			debugMsg("Got ".scalar(@result)." tracks\n");
 		}elsif($type eq 'album') {
-			my $items = $ds->find({
-				'field'  => 'album',
-				'find'   => $find,
-				'sortBy' => 'random',
-				'limit'  => 1,
-				'cache'  => 0,
-			});
-			my $album = shift @{$items};
+			my $album;
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				my @joins  = ();
+				push @joins, { 'tracks' => 'genreTracks' };
+				my $rs = Slim::Schema->rs('Album')->search($find, {
+					'order_by' => \'RAND()',
+					'join'     => \@joins,
+					})->slice(0,0);
+				
+				$album = $rs->next;
+			}else {
+				my $items = $ds->find({
+					'field'  => 'album',
+					'find'   => $find,
+					'sortBy' => 'random',
+					'limit'  => 1,
+					'cache'  => 0,
+				});
+				$album = shift @{$items};
+			}
 
 			if ($album && ref($album)) {
 				debugMsg("Getting tracks for album: ".$album->title."\n");
@@ -1196,29 +1341,59 @@ sub getNextDynamicPlayListTracks {
 			}
 		}elsif($type eq 'artist') {
 			# We want to do this twice to make sure the playlist will continue if only one track exists for the selected artist
-			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
+			my @artists = ();
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				my @joins  = ();
+				push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
+				my $rs = Slim::Schema->rs('Contributor')->search($find, {
+					'order_by' => \'RAND()',
+					'join'     => \@joins,
+					});
+				for my $artist ($rs->slice(0,1)) {
+					push @artists,$artist;
+				}
+			}else {
 				my $items = $ds->find({
 					'field'  => 'artist',
 					'find'   => $find,
 					'sortBy' => 'random',
-					'limit'  => 1,
+					'limit'  => 2,
 					'cache'  => 0,
 				});
-				my $artist = shift @{$items};
+				for my $artist (@$items) {
+					push @artists,$artist;
+				}
+			}
 
+			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
+				my $artist = shift @artists;
 				if ($artist && ref($artist)) {
 					debugMsg("Getting tracks for artist: ".$artist->name."\n");
-					my $artistFind = {'artist' => $artist->id };
-
-					my $items = $ds->find({
-						'field'  => 'track',
-						'find'   => $artistFind,
-						'sortBy' => 'random',
-						'limit'  => undef,
-						'cache'  => 0,
-					});
-					for my $item (@$items) {
-						push @result, $item;
+					my $items;
+					if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+						my $artistFind = {'contributor' => $artist->id };
+						 my @joins  = ();
+						 push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
+						 my $rs = Slim::Schema->rs('Track')->search($artistFind, {
+			                'order_by' => \'RAND()',
+		    	            'join'     => \@joins,
+		    	            });
+						for my $item ($rs->distinct) {
+							debugMsg("Adding: ".$item->title."\n");
+							push @result, $item;
+						}
+					}else {
+						my $artistFind = {'artist' => $artist->id };
+						$items = $ds->find({
+							'field'  => 'track',
+							'find'   => $artistFind,
+							'sortBy' => 'random',
+							'limit'  => undef,
+							'cache'  => 0,
+						});
+						for my $item (@$items) {
+							push @result, $item;
+						}
 					}
 				}
 			}
@@ -1236,6 +1411,58 @@ sub validateIntOrEmpty {
 	}
 	return undef;
 }
+
+sub getCurrentDBH {
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return Slim::Schema->storage->dbh();
+	}else {
+		return Slim::Music::Info::getCurrentDataStore()->dbh();
+	}
+}
+
+sub getCurrentDS {
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		return 'Slim::Schema';
+	}else {
+		return Slim::Music::Info::getCurrentDataStore();
+	}
+}
+
+sub objectForId {
+	my $type = shift;
+	my $id = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if($type eq 'artist') {
+			$type = 'Contributor';
+		}elsif($type eq 'album') {
+			$type = 'Album';
+		}elsif($type eq 'genre') {
+			$type = 'Genre';
+		}elsif($type eq 'track') {
+			$type = 'Track';
+		}elsif($type eq 'playlist') {
+			$type = 'Playlist';
+		}
+		return Slim::Schema->resultset($type)->find($id);
+	}else {
+		if($type eq 'playlist') {
+			$type = 'track';
+		}
+		return getCurrentDS()->objectForId($type,$id);
+	}
+}
+
+sub getLinkAttribute {
+	my $attr = shift;
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if($attr eq 'artist') {
+			$attr = 'contributor';
+		}
+		return $attr.'.id';
+	}
+	return $attr;
+}
+
 # other people call us externally.
 *escape   = \&URI::Escape::uri_escape_utf8;
 
