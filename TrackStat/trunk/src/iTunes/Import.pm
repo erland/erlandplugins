@@ -223,7 +223,7 @@ sub scanFunction {
 		debugMsg("opening iTunes Library XML file.\n");
 
 		open(ITUNESLIBRARY, $iTunesLibraryFile) || do {
-			$::d_itunes && warn "iTunes: Couldn't open iTunes Library: $iTunesLibraryFile";
+			warn "TrackStat::iTunes: Couldn't open iTunes Library: $iTunesLibraryFile";
 			return 0;
 		};
 
@@ -260,7 +260,7 @@ sub scanFunction {
 
 		} else {
 
-			$::d_itunes && warn "iTunes: Waiting on lock for iTunes Library";
+			warn "TrackStat::iTunes: Waiting on lock for iTunes Library";
 			return 1;
 		}
 	}
