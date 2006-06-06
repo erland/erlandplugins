@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 2. PREREQUISITES
 ================
 - A slimserver 6.2.* or 6.5 installed and configured
+- The DynamicPlayList plugin must installed
 
 3. FILES
 ========
@@ -39,5 +40,5 @@ Unzip to the Plugins directory in the Slimserver installation.
 5. USAGE
 ========
 This plugin makes it play random playlists, it requires the DynamicPlayList plugin. 
-The plugin today implements the same random playlists as the standard Random Mix playlists.
+Compared to the standard RandomMix plugin included with the slimserver, this plugin also offers ability to exclude certain genres from a playlist.
 
