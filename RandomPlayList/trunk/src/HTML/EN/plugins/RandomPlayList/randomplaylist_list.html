@@ -42,11 +42,6 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 	[% END %]
 [% END %]
 
-<form action="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html" name="mixForm">
-	<input type="hidden" name="type" value="">
-	<input type="hidden" name="addOnly" value="0">
-	<input type="hidden" name="player" value="[% player %]">
-
 	[% WRAPPER contentcontainer %]
 		[% IF player == '' %]
 			[%- WRAPPER contentitem %]
@@ -63,6 +58,11 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 			<td>&nbsp;</td>
 		</tr>
 
+<form action="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html" name="mixForm">
+	<input type="hidden" name="type" value="">
+	<input type="hidden" name="addOnly" value="0">
+	<input type="hidden" name="player" value="[% player %]">
+
 			[% odd = 1 %]
 			[% FOREACH type IN pluginRandomPlayListPlayLists.keys.sort %]
 				[% BLOCK controls %]
@@ -75,6 +75,7 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 				[% odd = (not odd) %]
 			[% END %]
 			[% odd = 0 %]
+</form>
 			[% IF pluginRandomPlayListNowPlaying != '' %]
 				[%# Reload status and playlist to reflect any new mixes %]
 				<script type="text/javascript">
@@ -108,9 +109,8 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 		<tr>
                 <td colspan="4"><hr></td>
         </tr>
-		<tr><td>
-</form>
 <form action="[% webroot %]plugins/RandomPlayList/randomplaylist_settings.html" name="genreForm">
+		<tr><td colspan="4">
 		<table border="0">[% USE table pluginRandomPlayListGenreList.keys.sort, cols=3, pad=0 %]
 			<tr><td colspan="3"><b>[% "PLUGIN_RANDOMPLAYLIST_GENRES_TITLE" | string %]</b></td></tr>
 			[%- FOREACH genrerow = table.rows %]
@@ -120,13 +120,11 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 					[%- IF not loop.first %]
 					<td>[% nbsp = "&nbsp"; nbsp.repeat(10) %]</td>
 					[%- END %]
-					<td><input type="checkbox" name="[% genreid %]" id="[% genreid %]" value="1" [% pluginRandomPlayListGenreList.$genre.enabled ? "checked" : "" %] onclick="changeNumSelected(this)">
+					<td><input type="checkbox" name="[% genreid %]" id="[% genreid %]" value="1" [% pluginRandomPlayListGenreList.$genre.included ? "checked" : "" %] onclick="changeNumSelected(this)">
 					<label for="[% genreid %]">[% genre | html %]</label></td>
 				[%- END %]
 				</tr>
 			[%- END %]
-		</table>
-		</td></tr>
 		<script type="text/javascript">
 		<!--
 			var f = document.genreForm;
@@ -137,7 +135,7 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 
 			// Work out how many checkboxes are initially selected
 			for (var i=0; i < f.elements.length; i++) {
-				if (f.elements[i].type == 'checkbox') {
+				if (f.elements[i].type == 'checkbox' && String(f.elements[i].name).substring(0,5) == 'genre' ) {
 					numCheckBoxes++;
 					if (f.elements[i].checked) {
 						numSelected++;
@@ -179,13 +177,93 @@ href="[% webroot %]plugins/RandomPlayList/randomplaylist_mix.html?type=[% type %
 			}
 
 			// Write the button using js, so it won't appear if js isn't enabled/available
-			document.write('<input type="button" value="'
+			document.write('<tr><td colspan="4"><input type="button" value="'
 						   + (numSelected == numCheckBoxes ? selectNoneGenresString : selectAllGenresString)
-										 + '" id="selectAllGenresButton" onclick="selectAllGenres()">');
+										 + '" id="selectAllGenresButton" onclick="selectAllGenres()"></td></tr>');
 		// -->
 		</script>
+		</table>
+		</td></tr>
 
-		<br><br><input type="submit" value="[% "SAVE" | string %]">
+		<tr><td colspan="4">
+		<table border="0">[% USE table pluginRandomPlayListGenreList.keys.sort, cols=3, pad=0 %]
+			<tr><td colspan="3"><b>[% "PLUGIN_RANDOMPLAYLIST_EXCLUDE_GENRES_TITLE" | string %]</b></td></tr>
+			[%- FOREACH genrerow = table.rows %]
+				<tr>
+				[%- FOREACH genre = genrerow %]
+				[%- genreid = "excludegenre_" _ pluginRandomPlayListGenreList.$genre.id %]
+					[%- IF not loop.first %]
+					<td>[% nbsp = "&nbsp"; nbsp.repeat(10) %]</td>
+					[%- END %]
+					<td><input type="checkbox" name="[% genreid %]" id="[% genreid %]" value="1" [% pluginRandomPlayListGenreList.$genre.excluded ? "checked" : "" %] onclick="changeExcludedNumSelected(this)">
+					<label for="[% genreid %]">[% genre | html %]</label></td>
+				[%- END %]
+				</tr>
+			[%- END %]
+		</table>
+		<script type="text/javascript">
+		<!--
+			var f = document.genreForm;
+			var numExcludeSelected = 0;
+			var numExcludeCheckBoxes = 0;
+			var selectAllGenresString = '[% "PLUGIN_RANDOMPLAYLIST_GENRES_SELECT_ALL" | string %]';
+			var selectNoneGenresString = '[% "PLUGIN_RANDOMPLAYLIST_GENRES_SELECT_NONE" | string %]';
+
+			// Work out how many checkboxes are initially selected
+			for (var i=0; i < f.elements.length; i++) {
+				if (f.elements[i].type == 'checkbox' && String(f.elements[i].name).substring(0,12) == 'excludegenre' ) {
+					numExcludeCheckBoxes++;
+					if (f.elements[i].checked) {
+						numExcludeSelected++;
+					}
+				}
+			}
+
+			// Select none if unless all are selected, else select all
+			function selectAllExcludedGenres() {
+				var newState = numExcludeSelected ==0;
+
+				for (var i=0; i < f.elements.length; i++) {
+					if (f.elements[i].type == 'checkbox' && String(f.elements[i].name).substring(0,12) == 'excludegenre' ) {
+						f.elements[i].checked = newState;
+					}
+				}
+				if (newState) {
+					numExcludeSelected = numExcludeCheckBoxes;
+					f.selectAllExcludedGenresButton.value = selectNoneGenresString;
+				} else {
+					numExcludeSelected = 0;
+					f.selectAllExcludedGenresButton.value = selectAllGenresString;
+				}
+			}
+
+			// Increase/decrease num selected every time a checkbox changes
+			function changeExcludedNumSelected(checkBox) {
+				if (checkBox.checked) {
+					numExcludeSelected++;
+				} else {
+					numExcludeSelected--;
+				}
+				
+				if (numExcludeSelected > 0) {
+				  f.selectAllExcludedGenresButton.value = selectNoneGenresString;
+				} else {
+					f.selectAllExcludedGenresButton.value = selectAllGenresString;
+				}
+			}
+
+			// Write the button using js, so it won't appear if js isn't enabled/available
+			document.write('<tr><td colspan="4"><input type="button" value="'
+						   + (numExcludeSelected > 0 ? selectNoneGenresString : selectAllGenresString)
+										 + '" id="selectAllExcludedGenresButton" onclick="selectAllExcludedGenres()"></td></tr>');
+		// -->
+		</script>
+		</td></tr>
+
+
+		<tr><td colspan="4">
+		<br><br><br><input type="submit" value="[% "SAVE" | string %]">
+		</td></tr>
 		[% IF pluginRandomPlayListError %]
 			<br><br><strong>[% pluginRandomPlayListError %]</strong>
 		[% END %]
