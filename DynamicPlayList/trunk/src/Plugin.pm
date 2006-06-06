@@ -277,7 +277,13 @@ sub handlePlayOrAdd {
 	# Go go go!
 	playRandom($client, $item, $add, 1, 1);
 }
-
+sub getCurrentPlayList {
+	my $client = shift;
+	if ($mixInfo{$client}) {
+		return $mixInfo{$client}->{'type'};
+	}
+	return undef;
+}
 sub getPlayList {
 	my $client = shift;
 	my $type = shift;
@@ -365,7 +371,7 @@ sub setMode {
 		listRef    => \@listRef,
 		name       => \&getDisplayText,
 		overlayRef => \&getOverlay,
-		modeName   => 'SQLPLayList',
+		modeName   => 'DynamicPlayList',
 		onPlay     => sub {
 			my ($client, $item) = @_;
 			handlePlayOrAdd($client, $item->{'dynamicplaylistid'}, 0);		
@@ -462,6 +468,8 @@ sub commandCallback62 {
 						cliPlayPlaylist62($client,\@$paramsRef);
 					}elsif($paramsRef->[2] eq "add") {
 						cliAddPlaylist62($client,\@$paramsRef);
+					}elsif($paramsRef->[2] eq "stop") {
+						cliStopPlaylist62($client,\@$paramsRef);
 					}
 				}
 			}
@@ -547,6 +555,7 @@ sub initPlugin {
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
 	}else {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
@@ -728,19 +737,13 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_dynamicplaylist_includesavedplaylists to 1\n");
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_includesavedplaylists', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_includerandomplaylists');
-	if (! defined $prefVal) {
-		# Default to standard playlist directory
-		debugMsg("Defaulting plugin_dynamicplaylist_includerandomplaylists to 1\n");
-		Slim::Utils::Prefs::set('plugin_dynamicplaylist_includerandomplaylists', 1);
-	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_includerandomplaylists','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -759,16 +762,6 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_showmessages"); }
-		},		
-	plugin_dynamicplaylist_includerandomplaylists => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_RANDOM_PLAYLISTS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_RANDOM_PLAYLISTS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_includerandomplaylists"); }
 		},		
 	plugin_dynamicplaylist_includesavedplaylists => {
 			'validate'     => \&validateTrueFalseWrapper
@@ -1049,6 +1042,58 @@ sub cliAddPlaylist62 {
 	debugMsg("Exiting cliAddPlaylist62\n");
 }
 
+
+sub cliStopPlaylist {
+	debugMsg("Entering cliStopPlaylist\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['stop']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliStopPlaylist\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting cliStopPlaylist\n");
+		return;
+	}
+	
+	playRandom($client, 'disable');
+	
+	$request->setStatusDone();
+	debugMsg("Exiting cliStopPlaylist\n");
+}
+
+sub cliStopPlaylist62 {
+	debugMsg("Entering cliStopPlaylist62\n");
+	my $client = shift;
+	my $paramsRef = shift;
+	
+	if (scalar(@$paramsRef) lt 3) {
+		debugMsg("Incorrect number of parameters\n");
+		debugMsg("Exiting cliStopPlaylists62\n");
+		return;
+	}
+	
+	if (@$paramsRef[1] ne "playlist" || @$paramsRef[2] ne "stop") {
+		debugMsg("Incorrect command\n");
+		debugMsg("Exiting cliStopPlaylist62\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		debugMsg("Exiting cliStopPlaylist62\n");
+		return;
+	}
+	
+	playRandom($client, 'disable');
+	
+	debugMsg("Exiting cliStopPlaylist62\n");
+}
+
 sub getDynamicPlayLists {
 	my ($client) = @_;
 
@@ -1080,147 +1125,7 @@ sub getDynamicPlayLists {
 		}
 	}
 	
-	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_includerandomplaylists")) {
-		my $randommix;
-		if ($::VERSION ge '6.5') {
-			$randommix = Slim::Utils::PluginManager::enabledPlugin("RandomPlay",$client);
-		}else {
-			$randommix = grep(/RandomPlay/,Slim::Buttons::Plugins::enabledPlugins($client));
-	    }
-		if($randommix) {
-			my %currentResultTrack = (
-				'id' => 'track',
-				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_TRACK'),
-				'type' => 'random'
-			);
-			my $id = "dynamicplaylist_random_track";
-			$result{$id} = \%currentResultTrack;
-			
-			my %currentResultAlbum = (
-				'id' => 'album',
-				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_ALBUM'),
-				'type' => 'random'
-			);
-			$id = "dynamicplaylist_random_album";
-			$result{$id} = \%currentResultAlbum;
-			
-			my %currentResultYear = (
-				'id' => 'year',
-				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_YEAR'),
-				'type' => 'random'
-			);
-			$id = "dynamicplaylist_random_year";
-			$result{$id} = \%currentResultYear;
-
-			my %currentResultArtist = (
-				'id' => 'artist',
-				'name' => $client->string('PLUGIN_DYNAMICPLAYLIST_RANDOM_ARTIST'),
-				'type' => 'random'
-			);
-			$id = "dynamicplaylist_random_artist";
-			$result{$id} = \%currentResultArtist;
-		}
-	}
-	
 	return \%result;
-}
-
-sub getRandomYear {
-	my $filteredGenres = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-		 my @joins = qw(genreTracks);
-		 push @joins, 'genreTracks';
-		 my $rs = Slim::Schema->rs('Track')->search(
-                { 'genreTracks.genre' => $filteredGenres },
-                { 'order_by' => \'RAND()', 'join' => \@joins }
-        	)->slice(0,1);
-        my $year = $rs->next;
-        if($year) {
-        	$year = $year->year;
-        }else {
-        	$year = undef;
-        }
-        if(!$year) {
-        	$year = $rs->next;
-	        if($year) {
-	        	$year = $year->year;
-	        }else {
-	        	$year = undef;
-	        }
-        }
-        return $year;
-	}else {
-	   	my $items = $ds->find({
-			'field'  => 'year',
-			'find'   => {
-				'genre.name' => $filteredGenres,
-			},
-			'sortBy' => 'random',
-			'limit'  => 2,
-			'cache'  => 0,
-		});
-		my $year = shift @$items;
-		if(!defined($year)) {
-			$year = shift @$items;
-		}
-		return $year;
-	}
-}
-
-sub getFilteredGenres {
-	my $client = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-	    # Should use genre.name in following find, but a bug in find() doesn't allow this
-	    # XXXX - how does the above comment translate into DBIx::Class world?
-	    my $rs = Slim::Schema->search('Genre');
-
-	    # Extract each genre name into a hash
-	    my @filteredGenres = ();
-	    my @exclude      = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
-
-	    for my $genre ($rs->all) {
-
-	            # Put the name here as well so the hash can be passed to
-	            # INPUT.Choice as part of listRef later on
-	            my $name = $genre->name;
-	            my $id   = $genre->id;
-	            my $ena  = 1;
-
-	            if (grep { $_ eq $name } @exclude) {
-	                    $ena = 0;
-	            }
-
-	            if($ena) {
-	            	push @filteredGenres, $id;
-	            }
-	    }
-	    return \@filteredGenres;
-	}else {
-        # Should use genre.name in following find, but a bug in find() doesn't allow this
-        my $items = $ds->find({
-                'field'  => 'genre',
-                'cache'  => 0,
-        });
-
-        # Extract each genre name into a hash
-	    my @filteredGenres = ();
-        my @exclude = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
-        foreach my $genre (@$items) {
-	            # Put the name here as well so the hash can be passed to
-	            # INPUT.Choice as part of listRef later on
-	            my $name = $genre->name;
-	            my $id   = $genre->id;
-	            my $ena  = 1;
-
-	            if (grep { $_ eq $name } @exclude) {
-	                    $ena = 0;
-	            }
-	            if($ena) {
-	            	push @filteredGenres, $name;
-	            }
-        }
-	    return \@filteredGenres;
-	}
 }
 
 sub getNextDynamicPlayListTracks {
@@ -1240,165 +1145,6 @@ sub getNextDynamicPlayListTracks {
 			$count++;
 		}
 		debugMsg("Got ".scalar(@result)." tracks\n");
-	}elsif($dynamicplaylist->{'type'} eq 'random') {
-		my $type = $dynamicplaylist->{'id'};
-		my $filteredGenres = getFilteredGenres($client);
-		debugMsg("Got ".scalar(@$filteredGenres)." filtered genres\n");
-		my $find;
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			$find = {'genreTracks.genre' =>  { 'in' => $filteredGenres }};
-		}else {
-			$find = {'genre.name' => $filteredGenres};
-		}
-		if ($type eq 'track' || $type eq 'year') {
-			# Find only tracks, not albums etc
-			$find->{'audio'} = 1;
-		}
-		my $items;
-		if($type eq 'track') {
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-				 my @joins  = ();
-				 push @joins, 'genreTracks';
-				 my $rs = Slim::Schema->rs('Track')->search($find, {
-	                'order_by' => \'RAND()',
-    	            'join'     => \@joins,
-    	            });
-				for my $track ($rs->slice(0, ($limit-1))) {
-					push @result, $track;
-				}
-			}else {
-				$items = $ds->find({
-					'field'  => 'track',
-					'find'   => $find,
-					'sortBy' => 'random',
-					'limit'  => $limit,
-					'cache'  => 0,
-				});
-				for my $track (@$items) {
-					push @result, $track;
-				}
-			}
-			debugMsg("Got ".scalar(@result)." tracks\n");
-		}elsif($type eq 'year') {
-			# We want to do this twice to make sure the playlist will continue if only one track exists for the selected year
-			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-				my $year = getRandomYear($filteredGenres);
-				$find->{'year'} = $year;
-				debugMsg("Finding tracks for year $year\n");
-				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-					 my @joins  = ();
-					 push @joins, 'genreTracks';
-					 my $rs = Slim::Schema->rs('Track')->search($find, {
-		                'order_by' => \'RAND()',
-	    	            'join'     => \@joins,
-	    	            });
-						for my $track ($rs->all) {
-							push @result, $track;
-						}
-				}else {
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $find,
-						'sortBy' => 'random',
-						'limit'  => undef,
-						'cache'  => 0,
-					});
-					for my $track (@$items) {
-						push @result, $track;
-					}
-				}
-			}
-			debugMsg("Got ".scalar(@result)." tracks\n");
-		}elsif($type eq 'album') {
-			my $album;
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-				my @joins  = ();
-				push @joins, { 'tracks' => 'genreTracks' };
-				my $rs = Slim::Schema->rs('Album')->search($find, {
-					'order_by' => \'RAND()',
-					'join'     => \@joins,
-					})->slice(0,0);
-				
-				$album = $rs->next;
-			}else {
-				my $items = $ds->find({
-					'field'  => 'album',
-					'find'   => $find,
-					'sortBy' => 'random',
-					'limit'  => 1,
-					'cache'  => 0,
-				});
-				$album = shift @{$items};
-			}
-
-			if ($album && ref($album)) {
-				debugMsg("Getting tracks for album: ".$album->title."\n");
-				my $iterator = $album->tracks;
-				for my $item ($iterator->slice(0,$iterator->count)) {
-					push @result, $item;
-				}
-				debugMsg("Got ".scalar(@result)." tracks\n");
-			}
-		}elsif($type eq 'artist') {
-			# We want to do this twice to make sure the playlist will continue if only one track exists for the selected artist
-			my @artists = ();
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-				my @joins  = ();
-				push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
-				my $rs = Slim::Schema->rs('Contributor')->search($find, {
-					'order_by' => \'RAND()',
-					'join'     => \@joins,
-					});
-				for my $artist ($rs->slice(0,1)) {
-					push @artists,$artist;
-				}
-			}else {
-				my $items = $ds->find({
-					'field'  => 'artist',
-					'find'   => $find,
-					'sortBy' => 'random',
-					'limit'  => 2,
-					'cache'  => 0,
-				});
-				for my $artist (@$items) {
-					push @artists,$artist;
-				}
-			}
-
-			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-				my $artist = shift @artists;
-				if ($artist && ref($artist)) {
-					debugMsg("Getting tracks for artist: ".$artist->name."\n");
-					my $items;
-					if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-						my $artistFind = {'contributor' => $artist->id };
-						 my @joins  = ();
-						 push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
-						 my $rs = Slim::Schema->rs('Track')->search($artistFind, {
-			                'order_by' => \'RAND()',
-		    	            'join'     => \@joins,
-		    	            });
-						for my $item ($rs->distinct) {
-							debugMsg("Adding: ".$item->title."\n");
-							push @result, $item;
-						}
-					}else {
-						my $artistFind = {'artist' => $artist->id };
-						$items = $ds->find({
-							'field'  => 'track',
-							'find'   => $artistFind,
-							'sortBy' => 'random',
-							'limit'  => undef,
-							'cache'  => 0,
-						});
-						for my $item (@$items) {
-							push @result, $item;
-						}
-					}
-				}
-			}
-			debugMsg("Got ".scalar(@result)." tracks\n");
-		}
 	}
 	
 	return \@result;
@@ -1515,9 +1261,6 @@ PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC
 PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES
 	EN	Show debug messages
 
-PLUGIN_DYNAMICPLAYLIST_INCLUDE_RANDOM_PLAYLISTS
-	EN	Include playlists from Random Mix plugin
-
 PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS
 	EN	Include saved playlists
 
@@ -1532,9 +1275,6 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS
 	EN	Saved playlists
-
-SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDERANDOMPLAYLISTS
-	EN	Random Mix playlists
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
@@ -1556,18 +1296,6 @@ PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW
 
 PLUGIN_DYNAMICPLAYLIST_PLAYING
 	EN	Playing
-
-PLUGIN_DYNAMICPLAYLIST_RANDOM_TRACK
-	EN	Random Song
-
-PLUGIN_DYNAMICPLAYLIST_RANDOM_ARTIST
-	EN	Random Artist
-
-PLUGIN_DYNAMICPLAYLIST_RANDOM_ALBUM
-	EN	Random Album
-
-PLUGIN_DYNAMICPLAYLIST_RANDOM_YEAR
-	EN	Random Year
 
 PLUGIN_DYNAMICPLAYLIST_PRESS_RIGHT
 	EN	Press RIGHT to stop adding songs
