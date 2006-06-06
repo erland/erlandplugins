@@ -71,7 +71,11 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type
 						[% PROCESS dynamicPlayListLink type="$type" addOnly="1" %]
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
-						[% pluginDynamicPlayListPlayLists.$type.name %]
+						[% IF pluginDynamicPlayListPlayLists.$type.url %]
+							<a href="[% webroot %][% pluginDynamicPlayListPlayLists.$type.url %]&player=[% player | uri %]">[% pluginDynamicPlayListPlayLists.$type.name %]</a>
+						[% ELSE %]
+							[% pluginDynamicPlayListPlayLists.$type.name %]
+						[% END %]
 					[% END %]
 					[% odd = (not odd) %]
 				[% END %]
