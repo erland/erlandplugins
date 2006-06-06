@@ -50,14 +50,17 @@ in your plugin. The plugin must be enabled for it to be detected by DynamicPlayl
 
 # Returns a map with a an entry for each playlist, 'myplugin_mycoolplaylist' in the sample below
 # The playlist entry must contain a 'name' but it can also contain additional items which you
-# need later when tracks are requested for the playlist
+# need later when tracks are requested for the playlist.
+# The 'url' parameter is optional and will be a link in the web interface which the user
+# can click on to get to the settings for the playlist
 # This method will be called by the DynamicPlaylist plugin whenever the playlists shall be shown
 sub getDynamicPlayLists {
 	my ($client) = @_;
 
 	my %result = ();
 	my %playlist = (
-		'name' => 'My Cool Playlist'
+		'name' => 'My Cool Playlist',
+		'url' => 'plugins/MyCoolPlugin/index.html'
 	);
 	$result{'myplugin_mycoolplaylist'} = \%playlist;
 	return \%result;
