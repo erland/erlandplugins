@@ -35,6 +35,7 @@ use Class::Struct;
 my $htmlTemplate = 'plugins/RandomPlayList/randomplaylist_list.html';
 my $ds = getCurrentDS();
 my $playLists = undef;
+my $driver;
 
 my %disable = (
 	'id' => 'disable', 
@@ -186,6 +187,8 @@ sub setMode {
 
 sub initPlugin {
 	checkDefaults();
+	$driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
 }
 
 sub webPages {
@@ -226,7 +229,7 @@ sub handleWebList {
 		
 		$name = $playLists->{$currentPlaying}->{'name'};
 	}
-	$params->{'pluginRandomPlayListGenreList'} = getFilteredGenres($client,1);
+	$params->{'pluginRandomPlayListGenreList'} = getGenres($client,1);
 	$params->{'pluginRandomPlayListPlayLists'} = $playLists;
 	$params->{'pluginRandomPlayListNowPlaying'} = $name;
 	if ($::VERSION ge '6.5') {
@@ -252,27 +255,49 @@ sub handleWebMix {
 sub handleWebSettings {
 	my ($client, $params) = @_;
 
-	my $genres = getFilteredGenres($client,1);
+    saveGenreListAttribute($client,$params,"genre_","plugin_randomplaylist_not_include_genres");
+    saveGenreListAttribute($client,$params,"excludegenre_","plugin_randomplaylist_exclude_genres",1);
+    
+    return handleWebList($client, $params);
+}
+
+
+sub saveGenreListAttribute {
+	my $client = shift;
+	my $params = shift;
+	my $paramNamePrefix = shift;
+	my $attributeName = shift;
+	my $saveSelected = shift;
+
+	my $genres = getGenres($client,1);
 	my @lookup = ();
 	
 	foreach my $genre (keys %$genres) {
             @lookup[$genres->{$genre}->{'id'}] = $genre;
     }
 
+    my @attributeGenres = ();
     # %$params will contain a key called genre_<genre id> for each ticked checkbox on the page
     foreach my $genre (keys(%$params)) {
-            if ($genre =~ s/^genre_//) {
-                    delete($genres->{$lookup[$genre]});
+            if ($genre =~ s/^$paramNamePrefix//) {
+            		if($saveSelected) {
+				    	push @attributeGenres, $lookup[$genre];
+                    }else {
+                    	delete($genres->{$lookup[$genre]});
+                    }
             }
     }
     
-    my @excludedGenres = ();
-    foreach my $genre (keys %$genres) {
-    	push @excludedGenres, $genre;
+    if(!$saveSelected) {
+	    foreach my $genre (keys %$genres) {
+	    	push @attributeGenres, $genre;
+	    }
+	}
+	if(scalar(@attributeGenres)>0) {
+    	Slim::Utils::Prefs::set($attributeName, \@attributeGenres);
+    }else {
+    	Slim::Utils::Prefs::set($attributeName, '');
     }
-    Slim::Utils::Prefs::set('plugin_randomplaylist_exclude_genres', \@excludedGenres);
-    debugMsg("Setting genres to : ".@excludedGenres."\n");
-    return handleWebList($client, $params);
 }
 
 sub getFunctions {
@@ -304,14 +329,19 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_randomplaylist_showmessages to 0\n");
 		Slim::Utils::Prefs::set('plugin_randomplaylist_showmessages', 0);
 	}
-	my @genres = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
+	my @genres = Slim::Utils::Prefs::getArray('plugin_randomplaylist_not_include_genres');
 	if(! @genres) {
 		my @default = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
 		if(@default) {
-			Slim::Utils::Prefs::set('plugin_randomplaylist_exclude_genres', @default);
+			Slim::Utils::Prefs::set('plugin_randomplaylist_not_include_genres', @default);
 		}else {
-			Slim::Utils::Prefs::set('plugin_randomplaylist_exclude_genres', []);
+			Slim::Utils::Prefs::set('plugin_randomplaylist_not_include_genres', '');
 		}
+	}
+	
+	@genres = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
+	if(! @genres) {
+		Slim::Utils::Prefs::set('plugin_randomplaylist_exclude_genres', '');
 	}
 }
 
@@ -362,28 +392,32 @@ sub getDynamicPlayLists {
 	}
 	my %currentResultTrack = (
 		'id' => 'track',
-		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_TRACK')
+		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_TRACK'),
+		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
 	my $id = "randomplaylist_track";
 	$result{$id} = \%currentResultTrack;
 	
 	my %currentResultAlbum = (
 		'id' => 'album',
-		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ALBUM')
+		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ALBUM'),
+		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
 	$id = "randomplaylist_album";
 	$result{$id} = \%currentResultAlbum;
 	
 	my %currentResultYear = (
 		'id' => 'year',
-		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_YEAR')
+		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_YEAR'),
+		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
 	$id = "randomplaylist_year";
 	$result{$id} = \%currentResultYear;
 
 	my %currentResultArtist = (
 		'id' => 'artist',
-		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ARTIST')
+		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ARTIST'),
+		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
 	$id = "randomplaylist_artist";
 	$result{$id} = \%currentResultArtist;
@@ -434,18 +468,22 @@ sub getRandomYear {
 	}
 }
 
-sub getFilteredGenres {
+sub getGenres {
 	my $client = shift;
 	my $returnAll = shift;
-    my @filteredGenres = ();
+	my $returnExcluded = shift;
+	
+    my @excludedGenres = ();
+    my @includedGenres = ();
     my %allGenres;
+    # Extract each genre name into a hash
+    my @include      = Slim::Utils::Prefs::getArray('plugin_randomplaylist_not_include_genres');
+    my @exclude      = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
+
 	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
 	    # Should use genre.name in following find, but a bug in find() doesn't allow this
 	    # XXXX - how does the above comment translate into DBIx::Class world?
 	    my $rs = Slim::Schema->search('Genre');
-
-	    # Extract each genre name into a hash
-	    my @exclude      = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
 
 	    for my $genre ($rs->all) {
 
@@ -453,19 +491,27 @@ sub getFilteredGenres {
 	            # INPUT.Choice as part of listRef later on
 	            my $name = $genre->name;
 	            my $id   = $genre->id;
-	            my $ena  = 1;
+	            my $exc  = 0;
+	            my $inc  = 1;
 
 	            if (grep { $_ eq $name } @exclude) {
-	                    $ena = 0;
+	                    $exc = 1;
+	            }
+	            if (grep { $_ eq $name } @include) {
+	                    $inc = 0;
 	            }
 	            
 				$allGenres{$name} = {
                      name    => $name,
                      id      => $id,
-                     enabled => $ena
+                     excluded => $exc,
+                     included => $inc
 				};
-	            if($ena) {
-	            	push @filteredGenres, $id;
+	            if($inc) {
+	            	push @includedGenres, $id;
+	            }
+	            if($exc) {
+	            	push @excludedGenres, $id;
 	            }
 	    }
 	}else {
@@ -475,107 +521,148 @@ sub getFilteredGenres {
                 'cache'  => 0,
         });
 
-        # Extract each genre name into a hash
-        my @exclude = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
         foreach my $genre (@$items) {
 	            # Put the name here as well so the hash can be passed to
 	            # INPUT.Choice as part of listRef later on
 	            my $name = $genre->name;
 	            my $id   = $genre->id;
-	            my $ena  = 1;
+	            my $exc  = 0;
+	            my $inc  = 1;
 
 	            if (grep { $_ eq $name } @exclude) {
-	                    $ena = 0;
+	                    $exc = 1;
+	            }
+	            if (grep { $_ eq $name } @include) {
+	                    $inc = 0;
 	            }
 				$allGenres{$name} = {
                      name    => $name,
                      id      => $id,
-                     enabled => $ena
+                     excluded => $exc,
+                     included => $inc
 				};
-	            if($ena) {
-	            	push @filteredGenres, $name;
+	            if($inc) {
+	            	push @includedGenres, $id;
+	            }
+	            if($exc) {
+	            	push @excludedGenres, $id;
 	            }
         }
 	}
     if($returnAll) {
     	return \%allGenres;
+    }elsif($returnExcluded) {
+    	return \@excludedGenres;
     }else {
-    	return \@filteredGenres;
+    	return \@includedGenres;
     }
+}
+
+sub getRandomString {
+    my $orderBy;
+    if($driver eq 'mysql') {
+    	$orderBy = "rand()";
+    }else {
+    	$orderBy = "random()";
+    }
+    return $orderBy;
 }
 
 sub getNextDynamicPlayListTracks {
 	my ($client,$dynamicplaylist,$limit,$offset) = @_;
 	
 	my @result = ();
-
+	my $dbh = getCurrentDBH();
 	my $type = $dynamicplaylist->{'id'};
-	my $filteredGenres = getFilteredGenres($client);
-	debugMsg("Got ".scalar(@$filteredGenres)." filtered genres\n");
+	my $includedGenres = getGenres($client);
+	my $excludedGenres = getGenres($client,undef,1);
+	my $genreString = undef;
+	my $excludeGenreString = undef;
+	foreach my $genre (@$includedGenres) {
+		if(defined($genreString)) {
+			$genreString .= ',';
+		}else {
+			$genreString .= '';
+		}
+		$genreString .= $genre;
+	}
+	foreach my $genre (@$excludedGenres) {
+		if(defined($excludeGenreString)) {
+			$excludeGenreString .= ',';
+		}else {
+			$excludeGenreString .= '';
+		}
+		$excludeGenreString .= $genre;
+	}
+	debugMsg("Got ".scalar(@$includedGenres)." included and ".scalar(@$excludedGenres)." excluded genres\n");
 	my $find;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-		$find = {'genreTracks.genre' =>  { 'in' => $filteredGenres }};
-	}else {
-		$find = {'genre.name' => $filteredGenres};
+	my $sql;
+	if($genreString) {
+		if($type eq 'track') {
+			if($excludeGenreString) {
+				$sql = "select tracks.id from tracks join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track as exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null group by tracks.id order by ".getRandomString()." limit $limit";
+			}else {
+				$sql = "select tracks.id from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null group by tracks.id order by ".getRandomString()." limit $limit";
+			}
+		}elsif($type eq 'album') {
+			if($excludeGenreString) {
+				$sql = "select tracks.album from tracks join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track as exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null group by tracks.album order by ".getRandomString()." limit 1";
+			}else {
+				$sql = "select tracks.album from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null group by tracks.album order by ".getRandomString()." limit 1";
+			}
+		}elsif($type eq 'artist') {
+			if($excludeGenreString) {
+				$sql = "select contributor_track.contributor from tracks join contributor_track on tracks.id=contributor_track.track join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null group by contributor_track.contributor order by ".getRandomString()." limit 2";
+			}else {
+				$sql = "select contributor_track.contributor from tracks join contributor_track on tracks.id=contributor_track.track join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null group by contributor_track.contributor order by ".getRandomString()." limit 2";
+			}
+		}elsif($type eq 'year') {
+			if($excludeGenreString) {
+				$sql = "select tracks.year from tracks join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track as exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null and tracks.year is not null group by tracks.year order by ".getRandomString()." limit 2";
+			}else {
+				$sql = "select tracks.year from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and tracks.year is not null group by tracks.year order by ".getRandomString()." limit 2";
+			}
+		}
 	}
-	if ($type eq 'track' || $type eq 'year') {
-		# Find only tracks, not albums etc
-		$find->{'audio'} = 1;
-	}
+	debugMsg("Preparing to execute: $sql\n");
 	my $items;
 
-
 	if($type eq 'track') {
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			 my @joins  = ();
-			 push @joins, 'genreTracks';
-			 my $rs = Slim::Schema->rs('Track')->search($find, {
-                'order_by' => \'RAND()',
-	            'join'     => \@joins,
-	            });
-			for my $track ($rs->slice(0, ($limit-1))) {
-				push @result, $track;
-			}
-		}else {
-			$items = $ds->find({
-				'field'  => 'track',
-				'find'   => $find,
-				'sortBy' => 'random',
-				'limit'  => $limit,
-				'cache'  => 0,
-			});
-			for my $track (@$items) {
-				push @result, $track;
-			}
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+		my $id;
+		$sth->bind_col(1,\$id);
+		while( $sth->fetch() ) {
+			my $track = objectForId('track',$id);
+			push @result, $track;
 		}
 		debugMsg("Got ".scalar(@result)." tracks\n");
 
 
 	}elsif($type eq 'year') {
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+		my $year;
+		my @yearResult;
+		$sth->bind_col(1,\$year);
+		while( $sth->fetch() ) {
+			push @yearResult, $year;
+		}
 		# We want to do this twice to make sure the playlist will continue if only one track exists for the selected year
 		for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-			my $year = getRandomYear($filteredGenres);
-			$find->{'year'} = $year;
-			debugMsg("Finding tracks for year $year\n");
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-				 my @joins  = ();
-				 push @joins, 'genreTracks';
-				 my $rs = Slim::Schema->rs('Track')->search($find, {
-	                'order_by' => \'RAND()',
-    	            'join'     => \@joins,
-    	            });
-					for my $track ($rs->all) {
-						push @result, $track;
-					}
-			}else {
-				$items = $ds->find({
-					'field'  => 'track',
-					'find'   => $find,
-					'sortBy' => 'random',
-					'limit'  => undef,
-					'cache'  => 0,
-				});
-				for my $track (@$items) {
+			$year = shift @yearResult;
+			if(defined($year)) {
+				debugMsg("Finding tracks for year $year\n");
+				if($excludeGenreString) {
+					$sth = $dbh->prepare("select tracks.id from tracks join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track as exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null and tracks.year=$year group by tracks.id order by ".getRandomString());
+				}else {
+					$sth = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and tracks.year=$year group by tracks.id order by ".getRandomString());
+				}
+				$sth->execute();
+				my $id;
+				$sth->bind_col(1,\$id);
+				while( $sth->fetch() ) {
+					my $track = objectForId('track',$id);
 					push @result, $track;
 				}
 			}
@@ -584,27 +671,12 @@ sub getNextDynamicPlayListTracks {
 
 
 	}elsif($type eq 'album') {
-		my $album;
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			my @joins  = ();
-			push @joins, { 'tracks' => 'genreTracks' };
-			my $rs = Slim::Schema->rs('Album')->search($find, {
-				'order_by' => \'RAND()',
-				'join'     => \@joins,
-				})->slice(0,0);
-			
-			$album = $rs->next;
-		}else {
-			my $items = $ds->find({
-				'field'  => 'album',
-				'find'   => $find,
-				'sortBy' => 'random',
-				'limit'  => 1,
-				'cache'  => 0,
-			});
-			$album = shift @{$items};
-		}
-
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+		my $id;
+		$sth->bind_col(1,\$id);
+		$sth->fetch();
+		my $album = objectForId('album',$id);
 		if ($album && ref($album)) {
 			debugMsg("Getting tracks for album: ".$album->title."\n");
 			my $iterator = $album->tracks;
@@ -616,60 +688,31 @@ sub getNextDynamicPlayListTracks {
 
 
 	}elsif($type eq 'artist') {
-		# We want to do this twice to make sure the playlist will continue if only one track exists for the selected artist
-		my @artists = ();
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			my @joins  = ();
-			push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
-			my $rs = Slim::Schema->rs('Contributor')->search($find, {
-				'order_by' => \'RAND()',
-				'join'     => \@joins,
-				});
-			for my $artist ($rs->slice(0,1)) {
-				push @artists,$artist;
-			}
-		}else {
-			my $items = $ds->find({
-				'field'  => 'artist',
-				'find'   => $find,
-				'sortBy' => 'random',
-				'limit'  => 2,
-				'cache'  => 0,
-			});
-			for my $artist (@$items) {
-				push @artists,$artist;
-			}
+		my $sth = $dbh->prepare($sql);
+		$sth->execute();
+		my $id;
+		my @artistResult;
+		$sth->bind_col(1,\$id);
+		while( $sth->fetch() ) {
+			my $artist = objectForId('artist',$id);
+			push @artistResult, $artist;
 		}
-
+		# We want to do this twice to make sure the playlist will continue if only one track exists for the selected artist
 		for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
-			my $artist = shift @artists;
+			my $artist = shift @artistResult;
 			if ($artist && ref($artist)) {
 				debugMsg("Getting tracks for artist: ".$artist->name."\n");
-				my $items;
-				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-					my $artistFind = {'contributor' => $artist->id };
-					 my @joins  = ();
-					 push @joins, { 'contributorTracks' => { 'track' => 'genreTracks' } };
-					 my $rs = Slim::Schema->rs('Track')->search($artistFind, {
-		                'order_by' => \'RAND()',
-	    	            'join'     => \@joins,
-	    	            });
-					for my $item ($rs->distinct) {
-						debugMsg("Adding: ".$item->title."\n");
-						push @result, $item;
-					}
+				if($excludeGenreString) {
+					$sth = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=".$artist->id." join genre_track as inc_gt on tracks.id=inc_gt.track and inc_gt.genre in ($genreString) left join genre_track as exc_gt on tracks.id=exc_gt.track and exc_gt.genre in ($excludeGenreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and exc_gt.track is null group by tracks.id order by ".getRandomString());
 				}else {
-					my $artistFind = {'artist' => $artist->id };
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $artistFind,
-						'sortBy' => 'random',
-						'limit'  => undef,
-						'cache'  => 0,
-					});
-					for my $item (@$items) {
-						push @result, $item;
-					}
+					$sth = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=".$artist->id." join genre_track on tracks.id=genre_track.track and genre_track.genre in ($genreString) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null group by tracks.id order by ".getRandomString());
+				}
+				$sth->execute();
+				my $id;
+				$sth->bind_col(1,\$id);
+				while( $sth->fetch() ) {
+					my $track = objectForId('track',$id);
+					push @result, $track;
 				}
 			}
 		}
@@ -800,6 +843,9 @@ PLUGIN_RANDOMPLAYLIST_GENRES_SELECT_NONE
 
 PLUGIN_RANDOMPLAYLIST_GENRES_TITLE
 	EN	Genres to include in the playlist:
+
+PLUGIN_RANDOMPLAYLIST_EXCLUDE_GENRES_TITLE
+	EN	Genres to exclude from playlist (exclude has higher priority than include):
 
 PLUGIN_RANDOMPLAYLIST_PRESS_RIGHT
 	EN	Press RIGHT to stop adding songs
