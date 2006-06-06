@@ -109,3 +109,6 @@ Add songs from playlist dynamicplaylist_random_track to currently playing playli
 ----------------------------------------------------------------------------------
 00:04:20:06:22:b3 dynamicplaylist playlist add dynamicplaylist_random_track
 
+Stop adding songs to currently playing playlist
+----------------------------------------------------------------------------------
+00:04:20:06:22:b3 dynamicplaylist playlist stop
