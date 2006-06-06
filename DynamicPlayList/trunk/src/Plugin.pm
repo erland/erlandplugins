@@ -30,7 +30,11 @@ use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
 use File::Spec::Functions qw(:ALL);
 use Class::Struct;
+use DBI qw(:sql_types);
+use FindBin qw($Bin);
 
+
+my $driver;
 my %stopcommands = ();
 # Information on each clients dynamicplaylist
 my %mixInfo      = ();
@@ -69,6 +73,7 @@ sub findAndAdd {
 		my $string = $item->title;
 		debugMsg("".($addOnly ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n");
 
+		addToPlayListHistory($client,$item);
 		# Replace the current playlist with the first item / track or add it to end
 		my $request = $client->execute(['playlist', $addOnly ? 'addtracks' : 'loadtracks',
 		                  sprintf('%s=%d', getLinkAttribute('track'),$item->id)]);
@@ -81,6 +86,9 @@ sub findAndAdd {
 		# Add the remaining items to the end
 		if (! defined $limit || $limit > 1 || $noOfItems>1) {
 			debugMsg("Adding ".(scalar @$items)." tracks to end of playlist\n");
+			foreach my $it (@$items) {
+				addToPlayListHistory($client,$it);
+			}
 			$request = $client->execute(['playlist', 'addtracks', 'listRef', $items]);
 			if ($::VERSION ge '6.5') {
 				$request->source('PLUGIN_DYNAMICPLAYLIST');
@@ -110,7 +118,8 @@ sub playRandom {
 	
 	# If this is a new mix, store the start time
 	my $startTime = undef;
-	if ($continuousMode && (!$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) && !$addOnly) {
+	if ($continuousMode && !$addOnly || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
+		clearPlayListHistory($client);
 		$startTime = time();
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
@@ -547,7 +556,7 @@ sub initPlugin {
 	);
 	
 	checkDefaults();
-
+	initDatabase();
 	if ($::VERSION ge '6.5') {
 		# set up our subscription
 		Slim::Control::Request::subscribe(\&commandCallback65, 
@@ -560,6 +569,23 @@ sub initPlugin {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
 
+}
+
+sub initDatabase {
+	$driver = Slim::Utils::Prefs::get('dbsource');
+    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+	my $dbh = getCurrentDBH();
+	my $st = $dbh->table_info();
+	my $tblexists;
+	while (my ( $qual, $owner, $table, $type ) = $st->fetchrow_array()) {
+		if($table eq "dynamicplaylist_history") {
+			$tblexists=1;
+		}
+	}
+	unless ($tblexists) {
+		debugMsg("Create database table\n");
+		executeSQLFile("dbcreate.sql");
+	}
 }
 
 sub shutdownPlugin {
@@ -1116,10 +1142,16 @@ sub getDynamicPlayLists {
 			my $playlistid = "dynamicplaylist_standard_".$playlist->id;
 			my $id = $playlist->id;
 			my $name = $playlist->title;
+			my $playlisturl;
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				$playlisturl = "browsedb.html?hierarchy=playlist,playlistTrack&level=1&playlist.id=".$playlist->id;
+			}else {
+				$playlisturl = "browsedb.html?hierarchy=playlist,playlistTrack&level=1&playlist=".$playlist->id;
+			}
 			my %currentResult = (
 				'id' => $id,
 				'name' => $name,
-				'type' => 'standard'
+				'url' => $playlisturl
 			);
 			$result{$playlistid} = \%currentResult;
 		}
@@ -1148,6 +1180,61 @@ sub getNextDynamicPlayListTracks {
 	}
 	
 	return \@result;
+}
+
+sub addToPlayListHistory
+{
+	my ($client,$track) = @_;
+
+	my $ds        = getCurrentDS();
+
+	my $dbh = getCurrentDBH();
+
+	my $sth = $dbh->prepare( "INSERT INTO dynamicplaylist_history (client,id,url,added) values (?,".$track->id.", ?, ".time().")" );
+	eval {
+		$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
+		$sth->bind_param(2, $track->url , SQL_VARCHAR);
+		$sth->execute();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	$sth->finish();
+}
+sub clearPlayListHistory {
+	my $ds        = getCurrentDS();
+
+	my $dbh = getCurrentDBH();
+
+	my $sql = "DELETE FROM dynamicplaylist_history";
+	my $sth = $dbh->prepare($sql);
+	eval {
+		$sth->execute();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	$sth->finish();
+	if($driver eq 'mysql') {
+		eval { 
+			$dbh->do("ALTER TABLE dynamicplaylist_history AUTO_INCREMENT=1");
+			commit($dbh);
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
+		}
+	}
 }
 
 sub validateIntOrEmpty {
@@ -1207,6 +1294,87 @@ sub getLinkAttribute {
 		return $attr.'.id';
 	}
 	return $attr;
+}
+
+sub executeSQLFile {
+        my $file  = shift;
+
+        my $sqlFile;
+		if ($::VERSION ge '6.5') {
+			for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
+				opendir(DIR, catdir($plugindir,"DynamicPlayList")) || next;
+        		$sqlFile = catdir($plugindir,"DynamicPlayList", "SQL", $driver, $file);
+        		closedir(DIR);
+        	}
+        }else {
+         	$sqlFile = catdir($Bin, "Plugins", "DynamicPlayList", "SQL", $driver, $file);
+        }
+
+        debugMsg("Executing SQL file $sqlFile\n");
+
+        open(my $fh, $sqlFile) or do {
+
+                msg("Couldn't open: $sqlFile : $!\n");
+                return;
+        };
+
+		my $dbh = getCurrentDBH();
+
+        my $statement   = '';
+        my $inStatement = 0;
+
+        for my $line (<$fh>) {
+                chomp $line;
+
+                # skip and strip comments & empty lines
+                $line =~ s/\s*--.*?$//o;
+                $line =~ s/^\s*//o;
+
+                next if $line =~ /^--/;
+                next if $line =~ /^\s*$/;
+
+                if ($line =~ /^\s*(?:CREATE|SET|INSERT|UPDATE|DELETE|DROP|SELECT|ALTER|DROP)\s+/oi) {
+                        $inStatement = 1;
+                }
+
+                if ($line =~ /;/ && $inStatement) {
+
+                        $statement .= $line;
+
+
+                        debugMsg("Executing SQL statement: [$statement]\n");
+
+                        eval { $dbh->do($statement) };
+
+                        if ($@) {
+                                msg("Couldn't execute SQL statement: [$statement] : [$@]\n");
+                        }
+
+                        $statement   = '';
+                        $inStatement = 0;
+                        next;
+                }
+
+                $statement .= $line if $inStatement;
+        }
+
+        commit($dbh);
+
+        close $fh;
+}
+
+sub commit {
+	my $dbh = shift;
+	if (!$dbh->{'AutoCommit'}) {
+		$dbh->commit();
+	}
+}
+
+sub rollback {
+	my $dbh = shift;
+	if (!$dbh->{'AutoCommit'}) {
+		$dbh->rollback();
+	}
 }
 
 # other people call us externally.
