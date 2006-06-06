@@ -2679,6 +2679,7 @@ sub getDynamicPlayLists {
 		}else {
 			$playlistItem{'name'} = $statistics->{$item}->{'name'};
 		}
+		$playlistItem{'url'}="plugins/TrackStat/".$id.".html?";
 
 		$result{$playlistid} = \%playlistItem;
 	}
