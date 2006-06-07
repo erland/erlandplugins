@@ -333,7 +333,7 @@ sub checkDefaults {
 	if(! @genres) {
 		my @default = Slim::Utils::Prefs::getArray('plugin_random_exclude_genres');
 		if(@default) {
-			Slim::Utils::Prefs::set('plugin_randomplaylist_not_include_genres', @default);
+			Slim::Utils::Prefs::set('plugin_randomplaylist_not_include_genres', \@default);
 		}else {
 			Slim::Utils::Prefs::set('plugin_randomplaylist_not_include_genres', '');
 		}
