@@ -1352,7 +1352,7 @@ sub mixerlink {
         		$form->{'playlist'} = $playlist;
         	}else {
 	    		my $album;
-	    		if($form->{'levelName'} eq 'age') {
+	    		if(defined($form->{'levelName'}) && $form->{'levelName'} eq 'age') {
 	    			$album = $item;
 	    		}else {
 	    			$album = $item->album;
