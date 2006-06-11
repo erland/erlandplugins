@@ -6,6 +6,7 @@
 [% END %]
 [% PROCESS plugins/TrackStat/css %]
 [% PROCESS plugins/TrackStat/controls %]
+[% PROCESS plugins/TrackStat/listitems %]
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
@@ -128,6 +129,29 @@
 	[% IF songlist %]
 		<div>
 			<strong>[% songlist %]</strong>&nbsp;&nbsp;&nbsp;[% IF pluginTrackStatFilteredStatistic %]<a href="[% webroot %][% path %]?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</a>&nbsp;&nbsp;&nbsp;[% END %]
+			[% IF pluginTrackStatShowGroupRatingControls %]
+				[% pluginTrackStatGroupRatingNumber %]&nbsp;
+				[% loop = 0 %]
+				[% WHILE loop < 5 %]
+					[% loop = loop + 1 %]
+					[% IF loop <= pluginTrackStatGroupRating %]
+						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+					[% ELSE %]
+						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+					[% END %]
+				[% END %]
+				&nbsp;
+			[% ELSIF pluginTrackStatShowGroupRatingView %]
+				[% pluginTrackStatGroupRatingNumber %]&nbsp;
+				[% loop = 0 %]
+				[% WHILE loop < 5 %]
+					[% loop = loop + 1 %]
+					[% IF loop <= pluginTrackStatGroupRating %]
+						<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 alt="[% loop %]" title="[% pluginTrackStatGroupRatingNumber %]">
+					[% END %]
+				[% END %]
+				&nbsp;
+			[% END %]
 			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=play"[% END %]
 			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=add"[% END %]
 			[% IF dynamicplaylist %]
@@ -143,9 +167,9 @@
 				[%- WRAPPER contentitem controls='controls' %]
 					<div style="width:76%">
 					[% IF item.listtype == 'track' %]
-						[% PROCESS trackinfo %]
+						[% PROCESS trackstatlistitem %]
 					[% ELSIF item.listtype == 'album' %]
-						<a [% PROCESS albumItemHRef %] target="browser">[% item.itemobj.album.title | html %]</a>
+						[% PROCESS trackstatlistitem %]
 						[% IF substatisticitems.size>0 %]
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
@@ -156,7 +180,7 @@
 							)
 						[% END %]
 					[% ELSIF item.listtype == 'artist' %]
-						<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+						[% PROCESS trackstatlistitem %]
 						[% IF substatisticitems.size>0 %]
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
@@ -167,7 +191,7 @@
 							)
 						[% END %]
 					[% ELSIF item.listtype == 'genre' %]
-						<a href="[% webroot %]browsedb.html?hierarchy=genre,artist,album,track&amp;level=1&amp;genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
+						[% PROCESS trackstatlistitem %]
 						[% IF substatisticitems.size>0 %]
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
@@ -178,12 +202,23 @@
 							)
 						[% END %]
 					[% ELSIF item.listtype == 'year' %]
-						<a href="[% webroot %]browsedb.html?hierarchy=year,album,track&amp;level=1&amp;year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
+						[% PROCESS trackstatlistitem %]
 						[% IF substatisticitems.size>0 %]
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
 							<a href="[% statisticlink.id %].html?year=[% item.itemobj.year %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+						[% END %]
+						[% IF substatisticitems.size>0 %]
+							)
+						[% END %]
+					[% ELSIF item.listtype == 'playlist' %]
+						[% PROCESS trackstatlistitem %]
+						[% IF substatisticitems.size>0 %]
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
+						[% END %]
+						[% FOREACH statisticlink = substatisticitems %]
+							<a href="[% statisticlink.id %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
