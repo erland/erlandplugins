@@ -1351,7 +1351,12 @@ sub mixerlink {
         	if(defined($playlist)) {
         		$form->{'playlist'} = $playlist;
         	}else {
-	    		my $album = $item->album;
+	    		my $album;
+	    		if($form->{'levelName'} eq 'age') {
+	    			$album = $item;
+	    		}else {
+	    			$album = $item->album;
+	    		}
 	    		if(defined($album)) {
     				$form->{'albumid'} = $album->id;
 	    		}
