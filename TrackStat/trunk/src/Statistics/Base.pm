@@ -120,6 +120,14 @@ sub getTracksWeb {
 	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
+	my $currenttrackstatitem = $params->{'currenttrackstatitem'};
+	if(defined($currenttrackstatitem)) {
+		my $parameters = $params->{'statisticparameters'};
+		if(defined($parameters)) {
+			$parameters .= "&currenttrackstatitem=$currenttrackstatitem";
+			$params->{'statisticparameters'} = $parameters;
+		}
+	}
 	eval {
 		$sth->execute();
 
@@ -150,6 +158,9 @@ sub getTracksWeb {
             $trackInfo{'itemobj'}          = $track;
             $trackInfo{'listtype'} = 'track';
             $trackInfo{'levelName'}  = 'track';
+            if(defined($currenttrackstatitem) && $track->id == $currenttrackstatitem) {
+				$trackInfo{'currentsong'} = 1;
+            }
             		  	
             saveMixerLinks(\%trackInfo);
 
@@ -610,6 +621,114 @@ sub getYearTracks {
 					push @result, $item;
 				}
 				debugMsg("Got ".scalar(@result)." tracks for ".$year."\n");
+			}
+		}
+		debugMsg("Got ".scalar(@result)." tracks\n");
+	};
+	if( $@ ) {
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
+	}
+	$sth->finish();
+	debugMsg("Returning ".scalar(@result)." tracks\n");
+	return \@result;
+}
+
+sub getPlaylistsWeb {
+	my $sql = shift;
+	my $params = shift;
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+	debugMsg("Executing: $sql\n");
+	my $sth = $dbh->prepare( $sql );
+	eval {
+		$sth->execute();
+
+		my( $id, $rating, $playCount,$lastPlayed,$added );
+		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
+		my $itemNumber = 0;
+		while( $sth->fetch() ) {
+			$playCount = 0 if (!(defined($playCount)));
+			$lastPlayed = 0 if (!(defined($lastPlayed)));
+			$added = 0 if (!(defined($added)));
+			$rating = 0 if (!(defined($rating)));
+			my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$id);
+			next unless defined $playlist;
+		  	my %trackInfo = ();
+			
+		  	$trackInfo{'playlist'} = $playlist->id;
+            $trackInfo{'noTrackStatButton'} = 1;
+            displayAsHTML('playlist', \%trackInfo, $playlist);
+		  	$trackInfo{'title'} = undef;
+		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+		  	$trackInfo{'lastPlayed'} = $lastPlayed;
+		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
+			$trackInfo{'player'} = $params->{'player'};
+            $trackInfo{'skinOverride'}     = $params->{'skinOverride'};
+            $trackInfo{'song_count'}       = ceil($playCount);
+            $trackInfo{'attributes'}       = '&'.getLinkAttribute('playlist').'='.$playlist->id;
+            $trackInfo{'itemobj'}{'playlist'} = $playlist;
+            $trackInfo{'listtype'} = 'playlist';
+            $trackInfo{'levelName'}  = 'playlist';
+            
+            saveMixerLinks(\%trackInfo);
+            
+		  	push @{$params->{'browse_items'}},\%trackInfo;
+		  	$itemNumber++;
+		  
+		}
+	};
+	if( $@ ) {
+		if(defined($DBI::errstr)) {
+	    	warn "Database error: $DBI::errstr\n";
+	    }else {
+	    	warn "Database error: $@";
+	    }
+	}
+	$sth->finish();
+}
+
+sub getPlaylistTracks {
+	my $sql = shift;
+	my $limit = shift;
+    my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+	debugMsg("Executing: $sql\n");
+	my $sth = $dbh->prepare( $sql );
+	my @result;
+	eval {
+		$sth->execute();
+		my( $id, $rating, $playCount,$lastPlayed,$added );
+		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added);
+		my @artists;
+		while( $sth->fetch() ) {
+			push @artists, $id;
+		}
+		if(scalar(@artists)>0) {
+			fisher_yates_shuffle(\@artists);
+			for (my $i = 0; $i < 2 && scalar(@result)<2; $i++) {
+				$id = shift @artists;
+				my $artist = Plugins::TrackStat::Storage::objectForId('artist',$id);
+
+				debugMsg("Getting tracks for artist: ".$artist->name."\n");
+				my $artistFind = {'artist' => $artist->id };
+
+				my $items = $ds->find({
+					'field'  => 'track',
+					'find'   => $artistFind,
+					'sortBy' => 'random',
+					'limit'  => $limit,
+					'cache'  => 0,
+				});
+				for my $item (@$items) {
+					push @result, $item;
+				}
+				debugMsg("Got ".scalar(@result)." tracks for ".$artist->name."\n");
 			}
 		}
 		debugMsg("Got ".scalar(@result)." tracks\n");
