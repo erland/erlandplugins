@@ -91,6 +91,9 @@ sub getNotRatedTracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED');
 	}
@@ -106,6 +109,8 @@ sub isNotRatedTracksValidInContext {
 		return 1;
 	}elsif(defined($params->{'year'})) {
 		return 1;
+	}elsif(defined($params->{'playlist'})) {
+		return 1;
 	}
 	return 0;
 }
@@ -116,11 +121,11 @@ sub getNotRatedTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null group by tracks.url order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and tracks.album=$album and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and tracks.album=$album and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy;";
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
@@ -130,10 +135,19 @@ sub getNotRatedTracksWeb {
 		my $year = $params->{'year'};
 	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null and tracks.year=$year order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
 	    $sql = "select tracks.url,t1.playCount,t1.added,t1.lastPlayed,t1.rating from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	}
     Plugins::TrackStat::Statistics::Base::getTracksWeb($sql,$params);
+    my %currentstatisticlinks = (
+    	'album' => 'notrated',
+    	'artist' => 'notratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotRatedTracks {
@@ -155,6 +169,9 @@ sub getNotRatedAlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS');
 	}
@@ -166,6 +183,8 @@ sub isNotRatedAlbumsValidInContext {
 	}elsif(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -188,6 +207,10 @@ sub getNotRatedAlbumsWeb {
 		my $year = $params->{'year'};
     	$sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id where tracks.year=$year group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
     	$sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
     }
@@ -198,6 +221,10 @@ sub getNotRatedAlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'notrated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotRatedAlbumTracks {
@@ -216,6 +243,9 @@ sub getNotRatedArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS');
 	}
@@ -226,6 +256,8 @@ sub isNotRatedArtistsValidInContext {
 	if(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -244,6 +276,10 @@ sub getNotRatedArtistsWeb {
 		my $year = $params->{'year'};
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor where tracks.year=$year group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
 	}
@@ -258,6 +294,10 @@ sub getNotRatedArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'notratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotRatedArtistTracks {
@@ -298,6 +338,12 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORYEAR
 	EN	Not rated songs from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_FORPLAYLIST
+	EN	Not rated songs in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS
 	EN	Not rated albums
 
@@ -319,6 +365,12 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORYEAR
 	EN	Not rated albums from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDALBUMS_FORPLAYLIST
+	EN	Not rated albums in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS
 	EN	Not rated artists
 
@@ -333,6 +385,12 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORYEAR
 	EN	Not rated artists from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORPLAYLIST
+	EN	Not rated artists in: 
 ";
 }
 

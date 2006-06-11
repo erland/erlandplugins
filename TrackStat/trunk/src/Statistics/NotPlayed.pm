@@ -88,7 +88,7 @@ sub getNotPlayedTracksName {
 	}elsif(defined($params->{'genre'})) {
 	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
-	}elsif(defined($params->{'album'})) {
+	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_FORALBUM')." ".$year;
 	}else {
@@ -116,16 +116,16 @@ sub getNotPlayedTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) group by tracks.url order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks, track_statistics, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks, track_statistics, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) group by tracks.url order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$album and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$album and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks, track_statistics where tracks.url = track_statistics.url and tracks.album=$album and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy limit $listLength;";
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks, track_statistics where tracks.url = track_statistics.url and tracks.album=$album and tracks.audio=1 and (tracks.playCount=0 or tracks.playCount is null) and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,tracks.playCount asc,$orderBy;";
 	    }
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
@@ -149,6 +149,11 @@ sub getNotPlayedTracksWeb {
 	    }
 	}
     Plugins::TrackStat::Statistics::Base::getTracksWeb($sql,$params);
+    my %currentstatisticlinks = (
+    	'album' => 'notplayed',
+    	'artist' => 'notplayedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotPlayedTracks {
@@ -228,6 +233,10 @@ sub getNotPlayedAlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'notplayed'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotPlayedAlbumTracks {
@@ -300,6 +309,10 @@ sub getNotPlayedArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'notplayedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getNotPlayedArtistTracks {

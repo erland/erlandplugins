@@ -115,6 +115,9 @@ sub getMostPlayedRecentTracksName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT');
 	}
@@ -129,6 +132,8 @@ sub isMostPlayedRecentTracksValidInContext {
 	}elsif(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -146,6 +151,9 @@ sub getMostPlayedNotRecentTracksName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT');
 	}
@@ -161,6 +169,8 @@ sub isMostPlayedNotRecentTracksValidInContext {
 		return 1;
 	}elsif(defined($params->{'year'})) {
 		return 1;
+	}elsif(defined($params->{'playlist'})) {
+		return 1;
 	}
 	return 0;
 }
@@ -168,6 +178,11 @@ sub getMostPlayedRecentTracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedHistoryTracksWeb($params,$listLength,">",getRecentTime());
+    my %currentstatisticlinks = (
+    	'album' => 'mostplayedrecent',
+    	'artist' => 'mostplayedrecentalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedRecentTracks {
@@ -186,6 +201,9 @@ sub getMostPlayedRecentAlbumsName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->name,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS');
 	}
@@ -197,6 +215,8 @@ sub isMostPlayedRecentAlbumsValidInContext {
 	}elsif(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -212,6 +232,9 @@ sub getMostPlayedNotRecentAlbumsName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS');
 	}
@@ -223,6 +246,8 @@ sub isMostPlayedNotRecentAlbumsValidInContext {
 	}elsif(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -238,6 +263,10 @@ sub getMostPlayedRecentAlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'mostplayedrecent',
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedRecentAlbumTracks {
@@ -253,6 +282,9 @@ sub getMostPlayedRecentArtistsName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS');
 	}
@@ -262,6 +294,8 @@ sub isMostPlayedRecentArtistsValidInContext {
 	if(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -274,6 +308,9 @@ sub getMostPlayedNotRecentArtistsName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
 	}elsif(defined($params->{'year'})) {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORYEAR')." ".$params->{'year'};
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS');
 	}
@@ -283,6 +320,8 @@ sub isMostPlayedNotRecentArtistsValidInContext {
 	if(defined($params->{'genre'})) {
 		return 1;
 	}elsif(defined($params->{'year'})) {
+		return 1;
+	}elsif(defined($params->{'playlist'})) {
 		return 1;
 	}
 	return 0;
@@ -302,6 +341,10 @@ sub getMostPlayedRecentArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'mostplayedrecentalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedRecentArtistTracks {
@@ -314,6 +357,11 @@ sub getMostPlayedNotRecentTracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedHistoryTracksWeb($params,$listLength,"<",getRecentTime());
+    my %currentstatisticlinks = (
+    	'album' => 'mostplayednotrecent',
+    	'artist' => 'mostplayednotrecentalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedNotRecentTracks {
@@ -332,6 +380,10 @@ sub getMostPlayedNotRecentAlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'mostplayednotrecent'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedNotRecentAlbumTracks {
@@ -354,6 +406,10 @@ sub getMostPlayedNotRecentArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'mostplayednotrecentalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getMostPlayedNotRecentArtistTracks {
@@ -371,34 +427,41 @@ sub getMostPlayedHistoryTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history,contributor_track where tracks.url = track_history.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,contributor_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
-		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
+		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) group by tracks.url order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history where tracks.url = track_history.url and tracks.audio=1 and tracks.album=$album and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.album=$album and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy;";
 	    if($beforeAfter eq "<") {
-		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
+		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy;"
 	    }
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history,genre_track where tracks.url = track_history.url and tracks.id=genre_track.track and genre_track.genre=$genre and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,genre_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=genre_track.track and genre_track.genre=$genre and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&genre=$genre";
 	}elsif(defined($params->{'year'})) {
 		my $year = $params->{'year'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history where tracks.url = track_history.url and tracks.audio=1 and tracks.year=$year and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.year=$year and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.year=$year and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,playlist_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    if($beforeAfter eq "<") {
+		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
+	    }
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history where tracks.url = track_history.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
@@ -412,7 +475,7 @@ sub getMostPlayedHistoryTracks {
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_history.rating) as avgrating from tracks,track_history where tracks.url = track_history.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
+    my $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by playCount desc,avgrating desc,$orderBy limit $listLength;";
     if($beforeAfter eq "<") {
 	    $sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
     }
@@ -428,27 +491,34 @@ sub getMostPlayedHistoryAlbumsWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select albums.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,contributor_track where tracks.url=track_history.url and tracks.album=albums.id and tracks.id=contributor_track.track and contributor_track.contributor=$artist and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,contributor_track,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and tracks.id=contributor_track.track and contributor_track.contributor=$artist and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
-	    $sql = "select albums.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,genre_track where tracks.url=track_history.url and tracks.album=albums.id and tracks.id=genre_track.track and genre_track.genre=$genre and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,genre_track,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and tracks.id=genre_track.track and genre_track.genre=$genre and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&genre=$genre";
 	}elsif(defined($params->{'year'})) {
 		my $year = $params->{'year'};
-	    $sql = "select albums.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums where tracks.url=track_history.url and tracks.album=albums.id and tracks.year=$year and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and tracks.year=$year and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id where tracks.year=$year group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,playlist_track,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    if($beforeAfter eq "<") {
+			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
-	    $sql = "select albums.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums where tracks.url=track_history.url and tracks.album=albums.id and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 	    }
@@ -462,7 +532,7 @@ sub getMostPlayedHistoryAlbumTracks {
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select albums.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums where tracks.url=track_history.url and tracks.album=albums.id and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statisttics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
     if($beforeAfter eq "<") {
 		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
     }
@@ -478,20 +548,27 @@ sub getMostPlayedHistoryArtistsWeb {
 	my $sql;
 	if(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
-	    $sql = "select contributors.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,genre_track where tracks.url = track_history.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.id=genre_track.track and genre_track.genre=$genre and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,genre_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.id=genre_track.track and genre_track.genre=$genre and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 		}
 	    $params->{'statisticparameters'} = "&genre=$genre";
 	}elsif(defined($params->{'year'})) {
 		my $year = $params->{'year'};
-	    $sql = "select contributors.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors where tracks.url = track_history.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.year=$year and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.year=$year and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor where tracks.year=$year group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 		}
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,playlist_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+	    if($beforeAfter eq "<") {
+			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
+		}
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
-	    $sql = "select contributors.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors where tracks.url = track_history.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
 	    if($beforeAfter eq "<") {
 			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 		}
@@ -505,7 +582,7 @@ sub getMostPlayedHistoryArtistTracks {
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select contributors.id,avg(case when track_history.rating is null then 60 else track_history.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors where tracks.url = track_history.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
     if($beforeAfter eq "<") {
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 	}
@@ -551,6 +628,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORYEAR
 	EN	Most played songs recently played from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORPLAYLIST
+	EN	Most played songs recently played in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS
 	EN	Most played albums recently played
 
@@ -572,6 +655,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORYEAR
 	EN	Most played albums recently played from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTALBUMS_FORPLAYLIST
+	EN	Most played albums recently played in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS
 	EN	Most played artists recently played
 
@@ -586,6 +675,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORYEAR
 	EN	Most played artists recently played from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTARTISTS_FORPLAYLIST
+	EN	Most played artists recently played in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT
 	EN	Most played songs not recently played
@@ -614,6 +709,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORYEAR
 	EN	Most played songs not recently played from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORPLAYLIST
+	EN	Most played songs not recently played in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS
 	EN	Most played albums not recently played
 
@@ -635,6 +736,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORYEAR
 	EN	Most played albums not recently played from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTALBUMS_FORPLAYLIST
+	EN	Most played albums not recently played in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS
 	EN	Most played artists not recently played
 
@@ -649,6 +756,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORYEAR
 	EN	Most played artists not recently played from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTARTISTS_FORPLAYLIST
+	EN	Most played artists not recently played in: 
 ";
 }
 

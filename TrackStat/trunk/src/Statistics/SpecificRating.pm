@@ -171,6 +171,8 @@ sub isRatedTracksValidInContext {
 		return 1;
 	}elsif(defined($params->{'year'})) {
 		return 1;
+	}elsif(defined($params->{'playlist'})) {
+		return 1;
 	}
 	return 0;
 }
@@ -189,6 +191,9 @@ sub getRated1TracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1');
 	}
@@ -208,6 +213,9 @@ sub getRated2TracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2');
 	}
@@ -227,6 +235,9 @@ sub getRated3TracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3');
 	}
@@ -246,6 +257,9 @@ sub getRated4TracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4');
 	}
@@ -265,6 +279,9 @@ sub getRated5TracksName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5');
 	}
@@ -274,6 +291,11 @@ sub getRated1TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedTracksWeb($params,$listLength,0,29);
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated1Tracks {
@@ -286,6 +308,11 @@ sub getRated2TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedTracksWeb($params,$listLength,29,49);
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated2Tracks {
@@ -298,6 +325,11 @@ sub getRated3TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedTracksWeb($params,$listLength,49,69);
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated3Tracks {
@@ -310,6 +342,11 @@ sub getRated4TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedTracksWeb($params,$listLength,69,89);
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated4Tracks {
@@ -322,6 +359,11 @@ sub getRated5TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
 	getMostPlayedTracksWeb($params,$listLength,89,100);
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated5Tracks {
@@ -339,6 +381,8 @@ sub isRatedAlbumsValidInContext {
 		return 1;
 	}elsif(defined($params->{'year'})) {
 		return 1;
+	}elsif(defined($params->{'playlist'})) {
+		return 1;
 	}
 	return 0;
 }
@@ -355,6 +399,9 @@ sub getRated1AlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS');
 	}
@@ -371,6 +418,9 @@ sub getRated2AlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS');
 	}
@@ -386,6 +436,9 @@ sub getRated3AlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS');
 	}
@@ -401,6 +454,9 @@ sub getRated4AlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS');
 	}
@@ -416,6 +472,9 @@ sub getRated5AlbumsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS');
 	}
@@ -430,6 +489,10 @@ sub getRated1AlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated1AlbumTracks {
@@ -448,6 +511,10 @@ sub getRated2AlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated2AlbumTracks {
@@ -466,6 +533,10 @@ sub getRated3AlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated3AlbumTracks {
@@ -484,6 +555,10 @@ sub getRated4AlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated4AlbumTracks {
@@ -502,6 +577,10 @@ sub getRated5AlbumsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated5AlbumTracks {
@@ -516,6 +595,8 @@ sub isRatedArtistsValidInContext {
 		return 1;
 	}elsif(defined($params->{'year'})) {
 		return 1;
+	}elsif(defined($params->{'playlist'})) {
+		return 1;
 	}
 	return 0;
 }
@@ -528,6 +609,9 @@ sub getRated1ArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS');
 	}
@@ -541,6 +625,9 @@ sub getRated2ArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS');
 	}
@@ -553,6 +640,9 @@ sub getRated3ArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS');
 	}
@@ -565,6 +655,9 @@ sub getRated4ArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS');
 	}
@@ -577,6 +670,9 @@ sub getRated5ArtistsName {
 	}elsif(defined($params->{'year'})) {
 	    my $year = $params->{'year'};
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
 	}else {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS');
 	}
@@ -596,6 +692,10 @@ sub getRated1ArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated1ArtistTracks {
@@ -618,6 +718,10 @@ sub getRated2ArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated2ArtistTracks {
@@ -640,6 +744,10 @@ sub getRated3ArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated3ArtistTracks {
@@ -662,6 +770,10 @@ sub getRated4ArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated4ArtistTracks {
@@ -684,6 +796,10 @@ sub getRated5ArtistsWeb {
     	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
 
 sub getRated5ArtistTracks {
@@ -702,16 +818,16 @@ sub getMostPlayedTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating group by tracks.url order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics,contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics,contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating group by tracks.url order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
-	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.audio=1 and tracks.album=$album and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy;";
 	    }
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
@@ -728,6 +844,13 @@ sub getMostPlayedTracksWeb {
 	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics where tracks.url = track_statistics.url and tracks.year=$year and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks,track_statistics, playlist_track where tracks.url = track_statistics.url and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	    }
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
 	    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
@@ -778,6 +901,13 @@ sub getMostPlayedAlbumsWeb {
 	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.year=$year group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks,track_statistics,albums,playlist_track where tracks.url = track_statistics.url and tracks.album=albums.id and tracks.id=playlist_track.track and playlist_track.playlist=$playlist group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
 	    $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
@@ -821,6 +951,13 @@ sub getMostPlayedArtistsWeb {
 	    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.year=$year group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
+	}elsif(defined($params->{'playlist'})) {
+		my $playlist = $params->{'playlist'};
+	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
+	    	$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks , track_statistics , contributors, contributor_track, playlist_track where tracks.url = track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and tracks.id=playlist_track.track and playlist_track.playlist=$playlist group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+	    }
+	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
 	    $sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
 	    if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
@@ -861,9 +998,6 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORARTIST
 	EN	Songs rated * by: 
 
-PLUGIN_TRACKSTAT_SONGLIST_RATED2
-	EN	Songs rated **
-
 PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORGENRE_SHORT
 	EN	Songs
 
@@ -875,6 +1009,15 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORYEAR
 	EN	Songs rated * from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1_FORPLAYLIST
+	EN	Songs rated * in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2
+	EN	Songs rated **
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORALBUM_SHORT
 	EN	Songs
@@ -899,6 +1042,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORYEAR
 	EN	Songs rated ** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2_FORPLAYLIST
+	EN	Songs rated ** in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED3
 	EN	Songs rated ***
@@ -927,6 +1076,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORYEAR
 	EN	Songs rated *** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3_FORPLAYLIST
+	EN	Songs rated *** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED4
 	EN	Songs rated ****
 
@@ -953,6 +1108,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORYEAR
 	EN	Songs rated **** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4_FORPLAYLIST
+	EN	Songs rated **** in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED5
 	EN	Songs rated *****
@@ -981,6 +1142,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORYEAR
 	EN	Songs rated ***** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORPLAYLIST
+	EN	Songs rated ***** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS
 	EN	Albums rated *
 
@@ -1001,6 +1168,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORYEAR
 	EN	Albums rated * from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS_FORPLAYLIST
+	EN	Albums rated * in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS
 	EN	Albums rated **
@@ -1023,6 +1196,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORYEAR
 	EN	Albums rated ** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ALBUMS_FORPLAYLIST
+	EN	Albums rated ** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS
 	EN	Albums rated ***
 
@@ -1043,6 +1222,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORYEAR
 	EN	Albums rated *** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ALBUMS_FORPLAYLIST
+	EN	Albums rated *** in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS
 	EN	Albums rated ****
@@ -1065,6 +1250,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORYEAR
 	EN	Albums rated **** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ALBUMS_FORPLAYLIST
+	EN	Albums rated **** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS
 	EN	Albums rated *****
 
@@ -1086,6 +1277,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORYEAR
 	EN	Albums rated ***** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORPLAYLIST
+	EN	Albums rated ***** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS
 	EN	Artists rated *
 
@@ -1100,6 +1297,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORYEAR
 	EN	Artists rated * from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS_FORPLAYLIST
+	EN	Artists rated * in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS
 	EN	Artists rated **
@@ -1116,6 +1319,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORYEAR
 	EN	Artists rated ** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED2ARTISTS_FORPLAYLIST
+	EN	Artists rated ** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS
 	EN	Artists rated ***
 
@@ -1130,6 +1339,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORYEAR
 	EN	Artists rated *** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED3ARTISTS_FORPLAYLIST
+	EN	Artists rated *** in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS
 	EN	Artists rated ****
@@ -1146,6 +1361,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORYEAR_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORYEAR
 	EN	Artists rated **** from: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED4ARTISTS_FORPLAYLIST
+	EN	Artists rated **** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS
 	EN	Artists rated *****
 
@@ -1160,6 +1381,12 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORYEAR
 	EN	Artists rated ***** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST
+	EN	Artists rated ***** in: 
 ";
 }
 
