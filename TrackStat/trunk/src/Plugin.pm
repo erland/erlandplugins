@@ -292,7 +292,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -311,6 +311,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_showmessages"); }
+		},		
+	plugin_trackstat_force_grouprating => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_FORCE_GROUPRATING')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_FORCE_GROUPRATING')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating"); }
 		},		
 	plugin_trackstat_fast_queries => {
 			'validate'     => \&validateTrueFalseWrapper
@@ -630,7 +640,7 @@ sub webPages {
 	for my $item (keys %$statistics) {
 		my $id = $statistics->{$item}->{'id'};
 		$id = $id."\.htm";
-		debugMsg("Adding page: $id\n");
+		#debugMsg("Adding page: $id\n");
 		$pages{$id} = \&handleWebStatistics;
 	}
 
@@ -682,6 +692,21 @@ sub baseWebPage {
 			}elsif($params->{trackstattrackid}) {
 				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
 					rateSong($client,$songKey,$params->{trackstatrating});
+				}
+			}
+		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'albumrating') {
+			my $album = $params->{album};
+			if ($album) {
+				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
+					my $unratedTracks;
+					if(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating")) {
+						$unratedTracks = Plugins::TrackStat::Storage::getTracksOnAlbum($album);
+					}else {
+						$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($album);
+					}
+					foreach my $url (@$unratedTracks) {
+						rateSong($client,$url,$params->{trackstatrating});
+					}
 				}
 			}
 		}
@@ -787,7 +812,7 @@ sub handlePlayAddWebPage {
 					debugMsg("Loading genre = ".$genre->name."\n");
 					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('genre'),$genre->id)]);
 				}else {
-					debugMsg("Adding artist = ".$genre->name."\n");
+					debugMsg("Adding genre = ".$genre->name."\n");
 					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('genre'),$genre->id)]);
 				}
 			}elsif($item->{'listtype'} eq 'year') {
@@ -798,6 +823,15 @@ sub handlePlayAddWebPage {
 				}else {
 					debugMsg("Adding year = ".$year."\n");
 					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('year'),$year)]);
+				}
+			}elsif($item->{'listtype'} eq 'playlist') {
+				my $playlist = $item->{'itemobj'}{'playlist'};
+				if($first==1) {
+					debugMsg("Loading playlist = ".$playlist->title."\n");
+					$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$playlist->id)]);
+				}else {
+					debugMsg("Adding playlist = ".$playlist->title."\n");
+					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$playlist->id)]);
 				}
 			}
 			if ($::VERSION ge '6.5') {
@@ -888,7 +922,7 @@ sub getStatisticPluginsStrings {
 	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
 	                }
 					if(UNIVERSAL::can("${fullname}","strings")) {
-						debugMsg("Calling: ".$fullname."::strings\n");
+						#debugMsg("Calling: ".$fullname."::strings\n");
 						my $str = eval { &{$fullname . "::strings"}(); };
 						if ($@) {
 		                	msg("TrackStat: Failed call strings on statistic plugin $plugin: $@\n");
@@ -931,7 +965,7 @@ sub initStatisticPlugins {
 	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
 	                }
 					if(UNIVERSAL::can("${fullname}","init")) {
-						debugMsg("Calling: ".$fullname."::init\n");
+						#debugMsg("Calling: ".$fullname."::init\n");
 						eval { &{$fullname . "::init"}(); };
 						if ($@) {
 		                	msg("TrackStat: Failed to call init on statistic plugin $plugin: $@\n");
@@ -942,10 +976,10 @@ sub initStatisticPlugins {
 						if ($@) {
 		                	msg("TrackStat: Failed to call getStatisticItems on statistic plugin $plugin: $@\n");
 		                }
-						debugMsg("Calling: ".$fullname."::getStatisticItems\n");
+						#debugMsg("Calling: ".$fullname."::getStatisticItems\n");
 						for my $item (keys %$pluginStatistics) {
 							my $enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistics_'.$item.'_enabled');
-							debugMsg("Statistic plugin loaded: $item from $plugin.pm\n");
+							#debugMsg("Statistic plugin loaded: $item from $plugin.pm\n");
 							my $subitems = $pluginStatistics->{$item};
 							my %items = ();
 							for my $subitem (keys %$subitems) {
@@ -997,6 +1031,41 @@ sub handleWebStatistics {
 			$params->{'songlist'} = $statistics->{$id}->{'name'};
 		}
 		$params->{'songlistid'} = $statistics->{$id}->{'id'};
+		my $statistic = undef;
+		my $allowControls = 0;
+		if(defined($params->{'statisticparameters'}) && $params->{'statisticparameters'} =~ /\&?album=(\d+)/) {
+			$statistic = Plugins::TrackStat::Storage::getGroupStatistic('album',$1);
+			$allowControls = 1;
+		}elsif(defined($params->{'statisticparameters'}) && $params->{'statisticparameters'} =~ /\&?artist=(\d+)/) {
+			$statistic = Plugins::TrackStat::Storage::getGroupStatistic('artist',$1);
+		}elsif(defined($params->{'statisticparameters'}) && $params->{'statisticparameters'} =~ /\&?playlist=(\d+)/) {
+			$statistic = Plugins::TrackStat::Storage::getGroupStatistic('playlist',$1);
+		}elsif(defined($params->{'statisticparameters'}) && $params->{'statisticparameters'} =~ /\&?year=(\d+)/) {
+			$statistic = Plugins::TrackStat::Storage::getGroupStatistic('year',$1);
+		}elsif(defined($params->{'statisticparameters'}) && $params->{'statisticparameters'} =~ /\&?genre=(\d+)/) {
+			$statistic = Plugins::TrackStat::Storage::getGroupStatistic('genre',$1);
+		}
+		if(defined $statistic) {
+			my $rating = $statistic->{'rating'};
+			if(!defined($rating)) {
+				$rating = 0;
+			}
+			if(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating") && $allowControls) {
+				$params->{'pluginTrackStatShowGroupRatingWarning'} = "PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION_FORCE";
+				$params->{'pluginTrackStatShowGroupRatingControls'} = 1;
+			}elsif(!$statistic->{'lowestrating'} && $allowControls) {
+				$params->{'pluginTrackStatShowGroupRatingWarning'} = "PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION";
+				$params->{'pluginTrackStatShowGroupRatingControls'} = 1;
+			}else {
+				if($rating) {
+					$params->{'pluginTrackStatShowGroupRatingView'} = 1;
+				}
+			}
+
+		  	$params->{'pluginTrackStatGroupRating'} = ($rating && $rating>0?($rating+10)/20:0);
+			$params->{'pluginTrackStatGroupRatingNumber'} = sprintf("%.2f", $rating/20);
+
+		}
 		setDynamicPlaylistParams($client,$params);
 	};
 	
@@ -1040,7 +1109,7 @@ sub setDynamicPlaylistParams {
 		$dynamicPlaylist = grep(/DynamicPlayList/,Slim::Buttons::Plugins::enabledPlugins($client));
     }
 	if($dynamicPlaylist && Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist")) {
-		if(!defined($params->{'artist'}) && !defined($params->{'album'}) && !defined($params->{'genre'}) && !defined($params->{'year'})) {
+		if(!defined($params->{'artist'}) && !defined($params->{'album'}) && !defined($params->{'genre'}) && !defined($params->{'year'}) && !defined($params->{'playlist'})) {
 			$params->{'dynamicplaylist'} = "trackstat_".$params->{'songlistid'};
 		}
 	}
@@ -1193,6 +1262,11 @@ sub initPlugin
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_show_mixerlinks",1);
 		}
+		
+		# Do not force group ratings by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_force_grouprating",0);
+		}
 
 		initRatingChar();
 		
@@ -1260,18 +1334,31 @@ sub mixerlink {
 #		}
 #		debugMsg("***********************************\n");
 		my $levelName = $form->{'levelName'};
-		if(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'year') && !$form->{'noTrackStatButton'}) {
+		if(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'year' || $levelName eq 'playlist') && !$form->{'noTrackStatButton'}) {
 			if ($::VERSION ge '6.5') {
 	        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
 	        }else {
         			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
 	        }
         }elsif(!$form->{'noTrackStatButton'}){
-    		my $album = $item->{'album'};
-    		if(defined($album)) {
-    			$form->{'albumid'} = $album->{'id'};
-    		}
-        	if(defined($form->{'albumid'})) {
+        	my $attributes = $form->{'attributes'};
+        	my $playlist = undef;
+        	if(defined($attributes) && $attributes =~ /\&?playlist=(\d+)/) {
+        		$playlist = $1;
+        	}elsif(defined($attributes) && $attributes =~ /\&?playlist\.id=(\d+)/) {
+        		$playlist = $1;
+        	}
+        	if(defined($playlist)) {
+        		$form->{'playlist'} = $playlist;
+        	}else {
+	    		my $album = $item->album;
+	    		if(defined($album)) {
+    				$form->{'albumid'} = $album->id;
+	    		}
+	    	}
+	    	$form->{'currenttrackstatitem'} = $item->id;
+	    	
+        	if(defined($form->{'albumid'}) || defined($form->{'playlist'})) {
 				if ($::VERSION ge '6.5') {
         			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
         		}else {
@@ -1988,6 +2075,8 @@ sub markedAsPlayed {
 	use strict 'refs';
 	if ($::VERSION ge '6.5') {
 		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
+	}else {
+		$client->execute(['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
 	}
 	debugMsg("Exiting markedAsPlayed\n");
 }
@@ -2111,6 +2200,8 @@ sub rateSong($$$) {
 	use strict 'refs';
 	if ($::VERSION ge '6.5') {
 		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit]);
+	}else {
+		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}
 	Slim::Music::Info::clearFormatDisplayCache();
 }
@@ -2849,6 +2940,15 @@ SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES
 SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES_DESC
 	EN	This will turn on/off simple queries, simple queries will work faster but it will only be based on statistics handled by TrackStat. The standard statistics in slimserver will not be used at all if simple queries are enabled.
 
+PLUGIN_TRACKSTAT_FORCE_GROUPRATING
+	EN	Force album ratings on rated tracks
+
+SETUP_PLUGIN_TRACKSTAT_FORCE_GROUPRATING
+	EN	Group ratings
+
+SETUP_PLUGIN_TRACKSTAT_FORCE_GROUPRATING_DESC
+	EN	If enabled already rated tracks will change rating when changing ratings on an album, if disabled rating an album only means that unrated tracks on that album will get a rating
+
 PLUGIN_TRACKSTAT_REFRESH_STARTUP
 	EN	Refresh statistics at startup
 
@@ -3238,6 +3338,12 @@ PLUGIN_TRACKSTAT_SELECT_STATISTICS_NONE
 
 PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS
 	EN	Show all
+
+PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION
+	EN	This will change all ratings not already set on this album, is this what you want to do ?
+
+PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION_FORCE
+	EN	This will change all ratings on this album old ratings will be lost, is this what you want to do ?
 $pluginStrings";
 return $str;
 }
