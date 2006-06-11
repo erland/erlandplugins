@@ -105,9 +105,14 @@ sub objectForId {
 			$type = 'Genre';
 		}elsif($type eq 'track') {
 			$type = 'Track';
+		}elsif($type eq 'playlist') {
+			$type = 'Playlist';
 		}
 		return Slim::Schema->resultset($type)->find($id);
 	}else {
+		if($type eq 'playlist') {
+			$type = 'track';
+		}
 		return getCurrentDS()->objectForId($type,$id);
 	}
 }
@@ -409,6 +414,91 @@ sub findTrack {
 	$sth->finish();
 
 	return $result;
+}
+
+sub getGroupStatistic {
+	my $type = shift;
+	my $id = shift;
+	return undef unless $id;
+	
+	my $sql;
+	if($type eq 'album') {
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$id group by tracks.album;";
+	}elsif($type eq 'artist') {
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$id left join track_statistics on tracks.url = track_statistics.url group by contributor_track.contributor;";
+	}elsif($type eq 'playlist') {
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$id left join track_statistics on tracks.url = track_statistics.url group by playlist_track.playlist;";
+	}elsif($type eq 'year') {
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.year=$id group by tracks.year;";
+	}elsif($type eq 'genre') {
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$id left join track_statistics on tracks.url = track_statistics.url group by genre_track.genre;";
+	}else {
+		return undef;
+	}
+	debugMsg("Executing: $sql\n");
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare( $sql );
+	my %statistic = ();
+	eval {
+		$sth->execute();
+		my $rating;
+		my $lowestrating;
+		$sth->bind_columns( undef, \$rating, \$lowestrating );
+		if($sth->fetch()) {
+	   		$statistic{'rating'} = $rating;
+	   		$statistic{'lowestrating'} = $lowestrating;
+		}else {
+	   		$statistic{'rating'} = 0;
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+   	}
+   	return \%statistic;
+}
+
+sub getUnratedTracksOnAlbum {
+	my $albumid = shift;
+	return 0 unless $albumid;
+	
+	my $sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$albumid and (track_statistics.rating is null or track_statistics.rating=0)";
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare( $sql );
+	my @unratedTracks = ();
+	eval {
+		$sth->execute();
+		my $url;
+		$sth->bind_columns( undef, \$url );
+		while( $sth->fetch() ) {
+			push @unratedTracks, $url;
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+   	}
+   	return \@unratedTracks;
+}
+
+sub getTracksOnAlbum {
+	my $albumid = shift;
+	return 0 unless $albumid;
+	
+	my $sql = "select tracks.url from tracks where tracks.album=$albumid";
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare( $sql );
+	my @tracks = ();
+	eval {
+		$sth->execute();
+		my $url;
+		$sth->bind_columns( undef, \$url );
+		while( $sth->fetch() ) {
+			push @tracks, $url;
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+   	}
+   	return \@tracks;
 }
 
 sub saveRating {
