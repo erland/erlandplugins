@@ -1330,17 +1330,31 @@ sub mixerlink {
         my $descend = shift;
 #		debugMsg("***********************************\n");
 #		for my $it (keys %$form) {
-#			debugMsg("Got $it=".$form->{$it}."\n");
+#			debugMsg("form{$it}=".$form->{$it}."\n");
 #		}
 #		debugMsg("***********************************\n");
+		
 		my $levelName = $form->{'levelName'};
-		if(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'year' || $levelName eq 'playlist') && !$form->{'noTrackStatButton'}) {
+		if($form->{'noTrackStatButton'}) {
+			if ($::VERSION lt '6.5') {
+        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => undef});
+        	}
+		}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
 			if ($::VERSION ge '6.5') {
 	        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
 	        }else {
         			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
 	        }
-        }elsif(!$form->{'noTrackStatButton'}){
+        }elsif(defined($levelName) && $levelName eq 'year') {
+        	$form->{'yearid'} = $item->year;
+        	if(defined($form->{'yearid'})) {
+				if ($::VERSION ge '6.5') {
+        			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+        		}else {
+        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
+        		}
+        	}
+        }else {
         	my $attributes = $form->{'attributes'};
         	my $playlist = undef;
         	if(defined($attributes) && $attributes =~ /\&?playlist=(\d+)/) {
@@ -1369,10 +1383,6 @@ sub mixerlink {
         		}else {
         			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
         		}
-        	}
-        }else {
-			if ($::VERSION lt '6.5') {
-        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => undef});
         	}
         }
         return $form;
