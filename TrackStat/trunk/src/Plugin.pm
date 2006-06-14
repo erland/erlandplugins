@@ -292,7 +292,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -389,6 +389,12 @@ sub setupGroup
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_recent_number_of_days"); }
+		},		
+	plugin_trackstat_recentadded_number_of_days => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RECENTADDED_NUMBER_OF_DAYS')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RECENTADDED_NUMBER_OF_DAYS')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_recentadded_number_of_days"); }
 		},		
 	plugin_trackstat_song_threshold_length => {
 			'validate'     => \&validateIntWrapper
@@ -1222,6 +1228,11 @@ sub initPlugin
 		# Set default recent number of days to 30
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_recent_number_of_days"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_recent_number_of_days",30);
+		}
+
+		# Set default recent added number of days to 30
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_recentadded_number_of_days"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_recentadded_number_of_days",30);
 		}
 
 		# enable refresh at startup by default
@@ -3203,6 +3214,15 @@ SETUP_PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS_DESC
 
 PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS
 	EN	Number of days to use for recently played in statistics
+
+SETUP_PLUGIN_TRACKSTAT_RECENTADDED_NUMBER_OF_DAYS
+	EN	Number of days to use for recently added
+
+SETUP_PLUGIN_TRACKSTAT_RECENTADDED_NUMBER_OF_DAYS_DESC
+	EN	Number of days to use for recently added in statistics. Its used when calculating statistics that ignores recently added or only uses recently added tracks.
+
+PLUGIN_TRACKSTAT_RECENTADDED_NUMBER_OF_DAYS
+	EN	Number of days to use for recently added in statistics
 
 SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
 	EN	Number of songs/albums/artists on web
