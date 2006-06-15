@@ -2613,11 +2613,13 @@ sub getMusicMagicURL {
 		$replacePath = escape($replacePath);
 		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
 		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
-		$url =~ s/$nativeUrl/$replacePath/isg;
+		if($url =~ /$nativeUrl/) {
+			$url =~ s/$nativeUrl/$replacePath/isg;
+		}else {
+			$url = Slim::Utils::Misc::pathFromFileURL($url);
+		}
 	}else {
-		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
-		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
-		$url =~ s/$nativeUrl/$nativeRoot/isg;
+		$url = Slim::Utils::Misc::pathFromFileURL($url);
 	}
 
 	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_musicmagic_replace_extension');;
