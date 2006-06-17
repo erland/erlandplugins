@@ -2799,6 +2799,9 @@ sub getDynamicPlayLists {
 			$playlistItem{'name'} = $statistics->{$item}->{'name'};
 		}
 		$playlistItem{'url'}="plugins/TrackStat/".$id.".html?";
+		if(defined($statistics->{$item}->{'groups'})) {
+			$playlistItem{'groups'} = $statistics->{$item}->{'groups'};
+		}
 
 		$result{$playlistid} = \%playlistItem;
 	}
@@ -3381,6 +3384,36 @@ PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION
 
 PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION_FORCE
 	EN	This will change all ratings on this album old ratings will be lost, is this what you want to do ?
+
+PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_YEAR_GROUP
+	EN	Years
+
+PLUGIN_TRACKSTAT_SONGLIST_GENRE_GROUP
+	EN	Genres
+
+PLUGIN_TRACKSTAT_SONGLIST_PLAYLIST_GROUP
+	EN	Playlists
+
+PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP
+	EN	Recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP
+	EN	Not recently played
+
+PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP
+	EN	Recently added
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP
+	EN	Not recently added
 $pluginStrings";
 return $str;
 }
