@@ -9,6 +9,11 @@
 	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
 		[% "PLUGIN_DYNAMICPLAYLIST" | string %]
 	</a>
+	[% FOREACH group IN pluginDynamicPlayListContext %]
+		[% IF group.dynamicplaylistenabled %]
+			&nbsp;/&nbsp;<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name %]</a>
+		[% END %]
+	[% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
 	[% IF pluginDynamicPlayListNowPlaying != '' %]
@@ -64,17 +69,25 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type
 		</tr>
 
 			[% odd = 1 %]
-			[% FOREACH type IN pluginDynamicPlayListPlayLists.keys.sort %]
-				[% IF pluginDynamicPlayListPlayLists.$type.dynamicplaylistenabled %]
+			[% FOREACH group IN pluginDynamicPlayListGroups %]
+				[% IF group.dynamicplaylistenabled %]
+					[%- WRAPPER contentitem %]
+						<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name %]/</a>
+					[% END %]
+					[% odd = (not odd) %]
+				[% END %]
+			[% END %]
+			[% FOREACH playlist IN pluginDynamicPlayListPlayLists %]
+				[% IF playlist.dynamicplaylistenabled %]
 					[% BLOCK controls %]
-						[% PROCESS dynamicPlayListLink type="$type" addOnly="0" %]
-						[% PROCESS dynamicPlayListLink type="$type" addOnly="1" %]
+						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" %]
+						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" %]
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
-						[% IF pluginDynamicPlayListPlayLists.$type.url %]
-							<a href="[% webroot %][% pluginDynamicPlayListPlayLists.$type.url %]&player=[% player | uri %]">[% pluginDynamicPlayListPlayLists.$type.name %]</a>
+						[% IF playlist.url %]
+							<a href="[% webroot %][% playlist.url %]&player=[% player | uri %]">[% playlist.name %]</a>
 						[% ELSE %]
-							[% pluginDynamicPlayListPlayLists.$type.name %]
+							[% playlist.name %]
 						[% END %]
 					[% END %]
 					[% odd = (not odd) %]
