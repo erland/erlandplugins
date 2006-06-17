@@ -393,6 +393,7 @@ sub getDynamicPlayLists {
 	my %currentResultTrack = (
 		'id' => 'track',
 		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_TRACK'),
+		'groups' => [[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_TRACK')],[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_RANDOM')]],
 		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
 	my $id = "randomplaylist_track";
@@ -400,6 +401,7 @@ sub getDynamicPlayLists {
 	
 	my %currentResultAlbum = (
 		'id' => 'album',
+		'groups' => [[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_ALBUM')],[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_RANDOM')]],
 		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ALBUM'),
 		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
@@ -408,6 +410,7 @@ sub getDynamicPlayLists {
 	
 	my %currentResultYear = (
 		'id' => 'year',
+		'groups' => [[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_YEAR')],[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_RANDOM')]],
 		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_YEAR'),
 		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
@@ -416,6 +419,7 @@ sub getDynamicPlayLists {
 
 	my %currentResultArtist = (
 		'id' => 'artist',
+		'groups' => [[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_ARTIST')],[$client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_RANDOM')]],
 		'name' => $client->string('PLUGIN_RANDOMPLAYLIST_RANDOM_ARTIST'),
 		'url' => "plugins/RandomPlayList/randomplaylist_list.html?"
 	);
@@ -815,16 +819,31 @@ PLUGIN_RANDOMPLAYLIST_PLAYING
 	EN	Playing
 
 PLUGIN_RANDOMPLAYLIST_RANDOM_TRACK
-	EN	Random Song
+	EN	Random songs
 
 PLUGIN_RANDOMPLAYLIST_RANDOM_ARTIST
-	EN	Random Artist
+	EN	Random artists
 
 PLUGIN_RANDOMPLAYLIST_RANDOM_ALBUM
-	EN	Random Album
+	EN	Random albums
 
 PLUGIN_RANDOMPLAYLIST_RANDOM_YEAR
-	EN	Random Year
+	EN	Random years
+
+PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_TRACK
+	EN	Songs
+
+PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_ARTIST
+	EN	Artists
+
+PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_ALBUM
+	EN	Albums
+
+PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_YEAR
+	EN	Years
+
+PLUGIN_RANDOMPLAYLIST_RANDOM_GROUP_RANDOM
+	EN	Random
 
 PLUGIN_RANDOMPLAYLIST_GENERAL_HELP
 	EN	You can add or remove songs from your mix at any time. To stop adding songs, clear your playlist or click to
