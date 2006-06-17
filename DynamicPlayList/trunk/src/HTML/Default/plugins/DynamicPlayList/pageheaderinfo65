@@ -9,6 +9,11 @@
                                         <a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
                                           [% "PLUGIN_DYNAMICPLAYLIST" | string %]
                                         </a>
+					[% FOREACH group IN pluginDynamicPlayListContext %]
+						[% IF group.dynamicplaylistenabled %]
+							&nbsp;/&nbsp;<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name %]</a>
+						[% END %]
+					[% END %]
                                 </td>
                                 <td width="4"></td>
                         </tr>
