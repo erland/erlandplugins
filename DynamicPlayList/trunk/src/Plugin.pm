@@ -377,9 +377,18 @@ sub initPlayLists {
 						my $enabled = 1;
 						for my $group (@$currentgroups) {
 							$grouppath .= "_".escape($group);
-							debugMsg("Got group: ".$grouppath."\n");
+							#debugMsg("Got group: ".$grouppath."\n");
 							my $existingItem = $currentLevel->{'dynamicplaylistgroup_'.$group};
 							if(defined($existingItem)) {
+								if($enabled) {
+									$enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_playlist_group_'.$grouppath.'_enabled');
+									if(!defined($enabled)) {
+										$enabled = 1;
+									}
+								}
+								if($enabled && $playlist->{'dynamicplaylistenabled'}) {
+									$existingItem->{'dynamicplaylistenabled'} = 1;
+								}
 								$currentLevel = $existingItem->{'childs'};
 							}else {
 								my %level = ();
@@ -393,7 +402,7 @@ sub initPlayLists {
 										$enabled = 1;
 									}
 								}
-								if($enabled) {
+								if($enabled && $playlist->{'dynamicplaylistenabled'}) {
 									#debugMsg("Enabled: plugin_dynamicplaylist_playlist_".$grouppath."_enabled=1\n");
 									$currentItemGroup{'dynamicplaylistenabled'} = 1;
 								}else {
@@ -997,6 +1006,11 @@ sub getPlayListGroups {
 				$result = getPlayListGroups(\@childpath,$childs,$result);
 			}
 		}
+	}
+	if($result) {
+		my @temp = sort { $a->{'name'} cmp $b->{'name'} } @$result;
+		$result = \@temp;
+		debugMsg("Got sorted array: $result\n");
 	}
 	return $result;
 }
