@@ -56,6 +56,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedRecentAddedTracks,
 			'id' =>  'mostplayedrecentadded',
 			'namefunction' => \&getMostPlayedRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentAddedTracksValidInContext
 		},
 		mostplayedrecentaddedartists => {
@@ -63,6 +64,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedRecentAddedArtistTracks,
 			'id' =>  'mostplayedrecentaddedartists',
 			'namefunction' => \&getMostPlayedRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentAddedArtistsValidInContext
 		},
 		mostplayedrecentaddedalbums => {
@@ -70,6 +72,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedRecentAddedAlbumTracks,
 			'id' =>  'mostplayedrecentaddedalbums',
 			'namefunction' => \&getMostPlayedRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentAddedAlbumsValidInContext
 		},
 		mostplayednotrecentadded => {
@@ -77,6 +80,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedNotRecentAddedTracks,
 			'id' =>  'mostplayednotrecentadded',
 			'namefunction' => \&getMostPlayedNotRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentAddedTracksValidInContext
 		},
 		mostplayednotrecentaddedartists => {
@@ -84,6 +88,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedNotRecentAddedArtistTracks,
 			'id' =>  'mostplayednotrecentaddedartists',
 			'namefunction' => \&getMostPlayedNotRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentAddedArtistsValidInContext
 		},
 		mostplayednotrecentaddedalbums => {
@@ -91,6 +96,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getMostPlayedNotRecentAddedAlbumTracks,
 			'id' =>  'mostplayednotrecentaddedalbums',
 			'namefunction' => \&getMostPlayedNotRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentAddedAlbumsValidInContext
 		}
 	);
@@ -758,6 +764,12 @@ PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDEDARTISTS_FORPLAYLIST
 	EN	Most played artists not recently added in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENTADDED_GROUP
+	EN	Most played
+
+PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENTADDED_GROUP
+	EN	Most played
 ";
 }
 

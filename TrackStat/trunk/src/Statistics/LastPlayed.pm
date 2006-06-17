@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastPlayedTracks,
 			'id' =>  'lastplayed',
 			'namefunction' => \&getLastPlayedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isLastPlayedTracksValidInContext
 		},
 		lastplayedalbums => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastPlayedAlbumTracks,
 			'id' =>  'lastplayedalbums',
 			'namefunction' => \&getLastPlayedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isLastPlayedAlbumsValidInContext
 		},
 		lastplayedartists => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastPlayedArtistTracks,
 			'id' =>  'lastplayedartists',
 			'namefunction' => \&getLastPlayedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isLastPlayedArtistsValidInContext
 		}
 	);
@@ -445,6 +448,9 @@ PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYEDARTISTS_FORPLAYLIST
 	EN	Last played artists in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTPLAYED_GROUP
+	EN	Last played
 ";
 }
 

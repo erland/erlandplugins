@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedRecentAddedTracks,
 			'id' =>  'notratedrecentadded',
 			'namefunction' => \&getNotRatedRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentAddedTracksValidInContext
 		},
 		notratedrecentaddedartists => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedRecentAddedArtistTracks,
 			'id' =>  'notratedrecentaddedartists',
 			'namefunction' => \&getNotRatedRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentAddedArtistsValidInContext
 		},
 		notratedrecentaddedalbums => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedRecentAddedAlbumTracks,
 			'id' =>  'notratedrecentaddedalbums',
 			'namefunction' => \&getNotRatedRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentAddedAlbumsValidInContext
 		},
 		notratednotrecentadded => {
@@ -78,6 +81,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedNotRecentAddedTracks,
 			'id' =>  'notratednotrecentadded',
 			'namefunction' => \&getNotRatedNotRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentAddedTracksValidInContext
 		},
 		notratednotrecentaddedartists => {
@@ -85,6 +89,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedNotRecentAddedArtistTracks,
 			'id' =>  'notratednotrecentaddedartists',
 			'namefunction' => \&getNotRatedNotRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentAddedArtistsValidInContext
 		},
 		notratednotrecentaddedalbums => {
@@ -92,6 +97,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedNotRecentAddedAlbumTracks,
 			'id' =>  'notratednotrecentaddedalbums',
 			'namefunction' => \&getNotRatedNotRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentAddedAlbumsValidInContext
 		}
 
@@ -717,6 +723,12 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDEDARTISTS_FORPLAYLIST
 	EN	Not rated artists not recently added in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENTADDED_GROUP
+	EN	Not rated
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENTADDED_GROUP
+	EN	Not rated
 ";
 }
 

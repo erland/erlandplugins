@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getFirstPlayedTracks,
 			'id' =>  'firstplayed',
 			'namefunction' => \&getFirstPlayedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isFirstPlayedTracksValidInContext
 		},
 		firstplayedalbums => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getFirstPlayedAlbumTracks,
 			'id' =>  'firstplayedalbums',
 			'namefunction' => \&getFirstPlayedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isFirstPlayedAlbumsValidInContext
 		},
 		firstplayedartists => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getFirstPlayedArtistTracks,
 			'id' =>  'firstplayedartists',
 			'namefunction' => \&getFirstPlayedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isFirstPlayedArtistsValidInContext
 		},
 	);
@@ -389,6 +392,9 @@ PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYEDARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYEDARTISTS_FORYEAR
 	EN	Artists played long ago from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_FIRSTPLAYED_GROUP
+	EN	Played long ago
 ";
 }
 

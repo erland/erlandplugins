@@ -56,6 +56,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedRecentAddedTracks,
 			'id' =>  'topratedrecentadded',
 			'namefunction' => \&getTopRatedRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedTracksValidInContext
 		},
 		topratedrecentaddedartists => {
@@ -63,6 +64,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedRecentAddedArtistTracks,
 			'id' =>  'topratedrecentaddedartists',
 			'namefunction' => \&getTopRatedRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedArtistsValidInContext
 		},
 		topratedrecentaddedalbums => {
@@ -70,6 +72,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedRecentAddedAlbumTracks,
 			'id' =>  'topratedrecentaddedalbums',
 			'namefunction' => \&getTopRatedRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedAlbumsValidInContext
 		},
 		topratednotrecentadded => {
@@ -77,6 +80,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedNotRecentAddedTracks,
 			'id' =>  'topratednotrecentadded',
 			'namefunction' => \&getTopRatedNotRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedTracksValidInContext
 		},
 		topratednotrecentaddedartists => {
@@ -84,6 +88,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedNotRecentAddedArtistTracks,
 			'id' =>  'topratednotrecentaddedartists',
 			'namefunction' => \&getTopRatedNotRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedArtistsValidInContext
 		},
 		topratednotrecentaddedalbums => {
@@ -91,6 +96,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getTopRatedNotRecentAddedAlbumTracks,
 			'id' =>  'topratednotrecentaddedalbums',
 			'namefunction' => \&getTopRatedNotRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedAlbumsValidInContext
 		}
 	);
@@ -758,6 +764,12 @@ PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDEDARTISTS_FORPLAYLIST
 	EN	Top rated artists not recently added in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP
+	EN	Top rated
+
+PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP
+	EN	Top rated
 ";
 }
 

@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotPlayedTracks,
 			'id' =>  'notplayed',
 			'namefunction' => \&getNotPlayedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isNotPlayedTracksValidInContext
 		},
 		notplayedartists => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotPlayedArtistTracks,
 			'id' =>  'notplayedartists',
 			'namefunction' => \&getNotPlayedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isNotPlayedArtistsValidInContext
 		},
 		notplayedalbums => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotPlayedAlbumTracks,
 			'id' =>  'notplayedalbums',
 			'namefunction' => \&getNotPlayedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isNotPlayedAlbumsValidInContext
 		}
 	);
@@ -392,6 +395,9 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYEDARTISTS_FORYEAR
 	EN	Never played artists from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTPLAYED_GROUP
+	EN	Not played
 ";
 }
 

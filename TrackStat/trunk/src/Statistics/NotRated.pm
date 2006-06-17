@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedTracks,
 			'id' =>  'notrated',
 			'namefunction' => \&getNotRatedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
 			'contextfunction' => \&isNotRatedTracksValidInContext
 		},
 		notratedartists => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedArtistTracks,
 			'id' =>  'notratedartists',
 			'namefunction' => \&getNotRatedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
 			'contextfunction' => \&isNotRatedArtistsValidInContext
 		},
 		notratedalbums => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotRatedAlbumTracks,
 			'id' =>  'notratedalbums',
 			'namefunction' => \&getNotRatedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
 			'contextfunction' => \&isNotRatedAlbumsValidInContext
 		}
 	);
@@ -391,6 +394,9 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDARTISTS_FORPLAYLIST
 	EN	Not rated artists in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP
+	EN	Not rated
 ";
 }
 

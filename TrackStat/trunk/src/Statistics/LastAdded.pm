@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastAddedTracks,
 			'id' =>  'lastadded',
 			'namefunction' => \&getLastAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isLastAddedTracksValidInContext
 		},
 		lastaddedartists => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastAddedArtistTracks,
 			'id' =>  'lastaddedartists',
 			'namefunction' => \&getLastAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isLastAddedArtistsValidInContext
 		},
 		lastaddedalbums => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLastAddedAlbumTracks,
 			'id' =>  'lastaddedalbums',
 			'namefunction' => \&getLastAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LASTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isLastAddedAlbumsValidInContext
 		}
 	);
@@ -390,6 +393,9 @@ PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_LASTADDEDARTISTS_FORYEAR
 	EN	Last added albums from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LASTADDED_GROUP
+	EN	Last added
 ";
 }
 

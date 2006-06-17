@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated1Tracks,
 			'id' =>  'rated1',
 			'namefunction' => \&getRated1TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated2 => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated2Tracks,
 			'id' =>  'rated2',
 			'namefunction' => \&getRated2TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated3 => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated3Tracks,
 			'id' =>  'rated3',
 			'namefunction' => \&getRated3TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated4 => {
@@ -78,6 +81,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated4Tracks,
 			'id' =>  'rated4',
 			'namefunction' => \&getRated4TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated5 => {
@@ -85,6 +89,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated5Tracks,
 			'id' =>  'rated5',
 			'namefunction' => \&getRated5TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated1artists => {
@@ -92,6 +97,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated1ArtistTracks,
 			'id' =>  'rated1artists',
 			'namefunction' => \&getRated1ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated2artists => {
@@ -99,6 +105,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated2ArtistTracks,
 			'id' =>  'rated2artists',
 			'namefunction' => \&getRated2ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated3artists => {
@@ -106,6 +113,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated3ArtistTracks,
 			'id' =>  'rated3artists',
 			'namefunction' => \&getRated3ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated4artists => {
@@ -113,6 +121,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated4ArtistTracks,
 			'id' =>  'rated4artists',
 			'namefunction' => \&getRated4ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated5artists => {
@@ -120,6 +129,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated5ArtistTracks,
 			'id' =>  'rated5artists',
 			'namefunction' => \&getRated5ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated1albums => {
@@ -127,6 +137,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated1AlbumTracks,
 			'id' =>  'rated1albums',
 			'namefunction' => \&getRated1AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated2albums => {
@@ -134,6 +145,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated2AlbumTracks,
 			'id' =>  'rated2albums',
 			'namefunction' => \&getRated2AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated3albums => {
@@ -141,6 +153,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated3AlbumTracks,
 			'id' =>  'rated3albums',
 			'namefunction' => \&getRated3AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated4albums => {
@@ -148,6 +161,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated4AlbumTracks,
 			'id' =>  'rated4albums',
 			'namefunction' => \&getRated4AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated5albums => {
@@ -155,6 +169,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getRated5AlbumTracks,
 			'id' =>  'rated5albums',
 			'namefunction' => \&getRated5AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		}
 	);
@@ -1387,6 +1402,9 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST
 	EN	Artists rated ***** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP
+	EN	Specific rating
 ";
 }
 

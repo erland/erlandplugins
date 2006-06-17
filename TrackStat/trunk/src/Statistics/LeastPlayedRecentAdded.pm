@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedRecentAddedTracks,
 			'id' =>  'leastplayedrecentadded',
 			'namefunction' => \&getLeastPlayedRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedRecentAddedTracksValidInContext
 		},
 		leastplayedrecentaddedartists => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedRecentAddedArtistTracks,
 			'id' =>  'leastplayedrecentaddedartists',
 			'namefunction' => \&getLeastPlayedRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedRecentAddedArtistsValidInContext
 		},
 		leastplayedrecentaddedalbums => {
@@ -71,6 +73,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedRecentAddedAlbumTracks,
 			'id' =>  'leastplayedrecentaddedalbums',
 			'namefunction' => \&getLeastPlayedRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedRecentAddedAlbumsValidInContext
 		},
 		leastplayednotrecentadded => {
@@ -78,6 +81,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedNotRecentAddedTracks,
 			'id' =>  'leastplayednotrecentadded',
 			'namefunction' => \&getLeastPlayedNotRecentAddedTracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedNotRecentAddedTracksValidInContext
 		},
 		leastplayednotrecentaddedartists => {
@@ -85,6 +89,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedNotRecentAddedArtistTracks,
 			'id' =>  'leastplayednotrecentaddedartists',
 			'namefunction' => \&getLeastPlayedNotRecentAddedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedNotRecentAddedArtistsValidInContext
 		},
 		leastplayednotrecentaddedalbums => {
@@ -92,6 +97,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getLeastPlayedNotRecentAddedAlbumTracks,
 			'id' =>  'leastplayednotrecentaddedalbums',
 			'namefunction' => \&getLeastPlayedNotRecentAddedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP')]],
 			'contextfunction' => \&isLeastPlayedNotRecentAddedAlbumsValidInContext
 		}
 	);
@@ -674,6 +680,12 @@ PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDEDARTISTS_FORYEAR_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDEDARTISTS_FORYEAR
 	EN	Least played artists not recently added from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDRECENTADDED_GROUP
+	EN	Least played
+
+PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYEDNOTRECENTADDED_GROUP
+	EN	Least played
 ";
 }
 

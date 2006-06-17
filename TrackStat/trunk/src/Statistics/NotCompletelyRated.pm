@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotCompletelyRatedArtistTracks,
 			'id' =>  'notcompletelyratedartists',
 			'namefunction' => \&getNotCompletelyRatedArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')]],
 			'contextfunction' => \&isNotCompletelyRatedArtistsValidInContext
 		},
 		notcompletelyratedalbums => {
@@ -64,6 +65,7 @@ sub getStatisticItems {
 			'playlistfunction' => \&getNotCompletelyRatedAlbumTracks,
 			'id' =>  'notcompletelyratedalbums',
 			'namefunction' => \&getNotCompletelyRatedAlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')]],
 			'contextfunction' => \&isNotCompletelyRatedAlbumsValidInContext
 		}
 	);
@@ -271,6 +273,9 @@ PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATEDARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATEDARTISTS_FORPLAYLIST
 	EN	Not completely rated artists in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP
+	EN	Not completely rated
 ";
 }
 
