@@ -24,6 +24,14 @@
 <form action="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_saveselectplaylists.html" name="editForm">
 	<table border="0">
 		<tr><td colspan="2"><b>[% "PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE" | string %]</b></td></tr>
+		[%- FOREACH group IN pluginDynamicPlayListGroups %]
+			<tr>
+				[%- groupid = "playlist_" _ group.id %]
+				<td><input type="checkbox" name="[% groupid %]" id="[% groupid %]" value="1" [% group.dynamicplaylistenabled ? "checked" : "" %] onclick="changeNumSelected(this)">
+				<label for="[% groupid %]">[% group.name | html %]</label></td>
+			</tr>
+		[%- END %]
+		<tr><td>&nbsp;</td></tr>
 		[%- FOREACH playlist IN pluginDynamicPlayListPlayLists.keys.sort %]
 			<tr>
 				[%- playlistid = "playlist_" _ pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistid %]
