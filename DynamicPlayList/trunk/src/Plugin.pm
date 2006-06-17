@@ -41,11 +41,15 @@ my %mixInfo      = ();
 my $htmlTemplate = 'plugins/DynamicPlayList/dynamicplaylist_list.html';
 my $ds = getCurrentDS();
 my $playLists = undef;
-my %plugins = ();
+my $playListItems = undef;
 
-my %disable = (
+my %plugins = ();
+my %disablePlaylist = (
 	'dynamicplaylistid' => 'disable', 
 	'name' => ''
+);
+my %disable = (
+	'playlist' => \%disablePlaylist
 );
 	
 sub getDisplayName {
@@ -234,8 +238,11 @@ sub getDisplayText {
 	my $id = undef;
 	my $name = '';
 	if($item) {
-		$id = $item->{'dynamicplaylistid'};
 		$name = $item->{'name'};
+		if(!defined($name) && defined($item->{'playlist'})) {
+			$name = $item->{'playlist'}->{'name'};
+			$id = $item->{'playlist'}->{'dynamicplaylistid'};
+		}
 	}
 	# if showing the current mode, show altered string
 	if ($mixInfo{$client} && $id eq $mixInfo{$client}->{'type'}) {
@@ -254,13 +261,14 @@ sub getOverlay {
 	my ($client, $item) = @_;
 
 	# Put the right arrow by genre filter and notesymbol by mixes
-	if ($item->{'dynamicplaylistid'} eq 'disable') {
+	if (defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
 		return [undef, Slim::Display::Display::symbol('rightarrow')];
-	}elsif (!$mixInfo{$client} || $item->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
+	}elsif(!defined($item->{'playlist'})) {
+		return [undef, Slim::Display::Display::symbol('rightarrow')];
+	}elsif (!$mixInfo{$client} || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
 		return [undef, Slim::Display::Display::symbol('notesymbol')];
-	} else {
-		return [undef, undef];
-	}
+	} 
+	return [undef, undef];
 }
 
 # Do what's necessary when play or add button is pressed
@@ -269,16 +277,16 @@ sub handlePlayOrAdd {
 	debugMsg("".($add ? 'Add' : 'Play')."$item\n");
 	
 	# reconstruct the list of options, adding and removing the 'disable' option where applicable
-	my $listRef = Slim::Buttons::Common::param($client, 'listRef');
-		
-	if ($item eq 'disable') {
-		pop @$listRef;
-		
-	# only add disable option if starting a mode from idle state
-	} elsif (! $mixInfo{$client}) {
-		push @$listRef, \%disable;
-	}
-	Slim::Buttons::Common::param($client, 'listRef', $listRef);
+#	my $listRef = Slim::Buttons::Common::param($client, 'listRef');
+#		
+#	if ($item eq 'disable') {
+#		pop @$listRef;
+#		
+#	# only add disable option if starting a mode from idle state
+#	} elsif (! $mixInfo{$client}) {
+#		push @$listRef, \%disable;
+#	}
+#	Slim::Buttons::Common::param($client, 'listRef', $listRef);
 
 	# Clear any current mix type in case user is restarting an already playing mix
 	$mixInfo{$client} = undef;
@@ -301,19 +309,28 @@ sub getPlayList {
 
 	debugMsg("Get playlist: $type\n");
 	if(!$playLists) {
-		$playLists = getPlayLists($client);
+		initPlayLists($client);
 	}
 	return undef unless $playLists;
 	
 	return $playLists->{$type};
 }
-
-sub getPlayLists {
+sub getDefaultGroups {
+	my $groupPath = Slim::Utils::Prefs::get('plugin_dynamicplaylist_ungrouped');
+	if(defined($groupPath) && $groupPath ne "") {
+		my @groups = split(/\//,$groupPath);
+		my @mainGroups = [@groups];
+		return \@mainGroups;
+	}
+	return undef;
+}
+sub initPlayLists {
 	my $client = shift;
 	
 	debugMsg("Searching for playlists\n");
 	
-	my %playLists = ();
+	my %localPlayLists = ();
+	my %localPlayListItems = ();
 	
 	no strict 'refs';
 	my @enabledplugins;
@@ -348,13 +365,84 @@ sub getPlayLists {
 				}else {
 					$playlist->{'dynamicplaylistenabled'} = 0;
 				}
-				$playLists{$item} = $playlist;
+				$localPlayLists{$item} = $playlist;
+				my $groups = $playlist->{'groups'};
+				if(!defined($groups)) {
+					$groups = getDefaultGroups();
+				}
+				if(defined($groups)) {
+					for my $currentgroups (@$groups) {
+						my $currentLevel = \%localPlayListItems;
+						my $grouppath = '';
+						my $enabled = 1;
+						for my $group (@$currentgroups) {
+							$grouppath .= "_".escape($group);
+							debugMsg("Got group: ".$grouppath."\n");
+							my $existingItem = $currentLevel->{'dynamicplaylistgroup_'.$group};
+							if(defined($existingItem)) {
+								$currentLevel = $existingItem->{'childs'};
+							}else {
+								my %level = ();
+								my %currentItemGroup = (
+									'childs' => \%level,
+									'name' => $group
+								);
+								if($enabled) {
+									$enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_playlist_group_'.$grouppath.'_enabled');
+									if(!defined($enabled)) {
+										$enabled = 1;
+									}
+								}
+								if($enabled) {
+									#debugMsg("Enabled: plugin_dynamicplaylist_playlist_".$grouppath."_enabled=1\n");
+									$currentItemGroup{'dynamicplaylistenabled'} = 1;
+								}else {
+									#debugMsg("Enabled: plugin_dynamicplaylist_playlist_".$grouppath."_enabled=0\n");
+									$currentItemGroup{'dynamicplaylistenabled'} = 0;
+								}
+
+								$currentLevel->{'dynamicplaylistgroup_'.$group} = \%currentItemGroup;
+								$currentLevel = \%level;
+							}
+						}
+						my %currentGroupItem = (
+							'playlist' => $playlist,
+							'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'}
+						);
+						$currentLevel->{$item} = \%currentGroupItem;
+					}
+				}else {
+					my %currentItem = (
+						'playlist' => $playlist,
+						'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'}
+					);
+					$localPlayListItems{$item} = \%currentItem;
+				}
 			}
+			#printPlayListItems('',\%localPlayListItems);
 		}
 	}
 	use strict 'refs';
 
-	return \%playLists;
+	$playLists = \%localPlayLists;
+	$playListItems = \%localPlayListItems;
+}
+
+sub printPlayListItems {
+	my $currentpath = shift;
+	my $items = shift;
+	return;
+	for my $itemKey (keys %$items) {
+		my $item = $items->{$itemKey};
+		if(defined($item->{'playlist'})) {
+			my $playlist = $item->{'playlist'};
+			debugMsg("Got: ".$currentpath."/".$playlist->{'name'}." (enabled=".$item->{'dynamicplaylistenabled'}.", ".$playlist->{'dynamicplaylistid'}.",".$playlist->{'dynamicplaylistplugin'}.")\n");
+		}else {
+			my $childs = $item->{'childs'};
+			#debugMsg("Got Group: ".$item->{'name'}." = ".$item->{'dynamicplaylistenabled'}."\n");
+			printPlayListItems($currentpath."/".$item->{'name'},$childs);
+		}
+	}
 }
 
 sub setMode {
@@ -367,10 +455,23 @@ sub setMode {
 	}
 
 	my @listRef = ();
-	$playLists = getPlayLists($client);
-	foreach my $playlist (sort keys %$playLists) {
-		if($playLists->{$playlist}->{'dynamicplaylistenabled'}) {
-			push @listRef, $playLists->{$playlist};
+	initPlayLists($client);
+	my $showFlat = Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist');
+	if($showFlat) {
+		foreach my $flatItem (sort keys %$playLists) {
+			if($playLists->{$flatItem}->{'dynamicplaylistenabled'}) {
+				my %flatPlaylistItem = (
+					'playlist' => $playLists->{$flatItem},
+					'dynamicplaylistenabled' => 1
+				);
+				push @listRef, \%flatPlaylistItem;
+			}
+		}
+	}else {
+		foreach my $menuItemKey (sort keys %$playListItems) {
+			if($playListItems->{$menuItemKey}->{'dynamicplaylistenabled'}) {
+				push @listRef, $playListItems->{$menuItemKey};
+			}
 		}
 	}
 
@@ -383,16 +484,22 @@ sub setMode {
 		modeName   => 'DynamicPlayList',
 		onPlay     => sub {
 			my ($client, $item) = @_;
-			handlePlayOrAdd($client, $item->{'dynamicplaylistid'}, 0);		
+			if(defined($item->{'playlist'})) {
+				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);		
+			}
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			handlePlayOrAdd($client, $item->{'dynamicplaylistid'}, 1);
+			if(defined($item->{'playlist'})) {
+				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
+			}
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
-			if($item->{'dynamicplaylistid'} eq 'disable') {
-				handlePlayOrAdd($client, $item->{'dynamicplaylistid'}, 0);
+			if(defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
+				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
+			}elsif(defined($item->{'childs'})) {
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($item->{'childs'}));
 			}else {
 				$client->bumpRight();
 			}
@@ -400,11 +507,50 @@ sub setMode {
 	);
 
 	# if we have an active mode, temporarily add the disable option to the list.
-	if ($mixInfo{$client}) {
+	if ($mixInfo{$client} && $mixInfo{$client}->{'type'} ne "") {
 		push @{$params{listRef}},\%disable;
 	}
 
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+}
+sub getSetModeDataForSubItems {
+	my $items = shift;
+
+	my @listRefSub = ();
+	foreach my $menuItemKey (sort keys %$items) {
+		if($items->{$menuItemKey}->{'dynamicplaylistenabled'}) {
+			push @listRefSub, $items->{$menuItemKey};
+		}
+	}
+	
+	my %params = (
+		header     => '{PLUGIN_DYNAMICPLAYLIST} {count}',
+		listRef    => \@listRefSub,
+		name       => \&getDisplayText,
+		overlayRef => \&getOverlay,
+		modeName   => 'DynamicPlayList',
+		onPlay     => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'playlist'})) {
+				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);		
+			}
+		},
+		onAdd      => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'playlist'})) {
+				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
+			}
+		},
+		onRight    => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'childs'})) {
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($item->{'childs'}));
+			}else {
+				$client->bumpRight();
+			}
+		}
+	);
+	return \%params;
 }
 
 sub commandCallback62 {
@@ -623,13 +769,15 @@ sub handleWebList {
 	my ($client, $params) = @_;
 
 	# Pass on the current pref values and now playing info
-	$playLists = getPlayLists($client);
+	initPlayLists($client);
 	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
 	my $name = undef;
 	if($playlist) {
 		$name = $playlist->{'name'};
 	}
-	$params->{'pluginDynamicPlayListPlayLists'} = $playLists;
+	$params->{'pluginDynamicPlayListContext'} = getPlayListContext($client,$params,$playListItems,1);
+	$params->{'pluginDynamicPlayListGroups'} = getPlayListGroupsForContext($client,$params,$playListItems,1);
+	$params->{'pluginDynamicPlayListPlayLists'} = getPlayListsForContext($client,$params,$playListItems,1);
 	$params->{'pluginDynamicPlayListNumTracks'} = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_tracks');
 	$params->{'pluginDynamicPlayListNumOldTracks'} = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_old_tracks');
 	$params->{'pluginDynamicPlayListContinuousMode'} = Slim::Utils::Prefs::get('plugin_dynamicplaylist_keep_adding_tracks');
@@ -675,13 +823,16 @@ sub handleWebSelectPlaylists {
 	my ($client, $params) = @_;
 
 	# Pass on the current pref values and now playing info
-	$playLists = getPlayLists($client);
+	initPlayLists($client);
 	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
 	my $name = undef;
 	if($playlist) {
 		$name = $playlist->{'name'};
 	}
 	$params->{'pluginDynamicPlayListPlayLists'} = $playLists;
+	my @groupPath = ();
+	my @groupResult = ();
+	$params->{'pluginDynamicPlayListGroups'} = getPlayListGroups(\@groupPath,$playListItems,\@groupResult);
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
@@ -690,11 +841,170 @@ sub handleWebSelectPlaylists {
 	return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_selectplaylists.html', $params);
 }
 
+sub getPlayListContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	debugMsg("Get playlist context for level=$level\n");
+	if(defined($params->{'group'.$level})) {
+		my $group = unescape($params->{'group'.$level});
+		debugMsg("Getting group: $group\n");
+		my $item = $currentItems->{'dynamicplaylistgroup_'.$group};
+		if(defined($item) && !defined($item->{'playlist'})) {
+			my $currentUrl = "&group".$level."=".escape($group);
+			my %resultItem = (
+				'url' => $currentUrl,
+				'name' => $group,
+				'dynamicplaylistenabled' => $item->{'dynamicplaylistenabled'}
+			);
+			debugMsg("Adding context: $group\n");
+			push @result, \%resultItem;
+
+			if(defined($item->{'childs'})) {
+				my $childResult = getPlayListContext($client,$params,$item->{'childs'},$level+1);
+				for my $child (@$childResult) {
+					$child->{'url'} = $currentUrl.$child->{'url'};
+					debugMsg("Adding child context: ".$child->{'name'}."\n");
+					push @result,$child;
+				}
+			}
+		}
+	}
+	return \@result;
+}
+sub getPlayListGroupsForContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	
+	if(Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist')) {
+		return \@result;
+	}
+
+	if(defined($params->{'group'.$level})) {
+		my $group = unescape($params->{'group'.$level});
+		debugMsg("Getting group: $group\n");
+		my $item = $currentItems->{'dynamicplaylistgroup_'.$group};
+		if(defined($item) && !defined($item->{'playlist'})) {
+			if(defined($item->{'childs'})) {
+				return getPlayListGroupsForContext($client,$params,$item->{'childs'},$level+1);
+			}else {
+				return \@result;
+			}
+		}
+	}else {
+		my $currentLevel;
+		my $url = "";
+		for ($currentLevel=1;$currentLevel<$level;$currentLevel++) {
+			$url.="&group".$currentLevel."=".$params->{'group'.$currentLevel};
+		}
+		for my $itemKey (keys %$currentItems) {
+			my $item = $currentItems->{$itemKey};
+			if(!defined($item->{'playlist'}) && defined($item->{'name'})) {
+				my $currentUrl = $url."&group".$level."=".escape($item->{'name'});
+				my %resultItem = (
+					'url' => $currentUrl,
+					'name' => $item->{'name'},
+					'dynamicplaylistenabled' => $item->{'dynamicplaylistenabled'}
+				);
+				debugMsg("Adding group: $itemKey\n");
+				push @result, \%resultItem;
+			}
+		}
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+
+sub getPlayListsForContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	
+	if(Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist')) {
+		foreach my $itemKey (keys %$playLists) {
+			debugMsg("Adding playlist: $itemKey\n");
+			push @result, $playLists->{$itemKey};
+		}
+	}else {
+		if(defined($params->{'group'.$level})) {
+			my $group = unescape($params->{'group'.$level});
+			debugMsg("Getting group: $group\n");
+			my $item = $currentItems->{'dynamicplaylistgroup_'.$group};
+			if(defined($item) && !defined($item->{'playlist'})) {
+				if(defined($item->{'childs'})) {
+					return getPlayListsForContext($client,$params,$item->{'childs'},$level+1);
+				}else {
+					return \@result;
+				}
+			}
+		}else {
+			for my $itemKey (keys %$currentItems) {
+				my $item = $currentItems->{$itemKey};
+				if(defined($item->{'playlist'})) {
+					debugMsg("Adding playlist: $itemKey\n");
+					push @result, $item->{'playlist'};
+				}
+			}
+		}
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+	
+sub getPlayListGroups {
+	my $path = shift;
+	my $items = shift;
+	my $result = shift;
+	for my $key (keys %$items) {
+		my $item = $items->{$key};
+		if(!defined($item->{'playlist'}) && defined($item->{'name'})) {
+			my $groupName = undef;
+			my $groupId = "";
+			for my $pathItem (@$path) {
+				if(defined($groupName)) {
+					$groupName .= "/";
+				}else {
+					$groupName = "";
+				}
+				$groupName .= $pathItem;
+				$groupId .= "_".$pathItem;
+			}
+			if(defined($groupName)) {
+				$groupName .= "/";
+			}else {
+				$groupName = "";
+			}
+			my %resultItem = (
+				'id' => escape($groupId."_".$item->{'name'}),
+				'name' => $groupName.$item->{'name'}."/",
+				'dynamicplaylistenabled' => $item->{'dynamicplaylistenabled'}
+			);
+			push @$result,\%resultItem;
+			my $childs = $item->{'childs'};
+			if(defined($childs)) {
+				my @childpath = ();
+				for my $childPathItem (@$path) {
+					push @childpath,$childPathItem;
+				}
+				push @childpath,$item->{'name'};
+				$result = getPlayListGroups(\@childpath,$childs,$result);
+			}
+		}
+	}
+	return $result;
+}
 # Draws the plugin's web page
 sub handleWebSaveSelectPlaylists {
 	my ($client, $params) = @_;
 
-	$playLists = getPlayLists($client);
+	initPlayLists($client);
 	my $first = 1;
 	my $sql = '';
 	foreach my $playlist (keys %$playLists) {
@@ -706,7 +1016,33 @@ sub handleWebSaveSelectPlaylists {
 		}
 	}
 	
+	savePlayListGroups($playListItems,$params,"");
+
 	handleWebList($client, $params);
+}
+
+sub savePlayListGroups {
+	my $items = shift;
+	my $params = shift;
+	my $path = shift;
+	
+	foreach my $itemKey (keys %$items) {
+		my $item = $items->{$itemKey};
+		if(!defined($item->{'playlist'}) && defined($item->{'name'})) {
+			my $groupid = escape($path)."_".escape($item->{'name'});
+			my $playlistid = "playlist_".$groupid;
+			if($params->{$playlistid}) {
+				#debugMsg("Saving: plugin_dynamicplaylist_playlist_".escape($path)."_".escape($itemKey)."_enabled=1\n");
+				Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_group_'.$groupid.'_enabled',1);
+			}else {
+				#debugMsg("Saving: plugin_dynamicplaylist_playlist_".escape($path)."_".escape($itemKey)."_enabled=0\n");
+				Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_group_'.$groupid.'_enabled',0);
+			}
+			if(defined($item->{'childs'})) {
+				savePlayListGroups($item->{'childs'},$params,$path."_".$item->{'name'});
+			}
+		}
+	}
 }
 
 sub getFunctions {
@@ -763,13 +1099,27 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_dynamicplaylist_includesavedplaylists to 1\n");
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_includesavedplaylists', 1);
 	}
+
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_ungrouped');
+	if (! defined $prefVal) {
+		# Default to show ungrouped playlists on top
+		debugMsg("Defaulting plugin_dynamicplaylist_ungrouped to ''\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_ungrouped', '');
+	}
+
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist');
+	if (! defined $prefVal) {
+		# Default to standard playlist directory
+		debugMsg("Defaulting plugin_dynamicplaylist_flatlist to 0\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_flatlist', 0);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -810,6 +1160,23 @@ sub setupGroup
 			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_number_of_old_tracks"); }
+		},
+	plugin_dynamicplaylist_flatlist => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_FLATLIST')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FLATLIST')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_flatlist"); }
+		},		
+	plugin_dynamicplaylist_ungrouped => {
+			'validate' => \&validateAcceptAllWrapper
+			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_UNGROUPED')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_UNGROUPED')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_ungrouped"); }
+			,'PrefSize' => 'large'
 		}
 	);
 	return (\%setupGroup,\%setupPrefs);
@@ -830,6 +1197,15 @@ sub validateTrueFalseWrapper {
 		return Slim::Utils::Validate::trueFalse($arg);
 	}else {
 		return Slim::Web::Setup::validateTrueFalse($arg);
+	}
+}
+
+sub validateAcceptAllWrapper {
+	my $arg = shift;
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Validate::acceptAll($arg);
+	}else {
+		return Slim::Web::Setup::validateAcceptAll($arg);
 	}
 }
 
@@ -876,7 +1252,7 @@ sub cliGetPlaylists {
 	}
 	
   	my $all = $request->getParam('_all');
-  	my $playLists = getPlayLists($client);
+  	initPlayLists($client);
   	if(!defined $all && $all ne 'all') {
   		$all = undef;
   	}
@@ -931,7 +1307,7 @@ sub cliGetPlaylists62 {
   		$all = @$paramsRef[2];
   	}
   	
-  	my $playLists = getPlayLists($client);
+  	initPlayLists($client);
   	if(!defined $all && $all ne 'all') {
   		$all = undef;
   	}
@@ -1438,6 +1814,12 @@ PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
 
+PLUGIN_DYNAMICPLAYLIST_UNGROUPED
+	EN	Group for playlists without a group
+
+PLUGIN_DYNAMICPLAYLIST_FLATLIST
+	EN	Show all playlists on top
+
 SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 	EN	Debugging
 
@@ -1449,6 +1831,12 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_UNGROUPED
+	EN	Playlists without a group
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST
+	EN	Show all playlists on top
 
 PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS
 	EN	Now Playing will show
