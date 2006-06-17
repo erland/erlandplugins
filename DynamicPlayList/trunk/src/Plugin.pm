@@ -1123,17 +1123,24 @@ sub checkDefaults {
 
 	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist');
 	if (! defined $prefVal) {
-		# Default to standard playlist directory
+		# Default to strurctured playlists
 		debugMsg("Defaulting plugin_dynamicplaylist_flatlist to 0\n");
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_flatlist', 0);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_structured_savedplaylists');
+	if (! defined $prefVal) {
+		# Default to structured playlists for saved playlists
+		debugMsg("Defaulting plugin_dynamicplaylist_structured_savedplaylists to true\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_structured_savedplaylists', 1);
+	}
+	
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1185,6 +1192,16 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_flatlist"); }
 		},		
+	plugin_dynamicplaylist_structured_savedplaylists => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_structured_savedplaylists"); }
+		},	
 	plugin_dynamicplaylist_ungrouped => {
 			'validate' => \&validateAcceptAllWrapper
 			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_UNGROUPED')
@@ -1527,7 +1544,10 @@ sub getDynamicPlayLists {
 			$playLists = Slim::DataStores::DBI::DBIStore->getPlaylists();
 		}
 		debugMsg("Got: ".scalar(@$playLists)." number of playlists\n");
-
+		my $playlistDir = Slim::Utils::Prefs::get('playlistdir');
+		if($playlistDir) {
+			$playlistDir = Slim::Utils::Misc::fileURLFromPath($playlistDir);
+		}
 		foreach my $playlist (@$playLists) {
 			my $playlistid = "dynamicplaylist_standard_".$playlist->id;
 			my $id = $playlist->id;
@@ -1543,6 +1563,21 @@ sub getDynamicPlayLists {
 				'name' => $name,
 				'url' => $playlisturl
 			);
+			
+			if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_structured_savedplaylists") && $playlistDir) {
+				my $url = $playlist->url;
+				if($url =~ /^$playlistDir/) {
+					$url =~ s/$playlistDir[\/\\]?//;
+				}
+				my @groups = split(/[\/\\]/,$url);
+				if(@groups) {
+					pop @groups;
+				}
+				if(@groups) {
+					my @mainGroup = [@groups];
+					$currentResult{'groups'} = \@mainGroup;
+				}
+			}
 			$result{$playlistid} = \%currentResult;
 		}
 	}
@@ -1834,6 +1869,9 @@ PLUGIN_DYNAMICPLAYLIST_UNGROUPED
 PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
 
+PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
+	EN	Use saved playlist sub directories as groups
+
 SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 	EN	Debugging
 
@@ -1851,6 +1889,9 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_UNGROUPED
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
+	EN	Use saved playlist sub directories as groups
 
 PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS
 	EN	Now Playing will show
