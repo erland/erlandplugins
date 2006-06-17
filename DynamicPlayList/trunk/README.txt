@@ -53,6 +53,8 @@ in your plugin. The plugin must be enabled for it to be detected by DynamicPlayl
 # need later when tracks are requested for the playlist.
 # The 'url' parameter is optional and will be a link in the web interface which the user
 # can click on to get to the settings for the playlist
+# The 'groups' parameter is options and will but the playlist in the specified groups, in the example
+# below the playlist will be available in: "Albums/Cool" and "Cool"
 # This method will be called by the DynamicPlaylist plugin whenever the playlists shall be shown
 sub getDynamicPlayLists {
 	my ($client) = @_;
@@ -60,7 +62,8 @@ sub getDynamicPlayLists {
 	my %result = ();
 	my %playlist = (
 		'name' => 'My Cool Playlist',
-		'url' => 'plugins/MyCoolPlugin/index.html'
+		'url' => 'plugins/MyCoolPlugin/index.html',
+		'groups' => [['Albums','Cool']['Cool']]
 	);
 	$result{'myplugin_mycoolplaylist'} = \%playlist;
 	return \%result;
