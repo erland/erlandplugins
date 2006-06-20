@@ -29,11 +29,15 @@
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
      users to make setting changes then click on a new mix without having to press the submit button. %]
 [% BLOCK href %]
-href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type %]&player=[% player | uri %]&addOnly=[% addOnly %]"
+href="[% webroot %][%- IF customurl -%]
+		[%- customurl -%]&player=[% player | uri %]"
+		[%- ELSE -%]
+		plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type %]&addOnly=[% addOnly %]&player=[% player | uri %]"
 		 onclick='document.genreForm.type.value = "[% type %]";
 							document.genreForm.addOnly.value = [% addOnly %]
 							document.genreForm.submit();
 							return false;'
+		[%- END -%]
 [% END %]
 
 [% BLOCK dynamicPlayListLink %]
@@ -80,8 +84,16 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type
 			[% FOREACH playlist IN pluginDynamicPlayListPlayLists %]
 				[% IF playlist.dynamicplaylistenabled %]
 					[% BLOCK controls %]
-						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" %]
-						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" %]
+						[% IF playlist.playurl %]
+							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" customurl="$playlist.playurl" %]
+						[% ELSE %]
+							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" %]
+						[% END %]
+						[% IF playlist.addurl %]
+							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" customurl="$playlist.addurl" %]
+						[% ELSE %]
+							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" %]
+						[% END %]
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
 						[% IF playlist.url %]
