@@ -494,12 +494,38 @@ sub setMode {
 		onPlay     => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'playlist'})) {
-				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);		
+				my $playlist = $item->{'playlist'};
+				if(defined($playlist->{'startfunction'})) {
+					eval {
+						my %callparams = (
+							'addonly' => 0
+						);
+						debugMsg("Calling startfunction for ".$playlist->{'dynamicplaylistid'}."\n");
+						return  &{$playlist->{'startfunction'}}($client,$playlist,\%callparams);
+					};
+					if ($@) {
+						debugMsg("Error starting playlist ".$playlist->{'id'}.": $@\n");
+					}
+				}else {
+					handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
+				}
 			}
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			if(defined($item->{'playlist'})) {
+			my $playlist = $item->{'playlist'};
+			if(defined($playlist->{'startfunction'})) {
+				eval {
+					my %callparams = (
+						'addonly' => 1
+					);
+					debugMsg("Calling startfunction for ".$playlist->{'dynamicplaylistid'}."\n");
+					return  &{$playlist->{'startfunction'}}($client,$playlist,\%callparams);
+				};
+				if ($@) {
+					debugMsg("Error starting playlist ".$playlist->{'id'}.": $@\n");
+				}
+			}else {
 				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
 			}
 		},
@@ -804,7 +830,7 @@ sub handleWebMix {
 	if (defined $client && $params->{'type'}) {
 		playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1, 1);
 	}
-	handleWebList($client, $params);
+	return handleWebList($client, $params);
 }
 
 # Handles settings changes from plugin's web page
