@@ -32,9 +32,10 @@
 href="[% webroot %][%- IF customurl -%]
 		[%- customurl -%]&player=[% player | uri %]"
 		[%- ELSE -%]
-		plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type %]&addOnly=[% addOnly %]&player=[% player | uri %]"
+		plugins/DynamicPlayList/dynamicplaylist_mix.html?type=[% type %]&addOnly=[% addOnly %]&player=[% player | uri %][% IF playlisttype and dynamicplaylist_parameter_1 %]&dynamicplaylist_parameter_1=[% dynamicplaylist_parameter_1 %][% END %]"
 		 onclick='document.genreForm.type.value = "[% type %]";
 							document.genreForm.addOnly.value = [% addOnly %]
+							[% IF playlisttype and dynamicplaylist_parameter_1 %]document.genreForm.dynamicplaylist_parameter_1.value = [% dynamicplaylist_parameter_1 %][% END %]
 							document.genreForm.submit();
 							return false;'
 		[%- END -%]
@@ -55,6 +56,9 @@ href="[% webroot %][%- IF customurl -%]
 	<input type="hidden" name="type" value="">
 	<input type="hidden" name="addOnly" value="0">
 	<input type="hidden" name="player" value="[% player %]">
+	[% IF playlisttype and dynamicplaylist_parameter_1 %]
+		<input type="hidden" name="dynamicplaylist_parameter_1" value="">
+	[% END %]
 
 	[% WRAPPER contentcontainer %]
 		[% IF player == '' %]
@@ -65,7 +69,11 @@ href="[% webroot %][%- IF customurl -%]
 
 
 			[%- WRAPPER contentitem %]
-				[% "PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW" | string %]
+				[% IF pluginDynamicPlayListContextName %]
+					[% "PLUGIN_DYNAMICPLAYLIST_CONTEXT_CHOOSE_BELOW" | string %]: <strong>[% pluginDynamicPlayListContextName %]</strong>
+				[% ELSE %]
+					[% "PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW" | string %]
+				[% END %]
 			[% END %]
 
 		<tr>
@@ -84,16 +92,8 @@ href="[% webroot %][%- IF customurl -%]
 			[% FOREACH playlist IN pluginDynamicPlayListPlayLists %]
 				[% IF playlist.dynamicplaylistenabled %]
 					[% BLOCK controls %]
-						[% IF playlist.playurl %]
-							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" customurl="$playlist.playurl" %]
-						[% ELSE %]
-							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" %]
-						[% END %]
-						[% IF playlist.addurl %]
-							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" customurl="$playlist.addurl" %]
-						[% ELSE %]
-							[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" %]
-						[% END %]
+						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" %]
+						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" %]
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
 						[% IF playlist.url %]
