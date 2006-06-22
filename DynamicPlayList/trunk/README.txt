@@ -40,8 +40,13 @@ Unzip to the Plugins directory in the Slimserver installation.
 ========
 This plugin makes it possible manage all dynamic playlists in the same menu on the
 Squeezebox and in the same list in the slimserver web interface. The plugin today implements
-Random Mix playlists connection and a connection to saved playlists so they are
-showed among the dynamic playlists.
+connection to saved playlists so they are showed among the dynamic playlists. The
+TrackStat plugin, RandomPlayList plugin and SQLPlayList plugin adds its own playlists
+so they are available among the dynamic playlists.
+In the SqueezeBox interface dynamic playlists are available in the "Dynamic Playlists" menu, but
+you can also reach playlists which requests parameters from the user by holding down play button
+on remote for a while on an item in one of the browse menues. There is also a PL button in the
+web ui browse pages that does the same.
 
 6. PLUGIN DEVELOPERS
 ====================
