@@ -433,41 +433,41 @@ sub getMostPlayedHistoryTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,contributor_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,contributor_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=$artist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$artist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) group by tracks.url order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.album=$album and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.album=$album and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.album=$album and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy;"
 	    }
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,genre_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=genre_track.track and genre_track.genre=$genre and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,genre_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=genre_track.track and genre_track.genre=$genre and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&genre=$genre";
 	}elsif(defined($params->{'year'})) {
 		my $year = $params->{'year'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.year=$year and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and tracks.year=$year and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and tracks.year=$year and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&year=$year";
 	}elsif(defined($params->{'playlist'})) {
 		my $playlist = $params->{'playlist'};
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,playlist_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,playlist_track,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=playlist_track.track and playlist_track.playlist=$playlist and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
 	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
-	    $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 	    if($beforeAfter eq "<") {
 		    $sql = "select tracks.url,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;"
 	    }
@@ -481,7 +481,7 @@ sub getMostPlayedHistoryTracks {
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select tracks.url,count(track_history.url) as playCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by count(track_history.url) desc,avgrating desc,$orderBy limit $listLength;";
+    my $sql = "select tracks.url,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
     if($beforeAfter eq "<") {
 	    $sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
     }
