@@ -190,7 +190,7 @@ sub getTracks {
 	eval {
 		$sth->execute();
 		my $url;
-		$sth->bind_columns( undef, \$url );
+		$sth->bind_col( 1, \$url );
 		while( $sth->fetch() ) {
 			my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 		  	push @result, $track;
