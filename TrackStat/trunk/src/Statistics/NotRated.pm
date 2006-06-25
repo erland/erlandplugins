@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'notrated',
 			'namefunction' => \&getNotRatedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isNotRatedTracksValidInContext
 		},
 		notratedartists => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'notratedartists',
 			'namefunction' => \&getNotRatedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isNotRatedArtistsValidInContext
 		},
 		notratedalbums => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'notratedalbums',
 			'namefunction' => \&getNotRatedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isNotRatedAlbumsValidInContext
 		}
 	);

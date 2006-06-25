@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayed',
 			'namefunction' => \&getMostPlayedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isMostPlayedTracksValidInContext
 		},
 		mostplayedartists => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayedartists',
 			'namefunction' => \&getMostPlayedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isMostPlayedArtistsValidInContext
 		},
 		mostplayedalbums => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayedalbums',
 			'namefunction' => \&getMostPlayedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isMostPlayedAlbumsValidInContext
 		},
 		mostplayedgenres => {

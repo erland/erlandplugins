@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'id' =>  'topratedrecentadded',
 			'namefunction' => \&getTopRatedRecentAddedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedTracksValidInContext
 		},
 		topratedrecentaddedartists => {
@@ -65,6 +66,7 @@ sub getStatisticItems {
 			'id' =>  'topratedrecentaddedartists',
 			'namefunction' => \&getTopRatedRecentAddedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedArtistsValidInContext
 		},
 		topratedrecentaddedalbums => {
@@ -73,6 +75,7 @@ sub getStatisticItems {
 			'id' =>  'topratedrecentaddedalbums',
 			'namefunction' => \&getTopRatedRecentAddedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isTopRatedRecentAddedAlbumsValidInContext
 		},
 		topratednotrecentadded => {
@@ -81,6 +84,7 @@ sub getStatisticItems {
 			'id' =>  'topratednotrecentadded',
 			'namefunction' => \&getTopRatedNotRecentAddedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedTracksValidInContext
 		},
 		topratednotrecentaddedartists => {
@@ -89,6 +93,7 @@ sub getStatisticItems {
 			'id' =>  'topratednotrecentaddedartists',
 			'namefunction' => \&getTopRatedNotRecentAddedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedArtistsValidInContext
 		},
 		topratednotrecentaddedalbums => {
@@ -97,6 +102,7 @@ sub getStatisticItems {
 			'id' =>  'topratednotrecentaddedalbums',
 			'namefunction' => \&getTopRatedNotRecentAddedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isTopRatedNotRecentAddedAlbumsValidInContext
 		}
 	);

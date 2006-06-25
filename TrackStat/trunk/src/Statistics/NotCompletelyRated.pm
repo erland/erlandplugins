@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'notcompletelyratedartists',
 			'namefunction' => \&getNotCompletelyRatedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isNotCompletelyRatedArtistsValidInContext
 		},
 		notcompletelyratedalbums => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'notcompletelyratedalbums',
 			'namefunction' => \&getNotCompletelyRatedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTCOMPLETELYRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isNotCompletelyRatedAlbumsValidInContext
 		}
 	);

@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'leastplayed',
 			'namefunction' => \&getLeastPlayedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isLeastPlayedTracksValidInContext
 		},
 		leastplayedartists => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'leastplayedartists',
 			'namefunction' => \&getLeastPlayedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isLeastPlayedArtistsValidInContext
 		},
 		leastplayedalbums => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'leastplayedalbums',
 			'namefunction' => \&getLeastPlayedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_LEASTPLAYED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isLeastPlayedAlbumsValidInContext
 		}
 	);

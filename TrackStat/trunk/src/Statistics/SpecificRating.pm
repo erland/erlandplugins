@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'rated1',
 			'namefunction' => \&getRated1TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated2 => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'rated2',
 			'namefunction' => \&getRated2TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated3 => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'rated3',
 			'namefunction' => \&getRated3TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated4 => {
@@ -82,6 +85,7 @@ sub getStatisticItems {
 			'id' =>  'rated4',
 			'namefunction' => \&getRated4TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated5 => {
@@ -90,6 +94,7 @@ sub getStatisticItems {
 			'id' =>  'rated5',
 			'namefunction' => \&getRated5TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
 		},
 		rated1artists => {
@@ -98,6 +103,7 @@ sub getStatisticItems {
 			'id' =>  'rated1artists',
 			'namefunction' => \&getRated1ArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated2artists => {
@@ -106,6 +112,7 @@ sub getStatisticItems {
 			'id' =>  'rated2artists',
 			'namefunction' => \&getRated2ArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated3artists => {
@@ -114,6 +121,7 @@ sub getStatisticItems {
 			'id' =>  'rated3artists',
 			'namefunction' => \&getRated3ArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated4artists => {
@@ -122,6 +130,7 @@ sub getStatisticItems {
 			'id' =>  'rated4artists',
 			'namefunction' => \&getRated4ArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated5artists => {
@@ -130,6 +139,7 @@ sub getStatisticItems {
 			'id' =>  'rated5artists',
 			'namefunction' => \&getRated5ArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isRatedArtistsValidInContext
 		},
 		rated1albums => {
@@ -138,6 +148,7 @@ sub getStatisticItems {
 			'id' =>  'rated1albums',
 			'namefunction' => \&getRated1AlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated2albums => {
@@ -146,6 +157,7 @@ sub getStatisticItems {
 			'id' =>  'rated2albums',
 			'namefunction' => \&getRated2AlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated3albums => {
@@ -154,6 +166,7 @@ sub getStatisticItems {
 			'id' =>  'rated3albums',
 			'namefunction' => \&getRated3AlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated4albums => {
@@ -162,6 +175,7 @@ sub getStatisticItems {
 			'id' =>  'rated4albums',
 			'namefunction' => \&getRated4AlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		},
 		rated5albums => {
@@ -170,6 +184,7 @@ sub getStatisticItems {
 			'id' =>  'rated5albums',
 			'namefunction' => \&getRated5AlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		}
 	);

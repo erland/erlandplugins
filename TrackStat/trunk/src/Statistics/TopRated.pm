@@ -57,6 +57,7 @@ sub getStatisticItems {
 			'id' =>  'toprated',
 			'namefunction' => \&getTopRatedTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isTopRatedTracksValidInContext
 		},
 		topratedartists => {
@@ -65,6 +66,7 @@ sub getStatisticItems {
 			'id' =>  'topratedartists',
 			'namefunction' => \&getTopRatedArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isTopRatedArtistsValidInContext
 		},
 		topratedalbums => {
@@ -73,6 +75,7 @@ sub getStatisticItems {
 			'id' =>  'topratedalbums',
 			'namefunction' => \&getTopRatedAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isTopRatedAlbumsValidInContext
 		},
 		topratedgenres => {

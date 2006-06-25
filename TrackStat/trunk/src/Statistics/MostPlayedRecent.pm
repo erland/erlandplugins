@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayednotrecent',
 			'namefunction' => \&getMostPlayedNotRecentTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentTracksValidInContext
 		},
 		mostplayednotrecentartists => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayednotrecentartists',
 			'namefunction' => \&getMostPlayedNotRecentArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentArtistsValidInContext
 		},
 		mostplayednotrecentalbums => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayednotrecentalbums',
 			'namefunction' => \&getMostPlayedNotRecentAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isMostPlayedNotRecentAlbumsValidInContext
 		}
 	);
@@ -84,6 +87,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayedrecent',
 			'namefunction' => \&getMostPlayedRecentTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentTracksValidInContext
 		};
 
@@ -93,6 +97,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayedrecentartists',
 			'namefunction' => \&getMostPlayedRecentArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentArtistsValidInContext
 		};
 				
@@ -102,6 +107,7 @@ sub getStatisticItems {
 			'id' =>  'mostplayedrecentalbums',
 			'namefunction' => \&getMostPlayedRecentAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isMostPlayedRecentAlbumsValidInContext
 		};
 	}

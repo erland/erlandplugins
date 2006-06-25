@@ -58,6 +58,7 @@ sub getStatisticItems {
 			'id' =>  'notratednotrecent',
 			'namefunction' => \&getNotRatedNotRecentTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentTracksValidInContext
 		},
 		notratednotrecentartists => {
@@ -66,6 +67,7 @@ sub getStatisticItems {
 			'id' =>  'notratednotrecentartists',
 			'namefunction' => \&getNotRatedNotRecentArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentArtistsValidInContext
 		},
 		notratednotrecentalbums => {
@@ -74,6 +76,7 @@ sub getStatisticItems {
 			'id' =>  'notratednotrecentalbums',
 			'namefunction' => \&getNotRatedNotRecentAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDNOTRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isNotRatedNotRecentAlbumsValidInContext
 		}
 	);
@@ -84,6 +87,7 @@ sub getStatisticItems {
 			'id' =>  'notratedrecent',
 			'namefunction' => \&getNotRatedRecentTracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentTracksValidInContext
 		};
 
@@ -93,6 +97,7 @@ sub getStatisticItems {
 			'id' =>  'notratedrecentartists',
 			'namefunction' => \&getNotRatedRecentArtistsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentArtistsValidInContext
 		};
 				
@@ -102,6 +107,7 @@ sub getStatisticItems {
 			'id' =>  'notratedrecentalbums',
 			'namefunction' => \&getNotRatedRecentAlbumsName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_RECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_NOTRATEDRECENT_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
 			'contextfunction' => \&isNotRatedRecentAlbumsValidInContext
 		};
 	}
