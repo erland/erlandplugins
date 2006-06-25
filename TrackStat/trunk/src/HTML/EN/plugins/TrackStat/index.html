@@ -11,6 +11,11 @@
 	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
 	</a>
+	[% FOREACH group IN pluginTrackStatStatisticContext %]
+		[% IF group.trackstat_statistic_enabled %]
+			&nbsp;/&nbsp;<a href="[% webroot %][% path %]?[% group.url %]&player=[% player | uri %][% statisticparameters %]">[% group.name %]</a>
+		[% END %]
+	[% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
 	[% IF track != '' %]
@@ -28,7 +33,7 @@
 	setTimeout("aReload()", [% refresh %] * 1000);
 
 	function aReload() {
-	  location.replace("[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]");
+	  location.replace("[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]");
 	}
 	-->
 	</SCRIPT>
@@ -58,15 +63,15 @@
 					[% WHILE loop < 5 %]
 						[% loop = loop + 1 %]
 						[% IF loop <= rating %]
-							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 						[% ELSE %]
-							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 						[% END %]
 					[% END %]
 					</td>
 					<td width="100%"<img src="[% webroot %]html/images/spacer.gif" width="4" height="13" alt=""></td>
-					<td height="5" width="100%"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=down[% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
-					<td height="5" width="13"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=up[% statisticparameters %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
+					<td height="5" width="100%"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=down[% statisticparameters %][% pluginTrackStatStatisticContextPath %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_down.gif" width=13 height=13 alt="Decrease Rating" title="Decrease Rating"></a></td>
+					<td height="5" width="13"><a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=up[% statisticparameters %][% pluginTrackStatStatisticContextPath %]"><img src="[% webroot %]plugins/TrackStat/html/images/b_up.gif" width=13 height=13 alt="Increase Rating" title="Increase Rating"></a></td>
 				</tr>
 				<tr height="5">
 					<td height="5">[% 'PLUGIN_TRACKSTAT_PLAY_COUNT' | string %]</td>
@@ -95,13 +100,27 @@
 		<table width="100%">
     	<tr valign="top"><td>
 		[% count = 0 %]
+        [% FOREACH group = pluginTrackStatStatisticGroups %]
+        	[% IF count>=pluginTrackStatNoOfStatisticGroupsPerColumn %]
+        		</td><td>
+        		[% count = 0 %]
+        	[% END %]
+        	[% count = count + 1 %]
+        	<a href="[% webroot %]plugins/TrackStat/index.html?player=[% player | uri %][% statisticparameters %]&[% group.url %]">[% group.name %]/</a><br>
+        [% END %]
+    	</td></tr>
+    	[% IF count > 0 %]
+    		<tr><td>&nbsp;</td></tr>
+    	[% END %]
+    	<tr valign="top"><td>
+		[% count = 0 %]
         [% FOREACH item = pluginTrackStatStatisticItems %]
         	[% IF count>=pluginTrackStatNoOfStatisticItemsPerColumn %]
         		</td><td>
         		[% count = 0 %]
         	[% END %]
         	[% count = count + 1 %]
-        	<a href="[% item.id %].html?player=[% player | uri %][% statisticparameters %]">[% item.name %]</a><br>
+        	<a href="[% item.item.id %].html?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">[% item.name %]</a><br>
         [% END %]
     	</td></tr>
 		</table>
@@ -111,6 +130,8 @@
 			<input type="hidden" name="player" value="[% player %]">
 			[% "PLUGIN_TRACKSTAT_WEB_LIST_LENGTH" | string %]
 			<input class="stdedit" type="text" size="2" name="listlength" value="[% pluginTrackStatListLength %]">
+			[% "PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH_SHORT" | string %]
+			<input class="stdedit" type="text" size="2" name="playerlistlength" value="[% pluginTrackStatPlayerListLength %]">
 			<input type="submit" value="[% "CHANGE" | string %]">
 		</form>
 		[% IF dynamicplaylist %]
@@ -128,16 +149,16 @@
 	</tr>
 	[% IF songlist %]
 		<div>
-			<strong>[% songlist %]</strong>&nbsp;&nbsp;&nbsp;[% IF pluginTrackStatFilteredStatistic %]<a href="[% webroot %][% path %]?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</a>&nbsp;&nbsp;&nbsp;[% END %]
+			<strong>[% songlist %]</strong>&nbsp;&nbsp;&nbsp;<a href="[% webroot %][% path %]?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</a>&nbsp;&nbsp;&nbsp;
 			[% IF pluginTrackStatShowGroupRatingControls %]
 				[% pluginTrackStatGroupRatingNumber %]&nbsp;
 				[% loop = 0 %]
 				[% WHILE loop < 5 %]
 					[% loop = loop + 1 %]
 					[% IF loop <= pluginTrackStatGroupRating %]
-						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 					[% ELSE %]
-						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
+						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
 					[% END %]
 				[% END %]
 				&nbsp;
@@ -174,7 +195,7 @@
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
-							<a href="[% statisticlink.id %].html?album=[% item.itemobj.album.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+							<a href="[% statisticlink.id %].html?album=[% item.itemobj.album.id %]&amp;player=[% player | uri %]&flatlist=1" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
@@ -185,7 +206,7 @@
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
-							<a href="[% statisticlink.id %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+							<a href="[% statisticlink.id %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% player | uri %]&flatlist=1" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
@@ -196,7 +217,7 @@
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
-							<a href="[% statisticlink.id %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+							<a href="[% statisticlink.id %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% player | uri %]&flatlist=1" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
@@ -207,7 +228,7 @@
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
-							<a href="[% statisticlink.id %].html?year=[% item.itemobj.year %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+							<a href="[% statisticlink.id %].html?year=[% item.itemobj.year %]&amp;player=[% player | uri %]&flatlist=1" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
@@ -218,7 +239,7 @@
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(
 						[% END %]
 						[% FOREACH statisticlink = substatisticitems %]
-							<a href="[% statisticlink.id %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% player | uri %]" target="browser">[% statisticlink.name %]</a>&nbsp;
+							<a href="[% statisticlink.id %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% player | uri %]&flatlist=1" target="browser">[% statisticlink.name %]</a>&nbsp;
 						[% END %]
 						[% IF substatisticitems.size>0 %]
 							)
