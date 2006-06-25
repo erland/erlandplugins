@@ -765,7 +765,7 @@ sub setModeChooseParameters {
 		listRef    => \@listRef,
 		name       => \&getChooseParametersDisplayText,
 		overlayRef => \&getChooseParametersOverlay,
-		modeName   => 'PLUGIN.DynamicPLayList.ChooseParameters',
+		modeName   => 'PLUGIN.DynamicPlayList.ChooseParameters',
 		onRight    => sub {
 			my ($client, $item) = @_;
 			requestNextParameter($client,$item,$parameterId,$playlist);
@@ -950,6 +950,9 @@ sub requestFirstParameter {
 		}
 		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
 		for(my $i=1;$i<$nextParameters{'dynamicplaylist_nextparameter'};$i++) {
+			Slim::Buttons::Common::popMode($client);
+		}
+		if(defined($nextParameters{'extrapopmode'})) {
 			Slim::Buttons::Common::popMode($client);
 		}
 		$client->update();
@@ -1297,10 +1300,10 @@ sub initPlugin {
 	
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks")) {
 		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import::addImporter($class,'DYNAMICPLAYLIST', {
+			Slim::Music::Import->addImporter('DYNAMICPLAYLIST', {
 				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import::useImporter($class, 1);
+	    	Slim::Music::Import->useImporter('DYNAMICPLAYLIST', 1);
 	    }else {
 			Slim::Music::Import::addImporter('DYNAMICPLAYLIST', {
 				'mixer'     => \&mixerFunction,
@@ -1347,8 +1350,9 @@ sub shutdownPlugin {
 		Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
 	}
 	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		Slim::Music::Import->useImporter('DYNAMICPLAYLIST', 0);
     }else {
-    	Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
+		Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
     }
 }
 
