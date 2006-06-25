@@ -78,6 +78,8 @@ my %ratingPlugins = ();
 my %playCountPlugins = ();
 
 my %statisticPlugins = ();
+my %statisticItems = ();
+my %statisticTypes = ();
 my $statisticPluginsStrings = "";
 my $statisticsInitialized = undef;
 
@@ -106,6 +108,34 @@ my %mapping = (
 	'5' => 'dead'
 );
 
+my %choiceMapping = (
+	'0.hold' => 'saveRating_0',
+	'1.hold' => 'saveRating_1',
+	'2.hold' => 'saveRating_2',
+	'3.hold' => 'saveRating_3',
+	'4.hold' => 'saveRating_4',
+	'5.hold' => 'saveRating_5',
+	'0.single' => 'numberScroll_0',
+	'1.single' => 'numberScroll_1',
+	'2.single' => 'numberScroll_2',
+	'3.single' => 'numberScroll_3',
+	'4.single' => 'numberScroll_4',
+	'5.single' => 'numberScroll_5',
+	'0' => 'dead',
+	'1' => 'dead',
+	'2' => 'dead',
+	'3' => 'dead',
+	'4' => 'dead',
+	'5' => 'dead',
+	'arrow_left' => 'exit_left',
+	'arrow_right' => 'exit_right',
+	'play' => 'play',
+	'add' => 'add',
+	'search' => 'passback',
+	'stop' => 'passback',
+	'pause' => 'passback'
+);
+
 sub defaultMap { 
 	return \%mapping; 
 }
@@ -120,12 +150,497 @@ our %menuSelection;
 sub setMode() 
 {
 	my $client = shift;
+	my $method = shift;
+	
+	if ($method eq 'pop') {
+		Slim::Buttons::Common::popMode($client);
+		return;
+	}
 
-    unless (defined($menuSelection{$client})) {
-            $menuSelection{$client} = 0;
+	my @listRef = ();
+	my $statistics = getStatisticPlugins();
+
+	my $statistictype = $client->param('statistictype');
+	my $showFlat = Slim::Utils::Prefs::get('plugin_trackstat_player_flatlist');
+	if($showFlat || defined($client->param('flatlist'))) {
+		foreach my $flatItem (sort keys %$statistics) {
+			my $item = $statistics->{$flatItem};
+			if($item->{'trackstat_statistic_enabled'}) {
+				my %flatStatisticItem = (
+					'item' => $item,
+					'trackstat_statistic_enabled' => 1
+				);
+				if(defined($item->{'namefunction'})) {
+					$flatStatisticItem{'name'} = &{$item->{'namefunction'}}();
+				}else {
+					$flatStatisticItem{'name'} = $item->{'name'};
+				}
+				if(!defined($statistictype)) {
+					push @listRef, \%flatStatisticItem;
+				}else {
+					if(defined($item->{'contextfunction'})) {
+						my %contextParams = ();
+						$contextParams{$statistictype} = $client->param($statistictype);
+						my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+						if($valid) {
+							push @listRef, \%flatStatisticItem;
+						}
+					}
+				}
+			}
+		}
+	}else {
+		foreach my $menuItemKey (sort keys %statisticItems) {
+			if($statisticItems{$menuItemKey}->{'trackstat_statistic_enabled'}) {
+				if(!defined($statistictype)) {
+					push @listRef, $statisticItems{$menuItemKey};
+				}else {
+					if(defined($statisticItems{$menuItemKey}->{'item'})) {
+						my $item = $statisticItems{$menuItemKey}->{'item'};
+						if(defined($item->{'contextfunction'})) {
+							my %contextParams = ();
+							$contextParams{$statistictype} = $client->param($statistictype);
+							my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+							if($valid) {
+								push @listRef, $statisticItems{$menuItemKey};
+							}
+						}
+					}else {
+						push @listRef, $statisticItems{$menuItemKey};
+					}
+				}
+			}
+		}
+	}
+
+	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
+	
+	# use INPUT.Choice to display the list of feeds
+	my %params = (
+		header     => '{PLUGIN_TRACKSTAT} {count}',
+		listRef    => \@listRef,
+		name       => \&getDisplayText,
+		overlayRef => \&getOverlay,
+		modeName   => 'PLUGIN.TrackStat::Plugin',
+		onPlay     => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'item'})) {
+				my %paramsData = (
+					'player' => $client->id,
+					'trackstatcmd' => 'play'
+				);
+				my $function = $item->{'item'}->{'webfunction'};
+			    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
+			    if(!defined $listLength || $listLength==0) {
+			    	$listLength = 20;
+			    }
+				debugMsg("Calling webfunction for ".$item->{'item'}->{'id'}."\n");
+				eval {
+					&{$function}(\%paramsData,$listLength);
+				};
+				handlePlayAdd($client,\%paramsData);
+			}
+		},
+		onAdd      => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'item'})) {
+				my %paramsData = (
+					'player' => $client->id,
+					'trackstatcmd' => 'add'
+				);
+				my $function = $item->{'item'}->{'webfunction'};
+			    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
+			    if(!defined $listLength || $listLength==0) {
+			    	$listLength = 20;
+			    }
+				debugMsg("Calling webfunction for ".$item->{'item'}->{'id'}."\n");
+				eval {
+					&{$function}(\%paramsData,$listLength);
+				};
+				handlePlayAdd($client,\%paramsData);
+			}
+		},
+		onRight    => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'childs'})) {
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+			}else {
+				my %paramsData = ();
+				if(defined($client->param('statistictype'))) {
+					$paramsData{'statistictype'} = $client->param('statistictype');
+					$paramsData{$client->param('statistictype')} = $client->param($client->param('statistictype'));
+				}
+				my $params = getSetModeDataForStatistics($client,$item->{'item'},\%paramsData);
+				if(defined($params)) {
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
+				}else {
+					Slim::Display::Animation::showBriefly( $client,
+						$item->{'name'},
+						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
+						1);
+
+				}
+			}
+		},
+	);
+	if(defined($statistictype)) {
+		$params{'statistictype'} = $statistictype;
+		$params{$statistictype} = $client->param($statistictype);
+	}
+	
+	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+}
+
+sub getDisplayText {
+	my ($client, $item) = @_;
+
+	my $name = '';
+	if($item) {
+		if(defined($item->{'item'})) {
+			if(defined($item->{'item'}->{'namefunction'})) {
+				$name = eval { &{$item->{'item'}->{'namefunction'}}() };
+			}else {
+				$name = $item->{'item'}->{'name'};
+			}
+		}else {
+			$name = $item->{'name'};
+		}
+	}
+	return $name;
+}
+
+sub getDataDisplayText {
+	my ($client, $item) = @_;
+
+	my $name = '';
+	if($item) {
+		if($item->{'listtype'} eq 'track') {
+			$name=Slim::Music::Info::standardTitle($client,$item->{'itemobj'});
+		}elsif($item->{'listtype'} eq 'album') {
+			$name=$item->{'itemobj'}->{'album'}->title;
+			if($item->{'rating'}) {
+				$name .= '  '.($RATING_CHARACTER x $item->{'rating'});
+			}
+			if($item->{'song_count'}) {
+				$name .= ' ('.$item->{'song_count'}.')';
+			}
+		}elsif($item->{'listtype'} eq 'artist') {
+			$name=$item->{'itemobj'}->{'artist'}->name;
+			if($item->{'rating'}) {
+				$name .= '  '.($RATING_CHARACTER x $item->{'rating'});
+			}
+			if($item->{'song_count'}) {
+				$name .= ' ('.$item->{'song_count'}.')';
+			}
+		}elsif($item->{'listtype'} eq 'genre') {
+			$name=$item->{'itemobj'}->{'genre'}->name;
+			if($item->{'rating'}) {
+				$name .= '  '.($RATING_CHARACTER x $item->{'rating'});
+			}
+			if($item->{'song_count'}) {
+				$name .= ' ('.$item->{'song_count'}.')';
+			}
+		}elsif($item->{'listtype'} eq 'year') {
+			$name=$item->{'itemobj'}->{'year'};
+			if($item->{'rating'}) {
+				$name .= '  '.($RATING_CHARACTER x $item->{'rating'});
+			}
+			if($item->{'song_count'}) {
+				$name .= ' ('.$item->{'song_count'}.')';
+			}
+		}elsif($item->{'listtype'} eq 'playlist') {
+			$name=$item->{'itemobj'}->{'title'};
+			if($item->{'rating'}) {
+				$name .= '  '.($RATING_CHARACTER x $item->{'rating'});
+			}
+			if($item->{'song_count'}) {
+				$name .= ' ('.$item->{'song_count'}.')';
+			}
+		}
+	}
+	return $name;
+}
+
+sub getOverlay {
+	my ($client, $item) = @_;
+	if(defined($item->{'item'})) {
+		return [Slim::Display::Display::symbol('rightarrow'),Slim::Display::Display::symbol('notesymbol')];
+	}else {
+		return [undef, Slim::Display::Display::symbol('rightarrow')];
+	}
+}
+
+sub getDataOverlay {
+	my ($client, $item) = @_;
+	if(defined($item->{'currentstatisticitems'})) {
+		return [Slim::Display::Display::symbol('rightarrow'), Slim::Display::Display::symbol('notesymbol')];
+	}else {
+		return [undef, Slim::Display::Display::symbol('notesymbol')];
+	}
+}
+
+sub getSetModeDataForSubItems {
+	my $client = shift;
+	my $items = shift;
+
+	my @listRef = ();
+	my $statistictype = $client->param('statistictype');
+	foreach my $menuItemKey (sort keys %$items) {
+		if($items->{$menuItemKey}->{'trackstat_statistic_enabled'}) {
+			if(!defined($statistictype)) {
+				push @listRef, $items->{$menuItemKey};
+			}else {
+				if(defined($items->{$menuItemKey}->{'item'})) {
+					my $item = $items->{$menuItemKey}->{'item'};
+					if(defined($item->{'contextfunction'})) {
+						my %contextParams = ();
+						$contextParams{$statistictype} = $client->param($statistictype);
+						my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+						if($valid) {
+							push @listRef, $statisticItems{$menuItemKey};
+						}
+					}
+				}else {
+					push @listRef, $items->{$menuItemKey};
+				}
+			}
+		}
+	}
+	
+	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
+
+	my %params = (
+		header     => '{PLUGIN_TRACKSTAT} {count}',
+		listRef    => \@listRef,
+		name       => \&getDisplayText,
+		overlayRef => \&getOverlay,
+		modeName   => 'PLUGIN.TrackStat::Plugin',
+		onPlay     => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'item'})) {
+				my %paramsData = (
+					'player' => $client->id,
+					'trackstatcmd' => 'play'
+				);
+				my $function = $item->{'item'}->{'webfunction'};
+			    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
+			    if(!defined $listLength || $listLength==0) {
+			    	$listLength = 20;
+			    }
+				debugMsg("Calling webfunction for ".$item->{'item'}->{'id'}."\n");
+				eval {
+					&{$function}(\%paramsData,$listLength);
+				};
+				handlePlayAdd($client,\%paramsData);
+			}
+		},
+		onAdd      => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'item'})) {
+				my %paramsData = (
+					'player' => $client->id,
+					'trackstatcmd' => 'add'
+				);
+				my $function = $item->{'item'}->{'webfunction'};
+			    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
+			    if(!defined $listLength || $listLength==0) {
+			    	$listLength = 20;
+			    }
+				debugMsg("Calling webfunction for ".$item->{'item'}->{'id'}."\n");
+				eval {
+					&{$function}(\%paramsData,$listLength);
+				};
+				handlePlayAdd($client,\%paramsData);
+			}
+		},
+		onRight    => sub {
+			my ($client, $item) = @_;
+			if(defined($item->{'childs'})) {
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+			}else {
+				my %paramsData = ();
+				if(defined($client->param('statistictype'))) {
+					$paramsData{'statistictype'} = $client->param('statistictype');
+					$paramsData{$client->param('statistictype')} = $client->param($client->param('statistictype'));
+				}
+				my $params = getSetModeDataForStatistics($client,$item->{'item'},\%paramsData);
+				if(defined($params)) {
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
+				}else {
+					Slim::Display::Animation::showBriefly( $client,
+						$item->{'name'},
+						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
+						1);
+				}
+			}
+		},
+	);
+	if(defined($statistictype)) {
+		$params{'statistictype'} = $statistictype;
+		$params{$statistictype} = $client->param($statistictype);
+	}
+	return \%params;
+}
+
+sub getSetModeDataForStatistics {
+	my $client = shift;
+	my $item = shift;
+	my $paramsData = shift;
+
+	if(!defined($paramsData)) {
+		my %newParamsData = ();
+		$paramsData = \%newParamsData;
+	}
+	my $function = $item->{'webfunction'};
+    my $listLength = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
+    if(!defined $listLength || $listLength==0) {
+    	$listLength = 20;
     }
+	debugMsg("Calling webfunction for ".$item->{'id'}."\n");
+	eval {
+		&{$function}($paramsData,$listLength);
+	};
+	my @listRef = ();
+	foreach my $it (@{$paramsData->{'browse_items'}}) {
+		if(defined($paramsData->{'currentstatisticitems'}) && defined($paramsData->{'currentstatisticitems'}->{$it->{'listtype'}})) {
+			$it->{'currentstatisticitems'} = $paramsData->{'currentstatisticitems'}->{$it->{'listtype'}};
+		}
+		push @listRef, $it;
+	}
+	
+	my $name;
+	if(defined($item->{'namefunction'})) {
+		$name = eval { &{$item->{'namefunction'}}($paramsData) };
+	}else {
+		$name = $item->{'name'};
+	}
+	
+	my %params = (
+		header     => $name.' {count}',
+		listRef    => \@listRef,
+		name       => \&getDataDisplayText,
+		overlayRef => \&getDataOverlay,
+		modeName   => 'PLUGIN.TrackStat.Choice',
+		parentMode => Slim::Buttons::Common::param($client,'parentMode'),
+		onPlay     => sub {
+			my ($client, $item) = @_;
+			my $request;
+			if($item->{'listtype'} eq 'track') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemobj'}->id)]);
+			}elsif($item->{'listtype'} eq 'album') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemobj'}->{'album'}->id)]);
+			}elsif($item->{'listtype'} eq 'artist') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemobj'}->{'artist'}->id)]);
+			}elsif($item->{'listtype'} eq 'genre') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemobj'}->{'genre'}->id)]);
+			}elsif($item->{'listtype'} eq 'year') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemobj'}->{'year'}->id)]);
+			}elsif($item->{'listtype'} eq 'playlist') {
+				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemobj'}->id)]);
+			}
+			
+			if ($::VERSION ge '6.5') {
+				# indicate request source
+				$request->source('PLUGIN_TRACKSTAT');
+			}
+		},
+		onAdd      => sub {
+			my ($client, $item) = @_;
+			my $request;
+			if($item->{'listtype'} eq 'track') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemobj'}->id)]);
+			}elsif($item->{'listtype'} eq 'album') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemobj'}->{'album'}->id)]);
+			}elsif($item->{'listtype'} eq 'artist') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemobj'}->{'artist'}->id)]);
+			}elsif($item->{'listtype'} eq 'genre') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemobj'}->{'genre'}->id)]);
+			}elsif($item->{'listtype'} eq 'year') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemobj'}->{'year'}->id)]);
+			}elsif($item->{'listtype'} eq 'playlist') {
+				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemobj'}->id)]);
+			}
+			
+			if ($::VERSION ge '6.5') {
+				# indicate request source
+				$request->source('PLUGIN_TRACKSTAT');
+			}
+		},
+		onRight    => sub {
+			my ($client, $item) = @_;
+			my %paramsDataSub = ();
+			if(defined($item->{'currentstatisticitems'})) {
+				if($item->{'listtype'} eq 'album') {
+					$paramsDataSub{'album'} = $item->{'itemobj'}->{'album'}->id;
+				}elsif($item->{'listtype'} eq 'artist') {
+					$paramsDataSub{'artist'} = $item->{'itemobj'}->{'artist'}->id;
+				}elsif($item->{'listtype'} eq 'genre') {
+					$paramsDataSub{'genre'} = $item->{'itemobj'}->{'genre'}->id;
+				}elsif($item->{'listtype'} eq 'year') {
+					$paramsDataSub{'year'} = $item->{'itemobj'}->{'year'};
+				}elsif($item->{'listtype'} eq 'playlist') {
+					$paramsDataSub{'playlist'} = $item->{'itemobj'}->id;
+				}
+			    my $statistics = getStatisticPlugins();
+				my $subitem = $statistics->{$item->{'currentstatisticitems'}};
 
-	$client->lines(\&lines);
+				my $params = getSetModeDataForStatistics($client,$subitem,\%paramsDataSub);
+				if(defined($params)) {
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
+				}else {
+					Slim::Display::Animation::showBriefly( $client,
+						$item->{'name'},
+						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
+						1);
+				}
+			}else {
+				if($item->{'listtype'} eq 'track') {
+					my $trackHandle = Plugins::TrackStat::Storage::findTrack( $item->{'itemobj'}->url,undef,$item->{'itemobj'});
+					my $displayStr;
+					my $headerStr;
+					if($trackHandle) {
+						if($trackHandle->rating) {
+							my $rating = $trackHandle->rating;
+							if($rating) {
+								$rating = $rating / 20;
+								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $rating);
+							}
+						}
+						if($trackHandle->playCount) {
+							my $playCount = $trackHandle->playCount;
+							if($displayStr) {
+								$displayStr .= '    '.$client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
+							}else {
+								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
+							}
+						}
+						if($trackHandle->lastPlayed) {
+							my $lastPlayed = $trackHandle->lastPlayed;
+							$headerStr = $client->string( 'PLUGIN_TRACKSTAT_LAST_PLAYED').' '.Slim::Utils::Misc::shortDateF($lastPlayed).' '.Slim::Utils::Misc::timeF($lastPlayed);
+						}
+					}
+					if(!$displayStr) {
+						$displayStr = $client->string( 'PLUGIN_TRACKSTAT_NO_TRACK');
+					}
+					if(!$headerStr) {
+						$headerStr = $client->string( 'PLUGIN_TRACKSTAT');
+					}
+
+					Slim::Display::Animation::showBriefly( $client,
+						$headerStr,
+						$displayStr,
+						1);
+				}else {
+					Slim::Display::Animation::bumpRight($client);
+				}
+			}
+		}
+	);
+	if(scalar(@listRef)>0) {
+		return \%params;
+	}else {
+		return undef;
+	}
 }
 
 sub enabled() 
@@ -134,94 +649,56 @@ sub enabled()
 	return 1;
 }
 
-my %functions = (
-	'down' => sub {
-		my $client = shift;
-		my $newposition = Slim::Buttons::Common::scroll($client, +1, 3, $menuSelection{$client});
+my %functions = ();
 
-        if ($newposition != $menuSelection{$client}) {
-                $menuSelection{$client} =$newposition;
-				$playerStatusHash{$client}->listitem($playerStatusHash{$client}->listitem+1);
-                $client->pushDown();
+sub saveRatingsForCurrentlyPlaying {
+	my $client = shift;
+	my $button = shift;
+	my $digit = shift;
+	my $playStatus = getPlayerStatusForClient($client);
+	if ($playStatus->isTiming() eq 'true') {
+		# see if the string is already in the cache
+		my $songKey;
+        my $song = Slim::Player::Playlist::song($client);
+    	$song = $song->url;
+        $songKey = $song;
+        if (Slim::Music::Info::isRemoteURL($song)) {
+                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
         }
-	},
-	'up' => sub {
-		my $client = shift;
-		my $newposition = Slim::Buttons::Common::scroll($client, -1, 3, $menuSelection{$client});
-
-        if ($newposition != $menuSelection{$client}) {
-                $menuSelection{$client} =$newposition;
-				$playerStatusHash{$client}->listitem($playerStatusHash{$client}->listitem-1);
-                $client->pushUp();
-        }
-	},
-	'left' => sub  {
-		my $client = shift;
-		Slim::Buttons::Common::popModeRight($client);
-	},
-	'right' => sub  {
-		my $client = shift;
-		Slim::Display::Animation::bumpRight($client);
-	},
-	'saveRating' => sub {
+        if($playStatus->currentTrackOriginalFilename() eq $songKey) {
+			$playStatus->currentSongRating($digit);
+		}
+    	debugMsg("saveRating: $client, $songKey, $digit\n");
+		Slim::Display::Animation::showBriefly( $client,
+			$client->string( 'PLUGIN_TRACKSTAT'),
+			$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
+			3);
+		rateSong($client,$songKey,$digit);
+	}else {
+		Slim::Display::Animation::showBriefly( $client,
+			$client->string( 'PLUGIN_TRACKSTAT'),
+			$client->string( 'PLUGIN_TRACKSTAT_RATING_NO_SONG'),
+			3);
+	}
+}
+sub saveRatingsFromChoice {
 		my $client = shift;
 		my $button = shift;
 		my $digit = shift;
-		my $playStatus = getPlayerStatusForClient($client);
-		if ($playStatus->isTiming() eq 'true') {
-			# see if the string is already in the cache
-			my $songKey;
-	        my $song = Slim::Player::Playlist::song($client);
-        	$song = $song->url;
-	        $songKey = $song;
-	        if (Slim::Music::Info::isRemoteURL($song)) {
-	                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
-	        }
-	        if($playStatus->currentTrackOriginalFilename() eq $songKey) {
-				$playStatus->currentSongRating($digit);
-			}
-        	debugMsg("saveRating: $client, $songKey, $digit\n");
+		my $listRef = Slim::Buttons::Common::param($client,'listRef');
+        my $listIndex = Slim::Buttons::Common::param($client,'listIndex');
+        my $item = $listRef->[$listIndex];
+        if($item->{'listtype'} eq 'track') {
+        	debugMsg("saveRating: $client, ".$item->{'itemobj'}->url.", $digit\n");
+			rateSong($client,$item->{'itemobj'}->url,$digit);
+        	my $title = Slim::Music::Info::standardTitle($client,$item->{'itemobj'});
 			Slim::Display::Animation::showBriefly( $client,
-				$client->string( 'PLUGIN_TRACKSTAT'),
+				$title,
 				$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
-				3);
-			rateSong($client,$songKey,$digit);
-		}else {
-			Slim::Display::Animation::showBriefly( $client,
-				$client->string( 'PLUGIN_TRACKSTAT'),
-				$client->string( 'PLUGIN_TRACKSTAT_RATING_NO_SONG'),
-				3);
+				1);
+        	
 		}
-	},
-);
-	
-sub lines() 
-{
-	my $client = shift;
-	my ($line1, $line2);
-	$line1 = $client->string('PLUGIN_TRACKSTAT');
-
-	if (my $playStatus = getTrackInfo($client)) {
-		if ($playStatus->trackAlreadyLoaded() eq 'true') {
-			my @items = (
-			$client->string('PLUGIN_TRACKSTAT_RATING')
-				.($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():''),
-			,$client->string('PLUGIN_TRACKSTAT_LAST_PLAYED')
-				.' '.($playStatus->lastPlayed()?$playStatus->lastPlayed():''),
-			,$client->string('PLUGIN_TRACKSTAT_PLAY_COUNT')
-				.' '.($playStatus->playCount()?$playStatus->playCount():''),
-			);
-			$playStatus->listitem($playStatus->listitem % scalar(@items));
-			$line2 = $items[$playStatus->listitem];
-		} else {
-			$line2 = $client->string('PLUGIN_TRACKSTAT_NOT_FOUND');
-		}
-	} else {
-		$line2 = $client->string('PLUGIN_TRACKSTAT_NO_TRACK');
-	}
-	return ($line1, $line2);
-}
-
+}	
 sub getTrackInfo {
 		debugMsg("Entering getTrackInfo\n");
 		my $client = shift;
@@ -248,9 +725,9 @@ sub getTrackInfo {
 							$playedCount = getPlayCount($track);
 						}
 						if($trackHandle->lastPlayed) {
-							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime $trackHandle->lastPlayed);
+							$playedDate = Slim::Utils::Misc::shortDateF($trackHandle->lastPlayed).' '.Slim::Utils::Misc::timeF($trackHandle->lastPlayed);
 						}elsif(getLastPlayed($track)) {
-							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime getLastPlayed($track));
+							$playedDate = Slim::Utils::Misc::shortDateF(getLastPlayed($track)).' '.Slim::Utils::Misc::timeF(getLastPlayed($track));
 						}
 						if($trackHandle->rating) {
 							$rating = $trackHandle->rating;
@@ -262,7 +739,7 @@ sub getTrackInfo {
 					if($track) {
 						$playedCount = getPlayCount($track);
 						if(getLastPlayed($track)) {
-							$playedDate = strftime ("%Y-%m-%d %H:%M:%S",localtime getLastPlayed($track));
+							$playedDate = Slim::Utils::Misc::shortDateF(getLastPlayed($track)).' '.Slim::Utils::Misc::timeF(getLastPlayed($track));
 						}
 					}
 				}
@@ -292,7 +769,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -331,6 +808,36 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_fast_queries"); }
+		},		
+	plugin_trackstat_deep_hierarchy => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_DEEP_HIERARCHY')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_DEEP_HIERARCHY')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_deep_hierarchy"); }
+		},		
+	plugin_trackstat_web_flatlist => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_FLATLIST')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_FLATLIST')
+			,'options' => {
+					 '0' => string('ON')
+					,'1' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_flatlist"); }
+		},		
+	plugin_trackstat_player_flatlist => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYER_FLATLIST')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYER_FLATLIST')
+			,'options' => {
+					 '0' => string('ON')
+					,'1' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_player_flatlist"); }
 		},		
 	plugin_trackstat_refresh_startup => {
 			'validate'     => \&validateTrueFalseWrapper
@@ -377,6 +884,12 @@ sub setupGroup
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"); }
+		},		
+	plugin_trackstat_player_list_length => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_player_list_length"); }
 		},		
 	plugin_trackstat_playlist_length => {
 			'validate'     => \&validateIntWrapper
@@ -659,6 +1172,7 @@ sub baseWebPage {
 	debugMsg("Entering baseWebPage\n");
 	if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'listlength') {
 		Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",$params->{listlength});
+		Slim::Utils::Prefs::set("plugin_trackstat_player_list_length",$params->{playerlistlength});
 	}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playlistlength') {
 		Slim::Utils::Prefs::set("plugin_trackstat_playlist_length",$params->{playlistlength});
 	}
@@ -730,24 +1244,23 @@ sub baseWebPage {
 		$params->{lastPlayed} = $playStatus->lastPlayed();
 		$params->{playCount} = $playStatus->playCount();
 	} 
-	my @statisticItems = ();
-	my $statistics = getStatisticPlugins();
-	for my $item (keys %$statistics) {
-		if($statistics->{$item}->{'trackstat_statistic_enabled'}) {
-			my %itemData = ();
-			$itemData{'id'} = $statistics->{$item}->{'id'};
-			if(defined($statistics->{$item}->{'namefunction'})) {
-				$itemData{'name'} = eval { &{$statistics->{$item}->{'namefunction'}}() };
-			}else {
-				$itemData{'name'} = $statistics->{$item}->{'name'};
-			}
-			push @statisticItems, \%itemData;
-		}
+
+	my $statisticItems = getStatisticItemsForContext($client,$params,\%statisticItems,1);
+	my $statisticGroups = getStatisticGroupsForContext($client,$params,\%statisticItems,1);
+	my $context = getStatisticContext($client,$params,\%statisticItems,1);
+	$params->{'pluginTrackStatStatisticGroups'} = $statisticGroups;
+	$params->{'pluginTrackStatNoOfStatisticGroupsPerColumn'} = scalar(@$statisticGroups)/3;
+	$params->{'pluginTrackStatStatisticItems'} = $statisticItems;
+	$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@$statisticItems)/3;
+	$params->{'pluginTrackStatStatisticContext'} = $context;
+	if($context && scalar(@$context)>0) {
+		$params->{'pluginTrackStatStatisticContextPath'} = $context->[-1]->{'url'};
 	}
-	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
-	$params->{'pluginTrackStatStatisticItems'} = \@statisticItems;
-	$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/3;
+	if($params->{flatlist}) {
+		$params->{'pluginTrackStatFlatlist'}=1;
+	}
 	$params->{'pluginTrackStatListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_web_list_length");
+	$params->{'pluginTrackStatPlayerListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_player_list_length");
 	$params->{'pluginTrackStatPlayListLength'} = Slim::Utils::Prefs::get("plugin_trackstat_playlist_length");
 	$params->{'pluginTrackStatShowMixerLinks'} = Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks");
 	if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
@@ -759,7 +1272,155 @@ sub baseWebPage {
 	debugMsg("Exiting baseWebPage\n");
 }
 	
-sub handlePlayAddWebPage {
+sub getStatisticContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	debugMsg("Get statistic context for level=$level\n");
+	if(defined($params->{'group'.$level})) {
+		my $group = unescape($params->{'group'.$level});
+		my $item = $currentItems->{'group_'.$group};
+		if(defined($item) && !defined($item->{'item'})) {
+			my $currentUrl = "&group".$level."=".escape($group);
+			my %resultItem = (
+				'url' => $currentUrl,
+				'name' => $group,
+				'trackstat_statistic_enabled' => $item->{'trackstat_statistic_enabled'}
+			);
+			push @result, \%resultItem;
+
+			if(defined($item->{'childs'})) {
+				my $childResult = getStatisticContext($client,$params,$item->{'childs'},$level+1);
+				for my $child (@$childResult) {
+					$child->{'url'} = $currentUrl.$child->{'url'};
+					push @result,$child;
+				}
+			}
+		}
+	}
+	return \@result;
+}
+
+sub getStatisticGroupsForContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	
+	if(Slim::Utils::Prefs::get('plugin_trackstat_web_flatlist') || $params->{'flatlist'}) {
+		return \@result;
+	}
+
+	if(defined($params->{'group'.$level})) {
+		my $group = unescape($params->{'group'.$level});
+		my $item = $currentItems->{'group_'.$group};
+		if(defined($item) && !defined($item->{'item'})) {
+			if(defined($item->{'childs'})) {
+				return getStatisticGroupsForContext($client,$params,$item->{'childs'},$level+1);
+			}else {
+				return \@result;
+			}
+		}
+	}else {
+		my $currentLevel;
+		my $url = "";
+		for ($currentLevel=1;$currentLevel<$level;$currentLevel++) {
+			$url.="&group".$currentLevel."=".$params->{'group'.$currentLevel};
+		}
+		for my $itemKey (keys %$currentItems) {
+			my $item = $currentItems->{$itemKey};
+			if(!defined($item->{'item'}) && defined($item->{'name'})) {
+				my $currentUrl = $url."&group".$level."=".escape($item->{'name'});
+				my %resultItem = (
+					'url' => $currentUrl,
+					'name' => $item->{'name'},
+					'trackstat_statistic_enabled' => $item->{'trackstat_statistic_enabled'}
+				);
+				push @result, \%resultItem;
+			}
+		}
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+
+sub getStatisticItemsForContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	my @contextResult = ();
+	
+	if(Slim::Utils::Prefs::get('plugin_trackstat_web_flatlist') || $params->{'flatlist'}) {
+		foreach my $itemKey (keys %statisticPlugins) {
+			my $item = $statisticPlugins{$itemKey};
+			if(defined($item->{'contextfunction'})) {
+				my $name;
+				if(defined($item->{'namefunction'})) {
+					$name = eval { &{$item->{'namefunction'}}() };
+				}else {
+					$name = $item->{'name'};
+				}
+				my %listItem = (
+					'name' => $name,
+					'item' => $item
+				);
+				push @result, \%listItem;
+				my $valid = eval {&{$item->{'contextfunction'}}($params)};
+				if($valid) {
+					push @contextResult, \%listItem;
+				}
+			}
+		}
+	}else {
+		if(defined($params->{'group'.$level})) {
+			my $group = unescape($params->{'group'.$level});
+			my $item = $currentItems->{'group_'.$group};
+			if(defined($item) && !defined($item->{'item'})) {
+				if(defined($item->{'childs'})) {
+					return getStatisticItemsForContext($client,$params,$item->{'childs'},$level+1);
+				}else {
+					return \@result;
+				}
+			}
+		}else {
+			for my $itemKey (keys %$currentItems) {
+				my $item = $currentItems->{$itemKey};
+				if(defined($item->{'item'})) {
+					my $item = $item->{'item'};
+					if(defined($item->{'contextfunction'})) {
+						my $name;
+						if(defined($item->{'namefunction'})) {
+							$name = eval { &{$item->{'namefunction'}}() };
+						}else {
+							$name = $item->{'name'};
+						}
+						my %listItem = (
+							'name' => $name,
+							'item' => $item
+						);
+						push @result, \%listItem;
+						my $valid = eval {&{$item->{'contextfunction'}}($params)};
+						if($valid) {
+							push @contextResult, \%listItem;
+						}
+					}
+				}
+			}
+		}
+	}
+	if(scalar(@contextResult)) {
+		@result = @contextResult;
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+
+sub handlePlayAdd {
 	my ($client, $params) = @_;
 
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
@@ -770,12 +1431,17 @@ sub handlePlayAddWebPage {
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'add') {
 			$first = 0;
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playdynamic') {
-			debugMsg("Checking if DynamicPlayList plugin is enabled and method exists\n");
-			if(UNIVERSAL::can("Plugins::DynamicPlayList::Plugin","playRandom")) {
-				debugMsg("Calling DynamicPlayList with ".$params->{'dynamicplaylist'}."\n");
-				no strict 'refs';
-				&{"Plugins::DynamicPlayList::Plugin::playRandom"}($client,$params->{'dynamicplaylist'},0,1);
-				use strict 'refs';
+			my $request = $client->execute(['dynamicplaylist', 'playlist', 'play', $params->{'dynamicplaylist'}]);
+			if ($::VERSION ge '6.5') {
+				# indicate request source
+				$request->source('PLUGIN_TRACKSTAT');
+			}
+			return;
+		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'adddynamic') {
+			my $request = $client->execute(['dynamicplaylist', 'playlist', 'add', $params->{'dynamicplaylist'}]);
+			if ($::VERSION ge '6.5') {
+				# indicate request source
+				$request->source('PLUGIN_TRACKSTAT');
 			}
 			return;
 		}else {
@@ -952,6 +1618,8 @@ sub getStatisticPluginsStrings {
 
 sub initStatisticPlugins {
 	%statisticPlugins = ();
+	%statisticItems = ();
+	%statisticTypes = ();
 	my @pluginDirs = ();
 	if ($::VERSION ge '6.5') {
 		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
@@ -997,6 +1665,78 @@ sub initStatisticPlugins {
 								$items{'trackstat_statistic_enabled'} = 0;
 							}
 							$statisticPlugins{$item} = \%items;
+							
+							my $groups = $items{'statisticgroups'};
+							if(Slim::Utils::Prefs::get("plugin_trackstat_deep_hierarchy") || !defined($groups)) {
+								$groups = $items{'groups'};
+							}
+							if(defined($groups)) {
+								for my $currentgroups (@$groups) {
+									my $currentLevel = \%statisticItems;
+									my $grouppath = '';
+									my $enabled = 1;
+									for my $group (@$currentgroups) {
+										$grouppath .= "_".escape($group);
+										my $existingItem = $currentLevel->{'group_'.$group};
+										if(defined($existingItem)) {
+											if($enabled) {
+												$enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistic_group_'.$grouppath.'_enabled');
+												if(!defined($enabled)) {
+													$enabled = 1;
+												}
+											}
+											if($enabled && $items{'trackstat_statistic_enabled'}) {
+												$existingItem->{'trackstat_statistic_enabled'} = 1;
+											}
+											$currentLevel = $existingItem->{'childs'};
+										}else {
+											my %level = ();
+											my %currentItemGroup = (
+												'childs' => \%level,
+												'name' => $group
+											);
+											if($enabled) {
+												$enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistic_group_'.$grouppath.'_enabled');
+												if(!defined($enabled)) {
+													$enabled = 1;
+												}
+											}
+											if($enabled && $items{'trackstat_statistic_enabled'}) {
+												#debugMsg("Enabled: plugin_dynamicplaylist_playlist_".$grouppath."_enabled=1\n");
+												$currentItemGroup{'trackstat_statistic_enabled'} = 1;
+											}else {
+												#debugMsg("Enabled: plugin_dynamicplaylist_playlist_".$grouppath."_enabled=0\n");
+												$currentItemGroup{'trackstat_statistic_enabled'} = 0;
+											}
+
+											$currentLevel->{'group_'.$group} = \%currentItemGroup;
+											$currentLevel = \%level;
+										}
+									}
+									my %currentGroupItem = (
+										'item' => \%items,
+										'trackstat_statistic_enabled' => $items{'trackstat_statistic_enabled'}
+									);
+									if(defined($items{'namefunction'})) {
+										$currentGroupItem{'name'} = &{$items{'namefunction'}}();
+									}else {
+										$currentGroupItem{'name'} = $items{'name'};
+									}
+									$currentLevel->{$item} = \%currentGroupItem;
+								}
+							}else {
+								my %currentItem = (
+									'item' => \%items,
+									'trackstat_statistic_enabled' => $items{'trackstat_statistic_enabled'}
+								);
+								if(defined($items{'namefunction'})) {
+									$currentItem{'name'} = &{$items{'namefunction'}}();
+								}else {
+									$currentItem{'name'} = $items{'name'};
+								}
+								$statisticItems{$item} = \%currentItem;
+							}
+
 						}
 					}
 				};
@@ -1008,6 +1748,23 @@ sub initStatisticPlugins {
 		}
 		closedir(DIR);
 	}
+	
+	for my $key (keys %statisticPlugins) {
+		my $item = $statisticPlugins{$key};
+		if($item->{'trackstat_statistic_enabled'}) {
+			if(defined($item->{'contextfunction'})) {
+				for my $type (qw{album artist genre year playlist track}) {
+					my %params = ();
+					$params{$type} = 1;
+					my $valid = eval {&{$item->{'contextfunction'}}(\%params)};
+					if($valid) {
+						$statisticTypes{$type} = 1;
+					}
+				}
+			}
+		}
+	}
+	
 	$statisticsInitialized = 1;
 }
 
@@ -1075,33 +1832,7 @@ sub handleWebStatistics {
 		setDynamicPlaylistParams($client,$params);
 	};
 	
-	my @statisticItems = ();
-	for my $item (keys %$statistics) {
-		if($statistics->{$item}->{'trackstat_statistic_enabled'}) {
-			if(defined($statistics->{$item}->{'contextfunction'})) {
-				my $valid = eval {&{$statistics->{$item}->{'contextfunction'}}($params)};
-				if($valid) {
-					my %itemData = ();
-					$itemData{'id'} = $statistics->{$item}->{'id'};
-					if(defined($statistics->{$item}->{'namefunction'})) {
-						$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
-					}else {
-						$itemData{'name'} = $statistics->{$item}->{'name'};
-					}
-					$itemData{'enabled'} = $statistics->{$item}->{'trackstat_statistic_enabled'};
-					push @statisticItems, \%itemData;
-				}
-			}
-		}
-	}
-	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
-	if(scalar(@statisticItems)) {
-		$params->{'pluginTrackStatStatisticItems'} = \@statisticItems;
-		$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/3;
-		$params->{'pluginTrackStatFilteredStatistic'} = 1;
-	}
-
-	handlePlayAddWebPage($client,$params);
+	handlePlayAdd($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
 }
 
@@ -1165,11 +1896,22 @@ sub initPlugin
     debugMsg("initialising\n");
 	#if we haven't already started, do so
 	if ( !$TRACKSTAT_HOOK ) {
+		my %choiceFunctions = %{Slim::Buttons::Input::Choice::getFunctions()};
+		$choiceFunctions{'saveRating'} = \&saveRatingsFromChoice;
+		Slim::Buttons::Common::addMode('PLUGIN.TrackStat.Choice',\%choiceFunctions,\&Slim::Buttons::Input::Choice::setMode);
+		for my $buttonPressMode (qw{repeat hold hold_release single double}) {
+			$choiceMapping{'play.' . $buttonPressMode} = 'dead';
+			$choiceMapping{'add.' . $buttonPressMode} = 'dead';
+			$choiceMapping{'search.' . $buttonPressMode} = 'passback';
+			$choiceMapping{'stop.' . $buttonPressMode} = 'passback';
+			$choiceMapping{'pause.' . $buttonPressMode} = 'passback';
+		}
+		Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.TrackStat.Choice',\%choiceMapping);
 
 		# Alter mapping for functions & buttons in Now Playing mode.
 		Slim::Hardware::IR::addModeDefaultMapping('playlist',\%mapping);
 		my $functref = Slim::Buttons::Playlist::getFunctions();
-		$functref->{'saveRating'} = $functions{'saveRating'};
+		$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying;
 
 		# this will set messages off by default
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_showmessages"))) { 
@@ -1192,6 +1934,15 @@ sub initPlugin
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",Slim::Utils::Prefs::get("itemsPerPage"));
 		}
+		# set default player list length to same as web list length or 20 if not exist
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_player_list_length"))) {
+			if(defined(Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"))) {
+				Slim::Utils::Prefs::set("plugin_trackstat_player_list_length",Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"));
+			}else {
+				Slim::Utils::Prefs::set("plugin_trackstat_player_list_length",20);
+			}
+		}
+
 		# set default playlist length to same as items per page
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_playlist_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_playlist_length",Slim::Utils::Prefs::get("itemsPerPage"));
@@ -1278,6 +2029,20 @@ sub initPlugin
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_force_grouprating",0);
 		}
+		
+		# Use structured menu on player by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_player_flatlist"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_player_flatlist",0);
+		}
+		# Use structured menu on web by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_flatlist"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_web_flatlist",0);
+		}
+
+		# Use deeper structured menu
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_deep_hierarchy"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_deep_hierarchy",0);
+		}
 
 		initRatingChar();
 		
@@ -1307,14 +2072,16 @@ sub initPlugin
 		use strict 'refs';
 		
 		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import::addImporter($class,'TRACKSTAT', {
+			Slim::Music::Import->addImporter('TRACKSTAT', {
+				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-        	Slim::Music::Import::useImporter($class, 1);
-        }else {
+	    	Slim::Music::Import->useImporter('TRACKSTAT', 1);
+	    }else {
 			Slim::Music::Import::addImporter('TRACKSTAT', {
+				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-        	Slim::Music::Import::useImporter('TRACKSTAT', 1);
-        }
+	    	Slim::Music::Import::useImporter('TRACKSTAT', 1);
+	    }
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -1333,6 +2100,75 @@ sub initPlugin
 		Slim::Music::Info::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
 		Slim::Music::Info::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
 	}
+}
+
+sub mixerFunction {
+	my ($client, $noSettings) = @_;
+	# look for parentParams (needed when multiple mixers have been used)
+	my $paramref = defined $client->param('parentParams') ? $client->param('parentParams') : $client->modeParameterStack(-1);
+	if(defined($paramref)) {
+		my $listIndex = $paramref->{'listIndex'};
+		my $items     = $paramref->{'listRef'};
+		my $currentItem = $items->[$listIndex];
+		my $hierarchy = $paramref->{'hierarchy'};
+		my @levels    = split(",", $hierarchy);
+		my $level     = $paramref->{'level'} || 0;
+		if($statisticTypes{$levels[$level]}) { 
+			if($levels[$level] eq 'album' || $levels[$level] eq 'age') {
+				my %params = (
+					'album' => $currentItem->id,
+					'statistictype' => 'album',
+					'flatlist' => 1
+				);
+				debugMsg("Calling album statistics with ".$params{'album'}."\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
+				$client->update();
+			}elsif($levels[$level] eq 'year') {
+				my %params = (
+					'year' => $currentItem,
+					'statistictype' => 'year',
+					'flatlist' => 1
+				);
+				debugMsg("Calling album statistics with ".$params{'year'}."\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
+				$client->update();
+			}elsif($levels[$level] eq 'artist') {
+				my %params = (
+					'artist' => $currentItem->id,
+					'statistictype' => 'artist',
+					'flatlist' => 1
+				);
+				debugMsg("Calling artist statistics with ".$params{'artist'}."\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
+				$client->update();
+			}elsif($levels[$level] eq 'genre') {
+				my %params = (
+					'genre' => $currentItem->id,
+					'statistictype' => 'genre',
+					'flatlist' => 1
+				);
+				debugMsg("Calling genre statistics with ".$params{'genre'}."\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
+				$client->update();
+			}elsif($levels[$level] eq 'playlist') {
+				my %params = (
+					'playlist' => $currentItem->id,
+					'statistictype' => 'playlist',
+					'flatlist' => 1
+				);
+				debugMsg("Calling playlist statistics with ".$params{'playlist'}."\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
+				$client->update();
+			}else {
+				debugMsg("Unknown statistictype = ".$levels[$level]."\n");
+			}
+		}else {
+			debugMsg("No statistics found for ".$levels[$level]."\n");
+		}
+	}else {
+		debugMsg("No parent parameter found\n");
+	}
+
 }
 
 sub mixerlink {
@@ -1417,9 +2253,10 @@ sub shutdownPlugin {
         if ($TRACKSTAT_HOOK) {
                 uninstallHook();
 				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-		        }else {
-		        	Slim::Music::Import::useImporter('TRACKSTAT', 0);
-		        }
+	    	    	Slim::Music::Import->useImporter('TRACKSTAT', 0);
+	    	    }else {
+	    	    	Slim::Music::Import::useImporter('TRACKSTAT', 0);
+	    	    }
         }
 }
 
@@ -2971,6 +3808,33 @@ SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES
 SETUP_PLUGIN_TRACKSTAT_FAST_QUERIES_DESC
 	EN	This will turn on/off simple queries, simple queries will work faster but it will only be based on statistics handled by TrackStat. The standard statistics in slimserver will not be used at all if simple queries are enabled.
 
+PLUGIN_TRACKSTAT_DEEP_HIERARCHY
+	EN	Group statistics into deep group hierarchy
+
+SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY
+	EN	Group statistics into deep group hierarchy
+
+SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY_DESC
+	EN	This will create a deeper group hierarchy making the groups a little smaller
+
+PLUGIN_TRACKSTAT_WEB_FLATLIST
+	EN	Group statistics into groups
+
+SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST
+	EN	Web interface structure
+
+SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST_DESC
+	EN	This will group the statistics in the web interface into different groups to simplify browsing the statistics.
+
+PLUGIN_TRACKSTAT_PLAYER_FLATLIST
+	EN	Group statistics into groups
+
+SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST
+	EN	Player interface structure
+
+SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST_DESC
+	EN	This will group the statistics in the player interface into different groups to simplify browsing the statistics.
+
 PLUGIN_TRACKSTAT_FORCE_GROUPRATING
 	EN	Force album ratings on rated tracks
 
@@ -3237,6 +4101,18 @@ SETUP_PLUGIN_TRACKSTAT_WEB_LIST_LENGTH_DESC
 
 PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
 	EN	Number of songs/albums/artists on web
+
+SETUP_PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH
+	EN	Number of songs/albums/artists on player
+
+SETUP_PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH_DESC
+	EN	Number songs/albums/artists that should be shown in the player interface for TrackStat when browsing statistic information with remote
+
+PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH
+	EN	Number of songs/albums/artists on player
+
+PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH_SHORT
+	EN	and on player
 
 SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
 	EN	Number of songs/albums/artists to use in dynamic playlists
