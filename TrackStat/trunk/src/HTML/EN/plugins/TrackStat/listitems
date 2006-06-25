@@ -20,7 +20,7 @@
 	        [% contrib = contributor.name | html %]
 
 		[% IF currentstatisticitems.artist %]
-		        [% contributorHTMLFrag = "<a href=\"${webroot}plugins/TrackStat/${currentstatisticitems.artist}.html?&amp;$attrs&amp;player=$playerURI\" $target>$contrib</a>" %]
+		        [% contributorHTMLFrag = "<a href=\"${webroot}plugins/TrackStat/${currentstatisticitems.artist}.html?&amp;$attrs&amp;player=$playerURI&amp;flatlist=1\" $target>$contrib</a>" %]
 		[% ELSE %]
 		        [% contributorHTMLFrag = "<a href=\"${webroot}browsedb.html?hierarchy=artist,album,track&amp;$attrs&amp;level=1&amp;player=$playerURI\" $target>$contrib</a>" %]
 		[% END %]
@@ -51,7 +51,7 @@
 	[% IF item.includeAlbum && item.itemobj.album.title && item.itemobj.album.title != item.noAlbum %][% "FROM" | string %]
 	<i>
 	[% IF currentstatisticitems.album %]
-		<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">
+		<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">
 	[% ELSE %]
 		<a href="[% webroot %]browsedb.html?hierarchy=album,track&amp;level=1&amp;album=[% itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">
 	[% END %]
@@ -66,31 +66,31 @@
 		[% PROCESS trackstattrackinfo %]
 	[% ELSIF item.listtype == 'album' %]
 		[% IF currentstatisticitems.album %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.album.title | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.album.title | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=album,track&amp;level=1&amp;album=[% itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.album.title | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'artist' %]
 		[% IF currentstatisticitems.artist %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.artist %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.artist %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.artist.name | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'genre' %]
 		[% IF currentstatisticitems.genre %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.genre %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.genre %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.genre.name | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=genre,artist,album,track&amp;level=1&amp;genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'year' %]
 		[% IF currentstatisticitems.year %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.year %].html?year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.year %].html?year=[% item.itemobj.year %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.year | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=year,album,track&amp;level=1&amp;year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'playlist' %]
 		[% IF currentstatisticitems.playlist %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.playlist %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.playlist.title | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.playlist %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.playlist.title | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=playlist,playlistTrack&amp;level=1&amp;playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.playlist.title | html %]</a>
 		[% END %]
@@ -102,31 +102,31 @@
 		[% PROCESS trackstattrackinfo %]
 	[% ELSIF item.listtype == 'album' %]
 		[% IF currentstatisticitems.album %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.album.title | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.album.title | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=album,track&amp;level=1&amp;album=[% itemobj.album.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.album.title | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'artist' %]
 		[% IF currentstatisticitems.artist %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.artist %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.artist %].html?artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.artist.name | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=artist,album,track&amp;level=1&amp;artist=[% item.itemobj.artist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.artist.name | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'genre' %]
 		[% IF currentstatisticitems.genre %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.genre %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.genre %].html?genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.genre.name | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=genre,artist,album,track&amp;level=1&amp;genre=[% item.itemobj.genre.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.genre.name | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'year' %]
 		[% IF currentstatisticitems.year %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.year %].html?year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.year %].html?year=[% item.itemobj.year %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.year | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=year,album,track&amp;level=1&amp;year=[% item.itemobj.year %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.year | html %]</a>
 		[% END %]
 	[% ELSIF item.listtype == 'playlist' %]
 		[% IF currentstatisticitems.playlist %]
-			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.playlist %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.playlist.title | html %]</a>
+			<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.playlist %].html?playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]&flatlist=1" target="browser">[% item.itemobj.playlist.title | html %]</a>
 		[% ELSE %]
 			<a href="[% webroot %]browsedb.html?hierarchy=playlist,playlistTrack&amp;level=1&amp;playlist=[% item.itemobj.playlist.id %]&amp;player=[% playerURI %]" target="browser">[% item.itemobj.playlist.title | html %]</a>
 		[% END %]
