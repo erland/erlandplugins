@@ -2351,19 +2351,17 @@ sub getNextDynamicPlayListTracks {
 	
 	my @result = ();
 
-	if($dynamicplaylist->{'type'} eq 'standard') {
-		debugMsg("Getting tracks for standard playlist: ".$dynamicplaylist->{'name'}."\n");
-		my $playlist = objectForId('playlist',$dynamicplaylist->{'id'});
-		my $iterator = $playlist->tracks;
-		my $count = 0;
-		for my $item ($iterator->slice(0,$iterator->count)) {
-			if($count >= $offset) {
-				push @result, $item;
-			}
-			$count++;
+	debugMsg("Getting tracks for standard playlist: ".$dynamicplaylist->{'name'}."\n");
+	my $playlist = objectForId('playlist',$dynamicplaylist->{'id'});
+	my $iterator = $playlist->tracks;
+	my $count = 0;
+	for my $item ($iterator->slice(0,$iterator->count)) {
+		if($count >= $offset) {
+			push @result, $item;
 		}
-		debugMsg("Got ".scalar(@result)." tracks\n");
+		$count++;
 	}
+	debugMsg("Got ".scalar(@result)." tracks\n");
 	
 	return \@result;
 }
