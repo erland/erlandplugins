@@ -769,7 +769,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -960,6 +960,21 @@ sub setupGroup
 			,'rejectMsg' => string('SETUP_BAD_FILE')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_backup_file"); }
+		},
+	plugin_trackstat_backup_dir => {
+			'validate' => \&validateIsDirOrEmpty
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_BACKUP_DIR')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_BACKUP_DIR')
+			,'rejectMsg' => string('SETUP_BAD_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_backup_dir"); }
+		},
+	plugin_trackstat_backup_time => {
+			'validate' => \&validateIsTimeOrEmpty
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_BACKUP_TIME')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_BACKUP_TIME')
+			,'PrefSize' => 'small'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get( "plugin_trackstat_backup_time"); }
 		},
 	plugin_trackstat_backup => {
 			'validate' => \&validateAcceptAllWrapper
@@ -2044,6 +2059,36 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_deep_hierarchy",0);
 		}
 
+		# Set scheuled backup time
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_backup_time"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_backup_time","03:00");
+		}
+
+		# Set scheduled backup dir
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_backup_dir"))) {
+			if(defined(Slim::Utils::Prefs::get("plugin_trackstat_backup_file"))) {
+				my $dir = Slim::Utils::Prefs::get("plugin_trackstat_backup_file"); 
+				while ($dir =~ m/[^\/\\]$/) {
+					$dir =~ s/[^\/\\]$//sg;
+				}
+				if($dir =~ m/[\/\\]$/) {
+					$dir =~ s/[\/\\]$//sg;
+				}
+				Slim::Utils::Prefs::set("plugin_trackstat_backup_dir",$dir);
+			}elsif(defined(Slim::Utils::Prefs::get("playlistdir"))) {
+				Slim::Utils::Prefs::set("plugin_trackstat_backup_dir",Slim::Utils::Prefs::get("playlistdir"));
+			}else {
+				Slim::Utils::Prefs::set("plugin_trackstat_backup_dir",'');
+			}
+				
+		}
+
+		# Turn of first scheduled backup to make it possible to configure changes
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_backup_lastday"))) {
+			my ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
+			Slim::Utils::Prefs::set("plugin_trackstat_backup_lastday",$mday);
+		}
+
 		initRatingChar();
 		
 		installHook();
@@ -2075,13 +2120,15 @@ sub initPlugin
 			Slim::Music::Import->addImporter('TRACKSTAT', {
 				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import->useImporter('TRACKSTAT', 1);
-	    }else {
+		    Slim::Music::Import->useImporter('TRACKSTAT', 1);
+		}else {
 			Slim::Music::Import::addImporter('TRACKSTAT', {
 				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import::useImporter('TRACKSTAT', 1);
-	    }
+		    Slim::Music::Import::useImporter('TRACKSTAT', 1);
+		}
+		
+		checkAndPerformScheduledBackup();
 	}
 	addTitleFormat('TRACKNUM. ARTIST - TITLE (TRACKSTATRATINGDYNAMIC)');
 	addTitleFormat('TRACKNUM. TITLE (TRACKSTATRATINGDYNAMIC)');
@@ -2102,6 +2149,52 @@ sub initPlugin
 	}
 }
 
+sub checkAndPerformScheduledBackup {
+	my $timestr = Slim::Utils::Prefs::get("plugin_trackstat_backup_time");
+	my $day = Slim::Utils::Prefs::get("plugin_trackstat_backup_lastday");
+	my $dir = Slim::Utils::Prefs::get("plugin_trackstat_backup_dir");
+	if(!defined($day)) {
+		$day = '';
+	}
+	
+	debugMsg("Checking if its time to do a scheduled backup\n");
+	if(defined($timestr) && $timestr ne '' && defined($dir) and $dir ne '') {
+		my $time = 0;
+		$timestr =~ s{
+			^(0?[0-9]|1[0-9]|2[0-4]):([0-5][0-9])\s*(P|PM|A|AM)?$
+		}{
+			if (defined $3) {
+				$time = ($1 == 12?0:$1 * 60 * 60) + ($2 * 60) + ($3 =~ /P/?12 * 60 * 60:0);
+			} else {
+				$time = ($1 * 60 * 60) + ($2 * 60);
+			}
+		}iegsx;
+		my ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
+	
+		my $currenttime = $hour * 60 * 60 + $min * 60;
+		
+		if(($day ne $mday) && $currenttime>$time) {
+			debugMsg("Making backup to: $dir/trackstat_scheduled_backup_".(1900+$year).(($mon+1)<10?'0'.($mon+1):($mon+1)).($mday<10?'0'.$mday:$mday).".xml\n");
+			eval {
+				backupToFile("$dir/trackstat_scheduled_backup_".(1900+$year).(($mon+1)<10?'0'.($mon+1):($mon+1)).($mday<10?'0'.$mday:$mday).".xml");
+			};
+			if ($@) {
+		    		msg("TrackStat: Scheduled backup failed: $@\n");
+		    	}
+		    	Slim::Utils::Prefs::set("plugin_trackstat_backup_lastday",$mday);
+		}else {
+			my $timesleft = $time-$currenttime;
+			if($day eq $mday) {
+				$timesleft = $timesleft + 60*60*24;
+			}
+			debugMsg("Its ".($timesleft)." seconds left until next scheduled backup\n");
+		}
+		
+	}else {
+		debugMsg("Scheduled backups disabled\n");
+	}
+	Slim::Utils::Timers::setTimer(0, Time::HiRes::time() + 60, \&checkAndPerformScheduledBackup);
+}
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
@@ -3603,7 +3696,10 @@ sub exportToMusicMagic()
 
 sub backupToFile() 
 {
-	my $backupfile = Slim::Utils::Prefs::get("plugin_trackstat_backup_file");
+	my $backupfile = shift;
+	if(!defined($backupfile)) {
+		$backupfile = Slim::Utils::Prefs::get("plugin_trackstat_backup_file");
+	}
 	if($backupfile) {
 		Plugins::TrackStat::Backup::File::backupToFile($backupfile);
 	}
@@ -3726,6 +3822,19 @@ sub validateIsFileOrEmpty {
 			return Slim::Utils::Validate::isFile($arg);
 		}else {
 			return Slim::Web::Setup::validateIsFile($arg);
+		}
+	}
+}
+
+sub validateIsTimeOrEmpty {
+	my $arg = shift;
+	if(!$arg || $arg eq '') {
+		return $arg;
+	}else {
+		if ($::VERSION ge '6.5') {
+			return Slim::Utils::Validate::isTime($arg);
+		}else {
+			return Slim::Web::Setup::validateTime($arg);
 		}
 	}
 }
@@ -4062,6 +4171,24 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE
 
 SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE_DESC
 	EN	File used for TrackStat information backup. This file must be in a place where the user which is running slimserver has read/write access.
+
+PLUGIN_TRACKSTAT_BACKUP_DIR
+	EN	Backup dir
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR
+	EN	Backup dir
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR_DESC
+	EN	Directory used for scheduled backups of TrackStat information. This directory must be in a place where the user which is running slimserver has read/write access.
+
+PLUGIN_TRACKSTAT_BACKUP_TIME
+	EN	Backup time
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME
+	EN	Backup time
+
+SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME_DESC
+	EN	Time each day when a scheduled backup or TrackStat information should take place, if this field is empty no scheduled backups will occur
 
 PLUGIN_TRACKSTAT_BACKUP
 	EN	Backup to file
