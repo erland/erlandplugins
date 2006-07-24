@@ -3158,8 +3158,8 @@ sub rateSong($$$) {
 		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}else {
 		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
+		Slim::Music::Info::clearFormatDisplayCache();
 	}
-	Slim::Music::Info::clearFormatDisplayCache();
 }
 
 sub setTrackStatRating {
