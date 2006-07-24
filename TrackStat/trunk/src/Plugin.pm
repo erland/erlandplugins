@@ -769,7 +769,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -914,6 +914,18 @@ sub setupGroup
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH')
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_SONG_THRESHOLD_LENGTH')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_song_threshold_length"); }
+		},		
+	plugin_trackstat_min_artist_tracks => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_MIN_ARTIST_TRACKS')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MIN_ARTIST_TRACKS')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_min_artist_tracks"); }
+		},		
+	plugin_trackstat_min_album_tracks => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_MIN_ALBUM_TRACKS')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_MIN_ALBUM_TRACKS')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_min_album_tracks"); }
 		},		
 	plugin_trackstat_min_song_length => {
 			'validate'     => \&validateIntWrapper
@@ -2087,6 +2099,16 @@ sub initPlugin
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_backup_lastday"))) {
 			my ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
 			Slim::Utils::Prefs::set("plugin_trackstat_backup_lastday",$mday);
+		}
+
+		# Remove two track artists by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_min_artist_tracks"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_min_artist_tracks",3);
+		}
+
+		# Remove single track albums by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_min_album_tracks"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_min_album_tracks",2);
 		}
 
 		initRatingChar();
@@ -4249,6 +4271,24 @@ SETUP_PLUGIN_TRACKSTAT_PLAYLIST_LENGTH_DESC
 
 PLUGIN_TRACKSTAT_PLAYLIST_LENGTH
 	EN	Number of songs/albums/artists to use in dynamic playlists
+
+SETUP_PLUGIN_TRACKSTAT_MIN_ARTIST_TRACKS
+	EN	Minimum songs per artist
+
+SETUP_PLUGIN_TRACKSTAT_MIN_ARTIST_TRACKS_DESC
+	EN	A minimum number of songs an artist must have to be shown in the artist statistics
+
+PLUGIN_TRACKSTAT_MIN_ARTIST_TRACKS
+	EN	Minimum songs per artist
+
+SETUP_PLUGIN_TRACKSTAT_MIN_ALBUM_TRACKS
+	EN	Minimum songs per album
+
+SETUP_PLUGIN_TRACKSTAT_MIN_ALBUM_TRACKS_DESC
+	EN	A minimum number of songs an album must have to be shown in the album statistics
+
+PLUGIN_TRACKSTAT_MIN_ALBUM_TRACKS
+	EN	Minimum songs per album
 
 SETUP_PLUGIN_TRACKSTAT_PLAYLIST_PER_ARTIST_LENGTH
 	EN	Number of songs per artist in playlists
