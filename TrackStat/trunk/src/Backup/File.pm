@@ -160,7 +160,7 @@ sub restoreFromFile
 		},
 	);
 
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5' && $::REVISION ge '7505' && $::REVISION lt '8053') {
 		while($isScanning) {
 			scanFunction();
 		}
@@ -175,7 +175,7 @@ sub stopScan {
 
 		debugMsg("Was stillScanning - stopping old scan.\n");
 
-		if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+		if ($::VERSION lt '6.5' || $::REVISION lt '7505' ||  $::REVISION ge '8053') {
 			Slim::Utils::Scheduler::remove_task(\&scanFunction);
 		}
 		$isScanning = 0;
@@ -213,7 +213,7 @@ sub doneScanning {
 	msg("TrackStat:Backup: Restore completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
 
 	# Take the scanner off the scheduler.
-	if ($::VERSION lt '6.5' || $::REVISION lt '7505') {
+	if ($::VERSION lt '6.5' || $::REVISION lt '7505' || $::REVISION ge '8053') {
 		Slim::Utils::Scheduler::remove_task(\&scanFunction);
 	}
 }
