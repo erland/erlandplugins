@@ -281,7 +281,7 @@ sub scanFunction {
 
 		$iTunesParserNB->parse_more($line);
 
-		return 1;
+		return $isScanning;
 	}
 
 	debugMsg("No iTunesParserNB defined!\n");
@@ -544,6 +544,10 @@ sub handleCharElement {
 sub handleEndElement {
 	my ($p, $element) = @_;
 
+	if(!$isScanning) {
+		return;
+	}
+
 	# Start our state machine controller - tell the next char handler what to do next.
 	if ($element eq 'key') {
 
@@ -565,8 +569,6 @@ sub handleEndElement {
 
 			#Slim::Music::Info::clearPlaylists('itunesplaylist:');
 
-			debugMsg("starting playlist parsing, cleared old playlists\n");
-
 			$inTracks = 0;
 			$inPlaylists = 1;
 		}
@@ -575,7 +577,9 @@ sub handleEndElement {
 			$nextIsPlaylistName = 1;
 		}
 
-		return;
+		if($inPlaylists==0) {
+			return;
+		}
 	}
 
 	if ($element eq 'string' || $element eq 'integer' || $element eq 'date') {
@@ -593,7 +597,7 @@ sub handleEndElement {
 	}
 
 	# Finish up
-	if ($element eq 'plist') {
+	if ($element eq 'plist' || $inPlaylists==1) {
 		debugMsg("Finished scanning iTunes XML\n");
 
 		doneScanning();
