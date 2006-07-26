@@ -79,7 +79,7 @@
 			<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=13 height=13 border="0">
 		[% END %]
 		[% FOREACH mixer = item.mixerlinks.values.sort %]
-	                [% PROCESS $mixer odd=item.odd item=item.item genre=item.genre artist=item.artist album=item.album %]
+	                [% PROCESS $mixer odd=item.odd item=item.item genre=item.genre artist=item.artist album=item.album dynamicplaylist_playlisttype=item.dynamicplaylist_playlisttype %]
 	        [% END %]
 	[% END %]
 	[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]

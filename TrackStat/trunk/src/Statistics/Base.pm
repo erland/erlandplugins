@@ -144,6 +144,7 @@ sub getTracksWeb {
 		  	my %trackInfo = ();
 			
             $trackInfo{'noTrackStatButton'} = 1;
+            $trackInfo{'levelName'}  = 'track';
             displayAsHTML('track', \%trackInfo, $track);
 		  	$trackInfo{'title'} = Slim::Music::Info::standardTitle(undef,$track);
 		  	$trackInfo{'lastPlayed'} = $lastPlayed;
@@ -157,7 +158,6 @@ sub getTracksWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('track').'='.$track->id;
             $trackInfo{'itemobj'}          = $track;
             $trackInfo{'listtype'} = 'track';
-            $trackInfo{'levelName'}  = 'track';
             if(defined($currenttrackstatitem) && $track->id == $currenttrackstatitem) {
 				$trackInfo{'currentsong'} = 1;
             }
@@ -236,6 +236,7 @@ sub getAlbumsWeb {
 			
 		  	$trackInfo{'album'} = $album->id;
             $trackInfo{'noTrackStatButton'} = 1;
+            $trackInfo{'levelName'}  = 'album';
             displayAsHTML('album', \%trackInfo, $album);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -249,7 +250,6 @@ sub getAlbumsWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('album').'='.$album->id;
             $trackInfo{'itemobj'}{'album'} = $album;
             $trackInfo{'listtype'} = 'album';
-            $trackInfo{'levelName'}  = 'album';
 		  	
             saveMixerLinks(\%trackInfo);
 
@@ -339,6 +339,7 @@ sub getArtistsWeb {
 			
 		  	$trackInfo{'artist'} = $artist->id;
             $trackInfo{'noTrackStatButton'} = 1;
+            $trackInfo{'levelName'}  = 'artist';
             displayAsHTML('artist', \%trackInfo, $artist);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -352,7 +353,6 @@ sub getArtistsWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('artist').'='.$artist->id;
             $trackInfo{'itemobj'}{'artist'} = $artist;
             $trackInfo{'listtype'} = 'artist';
-            $trackInfo{'levelName'}  = 'artist';
             
             saveMixerLinks(\%trackInfo);
             
@@ -447,6 +447,7 @@ sub getGenresWeb {
 			
 		  	$trackInfo{'genre'} = $id;
             $trackInfo{'noTrackStatButton'} = 1;
+            $trackInfo{'levelName'}  = 'genre';
             displayAsHTML('genre', \%trackInfo, $genre);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -460,7 +461,6 @@ sub getGenresWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('genre').'='.$genre->id;
             $trackInfo{'itemobj'}{'genre'} = $genre;
             $trackInfo{'listtype'} = 'genre';
-            $trackInfo{'levelName'}  = 'genre';
             		  	
             saveMixerLinks(\%trackInfo);
 
@@ -552,10 +552,11 @@ sub getYearsWeb {
 			my $year = $id;
 		  	my %trackInfo = ();
             $trackInfo{'noTrackStatButton'} = 1;
-			#my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-            #my $levelInfo = $fieldInfo->{'genre'};
-			
-            #&{$levelInfo->{'listItem'}}($ds, \%trackInfo, $genre);
+            $trackInfo{'levelName'}  = 'year';
+		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			my $yearobj = Plugins::TrackStat::Storage::objectForYear($id);
+		        displayAsHTML('year', \%trackInfo, $yearobj);
+		}
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
@@ -568,7 +569,6 @@ sub getYearsWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('year').'='.$year;
             $trackInfo{'itemobj'}{'year'} = $year;
             $trackInfo{'listtype'} = 'year';
-            $trackInfo{'levelName'}  = 'year';
             		  	
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
@@ -661,6 +661,7 @@ sub getPlaylistsWeb {
 			
 		  	$trackInfo{'playlist'} = $playlist->id;
             $trackInfo{'noTrackStatButton'} = 1;
+            $trackInfo{'levelName'}  = 'playlist';
             displayAsHTML('playlist', \%trackInfo, $playlist);
 		  	$trackInfo{'title'} = undef;
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
@@ -674,7 +675,6 @@ sub getPlaylistsWeb {
             $trackInfo{'attributes'}       = '&'.getLinkAttribute('playlist').'='.$playlist->id;
             $trackInfo{'itemobj'}{'playlist'} = $playlist;
             $trackInfo{'listtype'} = 'playlist';
-            $trackInfo{'levelName'}  = 'playlist';
             
             saveMixerLinks(\%trackInfo);
             
