@@ -2215,7 +2215,7 @@ sub checkAndPerformScheduledBackup {
 	}else {
 		debugMsg("Scheduled backups disabled\n");
 	}
-	Slim::Utils::Timers::setTimer(0, Time::HiRes::time() + 60, \&checkAndPerformScheduledBackup);
+	Slim::Utils::Timers::setTimer(0, Time::HiRes::time() + 900, \&checkAndPerformScheduledBackup);
 }
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
