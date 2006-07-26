@@ -289,6 +289,13 @@ sub scanFunction {
 	return 0;
 }
 
+sub getCurrentLocale {
+	if ($::VERSION ge '6.5') {
+		return Slim::Utils::Unicode::currentLocale();
+	}else {
+		return $Slim::Utils::Unicode::locale;
+	}
+}
 sub handleTrack {
 	my $curTrack = shift;
 
@@ -319,9 +326,9 @@ sub handleTrack {
 
 		$file  = Slim::Utils::Misc::pathFromFileURL($url);
 
-		if ($] > 5.007 && $file && $Slim::Utils::Unicode::locale ne 'utf8') {
+		if ($] > 5.007 && $file && getCurrentLocale() ne 'utf8') {
 
-			eval { Encode::from_to($file, 'utf8', $Slim::Utils::Unicode::locale) };
+			eval { Encode::from_to($file, 'utf8', getCurrentLocale()) };
 
 			# If the user is using both iTunes & a music folder,
 			# iTunes stores the url as encoded utf8 - but we want
