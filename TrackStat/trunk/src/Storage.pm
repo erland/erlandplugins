@@ -93,6 +93,10 @@ sub rollback {
 	}
 }
 
+sub objectForYear {
+	my $year = shift;
+	return Slim::Schema->resultset('Year')->single({'year' => $year});
+}
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
@@ -107,6 +111,8 @@ sub objectForId {
 			$type = 'Track';
 		}elsif($type eq 'playlist') {
 			$type = 'Playlist';
+		}elsif($type eq 'year') {
+			$type = 'Year';
 		}
 		return Slim::Schema->resultset($type)->find($id);
 	}else {
