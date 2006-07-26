@@ -8,5 +8,10 @@ div#trackstat_resultlist_controls {
 
 div#trackstat_resultlist_controls_inner {
 }
+a#trackstat_resultlist_controls_link {
+	vertical-align: 
+	top;padding: 0px;
+	margin: 0px;
+}
 
 </STYLE>
