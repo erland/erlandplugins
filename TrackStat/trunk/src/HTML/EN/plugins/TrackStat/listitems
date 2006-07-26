@@ -18,9 +18,10 @@
 	        [% attrs  = contributorTuple.attributes | html %]
 	        [% target = notarget ? '' : 'target="browser"' %]
 	        [% contrib = contributor.name | html %]
+	        [% contribid = contributor.id  %]
 
 		[% IF currentstatisticitems.artist %]
-		        [% contributorHTMLFrag = "<a href=\"${webroot}plugins/TrackStat/${currentstatisticitems.artist}.html?&amp;$attrs&amp;player=$playerURI&amp;flatlist=1\" $target>$contrib</a>" %]
+		        [% contributorHTMLFrag = "<a href=\"${webroot}plugins/TrackStat/${currentstatisticitems.artist}.html?artist=$contribid&amp;player=$playerURI&amp;flatlist=1\" $target>$contrib</a>" %]
 		[% ELSE %]
 		        [% contributorHTMLFrag = "<a href=\"${webroot}browsedb.html?hierarchy=artist,album,track&amp;$attrs&amp;level=1&amp;player=$playerURI\" $target>$contrib</a>" %]
 		[% END %]
