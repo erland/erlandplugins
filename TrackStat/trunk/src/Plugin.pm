@@ -274,7 +274,7 @@ sub setMode()
 				if(defined($params)) {
 					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
 				}else {
-					Slim::Display::Animation::showBriefly( $client,
+					$client->showBriefly(
 						$item->{'name'},
 						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
 						1);
@@ -467,7 +467,7 @@ sub getSetModeDataForSubItems {
 				if(defined($params)) {
 					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
 				}else {
-					Slim::Display::Animation::showBriefly( $client,
+					$client->showBriefly(
 						$item->{'name'},
 						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
 						1);
@@ -588,7 +588,7 @@ sub getSetModeDataForStatistics {
 				if(defined($params)) {
 					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat.Choice',$params);
 				}else {
-					Slim::Display::Animation::showBriefly( $client,
+					$client->showBriefly(
 						$item->{'name'},
 						$client->string( 'PLUGIN_TRACKSTAT_NO_TRACK'),
 						1);
@@ -626,7 +626,7 @@ sub getSetModeDataForStatistics {
 						$headerStr = $client->string( 'PLUGIN_TRACKSTAT');
 					}
 
-					Slim::Display::Animation::showBriefly( $client,
+					$client->showBriefly(
 						$headerStr,
 						$displayStr,
 						1);
@@ -669,13 +669,13 @@ sub saveRatingsForCurrentlyPlaying {
 			$playStatus->currentSongRating($digit);
 		}
     	debugMsg("saveRating: $client, $songKey, $digit\n");
-		Slim::Display::Animation::showBriefly( $client,
+		$client->showBriefly(
 			$client->string( 'PLUGIN_TRACKSTAT'),
 			$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
 			3);
 		rateSong($client,$songKey,$digit);
 	}else {
-		Slim::Display::Animation::showBriefly( $client,
+		$client->showBriefly(
 			$client->string( 'PLUGIN_TRACKSTAT'),
 			$client->string( 'PLUGIN_TRACKSTAT_RATING_NO_SONG'),
 			3);
@@ -692,7 +692,7 @@ sub saveRatingsFromChoice {
         	debugMsg("saveRating: $client, ".$item->{'itemobj'}->url.", $digit\n");
 			rateSong($client,$item->{'itemobj'}->url,$digit);
         	my $title = Slim::Music::Info::standardTitle($client,$item->{'itemobj'});
-			Slim::Display::Animation::showBriefly( $client,
+			$client->showBriefly(
 				$title,
 				$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
 				1);
@@ -3180,6 +3180,8 @@ sub rateSong($$$) {
 		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}else {
 		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
+	}
+	if ($::VERSION lt '6.5' || $::REVISION lt '8449' || $::REVISION ge '8602' ) {
 		Slim::Music::Info::clearFormatDisplayCache();
 	}
 }
