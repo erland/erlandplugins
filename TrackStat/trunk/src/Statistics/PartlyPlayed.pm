@@ -159,7 +159,7 @@ sub getPartlyPlayedAlbumTracks {
 	my $minalbumtext = "";
 	my $minalbumlimit = Slim::Utils::Prefs::get("plugin_trackstat_min_album_tracks");
 	if($minalbumlimit && $minalbumlimit>0) {
-		$minalbumtext = "having count(tracks.id)>=".$minalbumlimit." ";
+		$minalbumtext = "and count(tracks.id)>=".$minalbumlimit." ";
 	}
     my $sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having min(case when track_statistics.playCount is null then case when tracks.playCount is not null then tracks.playCount else 0 end else track_statistics.playCount end)=0 $minalbumtext order by avgrating desc,avgcount desc,$orderBy limit $listLength";
     if(Slim::Utils::Prefs::get("plugin_trackstat_fast_queries")) {
