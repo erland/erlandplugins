@@ -1359,7 +1359,7 @@ sub getStatisticGroupsForContext {
 		}
 		for my $itemKey (keys %$currentItems) {
 			my $item = $currentItems->{$itemKey};
-			if(!defined($item->{'item'}) && defined($item->{'name'})) {
+			if(!defined($item->{'item'}) && defined($item->{'name'}) && $item->{'trackstat_statistic_enabled'}) {
 				my $currentUrl = $url."&group".$level."=".escape($item->{'name'});
 				my %resultItem = (
 					'url' => $currentUrl,
@@ -1385,7 +1385,7 @@ sub getStatisticItemsForContext {
 	if(Slim::Utils::Prefs::get('plugin_trackstat_web_flatlist') || $params->{'flatlist'}) {
 		foreach my $itemKey (keys %statisticPlugins) {
 			my $item = $statisticPlugins{$itemKey};
-			if(defined($item->{'contextfunction'})) {
+			if(defined($item->{'contextfunction'}) && $item->{'trackstat_statistic_enabled'}) {
 				my $name;
 				if(defined($item->{'namefunction'})) {
 					$name = eval { &{$item->{'namefunction'}}() };
@@ -1417,7 +1417,7 @@ sub getStatisticItemsForContext {
 		}else {
 			for my $itemKey (keys %$currentItems) {
 				my $item = $currentItems->{$itemKey};
-				if(defined($item->{'item'})) {
+				if(defined($item->{'item'}) && $item->{'trackstat_statistic_enabled'}) {
 					my $item = $item->{'item'};
 					if(defined($item->{'contextfunction'})) {
 						my $name;
@@ -1590,6 +1590,7 @@ sub handleWebSaveSelectStatistics {
 		}
 	}
 	$params->{'path'} = "plugins/TrackStat/index.html";
+	initStatisticPlugins();
 	handleWebIndex($client, $params);
 }
 
