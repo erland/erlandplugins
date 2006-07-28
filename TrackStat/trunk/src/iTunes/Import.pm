@@ -281,6 +281,9 @@ sub scanFunction {
 
 		$iTunesParserNB->parse_more($line);
 
+		if(!$isScanning) {
+			doneScanning();
+		}
 		return $isScanning;
 	}
 
@@ -607,7 +610,7 @@ sub handleEndElement {
 	if ($element eq 'plist' || $inPlaylists==1) {
 		debugMsg("Finished scanning iTunes XML\n");
 
-		doneScanning();
+		$isScanning = 0;
 
 		return 0;
 	}
