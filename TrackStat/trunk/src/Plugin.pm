@@ -44,6 +44,8 @@ use POSIX qw(strftime ceil);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 
+use Scalar::Util qw(blessed);
+
 use FindBin qw($Bin);
 use Plugins::TrackStat::Time::Stopwatch;
 use Plugins::TrackStat::iTunes::Import;
@@ -2140,10 +2142,10 @@ sub initPlugin
 		use strict 'refs';
 		
 		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import->addImporter('TRACKSTAT', {
+			Slim::Music::Import->addImporter($class, {
 				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-		    Slim::Music::Import->useImporter('TRACKSTAT', 1);
+		    Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
 		}else {
 			Slim::Music::Import::addImporter('TRACKSTAT', {
 				'mixer'     => \&mixerFunction,
@@ -2218,6 +2220,31 @@ sub checkAndPerformScheduledBackup {
 	}
 	Slim::Utils::Timers::setTimer(0, Time::HiRes::time() + 900, \&checkAndPerformScheduledBackup);
 }
+sub mixable {
+        my $class = shift;
+        my $item  = shift;
+	my $blessed = blessed($item);
+
+	if(!$blessed) {
+		return undef;
+	}elsif($blessed eq 'Slim::Schema::Track') {
+		return 1 if($statisticTypes{'track'});
+	}elsif($blessed eq 'Slim::Schema::Year') {
+		return 1 if($statisticTypes{'year'} && $item->id);
+	}elsif($blessed eq 'Slim::Schema::Album') {
+		return 1 if($statisticTypes{'album'});
+	}elsif($blessed eq 'Slim::Schema::Age') {
+		return 1 if($statisticTypes{'album'});
+	}elsif($blessed eq 'Slim::Schema::Contributor') {
+		return 1 if($statisticTypes{'artist'});
+	}elsif($blessed eq 'Slim::Schema::Genre') {
+		return 1 if($statisticTypes{'genre'});
+	}elsif($blessed eq 'Slim::Schema::Playlist') {
+		return 1 if($statisticTypes{'playlist'});
+	}
+        return undef;
+}
+
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
@@ -2229,8 +2256,15 @@ sub mixerFunction {
 		my $hierarchy = $paramref->{'hierarchy'};
 		my @levels    = split(",", $hierarchy);
 		my $level     = $paramref->{'level'} || 0;
-		if($statisticTypes{$levels[$level]}) { 
-			if($levels[$level] eq 'album' || $levels[$level] eq 'age') {
+		my $mixerType = $levels[$level];
+		if($mixerType eq 'contributor') {
+			$mixerType='artist';
+		}
+		if($mixerType eq 'age') {
+			$mixerType='album';
+		}
+		if($statisticTypes{$mixerType}) { 
+			if($mixerType eq 'album') {
 				my %params = (
 					'album' => $currentItem->id,
 					'statistictype' => 'album',
@@ -2239,7 +2273,7 @@ sub mixerFunction {
 				debugMsg("Calling album statistics with ".$params{'album'}."\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'year') {
+			}elsif($mixerType eq 'year') {
 				my %params = (
 					'year' => $currentItem,
 					'statistictype' => 'year',
@@ -2248,7 +2282,7 @@ sub mixerFunction {
 				debugMsg("Calling album statistics with ".$params{'year'}."\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'artist') {
+			}elsif($mixerType eq 'artist') {
 				my %params = (
 					'artist' => $currentItem->id,
 					'statistictype' => 'artist',
@@ -2257,7 +2291,7 @@ sub mixerFunction {
 				debugMsg("Calling artist statistics with ".$params{'artist'}."\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'genre') {
+			}elsif($mixerType eq 'genre') {
 				my %params = (
 					'genre' => $currentItem->id,
 					'statistictype' => 'genre',
@@ -2266,7 +2300,7 @@ sub mixerFunction {
 				debugMsg("Calling genre statistics with ".$params{'genre'}."\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'playlist') {
+			}elsif($mixerType eq 'playlist') {
 				my %params = (
 					'playlist' => $currentItem->id,
 					'statistictype' => 'playlist',
@@ -2276,10 +2310,10 @@ sub mixerFunction {
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
 			}else {
-				debugMsg("Unknown statistictype = ".$levels[$level]."\n");
+				debugMsg("Unknown statistictype = ".$mixerType."\n");
 			}
 		}else {
-			debugMsg("No statistics found for ".$levels[$level]."\n");
+			debugMsg("No statistics found for ".$mixerType."\n");
 		}
 	}else {
 		debugMsg("No parent parameter found\n");
@@ -2369,7 +2403,7 @@ sub shutdownPlugin {
         if ($TRACKSTAT_HOOK) {
                 uninstallHook();
 				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-	    	    	Slim::Music::Import->useImporter('TRACKSTAT', 0);
+			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
 	    	    }else {
 	    	    	Slim::Music::Import::useImporter('TRACKSTAT', 0);
 	    	    }
