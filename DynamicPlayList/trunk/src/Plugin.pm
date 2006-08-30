@@ -32,6 +32,7 @@ use File::Spec::Functions qw(:ALL);
 use Class::Struct;
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
+use Scalar::Util qw(blessed);
 
 
 my $driver;
@@ -1095,6 +1096,36 @@ sub commandCallback65 {
 	}
 }
 
+sub mixable {
+        my $class = shift;
+        my $item  = shift;
+	my $blessed = blessed($item);
+
+	if(!$playListTypes) {
+		initPlayListTypes();
+	}
+
+	if(!$blessed) {
+		return undef;
+	}elsif($blessed eq 'Slim::Schema::Track') {
+		return 1 if($playListTypes->{'track'});
+	}elsif($blessed eq 'Slim::Schema::Year') {
+		return 1 if($playListTypes->{'year'} && $item->id);
+	}elsif($blessed eq 'Slim::Schema::Album') {
+		return 1 if($playListTypes->{'album'});
+	}elsif($blessed eq 'Slim::Schema::Age') {
+		return 1 if($playListTypes->{'album'});
+	}elsif($blessed eq 'Slim::Schema::Contributor') {
+		return 1 if($playListTypes->{'artist'});
+	}elsif($blessed eq 'Slim::Schema::Genre') {
+		return 1 if($playListTypes->{'genre'});
+	}elsif($blessed eq 'Slim::Schema::Playlist') {
+		return 1 if($playListTypes->{'playlist'});
+	}
+        return undef;
+}
+
+
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
@@ -1110,8 +1141,15 @@ sub mixerFunction {
 		my $hierarchy = $paramref->{'hierarchy'};
 		my @levels    = split(",", $hierarchy);
 		my $level     = $paramref->{'level'} || 0;
-		if($playListTypes->{$levels[$level]}) { 
-			if($levels[$level] eq 'album' || $levels[$level] eq 'age') {
+		my $mixerType = $levels[$level];
+		if($mixerType eq 'contributor') {
+			$mixerType='artist';
+		}
+		if($mixerType eq 'age') {
+			$mixerType='album';
+		}
+		if($playListTypes->{$mixerType}) { 
+			if($mixerType eq 'album') {
 				my %p = (
 					'id' => $currentItem->id,
 					'name' => $currentItem->title
@@ -1125,11 +1163,15 @@ sub mixerFunction {
 				debugMsg("Calling album playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'year') {
+			}elsif($mixerType eq 'year') {
 				my %p = (
 					'id' => $currentItem,
 					'name' => $currentItem
 				);
+				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+					$p{'id'} = $currentItem->id;
+					$p{'name'} = $currentItem->name;
+				}
 				my %params = (
 					'dynamicplaylist_parameter_1' => \%p,
 					'playlisttype' => 'year',
@@ -1139,7 +1181,7 @@ sub mixerFunction {
 				debugMsg("Calling year playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'artist') {
+			}elsif($mixerType eq 'artist') {
 				my %p = (
 					'id' => $currentItem->id,
 					'name' => $currentItem->name
@@ -1153,7 +1195,7 @@ sub mixerFunction {
 				debugMsg("Calling artist playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'genre') {
+			}elsif($mixerType eq 'genre') {
 				my %p = (
 					'id' => $currentItem->id,
 					'name' => $currentItem->name
@@ -1167,7 +1209,7 @@ sub mixerFunction {
 				debugMsg("Calling album playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
-			}elsif($levels[$level] eq 'playlist') {
+			}elsif($mixerType eq 'playlist') {
 				my %p = (
 					'id' => $currentItem->id,
 					'name' => $currentItem->title
@@ -1182,10 +1224,10 @@ sub mixerFunction {
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
 			}else {
-				debugMsg("Unknown playlisttype = ".$levels[$level]."\n");
+				debugMsg("Unknown playlisttype = ".$mixerType."\n");
 			}
 		}else {
-			debugMsg("No playlist found for ".$levels[$level]."\n");
+			debugMsg("No playlist found for ".$mixerType."\n");
 		}
 	}else {
 		debugMsg("No parent parameter found\n");
@@ -1300,10 +1342,10 @@ sub initPlugin {
 	
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks")) {
 		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import->addImporter('DYNAMICPLAYLIST', {
+			Slim::Music::Import->addImporter($class, {
 				'mixer'     => \&mixerFunction,
 	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import->useImporter('DYNAMICPLAYLIST', 1);
+	    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
 	    }else {
 			Slim::Music::Import::addImporter('DYNAMICPLAYLIST', {
 				'mixer'     => \&mixerFunction,
@@ -1350,7 +1392,7 @@ sub shutdownPlugin {
 		Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
 	}
 	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-		Slim::Music::Import->useImporter('DYNAMICPLAYLIST', 0);
+		Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
     }else {
 		Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
     }
