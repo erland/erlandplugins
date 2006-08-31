@@ -1340,19 +1340,24 @@ sub initPlugin {
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.ChooseParameters', getFunctions(), \&setModeChooseParameters);
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList', getFunctions(), \&setMode);
 	
-	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks")) {
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import->addImporter($class, {
-				'mixer'     => \&mixerFunction,
-	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
-	    }else {
-			Slim::Music::Import::addImporter('DYNAMICPLAYLIST', {
-				'mixer'     => \&mixerFunction,
-	            'mixerlink' => \&mixerlink});
-	    	Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 1);
-	    }
-	}
+		my %mixerMap = ();
+		if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks")) {
+			$mixerMap{'mixerlink'} = \&mixerlink;
+		}
+		if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
+			$mixerMap{'mixer'} = \&mixerFunction;
+		}
+		if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks") ||
+			Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
+
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				Slim::Music::Import->addImporter($class, \%mixerMap);
+			    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
+			}else {
+				Slim::Music::Import::addImporter('DYNAMICPLAYLIST', \%mixerMap);
+			    	Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 1);
+			}
+		}
 
 	if ($::VERSION ge '6.5') {
 		# set up our subscription
@@ -1366,6 +1371,9 @@ sub initPlugin {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
 
+}
+sub title {
+	return 'DYNAMICPLAYLIST';
 }
 
 sub initDatabase {
@@ -1391,11 +1399,14 @@ sub shutdownPlugin {
 	}else {
 		Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
 	}
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-		Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
-    }else {
-		Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
-    }
+	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks") ||
+		Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
+		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
+		}else {
+			Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
+		}
+	}
 }
 
 sub webPages {
@@ -1911,13 +1922,20 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_dynamicplaylist_web_show_mixerlinks to 1\n");
 		Slim::Utils::Prefs::set("plugin_dynamicplaylist_web_show_mixerlinks",1);
 	}
+
+	# enable mixer function by default
+	if(!defined(Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction"))) {
+		# Default to show mixer links
+		debugMsg("Defaulting plugin_dynamicplaylist_enable_mixerfunction to 1\n");
+		Slim::Utils::Prefs::set("plugin_dynamicplaylist_enable_mixerfunction",1);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1995,6 +2013,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks"); }
+		},
+	plugin_dynamicplaylist_enable_mixerfunction => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction"); }
 		}
 	);
 	return (\%setupGroup,\%setupPrefs);
@@ -2677,7 +2705,10 @@ PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
 
 PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS
-	EN	Show DynamicPlayList button in browse pages
+	EN	Show DynamicPlayList button in browse pages. May require slimserver restart.
+
+PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
+	EN	Enable DynamicPlayList play+hold action. May require slimserver restart.
 
 PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
 	EN	Use saved playlist sub directories as groups
@@ -2699,6 +2730,9 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_UNGROUPED
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS
 	EN	Buttons in browse pages
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
+	EN	Play+Hold mixer action
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
