@@ -170,7 +170,8 @@ sub setMode()
 			if($item->{'trackstat_statistic_enabled'}) {
 				my %flatStatisticItem = (
 					'item' => $item,
-					'trackstat_statistic_enabled' => 1
+					'trackstat_statistic_enabled' => 1,
+					'value' => $item
 				);
 				if(defined($item->{'namefunction'})) {
 					$flatStatisticItem{'name'} = &{$item->{'namefunction'}}();
@@ -771,7 +772,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_fast_queries','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -966,6 +967,26 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_show_mixerlinks"); }
+		},		
+	plugin_trackstat_web_enable_mixerfunction => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction"); }
+		},		
+	plugin_trackstat_enable_mixerfunction => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction"); }
 		},		
 	plugin_trackstat_backup_file => {
 			'validate' => \&validateAcceptAllWrapper
@@ -2055,6 +2076,16 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_web_show_mixerlinks",1);
 		}
 		
+		# enable mixer functions on web by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_web_enable_mixerfunction",1);
+		}
+
+		# enable mixer functions on player by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_enable_mixerfunction",1);
+		}
+
 		# Do not force group ratings by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_force_grouprating",0);
@@ -2141,16 +2172,22 @@ sub initPlugin
 		}
 		use strict 'refs';
 		
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import->addImporter($class, {
-				'mixer'     => \&mixerFunction,
-	            'mixerlink' => \&mixerlink});
-		    Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
-		}else {
-			Slim::Music::Import::addImporter('TRACKSTAT', {
-				'mixer'     => \&mixerFunction,
-	            'mixerlink' => \&mixerlink});
-		    Slim::Music::Import::useImporter('TRACKSTAT', 1);
+		my %mixerMap = ();
+		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction")) {
+			$mixerMap{'mixerlink'} = \&mixerlink;
+		}
+		if(Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
+			$mixerMap{'mixer'} = \&mixerFunction;
+		}
+		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
+			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				Slim::Music::Import->addImporter($class, \%mixerMap);
+				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
+			}else {
+				Slim::Music::Import::addImporter('TRACKSTAT', \%mixerMap);
+				Slim::Music::Import::useImporter('TRACKSTAT', 1);
+			}
 		}
 		
 		checkAndPerformScheduledBackup();
@@ -2274,8 +2311,12 @@ sub mixerFunction {
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.TrackStat::Plugin',\%params);
 				$client->update();
 			}elsif($mixerType eq 'year') {
+				my $year = $currentItem;
+				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+					$year = $currentItem->id;
+				}
 				my %params = (
-					'year' => $currentItem,
+					'year' => $year,
 					'statistictype' => 'year',
 					'flatlist' => 1
 				);
@@ -2319,6 +2360,9 @@ sub mixerFunction {
 		debugMsg("No parent parameter found\n");
 	}
 
+}
+sub title {
+	return 'TRACKSTAT';
 }
 
 sub mixerlink {
@@ -2402,11 +2446,14 @@ sub shutdownPlugin {
         debugMsg("disabling\n");
         if ($TRACKSTAT_HOOK) {
                 uninstallHook();
-				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
-			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
-	    	    }else {
-	    	    	Slim::Music::Import::useImporter('TRACKSTAT', 0);
-	    	    }
+		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
+			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
+			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
+			}else {
+				Slim::Music::Import::useImporter('TRACKSTAT', 0);
+			}
+		}
         }
 }
 
@@ -4380,6 +4427,24 @@ SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS_DESC
 
 PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS
 	EN	Show MusicIP mixer links
+
+SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION
+	EN	Show TrackStat buttons on web
+
+SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION_DESC
+	EN	Show TrackStat buttons in browse pages in web interface.<br>Note! Slimserver may have to be restarted for this to take effect
+
+PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION
+	EN	Show TrackStat buttons on web
+
+SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION
+	EN	Enable TrackStat play+hold
+
+SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION_DESC
+	EN	Enable TrackStat play+hold action with remote when browsing music on SqueezeBox.<br>Note! Slimserver may have to be restarted for this to take effect
+
+PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION
+	EN	Enable TrackStat play+hold
 
 PLUGIN_TRACKSTAT_RESTORE
 	EN	Restore from file
