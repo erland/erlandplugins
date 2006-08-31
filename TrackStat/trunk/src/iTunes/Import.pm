@@ -353,24 +353,6 @@ sub handleTrack {
 		# actual mtime of the file is updated however.
 
 		my $mtime = (stat($file))[9];
-		my $ctime = str2time($curTrack->{'Date Added'});
-
-		# If the file hasn't changed since the last
-		# time we checked, then don't bother going to
-		# the database. A file could be new to iTunes
-		# though, but it's mtime can be anything.
-		#
-		# A value of -1 for lastITunesMusicLibraryDate
-		# means the user has pressed 'wipe db'.
-#		if ($lastITunesMusicLibraryDate &&
-#		    $lastITunesMusicLibraryDate != -1 &&
-#		    ($ctime && $ctime < $lastITunesMusicLibraryDate) &&
-#		    ($mtime && $mtime < $lastITunesMusicLibraryDate)) {
-#
-#			debugMsg("iTunes: not updated, skipping: $file\n");
-#
-#			return 1;
-#		}
 
 		# Reuse the stat from above.
 		if (!$file || !-r _) { 
@@ -422,50 +404,13 @@ sub handleTrack {
 			$curTrack->{$key} = unescape($curTrack->{$key});
 		}
 
-		$cacheEntry{'CT'}       = $type;
-		$cacheEntry{'TITLE'}    = $curTrack->{'Name'};
-		$cacheEntry{'ARTIST'}   = $curTrack->{'Artist'};
-		$cacheEntry{'COMPOSER'} = $curTrack->{'Composer'};
-		$cacheEntry{'TRACKNUM'} = $curTrack->{'Track Number'};
 
-		my $discNum   = $curTrack->{'Disc Number'};
-		my $discCount = $curTrack->{'Disc Count'};
-
-		$cacheEntry{'DISC'}  = $discNum   if defined $discNum;
-		$cacheEntry{'DISCC'} = $discCount if defined $discCount;
-		$cacheEntry{'ALBUM'} = $curTrack->{'Album'};
-
-		$cacheEntry{'GENRE'} = $curTrack->{'Genre'};
-		$cacheEntry{'FS'}    = $curTrack->{'Size'};
-
-		if ($curTrack->{'Total Time'}) {
-			$cacheEntry{'SECS'} = $curTrack->{'Total Time'} / 1000;
-		}
-
-		$cacheEntry{'BITRATE'} = $curTrack->{'Bit Rate'} * 1000 if $curTrack->{'Bit Rate'};
-		$cacheEntry{'YEAR'}    = $curTrack->{'Year'};
-		$cacheEntry{'COMMENT'} = $curTrack->{'Comments'};
-		$cacheEntry{'RATE'}    = $curTrack->{'Sample Rate'};
 		$cacheEntry{'RATING'}    = $curTrack->{'Rating'};
 		$cacheEntry{'PLAYCOUNT'} = $curTrack->{'Play Count'};
 		if($curTrack->{'Play Date UTC'}) {
 			$cacheEntry{'LASTPLAYED'} = str2time($curTrack->{'Play Date UTC'});
 		}
 		
-		my $gain = $curTrack->{'Volume Adjustment'};
-		
-		# looking for a defined or non-zero volume adjustment
-		if ($gain) {
-			# itunes uses a range of -255 to 255 to be -100% (silent) to 100% (+6dB)
-			if ($gain == -255) {
-				$gain = -96.0;
-			} else {
-				$gain = 20.0 * log(($gain+255)/255)/log(10);
-			}
-			$cacheEntry{'REPLAYGAIN_TRACK_GAIN'} = $gain;
-		}
-
-		$cacheEntry{'VALID'} = 1;
 
 		sendTrackToStorage($url,\%cacheEntry);
 	} else {
