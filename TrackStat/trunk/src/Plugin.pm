@@ -658,6 +658,9 @@ sub saveRatingsForCurrentlyPlaying {
 	my $client = shift;
 	my $button = shift;
 	my $digit = shift;
+
+	return unless $digit>='0' && $digit<='5';
+
 	my $playStatus = getPlayerStatusForClient($client);
 	if ($playStatus->isTiming() eq 'true') {
 		# see if the string is already in the cache
@@ -688,6 +691,9 @@ sub saveRatingsFromChoice {
 		my $client = shift;
 		my $button = shift;
 		my $digit = shift;
+
+	return unless $digit>='0' && $digit<='5';
+
 		my $listRef = Slim::Buttons::Common::param($client,'listRef');
         my $listIndex = Slim::Buttons::Common::param($client,'listIndex');
         my $item = $listRef->[$listIndex];
