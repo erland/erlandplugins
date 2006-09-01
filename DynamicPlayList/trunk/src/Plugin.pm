@@ -2400,6 +2400,7 @@ sub getDynamicPlayLists {
 				if($url =~ /^$playlistDir/) {
 					$url =~ s/$playlistDir[\/\\]?//;
 				}
+				$url = unescape($url);
 				my @groups = split(/[\/\\]/,$url);
 				if(@groups) {
 					pop @groups;
