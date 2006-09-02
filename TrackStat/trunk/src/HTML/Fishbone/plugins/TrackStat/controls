@@ -37,8 +37,9 @@
 			<a class="trackstat_resultlist_controls_link"><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13 border="0"></a>
 		[% END %]
 		[% IF item.listtype == 'track' %]
-			[% loop = 5 %]
-			[% WHILE loop > 0 %]
+			[% loop = 0 %]
+			[% WHILE loop < 5 %]
+				[% loop = loop + 1 %]
 				[% IF loop > item.rating %]
 					[% IF item.listtype == 'track' %]
 						<a class="trackstat_resultlist_controls_link" href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]&trackstattrackid=[% item.itemobj.id%][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" border="0"><img src="[% webroot %]plugins/TrackStat/html/images/empty.gif" width=13 height=13 title="[% loop %]"></a>
@@ -48,7 +49,6 @@
 						<a class="trackstat_resultlist_controls_link" href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]&trackstattrackid=[% item.itemobj.id%][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" border="0"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 title="[% loop %]"></a>
 					[% END %]
 				[% END %]
-				[% loop = loop - 1 %]
 			[% END %]
 			[% IF !pluginTrackStatShowMixerLinks %]
 				<a class="trackstat_resultlist_controls_link"><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13></a>
