@@ -460,7 +460,7 @@ sub getSetModeDataForSubItems {
 		onRight    => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}else {
 				my %paramsData = ();
 				if(defined($client->param('statistictype'))) {
