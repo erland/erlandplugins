@@ -454,7 +454,8 @@ sub initPlayLists {
 								my %level = ();
 								my %currentItemGroup = (
 									'childs' => \%level,
-									'name' => $group
+									'name' => $group,
+									'value' => $grouppath
 								);
 								if($enabled) {
 									$enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_playlist_group_'.$grouppath.'_enabled');
@@ -476,14 +477,16 @@ sub initPlayLists {
 						}
 						my %currentGroupItem = (
 							'playlist' => $playlist,
-							'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'}
+							'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'},
+							'value' => $playlist->{'dynamicplaylistid'}
 						);
 						$currentLevel->{$item} = \%currentGroupItem;
 					}
 				}else {
 					my %currentItem = (
 						'playlist' => $playlist,
-						'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'}
+						'dynamicplaylistenabled' => $playlist->{'dynamicplaylistenabled'},
+						'value' => $playlist->{'dynamicplaylistid'}
 					);
 					$localPlayListItems{$item} = \%currentItem;
 				}
@@ -621,7 +624,8 @@ sub setMode {
 			if($playlist->{'dynamicplaylistenabled'}) {
 				my %flatPlaylistItem = (
 					'playlist' => $playlist,
-					'dynamicplaylistenabled' => 1
+					'dynamicplaylistenabled' => 1,
+					'value' => $playlist->{'dynamicplaylistid'}
 				);
 				if(!defined($playlisttype)) {
 					push @listRef, \%flatPlaylistItem;
@@ -703,7 +707,7 @@ sub setMode {
 			if(defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
 				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
 			}elsif(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
@@ -795,6 +799,7 @@ sub setModeChooseParameters {
 
 sub getSetModeDataForSubItems {
 	my $client = shift;
+	my $currentItem = shift;
 	my $items = shift;
 
 	my @listRefSub = ();
@@ -821,7 +826,7 @@ sub getSetModeDataForSubItems {
 		listRef    => \@listRefSub,
 		name       => \&getDisplayText,
 		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.DynamicPlayList',
+		modeName   => 'PLUGIN.DynamicPlayList'.$currentItem->{'value'},
 		onPlay     => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'playlist'})) {
@@ -865,7 +870,7 @@ sub getSetModeDataForSubItems {
 		onRight    => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
