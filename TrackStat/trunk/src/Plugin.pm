@@ -170,14 +170,14 @@ sub setMode()
 			if($item->{'trackstat_statistic_enabled'}) {
 				my %flatStatisticItem = (
 					'item' => $item,
-					'trackstat_statistic_enabled' => 1,
-					'value' => $item
+					'trackstat_statistic_enabled' => 1
 				);
 				if(defined($item->{'namefunction'})) {
 					$flatStatisticItem{'name'} = &{$item->{'namefunction'}}();
 				}else {
 					$flatStatisticItem{'name'} = $item->{'name'};
 				}
+				$flatStatisticItem{'value'} = $flatStatisticItem{'name'};
 				if(!defined($statistictype)) {
 					push @listRef, \%flatStatisticItem;
 				}else {
@@ -266,7 +266,7 @@ sub setMode()
 		onRight    => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}else {
 				my %paramsData = ();
 				if(defined($client->param('statistictype'))) {
@@ -384,6 +384,7 @@ sub getDataOverlay {
 
 sub getSetModeDataForSubItems {
 	my $client = shift;
+	my $currentItem = shift;
 	my $items = shift;
 
 	my @listRef = ();
@@ -417,7 +418,7 @@ sub getSetModeDataForSubItems {
 		listRef    => \@listRef,
 		name       => \&getDisplayText,
 		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.TrackStat::Plugin',
+		modeName   => 'PLUGIN.TrackStat::Plugin'.$currentItem->{'value'},
 		onPlay     => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'item'})) {
@@ -508,6 +509,7 @@ sub getSetModeDataForStatistics {
 		if(defined($paramsData->{'currentstatisticitems'}) && defined($paramsData->{'currentstatisticitems'}->{$it->{'listtype'}})) {
 			$it->{'currentstatisticitems'} = $paramsData->{'currentstatisticitems'}->{$it->{'listtype'}};
 		}
+		$it->{'value'} = $it->{'attributes'};
 		push @listRef, $it;
 	}
 	
@@ -523,7 +525,6 @@ sub getSetModeDataForStatistics {
 		listRef    => \@listRef,
 		name       => \&getDataDisplayText,
 		overlayRef => \&getDataOverlay,
-		modeName   => 'PLUGIN.TrackStat.Choice',
 		parentMode => Slim::Buttons::Common::param($client,'parentMode'),
 		onPlay     => sub {
 			my ($client, $item) = @_;
@@ -1750,7 +1751,8 @@ sub initStatisticPlugins {
 											my %level = ();
 											my %currentItemGroup = (
 												'childs' => \%level,
-												'name' => $group
+												'name' => $group,
+												'value' => $grouppath
 											);
 											if($enabled) {
 												$enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistic_group_'.$grouppath.'_enabled');
@@ -1779,6 +1781,7 @@ sub initStatisticPlugins {
 									}else {
 										$currentGroupItem{'name'} = $items{'name'};
 									}
+									$currentGroupItem{'value'} = $currentGroupItem{'name'};
 									$currentLevel->{$item} = \%currentGroupItem;
 								}
 							}else {
@@ -1791,6 +1794,7 @@ sub initStatisticPlugins {
 								}else {
 									$currentItem{'name'} = $items{'name'};
 								}
+								$currentItem{'value'} = $currentItem{'name'};
 								$statisticItems{$item} = \%currentItem;
 							}
 
