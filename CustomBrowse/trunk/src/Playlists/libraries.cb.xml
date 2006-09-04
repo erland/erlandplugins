@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<!-- <defaultdisabled>1</defaultdisabled> -->
 	<menu>
 		<id>libraries</id>
 		<name>Libraries</name>
