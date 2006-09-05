@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
+	<database>SQLite</database>
 	<menu>
 		<id>decades</id>
 		<name>Decades</name>
