@@ -3,7 +3,7 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		<id>newartists</id>
-		<name>New Arists</name>
+		<name>New Artists</name>
 		<menu>
 			<id>artist</id>
 			<itemtype>artist</itemtype>

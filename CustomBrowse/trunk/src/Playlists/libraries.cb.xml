@@ -9,7 +9,7 @@
 			<menudata>{custombrowse.audiodir}</menudata>
 			<menu>
 				<id>artists</id>
-				<name>Arists</name>
+				<name>Artists</name>
 				<menu>
 					<id>artist</id>
 					<itemtype>artist</itemtype>
