@@ -93,15 +93,19 @@ sub setMode {
 	}
 
         readBrowseConfiguration($client);
-        getMenu($client,undef);
+        my $params = getMenu($client,undef);
+	if(defined($params->{'useMode'})) {
+		Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+	}else {
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+	}
 }
-
 sub getMenu {
     my $client = shift;
     my $item = shift;
 
     my @listRef = ();
-    eval {
+
     if(!defined($item)) {
         for my $menu (keys %$browseMenus) {
             if(!defined($browseMenus->{$menu}->{'value'})) {
@@ -171,12 +175,21 @@ sub getMenu {
 	        }elsif($menu->{'menutype'} eq 'trackdetails') {
 	            my $track = objectForId('track',$item->{'parameters'}->{$menu->{'menudata'}});
 	            if(defined($track)) {
-	                Slim::Buttons::Common::pushModeLeft($client,'trackinfo',{'track' => $track});
-	                return;
-	            }   
+		            my %params = (
+		            	'useMode' => 'trackinfo',
+		            	'parameters' => 
+					{
+						'track' => $track
+					}			
+		            );
+		            return \%params;		
+	            }
 	        }elsif($menu->{'menutype'} eq 'mode') {
-	            Slim::Buttons::Common::pushModeLeft($client,$menu->{'menudata'},undef);
-	            return;
+	            my %params = (
+	            	'useMode' => $menu->{'menudata'},
+	            	'parameters' => undef			
+	            );
+	            return \%params;		
 	        }elsif($menu->{'menutype'} eq 'folder') {
 	            my $dir = $menu->{'menudata'};
 	            $dir = replaceParameters($dir,$item->{'parameters'});
@@ -208,10 +221,6 @@ sub getMenu {
 	        }
 	}
     }
-    };
-    if( $@ ) {
-	errorMsg("CustomBrowse: Failed to get menu:\n$@\n");
-    }		
 	
     if(scalar(@listRef)==0) {
         $client->bumpRight();
@@ -347,11 +356,15 @@ sub getMenu {
             },
             onRight    => sub {
                     my ($client, $item) = @_;
-                    getMenu($client,$item);
+                    my $params = getMenu($client,$item);
+                    if(defined($params->{'useMode'})) {
+                    	Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+                    }else {
+                    	Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+                    }
             },
     );
-
-    Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+    return \%params;
 }
 sub prepareMenuSQL {
     my $sql = shift;
