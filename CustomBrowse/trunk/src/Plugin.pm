@@ -91,13 +91,16 @@ sub setMode {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
-
         readBrowseConfiguration($client);
         my $params = getMenu($client,undef);
-	if(defined($params->{'useMode'})) {
-		Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+	if(defined($params)) {
+		if(defined($params->{'useMode'})) {
+			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+		}else {
+			Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+		}
 	}else {
-		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+	        $client->bumpRight();
 	}
 }
 sub getMenu {
@@ -105,6 +108,15 @@ sub getMenu {
     my $item = shift;
 
     my @listRef = ();
+    
+    my $selectedMenu = $client->param('selectedMenu');
+    if(!defined($item) && defined($selectedMenu)) {
+        for my $menu (keys %$browseMenus) {
+		if($browseMenus->{$menu}->{'enabled'} && $selectedMenu eq $browseMenus->{$menu}->{'id'}) {
+			$item = $browseMenus->{$menu};
+		}
+	}
+    }
 
     if(!defined($item)) {
         for my $menu (keys %$browseMenus) {
@@ -223,8 +235,7 @@ sub getMenu {
     }
 	
     if(scalar(@listRef)==0) {
-        $client->bumpRight();
-        return;
+        return undef;
     }
 
     my $modeNamePostFix = '';
@@ -357,10 +368,14 @@ sub getMenu {
             onRight    => sub {
                     my ($client, $item) = @_;
                     my $params = getMenu($client,$item);
-                    if(defined($params->{'useMode'})) {
-                    	Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+                    if(defined($params)) {
+	                    if(defined($params->{'useMode'})) {
+	                    	Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+	                    }else {
+	                    	Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+	                    }
                     }else {
-                    	Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+		        $client->bumpRight();
                     }
             },
     );
@@ -441,6 +456,28 @@ sub initPlugin {
 	
 	checkDefaults();
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse', getFunctions(), \&setMode);
+
+	if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_player')) {
+		readBrowseConfiguration();
+	        for my $menu (keys %$browseMenus) {
+	            if(!defined($browseMenus->{$menu}->{'value'})) {
+	            	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
+	            }
+	            if($browseMenus->{$menu}->{'enabled'}) {
+			my $name;
+			if(defined($browseMenus->{$menu}->{'itemname'})) {
+				$name = $browseMenus->{$menu}->{'itemname'};
+			}else {
+				$name = $browseMenus->{$menu}->{'name'};
+			}
+			my %submenu = (
+				'useMode' => 'PLUGIN.CustomBrowse',
+				'selectedMenu' => $browseMenus->{$menu}->{'id'}
+			);
+			Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenu);
+	            }
+	        }
+	}
 }
 
 sub webPages {
@@ -494,17 +531,20 @@ sub checkDefaults {
 
 	my $prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_showmessages');
 	if (! defined $prefVal) {
-		# Default to standard playlist directory
 		debugMsg("Defaulting plugin_custombrowse_showmessages to 0\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_showmessages', 0);
 	}
 
         $prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_directory');
 	if (! defined $prefVal) {
-		# Default to standard playlist directory
 		my $dir=Slim::Utils::Prefs::get('playlistdir');
 		debugMsg("Defaulting plugin_custombrowse_directory to:$dir\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_directory', $dir);
+	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_player');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_show_below_browse_player to 0\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_player', 0);
 	}
 }
 
@@ -512,7 +552,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -532,6 +572,16 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_showmessages"); }
 		},		
+	plugin_custombrowse_show_below_browse_player => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_player"); }
+		},
 	plugin_custombrowse_directory => {
 			'validate' => \&validateIsDirWrapper
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_DIRECTORY')
@@ -863,8 +913,14 @@ PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC
 PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
+	EN	Show menus in standard Browse menu on player. Requires slimserver restart.
+
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
+
+SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
+	EN	Standard Browse menu on player
 
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
