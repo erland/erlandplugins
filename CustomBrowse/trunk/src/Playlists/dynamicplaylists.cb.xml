@@ -8,6 +8,7 @@
 			<id>playlist</id>
 			<menutype>mode</menutype>
 			<menudata>PLUGIN.DynamicPlayList</menudata>
+			<menuurl>plugins/DynamicPlayList/dynamicplaylist_list.html?player={player}</menuurl>
 		</menu>
 	</menu>
 </custombrowse>

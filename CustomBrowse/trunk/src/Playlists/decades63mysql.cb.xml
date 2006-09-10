@@ -7,6 +7,7 @@
 		<name>Decades</name>
 		<menu>
 			<id>year</id>
+			<name>Albums</name>
 		        <menutype>sql</menutype>
 	        	<menudata>
 				select ifnull(floor(tracks.year/10)*10,0),ifnull(floor(tracks.year/10)*10,'Unknown') from tracks
@@ -17,6 +18,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
+				<name>Songs</name>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>

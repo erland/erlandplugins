@@ -6,6 +6,7 @@
 		<name>Years</name>
 		<menu>
 			<id>year</id>
+			<name>Albums</name>
 			<itemtype>year</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
@@ -17,6 +18,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
+				<name>Songs</name>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>

@@ -5,6 +5,7 @@
 	        <name>Albums</name>
 	        <menu>
 	                <id>album</id>
+			<name>Songs</name>
 			<itemtype>album</itemtype>
 	                <menutype>sql</menutype>
 	                <menudata>

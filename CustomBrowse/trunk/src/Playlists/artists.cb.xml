@@ -5,6 +5,7 @@
 		<name>Artists</name>
 		<menu>
 			<id>artist</id>
+			<name>Albums</name>
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
@@ -18,6 +19,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
+				<name>Songs</name>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>

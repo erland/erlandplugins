@@ -6,6 +6,7 @@
 		<name>Playlists</name>
 		<menu>
 			<id>playlist</id>
+			<name>Songs</name>
 			<itemtype>playlist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
