@@ -103,20 +103,10 @@ sub setMode {
 	        $client->bumpRight();
 	}
 }
-sub getMenu {
-    my $client = shift;
+sub getMenuItems {
     my $item = shift;
 
     my @listRef = ();
-    
-    my $selectedMenu = $client->param('selectedMenu');
-    if(!defined($item) && defined($selectedMenu)) {
-        for my $menu (keys %$browseMenus) {
-		if($browseMenus->{$menu}->{'enabled'} && $selectedMenu eq $browseMenus->{$menu}->{'id'}) {
-			$item = $browseMenus->{$menu};
-		}
-	}
-    }
 
     if(!defined($item)) {
         for my $menu (keys %$browseMenus) {
@@ -233,6 +223,30 @@ sub getMenu {
 	        }
 	}
     }
+    return \@listRef;
+}
+
+sub getMenu {
+    my $client = shift;
+    my $item = shift;
+
+    my @listRef = undef;
+    my $items = getMenuItems($item);
+    if(ref($items) eq 'ARRAY') {
+    	@listRef = @$items;
+    }else {
+	return $items;     
+    }
+    
+    my $selectedMenu = $client->param('selectedMenu');
+    if(!defined($item) && defined($selectedMenu)) {
+        for my $menu (keys %$browseMenus) {
+		if($browseMenus->{$menu}->{'enabled'} && $selectedMenu eq $browseMenus->{$menu}->{'id'}) {
+			$item = $browseMenus->{$menu};
+		}
+	}
+    }
+
 	
     if(scalar(@listRef)==0) {
         return undef;
@@ -480,29 +494,183 @@ sub initPlugin {
 	}
 }
 
-sub webPages {
+sub getPageItemsForContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
 
-	my %pages = (
-		"index\.(?:htm|xml)"     => \&handleWebList,
-	);
+	my $item = undef;
+	my $contextItems = getContext($client,$params,$currentItems,0);
+	my @contexts = @$contextItems;
 
-	my $value = 'plugins/CustomBrowse/index.html';
+	my $context = undef;
+	if(scalar(@contexts)>0) {
+		$context = @contexts[scalar(@contexts)-1];
+		$item = $context->{'item'};
+		$item->{'parameters'} = $context->{'parameters'};
+	}
 
-	if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
-
-		$value = undef;
-	} 
-
-	#Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
-
-	return (\%pages,$value);
+	my $items = getMenuItems($item);
+	if(ref($items) eq 'ARRAY') {
+		my @result = ();
+		for my $it (@$items) {
+			if(!defined($it->{'itemid'})) {
+				$it->{'itemid'} = $it->{'id'}
+			}
+			if(!defined($it->{'itemname'})) {
+				$it->{'itemname'} = $it->{'name'}
+			}
+			if(defined($it->{'menu'})) {
+				if(ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'}) && $it->{'menu'}->{'menutype'} eq 'trackdetails') {
+					my $id;
+					if($it->{'menu'}->{'menudata'} eq $it->{'id'}) {
+						$id = $it->{'itemid'};
+					}else {
+						$id = $item->{'parameters'}->{$it->{'menu'}->{'menudata'}};
+					}
+					$it->{'externalurl'}='songinfo.html?item='.escape($id).'&player='.$params->{'player'};
+				}elsif(ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'}) && $it->{'menu'}->{'menutype'} eq 'mode') {
+					if(defined($it->{'menu'}->{'menuurl'})) {
+						my $url = $it->{'menu'}->{'menuurl'};
+						$url = replaceParameters($url,$params);
+						$it->{'externalurl'}=$url;
+					}
+				}else {
+					if(defined($context)) {
+						$it->{'url'}=$context->{'url'}.','.$it->{'id'}.$context->{'valueUrl'}.'&'.$it->{'id'}.'='.=escape($it->{'itemid'});
+					}else {
+						$it->{'url'}='&hierarchy='.$it->{'id'}.'&'.$it->{'id'}.'='.escape($it->{'itemid'});
+					}
+				}
+			}
+			if($it->{'itemtype'} eq "track") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('track'),$it->{'itemid'});
+			}elsif($it->{'itemtype'} eq "album") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('album'),$it->{'itemid'});
+			}elsif($it->{'itemtype'} eq "artist") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('artist'),$it->{'itemid'});
+			}elsif($it->{'itemtype'} eq "year") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('year'),$it->{'itemid'});
+			}elsif($it->{'itemtype'} eq "genre") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('genre'),$it->{'itemid'});
+			}elsif($it->{'itemtype'} eq "playlist") {
+				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
+			}
+			if(defined($it->{'externalurl'}) || defined($it->{'url'})) {
+				push @result, $it;
+			}
+		}
+		return \@result;
+	}else {
+		my @result = ();
+		return \@result;
+	}
 }
 
-# Draws the plugin's web page
-sub handleWebList {
-	my ($client, $params) = @_;
+sub getContext {
+	my $client = shift;
+	my $params = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	if(defined($params->{'hierarchy'})) {
+		my $groupsstring = unescape($params->{'hierarchy'});
+		my @groups = (split /,/, $groupsstring);
+		my $group = @groups[$level];
+		my $item = undef;
+		foreach my $menuKey (keys %$currentItems) {
+			my $menu = $currentItems->{$menuKey};
+			if($menu->{'id'} eq $group) {
+				$item = $menu;
+			}
+		}
+		if(defined($item)) {
+			my $currentUrl = escape($group);
+			my $currentValue = escape($params->{$group});
+			my %parameters = ();
+			$parameters{$currentUrl} = $params->{$group};
+			my $name;
+			if(defined($item->{'name'})) {
+				$name = $item->{'name'};
+			}else {
+				$name = $item->{'id'};
+			}
+			my %resultItem = (
+				'url' => '&hierarchy='.$currentUrl,
+				'valueUrl' => '&'.$currentUrl.'='.$currentValue,
+				'parameters' => \%parameters,
+				'name' => $name,
+				'item' => $item
+			);
+			push @result, \%resultItem;
 
-	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/index.html', $params);
+			if(defined($item->{'menu'})) {
+				my $childResult = getSubContext($client,$params,\@groups,$item->{'menu'},$level+1);
+				for my $child (@$childResult) {
+					$child->{'url'} = '&hierarchy='.$currentUrl.','.$child->{'url'};
+					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
+					$child->{'parameters'}->{$currentUrl} = $params->{$group};
+					push @result,$child;
+				}
+			}
+		}
+	}
+	return \@result;
+}
+
+sub getSubContext {
+	my $client = shift;
+	my $params = shift;
+	my $groups = shift;
+	my $currentItems = shift;
+	my $level = shift;
+	my @result = ();
+	if($groups && scalar(@$groups)>$level) {
+		my $group = unescape(@$groups[$level]);
+		my $item = undef;
+		if(ref($currentItems) eq 'ARRAY') {
+			for my $menu (@$currentItems) {
+				if($menu->{'id'} eq $group) {
+					$item = $menu;
+				}
+			}
+		}else {
+			if($currentItems->{'id'} eq $group) {
+				$item = $currentItems;
+			}
+		}
+		if(defined($item)) {
+			my $currentUrl = escape($group);
+			my $currentValue = escape($params->{$group});
+			my %parameters = ();
+			$parameters{$currentUrl} = $params->{$group};
+			my $name;
+			if(defined($item->{'name'})) {
+				$name = $item->{'name'};
+			}else {
+				$name = $item->{'id'};
+			}
+			my %resultItem = (
+				'url' => $currentUrl,
+				'valueUrl' => '&'.$currentUrl.'='.$currentValue,
+				'parameters' => \%parameters,
+				'name' => $name,
+				'item' => $item
+			);
+			push @result, \%resultItem;
+
+			if(defined($item->{'menu'})) {
+				my $childResult = getSubContext($client,$params,$groups,$item->{'menu'},$level+1);
+				for my $child (@$childResult) {
+					$child->{'url'} = $currentUrl.','.$child->{'url'};
+					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
+					$child->{'parameters'}->{$currentUrl} = $params->{$group};
+					push @result,$child;
+				}
+			}
+		}
+	}
+	return \@result;
 }
 
 sub getFunctions {
@@ -616,6 +784,14 @@ sub webPages {
 sub handleWebList {
         my ($client, $params) = @_;
 
+	if(!defined($params->{'hierarchy'})) {
+		readBrowseConfiguration($client);
+	}
+	my $items = getPageItemsForContext($client,$params,$browseMenus);
+	my $context = getContext($client,$params,$browseMenus,0);
+
+	$params->{'pluginCustomBrowseItems'} = $items;
+	$params->{'pluginCustomBrowseContext'} = $context;
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }

@@ -9,6 +9,9 @@
 	<a href="[% webroot %]plugins/CustomBrowse/dynamicplaylist_list.html?player=[% player | uri %]">
 		[% "PLUGIN_CUSTOMBROWSE" | string %]
 	</a>
+	[% FOREACH group IN pluginCustomBrowseContext %]
+                &nbsp;/&nbsp;<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %]">[% group.name %]</a>
+        [% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
@@ -16,8 +19,35 @@
 [% IF !pluginCustomBrowseSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
 [% END %]
-<tr><td colspan="4">
+<tr><td></td><td colspan="4">
 <br>
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_selectmenus.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS" | string %]</a>
+<br>
+<br>
 </td></tr>
+    	<tr valign="top"><td></td><td colspan="4">
+		[% WRAPPER contentcontainer %]
+			[% odd = 1 %]
+			[% count = 0 %]
+			[% FOREACH item = pluginCustomBrowseItems %]
+				[% BLOCK controls %]
+					[% IF item.attributes %]
+						[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+					        [% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+					[% END %]
+				[% END %]
+				[%- WRAPPER contentitem controls='controls' %]
+			        	[% count = count + 1 %]
+					[% IF item.externalurl %]
+			        		<a href="[% webroot %][% item.externalurl %]">[% item.itemname %]</a><br>
+					[% ELSIF item.url %]
+			        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% item.itemname %]</a><br>
+					[% ELSE %]
+			        		[% item.itemname %]<br>
+					[% END %]
+			        [% END %]
+				[% odd = (not odd) %]
+		        [% END %]
+		[% END %]
+    	</td></tr>
 [% PROCESS pagefooter.html %]
