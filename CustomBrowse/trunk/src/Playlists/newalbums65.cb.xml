@@ -3,10 +3,10 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 	        <id>newalbums</id>
-	        <name>New Albums</name>
+	        <menuname>New Albums</menuname>
 	        <menu>
 	                <id>album</id>
-			<name>Songs</name>
+			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
 	                <menutype>sql</menutype>
 	                <menudata>

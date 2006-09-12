@@ -2,10 +2,10 @@
 <custombrowse>
 	<menu>
 		<id>genres</id>
-		<name>Genres</name>
+		<menuname>Genres</menuname>
 		<menu>
 			<id>genre</id>
-			<name>Artists</name>
+			<menuname>Artists</menuname>
 			<itemtype>genre</itemtype>
 			<menutype>sql</menutype>
 			<menudata>
@@ -14,7 +14,7 @@
 			</menudata>
 			<menu>
 				<id>artist</id>
-				<name>Albums</name>
+				<menuname>Albums</menuname>
 				<itemtype>artist</itemtype>
 			        <menutype>sql</menutype>
 		        	<menudata>
@@ -31,7 +31,7 @@
 				</menudata>
 				<menu>
 					<id>album</id>
-					<name>Songs</name>
+					<menuname>Songs</menuname>
 					<itemtype>album</itemtype>
 					<menutype>sql</menutype>
 					<menudata>

@@ -3,10 +3,10 @@
 	<database>SQLite</database>
 	<menu>
 	        <id>albums</id>
-	        <name>Random Albums</name>
+	        <menuname>Random Albums</menuname>
 	        <menu>
 	                <id>album</id>
-			<name>Songs</name>
+			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
 	                <menutype>sql</menutype>
 	                <menudata>

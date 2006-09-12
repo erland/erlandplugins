@@ -3,7 +3,7 @@
 	<requireplugins>TrackStat</requireplugins>
 	<menu>
 		<id>trackstat</id>
-		<name>Statistics</name>
+		<menuname>Statistics</menuname>
 		<menu>
 			<id>statistic</id>
 			<menutype>mode</menutype>

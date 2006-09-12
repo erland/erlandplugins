@@ -2,10 +2,10 @@
 <custombrowse>
 	<menu>
 		<id>artists</id>
-		<name>Artists</name>
+		<menuname>Artists</menuname>
 		<menu>
 			<id>variousartist</id>
-			<name>Various Artists</name>
+			<menuname>Various Artists</menuname>
 			<menutype>sql</menutype>
 			<menudata>
 				select contributors.id,contributors.name from contributors
@@ -16,7 +16,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
-				<name>Songs</name>
+				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
@@ -49,7 +49,7 @@
 		</menu>
 		<menu>
 			<id>artist</id>
-			<name>Albums</name>
+			<menuname>Albums</menuname>
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
@@ -68,7 +68,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
-				<name>Songs</name>
+				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>

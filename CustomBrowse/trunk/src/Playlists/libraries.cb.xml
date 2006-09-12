@@ -2,18 +2,18 @@
 <custombrowse>
 	<menu>
 		<id>libraries</id>
-		<name>Libraries</name>
+		<menuname>Libraries</menuname>
 		<menu>
 			<id>library</id>
-			<name>Library</name>
+			<menuname>Library</menuname>
 			<menutype>folder</menutype>
 			<menudata>{custombrowse.audiodir}</menudata>
 			<menu>
 				<id>artists</id>
-				<name>Artists</name>
+				<menuname>Artists</menuname>
 				<menu>
 					<id>artist</id>
-					<name>Albums</name>
+					<menuname>Albums</menuname>
 					<itemtype>artist</itemtype>
 				        <menutype>sql</menutype>
 			        	<menudata>
@@ -29,7 +29,7 @@
 					</menudata>
 					<menu>
 						<id>album</id>
-						<name>Songs</name>
+						<menuname>Songs</menuname>
 						<itemtype>album</itemtype>
 						<menutype>sql</menutype>
 						<menudata>
@@ -70,10 +70,10 @@
 			</menu>
 		        <menu>
         	        	<id>albums</id>
-	        	        <name>Albums</name>
+	        	        <menuname>Albums</menuname>
 		                <menu>
 		                        <id>album</id>
-					<name>Songs</name>
+					<menuname>Songs</menuname>
 		                        <itemtype>album</itemtype>
 		                        <menutype>sql</menutype>
 		                        <menudata>
@@ -108,10 +108,10 @@
 		        </menu>
 			<menu>
 				<id>genres</id>
-				<name>Genres</name>
+				<menuname>Genres</menuname>
 				<menu>
 					<id>genre</id>
-					<name>Artists</name>
+					<menuname>Artists</menuname>
 					<itemtype>genre</itemtype>
 					<menutype>sql</menutype>
 					<menudata>
@@ -126,7 +126,7 @@
 					</menudata>
 					<menu>
 						<id>artist</id>
-						<name>Albums</name>
+						<menuname>Albums</menuname>
 						<itemtype>artist</itemtype>
 					        <menutype>sql</menutype>
 				        	<menudata>
@@ -143,7 +143,7 @@
 						</menudata>
 						<menu>
 							<id>album</id>
-							<name>Songs</name>
+							<menuname>Songs</menuname>
 							<itemtype>album</itemtype>
 							<menutype>sql</menutype>
 							<menudata>

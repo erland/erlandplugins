@@ -4,10 +4,10 @@
 	<database>SQLite</database>
 	<menu>
 		<id>rated</id>
-		<name>Ratings</name>
+		<menuname>Ratings</menuname>
 		<menu>
 			<id>rating</id>
-			<name>Artists</name>
+			<menuname>Artists</menuname>
 			<menutype>sql</menutype>
 			<menudata>
 				select rating,round(rating/20)||' stars' from track_statistics 
@@ -18,7 +18,7 @@
 			</menudata>
 			<menu>
 				<id>artist</id>
-				<name>Albums</name>
+				<menuname>Albums</menuname>
 				<itemtype>artist</itemtype>
 			        <menutype>sql</menutype>
 		        	<menudata>
@@ -35,7 +35,7 @@
 				</menudata>
 				<menu>
 					<id>album</id>
-					<name>Songs</name>
+					<menuname>Songs</menuname>
 					<itemtype>album</itemtype>
 					<menutype>sql</menutype>
 					<menudata>

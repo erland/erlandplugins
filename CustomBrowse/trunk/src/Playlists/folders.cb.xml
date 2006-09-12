@@ -2,7 +2,7 @@
 <custombrowse>
 	<menu>
 		<id>folders</id>
-		<name>Music Folders</name>
+		<menuname>Music Folders</menuname>
 		<menu>
 			<id>browseitem</id>
 			<menutype>mode</menutype>

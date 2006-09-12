@@ -2,10 +2,10 @@
 <custombrowse>
 	<menu>
 	        <id>albums</id>
-	        <name>Albums</name>
+	        <menuname>Albums</menuname>
 	        <menu>
 	                <id>album</id>
-			<name>Songs</name>
+			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
 	                <menutype>sql</menutype>
 	                <menudata>

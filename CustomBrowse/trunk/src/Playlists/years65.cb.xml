@@ -3,10 +3,10 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		<id>years</id>
-		<name>Years</name>
+		<menuname>Years</menuname>
 		<menu>
 			<id>year</id>
-			<name>Albums</name>
+			<menuname>Albums</menuname>
 			<itemtype>year</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
@@ -15,7 +15,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
-				<name>Songs</name>
+				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
