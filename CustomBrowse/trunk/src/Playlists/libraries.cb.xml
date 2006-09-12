@@ -22,6 +22,7 @@
 							tracks.audio=1 and 
 							tracks.id=contributor_track.track and 
 							contributor_track.contributor=contributors.id and
+							contributor_track.role in (1,5) and
 							tracks.url like '{custombrowse.audiodirurl}/{library}%'
 						group by contributors.id 
 						order by contributors.namesort asc

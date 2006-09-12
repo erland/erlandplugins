@@ -9,12 +9,7 @@
 			<itemtype>genre</itemtype>
 			<menutype>sql</menutype>
 			<menudata>
-				select genres.id,genres.name from genres,tracks,genre_track 
-				where 
-					tracks.audio=1 and 
-					tracks.id=genre_track.track and 
-					genre_track.genre=genres.id 
-				group by genres.id 
+				select genres.id,genres.name from genres 
 				order by genres.namesort asc
 			</menudata>
 			<menu>
@@ -28,6 +23,7 @@
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
+						contributor_track.role in (1,5) and
 						tracks.id=genre_track.track and 
 						genre_track.genre={genre} 
 					group by contributors.id 
@@ -39,12 +35,12 @@
 					<itemtype>album</itemtype>
 					<menutype>sql</menutype>
 					<menudata>
-						select albums.id,albums.title from tracks,contributor_track,albums,genre_track 
+						select albums.id,albums.title from tracks,contributor_album,albums,genre_track 
 						where 
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
-							tracks.id=contributor_track.track and 
-							contributor_track.contributor={artist} and 
+							tracks.album=contributor_album.album and 
+							contributor_album.contributor={artist} and 
 							tracks.id=genre_track.track and 
 							genre_track.genre={genre} 
 						group by albums.id 

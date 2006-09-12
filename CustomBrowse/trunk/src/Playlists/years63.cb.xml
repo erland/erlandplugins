@@ -10,11 +10,9 @@
 			<itemtype>year</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select ifnull(tracks.year,0),ifnull(tracks.year,'Unknown') from tracks 
-				where 
-					tracks.audio=1 
-				group by tracks.year 
-				order by tracks.year asc
+				select ifnull(albums.year,0),ifnull(albums.year,'Unknown') from albums 
+				group by albums.year 
+				order by albums.year asc
 			</menudata>
 			<menu>
 				<id>album</id>
@@ -22,12 +20,9 @@
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from tracks,albums 
+					select albums.id,albums.title from albums 
 					where 
-						tracks.audio=1 and 
-						albums.id=tracks.album and 
-						ifnull(tracks.year,0)={year} 
-					group by albums.id 
+						ifnull(albums.year,0)={year} 
 					order by albums.titlesort
 				</menudata>
 				<menu>

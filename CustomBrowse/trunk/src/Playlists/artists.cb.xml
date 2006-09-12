@@ -4,16 +4,65 @@
 		<id>artists</id>
 		<name>Artists</name>
 		<menu>
+			<id>variousartist</id>
+			<name>Various Artists</name>
+			<menutype>sql</menutype>
+			<menudata>
+				select contributors.id,contributors.name from contributors
+				where
+					contributors.name='Various Artists' and
+					{property.variousArtistAutoIdentification}=1
+				group by contributors.id
+			</menudata>
+			<menu>
+				<id>album</id>
+				<name>Songs</name>
+				<itemtype>album</itemtype>
+				<menutype>sql</menutype>
+				<menudata>
+					select albums.id,albums.title from albums
+					where
+						albums.compilation = 1
+					group by albums.id
+					order by albums.titlesort asc
+                                </menudata>
+				<menu>
+					<id>track</id>
+					<itemtype>track</itemtype>
+					<itemformat>track</itemformat>
+					<menutype>sql</menutype>
+					<menudata>
+						select tracks.id,tracks.title from tracks,albums
+						where
+							tracks.audio=1 and
+							tracks.album={album}
+						group by tracks.id
+						order by tracks.tracknum asc,tracks.titlesort asc
+					</menudata>
+					<menu>
+						<id>trackdetails</id>
+						<menutype>trackdetails</menutype>
+						<menudata>track</menudata>
+					</menu>
+				</menu>
+			</menu>
+		</menu>
+		<menu>
 			<id>artist</id>
 			<name>Albums</name>
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select contributors.id,contributors.name from contributors,tracks,contributor_track 
+				select contributors.id,contributors.name from contributors,contributor_album,albums
 				where 
-					tracks.audio=1 and 
-					tracks.id=contributor_track.track and 
-					contributor_track.contributor=contributors.id 
+					contributor_album.contributor=contributors.id and
+					contributor_album.album=albums.id and
+					contributor_album.role in (1,5) and 
+					(
+						albums.compilation is null or 
+						albums.compilation=0 or 
+						{property.variousArtistAutoIdentification}=0
+					)
 				group by contributors.id 
 				order by contributors.namesort asc
 			</menudata>
@@ -23,12 +72,10 @@
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from tracks,contributor_track,albums 
+					select albums.id,albums.title from contributor_album,albums 
 					where 
-						tracks.audio=1 and 
-						albums.id=tracks.album and 
-						tracks.id=contributor_track.track and 
-						contributor_track.contributor={artist} 
+						albums.id=contributor_album.album and 
+						contributor_album.contributor={artist} 
 					group by albums.id 
 					order by albums.titlesort asc
 				</menudata>

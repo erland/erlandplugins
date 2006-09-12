@@ -9,11 +9,7 @@
 			<itemtype>album</itemtype>
 	                <menutype>sql</menutype>
 	                <menudata>
-				select albums.id,albums.title from tracks,albums 
-				where 
-					tracks.audio=1 and 
-					albums.id=tracks.album 
-				group by albums.id 
+				select albums.id,albums.title from albums 
 				order by albums.titlesort asc
 			</menudata>
 			<menu>

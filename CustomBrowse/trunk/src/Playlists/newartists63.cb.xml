@@ -14,7 +14,8 @@
 				where 
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
-					contributor_track.contributor=contributors.id 
+					contributor_track.contributor=contributors.id and
+					contributor_track.role in (1,5)
 				group by contributors.id 
 				order by max(tracks.age) desc
 			</menudata>
