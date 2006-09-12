@@ -420,6 +420,14 @@ sub replaceParameters {
     $originalValue =~ s/\{custombrowse\.audiodir\}/$audiodir/g;
     my $audiodirurl = Slim::Utils::Misc::fileURLFromPath($audiodir);
     $originalValue =~ s/\{custombrowse\.audiodirurl\}/$audiodirurl/g;
+    while($originalValue =~ m/\{property\.(.*?)\}/) {
+	my $propertyValue = Slim::Utils::Prefs::get($1);
+	if(defined($propertyValue)) {
+		$originalValue =~ s/\{property\.$1\}/\'$propertyValue\'/g;
+	}else {
+		$originalValue =~ s/\{property\..*?\}/''/g;
+	}
+    }
 
     return $originalValue;
 }
@@ -569,7 +577,9 @@ sub getPageItemsForContext {
 					}
 				}
 			}
-			if($it->{'itemtype'} eq "track") {
+			if(!defined($it->{'itemtype'})) {
+				# Do nothing
+			}elsif($it->{'itemtype'} eq "track") {
 				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('track'),$it->{'itemid'});
 			}elsif($it->{'itemtype'} eq "album") {
 				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('album'),$it->{'itemid'});
