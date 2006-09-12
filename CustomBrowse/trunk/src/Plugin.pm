@@ -53,11 +53,11 @@ sub getDisplayText {
                     $name = Slim::Music::Info::standardTitle(undef, $track);
                 }
             }
-            if($name eq '') {
-		$name = $item->{'name'};
-            }
             if(!defined($name) || $name eq '') {
 		$name = $item->{'itemname'};
+            }
+            if(!defined($name) || $name eq '') {
+		$name = $item->{'menuname'};
             }
 	}
 	return $name;
@@ -119,6 +119,7 @@ sub getMenuItems {
             }
         }
 	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
+	@listRef = sort { $a->{'menuname'} cmp $b->{'menuname'} } @listRef;
     }elsif(defined($item->{'menu'})) {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {
@@ -132,7 +133,7 @@ sub getMenuItems {
 		if(!defined($menu->{'menutype'})) {
 	                my %menuItem = (
 	                    'itemid' => $menu->{'id'},
-	                    'itemname' => $menu->{'name'}
+	                    'itemname' => $menu->{'menuname'}
 	                );
 	                $menuItem{'value'} = $item->{'value'}."_".$menu->{'id'};
 	                for my $menuKey (keys %{$menu}) {
@@ -259,8 +260,8 @@ sub getMenu {
 	$modeNamePostFix = $item->{'value'};
 	if(defined($item->{'itemname'})) {
 		$menuTitle = $item->{'itemname'};
-	}elsif(defined($item->{'name'})) {
-		$menuTitle = $item->{'name'};
+	}elsif(defined($item->{'menuname'})) {
+		$menuTitle = $item->{'menuname'};
 	}
     }
     # use INPUT.Choice to display the list of feeds
@@ -491,7 +492,7 @@ sub initPlugin {
 			if(defined($browseMenus->{$menu}->{'itemname'})) {
 				$name = $browseMenus->{$menu}->{'itemname'};
 			}else {
-				$name = $browseMenus->{$menu}->{'name'};
+				$name = $browseMenus->{$menu}->{'menuname'};
 			}
 			my %submenu = (
 				'useMode' => 'PLUGIN.CustomBrowse',
@@ -552,7 +553,7 @@ sub getPageItemsForContext {
 				$it->{'itemid'} = $it->{'id'}
 			}
 			if(!defined($it->{'itemname'})) {
-				$it->{'itemname'} = $it->{'name'}
+				$it->{'itemname'} = $it->{'menuname'}
 			}
 			if(defined($it->{'menu'})) {
 				if(ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'}) && $it->{'menu'}->{'menutype'} eq 'trackdetails') {
@@ -577,20 +578,20 @@ sub getPageItemsForContext {
 					}
 				}
 			}
-			if(!defined($it->{'itemtype'})) {
-				# Do nothing
-			}elsif($it->{'itemtype'} eq "track") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('track'),$it->{'itemid'});
-			}elsif($it->{'itemtype'} eq "album") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('album'),$it->{'itemid'});
-			}elsif($it->{'itemtype'} eq "artist") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('artist'),$it->{'itemid'});
-			}elsif($it->{'itemtype'} eq "year") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('year'),$it->{'itemid'});
-			}elsif($it->{'itemtype'} eq "genre") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('genre'),$it->{'itemid'});
-			}elsif($it->{'itemtype'} eq "playlist") {
-				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
+			if(defined($item->{'itemtype'})) {
+				if($it->{'itemtype'} eq "track") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('track'),$it->{'itemid'});
+				}elsif($it->{'itemtype'} eq "album") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('album'),$it->{'itemid'});
+				}elsif($it->{'itemtype'} eq "artist") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('artist'),$it->{'itemid'});
+				}elsif($it->{'itemtype'} eq "year") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('year'),$it->{'itemid'});
+				}elsif($it->{'itemtype'} eq "genre") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('genre'),$it->{'itemid'});
+				}elsif($it->{'itemtype'} eq "playlist") {
+					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
+				}
 			}
 			if(defined($it->{'externalurl'}) || defined($it->{'url'})) {
 				push @resultItems, $it;
@@ -622,7 +623,7 @@ sub getContext {
 	if(defined($params->{'hierarchy'})) {
 		my $groupsstring = unescape($params->{'hierarchy'});
 		my @groups = (split /,/, $groupsstring);
-		my $group = @groups[$level];
+		my $group = $groups[$level];
 		my $item = undef;
 		foreach my $menuKey (keys %$currentItems) {
 			my $menu = $currentItems->{$menuKey};
@@ -636,8 +637,8 @@ sub getContext {
 			my %parameters = ();
 			$parameters{$currentUrl} = $params->{$group};
 			my $name;
-			if(defined($item->{'name'})) {
-				$name = $item->{'name'};
+			if(defined($item->{'menuname'})) {
+				$name = $item->{'menuname'};
 			}else {
 				$name = $item->{'id'};
 			}
@@ -691,8 +692,8 @@ sub getSubContext {
 			my %parameters = ();
 			$parameters{$currentUrl} = $params->{$group};
 			my $name;
-			if(defined($item->{'name'})) {
-				$name = $item->{'name'};
+			if(defined($item->{'menuname'})) {
+				$name = $item->{'menuname'};
 			}else {
 				$name = $item->{'id'};
 			}
