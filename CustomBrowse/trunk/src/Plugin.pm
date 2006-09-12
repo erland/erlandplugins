@@ -23,6 +23,7 @@ use strict;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+use POSIX qw(ceil);
 use File::Spec::Functions qw(:ALL);
 use File::Slurp;
 use XML::Simple;
@@ -509,11 +510,36 @@ sub getPageItemsForContext {
 		$item = $context->{'item'};
 		$item->{'parameters'} = $context->{'parameters'};
 	}
-
+	my %result = ();
 	my $items = getMenuItems($item);
 	if(ref($items) eq 'ARRAY') {
-		my @result = ();
+		my @resultItems = ();
+		my %pagebar = ();
+		$result{'pageinfo'}=\%pagebar;
+		$result{'pageinfo'}->{'totalitems'} = scalar(@$items);
+		my $itemsPerPage = Slim::Utils::Prefs::get('itemsPerPage');
+		$result{'pageinfo'}->{'itemsperpage'} = $itemsPerPage;
+		my $start = 0;
+		if(defined($params->{'start'})) {
+			$start = $params->{'start'};
+			@$items = splice(@$items,$params->{'start'});
+		}
+		$result{'pageinfo'}->{'currentpage'} = int($start/$itemsPerPage);
+		$result{'pageinfo'}->{'totalpages'} = ceil($result{'pageinfo'}->{'totalitems'}/$itemsPerPage) || 0;
+		$result{'pageinfo'}->{'enditem'} = $start+$itemsPerPage -1;
+		$result{'pageinfo'}->{'startitem'} = $start || 0;
+		if(defined($context)) {
+			$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'};
+		}
+
+		my $count = 0;
 		for my $it (@$items) {
+			if(defined($itemsPerPage) && $itemsPerPage>0) {
+				$count = $count + 1;
+				if($count>$itemsPerPage) {
+					last;
+				}
+			}
 			if(!defined($it->{'itemid'})) {
 				$it->{'itemid'} = $it->{'id'}
 			}
@@ -557,14 +583,24 @@ sub getPageItemsForContext {
 				$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
 			}
 			if(defined($it->{'externalurl'}) || defined($it->{'url'})) {
-				push @result, $it;
+				push @resultItems, $it;
 			}
 		}
-		return \@result;
+		$result{'items'} = \@resultItems;
 	}else {
-		my @result = ();
-		return \@result;
+		my @resultItems = ();
+		$result{'items'} = \@resultItems;
+		my %pagebar = ();
+		$result{'pageinfo'}=\%pagebar;
+		$result{'pageinfo'}->{'totalitems'} = 0;
+		my $itemsPerPage = Slim::Utils::Prefs::get('itemsPerPage');
+		$result{'pageinfo'}->{'itemsperpage'} = $itemsPerPage;
+		$result{'pageinfo'}->{'currentpage'} = 0;
+		$result{'pageinfo'}->{'totalpages'} = 0;
+		$result{'pageinfo'}->{'enditem'} = 0;
+		$result{'pageinfo'}->{'startitem'} = 0;
 	}
+	return \%result;
 }
 
 sub getContext {
@@ -790,7 +826,8 @@ sub handleWebList {
 	my $items = getPageItemsForContext($client,$params,$browseMenus);
 	my $context = getContext($client,$params,$browseMenus,0);
 
-	$params->{'pluginCustomBrowseItems'} = $items;
+	$params->{'pluginCustomBrowsePageInfo'} = $items->{'pageinfo'};
+	$params->{'pluginCustomBrowseItems'} = $items->{'items'};
 	$params->{'pluginCustomBrowseContext'} = $context;
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
