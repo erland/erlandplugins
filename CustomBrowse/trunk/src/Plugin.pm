@@ -35,6 +35,35 @@ use FindBin qw($Bin);
 my $driver;
 my $browseMenus;
 
+my %_ignoredItems = (
+
+        # always ignore . and ..
+        '.' => 1,
+        '..' => 1,
+
+        # Items we should ignore on a mac volume
+        'Icon' => 1,
+        'TheVolumeSettingsFolder' => 1,
+        'TheFindByContentFolder' => 1,
+        'Network Trash Folder' => 1,
+        'Desktop' => 1,
+        'Desktop Folder' => 1,
+        'Temporary Items' => 1,
+        '.Trashes' => 1,
+        '.AppleDB' => 1,
+        '.AppleDouble' => 1,
+        '.Metadata' => 1,
+        '.DS_Store' => 1,
+
+        # Items we should ignore on a linux vlume
+        'lost+found' => 1,
+
+        # Items we should ignore  on a Windows volume
+        'System Volume Information' => 1,
+        'RECYCLER' => 1,
+        'Recycled' => 1,
+);
+
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMBROWSE';
 }
@@ -197,10 +226,15 @@ sub getMenuItems {
 	        }elsif($menu->{'menutype'} eq 'folder') {
 	            my $dir = $menu->{'menudata'};
 	            $dir = replaceParameters($dir,$item->{'parameters'});
-	            for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
-	            	if(-d catdir($dir, $subdir)) {
+
+	            for my $subdir (readDirectory($dir)) {
+			my $fullpath = catdir($dir, $subdir);
+			#Make sure fullpath can handle non ascii characters, catdir destroys them
+			$fullpath = Slim::Utils::Unicode::utf8on($fullpath);
+			$fullpath = Slim::Utils::Unicode::utf8encode_locale($fullpath);
+	            	if(-d $fullpath) {
 		                my %menuItem = (
-		                    'itemid' => escape($subdir),
+		                    'itemid' => escapeSubDir($subdir),
 		                    'itemname' => $subdir
 		                );
 		                $menuItem{'value'} = $item->{'value'}."_".$subdir;
@@ -216,7 +250,7 @@ sub getMenuItems {
 		                    }
 		                }
 		                if(defined($menu->{'id'})) {
-		                    $menuItem{'parameters'}->{$menu->{'id'}} = escape($subdir);
+		                    $menuItem{'parameters'}->{$menu->{'id'}} = escapeSubDir($subdir);
 		                }
 		                push @listRef, \%menuItem;
 			}
@@ -227,7 +261,43 @@ sub getMenuItems {
     }
     return \@listRef;
 }
+sub escapeSubDir {
+	my $dir = shift;
+	my $result = Slim::Utils::Misc::fileURLFromPath($dir);
+	return substr($result,3);
+}
+sub readDirectory {
+	my $dirname = shift;
 
+	my @result = ();
+	my $ignore = Slim::Utils::Prefs::get('ignoreDirRE') || '';
+	opendir(DIR, $dirname) || do {
+                warn "opendir failed: " . $dirname . ": $!\n";
+        };
+	for my $item (readdir(DIR)) {
+		next if exists $_ignoredItems{$item};
+		next if $item =~ /^__\S+\.m3u$/;
+	        next if $item =~ /^\._/;
+	        if ($ignore ne '') {
+	        	next if $item =~ /$ignore/;
+	        }
+		my $fullpath = catdir($dirname,$item);
+
+		#Make sure fullpath can handle non ascii characters, catdir destroys them
+		$fullpath = Slim::Utils::Unicode::utf8on($fullpath);
+		$fullpath = Slim::Utils::Unicode::utf8encode_locale($fullpath);
+
+		# We only want files, directories and symlinks Bug #441
+                # Otherwise we'll try and read them, and bad things will happen.
+                # symlink must come first so an lstat() is done.
+		unless (-l $fullpath || -d $fullpath || -f $fullpath) {
+	        	next;
+		}
+		push @result,$item;
+	}
+	closedir(DIR);
+	return sort(@result);
+}
 sub getMenu {
     my $client = shift;
     my $item = shift;
@@ -410,23 +480,29 @@ sub prepareMenuSQL {
 sub replaceParameters {
     my $originalValue = shift;
     my $parameters = shift;
+    my $dbh = getCurrentDBH();
 
     if(defined($parameters)) {
         for my $param (keys %$parameters) {
-            my $value = $parameters->{$param};
+            my $value = $dbh->quote($parameters->{$param});
+	    $value = substr($value, 1, -1);
             $originalValue =~ s/\{$param\}/$value/g;
         }
     }
-    my $audiodir = Slim::Utils::Prefs::get('audiodir');
+    my $audiodir = $dbh->quote(Slim::Utils::Prefs::get('audiodir'));
+    $audiodir = substr($audiodir, 1, -1);
     $originalValue =~ s/\{custombrowse\.audiodir\}/$audiodir/g;
-    my $audiodirurl = Slim::Utils::Misc::fileURLFromPath($audiodir);
+    my $audiodirurl = $dbh->quote(Slim::Utils::Misc::fileURLFromPath(Slim::Utils::Prefs::get('audiodir')));
+    $audiodirurl = substr($audiodirurl, 1, -1);
     $originalValue =~ s/\{custombrowse\.audiodirurl\}/$audiodirurl/g;
     while($originalValue =~ m/\{property\.(.*?)\}/) {
 	my $propertyValue = Slim::Utils::Prefs::get($1);
 	if(defined($propertyValue)) {
-		$originalValue =~ s/\{property\.$1\}/\'$propertyValue\'/g;
+		$propertyValue = $dbh->quote($propertyValue);
+	    	$propertyValue = substr($propertyValue, 1, -1);
+		$originalValue =~ s/\{property\.$1\}/$propertyValue/g;
 	}else {
-		$originalValue =~ s/\{property\..*?\}/''/g;
+		$originalValue =~ s/\{property\..*?\}//g;
 	}
     }
 
