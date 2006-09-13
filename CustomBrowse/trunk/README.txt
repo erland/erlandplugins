@@ -51,9 +51,10 @@ defined.
 <custombrowse>
         <menu>
                 <id>albums</id>
-                <name>Albums</name>
+                <menuname>Albums</menuname>
                 <menu>
                         <id>album</id>
+			<menuname>Songs</menuname>
                         <itemtype>album</itemtype>
                         <menutype>sql</menutype>
                         <menudata>
@@ -94,9 +95,10 @@ menu = Defines a new sub menu
 id = Identification for a specific menu, must be uniqe on the same level.
      The id element is mandatory for all menus.
 
-name = Title of the menu, this element is only required on the top menu level, its
-       never used for dynamic menus. The name element is mandatory for static menus with
-       no menutype element, its not used for dynamic menus.
+menuname = Title of the menu, this element is required on the top menu level, its
+           never used for dynamic menus in the player interface. In the web interface
+           this value is used for the navigation links at the top. The menuname element 
+           is mandatory for static menus with no menutype element.
 
 itemtype = Type of items in the menu, should only be available if the menu items
            represents a single unique database object. The following values are allowed:
@@ -141,7 +143,8 @@ menudata = Defines parameters needed for retrieval of dynamic menu data. This el
                          is the text that is displayed. The first column should typically
                          be the id column in the table, for example tracks.id. Text within
                          {} will be replaced by looking up the selected item in the parent
-                         menu with the id specified within {}
+                         menu with the id specified within {}. Keywords will be replaced in
+                         this field.
 
            trackdetails  The id of the parent menu that contains the track that should be
                          displayed. 
@@ -155,8 +158,13 @@ menudata = Defines parameters needed for retrieval of dynamic menu data. This el
                          PLUGIN.DynamicPlayList
            
            folder        The directory where sub folders shall be read. This value can
-                         also contain keywords which will be replaced. The following
-                         keywords are currently supported:
-                         {custombrowse.audiodir} = The music directory
-                         {custombrowse.audiodirurl} = The url of the music directory
+                         also contain keywords which will be replaced. 
+                         
+Keywords
+--------
+Currently the following keywords are supported in those element that supports keyword replacment.
+A keyword will be replaced with the real value before its used.
 
+{custombrowse.audiodir} = The music directory
+{custombrowse.audiodirurl} = The url of the music directory
+{property.xxx} = The value of the xxx configuration parameter, slimserver.pref for exact name.
