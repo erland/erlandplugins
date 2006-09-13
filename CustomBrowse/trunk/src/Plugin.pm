@@ -147,7 +147,6 @@ sub getMenuItems {
 	            push @listRef,$browseMenus->{$menu};
             }
         }
-	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
 	@listRef = sort { $a->{'menuname'} cmp $b->{'menuname'} } @listRef;
     }elsif(defined($item->{'menu'})) {
 	my @menus = ();
@@ -699,7 +698,12 @@ sub getContext {
 		}
 		if(defined($item)) {
 			my $currentUrl = escape($group);
-			my $currentValue = escape($params->{$group});
+			my $currentValue;
+			if(defined($params->{$group})) {
+				$currentValue = escape($params->{$group});
+			}else {
+				$currentValue = escape($group);
+			}
 			my %parameters = ();
 			$parameters{$currentUrl} = $params->{$group};
 			my $name;
@@ -827,13 +831,18 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_show_below_browse_player to 0\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_player', 0);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_show_below_browse_web to 0\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_web', 0);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_show_below_browse_web','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -863,6 +872,16 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_player"); }
 		},
+	plugin_custombrowse_show_below_browse_web => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_web"); }
+		},
 	plugin_custombrowse_directory => {
 			'validate' => \&validateIsDirWrapper
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_DIRECTORY')
@@ -887,12 +906,48 @@ sub webPages {
 
                 $value = undef;
         }
-
-        #Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
+	if(defined($value)) {
+		if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web')) {
+			readBrowseConfiguration();
+			addWebMenus($value);
+		}else {
+		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		}
+	}
 
         return (\%pages,$value);
 }
 
+sub addWebMenus {
+	my $value = shift;
+	readBrowseConfiguration();
+        for my $menu (keys %$browseMenus) {
+            if(!defined($browseMenus->{$menu}->{'value'})) {
+            	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
+            }
+            if($browseMenus->{$menu}->{'enabled'}) {
+		my $name;
+		if(defined($browseMenus->{$menu}->{'itemname'})) {
+			$name = $browseMenus->{$menu}->{'itemname'};
+		}else {
+			$name = $browseMenus->{$menu}->{'menuname'};
+		}
+		if ( !Slim::Utils::Strings::stringExists($name) ) {
+                	Slim::Utils::Strings::addStringPointer( uc $name, $name );
+        	}
+		if(defined($browseMenus->{$menu}->{'menu'}) && ref($browseMenus->{$menu}->{'menu'}) ne 'ARRAY' && $browseMenus->{$menu}->{'menu'}->{'menutype'} eq 'mode') {
+			my $url;
+			if(defined($browseMenus->{$menu}->{'menu'}->{'menuurl'})) {
+				$url = $browseMenus->{$menu}->{'menu'}->{'menuurl'};
+				$url = replaceParameters($url);
+			}
+		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
+		}else {
+		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".escape($browseMenus->{$menu}->{'id'} )});
+		}
+            }
+        }
+}
 # Draws the plugin's web page
 sub handleWebList {
         my ($client, $params) = @_;
@@ -1206,11 +1261,17 @@ PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
 	EN	Show menus in standard Browse menu on player. Requires slimserver restart.
 
+PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
+	EN	Show menus in standard Browse menu in web interface. Requires slimserver restart.
+
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
 	EN	Standard Browse menu on player
+
+SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
+	EN	Standard Browse menu in web interface
 
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
