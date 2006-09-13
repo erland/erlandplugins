@@ -907,11 +907,13 @@ sub webPages {
                 $value = undef;
         }
 	if(defined($value)) {
-		if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web')) {
-			readBrowseConfiguration();
-			addWebMenus($value);
-		}else {
-		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		if ($::VERSION ge '6.5') {
+			if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web')) {
+				readBrowseConfiguration();
+				addWebMenus($value);
+			}else {
+		        	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			}
 		}
 	}
 
@@ -1262,7 +1264,7 @@ PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
 	EN	Show menus in standard Browse menu on player. Requires slimserver restart.
 
 PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
-	EN	Show menus in standard Browse menu in web interface. Requires slimserver restart.
+	EN	Show menus in standard Browse menu in web interface (slimserver 6.5 and later). Requires slimserver restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
