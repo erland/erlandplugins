@@ -226,12 +226,9 @@ sub getMenuItems {
 	        }elsif($menu->{'menutype'} eq 'folder') {
 	            my $dir = $menu->{'menudata'};
 	            $dir = replaceParameters($dir,$item->{'parameters'});
-
-	            for my $subdir (readDirectory($dir)) {
+	            $dir = Slim::Utils::Unicode::utf8off($dir);
+	            for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 			my $fullpath = catdir($dir, $subdir);
-			#Make sure fullpath can handle non ascii characters, catdir destroys them
-			$fullpath = Slim::Utils::Unicode::utf8on($fullpath);
-			$fullpath = Slim::Utils::Unicode::utf8encode_locale($fullpath);
 	            	if(-d $fullpath) {
 		                my %menuItem = (
 		                    'itemid' => escapeSubDir($subdir),
@@ -266,38 +263,7 @@ sub escapeSubDir {
 	my $result = Slim::Utils::Misc::fileURLFromPath($dir);
 	return substr($result,3);
 }
-sub readDirectory {
-	my $dirname = shift;
 
-	my @result = ();
-	my $ignore = Slim::Utils::Prefs::get('ignoreDirRE') || '';
-	opendir(DIR, $dirname) || do {
-                warn "opendir failed: " . $dirname . ": $!\n";
-        };
-	for my $item (readdir(DIR)) {
-		next if exists $_ignoredItems{$item};
-		next if $item =~ /^__\S+\.m3u$/;
-	        next if $item =~ /^\._/;
-	        if ($ignore ne '') {
-	        	next if $item =~ /$ignore/;
-	        }
-		my $fullpath = catdir($dirname,$item);
-
-		#Make sure fullpath can handle non ascii characters, catdir destroys them
-		$fullpath = Slim::Utils::Unicode::utf8on($fullpath);
-		$fullpath = Slim::Utils::Unicode::utf8encode_locale($fullpath);
-
-		# We only want files, directories and symlinks Bug #441
-                # Otherwise we'll try and read them, and bad things will happen.
-                # symlink must come first so an lstat() is done.
-		unless (-l $fullpath || -d $fullpath || -f $fullpath) {
-	        	next;
-		}
-		push @result,$item;
-	}
-	closedir(DIR);
-	return sort(@result);
-}
 sub getMenu {
     my $client = shift;
     my $item = shift;
