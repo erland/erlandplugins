@@ -3,10 +3,10 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		<id>decades</id>
-		<name>Decades</name>
+		<menuname>Decades</menuname>
 		<menu>
 			<id>year</id>
-			<name>Albums</name>
+			<menuname>Albums</menuname>
 		        <menutype>sql</menutype>
 	        	<menudata>
 				select floor(tracks.year/10)*10,case when tracks.year&gt;0 then floor(tracks.year/10)*10 else 'Unknown' end from tracks
@@ -17,7 +17,7 @@
 			</menudata>
 			<menu>
 				<id>album</id>
-				<name>Songs</name>
+				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
