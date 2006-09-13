@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-		<id>artists</id>
+		<id>singles</id>
 		<menuname>Singles</menuname>
 		<menu>
 			<id>artist</id>
