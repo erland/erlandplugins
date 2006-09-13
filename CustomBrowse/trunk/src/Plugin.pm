@@ -228,11 +228,31 @@ sub getMenuItems {
 	            $dir = replaceParameters($dir,$item->{'parameters'});
 	            $dir = Slim::Utils::Unicode::utf8off($dir);
 	            for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
+			my $subdirname = $subdir;
 			my $fullpath = catdir($dir, $subdir);
+			if(Slim::Music::Info::isWinShortcut($fullpath)) {
+				$subdirname = substr($subdir,0,-4);
+				$fullpath = Slim::Utils::Misc::pathFromWinShortcut(Slim::Utils::Misc::fileURLFromPath($fullpath));
+				if($fullpath ne '') {
+					$fullpath = Slim::Utils::Misc::pathFromFileURL($fullpath);
+					#Strip read dir from path
+					my $tmp = $fullpath;
+					my $tmpdir = $dir;
+					$tmpdir =~ s/\\/\\\\/g;
+					$tmp =~ s/^$tmpdir//g;
+					#Strip audio dir from path
+					my $audiodir = Slim::Utils::Prefs::get('audiodir');
+					$tmpdir = $audiodir;
+					$tmpdir =~ s/\\/\\\\/g;
+					$tmp =~ s/^$tmpdir//g;
+					$tmp =~ s/^[\\\/]?//g;
+					$subdir = $tmp;
+				}
+			}
 	            	if(-d $fullpath) {
 		                my %menuItem = (
 		                    'itemid' => escapeSubDir($subdir),
-		                    'itemname' => $subdir
+		                    'itemname' => $subdirname
 		                );
 		                $menuItem{'value'} = $item->{'value'}."_".$subdir;
 	
@@ -252,7 +272,7 @@ sub getMenuItems {
 		                push @listRef, \%menuItem;
 			}
 			@listRef = sort { $a->{'itemname'} cmp $b->{'itemname'} } @listRef;
-	            }	
+	            }
 	        }
 	}
     }
@@ -261,7 +281,11 @@ sub getMenuItems {
 sub escapeSubDir {
 	my $dir = shift;
 	my $result = Slim::Utils::Misc::fileURLFromPath($dir);
-	return substr($result,3);
+	if (Slim::Utils::OSDetect::OS() eq "win") {
+		return substr($result,8);
+	}else {
+		return substr($result,3);
+	}
 }
 
 sub getMenu {
