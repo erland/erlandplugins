@@ -10,12 +10,14 @@
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select contributors.id,contributors.name from contributors,tracks,contributor_track 
+				select contributors.id,contributors.name from contributors,tracks,contributor_track,albums 
 				where 
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
 					contributor_track.contributor=contributors.id and
-					contributor_track.role in (1,5)
+					contributor_track.role in (1,5) and
+					albums.id=tracks.album and
+					(albums.compilation is null or albums.compilation=0)
 				group by contributors.id 
 				order by max(tracks.timestamp) desc
 			</menudata>
