@@ -27,7 +27,7 @@
 					where 
 						tracks.audio=1 and 
 						tracks.album={album} 
-					order by tracks.tracknum asc,tracks.titlesort asc
+					order by tracks.age desc
 				</menudata>
 				<menu>
 					<id>trackdetails</id>
