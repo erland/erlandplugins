@@ -5,7 +5,7 @@
 		<menuname>Singles</menuname>
 		<menu>
 			<id>artist</id>
-			<menuname>Singles</menuname>
+			<menuname>Songs</menuname>
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
@@ -16,48 +16,33 @@
                                         contributor_track.role in (1,5) and
                                         tracks.album=albums.id and
 					(albums.compilation is null or albums.compilation=0) and
+					albums.title='No Album' and 
                                         tracks.audio=1
-                                group by albums.id
-				having count(*)&lt;6
+                                group by contributors.id
                                 order by contributors.namesort asc
 			</menudata>
 			<menu>
-				<id>album</id>
+				<id>track</id>
 				<menuname>Songs</menuname>
-				<itemtype>album</itemtype>
+				<itemtype>track</itemtype>
+				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from contributor_album,albums,tracks 
+					select tracks.id,tracks.title from contributor_album,albums,tracks 
 					where 
 						albums.id=contributor_album.album and 
 						contributor_album.role in (1,5) and
 						contributor_album.contributor={artist} and
 						tracks.album=albums.id and
-						(albums.compilation is null or albums.compilation=0)
-					group by albums.id 
-					having count(*)&lt;6
-					order by albums.titlesort asc
+						albums.title='No Album' and
+						tracks.audio=1
+					group by tracks.id 
+					order by tracks.titlesort asc
 				</menudata>
 				<menu>
-					<id>track</id>
-					<itemtype>track</itemtype>
-					<itemformat>track</itemformat>
-					<menutype>sql</menutype>
-					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums 
-						where 
-							tracks.audio=1 and 
-							contributor_track.track=tracks.id and 
-							tracks.album={album} and 
-							contributor_track.contributor={artist} 
-						group by tracks.id 
-						order by tracks.tracknum asc,tracks.titlesort asc
-					</menudata>
-					<menu>
-						<id>trackdetails</id>
-						<menutype>trackdetails</menutype>
-						<menudata>track</menudata>
-					</menu>
+					<id>trackdetails</id>
+					<menutype>trackdetails</menutype>
+					<menudata>track</menudata>
 				</menu>
 			</menu>
 		</menu>
