@@ -163,7 +163,11 @@ sub getMenuItems {
 	                    'itemid' => $menu->{'id'},
 	                    'itemname' => $menu->{'menuname'}
 	                );
-	                $menuItem{'value'} = $item->{'value'}."_".$menu->{'id'};
+			if(defined($item->{'value'})) {
+		                $menuItem{'value'} = $item->{'value'}."_".$menu->{'id'};
+			}else {
+		                $menuItem{'value'} = $menu->{'id'};
+			}
 	                for my $menuKey (keys %{$menu}) {
 	                    $menuItem{$menuKey} = $menu->{$menuKey};
 	                }
@@ -187,7 +191,11 @@ sub getMenuItems {
 	                    'itemid' => $dataItem->{'id'},
 	                    'itemname' => $dataItem->{'name'}
 	                );
-	                $menuItem{'value'} = $item->{'value'}."_".$dataItem->{'name'};
+			if(defined($item->{'value'})) {
+		                $menuItem{'value'} = $item->{'value'}."_".$dataItem->{'name'};
+			}else {
+		                $menuItem{'value'} = $dataItem->{'name'};
+			}
 	
 	                for my $menuKey (keys %{$menu}) {
 	                    $menuItem{$menuKey} = $menu->{$menuKey};
@@ -233,17 +241,9 @@ sub getMenuItems {
 				$subdirname = substr($subdir,0,-4);
 				$fullpath = Slim::Utils::Misc::pathFromWinShortcut(Slim::Utils::Misc::fileURLFromPath($fullpath));
 				if($fullpath ne '') {
-					$fullpath = Slim::Utils::Misc::pathFromFileURL($fullpath);
-					#Strip read dir from path
 					my $tmp = $fullpath;
-					my $tmpdir = $dir;
-					$tmpdir =~ s/\\/\\\\/g;
-					$tmp =~ s/^$tmpdir//g;
-					#Strip audio dir from path
-					my $audiodir = Slim::Utils::Prefs::get('audiodir');
-					$tmpdir = $audiodir;
-					$tmpdir =~ s/\\/\\\\/g;
-					$tmp =~ s/^$tmpdir//g;
+					my $libraryAudioDirUrl = getCustomBrowseProperty('libraryAudioDirUrl');
+					$tmp =~ s/^$libraryAudioDirUrl//g;
 					$tmp =~ s/^[\\\/]?//g;
 					$subdir = $tmp;
 				}
@@ -276,6 +276,25 @@ sub getMenuItems {
 	}
     }
     return \@listRef;
+}
+sub getCustomBrowseProperty {
+	my $name = shift;
+	my $properties = getCustomBrowseProperties();
+	return $properties->{$name};
+}
+
+sub getCustomBrowseProperties {
+	my $array = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
+	my %result = ();
+	foreach my $item (@$array) {
+		if($item =~ m/^([a-zA-Z0-9]+?)\s*=\s*(.+)\s*$/) {
+			my $name = $1;
+			my $value = $2;
+			debugMsg("Got property: $name=$value\n");
+			$result{$name}=$value;
+		}
+	}
+	return \%result;
 }
 sub escapeSubDir {
 	my $dir = shift;
@@ -478,12 +497,16 @@ sub replaceParameters {
             $originalValue =~ s/\{$param\}/$value/g;
         }
     }
-    my $audiodir = $dbh->quote(Slim::Utils::Prefs::get('audiodir'));
-    $audiodir = substr($audiodir, 1, -1);
-    $originalValue =~ s/\{custombrowse\.audiodir\}/$audiodir/g;
-    my $audiodirurl = $dbh->quote(Slim::Utils::Misc::fileURLFromPath(Slim::Utils::Prefs::get('audiodir')));
-    $audiodirurl = substr($audiodirurl, 1, -1);
-    $originalValue =~ s/\{custombrowse\.audiodirurl\}/$audiodirurl/g;
+    while($originalValue =~ m/\{custombrowse\.(.*?)\}/) {
+	my $propertyValue = getCustomBrowseProperty($1);
+	if(defined($propertyValue)) {
+		$propertyValue = $dbh->quote($propertyValue);
+	    	$propertyValue = substr($propertyValue, 1, -1);
+		$originalValue =~ s/\{custombrowse\.$1\}/$propertyValue/g;
+	}else {
+		$originalValue =~ s/\{custombrowse\..*?\}//g;
+	}
+    }
     while($originalValue =~ m/\{property\.(.*?)\}/) {
 	my $propertyValue = Slim::Utils::Prefs::get($1);
 	if(defined($propertyValue)) {
@@ -836,13 +859,21 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_show_below_browse_web to 0\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_web', 0);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
+	if (! $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_properties\n");
+		my @properties = ();
+		push @properties, 'libraryDir='.Slim::Utils::Prefs::get('audiodir');
+		push @properties, 'libraryAudioDirUrl='.Slim::Utils::Misc::fileURLFromPath(Slim::Utils::Prefs::get('audiodir'));
+		Slim::Utils::Prefs::set('plugin_custombrowse_properties', \@properties);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_show_below_browse_web','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_show_below_browse_web','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -881,6 +912,17 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_web"); }
+		},
+	plugin_custombrowse_properties => {
+			'validate' => \&validateProperty
+			,'isArray' => 1
+			,'arrayAddExtra' => 1
+			,'arrayDeleteNull' => 1
+			,'arrayDeleteValue' => ''
+			,'arrayBasicValue' => ''
+			,'inputTemplate' => 'setup_input_array_txt.html'
+			,'changeAddlText' => string('PLUGIN_CUSTOMBROWSE_PROPERTIES')
+			,'PrefSize' => 'large'
 		},
 	plugin_custombrowse_directory => {
 			'validate' => \&validateIsDirWrapper
@@ -1132,6 +1174,14 @@ sub validateTrueFalseWrapper {
 	}
 }
 
+sub validateProperty {
+	my $arg = shift;
+	if($arg eq '' || $arg =~ /^[a-zA-Z0-9]+\s*=\s*.+$/) {
+		return $arg;
+	}else {
+		return undef;
+	}
+}
 sub validateIsDirWrapper {
 	my $arg = shift;
 	if ($::VERSION ge '6.5') {
@@ -1260,6 +1310,9 @@ PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC
 PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_CUSTOMBROWSE_PROPERTIES
+	EN	Properties to use in queries and menus
+
 PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
 	EN	Show menus in standard Browse menu on player. Requires slimserver restart.
 
@@ -1274,6 +1327,9 @@ SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
 	EN	Standard Browse menu in web interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
+	EN	Properties to use in queries and menus
 
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
