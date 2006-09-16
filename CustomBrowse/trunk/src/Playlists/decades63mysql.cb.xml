@@ -14,7 +14,7 @@
                                 where
                                         tracks.audio=1
                                 group by floor(tracks.year/10)*10
-                                order by tracks.year asc;
+                                order by tracks.year asc
 			</menudata>
 			<menu>
 				<id>album</id>
