@@ -57,8 +57,9 @@ defined.
 			<menuname>Songs</menuname>
                         <itemtype>album</itemtype>
                         <menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
                         <menudata>
-                                select albums.id,albums.title from tracks,albums
+                                select albums.id,albums.title,left(albums.titlesort,1) from tracks,albums
                                 where
                                         tracks.audio=1 and
                                         albums.id=tracks.album
@@ -131,6 +132,14 @@ menutype = Type of menu. This element defines how items should be retrieved for 
            folder        Lists all sub directories as a menu item, the parent directory
                          is defined in the menudata element.
 
+menulinks = Defines the type of navigation links that should be available in the web interface.
+            Currently the only allowed value is "alpha". If this element exist for a menytype=sql
+            the SQL statement must contain a third column that contains the navigation letter
+            for each row.
+
+menuurl = Defines the url that shall be used as link in web interface for menus with
+          menutype=mode. 
+
 menudata = Defines parameters needed for retrieval of dynamic menu data. This element
            contains different information dependent on the value of the menutype element. The 
            menudata element is mandatory for dynamic menus, its currently not used for static
@@ -138,13 +147,16 @@ menudata = Defines parameters needed for retrieval of dynamic menu data. This el
            
            menytype      menudata
            --------      -------------------------------------------------------------------
-           sql           One or several SQL statements which should return two columns. The
-                         first column will be used as id internally and the second column
-                         is the text that is displayed. The first column should typically
-                         be the id column in the table, for example tracks.id. Text within
+           sql           One or several SQL statements which should return two or tree columns. 
+                         The first column will be used as id internally and the second column
+                         is the text that is displayed. The third column is optional and is only
+                         required if menulinks=alpha has been defined. The first column should 
+                         typically be the id column in the table, for example tracks.id. Text within
                          {} will be replaced by looking up the selected item in the parent
                          menu with the id specified within {}. Keywords will be replaced in
-                         this field.
+                         this field. The third column is optional and when it exists it shall
+                         contain the letter which the item shall be linked to, typically the first
+                         letter in the sort column in the database.
 
            trackdetails  The id of the parent menu that contains the track that should be
                          displayed. 
