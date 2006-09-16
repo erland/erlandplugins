@@ -29,11 +29,11 @@
 				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from contributor_album,albums,tracks 
+					select tracks.id,tracks.title from contributor_track,albums,tracks 
 					where 
-						albums.id=contributor_album.album and 
-						contributor_album.role in (1,5) and
-						contributor_album.contributor={artist} and
+						tracks.id=contributor_track.track and 
+						contributor_track.role in (1,5) and
+						contributor_track.contributor={artist} and
 						tracks.album=albums.id and
 						albums.title='No Album' and
 						tracks.audio=1
