@@ -35,35 +35,6 @@ use FindBin qw($Bin);
 my $driver;
 my $browseMenus;
 
-my %_ignoredItems = (
-
-        # always ignore . and ..
-        '.' => 1,
-        '..' => 1,
-
-        # Items we should ignore on a mac volume
-        'Icon' => 1,
-        'TheVolumeSettingsFolder' => 1,
-        'TheFindByContentFolder' => 1,
-        'Network Trash Folder' => 1,
-        'Desktop' => 1,
-        'Desktop Folder' => 1,
-        'Temporary Items' => 1,
-        '.Trashes' => 1,
-        '.AppleDB' => 1,
-        '.AppleDouble' => 1,
-        '.Metadata' => 1,
-        '.DS_Store' => 1,
-
-        # Items we should ignore on a linux vlume
-        'lost+found' => 1,
-
-        # Items we should ignore  on a Windows volume
-        'System Volume Information' => 1,
-        'RECYCLER' => 1,
-        'Recycled' => 1,
-);
-
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMBROWSE';
 }
