@@ -9,8 +9,9 @@
 			<menuname>Songs</menuname>
 			<itemtype>playlist</itemtype>
 		        <menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,tracks.title from playlist_track,tracks 
+				select tracks.id,tracks.title,left(tracks.titlesort,1) from playlist_track,tracks 
 				where 
 					tracks.content_type!='cpl' and 
 					tracks.id=playlist_track.playlist 

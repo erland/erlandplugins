@@ -19,8 +19,9 @@
 				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
 				<menutype>sql</menutype>
+				<menulinks>alpha</menulinks>
 				<menudata>
-					select albums.id,albums.title from albums 
+					select albums.id,albums.title,left(albums.titlesort,1) from albums 
 					where 
 						ifnull(albums.year,0)={year} 
 					order by albums.titlesort

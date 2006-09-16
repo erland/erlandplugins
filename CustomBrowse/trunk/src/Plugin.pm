@@ -191,6 +191,9 @@ sub getMenuItems {
 	                    'itemid' => $dataItem->{'id'},
 	                    'itemname' => $dataItem->{'name'}
 	                );
+			if(defined($dataItem->{'link'})) {
+	                    $menuItem{'itemlink'} = $dataItem->{'link'};
+			}
 			if(defined($item->{'value'})) {
 		                $menuItem{'value'} = $item->{'value'}."_".$dataItem->{'name'};
 			}else {
@@ -251,7 +254,8 @@ sub getMenuItems {
 	            	if(-d $fullpath) {
 		                my %menuItem = (
 		                    'itemid' => escapeSubDir($subdir),
-		                    'itemname' => $subdirname
+		                    'itemname' => $subdirname,
+		                    'itemlink' => substr($subdirname,0,1)
 		                );
 		                $menuItem{'value'} = $item->{'value'}."_".$subdir;
 	
@@ -524,7 +528,7 @@ sub replaceParameters {
 sub getSQLMenuData {
 	my $sqlstatements = shift;
 	my $limit = shift;
-	my @result;
+	my @result =();
 	my $ds = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
@@ -544,13 +548,21 @@ sub getSQLMenuData {
 				debugMsg("Executing and collecting: $sql\n");
 				my $id;
                                 my $name;
+                                my $link;
 				$sth->bind_col( 1, \$id);
                                 $sth->bind_col( 2, \$name);
+				# bind optional column
+				eval {
+	                                $sth->bind_col( 3, \$link);
+				};
 				while( $sth->fetch() ) {
                                     my %item = (
                                         'id' => $id,
                                         'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
                                     );
+				    if(defined($link)) {
+					$item{'link'} = Slim::Utils::Unicode::utf8decode($link,'utf8');
+                                    }
                                     push @result, \%item;
 				}
 			}
@@ -602,10 +614,18 @@ sub getPageItemsForContext {
 	my @contexts = @$contextItems;
 
 	my $context = undef;
+	my $currentMenu = undef;
 	if(scalar(@contexts)>0) {
 		$context = @contexts[scalar(@contexts)-1];
 		$item = $context->{'item'};
 		$item->{'parameters'} = $context->{'parameters'};
+		if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
+			foreach my $it (@{$item->{'menu'}}) {
+				$currentMenu = $it;
+			}
+		}elsif(defined($item->{'menu'})) {
+			$currentMenu = $item->{'menu'};
+		}
 	}
 	my %result = ();
 	my $items = getMenuItems($item);
@@ -616,6 +636,28 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}->{'totalitems'} = scalar(@$items);
 		my $itemsPerPage = Slim::Utils::Prefs::get('itemsPerPage');
 		$result{'pageinfo'}->{'itemsperpage'} = $itemsPerPage;
+		if(defined($currentMenu) && defined($currentMenu->{'menulinks'}) && $currentMenu->{'menulinks'} eq 'alpha') {
+			my %alphaMap = ();
+			my $itemNo = 0;
+			my $prevLetter = '';
+			my $letter = '';
+			my $pageItemNo=0;
+			my $startItemNo = 0;
+			for my $alphaIt (@$items) {
+				if($pageItemNo>=$itemsPerPage) {
+					$pageItemNo = $pageItemNo - $itemsPerPage;
+					$startItemNo = $itemNo;
+				}
+				$prevLetter = $letter;
+				$letter = $alphaIt->{'itemlink'};
+				if($letter ne $prevLetter) {
+					$alphaMap{$letter}=$startItemNo;
+				}
+				$itemNo =$itemNo + 1;
+				$pageItemNo = $pageItemNo + 1;
+			}
+			$result{'pageinfo'}->{'alphamap'}=\%alphaMap;
+		}
 		my $start = 0;
 		if(defined($params->{'start'})) {
 			$start = $params->{'start'};
@@ -625,10 +667,12 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}->{'totalpages'} = ceil($result{'pageinfo'}->{'totalitems'}/$itemsPerPage) || 0;
 		$result{'pageinfo'}->{'enditem'} = $start+$itemsPerPage -1;
 		$result{'pageinfo'}->{'startitem'} = $start || 0;
+		if($result{'pageinfo'}->{'enditem'}>=$result{'pageinfo'}->{'totalitems'}) {
+			$result{'pageinfo'}->{'enditem'} = $result{'pageinfo'}->{'totalitems'}-1;
+		}
 		if(defined($context)) {
 			$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'};
 		}
-
 		my $count = 0;
 		for my $it (@$items) {
 			if(defined($itemsPerPage) && $itemsPerPage>0) {

@@ -8,8 +8,9 @@
 			<menuname>Albums</menuname>
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name from contributors,contributor_album
+				select contributors.id,contributors.name,left(contributors.namesort,1) from contributors,contributor_album
 				where 
 					contributor_album.contributor=contributors.id and
 					contributor_album.role in (2) 
