@@ -40,16 +40,25 @@
 					[% IF item.attributes %]
 						[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 					        [% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+						[% IF pluginCustomBrowseSlimserver65 %]
+							[% FOREACH mixer = item.mixerlinks.values.sort %]
+					                	[% PROCESS $mixer %]
+						        [% END %]
+						[% END %]
 					[% END %]
 				[% END %]
 				[%- WRAPPER contentitem controls='controls' %]
 			        	[% count = count + 1 %]
-					[% IF item.externalurl %]
-			        		<a href="[% webroot %][% item.externalurl %]">[% item.itemname %]</a><br>
-					[% ELSIF item.url %]
-			        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% item.itemname %]</a><br>
+					[% IF item.itemobj %]
+						[% PROCESS trackinfo %]
 					[% ELSE %]
-			        		[% item.itemname %]<br>
+						[% IF item.externalurl %]
+				        		<a href="[% webroot %][% item.externalurl %]">[% item.itemname %]</a><br>
+						[% ELSIF item.url %]
+				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% item.itemname %]</a><br>
+						[% ELSE %]
+				        		[% item.itemname %]<br>
+						[% END %]
 					[% END %]
 			        [% END %]
 				[% odd = (not odd) %]

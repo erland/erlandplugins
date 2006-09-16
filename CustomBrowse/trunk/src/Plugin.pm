@@ -682,7 +682,14 @@ sub getPageItemsForContext {
 					}
 				}
 			}
-			if(defined($item->{'itemtype'})) {
+			if(defined($it->{'itemformat'})) {
+				my $format = $it->{'itemformat'};
+				if($format eq 'track') {
+					my $track = objectForId('track',$it->{'itemid'});
+					displayAsHTML('track',$it,$track);
+				}
+			}
+			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
 					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('track'),$it->{'itemid'});
 				}elsif($it->{'itemtype'} eq "album") {
@@ -717,6 +724,22 @@ sub getPageItemsForContext {
 	}
 	return \%result;
 }
+
+sub displayAsHTML {
+        my $type = shift;
+        my $form = shift;
+        my $item = shift;
+
+        if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+                $item->displayAsHTML($form);
+        }else {
+                my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+                my $fieldInfo = Slim::DataStores::Base->fieldInfo;
+	        my $levelInfo = $fieldInfo->{$type};
+        	&{$levelInfo->{'listItem'}}($ds, $form, $item);
+        }
+}
+
 
 sub getContext {
 	my $client = shift;
