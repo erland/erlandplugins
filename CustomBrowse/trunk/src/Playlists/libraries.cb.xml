@@ -18,7 +18,7 @@
 				        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 			        	<menudata>
-						select contributors.id,contributors.name,left(contributors.namesort,1) from contributors,tracks,contributor_track 
+						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track 
 						where 
 							tracks.audio=1 and 
 							tracks.id=contributor_track.track and 
@@ -79,7 +79,7 @@
 		                        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 		                        <menudata>
-		                                select albums.id,albums.title,left(albums.titlesort,1) from tracks,albums
+		                                select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums
 		                                where
 		                                        tracks.audio=1 and
 		                                        albums.id=tracks.album and
@@ -118,7 +118,7 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select genres.id,genres.name,left(genres.namesort,1) from genres,tracks,genre_track 
+						select genres.id,genres.name,substr(genres.namesort,1,1) from genres,tracks,genre_track 
 						where 
 							tracks.audio=1 and 
 							tracks.id=genre_track.track and 
@@ -134,7 +134,7 @@
 					        <menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 				        	<menudata>
-							select contributors.id,contributors.name,left(contributors.namesort,1) from contributors,tracks,contributor_track,genre_track 
+							select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,genre_track 
 							where 
 								tracks.audio=1 and 
 								tracks.id=contributor_track.track and 
@@ -152,7 +152,7 @@
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
-								select albums.id,albums.title,left(albums.titlesort,1) from tracks,contributor_track,albums,genre_track 
+								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track 
 								where 
 									tracks.audio=1 and 
 									albums.id=tracks.album and 

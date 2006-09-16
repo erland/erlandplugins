@@ -21,7 +21,7 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select albums.id,albums.title,left(albums.titlesort,1) from albums 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums 
 					where 
 						ifnull(albums.year,0)={year} 
 					order by albums.titlesort

@@ -10,7 +10,7 @@
 	                <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	                <menudata>
-				select albums.id,albums.title,left(albums.titlesort,1) from albums 
+				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums 
 				order by albums.titlesort asc
 			</menudata>
 			<menu>

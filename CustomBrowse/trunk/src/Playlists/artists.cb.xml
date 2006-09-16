@@ -54,7 +54,7 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name,left(contributors.namesort,1) from contributors,contributor_album,albums
+				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_album,albums
 				where 
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
@@ -74,7 +74,7 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select albums.id,albums.title,left(albums.titlesort,1) from contributor_album,albums 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from contributor_album,albums 
 					where 
 						albums.id=contributor_album.album and 
 						contributor_album.contributor={artist} 

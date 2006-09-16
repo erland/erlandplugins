@@ -23,7 +23,7 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select albums.id,albums.title,left(albums.titlesort,1) from tracks,albums 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums 
 					where 
 						tracks.audio=1 and 
 						albums.id=tracks.album and 

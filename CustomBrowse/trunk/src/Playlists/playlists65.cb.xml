@@ -11,7 +11,7 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,tracks.title,left(tracks.titlesort,1) from playlist_track,tracks 
+				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks 
 				where 
 					tracks.content_type!='cpl' and 
 					tracks.id=playlist_track.playlist 

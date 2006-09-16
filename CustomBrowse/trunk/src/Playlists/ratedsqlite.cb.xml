@@ -23,7 +23,7 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,left(contributors.namesort,1) from contributors,tracks,contributor_track,track_statistics
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,track_statistics
 					where 
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
@@ -41,7 +41,7 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select albums.id,albums.title,left(albums.titlesort,1) from tracks,contributor_track,albums,track_statistics 
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,track_statistics 
 						where 
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
