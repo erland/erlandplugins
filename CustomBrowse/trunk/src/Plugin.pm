@@ -245,6 +245,7 @@ sub getMenuItems {
 				$fullpath = Slim::Utils::Misc::pathFromWinShortcut(Slim::Utils::Misc::fileURLFromPath($fullpath));
 				if($fullpath ne '') {
 					my $tmp = $fullpath;
+					$fullpath = Slim::Utils::Misc::pathFromFileURL($fullpath);
 					my $libraryAudioDirUrl = getCustomBrowseProperty('libraryAudioDirUrl');
 					$tmp =~ s/^$libraryAudioDirUrl//g;
 					$tmp =~ s/^[\\\/]?//g;
