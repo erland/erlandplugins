@@ -26,7 +26,7 @@
 				[%- menubrowseid = "menubrowse_" _ pluginCustomBrowseMenus.$menu.id %]
 				<td><input type="checkbox" name="[% menubrowseid %]" id="[% menubrowseid %]" value="1" [% pluginCustomBrowseMenus.$menu.enabledbrowse ? "checked" : "" %] onclick="changeNumSelected(this)"></td>
 				<td><input type="checkbox" name="[% menuid %]" id="[% menuid %]" value="1" [% pluginCustomBrowseMenus.$menu.enabled ? "checked" : "" %] onclick="changeNumSelected(this)">
-				<label for="[% menuid %]">[% pluginCustomBrowseMenus.$menu.name | html %]</label></td><td>([% menu %])</td>
+				<label for="[% menuid %]">[% pluginCustomBrowseMenus.$menu.menuname | html %]</label></td><td>&nbsp;&nbsp;([% menu %])</td>
 			</tr>
 		[%- END %]
 	</table>
