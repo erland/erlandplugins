@@ -553,29 +553,36 @@ sub initPlugin {
 	checkDefaults();
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse', getFunctions(), \&setMode);
 
-	if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_player')) {
-		readBrowseConfiguration();
-	        for my $menu (keys %$browseMenus) {
-	            if(!defined($browseMenus->{$menu}->{'value'})) {
-	            	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
-	            }
-	            if($browseMenus->{$menu}->{'enabled'}) {
-			my $name;
-			if(defined($browseMenus->{$menu}->{'itemname'})) {
-				$name = $browseMenus->{$menu}->{'itemname'};
-			}else {
-				$name = $browseMenus->{$menu}->{'menuname'};
-			}
-			my %submenu = (
-				'useMode' => 'PLUGIN.CustomBrowse',
-				'selectedMenu' => $browseMenus->{$menu}->{'id'}
-			);
-			Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenu);
-	            }
-	        }
-	}
+	readBrowseConfiguration();
+	my %submenu = (
+		'useMode' => 'PLUGIN.CustomBrowse',
+	);
+	Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
+	addPlayerMenus();
 }
 
+sub addPlayerMenus {
+        for my $menu (keys %$browseMenus) {
+            if(!defined($browseMenus->{$menu}->{'value'})) {
+            	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
+            }
+            my $name;
+            if(defined($browseMenus->{$menu}->{'itemname'})) {
+            	$name = $browseMenus->{$menu}->{'itemname'};
+            }else {
+            	$name = $browseMenus->{$menu}->{'menuname'};
+            }
+            if($browseMenus->{$menu}->{'enabledbrowse'}) {
+		my %submenu = (
+			'useMode' => 'PLUGIN.CustomBrowse',
+			'selectedMenu' => $browseMenus->{$menu}->{'id'}
+		);
+		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenu);
+            }else {
+                Slim::Buttons::Home::delSubMenu('BROWSE_MUSIC',$name);
+            }
+        }
+}
 sub getPageItemsForContext {
 	my $client = shift;
 	my $params = shift;
@@ -888,16 +895,6 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_directory to:$dir\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_directory', $dir);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_player');
-	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_custombrowse_show_below_browse_player to 0\n");
-		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_player', 0);
-	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web');
-	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_custombrowse_show_below_browse_web to 0\n");
-		Slim::Utils::Prefs::set('plugin_custombrowse_show_below_browse_web', 0);
-	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
 		debugMsg("Defaulting plugin_custombrowse_properties\n");
@@ -912,7 +909,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_show_below_browse_player','plugin_custombrowse_show_below_browse_web','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -932,26 +929,6 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_showmessages"); }
 		},		
-	plugin_custombrowse_show_below_browse_player => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER')
-			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_player"); }
-		},
-	plugin_custombrowse_show_below_browse_web => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB')
-			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_show_below_browse_web"); }
-		},
 	plugin_custombrowse_properties => {
 			'validate' => \&validateProperty
 			,'isArray' => 1
@@ -989,12 +966,9 @@ sub webPages {
         }
 	if(defined($value)) {
 		if ($::VERSION ge '6.5') {
-			if(Slim::Utils::Prefs::get('plugin_custombrowse_show_below_browse_web')) {
-				readBrowseConfiguration();
-				addWebMenus($value);
-			}else {
-		        	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
-			}
+			readBrowseConfiguration();
+			addWebMenus($value);
+	        	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}else {
 	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
@@ -1005,31 +979,35 @@ sub webPages {
 
 sub addWebMenus {
 	my $value = shift;
-	readBrowseConfiguration();
         for my $menu (keys %$browseMenus) {
             if(!defined($browseMenus->{$menu}->{'value'})) {
             	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
             }
-            if($browseMenus->{$menu}->{'enabled'}) {
-		my $name;
-		if(defined($browseMenus->{$menu}->{'itemname'})) {
-			$name = $browseMenus->{$menu}->{'itemname'};
-		}else {
-			$name = $browseMenus->{$menu}->{'menuname'};
-		}
-		if ( !Slim::Utils::Strings::stringExists($name) ) {
-                	Slim::Utils::Strings::addStringPointer( uc $name, $name );
-        	}
+            my $name;
+            if(defined($browseMenus->{$menu}->{'itemname'})) {
+		$name = $browseMenus->{$menu}->{'itemname'};
+            }else {
+		$name = $browseMenus->{$menu}->{'menuname'};
+            }
+            if ( !Slim::Utils::Strings::stringExists($name) ) {
+               	Slim::Utils::Strings::addStringPointer( uc $name, $name );
+            }
+            if($browseMenus->{$menu}->{'enabledbrowse'}) {
 		if(defined($browseMenus->{$menu}->{'menu'}) && ref($browseMenus->{$menu}->{'menu'}) ne 'ARRAY' && $browseMenus->{$menu}->{'menu'}->{'menutype'} eq 'mode') {
 			my $url;
 			if(defined($browseMenus->{$menu}->{'menu'}->{'menuurl'})) {
 				$url = $browseMenus->{$menu}->{'menu'}->{'menuurl'};
 				$url = replaceParameters($url);
 			}
+			debugMsg("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
 		}else {
+			debugMsg("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".escape($browseMenus->{$menu}->{'id'} )});
 		}
+            }else {
+		debugMsg("Removing menu: $name\n");
+		Slim::Web::Pages->addPageLinks("browse", {$name => undef});
             }
         }
 }
@@ -1061,7 +1039,7 @@ sub handleWebSelectMenus {
         # Pass on the current pref values and now playing info
         $params->{'pluginCustomBrowseMenus'} = $browseMenus;
         if ($::VERSION ge '6.5') {
-                $params->{'pluginDynamicPlayListSlimserver65'} = 1;
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_selectmenus.html', $params);
@@ -1074,13 +1052,31 @@ sub handleWebSaveSelectMenus {
 	readBrowseConfiguration($client);
         foreach my $menu (keys %$browseMenus) {
                 my $menuid = "menu_".escape($browseMenus->{$menu}->{'id'});
+                my $menubrowseid = "menubrowse_".escape($browseMenus->{$menu}->{'id'});
                 if($params->{$menuid}) {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',1);
+			$browseMenus->{$menu}->{'enabled'}=1;
+			if($params->{$menubrowseid}) {
+                	        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',1);
+				$browseMenus->{$menu}->{'enabledbrowse'}=1;
+	                }else {
+        			Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',0);
+				$browseMenus->{$menu}->{'enabledbrowse'}=0;
+                	}
                 }else {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
+			$browseMenus->{$menu}->{'enabled'}=0;
+			$browseMenus->{$menu}->{'enabledbrowse'}=0;
                 }
         }
-
+        my $value = 'plugins/CustomBrowse/custombrowse_list.html';
+        if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
+                $value = undef;
+        }
+	if ($::VERSION ge '6.5') {
+		addWebMenus($value);
+	}
+	addPlayerMenus();
         handleWebList($client, $params);
 }
 
@@ -1166,7 +1162,7 @@ sub readBrowseConfigurationFromDir {
 			}
 		}
 		my $disabled = 0;
-		if(defined($xml->{'menu'}) and defined($xml->{'menu'}->{'id'})) {
+		if(defined($xml->{'menu'}) && defined($xml->{'menu'}->{'id'})) {
 			my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_menu_'.escape($xml->{'menu'}->{'id'}).'_enabled');
 			if(defined($enabled) && !$enabled) {
 				$disabled = 1;
@@ -1176,12 +1172,29 @@ sub readBrowseConfigurationFromDir {
 				}
 			}
 		}
+		my $disabledBrowse = 1;
+		if(defined($xml->{'menu'}) && defined($xml->{'menu'}->{'id'})) {
+			my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_menubrowse_'.escape($xml->{'menu'}->{'id'}).'_enabled');
+			if(defined($enabled) && $enabled) {
+				$disabledBrowse = 0;
+			}elsif(!defined($enabled)) {
+				if(defined($xml->{'defaultenabledbrowse'}) && $xml->{'defaultenabledbrowse'}) {
+					$disabledBrowse = 0;
+				}
+			}
+		}
 		
 		if($include && !$disabled) {
 			$xml->{'menu'}->{'enabled'}=1;
+			if($disabledBrowse) {
+				$xml->{'menu'}->{'enabledbrowse'}=0;
+			}else {
+				$xml->{'menu'}->{'enabledbrowse'}=1;
+			}
 	                $localBrowseMenus->{$item} = $xml->{'menu'};
 		}elsif($include && $disabled) {
 			$xml->{'menu'}->{'enabled'}=0;
+			$xml->{'menu'}->{'enabledbrowse'}=0;
 	                $localBrowseMenus->{$item} = $xml->{'menu'};
 		}
             }
@@ -1354,20 +1367,8 @@ PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
 
-PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
-	EN	Show menus in standard Browse menu on player. Requires slimserver restart.
-
-PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
-	EN	Show menus in standard Browse menu in web interface (slimserver 6.5 and later). Requires slimserver restart.
-
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
-
-SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_PLAYER
-	EN	Standard Browse menu on player
-
-SETUP_PLUGIN_CUSTOMBROWSE_SHOW_BELOW_BROWSE_WEB
-	EN	Standard Browse menu in web interface
 
 SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
@@ -1383,6 +1384,9 @@ PLUGIN_CUSTOMBROWSE_SELECT_MENUS
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE
 	EN	Select enabled menus
+
+PLUGIN_CUSTOMBROWSE_SELECT_MENUS_BROWSE_TITLE
+	EN	Show in<br>browse menu
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_NONE
 	EN	No Menus
