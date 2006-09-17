@@ -995,10 +995,12 @@ sub webPages {
 			}else {
 		        	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 			}
+		}else {
+	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
 	}
 
-        return (\%pages,$value);
+        return (\%pages);
 }
 
 sub addWebMenus {
