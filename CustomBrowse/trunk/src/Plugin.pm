@@ -286,6 +286,18 @@ sub getMenu {
     my $client = shift;
     my $item = shift;
 
+    my $selectedMenu = $client->param('selectedMenu');
+    if(!defined($item) && defined($selectedMenu)) {
+        for my $menu (keys %$browseMenus) {
+		if($browseMenus->{$menu}->{'enabled'} && $selectedMenu eq $browseMenus->{$menu}->{'id'}) {
+			$item = $browseMenus->{$menu};
+			if(!defined($item->{'value'})) {
+				$item->{'value'} = $item->{'id'};
+			}
+		}
+	}
+    }
+
     my @listRef = undef;
     my $items = getMenuItems($item);
     if(ref($items) eq 'ARRAY') {
@@ -294,16 +306,6 @@ sub getMenu {
 	return $items;     
     }
     
-    my $selectedMenu = $client->param('selectedMenu');
-    if(!defined($item) && defined($selectedMenu)) {
-        for my $menu (keys %$browseMenus) {
-		if($browseMenus->{$menu}->{'enabled'} && $selectedMenu eq $browseMenus->{$menu}->{'id'}) {
-			$item = $browseMenus->{$menu};
-		}
-	}
-    }
-
-	
     if(scalar(@listRef)==0) {
         return undef;
     }
