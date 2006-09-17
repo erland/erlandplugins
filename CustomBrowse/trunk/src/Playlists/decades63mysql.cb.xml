@@ -10,7 +10,7 @@
 			<menuname>Albums</menuname>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select ifnull(floor(tracks.year/10)*10,0),ifnull(concat(floor(tracks.year/10)*10,'\'s'),'Unknown') from tracks
+				select ifnull(floor(tracks.year/10)*10,0),ifnull(concat(floor(tracks.year/10)*10,'s'),'Unknown') from tracks
                                 where
                                         tracks.audio=1
                                 group by floor(tracks.year/10)*10

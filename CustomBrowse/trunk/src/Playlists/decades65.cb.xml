@@ -10,7 +10,7 @@
 			<menuname>Albums</menuname>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select floor(tracks.year/10)*10,case when tracks.year&gt;0 then concat(floor(tracks.year/10)*10,'\'s') else 'Unknown' end from tracks
+				select floor(tracks.year/10)*10,case when tracks.year&gt;0 then concat(floor(tracks.year/10)*10,'s') else 'Unknown' end from tracks
                                 where
                                         tracks.audio=1
                                 group by floor(tracks.year/10)*10
