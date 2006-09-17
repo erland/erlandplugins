@@ -8,7 +8,7 @@
 			<id>statistic</id>
 			<menutype>mode</menutype>
 			<menudata>PLUGIN.TrackStat::Plugin</menudata>
-			<menuurl>plugins/TrackStat/index.html?player={player}</menuurl>
+			<menuurl>plugins/TrackStat/index.html</menuurl>
 		</menu>
 	</menu>
 </custombrowse>
