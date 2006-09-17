@@ -7,7 +7,7 @@
 			<id>browseitem</id>
 			<menutype>mode</menutype>
 			<menudata>browsetree</menudata>
-			<menuurl>browsetree.html?player={player}</menuurl>
+			<menuurl>browsetree.html</menuurl>
 		</menu>
 	</menu>
 </custombrowse>
