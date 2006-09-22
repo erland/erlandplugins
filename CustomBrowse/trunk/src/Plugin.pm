@@ -39,6 +39,20 @@ sub getDisplayName {
 	return 'PLUGIN_CUSTOMBROWSE';
 }
 
+my %choiceMapping = (
+        'arrow_left' => 'exit_left',
+        'arrow_right' => 'exit_right',
+        'play' => 'dead',
+	'play.single' => 'play_0',
+	'play.hold' => 'create_mix',
+        'add' => 'dead',
+        'add.single' => 'add_0',
+        'add.hold' => 'insert_0',
+        'search' => 'passback',
+        'stop' => 'passback',
+        'pause' => 'passback'
+);
+
 # Returns the display text for the currently selected item in the menu
 sub getDisplayText {
 	my ($client, $item) = @_;
@@ -62,7 +76,6 @@ sub getDisplayText {
 	}
 	return $name;
 }
-
 
 # Returns the overlay to be display next to items in the menu
 sub getOverlay {
@@ -98,7 +111,7 @@ sub setMode {
 		if(defined($params->{'useMode'})) {
 			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
 		}else {
-			Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+			Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
 		}
 	}else {
 	        $client->bumpRight();
@@ -320,122 +333,67 @@ sub getMenu {
 		$menuTitle = $item->{'menuname'};
 	}
     }
-    # use INPUT.Choice to display the list of feeds
+
+    my $sorted = '0';
+    if(!defined($item)) {
+	$sorted = 'L';
+    }else {
+	if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
+		my $menuArray = $item->{'menu'};
+		for my $it (@$menuArray) {
+			if(defined($it->{'menulinks'}) && $it->{'menulinks'} eq 'alpha') {
+				$sorted = 'L';
+				last;
+			}
+		}
+	}elsif(defined($item->{'menu'})) {
+		if(defined($item->{'menu'}->{'menulinks'}) && $item->{'menu'}->{'menulinks'} eq 'alpha') {
+			$sorted = 'L';
+		}
+	}
+    }
+
+    # use PLUGIN.CustomBrowse.Choice to display the list of feeds
     my %params = (
             header     => $menuTitle.' {count}',
             listRef    => \@listRef,
+            lookupRef  => sub {
+				my ($index) = @_;
+				my $sortListRef = Slim::Buttons::Common::param($client,'listRef');
+				my $sortItem  = $sortListRef->[$index];
+				if(defined($sortItem->{'itemlink'})) {
+					return $sortItem->{'itemlink'};
+				}elsif(defined($sortItem->{'itemname'})) {
+					return $sortItem->{'itemname'};
+				}else {
+					return $sortItem->{'menuname'};
+				}
+			},
+            isSorted => $sorted,
             name       => \&getDisplayText,
             overlayRef => \&getOverlay,
             modeName   => 'PLUGIN.CustomBrowse'.$modeNamePostFix,
+            onCreateMix     => sub {
+                    my ($client, $item) = @_;
+                    createMix($client, $item);
+            },				
+            onInsert     => sub {
+                    my ($client, $item) = @_;
+                    playAddItem($client,$item,'inserttracks','INSERT_TO_PLAYLIST');
+            },				
             onPlay     => sub {
                     my ($client, $item) = @_;
-                    if(defined($item->{'itemtype'})) {
-			my $request = undef;
-			if($item->{'itemtype'} eq "track") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "album") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "artist") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "year") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "genre") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "playlist") {
-				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemid'})]);
-			}else {
-	                    	debugMsg("Can not play item with itemtype=".$item->{'itemtype'}."\n");
-			}
-			if ($::VERSION ge '6.5' && defined($request)) {
-				# indicate request source
-				$request->source('PLUGIN_CUSTOMBROWSE');
-                        }
-			if(defined($request)) {
-				my $string;
-				my $line1;
-				my $line2;
-				if (Slim::Player::Playlist::shuffle($client)) {
-                                        $string = 'PLAYING_RANDOMLY_FROM';
-                                } else {
-                                        $string = 'NOW_PLAYING_FROM';
-                                }
-
-	                        if ($client->linesPerScreen == 1) {
-        	                        $line2 = $client->doubleString($string);
-                	        } else {
-                        	        $line1 = $client->string($string);
-	                                $line2 = $item->{'itemname'};
-	                        }
-				if ($::VERSION ge '6.5') {
-		                        $client->showBriefly({
-		                                'line'    => [ $line1, $line2 ],
-		                                'overlay' => [ undef, $client->symbols('notesymbol') ],
-		                        });
-				}else {
-					$client->showBriefly({
-						'line1' => $line1,
-						'line2' => $line2,
-						'overlay2' => $client->symbols('notesymbol')
-					});
-				}
-			}
-                    }else {
-                    	debugMsg("Can not play item with undefined itemtype\n");
-                    }			
+                    my $string;		
+                    if (Slim::Player::Playlist::shuffle($client)) {
+                    	$string = 'PLAYING_RANDOMLY_FROM';
+                    } else {
+                    	$string = 'NOW_PLAYING_FROM';
+                    }
+                    playAddItem($client,$item,'loadtracks',$string);
             },
             onAdd      => sub {
                     my ($client, $item) = @_;
-                    my $playlist = $item->{'playlist'};
-                    if(defined($item->{'itemtype'})) {
-			my $request = undef;
-			if($item->{'itemtype'} eq "track") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "album") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "artist") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "year") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "genre") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemid'})]);
-			}elsif($item->{'itemtype'} eq "playlist") {
-				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemid'})]);
-			}else {
-	                    	debugMsg("Can not add item with itemtype=".$item->{'itemtype'}."\n");
-			}
-			if ($::VERSION ge '6.5' && defined($request)) {
-				# indicate request source
-				$request->source('PLUGIN_CUSTOMBROWSE');
-                        }                    
-			if(defined($request)) {
-				my $string;
-				my $line1;
-				my $line2;
-                                $string = 'ADDING_TO_PLAYLIST';
-
-	                        if ($client->linesPerScreen == 1) {
-        	                        $line2 = $client->doubleString($string);
-                	        } else {
-                        	        $line1 = $client->string($string);
-	                                $line2 = $item->{'itemname'};
-	                        }
-
-				if ($::VERSION ge '6.5') {
-		                        $client->showBriefly({
-		                                'line'    => [ $line1, $line2 ],
-		                                'overlay' => [ undef, $client->symbols('notesymbol') ],
-		                        });
-				}else {
-					$client->showBriefly({
-						'line1' => $line1,
-						'line2' => $line2,
-						'overlay2' => $client->symbols('notesymbol')
-					});
-				}
-			}
-                    }else {
-                    	debugMsg("Can not add item with undefined itemtype\n");
-                    }			
+                    playAddItem($client,$item,'addtracks','ADDING_TO_PLAYLIST');
             },
             onRight    => sub {
                     my ($client, $item) = @_;
@@ -444,7 +402,7 @@ sub getMenu {
 	                    if(defined($params->{'useMode'})) {
 	                    	Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
 	                    }else {
-	                    	Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+	                    	Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
 	                    }
                     }else {
 		        $client->bumpRight();
@@ -452,6 +410,102 @@ sub getMenu {
             },
     );
     return \%params;
+}
+
+sub createMix {
+	my ($client,$item) = @_;
+	if(defined($item->{'itemtype'})) {
+		my $Imports = Slim::Music::Import->importers;
+
+		my @mixers = ();
+
+		for my $import (keys %{$Imports}) {
+			next if !$Imports->{$import}->{'mixer'};
+			next if !$Imports->{$import}->{'use'};
+
+			if ($::VERSION ge '6.5') {
+				if (eval {$import->mixable($item)}) {
+					push @mixers, $import;
+				}
+			}else {
+				push @mixers, $import;
+			}
+		}
+
+		my $itemObj = undef;
+		if($item->{'itemtype'} eq "track") {
+			$itemObj = objectForId('track',$item->{'itemid'});
+		}elsif($item->{'itemtype'} eq "album") {
+			$itemObj = objectForId('album',$item->{'itemid'});
+		}elsif($item->{'itemtype'} eq "artist") {
+			$itemObj = objectForId('artist',$item->{'itemid'});
+		}elsif($item->{'itemtype'} eq "year") {
+#			$itemObj = objectForId('year',$item->{'itemid'});
+		}elsif($item->{'itemtype'} eq "genre") {
+			$itemObj = objectForId('genre',$item->{'itemid'});
+		}elsif($item->{'itemtype'} eq "playlist") {
+			$itemObj = objectForId('playlist',$item->{'itemid'});
+		}else {
+			debugMsg("Can not create mix for item with itemtype=".$item->{'itemtype'}."\n");
+		}
+
+		if(defined($itemObj)) {
+			msg("CustomBrowse: Creating mix not supported yet\n"); 
+		}
+	}else {
+		debugMsg("Can not play/add item with undefined itemtype\n");
+	}			
+}
+
+sub playAddItem {
+	my ($client,$item, $command, $displayString) = @_;
+	if(defined($item->{'itemtype'})) {
+		my $request = undef;
+		if($item->{'itemtype'} eq "track") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemid'})]);
+		}elsif($item->{'itemtype'} eq "album") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemid'})]);
+		}elsif($item->{'itemtype'} eq "artist") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemid'})]);
+		}elsif($item->{'itemtype'} eq "year") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemid'})]);
+		}elsif($item->{'itemtype'} eq "genre") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemid'})]);
+		}elsif($item->{'itemtype'} eq "playlist") {
+			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemid'})]);
+		}else {
+			debugMsg("Can not play/add item with itemtype=".$item->{'itemtype'}."\n");
+		}
+		if ($::VERSION ge '6.5' && defined($request)) {
+			# indicate request source
+			$request->source('PLUGIN_CUSTOMBROWSE');
+		}
+		if(defined($request)) {
+			my $line1;
+			my $line2;
+
+			if ($client->linesPerScreen == 1) {
+				$line2 = $client->doubleString($displayString);
+			} else {
+				$line1 = $client->string($displayString);
+				$line2 = $item->{'itemname'};
+			}
+			if ($::VERSION ge '6.5') {
+				$client->showBriefly({
+					'line'    => [ $line1, $line2 ],
+					'overlay' => [ undef, $client->symbols('notesymbol') ],
+				});
+			}else {
+				$client->showBriefly({
+					'line1' => $line1,
+					'line2' => $line2,
+					'overlay2' => $client->symbols('notesymbol')
+				});
+			}
+		}
+	}else {
+		debugMsg("Can not play/add item with undefined itemtype\n");
+	}			
 }
 sub prepareMenuSQL {
     my $sql = shift;
@@ -553,6 +607,29 @@ sub initPlugin {
 	my $class = shift;
 	
 	checkDefaults();
+	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
+	$choiceFunctions{'create_mix'} = sub {Slim::Buttons::Input::Choice::callCallback('onCreateMix', @_)};
+	$choiceFunctions{'insert'} = sub {Slim::Buttons::Input::Choice::callCallback('onInsert', @_)};
+	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Choice',\%choiceFunctions,\&Slim::Buttons::Input::Choice::setMode);
+	for my $buttonPressMode (qw{repeat hold hold_release single double}) {
+		if(!defined($choiceMapping{'play.' . $buttonPressMode})) {
+			$choiceMapping{'play.' . $buttonPressMode} = 'dead';
+		}
+		if(!defined($choiceMapping{'add.' . $buttonPressMode})) {
+			$choiceMapping{'add.' . $buttonPressMode} = 'dead';
+		}
+		if(!defined($choiceMapping{'search.' . $buttonPressMode})) {
+			$choiceMapping{'search.' . $buttonPressMode} = 'passback';
+		}
+		if(!defined($choiceMapping{'stop.' . $buttonPressMode})) {
+			$choiceMapping{'stop.' . $buttonPressMode} = 'passback';
+		}
+		if(!defined($choiceMapping{'pause.' . $buttonPressMode})) {
+			$choiceMapping{'pause.' . $buttonPressMode} = 'passback';
+		}
+	}
+        Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.CustomBrowse.Choice',\%choiceMapping);
+
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse', getFunctions(), \&setMode);
 
 	readBrowseConfiguration();
