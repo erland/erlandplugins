@@ -136,6 +136,9 @@ menulinks = Defines the type of navigation links that should be available in the
             Currently the only allowed value is "alpha". If this element exist for a menytype=sql
             the SQL statement must contain a third column that contains the navigation letter
             for each row.
+            The menulinks element also affects the SqueezeBox navigation in the way that this will
+            enable navigation by letters using numeric buttons, without a menulinks element the 
+            SqueezeBox navigation will be done using positional navigation using numeric buttons.
 
 menuurl = Defines the url that shall be used as link in web interface for menus with
           menutype=mode. 
