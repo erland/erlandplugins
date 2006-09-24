@@ -2385,16 +2385,16 @@ sub mixerlink {
 #		}
 #		debugMsg("***********************************\n");
 		
-		my $levelName = $form->{'levelName'};
-		if($form->{'noTrackStatButton'}) {
-			if ($::VERSION lt '6.5') {
+	my $levelName = $form->{'levelName'};
+	if($form->{'noTrackStatButton'}) {
+		if ($::VERSION lt '6.5') {
         		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => undef});
         	}
-		}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
-			if ($::VERSION ge '6.5') {
+	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
+		if ($::VERSION ge '6.5') {
 	        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
 	        }else {
-        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
+        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
 	        }
         }elsif(defined($levelName) && $levelName eq 'year') {
         	$form->{'yearid'} = $item->year;
@@ -2419,7 +2419,9 @@ sub mixerlink {
 	    		my $album;
 	    		if(defined($form->{'levelName'}) && $form->{'levelName'} eq 'age') {
 	    			$album = $item;
-	    		}else {
+	    		}elsif(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::DataStores::DBI::Album') {
+	    			$album = $item;
+			}else {
 	    			$album = $item->album;
 	    		}
 	    		if(defined($album)) {
@@ -2429,7 +2431,7 @@ sub mixerlink {
 	    	$form->{'currenttrackstatitem'} = $item->id;
 	    	
         	if(defined($form->{'albumid'}) || defined($form->{'playlist'})) {
-				if ($::VERSION ge '6.5') {
+			if ($::VERSION ge '6.5') {
         			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
         		}else {
         			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
