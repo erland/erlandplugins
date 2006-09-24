@@ -18,6 +18,7 @@
 				<id>album</id>
 				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
+				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
 					select albums.id,albums.title from albums
@@ -71,6 +72,7 @@
 				<id>album</id>
 				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
+				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>

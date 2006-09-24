@@ -7,6 +7,7 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
+			<itemformat>album</itemformat>
 	                <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	                <menudata>

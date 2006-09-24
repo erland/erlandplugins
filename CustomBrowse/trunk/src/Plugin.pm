@@ -419,18 +419,18 @@ sub createMix {
 
 		my @mixers = ();
 
-		for my $import (keys %{$Imports}) {
-			next if !$Imports->{$import}->{'mixer'};
-			next if !$Imports->{$import}->{'use'};
-
-			if ($::VERSION ge '6.5') {
-				if (eval {$import->mixable($item)}) {
-					push @mixers, $import;
-				}
-			}else {
-				push @mixers, $import;
-			}
-		}
+#		for my $import (keys %{$Imports}) {
+#			next if !$Imports->{$import}->{'mixer'};
+#			next if !$Imports->{$import}->{'use'};
+#
+#			if ($::VERSION ge '6.5') {
+#				if (eval {$import->mixable($item)}) {
+#					push @mixers, $import;
+#				}
+#			}else {
+#				push @mixers, $import;
+#			}
+#		}
 
 		my $itemObj = undef;
 		if($item->{'itemtype'} eq "track") {
@@ -773,7 +773,12 @@ sub getPageItemsForContext {
 				if($format eq 'track') {
 					my $track = objectForId('track',$it->{'itemid'});
 					displayAsHTML('track',$it,$track);
+				}elsif($format eq 'album') {
+					$result{'artwork'} = 1;
+					my $track = objectForId('album',$it->{'itemid'});
+					displayAsHTML('album',$it,$track);
 				}
+
 			}
 			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
@@ -1100,6 +1105,9 @@ sub handleWebList {
 	my $items = getPageItemsForContext($client,$params,$browseMenus);
 	my $context = getContext($client,$params,$browseMenus,0);
 
+	if($items->{'artwork'}) {
+		$params->{'pluginCustomBrowseArtworkSupported'} = 1;
+	}
 	$params->{'pluginCustomBrowsePageInfo'} = $items->{'pageinfo'};
 	$params->{'pluginCustomBrowseItems'} = $items->{'items'};
 	$params->{'pluginCustomBrowseContext'} = $context;

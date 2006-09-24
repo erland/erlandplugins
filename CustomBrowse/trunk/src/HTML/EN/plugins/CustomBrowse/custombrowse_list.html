@@ -5,7 +5,7 @@
 	[% PROCESS plugins/CustomBrowse/css65 %]
 [% END %]
 
-[%- pwd_list = BLOCK -%]/
+[%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
 		[% "PLUGIN_CUSTOMBROWSE" | string %]
 	</a>
@@ -14,11 +14,54 @@
         [% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
+&nbsp;
 [% END -%]
 [% PROCESS pageheader.html %]
 [% IF !pluginCustomBrowseSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
 [% END %]
+[% IF pluginCustomBrowseSlimserver65 %]
+	[%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
+	        contentwrapper = 'galleryitem';
+		container = 'gallerycontainer';
+	ELSE;
+	        contentwrapper = 'contentitem';
+		container = 'contentcontainer';
+	END;
+	%]
+[% ELSE %]
+        [% contentwrapper = 'contentitem' %]
+	[% container = 'contentcontainer' %]
+[% END %]
+
+[% BLOCK galleryitem %]
+	<li>
+	<div style="width:[% item.size %]px;">
+		[%- IF anchor %]
+		        <a name="[% anchor | uri %]"></a>
+		[%- END -%]
+
+	        <div class="artworkImage" style="width: [% item.size %];">
+	                [% IF item.coverThumb %]
+	                        <div style="width:[% item.size %]px;height:[% item.size %]px;">
+				<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]" target="browser">[% PROCESS thumbnailItemImg height="$item.size" %]</a>
+	                        </div>
+	                [% ELSE %]
+				<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]" target="browser">[% PROCESS dummyItemImg height="$item.size" %]</a>
+	                [% END %]
+	        </div>
+	
+	        [% SET class = 'even' odd = 0 %]
+	        <div class="artworkControls">
+	                [%- PROCESS $controls -%]
+	        </div>
+
+	        <div class="artworkText" style="width:[% item.size %]px;"><span style="width:[% item.size %]px;">
+	        [%- content | indent(4) %]
+	        </span></div>
+	</div></li>
+[%- END %]
+
 	<tr valign="top"><td></td><td colspan="4">
 		[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
 			[% "ITEMS" | string %] [% pluginCustomBrowsePageInfo.startitem + 1 %] [% "TO" | string %] [% pluginCustomBrowsePageInfo.enditem + 1 %] [% "OF" | string %] [% pluginCustomBrowsePageInfo.totalitems %]
@@ -26,7 +69,7 @@
 		[% END %]
 	</td></tr>
     	<tr valign="top"><td></td><td colspan="4">
-		[% WRAPPER contentcontainer %]
+		[% WRAPPER $container %]
 			[% odd = 1 %]
 			[% count = 0 %]
 			[% FOREACH item = pluginCustomBrowseItems %]
@@ -34,14 +77,16 @@
 					[% IF item.attributes %]
 						[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 					        [% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+						<!--
 						[% IF pluginCustomBrowseSlimserver65 %]
 							[% FOREACH mixer = item.mixerlinks.values.sort %]
 					                	[% PROCESS $mixer %]
 						        [% END %]
 						[% END %]
+						-->
 					[% END %]
 				[% END %]
-				[%- WRAPPER contentitem controls='controls' %]
+				[%- WRAPPER $contentwrapper controls='controls' %]
 			        	[% count = count + 1 %]
 					[% IF item.itemobj %]
 						[% PROCESS trackinfo %]
