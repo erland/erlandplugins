@@ -56,6 +56,7 @@ defined.
                         <id>album</id>
 			<menuname>Songs</menuname>
                         <itemtype>album</itemtype>
+			<itemformat>album</itemformat>
                         <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
                         <menudata>
@@ -110,7 +111,9 @@ itemtype = Type of items in the menu, should only be available if the menu items
            really represent the item type set.
 
 itemformat = The formatting type that should be applied to the menu item. Currently 
-             only "track" is supported. The itemformat element is optional.
+             only "track" and "album" is supported. The itemformat element is optional.
+             If item format "album" is specified this will enable the gallery view button
+             in the web interface.
 
 menutype = Type of menu. This element defines how items should be retrieved for dynamic
            menus. The menutype element is mandatory for dynamic menus, its currently not
