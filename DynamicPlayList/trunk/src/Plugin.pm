@@ -318,7 +318,7 @@ sub handlePlayOrAdd {
 }
 sub getCurrentPlayList {
 	my $client = shift;
-	if ($mixInfo{$client}) {
+	if (defined($client) && $mixInfo{$client}) {
 		return $mixInfo{$client}->{'type'};
 	}
 	return undef;
@@ -1173,7 +1173,7 @@ sub mixerFunction {
 					'id' => $currentItem,
 					'name' => $currentItem
 				);
-				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				if ($::VERSION ge '6.5') {
 					$p{'id'} = $currentItem->id;
 					$p{'name'} = $currentItem->name;
 				}
@@ -1355,7 +1355,7 @@ sub initPlugin {
 		if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks") ||
 			Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
 
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			if ($::VERSION ge '6.5') {
 				Slim::Music::Import->addImporter($class, \%mixerMap);
 			    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
 			}else {
@@ -1406,7 +1406,7 @@ sub shutdownPlugin {
 	}
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks") ||
 		Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if ($::VERSION ge '6.5') {
 			Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
 		}else {
 			Slim::Music::Import::useImporter('DYNAMICPLAYLIST', 0);
@@ -1444,7 +1444,10 @@ sub handleWebList {
 	# Pass on the current pref values and now playing info
 	initPlayLists($client);
 	initPlayListTypes();
-	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	my $playlist = undef;
+	if(defined($client) && defined($mixInfo{$client}) && defined($mixInfo{$client}->{'type'})) {
+		$playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	}
 	my $name = undef;
 	if($playlist) {
 		$name = $playlist->{'name'};
@@ -2370,7 +2373,7 @@ sub getDynamicPlayLists {
 	my %result = ();
 	
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_includesavedplaylists")) {
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if ($::VERSION ge '6.5') {
 			my @result;
 			for my $playlist (Slim::Schema->rs('Playlist')->getPlaylists) {
 				push @result, $playlist;
@@ -2389,7 +2392,7 @@ sub getDynamicPlayLists {
 			my $id = $playlist->id;
 			my $name = $playlist->title;
 			my $playlisturl;
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			if ($::VERSION ge '6.5') {
 				$playlisturl = "browsedb.html?hierarchy=playlist,playlistTrack&level=1&playlist.id=".$playlist->id;
 			}else {
 				$playlisturl = "browsedb.html?hierarchy=playlist,playlistTrack&level=1&playlist=".$playlist->id;
@@ -2506,7 +2509,7 @@ sub validateIntOrEmpty {
 }
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return Slim::Schema->storage->dbh();
 	}else {
 		return Slim::Music::Info::getCurrentDataStore()->dbh();
@@ -2514,7 +2517,7 @@ sub getCurrentDBH {
 }
 
 sub getCurrentDS {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return 'Slim::Schema';
 	}else {
 		return Slim::Music::Info::getCurrentDataStore();
@@ -2524,7 +2527,7 @@ sub getCurrentDS {
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($type eq 'artist') {
 			$type = 'Contributor';
 		}elsif($type eq 'album') {
@@ -2547,7 +2550,7 @@ sub objectForId {
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($attr eq 'artist') {
 			$attr = 'contributor';
 		}
