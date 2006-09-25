@@ -821,7 +821,7 @@ sub displayAsHTML {
         my $form = shift;
         my $item = shift;
 
-        if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+        if ($::VERSION ge '6.5') {
                 $item->displayAsHTML($form);
         }else {
                 my $ds = getCurrentDS();
@@ -1350,7 +1350,7 @@ sub validateIntOrEmpty {
 }
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return Slim::Schema->storage->dbh();
 	}else {
 		return Slim::Music::Info::getCurrentDataStore()->dbh();
@@ -1358,7 +1358,7 @@ sub getCurrentDBH {
 }
 
 sub getCurrentDS {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return 'Slim::Schema';
 	}else {
 		return Slim::Music::Info::getCurrentDataStore();
@@ -1368,7 +1368,7 @@ sub getCurrentDS {
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($type eq 'artist') {
 			$type = 'Contributor';
 		}elsif($type eq 'album') {
@@ -1391,7 +1391,7 @@ sub objectForId {
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($attr eq 'artist') {
 			$attr = 'contributor';
 		}
