@@ -432,7 +432,7 @@ sub getDynamicPlayLists {
 
 sub getRandomYear {
 	my $filteredGenres = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		 my @joins = qw(genreTracks);
 		 push @joins, 'genreTracks';
 		 my $rs = Slim::Schema->rs('Track')->search(
@@ -484,7 +484,7 @@ sub getGenres {
     my @include      = Slim::Utils::Prefs::getArray('plugin_randomplaylist_not_include_genres');
     my @exclude      = Slim::Utils::Prefs::getArray('plugin_randomplaylist_exclude_genres');
 
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 	    # Should use genre.name in following find, but a bug in find() doesn't allow this
 	    # XXXX - how does the above comment translate into DBIx::Class world?
 	    my $rs = Slim::Schema->search('Genre');
@@ -727,7 +727,7 @@ sub getNextDynamicPlayListTracks {
 }
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return Slim::Schema->storage->dbh();
 	}else {
 		return Slim::Music::Info::getCurrentDataStore()->dbh();
@@ -735,7 +735,7 @@ sub getCurrentDBH {
 }
 
 sub getCurrentDS {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return 'Slim::Schema';
 	}else {
 		return Slim::Music::Info::getCurrentDataStore();
@@ -745,7 +745,7 @@ sub getCurrentDS {
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($type eq 'artist') {
 			$type = 'Contributor';
 		}elsif($type eq 'album') {
