@@ -36,7 +36,7 @@ use POSIX qw(strftime ceil);
 if ($] > 5.007) {
 	require Encode;
 }
-if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+if ($::VERSION ge '6.5') {
 	eval "use Slim::Schema";
 }
 
@@ -55,7 +55,7 @@ my $driver;
 my $distinct = '';
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return Slim::Schema->storage->dbh();
 	}else {
 		return Slim::Music::Info::getCurrentDataStore()->dbh();
@@ -63,7 +63,7 @@ sub getCurrentDBH {
 }
 
 sub getCurrentDS {
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return 'Slim::Schema';
 	}else {
 		return Slim::Music::Info::getCurrentDataStore();
@@ -72,7 +72,7 @@ sub getCurrentDS {
 
 sub getMusicBrainzId {
 	my $track = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return $track->musicbrainz_id;
 	}else {
 		return $track->{musicbrainz_id};
@@ -100,7 +100,7 @@ sub objectForYear {
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($type eq 'artist') {
 			$type = 'Contributor';
 		}elsif($type eq 'album') {
@@ -125,7 +125,7 @@ sub objectForId {
 
 sub objectForUrl {
 	my $url = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		return Slim::Schema->objectForUrl({
 			'url' => $url
 		});
@@ -1651,11 +1651,7 @@ sub getRandomString {
 sub getAddedTime {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		if($::REVISION ge '7505') {
-			return $track->timestamp;
-		}else {
-			return $track->{timestamp};
-		}
+		return $track->timestamp;
 	}else {
 		return $track->{age};
 	}

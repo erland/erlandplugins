@@ -82,13 +82,7 @@ sub startExport {
 	$isScanning = 1;
 	$MusicMagicScanStartTime = time();
 
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505' && $::REVISION lt '8053') {
-		while($isScanning) {
-			scanFunction();
-		}
-	}else {
-		Slim::Utils::Scheduler::add_task(\&scanFunction);
-	}
+	Slim::Utils::Scheduler::add_task(\&scanFunction);
 }
 
 sub stopScan {
@@ -97,9 +91,7 @@ sub stopScan {
 
 		debugMsg("Was stillScanning - stopping old scan.\n");
 
-		if ($::VERSION lt '6.5' || $::REVISION lt '7505' ||  $::REVISION ge '8053') {
-			Slim::Utils::Scheduler::remove_task(\&scanFunction);
-		}
+		Slim::Utils::Scheduler::remove_task(\&scanFunction);
 		$isScanning = 0;
 		
 		resetScanState();
@@ -138,10 +130,8 @@ sub doneScanning {
 
 	Slim::Utils::Prefs::set('plugin_trackstat_lastMusicMagicDate', $lastMusicMagicDate);
 
-	if ($::VERSION lt '6.5' || $::REVISION lt '7505' ||  $::REVISION ge '8053') {
-		# Take the scanner off the scheduler.
-		Slim::Utils::Scheduler::remove_task(\&scanFunction);
-	}
+	# Take the scanner off the scheduler.
+	Slim::Utils::Scheduler::remove_task(\&scanFunction);
 }
 
 sub scanFunction {

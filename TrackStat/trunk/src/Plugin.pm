@@ -1915,11 +1915,7 @@ sub setDynamicPlaylistParams {
 sub getPlayCount {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		if($::REVISION ge '7505') {
-			return $track->playcount;
-		}else {
-			return $track->{playcount};
-		}
+		return $track->playcount;
 	}else {
 		return $track->{playCount};
 	}
@@ -1928,11 +1924,7 @@ sub getPlayCount {
 sub getLastPlayed {
 	my $track = shift;
 	if ($::VERSION ge '6.5') {
-		if($::REVISION ge '7505') {
-			return $track->lastplayed;
-		}else {
-			return $track->{lastplayed};
-		}
+		return $track->lastplayed;
 	}else {
 		return $track->{lastPlayed};
 	}
@@ -2191,7 +2183,7 @@ sub initPlugin
 		}
 		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
 			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			if ($::VERSION ge '6.5') {
 				Slim::Music::Import->addImporter($class, \%mixerMap);
 				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
 			}else {
@@ -2322,7 +2314,7 @@ sub mixerFunction {
 				$client->update();
 			}elsif($mixerType eq 'year') {
 				my $year = $currentItem;
-				if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+				if ($::VERSION ge '6.5') {
 					$year = $currentItem->id;
 				}
 				my %params = (
@@ -2460,7 +2452,7 @@ sub shutdownPlugin {
                 uninstallHook();
 		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
 			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
-			if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+			if ($::VERSION ge '6.5') {
 				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
 			}else {
 				Slim::Music::Import::useImporter('TRACKSTAT', 0);
@@ -3275,9 +3267,7 @@ sub rateSong($$$) {
 	}else {
 		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}
-	if ($::VERSION lt '6.5' || $::REVISION lt '8449' || $::REVISION ge '8602' ) {
-		Slim::Music::Info::clearFormatDisplayCache();
-	}
+	Slim::Music::Info::clearFormatDisplayCache();
 }
 
 sub setTrackStatRating {
@@ -3959,7 +3949,7 @@ sub validateIsTimeOrEmpty {
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($attr eq 'artist') {
 			$attr = 'contributor';
 		}

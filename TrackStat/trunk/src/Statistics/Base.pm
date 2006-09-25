@@ -92,7 +92,7 @@ sub displayAsHTML {
 	my $form = shift;
 	my $item = shift;
 	
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		$item->displayAsHTML($form);
 	}else {
 		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -104,7 +104,7 @@ sub displayAsHTML {
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+	if ($::VERSION ge '6.5') {
 		if($attr eq 'artist') {
 			$attr = 'contributor';
 		}
@@ -553,7 +553,7 @@ sub getYearsWeb {
 		  	my %trackInfo = ();
             $trackInfo{'noTrackStatButton'} = 1;
             $trackInfo{'levelName'}  = 'year';
-		if ($::VERSION ge '6.5' && $::REVISION ge '7505') {
+		if ($::VERSION ge '6.5') {
 			my $yearobj = Plugins::TrackStat::Storage::objectForYear($id);
 		        displayAsHTML('year', \%trackInfo, $yearobj);
 		}
