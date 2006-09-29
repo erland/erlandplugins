@@ -85,6 +85,13 @@ my %statisticTypes = ();
 my $statisticPluginsStrings = "";
 my $statisticsInitialized = undef;
 
+my $ratingDynamicLastUrl = undef;
+my $ratingStaticLastUrl = undef;
+my $ratingNumberLastUrl = undef;
+my $ratingDynamicCache = undef;
+my $ratingStaticCache = undef;
+my $ratingNumberCache = undef;
+
 ##################################################
 ### SLIMP3 Plugin API                          ###
 ##################################################
@@ -3268,6 +3275,9 @@ sub rateSong($$$) {
 		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
 	}
 	Slim::Music::Info::clearFormatDisplayCache();
+	$ratingStaticLastUrl = undef;
+	$ratingDynamicLastUrl = undef;
+	$ratingNumberLastUrl = undef;
 }
 
 sub setTrackStatRating {
@@ -3735,50 +3745,69 @@ sub getMusicInfoSCRCustomItem()
 	return $formattedString;
 }
 
+
 sub getRatingDynamicCustomItem
 {
-	debugMsg("Entering getRatingDynamicCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = '';
-	if($trackHandle && $trackHandle->rating) {
-		my $rating = $trackHandle->rating / 20;
-		$string = ($rating?$RATING_CHARACTER x $rating:'');
+	if(defined($ratingDynamicLastUrl) && $track eq $ratingDynamicLastUrl) {
+		$string = $ratingDynamicCache;
+	}else {
+		debugMsg("Entering getRatingDynamicCustomItem\n");
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if($trackHandle && $trackHandle->rating) {
+			my $rating = $trackHandle->rating / 20;
+			$string = ($rating?$RATING_CHARACTER x $rating:'');
+		}
+		$ratingDynamicLastUrl = $track;
+		$ratingDynamicCache = $string;
+		debugMsg("Exiting getRatingDynamicCustomItem\n");
 	}
-	debugMsg("Exiting getRatingDynamicCustomItem\n");
 	return $string;
 }
 
 sub getRatingStaticCustomItem
 {
-	debugMsg("Entering getRatingStaticCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = $NO_RATING_CHARACTER x 5;
-	if($trackHandle && $trackHandle->rating) {
-		my $rating = $trackHandle->rating / 20;
-		debugMsg("rating = $rating\n");
-		if($rating) {
-			$string = ($rating?$RATING_CHARACTER x $rating:'');
-			my $left = 5 - $rating;
-			$string = $string . ($NO_RATING_CHARACTER x $left);
+	if(defined($ratingStaticLastUrl) && $track eq $ratingStaticLastUrl) {
+		$string = $ratingStaticCache;
+	}else {
+		debugMsg("Entering getRatingStaticCustomItem\n");
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if($trackHandle && $trackHandle->rating) {
+			my $rating = $trackHandle->rating / 20;
+			debugMsg("rating = $rating\n");
+			if($rating) {
+				$string = ($rating?$RATING_CHARACTER x $rating:'');
+				my $left = 5 - $rating;
+				$string = $string . ($NO_RATING_CHARACTER x $left);
+			}
 		}
+		$ratingStaticLastUrl = $track;
+		$ratingStaticCache = $string;
+		debugMsg("Exiting getRatingStaticCustomItem\n");
 	}
-	debugMsg("Exiting getRatingStaticCustomItem\n");
 	return $string;
 }
 
 sub getRatingNumberCustomItem
 {
-	debugMsg("Entering getRatingNumberCustomItem\n");
 	my $track = shift;
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 	my $string = '';
-	if($trackHandle && $trackHandle->rating) {
-		my $rating = $trackHandle->rating / 20;
-		$string = ($rating?$rating:'');
+	if(defined($ratingNumberLastUrl) && $track eq $ratingNumberLastUrl) {
+		$string = $ratingNumberCache;
+	}else {
+		debugMsg("Entering getRatingNumberCustomItem\n");
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if($trackHandle && $trackHandle->rating) {
+			my $rating = $trackHandle->rating / 20;
+			$string = ($rating?$rating:'');
+		}
+		$ratingNumberLastUrl = $track;
+		$ratingNumberCache = $string;
+		debugMsg("Exiting getRatingNumberCustomItem\n");
 	}
-	debugMsg("Exiting getRatingNumberCustomItem\n");
 	return $string;
 }
 
