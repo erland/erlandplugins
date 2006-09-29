@@ -119,6 +119,7 @@ sub setMode {
 }
 sub getMenuItems {
     my $item = shift;
+    my $option = shift;
 
     my @listRef = ();
 
@@ -168,7 +169,46 @@ sub getMenuItems {
 	                push @listRef, \%menuItem;
 	
 	        }elsif($menu->{'menutype'} eq 'sql') {
-	            my $sql = prepareMenuSQL($menu->{'menudata'},$item->{'parameters'});
+                    my $menudata = undef;
+                    my $optionKeywords = undef;			
+		    if(defined($menu->{'option'})) {
+			if(ref($menu->{'option'}) eq 'ARRAY') {
+				my $foundOption = 0;
+				if(defined($option)) {
+					my $options = $menu->{'option'};
+					foreach my $op (@$options) {
+						if(defined($op->{'id'}) && $op->{'id'} eq $option) {
+							$menudata = $op->{'menudata'};
+							$optionKeywords = getKeywords($op);
+							$foundOption = 1;
+							last;
+						}
+					}
+				}
+				if(!defined($menudata)) {
+					my $options = $menu->{'option'};
+					if(!$foundOption && defined($options->[0]->{'menudata'})) {
+						$menudata = $options->[0]->{'menudata'};
+					}else {
+						$menudata = $menu->{'menudata'};
+					}
+					if(!$foundOption && defined($options->[0]->{'keyword'})) {
+						$optionKeywords = getKeywords($options->[0]);
+					}
+				}
+			}else {
+				if(defined($menu->{'option'}->{'menudata'})) {
+					$menudata = $menu->{'option'}->{'menudata'};
+					$optionKeywords = getKeywords($menu->{'option'});
+				}else {
+					$menudata = $menu->{'menudata'};
+				}
+			}
+                    }else {
+			$menudata = $menu->{'menudata'};
+		    }
+                    my $keywords = combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
+	            my $sql = prepareMenuSQL($menudata,$keywords);
 	            my $menuData = getSQLMenuData($sql);
 	            for my $dataItem (@$menuData) {
 	                my %menuItem = (
@@ -219,7 +259,8 @@ sub getMenuItems {
 	            return \%params;		
 	        }elsif($menu->{'menutype'} eq 'folder') {
 	            my $dir = $menu->{'menudata'};
-	            $dir = replaceParameters($dir,$item->{'parameters'});
+                    my $keywords = combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
+	            $dir = replaceParameters($dir,$keywords);
 	            $dir = Slim::Utils::Unicode::utf8off($dir);
 	            for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 			my $subdirname = $subdir;
@@ -265,6 +306,91 @@ sub getMenuItems {
 	}
     }
     return \@listRef;
+}
+
+sub getKeywords {
+	my $menu = shift;
+	
+	if(defined($menu->{'keyword'})) {
+		my %keywords = ();
+		if(ref($menu->{'keyword'}) eq 'ARRAY') {
+			my $keywordItems = $menu->{'keyword'};
+			foreach my $keyword (@$keywordItems) {
+				$keywords{$keyword->{'name'}} = $keyword->{'value'};
+			}
+		}else {
+			$keywords{$menu->{'keyword'}->{'name'}} = $menu->{'keyword'}->{'value'};
+		}
+		return \%keywords;
+	}
+	return undef;
+}
+
+sub combineKeywords {
+	my $parentKeywords = shift;
+	my $optionKeywords = shift;
+	my $selectionKeywords = shift;
+
+	my %keywords = ();
+	if(defined($parentKeywords)) {
+		foreach my $keyword (keys %$parentKeywords) {
+			$keywords{$keyword} = $parentKeywords->{$keyword};
+		}
+	}
+	if(defined($optionKeywords)) {
+		foreach my $keyword (keys %$optionKeywords) {
+			$keywords{$keyword} = $optionKeywords->{$keyword};
+		}
+	}
+	if(defined($selectionKeywords)) {
+		foreach my $keyword (keys %$selectionKeywords) {
+			$keywords{$keyword} = $selectionKeywords->{$keyword};
+		}
+	}
+	return \%keywords;
+}
+sub copyKeywords {
+	my $parent = shift;
+	my $menu = shift;
+	my @menus = ();
+	if(ref($menu) eq 'ARRAY') {
+		foreach my $item (@$menu) {
+			push @menus, $item;
+		}
+	}else {
+		push @menus,$menu;
+	}
+
+	foreach my $menuItem (@menus) {
+		my %keywords = ();
+		my $foundKeyword = 0;
+		if(defined($parent->{'keywordparameters'})) {
+
+			my $parameters = $parent->{'keywordparameters'};
+			foreach my $key (keys %$parameters) {
+				$keywords{$key} = $parameters->{$key};
+				$foundKeyword = 1;
+			}
+		}
+		if(defined($menuItem->{'keyword'})) {
+			if(ref($menuItem->{'keyword'}) eq 'ARRAY') {
+				my $keywordArray = $menuItem->{'keyword'};
+				foreach my $keyword (@$keywordArray) {
+					$keywords{$keyword->{'name'}} = $keyword->{'value'};
+					$foundKeyword = 1;
+				}
+			}else {
+				$keywords{$menuItem->{'keyword'}->{'name'}} = $menuItem->{'keyword'}->{'value'};
+				$foundKeyword = 1;
+			}
+		}
+		if($foundKeyword) {
+			$menuItem->{'keywordparameters'} = \%keywords;
+		}
+		if(defined($menuItem->{'menu'})) {
+			copyKeywords($menuItem,$menuItem->{'menu'});
+		}
+	}
 }
 sub getCustomBrowseProperty {
 	my $name = shift;
@@ -341,13 +467,15 @@ sub getMenu {
 	if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
 		my $menuArray = $item->{'menu'};
 		for my $it (@$menuArray) {
-			if(defined($it->{'menulinks'}) && $it->{'menulinks'} eq 'alpha') {
+			my $menulinks = getMenuLinks($it);
+			if(defined($menulinks) && $menulinks eq 'alpha') {
 				$sorted = 'L';
 				last;
 			}
 		}
 	}elsif(defined($item->{'menu'})) {
-		if(defined($item->{'menu'}->{'menulinks'}) && $item->{'menu'}->{'menulinks'} eq 'alpha') {
+		my $menulinks = getMenuLinks($item->{'menu'});
+		if(defined($menulinks) && $menulinks eq 'alpha') {
 			$sorted = 'L';
 		}
 	}
@@ -686,7 +814,7 @@ sub getPageItemsForContext {
 		}
 	}
 	my %result = ();
-	my $items = getMenuItems($item);
+	my $items = getMenuItems($item,$params->{'option'});
 	if(ref($items) eq 'ARRAY') {
 		my @resultItems = ();
 		my %pagebar = ();
@@ -694,7 +822,8 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}->{'totalitems'} = scalar(@$items);
 		my $itemsPerPage = Slim::Utils::Prefs::get('itemsPerPage');
 		$result{'pageinfo'}->{'itemsperpage'} = $itemsPerPage;
-		if(defined($currentMenu) && defined($currentMenu->{'menulinks'}) && $currentMenu->{'menulinks'} eq 'alpha') {
+		my $menulinks = getMenuLinks($currentMenu,$params->{'option'});
+		if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 			my %alphaMap = ();
 			my $itemNo = 0;
 			my $prevLetter = '';
@@ -729,7 +858,11 @@ sub getPageItemsForContext {
 			$result{'pageinfo'}->{'enditem'} = $result{'pageinfo'}->{'totalitems'}-1;
 		}
 		if(defined($context)) {
-			$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'};
+			if(defined($params->{'option'})) {
+				$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'}.'&option='.$params->{'option'};
+			}else {
+				$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'};
+			}
 		}
 		my $count = 0;
 		for my $it (@$items) {
@@ -757,7 +890,8 @@ sub getPageItemsForContext {
 				}elsif(ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'}) && $it->{'menu'}->{'menutype'} eq 'mode') {
 					if(defined($it->{'menu'}->{'menuurl'})) {
 						my $url = $it->{'menu'}->{'menuurl'};
-						$url = replaceParameters($url,$params);
+						my $keywords = combineKeywords($it->{'menu'}->{'keywordparameters'},undef,$params);
+						$url = replaceParameters($url,$keywords);
 						$it->{'externalurl'}=$url;
 					}
 				}else {
@@ -813,7 +947,67 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}->{'enditem'} = 0;
 		$result{'pageinfo'}->{'startitem'} = 0;
 	}
+	my $options = getMenuOptions($currentMenu);
+	if(scalar(@$options)>0) {
+		$result{'options'} = $options;
+	}
 	return \%result;
+}
+
+sub getMenuOptions {
+	my $menu = shift;
+
+	my @options = ();
+
+	if(defined($menu) && defined($menu->{'option'})) {
+		if(ref($menu->{'option'}) eq 'ARRAY') {
+			my $menuoptions = $menu->{'option'};
+			for my $op (@$menuoptions) {
+				my %option = (
+					'id' => $op->{'id'},
+					'name' => $op->{'name'},
+				);
+				push @options, \%option;
+			}
+		}
+	}
+	return \@options;
+}
+
+sub getMenuLinks {
+	my $menu = shift;
+	my $option = shift;
+
+	my $menulinks = undef;
+
+	if(!defined($menu)) {
+		return undef;
+	}
+	if(defined($menu->{'option'})) {
+		if(ref($menu->{'option'}) eq 'ARRAY') {
+			my $options = $menu->{'option'};
+			my $foundOption = 0;
+			if(defined($option)) {
+				for my $op (@$options) {
+					if(defined($op->{'id'}) && $op->{'id'} eq $option) {
+						$menulinks = $op->{'menulinks'};
+						$foundOption = 1;
+					}
+				}
+			}
+			if(!defined($menulinks)) {
+				if(!$foundOption && defined($options->[0]->{'menulinks'})) {
+					$menulinks = $options->[0]->{'menulinks'};
+				}
+			}
+		}else {
+			$menulinks = $menu->{'option'}->{'menulinks'};
+		}
+	}
+	if(!defined($menulinks)) {
+		$menulinks = $menu->{'menulinks'};
+	}
+	return $menulinks;
 }
 
 sub displayAsHTML {
@@ -1081,7 +1275,8 @@ sub addWebMenus {
 			my $url;
 			if(defined($browseMenus->{$menu}->{'menu'}->{'menuurl'})) {
 				$url = $browseMenus->{$menu}->{'menu'}->{'menuurl'};
-				$url = replaceParameters($url);
+				my $keywords = combineKeywords($browseMenus->{$menu}->{'menu'}->{'keywordparameters'});
+				$url = replaceParameters($url,$keywords);
 			}
 			debugMsg("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
@@ -1109,8 +1304,14 @@ sub handleWebList {
 		$params->{'pluginCustomBrowseArtworkSupported'} = 1;
 	}
 	$params->{'pluginCustomBrowsePageInfo'} = $items->{'pageinfo'};
+	$params->{'pluginCustomBrowseOptions'} = $items->{'options'};
 	$params->{'pluginCustomBrowseItems'} = $items->{'items'};
 	$params->{'pluginCustomBrowseContext'} = $context;
+	$params->{'pluginCustomBrowseSelectedOption'} = $params->{'option'};
+
+	if(defined($context) && scalar(@$context)>0) {
+		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+	}
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
@@ -1189,6 +1390,10 @@ sub readBrowseConfiguration {
 	    readBrowseConfigurationFromDir($client,$browseDir,\%localBrowseMenus);
     }
     
+    my @menus = ();
+    foreach my $menu (keys %localBrowseMenus) {
+    	copyKeywords(undef,$localBrowseMenus{$menu});
+    }
     $browseMenus = \%localBrowseMenus;
 }
 
@@ -1209,6 +1414,7 @@ sub readBrowseConfigurationFromDir {
         my $content = eval { read_file($path) };
         if ( $content ) {
             my $xml = eval { 	XMLin($content, forcearray => ["item"], keyattr => []) };
+            #debugMsg(Dumper($xml));
             if ($@) {
                     errorMsg("CustomBrowse: Failed to parse browse configuration in $path because:\n$@\n");
             }else {
