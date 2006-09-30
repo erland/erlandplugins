@@ -34,6 +34,18 @@
 						<itemtype>album</itemtype>
 						<itemformat>album</itemformat>
 						<menutype>sql</menutype>
+						<option>
+                                        		<id>byyear</id>
+		                                        <name>Sort by year</name>
+                		                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+		                                        <menulinks>number</menulinks>
+		                                </option>
+		                                <option>
+		                                        <id>bytitle</id>
+		                                        <name>Sort by title</name>
+		                                        <menulinks>alpha</menulinks>
+		                                        <keyword name="orderby" value="albums.titlesort asc"/>
+		                                </option>
 						<menudata>
 							select albums.id,albums.title from tracks,contributor_track,albums 
 							where 
@@ -43,7 +55,7 @@
 								contributor_track.contributor={artist} and
 								tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 							group by albums.id 
-							order by albums.titlesort asc
+							order by {orderby}
 						</menudata>
 						<menu>
 							<id>track</id>
@@ -175,7 +187,18 @@
 							<itemtype>album</itemtype>
 							<itemformat>album</itemformat>
 							<menutype>sql</menutype>
-							<menulinks>alpha</menulinks>
+							<option>
+                                       				<id>byyear</id>
+			                                        <name>Sort by year</name>
+			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+			                                        <menulinks>number</menulinks>
+			                                </option>
+			                                <option>
+			                                        <id>bytitle</id>
+			                                        <name>Sort by title</name>
+			                                        <menulinks>alpha</menulinks>
+			                                        <keyword name="orderby" value="albums.titlesort asc"/>
+			                                </option>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track 
 								where 
@@ -187,7 +210,7 @@
 									genre_track.genre={genre} and
 									tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 								group by albums.id 
-								order by albums.titlesort
+								order by {orderby}
 							</menudata>
 							<menu>
 								<id>track</id>

@@ -22,10 +22,17 @@
 				<itemtype>album</itemtype>
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
-				<menulinks>alpha</menulinks>
 				<option>
                                         <id>bytitle</id>
                                         <name>Sort by title</name>
+                                        <menulinks>alpha</menulinks>
+                                        <keyword name="orderby" value="albums.titlesort asc"/>
+                                </option>
+                                <option>
+                                        <id>byyear</id>
+                                        <name>Sort by year</name>
+                                        <menulinks>number</menulinks>
+                                        <keyword name="orderby" value="albums.year desc, albums.titlesort asc"/>
                                 </option>
                                 <option>
                                         <id>byartist</id>

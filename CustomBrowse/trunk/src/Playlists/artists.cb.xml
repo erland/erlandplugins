@@ -20,12 +20,24 @@
 				<itemtype>album</itemtype>
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
+				<option>
+					<id>byyear</id>
+					<name>Sort by year</name>
+					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					<menulinks>number</menulinks>
+				</option>
+				<option>
+					<id>bytitle</id>
+					<name>Sort by title</name>
+					<menulinks>alpha</menulinks>
+					<keyword name="orderby" value="albums.titlesort asc"/>
+				</option>
 				<menudata>
 					select albums.id,albums.title from albums
 					where
 						albums.compilation = 1
 					group by albums.id
-					order by albums.titlesort asc
+					order by {orderby}
                                 </menudata>
 				<menu>
 					<id>track</id>
@@ -75,14 +87,25 @@
 				<itemtype>album</itemtype>
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
-				<menulinks>alpha</menulinks>
+				<option>
+                                        <id>byyear</id>
+                                        <name>Sort by year</name>
+                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+                                        <menulinks>number</menulinks>
+                                </option>
+                                <option>
+                                        <id>bytitle</id>
+                                        <name>Sort by title</name>
+                                        <menulinks>alpha</menulinks>
+                                        <keyword name="orderby" value="albums.titlesort asc"/>
+                                </option>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from contributor_album,albums 
 					where 
 						albums.id=contributor_album.album and 
 						contributor_album.contributor={artist} 
 					group by albums.id 
-					order by albums.titlesort asc
+					order by {orderby}
 				</menudata>
 				<menu>
 					<id>track</id>

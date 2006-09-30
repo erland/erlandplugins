@@ -36,7 +36,18 @@
 					<itemtype>album</itemtype>
 					<itemformat>album</itemformat>
 					<menutype>sql</menutype>
-					<menulinks>alpha</menulinks>
+					<option>
+						<id>byyear</id>
+						<name>Sort by year</name>
+						<menulinks>number</menulinks>
+						<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					</option>
+					<option>
+						<id>bytitle</id>
+						<name>Sort by title</name>
+						<menulinks>alpha</menulinks>
+						<keyword name="orderby" value="albums.titlesort asc"/>
+					</option>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_album,albums,genre_track 
 						where 
@@ -47,7 +58,7 @@
 							tracks.id=genre_track.track and 
 							genre_track.genre={genre} 
 						group by albums.id 
-						order by albums.titlesort
+						order by {orderby}
 					</menudata>
 					<menu>
 						<id>track</id>
