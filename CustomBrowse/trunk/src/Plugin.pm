@@ -507,7 +507,7 @@ sub getMenu {
             },				
             onInsert     => sub {
                     my ($client, $item) = @_;
-                    playAddItem($client,$item,'inserttracks','INSERT_TO_PLAYLIST');
+                    playAddItem($client,Slim::Buttons::Common::param($client, 'listRef'),$item,'inserttracks','INSERT_TO_PLAYLIST');
             },				
             onPlay     => sub {
                     my ($client, $item) = @_;
@@ -517,11 +517,11 @@ sub getMenu {
                     } else {
                     	$string = 'NOW_PLAYING_FROM';
                     }
-                    playAddItem($client,$item,'loadtracks',$string);
+                    playAddItem($client,Slim::Buttons::Common::param($client, 'listRef'),$item,'loadtracks',$string);
             },
             onAdd      => sub {
                     my ($client, $item) = @_;
-                    playAddItem($client,$item,'addtracks','ADDING_TO_PLAYLIST');
+                    playAddItem($client,Slim::Buttons::Common::param($client, 'listRef'),$item,'addtracks','ADDING_TO_PLAYLIST');
             },
             onRight    => sub {
                     my ($client, $item) = @_;
@@ -586,54 +586,93 @@ sub createMix {
 }
 
 sub playAddItem {
-	my ($client,$item, $command, $displayString) = @_;
-	if(defined($item->{'itemtype'})) {
-		my $request = undef;
-		if($item->{'itemtype'} eq "track") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('track'),$item->{'itemid'})]);
-		}elsif($item->{'itemtype'} eq "album") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('album'),$item->{'itemid'})]);
-		}elsif($item->{'itemtype'} eq "artist") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('artist'),$item->{'itemid'})]);
-		}elsif($item->{'itemtype'} eq "year") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('year'),$item->{'itemid'})]);
-		}elsif($item->{'itemtype'} eq "genre") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('genre'),$item->{'itemid'})]);
-		}elsif($item->{'itemtype'} eq "playlist") {
-			$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemid'})]);
+	my ($client,$listRef, $item, $command, $displayString) = @_;
+	my @items = ();
+	if(!defined($item->{'playtype'})) {
+		push @items,$item;
+	}elsif($item->{'playtype'} eq 'all') {
+		if(defined($listRef)) {
+			@items = @$listRef;
 		}else {
-			debugMsg("Can not play/add item with itemtype=".$item->{'itemtype'}."\n");
+			push @items,$item;
 		}
-		if ($::VERSION ge '6.5' && defined($request)) {
-			# indicate request source
-			$request->source('PLUGIN_CUSTOMBROWSE');
-		}
-		if(defined($request)) {
-			my $line1;
-			my $line2;
-
-			if ($client->linesPerScreen == 1) {
-				$line2 = $client->doubleString($displayString);
-			} else {
-				$line1 = $client->string($displayString);
-				$line2 = $item->{'itemname'};
-			}
-			if ($::VERSION ge '6.5') {
-				$client->showBriefly({
-					'line'    => [ $line1, $line2 ],
-					'overlay' => [ undef, $client->symbols('notesymbol') ],
-				});
+	}
+	my $request = undef;
+	my $playedMultiple = undef;
+	foreach my $it (@items) {
+		if(defined($it->{'itemtype'})) {
+			if($it->{'itemtype'} eq "track") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('track'),$it->{'itemid'})]);
+			}elsif($it->{'itemtype'} eq "album") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('album'),$it->{'itemid'})]);
+			}elsif($it->{'itemtype'} eq "artist") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('artist'),$it->{'itemid'})]);
+			}elsif($it->{'itemtype'} eq "year") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('year'),$it->{'itemid'})]);
+			}elsif($it->{'itemtype'} eq "genre") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('genre'),$it->{'itemid'})]);
+			}elsif($it->{'itemtype'} eq "playlist") {
+				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
+				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('playlist'),$it->{'itemid'})]);
 			}else {
-				$client->showBriefly({
-					'line1' => $line1,
-					'line2' => $line2,
-					'overlay2' => $client->symbols('notesymbol')
-				});
+				my $subItems = getMenuItems($it);
+				for my $subitem (@$subItems) {
+					playAddItem($client,$subItems,$subitem,$command,undef);
+					if($command eq 'loadtracks') {
+						$command = 'addtracks';
+					}
+					$playedMultiple = 1;
+				}
+			}
+			if ($::VERSION ge '6.5' && defined($request)) {
+				# indicate request source
+				$request->source('PLUGIN_CUSTOMBROWSE');
+			}
+		}else {
+			my $subItems = getMenuItems($it);
+			for my $subitem (@$subItems) {
+				playAddItem($client,$subItems,$subitem,$command,undef);
+				if($command eq 'loadtracks') {
+					$command = 'addtracks';
+				}
+				$playedMultiple = 1;
+			}
+		}			
+		if($command eq 'loadtracks') {
+			$command = 'addtracks';
+		}
+	}
+	if(($playedMultiple || defined($request)) && defined($displayString)) {
+		my $line1;
+		my $line2;
+
+		if ($client->linesPerScreen == 1) {
+			$line2 = $client->doubleString($displayString);
+		} else {
+			$line1 = $client->string($displayString);
+			$line2 = $item->{'itemname'};
+			if(!defined($line2)) {
+				$line2 = $item->{'menuname'};
 			}
 		}
-	}else {
-		debugMsg("Can not play/add item with undefined itemtype\n");
-	}			
+		if ($::VERSION ge '6.5') {
+			$client->showBriefly({
+				'line'    => [ $line1, $line2 ],
+				'overlay' => [ undef, $client->symbols('notesymbol') ],
+			});
+		}else {
+			$client->showBriefly({
+				'line1' => $line1,
+				'line2' => $line2,
+				'overlay2' => $client->symbols('notesymbol')
+			});
+		}
+	}
 }
 sub prepareMenuSQL {
     my $sql = shift;
@@ -1232,6 +1271,10 @@ sub setupGroup
 sub webPages {
 	my %pages = (
                 "custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
+                "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
+                "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
+                "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
+                "custombrowse_playall\.(?:htm|xml)"     => \&handleWebPlayAll,
 		"custombrowse_selectmenus\.(?:htm|xml)" => \&handleWebSelectMenus,
 		"custombrowse_saveselectmenus\.(?:htm|xml)" => \&handleWebSaveSelectMenus,
         );
@@ -1317,6 +1360,69 @@ sub handleWebList {
         }
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
+}
+
+sub handleWebPlayAdd {
+	my ($client, $params,$addOnly,$gotoparent) = @_;
+	return unless $client;
+	if(!defined($params->{'hierarchy'})) {
+		readBrowseConfiguration($client);
+	}
+	my $items = getPageItemsForContext($client,$params,$browseMenus);
+	if(defined($items->{'items'})) {
+		my $playItems = $items->{'items'};
+		my $loadCommand = 'loadtracks';
+		foreach my $playItem (@$playItems) {
+			if($addOnly) {
+				debugMsg("Adding ".$playItem->{'itemname'}."\n");
+				playAddItem($client,undef,$playItem,'addtracks',undef);
+			}else {
+				debugMsg("Playing ".$playItem->{'itemname'}."\n");
+				playAddItem($client,undef,$playItem,$loadCommand,undef);
+			}
+			$loadCommand = 'addtracks';
+		}
+	}
+	my $hierarchy = $params->{'hierarchy'};
+	if(defined($hierarchy)) {
+		my @hierarchyItems = (split /,/, $hierarchy);
+		my $newHierarchy = '';
+		my $i=0;
+		my $noOfHierarchiesToUse = scalar(@hierarchyItems)-1;
+		foreach my $hierarchyItem (@hierarchyItems) {
+			if($i && $i<$noOfHierarchiesToUse) {
+				$newHierarchy = $newHierarchy.',';
+			}
+			if($i<$noOfHierarchiesToUse) {
+				$newHierarchy = $hierarchyItem;
+			}
+			$i=$i+1;
+		}
+		$params->{'hierarchy'} = $newHierarchy;
+	}
+	if(!$gotoparent) {
+		$params->{'hierarchy'} = $hierarchy;
+	}
+	return handleWebList($client,$params);
+}
+sub handleWebPlay {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,1);
+}
+
+sub handleWebAdd {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,1);
+}
+
+sub handleWebPlayAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,0);
+}
+
+sub handleWebAddAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,0);
 }
 
 # Draws the plugin's select menus web page
