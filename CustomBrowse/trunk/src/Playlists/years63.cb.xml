@@ -12,7 +12,7 @@
 	        	<menudata>
 				select ifnull(albums.year,0),ifnull(albums.year,'Unknown') from albums 
 				group by albums.year 
-				order by albums.year asc
+				order by albums.year desc
 			</menudata>
 			<menu>
 				<id>album</id>

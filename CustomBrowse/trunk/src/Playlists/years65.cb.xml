@@ -11,7 +11,7 @@
 		        <menutype>sql</menutype>
 	        	<menudata>
 				select years.id,case when years.id&gt;0 then years.id else 'Unknown' end from years 
-				order by years.id asc
+				order by years.id desc
 			</menudata>
 			<menu>
 				<id>album</id>
