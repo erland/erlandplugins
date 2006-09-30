@@ -31,6 +31,7 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					<playtype>all</playtype>
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks,albums
@@ -87,6 +88,7 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					<playtype>all</playtype>
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks,contributor_track,albums 

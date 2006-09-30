@@ -23,6 +23,27 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
+				<option>
+                                        <id>bytitle</id>
+                                        <name>Sort by title</name>
+                                </option>
+                                <option>
+                                        <id>byartist</id>
+                                        <name>Sort by artist</name>
+                                        <menulinks>number</menulinks>
+                                        <menudata>
+                                                select albums.id,albums.title||' ('||contributors.name||')' from tracks,albums,contributor_track,contributors
+                                                where
+                                                        tracks.id=contributor_track.track and
+                                                        tracks.album=albums.id and
+                                                        contributor_track.contributor=contributors.id and
+                                                        contributor_track.role in (1,5) and
+                                                        ifnull(tracks.year,0)&gt;={year} and
+                                                        ifnull(tracks.year,0)&lt;{year}+10
+                                                group by albums.id
+                                                order by contributors.namesort asc,albums.year desc
+                                        </menudata>
+                                </option>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums 
 					where 
@@ -37,6 +58,7 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					<playtype>all</playtype>
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks,albums 
