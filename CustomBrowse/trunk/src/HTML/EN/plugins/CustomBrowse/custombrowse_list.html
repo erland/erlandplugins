@@ -70,18 +70,22 @@
 	</td></tr>
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
-		[% WRAPPER contentcontainer %]
-			[% IF pluginCustomBrowseCurrentContext %]
-				[% BLOCK allsongscontrols %]
-					[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
-				        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
+		[% IF pluginCustomBrowseItems.size>0 %]
+			[% WRAPPER contentcontainer %]
+				[% IF pluginCustomBrowseCurrentContext %]
+					[% BLOCK allsongscontrols %]
+						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
+					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
+					[% END %]
+					[%- WRAPPER contentitem controls='allsongscontrols' %]
+			        		[% "ALL_SONGS" | string %]<br>
+			        	[% END %]
+					[% odd = (not odd) %]
 				[% END %]
-				[%- WRAPPER contentitem controls='allsongscontrols' %]
-		        		[% "ALL_SONGS" | string %]<br>
-			        [% END %]
-				[% odd = (not odd) %]
+				[% count = 0 %]
 			[% END %]
-			[% count = 0 %]
+		[% ELSE %]
+			[% "PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND" | string %]<br>
 		[% END %]
 		[% WRAPPER $container %]
 			[% FOREACH item = pluginCustomBrowseItems %]
