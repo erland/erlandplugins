@@ -20,6 +20,26 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
+				<option>
+					<id>bytitle</id>
+					<name>Sort by title</name>
+					<menulinks>alpha</menulinks>
+				</option>
+				<option>
+					<id>byartist</id>
+					<name>Sort by artist</name>
+					<menulinks>number</menulinks>
+					<menudata>
+						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_album,contributors
+						where
+							albums.id=contributor_album.album and
+							contributor_album.contributor=contributors.id and
+							contributor_album.role in (1,5) and
+							albums.year={year}
+						group by albums.id
+						order by contributors.namesort asc
+					</menudata>
+				</option>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums 
 					where 
