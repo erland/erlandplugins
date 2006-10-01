@@ -869,14 +869,20 @@ sub getPageItemsForContext {
 			my $letter = '';
 			my $pageItemNo=0;
 			my $startItemNo = 0;
+			my $moveAlphaLetter = 0;
 			for my $alphaIt (@$items) {
 				if($pageItemNo>=$itemsPerPage) {
-					$pageItemNo = $pageItemNo - $itemsPerPage;
-					$startItemNo = $itemNo;
+					if($alphaIt->{'itemlink'} ne $letter) {
+						$pageItemNo = $pageItemNo - $itemsPerPage-$moveAlphaLetter;
+						$startItemNo = $itemNo;
+						$moveAlphaLetter = 0;
+					}else {
+						$moveAlphaLetter = $moveAlphaLetter +1;
+					}
 				}
 				$prevLetter = $letter;
 				$letter = $alphaIt->{'itemlink'};
-				if($letter ne $prevLetter) {
+				if(defined($letter) && (!defined($prevLetter) || $letter ne $prevLetter)) {
 					$alphaMap{$letter}=$startItemNo;
 				}
 				$itemNo =$itemNo + 1;
@@ -904,11 +910,20 @@ sub getPageItemsForContext {
 			}
 		}
 		my $count = 0;
+		my $prevLetter = '';
 		for my $it (@$items) {
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
 				$count = $count + 1;
 				if($count>$itemsPerPage) {
-					last;
+					if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
+						if($prevLetter ne $it->{'itemlink'}) {
+							last;
+						}else {
+							$result{'pageinfo'}->{'enditem'} = $result{'pageinfo'}->{'enditem'} +1;
+						}
+					}else {
+						last;
+					}
 				}
 			}
 			if(!defined($it->{'itemid'})) {
@@ -970,6 +985,9 @@ sub getPageItemsForContext {
 			}
 			if(defined($it->{'externalurl'}) || defined($it->{'url'})) {
 				push @resultItems, $it;
+			}
+			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
+				$prevLetter = $it->{'itemlink'};
 			}
 		}
 		$result{'items'} = \@resultItems;
