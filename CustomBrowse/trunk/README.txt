@@ -59,13 +59,25 @@ defined.
 			<itemformat>album</itemformat>
                         <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
+			<option>
+				<id>bytitle</id>
+				<name>Sort by title</name>
+				<menulinks>alpha</menulinks>
+				<keyword name="orderby" value="albums.titlesort asc"/>
+			</option>
+			<option>
+				<id>byyear</id>
+				<name>Sort by year</name>
+				<menulinks>number</menulinks>
+				<keyword name="orderby" value="albums.year desc, albums.titlesort asc"/>
+			</option>
                         <menudata>
                                 select albums.id,albums.title,left(albums.titlesort,1) from tracks,albums
                                 where
                                         tracks.audio=1 and
                                         albums.id=tracks.album
                                 group by albums.id
-                                order by albums.titlesort asc
+                                order by {orderby}
                         </menudata>
                         <menu>
                                 <id>track</id>
@@ -136,12 +148,16 @@ menutype = Type of menu. This element defines how items should be retrieved for 
                          is defined in the menudata element.
 
 menulinks = Defines the type of navigation links that should be available in the web interface.
-            Currently the only allowed value is "alpha". If this element exist for a menytype=sql
-            the SQL statement must contain a third column that contains the navigation letter
-            for each row.
-            The menulinks element also affects the SqueezeBox navigation in the way that this will
-            enable navigation by letters using numeric buttons, without a menulinks element the 
-            SqueezeBox navigation will be done using positional navigation using numeric buttons.
+            Currently the only allowed value is "alpha" and "number". Not specifying this element
+            is the same as setting it to "number"
+            
+            number = Standard positional navigation using numeric buttons on SqueezeBox and
+                     page number links in web interface.
+
+            alpha = If this element exist for a menytype=sql the SQL statement must contain a 
+                    third column that contains the navigation letter for each row. The menulinks 
+                    element also affects the SqueezeBox navigation in the way that this will
+                    enable navigation by letters using numeric buttons.
 
 menuurl = Defines the url that shall be used as link in web interface for menus with
           menutype=mode. 
@@ -178,6 +194,58 @@ menudata = Defines parameters needed for retrieval of dynamic menu data. This el
            folder        The directory where sub folders shall be read. This value can
                          also contain keywords which will be replaced. 
                          
+keyword = Defines a keyword that can be used in SQL statements and will be replaced before
+          actually executing the SQL. Keywords can be defined on all levels in the menu
+          structure. If the same keyword exist both in a the current menu and the parent
+          menu the value of the keyword in the current menu will be used. You can also define
+          keywords in option element and then this will override keywords defined directly in
+          the menu element or in one of the parent menus.
+          The keyword element requires two attributes:
+          
+          name = The name of the keyword, this name should be used when using the keyword
+          value = The value of the keyword, the keyword will be replaced by this text if it is
+                  used in a SQL statement.
+
+option = Makes a drop list available in the web user interface where its possible to select one
+         of the options defined for the menu. Typically the option element is used to make it
+         possible to select different sort order for the menu items. The option element is
+         optional and is not required if you don't want any drop list in the user interface.
+         The option element must have the following sub elements:
+         
+         id = A unique id of the option
+         name = The text that should be displayed to the user
+         
+         The option can also optionally contain the following elements which then will override
+         the same elements directly inside menu.
+ 
+         menulinks
+         menudata
+         keyword
+
+playtype = The playtype element indicates what should happen if you press play on an item
+           in the menu. The playtype element is optional and if not specified the logic will
+           be:
+           1. Play the selected item if its itemtype is supported
+           2. Play all items in the sub menu if the itemtype is not supported
+
+           The supported values of the playtype element are:
+           all    = Play all items in the current menu instead of just playing the selected, this
+                    is useful for makeing play on a track play all tracks on that album.
+           sql    = Play the tracks with the ids returned from the SQL statement in the playdata
+                    element.
+           none   = Nothing shall happend when play/add is pressed
+
+playdata = Contains custom data for the playtype element. This element is optional and is only
+           required for some of the different play types.
+
+           playtype	playdata
+           --------     ---------------------------------------------------------------------
+           all          Not used
+
+           sql          A SQL statement that returns the track identifiers of the tracks that
+                        should be played. The SQL statement should return two columns the track
+                        identifier and the track title.
+
 Keywords
 --------
 Currently the following keywords are supported in those element that supports keyword replacment.
@@ -186,3 +254,9 @@ A keyword will be replaced with the real value before its used.
 {custombrowse.audiodir} = The music directory
 {custombrowse.audiodirurl} = The url of the music directory
 {property.xxx} = The value of the xxx configuration parameter, slimserver.pref for exact name.
+{xxx} The value of the keyword with name xxx or the id of the selected item in the menu with id xxx
+
+Keywords can also be defined as a keyword element in the xml file, this is useful for example
+to change keyword values in different option element, but might also be usefull if you want to
+define some part of a SQL statement in one place instead of repeating it in every statement.
+
