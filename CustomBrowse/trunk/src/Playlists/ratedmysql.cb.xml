@@ -5,9 +5,18 @@
 	<menu>
 		<id>rated</id>
 		<menuname>Ratings</menuname>
+		<playtype>none</playtype>
 		<menu>
 			<id>rating</id>
 			<menuname>Artists</menuname>
+			<playtype>sql</playtype>
+			<playdata>
+				select tracks.id, tracks.title from tracks,track_statistics
+				where
+					tracks.url=track_statistics.url and
+					track_statistics.rating={rating}
+				order by rand()
+			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
 				select rating,concat(floor(rating/20),' stars') from track_statistics 
@@ -20,6 +29,18 @@
 				<id>artist</id>
 				<menuname>Albums</menuname>
 				<itemtype>artist</itemtype>
+				<playtype>sql</playtype>
+				<playdata>
+					select tracks.id,tracks.title from tracks,track_statistics,contributor_track
+					where
+						tracks.url = track_statistics.url and
+						tracks.id = contributor_track.track and
+						contributor_track.role in (1,5) and 
+						contributor_track.contributor={artist} and
+						track_statistics.rating={rating}
+					group by tracks.id
+					order by rand()
+				</playdata>
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
@@ -39,6 +60,19 @@
 					<menuname>Songs</menuname>
 					<itemtype>album</itemtype>
 					<itemformat>album</itemformat>
+					<playtype>sql</playtype>
+					<playdata>
+						select tracks.id,tracks.title from tracks,track_statistics,contributor_track
+						where
+							tracks.url = track_statistics.url and
+							tracks.id = contributor_track.track and
+							contributor_track.role in (1,5) and
+							contributor_track.contributor={artist} and
+							track_statistics.rating={rating} and
+							tracks.album={album}
+						group by tracks.id
+						order by rand()
+					</playdata>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
