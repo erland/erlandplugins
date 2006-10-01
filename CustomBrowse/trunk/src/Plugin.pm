@@ -596,6 +596,22 @@ sub playAddItem {
 		}else {
 			push @items,$item;
 		}
+	}elsif($item->{'playtype'} eq 'sql') {
+		if(defined($item->{'playdata'})) {
+                    my $keywords = combineKeywords($item->{'keywordparameters'},undef,$item->{'parameters'});
+	            my $sql = prepareMenuSQL($item->{'playdata'},$keywords);
+	            my $sqlItems = getSQLMenuData($sql);
+		    foreach my $sqlItem (@$sqlItems) {
+			my %addItem = (
+				'itemtype' => 'track',
+				'itemid' => $sqlItem->{'id'},
+				'itemname' => $sqlItem->{'name'}
+			);
+			push @items, \%addItem;
+		    }		
+		}else {
+			msg("CustomBrowse: ERROR, no playdata element found\n");
+		}
 	}
 	my $request = undef;
 	my $playedMultiple = undef;
@@ -621,12 +637,14 @@ sub playAddItem {
 				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('playlist'),$it->{'itemid'})]);
 			}else {
 				my $subItems = getMenuItems($it);
-				for my $subitem (@$subItems) {
-					playAddItem($client,$subItems,$subitem,$command,undef);
-					if($command eq 'loadtracks') {
-						$command = 'addtracks';
+				if(ref($subItems) eq 'ARRAY') {
+					for my $subitem (@$subItems) {
+						playAddItem($client,$subItems,$subitem,$command,undef);
+						if($command eq 'loadtracks') {
+							$command = 'addtracks';
+						}
+						$playedMultiple = 1;
 					}
-					$playedMultiple = 1;
 				}
 			}
 			if ($::VERSION ge '6.5' && defined($request)) {
@@ -635,12 +653,14 @@ sub playAddItem {
 			}
 		}else {
 			my $subItems = getMenuItems($it);
-			for my $subitem (@$subItems) {
-				playAddItem($client,$subItems,$subitem,$command,undef);
-				if($command eq 'loadtracks') {
-					$command = 'addtracks';
+			if(ref($subItems) eq 'ARRAY') {
+				for my $subitem (@$subItems) {
+					playAddItem($client,$subItems,$subitem,$command,undef);
+					if($command eq 'loadtracks') {
+						$command = 'addtracks';
+					}
+					$playedMultiple = 1;
 				}
-				$playedMultiple = 1;
 			}
 		}			
 		if($command eq 'loadtracks') {
