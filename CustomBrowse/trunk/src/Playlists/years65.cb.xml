@@ -30,20 +30,23 @@
 					<name>Sort by artist</name>
 					<menulinks>number</menulinks>
 					<menudata>
-						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_album,contributors
+						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks
 						where
-							albums.id=contributor_album.album and
-							contributor_album.contributor=contributors.id and
-							contributor_album.role in (1,5) and
-							albums.year={year}
+							tracks.id=contributor_track.track and
+							contributor_track.contributor=contributors.id and
+							contributor_track.role in (1,5) and
+							albums.id=tracks.album and
+							tracks.year={year}
 						group by albums.id
 						order by contributors.namesort asc
 					</menudata>
 				</option>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks 
 					where 
-						albums.year={year} 
+						albums.id=tracks.album and
+						tracks.year={year} 
+					group by albums.id
 					order by albums.titlesort
 				</menudata>
 				<menu>
