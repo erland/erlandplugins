@@ -1,0 +1,33 @@
+[%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
+[% IF !pluginCustomBrowseSlimserver65 %]
+	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
+	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
+	[% PROCESS plugins/CustomBrowse/css65 %]
+[% END %]
+
+[%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
+	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
+		[% "PLUGIN_CUSTOMBROWSE" | string %]
+	</a>
+[% END -%]
+[%- pageHeaderInfo = BLOCK %]
+&nbsp;
+[% END -%]
+[% PROCESS pageheader.html %]
+[% IF !pluginCustomBrowseSlimserver65 %]
+	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
+[% END %]
+
+
+    	<tr valign="top"><td></td><td colspan="4">
+		[% odd = 1 %]
+		[% WRAPPER contentcontainer %]
+			[%- FOREACH menu IN pluginCustomBrowseMenus.keys.sort %]
+				[%- WRAPPER contentitem %]
+		        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_editmenu.html?player=[% player | uri %]&menu=[% menu %]">[% pluginCustomBrowseMenus.$menu.menuname %] ([% menu %])</a><br>
+			        [% END %]
+				[% odd = (not odd) %]
+		        [% END %]
+		[% END %]
+    	</td></tr>
+[% PROCESS pagefooter.html %]

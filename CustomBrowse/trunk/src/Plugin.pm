@@ -1309,6 +1309,9 @@ sub setupGroup
 sub webPages {
 	my %pages = (
                 "custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
+                "custombrowse_editmenus\.(?:htm|xml)"     => \&handleWebEditMenus,
+                "custombrowse_editmenu\.(?:htm|xml)"     => \&handleWebEditMenu,
+                "custombrowse_savemenu\.(?:htm|xml)"     => \&handleWebSaveMenu,
                 "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
@@ -1398,6 +1401,113 @@ sub handleWebList {
         }
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
+}
+
+sub handleWebEditMenus {
+        my ($client, $params) = @_;
+
+	readBrowseConfiguration($client);
+
+        $params->{'pluginCustomBrowseMenus'} = $browseMenus;
+
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenus.html', $params);
+}
+
+sub handleWebEditMenu {
+        my ($client, $params) = @_;
+
+	readBrowseConfiguration($client);
+	
+	if(defined($params->{'menu'}) && defined($browseMenus->{$params->{'menu'}})) {
+		my $data = undef;
+
+		my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+		if (!defined $browseDir || !-d $browseDir) {
+			debugMsg("Skipping custom browse configuration - directory is undefined\n");
+		}else {
+			$data = loadMenuData($browseDir,$params->{'menu'});
+		}
+		if(!defined($data)) {
+			my @pluginDirs = ();
+			if ($::VERSION ge '6.5') {
+				@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+			}else {
+				@pluginDirs = catdir($Bin, "Plugins");
+			}
+			for my $plugindir (@pluginDirs) {
+				$data = loadMenuData(catdir($plugindir,"CustomBrowse","Playlists"),$params->{'menu'});
+				if(defined($data)) {
+					last;
+				}
+			}
+		}
+	        $params->{'pluginCustomBrowseEditMenuData'} = $data;
+		$params->{'pluginCustomBrowseEditMenuFile'} = $params->{'menu'};
+		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($params->{'menu'});
+	}
+
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
+}
+sub handleWebSaveMenu {
+	my ($client, $params) = @_;
+	$params->{'pluginCustomBrowseError'} = undef;
+
+	if (!$params->{'text'} || !$params->{'file'}) {
+		$params->{'pluginCustomBrowseError'} = 'All fields are mandatory';
+	}
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	
+	if (!defined $browseDir || !-d $browseDir) {
+		$params->{'pluginCustomBrowseError'} = 'No custom menu dir configured';
+	}
+	my $url = catfile($browseDir, unescape($params->{'file'}));
+	
+	#my $playlist = getPlayList($client,escape($params->{'name'},"^A-Za-z0-9\-_"));
+	#if($playlist && $playlist->{'file'} ne unescape($params->{'file'})) {
+	#	$params->{'pluginSQLPlayListError'} = 'Playlist with that name already exists';
+	#}
+	if(!saveMenu($client,$params,$url)) {
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
+	}else {
+		return handleWebEditMenus($client,$params)
+	}
+}
+
+sub saveMenu 
+{
+	my ($client, $params, $url) = @_;
+	my $fh;
+	if(!($params->{'pluginCustomBrowseError'})) {
+		debugMsg("Opening browse configuration file: $url\n");
+		open($fh,"> $url") or do {
+	            $params->{'pluginCustomBrowseError'} = 'Error saving menu';
+		};
+	}
+	if(!($params->{'pluginCustomBrowseError'})) {
+
+		debugMsg("Writing to file: $url\n");
+		print $fh $params->{'text'};
+		debugMsg("Writing to file succeeded\n");
+		close $fh;
+	}
+	
+	if($params->{'pluginCustomBrowseError'}) {
+		$params->{'pluginCustomBrowseEditMenuFile'} = $params->{'file'};
+		$params->{'pluginCustomBrowseEditMenuData'} = $params->{'text'};
+		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($params->{'pluginCustomBrowseEditMenuFile'});
+		return undef;
+	}else {
+		return 1;
+	}
 }
 
 sub handleWebPlayAdd {
@@ -1557,6 +1667,7 @@ sub readBrowseConfigurationFromDir {
         # read_file from File::Slurp
         my $content = eval { read_file($path) };
         if ( $content ) {
+	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
             my $xml = eval { 	XMLin($content, forcearray => ["item"], keyattr => []) };
             #debugMsg(Dumper($xml));
             if ($@) {
@@ -1647,6 +1758,27 @@ sub readBrowseConfigurationFromDir {
         }
     }
 }
+
+sub loadMenuData {
+    my $browseDir = shift;
+    my $file = shift;
+
+    debugMsg("Loading menu data from: $browseDir/$file\n");
+
+    my $path = catfile($browseDir, $file);
+    
+    return unless -f $path;
+
+    my $content = eval { read_file($path) };
+    if ($@) {
+    	debugMsg("Failed to load menu data because:\n$@\n");
+    }
+    if(defined($content)) {
+	debugMsg("Loading of menu data succeeded\n");
+    }
+    return $content;
+}
+
 sub validateIntWrapper {
 	my $arg = shift;
 	if ($::VERSION ge '6.5') {
@@ -1834,6 +1966,14 @@ PLUGIN_CUSTOMBROWSE_SELECT_MENUS_ALL
 PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND
 	EN	No matching songs, albums or artists were found
 
+PLUGIN_CUSTOMBROWSE_EDIT_MENUS
+	EN	Edit menus
+
+PLUGIN_CUSTOMBROWSE_EDIT_MENU_FILENAME
+	EN	Filename
+
+PLUGIN_CUSTOMBROWSE_EDIT_MENU_DATA
+	EN	Menu configuration
 EOF
 
 }
