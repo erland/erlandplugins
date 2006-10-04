@@ -2963,9 +2963,10 @@ sub commandCallback65($)
 # timer and set new Artist and Track.
 sub startTimingNewSong($$$$)
 {
-	debugMsg("Starting a new song\n");
 	# Parameter - TrackStatus for current client
 	my $playStatus = shift;
+	return unless $playStatus->currentTrackOriginalFilename;
+	debugMsg("Starting a new song\n");
 	my $ds        = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track     = Plugins::TrackStat::Storage::objectForUrl($playStatus->currentTrackOriginalFilename);
 
@@ -3750,7 +3751,7 @@ sub getRatingDynamicCustomItem
 {
 	my $track = shift;
 	my $string = '';
-	if(defined($ratingDynamicLastUrl) && $track eq $ratingDynamicLastUrl) {
+	if(defined($ratingDynamicLastUrl) && $track->url eq $ratingDynamicLastUrl) {
 		$string = $ratingDynamicCache;
 	}else {
 		debugMsg("Entering getRatingDynamicCustomItem\n");
@@ -3759,7 +3760,7 @@ sub getRatingDynamicCustomItem
 			my $rating = $trackHandle->rating / 20;
 			$string = ($rating?$RATING_CHARACTER x $rating:'');
 		}
-		$ratingDynamicLastUrl = $track;
+		$ratingDynamicLastUrl = $track->url;
 		$ratingDynamicCache = $string;
 		debugMsg("Exiting getRatingDynamicCustomItem\n");
 	}
@@ -3770,7 +3771,7 @@ sub getRatingStaticCustomItem
 {
 	my $track = shift;
 	my $string = $NO_RATING_CHARACTER x 5;
-	if(defined($ratingStaticLastUrl) && $track eq $ratingStaticLastUrl) {
+	if(defined($ratingStaticLastUrl) && $track->url eq $ratingStaticLastUrl) {
 		$string = $ratingStaticCache;
 	}else {
 		debugMsg("Entering getRatingStaticCustomItem\n");
@@ -3784,7 +3785,7 @@ sub getRatingStaticCustomItem
 				$string = $string . ($NO_RATING_CHARACTER x $left);
 			}
 		}
-		$ratingStaticLastUrl = $track;
+		$ratingStaticLastUrl = $track->url;
 		$ratingStaticCache = $string;
 		debugMsg("Exiting getRatingStaticCustomItem\n");
 	}
@@ -3795,7 +3796,7 @@ sub getRatingNumberCustomItem
 {
 	my $track = shift;
 	my $string = '';
-	if(defined($ratingNumberLastUrl) && $track eq $ratingNumberLastUrl) {
+	if(defined($ratingNumberLastUrl) && $track->url eq $ratingNumberLastUrl) {
 		$string = $ratingNumberCache;
 	}else {
 		debugMsg("Entering getRatingNumberCustomItem\n");
@@ -3804,7 +3805,7 @@ sub getRatingNumberCustomItem
 			my $rating = $trackHandle->rating / 20;
 			$string = ($rating?$rating:'');
 		}
-		$ratingNumberLastUrl = $track;
+		$ratingNumberLastUrl = $track->url;
 		$ratingNumberCache = $string;
 		debugMsg("Exiting getRatingNumberCustomItem\n");
 	}
