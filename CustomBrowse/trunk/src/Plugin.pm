@@ -1542,7 +1542,8 @@ sub handleWebEditMenu {
 				@pluginDirs = catdir($Bin, "Plugins");
 			}
 			for my $plugindir (@pluginDirs) {
-				$data = loadMenuData(catdir($plugindir,"CustomBrowse","Playlists"),$params->{'menu'});
+				next unless -d catdir($plugindir,"CustomBrowse","Menus");
+				$data = loadMenuData(catdir($plugindir,"CustomBrowse","Menus"),$params->{'menu'});
 				if(defined($data)) {
 					last;
 				}
@@ -1791,7 +1792,7 @@ sub saveMenu
 	}
 	if(!($params->{'pluginCustomBrowseError'})) {
 		my %templates = ();
-		my $error = parseTemplateContent($client,'test',$params->{'text'},\%templates);
+		my $error = parseMenuContent($client,'test',$params->{'text'},\%templates);
 		if($error) {
 			$params->{'pluginCustomBrowseError'} = "Reading menu configuration: <br>".$error;
 		}
@@ -2017,168 +2018,26 @@ sub readTemplateConfigurationFromDir {
 	}
     }
 }
-
-sub parseTemplateContent {
+sub parseMenuContent {
 	my $client = shift;
-	my $key = shift;
+	my $item = shift;
 	my $content = shift;
-	my $templates = shift;
-
-	my $errorMsg = undef;
-        if ( $content ) {
-	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-            my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
-            #debugMsg(Dumper($xml));
-            if ($@) {
-		    $errorMsg = "$@";
-                    errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
-            }else {
-		my $include = 1;
-		if(defined($xml->{'minslimserverversion'})) {
-			if($::VERSION lt $xml->{'minslimserverversion'}) {
-				$include = 0;
-			}
-		}
-		if(defined($xml->{'maxslimserverversion'})) {
-			if($::VERSION gt $xml->{'maxslimserverversion'}) {
-				$include = 0;
-			}
-		}
-		if(defined($xml->{'requireplugins'}) && $include) {
-			$include = 0;
-			my $requiredPlugins = $xml->{'requireplugins'};
-			my $enabledPlugin = 1;
-			foreach my $plugin (split /,/, $requiredPlugins) {
-				if($enabledPlugin) {
-					if ($::VERSION ge '6.5') {
-						$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
-					}else {
-						$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
-					}
-				}
-			}
-			if($enabledPlugin) {
-				$include = 1;
-			}
-		}
-		if(defined($xml->{'database'}) && $include) {
-			$include = 0;
-			my $driver = Slim::Utils::Prefs::get('dbsource');
-			$driver =~ s/dbi:(.*?):(.*)$/$1/;
-			if($driver eq $xml->{'database'}) {
-				$include = 1;
-			}
-		}
-		if($include && defined($xml->{'template'})) {
-	                $templates->{$key} = $xml->{'template'};
-		}
-            }
-    
-            # Release content
-            undef $content;
-        }else {
-            if ($@) {
-                    $errorMsg = "Incorrect information in menu data: $@";
-                    errorMsg("CustomBrowse: Unable to read menu configuration:\n$@\n");
-            }else {
-		$errorMsg = "Incorrect information in menu data";
-                errorMsg("CustomBrowse: Unable to to read menu configuration\n");
-            }
-        }
-	return $errorMsg;
-}
-
-sub readBrowseConfiguration {
-    my $client = shift;
-    my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
-    debugMsg("Searching for custom browse configuration in: $browseDir\n");
-    
-    my %localBrowseMenus = ();
-    my @pluginDirs = ();
-    if ($::VERSION ge '6.5') {
-        @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-    }else {
-        @pluginDirs = catdir($Bin, "Plugins");
-    }
-    for my $plugindir (@pluginDirs) {
-	next unless -d catdir($plugindir,"CustomBrowse","Playlists");
-	readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Playlists"),\%localBrowseMenus);
-    }
-    if (!defined $browseDir || !-d $browseDir) {
-            debugMsg("Skipping custom browse configuration scan - directory is undefined\n");
-    }else {
-	    readBrowseConfigurationFromDir($client,0,$browseDir,\%localBrowseMenus);
-    }
-    
-    my @menus = ();
-    foreach my $menu (keys %localBrowseMenus) {
-    	copyKeywords(undef,$localBrowseMenus{$menu});
-    }
-    $browseMenus = \%localBrowseMenus;
-}
-
-sub readBrowseConfigurationFromDir {
-    my $client = shift;
-    my $defaultMenu = shift;
-    my $browseDir = shift;
-    my $localBrowseMenus = shift;
-    debugMsg("Loading browse configuration from: $browseDir\n");
-
-    my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"cb.xml");
-    for my $item (@dircontents) {
-
-	next if -d catdir($browseDir, $item);
+	my $menus = shift;
+	my $defaultMenu = shift;
 
 	my $menuId = $item;
 	$menuId =~ s/\.cb\.xml//;
-
-        my $path = catfile($browseDir, $item);
-
-        # read_file from File::Slurp
-        my $content = eval { read_file($path) };
+	my $errorMsg = undef;
         if ( $content ) {
 	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
             my $xml = eval { 	XMLin($content, forcearray => ["item"], keyattr => []) };
             #debugMsg(Dumper($xml));
             if ($@) {
-                    errorMsg("CustomBrowse: Failed to parse browse configuration in $path because:\n$@\n");
+		    $errorMsg = "$@";
+                    errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
             }else {
-		my $include = 1;
-		if(defined($xml->{'minslimserverversion'})) {
-			if($::VERSION lt $xml->{'minslimserverversion'}) {
-				$include = 0;
-			}
-		}
-		if(defined($xml->{'maxslimserverversion'})) {
-			if($::VERSION gt $xml->{'maxslimserverversion'}) {
-				$include = 0;
-			}
-		}
-		if(defined($xml->{'requireplugins'}) && $include) {
-			$include = 0;
-			my $requiredPlugins = $xml->{'requireplugins'};
-			my $enabledPlugin = 1;
-			foreach my $plugin (split /,/, $requiredPlugins) {
-				if($enabledPlugin) {
-					if ($::VERSION ge '6.5') {
-						$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
-					}else {
-						$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
-					}
-				}
-			}
-			if($enabledPlugin) {
-				$include = 1;
-			}
-		}
-		if(defined($xml->{'database'}) && $include) {
-			$include = 0;
-			my $driver = Slim::Utils::Prefs::get('dbsource');
-			$driver =~ s/dbi:(.*?):(.*)$/$1/;
-			if($driver eq $xml->{'database'}) {
-				$include = 1;
-			}
-		}
+		my $include = isMenuEnabled($client,$xml);
+
 		my $disabled = 0;
 		if(defined($xml->{'menu'})) {
 			$xml->{'menu'}->{'id'} = $menuId;
@@ -2215,19 +2074,158 @@ sub readBrowseConfigurationFromDir {
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
 			}
-	                $localBrowseMenus->{$item} = $xml->{'menu'};
+	                $menus->{$item} = $xml->{'menu'};
 		}elsif($include && $disabled) {
 			$xml->{'menu'}->{'enabled'}=0;
 			$xml->{'menu'}->{'enabledbrowse'}=0;
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
 			}
-	                $localBrowseMenus->{$item} = $xml->{'menu'};
+	                $menus->{$item} = $xml->{'menu'};
 		}
             }
     
             # Release content
             undef $content;
+        }else {
+            if ($@) {
+                    $errorMsg = "Incorrect information in menu data: $@";
+                    errorMsg("CustomBrowse: Unable to read menu configuration:\n$@\n");
+            }else {
+		$errorMsg = "Incorrect information in menu data";
+                errorMsg("CustomBrowse: Unable to to read menu configuration\n");
+            }
+        }
+	return $errorMsg;
+}
+sub parseTemplateContent {
+	my $client = shift;
+	my $key = shift;
+	my $content = shift;
+	my $templates = shift;
+
+	my $errorMsg = undef;
+        if ( $content ) {
+	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+            my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
+            #debugMsg(Dumper($xml));
+            if ($@) {
+		    $errorMsg = "$@";
+                    errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
+            }else {
+		my $include = isMenuEnabled($client,$xml);
+		if($include && defined($xml->{'template'})) {
+	                $templates->{$key} = $xml->{'template'};
+		}
+            }
+    
+            # Release content
+            undef $content;
+        }else {
+            if ($@) {
+                    $errorMsg = "Incorrect information in menu data: $@";
+                    errorMsg("CustomBrowse: Unable to read menu configuration:\n$@\n");
+            }else {
+		$errorMsg = "Incorrect information in menu data";
+                errorMsg("CustomBrowse: Unable to to read menu configuration\n");
+            }
+        }
+	return $errorMsg;
+}
+
+sub isMenuEnabled {
+	my $client = shift;
+	my $xml = shift;
+
+	my $include = 1;
+	if(defined($xml->{'minslimserverversion'})) {
+		if($::VERSION lt $xml->{'minslimserverversion'}) {
+			$include = 0;
+		}
+	}
+	if(defined($xml->{'maxslimserverversion'})) {
+		if($::VERSION gt $xml->{'maxslimserverversion'}) {
+			$include = 0;
+		}
+	}
+	if(defined($xml->{'requireplugins'}) && $include) {
+		$include = 0;
+		my $requiredPlugins = $xml->{'requireplugins'};
+		my $enabledPlugin = 1;
+		foreach my $plugin (split /,/, $requiredPlugins) {
+			if($enabledPlugin) {
+				if ($::VERSION ge '6.5') {
+					$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+				}else {
+					$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
+				}
+			}
+		}
+		if($enabledPlugin) {
+			$include = 1;
+		}
+	}
+	if(defined($xml->{'database'}) && $include) {
+		$include = 0;
+		my $driver = Slim::Utils::Prefs::get('dbsource');
+		$driver =~ s/dbi:(.*?):(.*)$/$1/;
+		if($driver eq $xml->{'database'}) {
+			$include = 1;
+		}
+	}
+	return $include;
+}
+
+sub readBrowseConfiguration {
+    my $client = shift;
+    my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+    debugMsg("Searching for custom browse configuration in: $browseDir\n");
+    
+    my %localBrowseMenus = ();
+    my @pluginDirs = ();
+    if ($::VERSION ge '6.5') {
+        @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+    }else {
+        @pluginDirs = catdir($Bin, "Plugins");
+    }
+    for my $plugindir (@pluginDirs) {
+	next unless -d catdir($plugindir,"CustomBrowse","Menus");
+	readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus);
+    }
+    if (!defined $browseDir || !-d $browseDir) {
+            debugMsg("Skipping custom browse configuration scan - directory is undefined\n");
+    }else {
+	    readBrowseConfigurationFromDir($client,0,$browseDir,\%localBrowseMenus);
+    }
+    
+    my @menus = ();
+    foreach my $menu (keys %localBrowseMenus) {
+    	copyKeywords(undef,$localBrowseMenus{$menu});
+    }
+    $browseMenus = \%localBrowseMenus;
+}
+
+sub readBrowseConfigurationFromDir {
+    my $client = shift;
+    my $defaultMenu = shift;
+    my $browseDir = shift;
+    my $localBrowseMenus = shift;
+    debugMsg("Loading browse configuration from: $browseDir\n");
+
+    my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"cb.xml");
+    for my $item (@dircontents) {
+
+	next if -d catdir($browseDir, $item);
+
+        my $path = catfile($browseDir, $item);
+
+        # read_file from File::Slurp
+        my $content = eval { read_file($path) };
+        if ( $content ) {
+		my $errorMsg = parseMenuContent($client,$item,$content,$localBrowseMenus,$defaultMenu);
+		if($errorMsg) {
+	                errorMsg("CustomBrowse: Unable to open browse configuration file: $path\n$errorMsg\n");
+		}
         }else {
             if ($@) {
                     errorMsg("CustomBrowse: Unable to open browse configuration file: $path\nBecause of:\n$@\n");
