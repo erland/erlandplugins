@@ -2,7 +2,6 @@
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
 	<menu>
-		<id>newartists</id>
 		<menuname>New Artists</menuname>
 		<menu>
 			<id>artist</id>

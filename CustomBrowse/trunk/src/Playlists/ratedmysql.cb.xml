@@ -3,7 +3,6 @@
 	<requireplugins>TrackStat</requireplugins>
 	<database>mysql</database>
 	<menu>
-		<id>rated</id>
 		<menuname>Ratings</menuname>
 		<playtype>none</playtype>
 		<menu>

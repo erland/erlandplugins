@@ -2,7 +2,6 @@
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
 	<menu>
-		<id>years</id>
 		<menuname>Years</menuname>
 		<menu>
 			<id>year</id>

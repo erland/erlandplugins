@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-		<id>deepsingles</id>
 		<menuname>Singles by letter</menuname>
 		<menu>
 			<id>artistletter</id>

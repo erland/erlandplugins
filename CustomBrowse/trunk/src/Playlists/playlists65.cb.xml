@@ -2,7 +2,6 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
-		<id>playlists</id>
 		<menuname>Playlists</menuname>
 		<menu>
 			<id>playlist</id>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-		<id>artists</id>
 		<menuname>Artists</menuname>
 		<menu>
 			<id>variousartist</id>

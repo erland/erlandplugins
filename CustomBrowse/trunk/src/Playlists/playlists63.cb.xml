@@ -2,7 +2,6 @@
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
 	<menu>
-		<id>playlists</id>
 		<menuname>Playlists</menuname>
 		<menu>
 			<id>playlist</id>

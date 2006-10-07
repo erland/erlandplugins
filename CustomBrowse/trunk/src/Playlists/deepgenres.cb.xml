@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-		<id>deepgenres</id>
 		<menuname>Genres by letters</menuname>
 		<menu>
 			<id>genre</id>

@@ -2,7 +2,6 @@
 <custombrowse>
 	<database>SQLite</database>
 	<menu>
-	        <id>randomalbums</id>
 	        <menuname>Random Albums</menuname>
 	        <menu>
 	                <id>album</id>

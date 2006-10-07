@@ -3,7 +3,6 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<database>mysql</database>
 	<menu>
-		<id>decades</id>
 		<menuname>Decades</menuname>
 		<menu>
 			<id>year</id>

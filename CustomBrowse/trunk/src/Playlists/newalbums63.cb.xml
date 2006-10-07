@@ -2,7 +2,6 @@
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
 	<menu>
-	        <id>newalbums</id>
 	        <menuname>New Albums</menuname>
 	        <menu>
 	                <id>album</id>

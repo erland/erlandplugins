@@ -2,7 +2,6 @@
 <custombrowse>
 	<requireplugins>TrackStat</requireplugins>
 	<menu>
-		<id>trackstat</id>
 		<menuname>Statistics</menuname>
 		<menu>
 			<id>statistic</id>

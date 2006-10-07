@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-	        <id>albumscompilations</id>
 	        <menuname>Albums/Compilations</menuname>
 	        <menu>
 			<id>compilations</id>

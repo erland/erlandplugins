@@ -3,7 +3,6 @@
 	<requireplugins>TrackStat</requireplugins>
 	<database>SQLite</database>
 	<menu>
-		<id>rated</id>
 		<menuname>Ratings</menuname>
 		<menu>
 			<id>rating</id>

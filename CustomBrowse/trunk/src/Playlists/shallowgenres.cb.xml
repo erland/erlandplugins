@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
-		<id>shallowgenres</id>
 		<menuname>Genre Albums</menuname>
 		<menu>
 			<id>genre</id>

@@ -2,7 +2,6 @@
 <custombrowse>
 	<requireplugins>DynamicPlayList</requireplugins>
 	<menu>
-		<id>dynamicplaylists</id>
 		<menuname>Dynamic Playlists</menuname>
 		<menu>
 			<id>playlist</id>
