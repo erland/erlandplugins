@@ -1706,6 +1706,10 @@ sub handleWebNewMenu {
 	$menuData = Slim::Utils::Unicode::utf8on($menuData);
 	$menuData = Slim::Utils::Unicode::utf8encode_locale($menuData);
 	$menuData = encode_entities($menuData);
+	if(length($menuData)>10000) {
+		debugMsg("Warning! Large menu configuration, ".length($menuData)." characters\n");
+	        $params->{'pluginCustomBrowseEditMenuSizeWarning'} = "This menu configuration is very large, due to size limitations it might fail when you try to save it<br>Temporary solution: If save fails, click back in web browser and copy the information in the Menu configuration field to a text file and save it to the ".Slim::Utils::Prefs::get("plugin_custombrowse_directory")." directory with a filename with extension .cb.xml";
+	}
         $params->{'pluginCustomBrowseEditMenuData'} = $menuData;
 	$params->{'pluginCustomBrowseEditMenuFile'} = $menuFile;
 	$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($menuFile);
