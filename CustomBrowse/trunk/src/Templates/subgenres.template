@@ -42,7 +42,7 @@
 				        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 			        	<menudata>
-						select contributors.id,contributors.name from tracks,contributor_track,contributors,genre_track
+						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
 						where
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
@@ -75,7 +75,7 @@
 		                                        <keyword name="orderby" value="albums.titlesort asc"/>
 		                                </option>
 						<menudata>
-							select albums.id,albums.title from tracks,albums,contributor_track,genre_track
+							select albums.id,albums.title,substr(albums.titlesort) from tracks,albums,contributor_track,genre_track
 							where
 								tracks.id=contributor_track.track and
 								contributor_track.role in (1,5) and
