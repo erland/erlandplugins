@@ -30,10 +30,11 @@ use XML::Simple;
 use Data::Dumper;
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
-
+use HTML::Entities;
 
 my $driver;
 my $browseMenus;
+my $template;
 
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMBROWSE';
@@ -742,7 +743,6 @@ sub replaceParameters {
 
 sub getSQLMenuData {
 	my $sqlstatements = shift;
-	my $limit = shift;
 	my @result =();
 	my $ds = getCurrentDS();
 	my $dbh = getCurrentDBH();
@@ -788,6 +788,104 @@ sub getSQLMenuData {
 		}		
 	}
 	return \@result;
+}
+
+sub getSQLTemplateData {
+	my $sqlstatements = shift;
+	my @result =();
+	my $ds = getCurrentDS();
+	my $dbh = getCurrentDBH();
+	my $trackno = 0;
+	my $sqlerrors = "";
+    	for my $sql (split(/[;]/,$sqlstatements)) {
+    	eval {
+			$sql =~ s/^\s+//g;
+			$sql =~ s/\s+$//g;
+			my $sth = $dbh->prepare( $sql );
+			debugMsg("Executing: $sql\n");
+			$sth->execute() or do {
+	            debugMsg("Error executing: $sql\n");
+	            $sql = undef;
+			};
+
+	        if ($sql =~ /^SELECT+/oi) {
+				debugMsg("Executing and collecting: $sql\n");
+				my $id;
+                                my $name;
+                                my $value;
+				$sth->bind_col( 1, \$id);
+                                $sth->bind_col( 2, \$name);
+                                $sth->bind_col( 3, \$value);
+				while( $sth->fetch() ) {
+                                    my %item = (
+                                        'id' => $id,
+                                        'name' => Slim::Utils::Unicode::utf8decode($name,'utf8'),
+					'value' => Slim::Utils::Unicode::utf8decode($value,'utf8')
+                                    );
+                                    push @result, \%item;
+				}
+			}
+			$sth->finish();
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		}		
+	}
+	return \@result;
+}
+
+sub getTemplate {
+	if(!defined($template)) {
+		my @pluginDirs = ();
+		if ($::VERSION ge '6.5') {
+			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		}else {
+			@pluginDirs = catdir($Bin, "Plugins");
+		}
+		my @include_path = ();
+		my $templateDir = undef;
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,'CustomBrowse/Templates');
+			$templateDir = catdir($plugindir,'CustomBrowse/Templates');
+			push @include_path,$templateDir;
+		}
+	
+	
+		$template = Template->new({
+	
+	                INCLUDE_PATH => \@include_path,
+	                COMPILE_DIR => catdir( Slim::Utils::Prefs::get('cachedir'), 'templates' ),
+	                FILTERS => {
+	                        'string'        => \&Slim::Utils::Strings::string,
+	                        'getstring'     => \&Slim::Utils::Strings::getString,
+	                        'resolvestring' => \&Slim::Utils::Strings::resolveString,
+	                        'nbsp'          => \&nonBreaking,
+	                        'uri'           => \&URI::Escape::uri_escape_utf8,
+	                        'unuri'         => \&URI::Escape::uri_unescape,
+	                        'utf8decode'    => \&Slim::Utils::Unicode::utf8decode,
+	                        'utf8encode'    => \&Slim::Utils::Unicode::utf8encode,
+	                        'utf8on'        => \&Slim::Utils::Unicode::utf8on,
+	                        'utf8off'       => \&Slim::Utils::Unicode::utf8off,
+	                },
+	
+	                EVAL_PERL => 1,
+	        });
+	}
+	return $template;
+}
+
+sub fillTemplate {
+	my $filename = shift;
+	my $params = shift;
+
+	
+	my $output = '';
+	$params->{'LOCALE'} = 'utf-8';
+	my $template = getTemplate();
+	if(!$template->process($filename,$params,\$output)) {
+		msg("CustomBrowse: ERROR parsing template: ".$template->error()."\n");
+	}
+	return $output;
 }
 
 sub initPlugin {
@@ -1312,6 +1410,11 @@ sub webPages {
                 "custombrowse_editmenus\.(?:htm|xml)"     => \&handleWebEditMenus,
                 "custombrowse_editmenu\.(?:htm|xml)"     => \&handleWebEditMenu,
                 "custombrowse_savemenu\.(?:htm|xml)"     => \&handleWebSaveMenu,
+                "custombrowse_savenewmenu\.(?:htm|xml)"     => \&handleWebSaveNewMenu,
+                "custombrowse_removemenu\.(?:htm|xml)"     => \&handleWebRemoveMenu,
+                "custombrowse_newmenutypes\.(?:htm|xml)"     => \&handleWebNewMenuTypes,
+                "custombrowse_newmenuparameters\.(?:htm|xml)"     => \&handleWebNewMenuParameters,
+                "custombrowse_newmenu\.(?:htm|xml)"     => \&handleWebNewMenu,
                 "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
@@ -1445,6 +1548,9 @@ sub handleWebEditMenu {
 				}
 			}
 		}
+		if($data) {
+			$data = encode_entities($data);
+		}
 	        $params->{'pluginCustomBrowseEditMenuData'} = $data;
 		$params->{'pluginCustomBrowseEditMenuFile'} = $params->{'menu'};
 		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($params->{'menu'});
@@ -1456,6 +1562,198 @@ sub handleWebEditMenu {
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
 }
+
+sub handleWebNewMenuTypes {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	$params->{'pluginCustomBrowseTemplates'} = readTemplateConfiguration($client);
+	
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenutypes.html', $params);
+}
+
+sub handleWebNewMenuParameters {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	$params->{'pluginCustomBrowseNewMenuTemplate'} = $params->{'menutemplate'};
+	my $templates = readTemplateConfiguration($client);
+	my $template = $templates->{$params->{'menutemplate'}};
+	if(defined($template->{'parameter'})) {
+		my $parameters = $template->{'parameter'};
+		my @parametersToSelect = ();
+		for my $p (@$parameters) {
+			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
+				addValuesToTemplateParameter($p);
+				push @parametersToSelect,$p;
+			}
+		}
+		$params->{'pluginCustomBrowseNewMenuParameters'} = \@parametersToSelect;
+	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenuparameters.html', $params);
+	}else {
+		return handleWebNewMenu($client,$params);
+	}
+}
+
+sub addValuesToTemplateParameter {
+	my $p = shift;
+	if($p->{'type'} =~ '^sql.*') {
+		my $listValues = getSQLTemplateData($p->{'data'});
+		$p->{'values'} = $listValues;
+	}elsif($p->{'type'} =~ '.*list$' || $p->{'type'} =~ '.*checkboxes$') {
+		my @listValues = ();
+		my @values = split(/,/,$p->{'data'});
+		for my $value (@values){
+			my @idName = split(/=/,$value);
+			my %listValue = (
+				'id' => @idName->[0],
+				'name' => @idName->[1]
+			);
+			if(scalar(@idName)>2) {
+				$listValue{'value'} = @idName->[2];
+			}else {
+				$listValue{'value'} = @idName->[0];
+			}
+			push @listValues, \%listValue;
+		}
+		$p->{'values'} = \@listValues;
+	}
+}
+
+sub getValueOfTemplateParameter {
+	my $params = shift;
+	my $parameter = shift;
+
+	my $dbh = getCurrentDBH();
+	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
+		my $selectedValues = undef;
+		if($parameter->{'type'} =~ /.*multiplelist$/) {
+			$selectedValues = getMultipleListQueryParameter($params,'menuparameter_'.$parameter->{'id'});
+		}else {
+			$selectedValues = getCheckBoxesQueryParameter($params,'menuparameter_'.$parameter->{'id'});
+		}
+		my $values = $parameter->{'values'};
+		my $result = undef;
+		for my $item (@$values) {
+			if(defined($selectedValues->{$item->{'id'}})) {
+				if(defined($result)) {
+					$result = $result.',';
+				}
+				if($parameter->{'quotevalue'}) {
+					$result = $result.$dbh->quote(encode_entities($item->{'value'}));
+				}else {
+					$result = $result.encode_entities($item->{'value'});
+				}
+			}
+		}
+		if(!defined($result)) {
+			$result = '';
+		}
+		return $result;
+	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
+		my $values = $parameter->{'values'};
+		my $selectedValue = $params->{'menuparameter_'.$parameter->{'id'}};
+		my $result = undef;
+		for my $item (@$values) {
+			if($selectedValue eq $item->{'id'}) {
+				if($parameter->{'quotevalue'}) {
+					$result = $dbh->quote(encode_entities($item->{'value'}));
+				}else {
+					$result = encode_entities($item->{'value'});
+				}
+				last;
+			}
+		}
+		if(!defined($result)) {
+			$result = '';
+		}
+		return $result;
+	}else{
+		if($parameter->{'quotevalue'}) {
+			return $dbh->quote(encode_entities($params->{'menuparameter_'.$parameter->{'id'}}));
+		}else {
+			return encode_entities($params->{'menuparameter_'.$parameter->{'id'}});
+		}
+	}
+}
+sub handleWebNewMenu {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	my $templateFile = $params->{'menutemplate'};
+	my $menuFile = $templateFile;
+	$templateFile =~ s/\.xml$/.template/;
+	$menuFile =~ s/\.xml$/.cb.xml/;
+	my $templates = readTemplateConfiguration($client);
+	my $template = $templates->{$params->{'menutemplate'}};
+	my %templateParameters = ();
+	if(defined($template->{'parameter'})) {
+		my $parameters = $template->{'parameter'};
+		my @parametersToSelect = ();
+		for my $p (@$parameters) {
+			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
+				addValuesToTemplateParameter($p);
+				my $value = getValueOfTemplateParameter($params,$p);
+				$templateParameters{$p->{'id'}} = $value;
+			}
+		}
+	}
+	my $menuData = fillTemplate($templateFile,\%templateParameters);
+	$menuData = Slim::Utils::Unicode::utf8on($menuData);
+	$menuData = Slim::Utils::Unicode::utf8encode_locale($menuData);
+	$menuData = encode_entities($menuData);
+        $params->{'pluginCustomBrowseEditMenuData'} = $menuData;
+	$params->{'pluginCustomBrowseEditMenuFile'} = $menuFile;
+	$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($menuFile);
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenu.html', $params);
+}
+
+sub handleWebRemoveMenu {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	my $file = unescape($params->{'menu'});
+	my $url = catfile($browseDir, $file);
+	if(defined($browseDir) && -d $browseDir && $file && -e $url) {
+		unlink($url) or do {
+			warn "Unable to delete file: ".$url.": $! \n";
+		}
+	}		
+        return handleWebEditMenus($client,$params);
+}
+
+sub handleWebSaveNewMenu {
+	my ($client, $params) = @_;
+	$params->{'pluginCustomBrowseError'} = undef;
+
+	if (!$params->{'text'} || !$params->{'file'}) {
+		$params->{'pluginCustomBrowseError'} = 'All fields are mandatory';
+	}
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	
+	if (!defined $browseDir || !-d $browseDir) {
+		$params->{'pluginCustomBrowseError'} = 'No custom menu dir configured';
+	}
+	my $file = unescape($params->{'file'});
+	my $url = catfile($browseDir, $file);
+	
+	if(!defined($params->{'pluginCustomBrowseError'}) && -e $url) {
+		$params->{'pluginCustomBrowseError'} = 'Invalid filename, file already exist';
+	}
+
+	if(!saveMenu($client,$params,$url)) {
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenu.html', $params);
+	}else {
+		return handleWebEditMenus($client,$params)
+	}
+}
+
 sub handleWebSaveMenu {
 	my ($client, $params) = @_;
 	$params->{'pluginCustomBrowseError'} = undef;
@@ -1469,7 +1767,8 @@ sub handleWebSaveMenu {
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginCustomBrowseError'} = 'No custom menu dir configured';
 	}
-	my $url = catfile($browseDir, unescape($params->{'file'}));
+	my $file = unescape($params->{'file'});
+	my $url = catfile($browseDir, $file);
 	
 	#my $playlist = getPlayList($client,escape($params->{'name'},"^A-Za-z0-9\-_"));
 	#if($playlist && $playlist->{'file'} ne unescape($params->{'file'})) {
@@ -1486,6 +1785,18 @@ sub saveMenu
 {
 	my ($client, $params, $url) = @_;
 	my $fh;
+
+	if(!($url =~ /.*\.cb\.xml$/)) {
+		$params->{'pluginCustomBrowseError'} = 'Filename must end with .cb.xml';
+	}
+	if(!($params->{'pluginCustomBrowseError'})) {
+		my %templates = ();
+		my $error = parseTemplateContent($client,'test',$params->{'text'},\%templates);
+		if($error) {
+			$params->{'pluginCustomBrowseError'} = "Reading menu configuration: <br>".$error;
+		}
+	}
+
 	if(!($params->{'pluginCustomBrowseError'})) {
 		debugMsg("Opening browse configuration file: $url\n");
 		open($fh,"> $url") or do {
@@ -1504,10 +1815,56 @@ sub saveMenu
 		$params->{'pluginCustomBrowseEditMenuFile'} = $params->{'file'};
 		$params->{'pluginCustomBrowseEditMenuData'} = $params->{'text'};
 		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($params->{'pluginCustomBrowseEditMenuFile'});
+		if ($::VERSION ge '6.5') {
+			$params->{'pluginCustomBrowseSlimserver65'} = 1;
+		}
 		return undef;
 	}else {
 		return 1;
 	}
+}
+
+sub getMultipleListQueryParameter {
+	my $params = shift;
+	my $parameter = shift;
+
+	my $query = $params->{url_query};
+	my %result = ();
+	if($query) {
+		foreach my $param (split /\&/, $query) {
+			if ($param =~ /([^=]+)=(.*)/) {
+				my $name  = unescape($1);
+				my $value = unescape($2);
+				if($name eq $parameter) {
+					# We need to turn perl's internal
+					# representation of the unescaped
+					# UTF-8 string into a "real" UTF-8
+					# string with the appropriate magic set.
+					if ($value ne '*' && $value ne '') {
+						$value = Slim::Utils::Unicode::utf8on($value);
+						$value = Slim::Utils::Unicode::utf8encode_locale($value);
+					}
+					$result{$value} = 1;
+				}
+			}
+		}
+	}
+	return \%result;
+}
+
+sub getCheckBoxesQueryParameter {
+	my $params = shift;
+	my $parameter = shift;
+
+	my %result = ();
+	foreach my $key (keys %$params) {
+		my $pattern = '^'.$parameter.'_(.*)';
+		if ($key =~ /$pattern/) {
+			my $id  = unescape($1);
+			$result{$id} = 1;
+		}
+	}
+	return \%result;
 }
 
 sub handleWebPlayAdd {
@@ -1623,6 +1980,114 @@ sub handleWebSaveSelectMenus {
 }
 
 
+sub readTemplateConfiguration {
+    my $client = shift;
+    my @pluginDirs = ();
+    if ($::VERSION ge '6.5') {
+        @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+    }else {
+        @pluginDirs = catdir($Bin, "Plugins");
+    }
+    my %templates = ();
+    for my $plugindir (@pluginDirs) {
+	next unless -d catdir($plugindir,"CustomBrowse","Templates");
+	readTemplateConfigurationFromDir($client,catdir($plugindir,"CustomBrowse","Templates"),\%templates);
+    }
+    return \%templates;
+}
+
+sub readTemplateConfigurationFromDir {
+    my $client = shift;
+    my $browseDir = shift;
+    my $templates = shift;
+    debugMsg("Loading template configuration from: $browseDir\n");
+
+    my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"xml");
+    for my $item (@dircontents) {
+
+	next if -d catdir($browseDir, $item);
+
+        my $path = catfile($browseDir, $item);
+
+        # read_file from File::Slurp
+        my $content = eval { read_file($path) };
+	my $error = parseTemplateContent($client,$item,$content,$templates);
+	if($error) {
+		errorMsg("Unable to read: $path\n");
+	}
+    }
+}
+
+sub parseTemplateContent {
+	my $client = shift;
+	my $key = shift;
+	my $content = shift;
+	my $templates = shift;
+
+	my $errorMsg = undef;
+        if ( $content ) {
+	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+            my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
+            #debugMsg(Dumper($xml));
+            if ($@) {
+		    $errorMsg = "$@";
+                    errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
+            }else {
+		my $include = 1;
+		if(defined($xml->{'minslimserverversion'})) {
+			if($::VERSION lt $xml->{'minslimserverversion'}) {
+				$include = 0;
+			}
+		}
+		if(defined($xml->{'maxslimserverversion'})) {
+			if($::VERSION gt $xml->{'maxslimserverversion'}) {
+				$include = 0;
+			}
+		}
+		if(defined($xml->{'requireplugins'}) && $include) {
+			$include = 0;
+			my $requiredPlugins = $xml->{'requireplugins'};
+			my $enabledPlugin = 1;
+			foreach my $plugin (split /,/, $requiredPlugins) {
+				if($enabledPlugin) {
+					if ($::VERSION ge '6.5') {
+						$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+					}else {
+						$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
+					}
+				}
+			}
+			if($enabledPlugin) {
+				$include = 1;
+			}
+		}
+		if(defined($xml->{'database'}) && $include) {
+			$include = 0;
+			my $driver = Slim::Utils::Prefs::get('dbsource');
+			$driver =~ s/dbi:(.*?):(.*)$/$1/;
+			if($driver eq $xml->{'database'}) {
+				$include = 1;
+			}
+		}
+		if($include && defined($xml->{'template'})) {
+	                $templates->{$key} = $xml->{'template'};
+		}
+            }
+    
+            # Release content
+            undef $content;
+        }else {
+            if ($@) {
+                    $errorMsg = "Incorrect information in menu data: $@";
+                    errorMsg("CustomBrowse: Unable to read menu configuration:\n$@\n");
+            }else {
+		$errorMsg = "Incorrect information in menu data";
+                errorMsg("CustomBrowse: Unable to to read menu configuration\n");
+            }
+        }
+	return $errorMsg;
+}
+
 sub readBrowseConfiguration {
     my $client = shift;
     my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
@@ -1636,12 +2101,13 @@ sub readBrowseConfiguration {
         @pluginDirs = catdir($Bin, "Plugins");
     }
     for my $plugindir (@pluginDirs) {
-	readBrowseConfigurationFromDir($client,catdir($plugindir,"CustomBrowse","Playlists"),\%localBrowseMenus);
+	next unless -d catdir($plugindir,"CustomBrowse","Playlists");
+	readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Playlists"),\%localBrowseMenus);
     }
     if (!defined $browseDir || !-d $browseDir) {
             debugMsg("Skipping custom browse configuration scan - directory is undefined\n");
     }else {
-	    readBrowseConfigurationFromDir($client,$browseDir,\%localBrowseMenus);
+	    readBrowseConfigurationFromDir($client,0,$browseDir,\%localBrowseMenus);
     }
     
     my @menus = ();
@@ -1653,6 +2119,7 @@ sub readBrowseConfiguration {
 
 sub readBrowseConfigurationFromDir {
     my $client = shift;
+    my $defaultMenu = shift;
     my $browseDir = shift;
     my $localBrowseMenus = shift;
     debugMsg("Loading browse configuration from: $browseDir\n");
@@ -1661,6 +2128,9 @@ sub readBrowseConfigurationFromDir {
     for my $item (@dircontents) {
 
 	next if -d catdir($browseDir, $item);
+
+	my $menuId = $item;
+	$menuId =~ s/\.cb\.xml//;
 
         my $path = catfile($browseDir, $item);
 
@@ -1710,6 +2180,9 @@ sub readBrowseConfigurationFromDir {
 			}
 		}
 		my $disabled = 0;
+		if(defined($xml->{'menu'})) {
+			$xml->{'menu'}->{'id'} = $menuId;
+		}
 		if(defined($xml->{'menu'}) && defined($xml->{'menu'}->{'id'})) {
 			my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_menu_'.escape($xml->{'menu'}->{'id'}).'_enabled');
 			if(defined($enabled) && !$enabled) {
@@ -1739,10 +2212,16 @@ sub readBrowseConfigurationFromDir {
 			}else {
 				$xml->{'menu'}->{'enabledbrowse'}=1;
 			}
+			if($defaultMenu) {
+				$xml->{'menu'}->{'defaultmenu'} = 1;
+			}
 	                $localBrowseMenus->{$item} = $xml->{'menu'};
 		}elsif($include && $disabled) {
 			$xml->{'menu'}->{'enabled'}=0;
 			$xml->{'menu'}->{'enabledbrowse'}=0;
+			if($defaultMenu) {
+				$xml->{'menu'}->{'defaultmenu'} = 1;
+			}
 	                $localBrowseMenus->{$item} = $xml->{'menu'};
 		}
             }
@@ -1974,6 +2453,22 @@ PLUGIN_CUSTOMBROWSE_EDIT_MENU_FILENAME
 
 PLUGIN_CUSTOMBROWSE_EDIT_MENU_DATA
 	EN	Menu configuration
+
+PLUGIN_CUSTOMBROWSE_NEW_MENU_TYPES_TITLE
+	EN	Select type of menu to create
+
+PLUGIN_CUSTOMBROWSE_NEW_MENU
+	EN	Create new menu
+
+PLUGIN_CUSTOMBROWSE_NEW_MENU_PARAMETERS_TITLE
+	EN	Please enter menu parameters
+
+PLUGIN_CUSTOMBROWSE_REMOVE_MENU_QUESTION
+	EN	Are you sure you want to delete this menu ?
+
+PLUGIN_CUSTOMBROWSE_REMOVE_MENU
+	EN	Delete
+
 EOF
 
 }

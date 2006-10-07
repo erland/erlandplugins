@@ -20,11 +20,19 @@
 
 
     	<tr valign="top"><td></td><td colspan="4">
+		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_newmenutypes.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_NEW_MENU" | string %]</a>
+		<br>
+		<br>
 		[% odd = 1 %]
 		[% WRAPPER contentcontainer %]
 			[%- FOREACH menu IN pluginCustomBrowseMenus.keys.sort %]
-				[%- WRAPPER contentitem %]
-		        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_editmenu.html?player=[% player | uri %]&menu=[% menu %]">[% pluginCustomBrowseMenus.$menu.menuname %] ([% menu %])</a><br>
+				[% BLOCK controls %]
+					[% IF !pluginCustomBrowseMenus.$menu.defaultmenu %]
+					        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_removemenu.html?player=[% player | uri %]&menu=[% menu %]" onClick="return confirm('[% "PLUGIN_CUSTOMBROWSE_REMOVE_MENU_QUESTION" | string %]');" title="[% pluginCustomBrowseMenus.$menu.menuname %]">[% "PLUGIN_CUSTOMBROWSE_REMOVE_MENU" | string %]</a>
+					[% END %]
+				[% END %]
+				[%- WRAPPER contentitem  controls='controls' %]
+		        		<div><div style="float:right;align:right"><a href="[% webroot %]plugins/CustomBrowse/custombrowse_editmenu.html?player=[% player | uri %]&menu=[% menu %]">([% menu %])</a></div><a href="[% webroot %]plugins/CustomBrowse/custombrowse_editmenu.html?player=[% player | uri %]&menu=[% menu %]">[% pluginCustomBrowseMenus.$menu.menuname %]&nbsp;&nbsp;&nbsp;[% IF pluginCustomBrowseMenus.$menu.defaultmenu %](builtin)[% END %]</a></div>
 			        [% END %]
 				[% odd = (not odd) %]
 		        [% END %]
