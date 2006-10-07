@@ -35,13 +35,17 @@ Unzip to the Plugins directory in the Slimserver installation.
 ========
 This plugin makes it possible to create custom browse menus.
 
-You define a new playlist by creating a *.cb.xml file with the contents
+The easiest way to creat new menus is to use the "Edit menus/Create new menu" link
+in the web interface. You will be able to select type of menu and enter a few parameters for
+the new menu.
+
+You can also define a new menu by creating a *.cb.xml file with the contents
 as described below. This file will be found by the CustomBrowse
 plugin if you put it in the directory you have specified
 in the settings page for the CustomBrowse plugin in the web
 interface. The easiest way to learn how to define a custom menu
 is probably to look at the samples that is delived with the plugin and
-are stored in the CustomBrowse/Playlists directory. Some definitions and
+are stored in the CustomBrowse/Menus directory. Some definitions and
 samples of the format can be found below.
 
 The following example shows how an "Albums" menu could be
@@ -50,7 +54,6 @@ defined.
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
         <menu>
-                <id>albums</id>
                 <menuname>Albums</menuname>
                 <menu>
                         <id>album</id>
@@ -107,7 +110,8 @@ The principle for the different elements are as follows:
 menu = Defines a new sub menu
 
 id = Identification for a specific menu, must be uniqe on the same level.
-     The id element is mandatory for all menus.
+     The id element is mandatory for all menus besides the top menu. The top menu will
+     allways get id equal to the filename.
 
 menuname = Title of the menu, this element is required on the top menu level, its
            never used for dynamic menus in the player interface. In the web interface
