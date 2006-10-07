@@ -123,8 +123,6 @@
 	                                <id>bytitle</id>
                		                <name>Sort by title</name>
 	                        </option>
-				[%- IF includedgenres and excludedgenres %]
-				[%- ELSE %]
 	                        <option>
 	                                <id>byartist</id>
 	                                <name>Sort by artist</name>
@@ -152,7 +150,6 @@
 						order by contributors.namesort asc,albums.year desc
 	                                </menudata>
 	                        </option>
-				[%- END %]
 	                        <menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums[% IF includedgenres %],genre_track,genres[% END %]
 					where
