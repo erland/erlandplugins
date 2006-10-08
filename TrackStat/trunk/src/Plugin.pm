@@ -40,7 +40,7 @@ use Slim::Utils::Strings qw(string);
 
 use Time::HiRes;
 use Class::Struct;
-use POSIX qw(strftime ceil);
+use POSIX qw(strftime ceil floor);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 
@@ -613,7 +613,7 @@ sub getSetModeDataForStatistics {
 						if($trackHandle->rating) {
 							my $rating = $trackHandle->rating;
 							if($rating) {
-								$rating = $rating / 20;
+								$rating = floor(($rating+10) / 20);
 								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $rating);
 							}
 						}
@@ -687,7 +687,7 @@ sub saveRatingsForCurrentlyPlaying {
 			$client->string( 'PLUGIN_TRACKSTAT'),
 			$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
 			3);
-		rateSong($client,$songKey,$digit);
+		rateSong($client,$songKey,$digit*20);
 	}else {
 		$client->showBriefly(
 			$client->string( 'PLUGIN_TRACKSTAT'),
@@ -707,7 +707,7 @@ sub saveRatingsFromChoice {
         my $item = $listRef->[$listIndex];
         if($item->{'listtype'} eq 'track') {
         	debugMsg("saveRating: $client, ".$item->{'itemobj'}->url.", $digit\n");
-			rateSong($client,$item->{'itemobj'}->url,$digit);
+			rateSong($client,$item->{'itemobj'}->url,$digit*20);
         	my $title = Slim::Music::Info::standardTitle($client,$item->{'itemobj'});
 			$client->showBriefly(
 				$title,
@@ -749,7 +749,7 @@ sub getTrackInfo {
 						if($trackHandle->rating) {
 							$rating = $trackHandle->rating;
 							if($rating) {
-								$rating = $rating / 20;
+								$rating = floor(($rating+10) / 20);
 							}
 						}
 				}else {
@@ -1262,10 +1262,10 @@ sub baseWebPage {
 					$playStatus->currentSongRating($params->{trackstatrating});
 				}
 				
-				rateSong($client,$songKey,$playStatus->currentSongRating());
+				rateSong($client,$songKey,$playStatus->currentSongRating()*20);
 			}elsif($params->{trackstattrackid}) {
 				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
-					rateSong($client,$songKey,$params->{trackstatrating});
+					rateSong($client,$songKey,$params->{trackstatrating}*20);
 				}
 			}
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'albumrating') {
@@ -1279,7 +1279,7 @@ sub baseWebPage {
 						$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($album);
 					}
 					foreach my $url (@$unratedTracks) {
-						rateSong($client,$url,$params->{trackstatrating});
+						rateSong($client,$url,$params->{trackstatrating}*20);
 					}
 				}
 			}
@@ -3237,27 +3237,27 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 
 
 sub rateSong($$$) {
-	my ($client,$url,$digit)=@_;
+	my ($client,$url,$rating)=@_;
 
-	debugMsg("Changing song rating to: $digit\n");
+	debugMsg("Changing song rating to: $rating\n");
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track = Plugins::TrackStat::Storage::objectForUrl($url);
 	if(!defined $track) {
 		debugMsg("Failure setting rating, track does not exist: $url\n");
 		return;
 	}
-	my $rating = $digit * 20;
 	Plugins::TrackStat::Storage::saveRating($url,undef,$track,$rating);
 	no strict 'refs';
 	for my $item (keys %ratingPlugins) {
 		debugMsg("Calling $item\n");
 		eval { &{$ratingPlugins{$item}}($client,$url,$rating) };
 	}
+	my $digit = floor(($rating+10)/20);
 	use strict 'refs';
 	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit]);
+		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
 	}else {
-		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit]);
+		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
 	}
 	Slim::Music::Info::clearFormatDisplayCache();
 	$ratingStaticLastUrl = undef;
@@ -3268,7 +3268,7 @@ sub rateSong($$$) {
 sub setTrackStatRating {
 	debugMsg("Entering setTrackStatRating\n");
 	my ($client,$url,$rating)=@_;
-	my $lowrating = $rating / 20;
+	my $lowrating = floor(($rating+10) / 20);
 	my $track = undef;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	if ($::VERSION ge '6.5') {
@@ -3378,11 +3378,14 @@ sub getCLIRating {
 		return;
 	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
-	my $result = 0;
+	my $resultRating = 0;
+	my $resultDigit = 0;
 	if($trackHandle && $trackHandle->rating) {
-		$result = $trackHandle->rating/20;
+		$resultRating = $trackHandle->rating;
+		$resultDigit = floor(($trackHandle->rating+10)/20);
 	}
-	$request->addResult('rating', $result);
+	$request->addResult('rating', $resultDigit);
+	$request->addResult('ratingpercentage', $resultRating);
 	$request->setStatusDone();
 	debugMsg("Exiting getCLIRating\n");
 }
@@ -3439,11 +3442,14 @@ sub getCLIRating62 {
 		return;
 	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
-	my $result = 0;
+	my $resultRating = 0;
+	my $resultDigit = 0;
 	if($trackHandle && $trackHandle->rating) {
-		$result = $trackHandle->rating/20;
+		$resultRating = $trackHandle->rating;
+		$resultDigit = floor(($trackHandle->rating+10)/20);
 	}
-	push @$paramsRef,"rating:$result";
+	push @$paramsRef,"rating:$resultDigit";
+	push @$paramsRef,"rating:$resultRating";
 	debugMsg("Exiting getCLIRating62\n");
 }
 
@@ -3504,10 +3510,16 @@ sub setCLIRating {
 		debugMsg("Exiting setCLIRating\n");
 		return;
 	}
-	
+	if($rating =~ /.*%$/) {
+		$rating =~ s/%$//;
+	}else {
+		$rating = $rating*20;
+	}
 	rateSong($client,$track->url,$rating);
 	
-	$request->addResult('rating', $rating);
+	my $digit = floor(($rating+10)/20);
+	$request->addResult('rating', $digit);
+	$request->addResult('ratingpercentage', $rating);
 	$request->setStatusDone();
 	debugMsg("Exiting setCLIRating\n");
 }
@@ -3571,9 +3583,16 @@ sub setCLIRating62 {
 		return;
 	}
 	
+	if($rating =~ /.*%$/) {
+		$rating =~ s/%$//;
+	}else {
+		$rating = $rating*20;
+	}
 	rateSong($client,$track->url,$rating);
 	
-	push @$paramsRef,"rating:$rating";
+	my $digit = floor(($rating+10)/20);
+	push @$paramsRef,"rating:$digit";
+	push @$paramsRef,"ratingpercentage:$rating";
 	debugMsg("Exiting setCLIRating62\n");
 }
 
@@ -3741,7 +3760,7 @@ sub getRatingDynamicCustomItem
 		debugMsg("Entering getRatingDynamicCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = $trackHandle->rating / 20;
+			my $rating = floor(($trackHandle->rating+10) / 20);
 			$string = ($rating?$RATING_CHARACTER x $rating:'');
 		}
 		$ratingDynamicLastUrl = $track->url;
@@ -3761,7 +3780,7 @@ sub getRatingStaticCustomItem
 		debugMsg("Entering getRatingStaticCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = $trackHandle->rating / 20;
+			my $rating = floor(($trackHandle->rating+10) / 20);
 			debugMsg("rating = $rating\n");
 			if($rating) {
 				$string = ($rating?$RATING_CHARACTER x $rating:'');
@@ -3786,7 +3805,7 @@ sub getRatingNumberCustomItem
 		debugMsg("Entering getRatingNumberCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = $trackHandle->rating / 20;
+			my $rating = floor(($trackHandle->rating+10) / 20);
 			$string = ($rating?$rating:'');
 		}
 		$ratingNumberLastUrl = $track->url;

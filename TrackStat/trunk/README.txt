@@ -177,22 +177,30 @@ trackstat getrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 00:04:20:06:22:b3 trackstat getrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 00:04:20:06:22:b3 trackstat getrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3
 
-If the command succeeds it returns a "rating" parameter with the rating for the selected track.
+If the command succeeds it returns a "rating" parameter with the rating for the selected track between 0-5 and
+it also returns a "ratingpercentage" pamameter with the rating for the selected track between 0-100.
 
-Command: Set rating for a track to 4:
--------------------------------------
+Command: Set rating for a track to 4 (or 85%):
+----------------------------------------------
 trackstat setrating 94 4
+trackstat setrating 94 85%
 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 85%
 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 85%
 00:04:20:06:22:b3 trackstat setrating 94 4
+00:04:20:06:22:b3 trackstat setrating 94 85%
 00:04:20:06:22:b3 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+00:04:20:06:22:b3 trackstat setrating file:///mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 85%
 00:04:20:06:22:b3 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 4
+00:04:20:06:22:b3 trackstat setrating /mnt/mp3music_small/The%20Bodyguard/12%20Trust%20In%20Me.mp3 85%
 
-If the command succeeds it returns a "rating" parameter with the newly set rating
+If the command succeeds it returns a "rating" parameter with the newly set rating between 0-5 and it also
+returns a "ratingpercentage" parameter with the rating for the selected track between 0-100.
 
-Notification: Rating changed for a track with trackid 94 and rating 4
-----------------------------------------------------------------------
-trackstat changedrating file%3A%2F%2F%2Fmp3music_small%2FThe%20Bodyguard%2F12%20Trust%20In%20Me.mp3 94 4
+Notification: Rating changed for a track with trackid 94 and rating 4 (or rating percentage 85%)
+------------------------------------------------------------------------------------------------
+trackstat changedrating file%3A%2F%2F%2Fmp3music_small%2FThe%20Bodyguard%2F12%20Trust%20In%20Me.mp3 94 4 85%
 
 Notification: Statistic about playcount=18 and lastplayed=1144572357 changed
 ----------------------------------------------------------------------------
