@@ -786,7 +786,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -885,7 +885,17 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist"); }
-		},		
+		},
+	plugin_trackstat_dynamicplaylist_norepeat => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat"); }
+		},
 	plugin_trackstat_web_list_length => {
 			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_WEB_LIST_LENGTH')
@@ -1974,6 +1984,13 @@ sub initPlugin
 			debugMsg("First run - setting dynamicplaylist ON\n");
 			Slim::Utils::Prefs::set("plugin_trackstat_dynamicplaylist", 1 ); 
 		}
+
+		# this will enable DynamicPlaylist integration to not repeat tracks by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat"))) { 
+			debugMsg("First run - setting dynamicplaylist no repeat ON\n");
+			Slim::Utils::Prefs::set("plugin_trackstat_dynamicplaylist_norepeat", 1 ); 
+		}
+
 		# set default web list length to same as items per page
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_list_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_list_length",Slim::Utils::Prefs::get("itemsPerPage"));
@@ -4120,6 +4137,15 @@ SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
 
 SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_DESC
 	EN	This will turn on/off integration with Dynamic Playlists plugin making the statistics available as playlists
+
+PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT
+	EN	Dynamic Playlists do not repeat songs
+
+SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT
+	EN	Dynamic Playlists do not repeat songs
+
+SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT_DESC
+	EN	If enabled, this will make sure tracks are not repeated when playing one of the TrackStat playlists with Dynamic Playlists plugin
 
 PLUGIN_TRACKSTAT_ITUNES_IMPORTING
 	EN	Importing from iTunes...

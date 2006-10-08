@@ -206,7 +206,12 @@ sub getNotRatedRecentAddedTracks {
 	}
 	my $recentadded = getRecentAddedTime();
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select tracks.id from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null and t1.added$recentaddedcmp$recentadded order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	my $sql;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+		$sql = "select tracks.id from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and t2.url is null and t1.added$recentaddedcmp$recentadded order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	}else {
+		$sql = "select tracks.id from tracks left join track_statistics t1 on tracks.url=t1.url left join track_statistics t2 on tracks.url=t2.url and t2.rating>0 where tracks.audio=1 and t2.url is null and t1.added$recentaddedcmp$recentadded order by t1.playCount desc,tracks.playCount desc,$orderBy limit $listLength;";
+	}
     return Plugins::TrackStat::Statistics::Base::getTracks($sql,$limit);
 }
 
@@ -353,16 +358,22 @@ sub getNotRatedRecentAddedAlbumsWeb {
 	}
 }
 
-sub getNotRatedAlbumTracks {
+sub getNotRatedRecentAddedAlbumTracks {
 	my $listLength = shift;
-	my $limit = undef;
+	my $limit = shift;
+	$limit = undef;
 	my $recentaddedcmp = shift;
 	if(!defined($recentaddedcmp)) {
 		$recentaddedcmp = '>';
 	}
 	my $recentadded = getRecentAddedTime();
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id where track_statistics.added$recentaddedcmp$recentadded group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
+	my $sql;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+		$sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and track_statistics.added$recentaddedcmp$recentadded group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
+	}else {
+		$sql = "select albums.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id where track_statistics.added$recentaddedcmp$recentadded group by tracks.album having avgrating=0 order by avgcount desc,$orderBy limit $listLength";
+	}
     return Plugins::TrackStat::Statistics::Base::getAlbumTracks($sql,$limit);
 }
 
@@ -501,16 +512,22 @@ sub getNotRatedRecentAddedArtistsWeb {
 	}
 }
 
-sub getNotRatedArtistTracks {
+sub getNotRatedRecentAddedArtistTracks {
 	my $listLength = shift;
+	my $limit = shift;
 	my $recentaddedcmp = shift;
 	if(!defined($recentaddedcmp)) {
 		$recentaddedcmp = '>';
 	}
 	my $recentadded = getRecentAddedTime();
-	my $limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
+	$limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
-    my $sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor where track_statistics.added$recentaddedcmp$recentadded group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
+	my $sql;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and track_statistics.added$recentaddedcmp$recentadded group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
+	}else {
+		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 0 else track_statistics.rating end) as avgrating,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track join contributors on contributors.id = contributor_track.contributor where track_statistics.added$recentaddedcmp$recentadded group by contributors.id having avgrating=0 order by sumcount desc,$orderBy limit $listLength";
+	}
     return Plugins::TrackStat::Statistics::Base::getArtistTracks($sql,$limit);
 }
 
@@ -554,7 +571,7 @@ sub getNotRatedNotRecentAddedArtistsWeb {
 sub getNotRatedNotRecentAddedArtistTracks {
 	my $listLength = shift;
 
-	return getNotRatedRecentAddedArtistTracks($listLength,'<');
+	return getNotRatedRecentAddedArtistTracks($listLength,undef,'<');
 }
 
 sub getRecentAddedTime() {
