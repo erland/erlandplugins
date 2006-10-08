@@ -123,6 +123,40 @@ sub objectForId {
 	}
 }
 
+sub objectsForId {
+	my $type = shift;
+	my $idArray = shift;
+	
+	my @resultArray = ();
+	return \@resultArray unless scalar(@$idArray)>0;
+
+	if ($::VERSION ge '6.5') {
+		if($type eq 'artist') {
+			$type = 'Contributor';
+		}elsif($type eq 'album') {
+			$type = 'Album';
+		}elsif($type eq 'genre') {
+			$type = 'Genre';
+		}elsif($type eq 'track') {
+			$type = 'Track';
+		}elsif($type eq 'playlist') {
+			$type = 'Playlist';
+		}elsif($type eq 'year') {
+			$type = 'Year';
+		}
+		@resultArray = Slim::Schema->resultset($type)->search({ 'id' => { 'in' => $idArray } });
+	}else {
+		if($type eq 'playlist') {
+			$type = 'track';
+		}
+		for my $id (@$idArray) {
+			my $obj = getCurrentDS()->objectForId($type,$id);
+			push @resultArray,$obj;
+		}
+	}
+	return \@resultArray;
+}
+
 sub objectForUrl {
 	my $url = shift;
 	if ($::VERSION ge '6.5') {

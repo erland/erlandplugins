@@ -131,15 +131,32 @@ sub getTracksWeb {
 	eval {
 		$sth->execute();
 
-		my( $url, $playCount, $added, $lastPlayed, $rating );
-		$sth->bind_columns( undef, \$url, \$playCount, \$added, \$lastPlayed, \$rating );
+		my( $id, $playCount, $added, $lastPlayed, $rating );
+		$sth->bind_columns( undef, \$id, \$playCount, \$added, \$lastPlayed, \$rating );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
+			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
-			$playCount = 0 if (!(defined($playCount)));
 			$rating = 0 if (!(defined($rating)));
-			my $track = Plugins::TrackStat::Storage::objectForUrl($url);
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('track',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $track = $objectData->{'itemobj'};
 			next unless defined $track;
 		  	my %trackInfo = ();
 			
@@ -147,14 +164,15 @@ sub getTracksWeb {
 			$trackInfo{'levelName'}  = 'track';
 			displayAsHTML('track', \%trackInfo, $track);
 		  	$trackInfo{'title'} = Slim::Music::Info::standardTitle(undef,$track);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = $playCount;
+			$trackInfo{'song_count'}       = $objectData->{'playCount'};
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('track').'='.$track->id;
 			$trackInfo{'itemobj'}          = $track;
 			$trackInfo{'listtype'} = 'track';
@@ -186,14 +204,13 @@ sub getTracks {
 	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
-	my @result;
+	my @objectIds = ();
 	eval {
 		$sth->execute();
-		my $url;
-		$sth->bind_col( 1, \$url );
+		my $id;
+		$sth->bind_col( 1, \$id );
 		while( $sth->fetch() ) {
-			my $track = Plugins::TrackStat::Storage::objectForUrl($url);
-		  	push @result, $track;
+			push @objectIds,$id;
 		}
 	};
 	if( $@ ) {
@@ -204,10 +221,20 @@ sub getTracks {
 		}
 	}
 	$sth->finish();
-	fisher_yates_shuffle(\@result);
-	if(defined($limit) && scalar(@result)>$limit) {
-		my $entriesToRemove = scalar(@result) - $limit;
-		splice(@result,0,$entriesToRemove);
+	fisher_yates_shuffle(\@objectIds);
+	if(defined($limit) && scalar(@objectIds)>$limit) {
+		my $entriesToRemove = scalar(@objectIds) - $limit;
+		splice(@objectIds,0,$entriesToRemove);
+	}
+	my $objectItems = Plugins::TrackStat::Storage::objectsForId('track',\@objectIds);
+	my %objects = ();
+	for my $object (@$objectItems) {
+		$objects{$object->id} = $object;
+	}
+	my @result = ();
+	for my $objectId (@objectIds) {
+	  	push @result, $objects{$objectId};
+		debugMsg("Adding track: ".$objects{$objectId}->title."\n");
 	}
 	return \@result;
 }
@@ -225,12 +252,29 @@ sub getAlbumsWeb {
 		my( $id, $rating, $playCount, $lastPlayed, $added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount, \$lastPlayed, \$added );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
 			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $album = Plugins::TrackStat::Storage::objectForId('album',$id);
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('album',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $album = $objectData->{'itemobj'};
 			next unless defined $album;
 		  	my %trackInfo = ();
 			
@@ -239,14 +283,15 @@ sub getAlbumsWeb {
 			$trackInfo{'levelName'}  = 'album';
 			displayAsHTML('album', \%trackInfo, $album);
 		  	$trackInfo{'title'} = undef;
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = ceil($playCount);
+			$trackInfo{'song_count'}       = ceil($objectData->{'playCount'});
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('album').'='.$album->id;
 			$trackInfo{'itemobj'}{'album'} = $album;
 			$trackInfo{'listtype'} = 'album';
@@ -328,12 +373,29 @@ sub getArtistsWeb {
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
 			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $artist = Plugins::TrackStat::Storage::objectForId('artist',$id);
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('artist',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $artist = $objectData->{'itemobj'};
 			next unless defined $artist;
 		  	my %trackInfo = ();
 			
@@ -342,14 +404,15 @@ sub getArtistsWeb {
 			$trackInfo{'levelName'}  = 'artist';
 			displayAsHTML('artist', \%trackInfo, $artist);
 		  	$trackInfo{'title'} = undef;
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = ceil($playCount);
+			$trackInfo{'song_count'}       = ceil($objectData->{'playCount'});
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('artist').'='.$artist->id;
 			$trackInfo{'itemobj'}{'artist'} = $artist;
 			$trackInfo{'listtype'} = 'artist';
@@ -436,12 +499,29 @@ sub getGenresWeb {
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
 			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $genre = Plugins::TrackStat::Storage::objectForId('genre',$id);
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('genre',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $genre = $objectData->{'itemobj'};
 			next unless defined $genre;
 		  	my %trackInfo = ();
 			
@@ -450,14 +530,15 @@ sub getGenresWeb {
 			$trackInfo{'levelName'}  = 'genre';
 			displayAsHTML('genre', \%trackInfo, $genre);
 		  	$trackInfo{'title'} = undef;
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = ceil($playCount);
+			$trackInfo{'song_count'}       = ceil($objectData->{'playCount'});
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('genre').'='.$genre->id;
 			$trackInfo{'itemobj'}{'genre'} = $genre;
 			$trackInfo{'listtype'} = 'genre';
@@ -544,28 +625,46 @@ sub getYearsWeb {
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
 			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $year = $id;
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('year',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $year = $objectId;
 		  	my %trackInfo = ();
 			$trackInfo{'noTrackStatButton'} = 1;
 			$trackInfo{'levelName'}  = 'year';
 			if ($::VERSION ge '6.5') {
-				my $yearobj = Plugins::TrackStat::Storage::objectForYear($id);
+				my $yearobj = $objectData->{'itemobj'};
 				displayAsHTML('year', \%trackInfo, $yearobj);
 			}
 		  	$trackInfo{'title'} = undef;
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = ceil($playCount);
+			$trackInfo{'song_count'}       = ceil($objectData->{'playCount'});
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('year').'='.$year;
 			$trackInfo{'itemobj'}{'year'} = $year;
 			$trackInfo{'listtype'} = 'year';
@@ -650,12 +749,29 @@ sub getPlaylistsWeb {
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
 		my $itemNumber = 0;
+		my %objects = ();
+		my @objectIds = ();
 		while( $sth->fetch() ) {
 			$playCount = 0 if (!(defined($playCount)));
 			$lastPlayed = 0 if (!(defined($lastPlayed)));
 			$added = 0 if (!(defined($added)));
 			$rating = 0 if (!(defined($rating)));
-			my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$id);
+			my %objectStatisticInfo = (
+				'lastPlayed' => $lastPlayed,
+				'added' => $added,
+				'playCount' => $playCount,
+				'rating' => $rating
+			);
+			push @objectIds,$id;
+			$objects{$id} = \%objectStatisticInfo;
+		}
+		my $objectItems = Plugins::TrackStat::Storage::objectsForId('track',\@objectIds);
+		for my $object (@$objectItems) {
+			$objects{$object->id}->{'itemobj'} = $object;
+		}
+		for my $objectId (@objectIds) {
+			my $objectData = $objects{$objectId};
+			my $playlist = $objectData->{'itemobj'};
 			next unless defined $playlist;
 		  	my %trackInfo = ();
 			
@@ -664,14 +780,15 @@ sub getPlaylistsWeb {
 			$trackInfo{'levelName'}  = 'playlist';
 			displayAsHTML('playlist', \%trackInfo, $playlist);
 		  	$trackInfo{'title'} = undef;
+			my $rating = $objectData->{'rating'};
 		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
 		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
-		  	$trackInfo{'lastPlayed'} = $lastPlayed;
-		  	$trackInfo{'added'} = $added;
+		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
+		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
-			$trackInfo{'song_count'}       = ceil($playCount);
+			$trackInfo{'song_count'}       = ceil($objectData->{'playCount'});
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('playlist').'='.$playlist->id;
 			$trackInfo{'itemobj'}{'playlist'} = $playlist;
 			$trackInfo{'listtype'} = 'playlist';
