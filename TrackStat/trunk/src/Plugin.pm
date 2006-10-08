@@ -3449,7 +3449,7 @@ sub getCLIRating62 {
 		$resultDigit = floor(($trackHandle->rating+10)/20);
 	}
 	push @$paramsRef,"rating:$resultDigit";
-	push @$paramsRef,"rating:$resultRating";
+	push @$paramsRef,"ratingpercentage:$resultRating";
 	debugMsg("Exiting getCLIRating62\n");
 }
 
