@@ -16,7 +16,7 @@
 		&nbsp;
 	[% END %]
 	[% loop = 0 %]
-	[% WHILE loop < 5 %]
+	[% WHILE loop < pluginTrackStatMaxRating %]
 		[% loop = loop + 1 %]
 		[% IF loop <= item.rating %]
 			[% IF item.listtype == 'track' %]
@@ -57,7 +57,7 @@
 		&nbsp;
 	[% END %]
 	[% loop = 0 %]
-	[% WHILE loop < 5 %]
+	[% WHILE loop < pluginTrackStatMaxRating %]
 		[% loop = loop + 1 %]
 		[% IF loop <= item.rating %]
 			[% IF item.listtype == 'track' %]

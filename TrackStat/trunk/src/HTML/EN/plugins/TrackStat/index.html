@@ -60,7 +60,7 @@
 					<td height="5">[% 'PLUGIN_TRACKSTAT_RATING' | string %]</td>
 					<td height="5">
 					[% loop = 0 %]
-					[% WHILE loop < 5 %]
+					[% WHILE loop < pluginTrackStatMaxRating %]
 						[% loop = loop + 1 %]
 						[% IF loop <= rating %]
 							<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
@@ -153,7 +153,7 @@
 			[% IF pluginTrackStatShowGroupRatingControls %]
 				[% pluginTrackStatGroupRatingNumber %]&nbsp;
 				[% loop = 0 %]
-				[% WHILE loop < 5 %]
+				[% WHILE loop < pluginTrackStatMaxRating %]
 					[% loop = loop + 1 %]
 					[% IF loop <= pluginTrackStatGroupRating %]
 						<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=[% loop %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" onClick="return confirm('[% pluginTrackStatShowGroupRatingWarning | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/star.gif" width=13 height=13 alt="[% loop %]" title="[% loop %]"></a>
@@ -165,7 +165,7 @@
 			[% ELSIF pluginTrackStatShowGroupRatingView %]
 				[% pluginTrackStatGroupRatingNumber %]&nbsp;
 				[% loop = 0 %]
-				[% WHILE loop < 5 %]
+				[% WHILE loop < pluginTrackStatMaxRating %]
 					[% loop = loop + 1 %]
 					[% IF loop <= pluginTrackStatGroupRating %]
 						<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 alt="[% loop %]" title="[% pluginTrackStatGroupRatingNumber %]">

@@ -188,6 +188,143 @@ sub getStatisticItems {
 			'contextfunction' => \&isRatedAlbumsValidInContext
 		}
 	);
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		$statistics{rated6} = {
+			'webfunction' => \&getRated6TracksWeb,
+			'playlistfunction' => \&getRated6Tracks,
+			'id' =>  'rated6',
+			'namefunction' => \&getRated6TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
+			'contextfunction' => \&isRatedTracksValidInContext
+		};
+		$statistics{rated7} = {
+			'webfunction' => \&getRated7TracksWeb,
+			'playlistfunction' => \&getRated7Tracks,
+			'id' =>  'rated7',
+			'namefunction' => \&getRated6TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
+			'contextfunction' => \&isRatedTracksValidInContext
+		};
+		$statistics{rated8} = {
+			'webfunction' => \&getRated8TracksWeb,
+			'playlistfunction' => \&getRated8Tracks,
+			'id' =>  'rated8',
+			'namefunction' => \&getRated8TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
+			'contextfunction' => \&isRatedTracksValidInContext
+		};
+		$statistics{rated9} = {
+			'webfunction' => \&getRated9TracksWeb,
+			'playlistfunction' => \&getRated9Tracks,
+			'id' =>  'rated9',
+			'namefunction' => \&getRated9TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
+			'contextfunction' => \&isRatedTracksValidInContext
+		};
+		$statistics{rated10} = {
+			'webfunction' => \&getRated10TracksWeb,
+			'playlistfunction' => \&getRated10Tracks,
+			'id' =>  'rated10',
+			'namefunction' => \&getRated10TracksName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
+			'contextfunction' => \&isRatedTracksValidInContext
+		};
+		$statistics{rated6artists} = {
+			'webfunction' => \&getRated6ArtistsWeb,
+			'playlistfunction' => \&getRated6ArtistTracks,
+			'id' =>  'rated6artists',
+			'namefunction' => \&getRated6ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
+			'contextfunction' => \&isRatedArtistsValidInContext
+		};
+		$statistics{rated7artists} = {
+			'webfunction' => \&getRated7ArtistsWeb,
+			'playlistfunction' => \&getRated7ArtistTracks,
+			'id' =>  'rated7artists',
+			'namefunction' => \&getRated7ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
+			'contextfunction' => \&isRatedArtistsValidInContext
+		};
+		$statistics{rated8artists} = {
+			'webfunction' => \&getRated8ArtistsWeb,
+			'playlistfunction' => \&getRated8ArtistTracks,
+			'id' =>  'rated8artists',
+			'namefunction' => \&getRated8ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
+			'contextfunction' => \&isRatedArtistsValidInContext
+		};
+		$statistics{rated9artists} = {
+			'webfunction' => \&getRated9ArtistsWeb,
+			'playlistfunction' => \&getRated9ArtistTracks,
+			'id' =>  'rated9artists',
+			'namefunction' => \&getRated9ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
+			'contextfunction' => \&isRatedArtistsValidInContext
+		};
+		$statistics{rated10artists} = {
+			'webfunction' => \&getRated10ArtistsWeb,
+			'playlistfunction' => \&getRated10ArtistTracks,
+			'id' =>  'rated10artists',
+			'namefunction' => \&getRated10ArtistsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ARTIST_GROUP')]],
+			'contextfunction' => \&isRatedArtistsValidInContext
+		};
+		$statistics{rated6albums} = {
+			'webfunction' => \&getRated6AlbumsWeb,
+			'playlistfunction' => \&getRated6AlbumTracks,
+			'id' =>  'rated6albums',
+			'namefunction' => \&getRated6AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
+			'contextfunction' => \&isRatedAlbumsValidInContext
+		};
+		$statistics{rated7albums} = {
+			'webfunction' => \&getRated7AlbumsWeb,
+			'playlistfunction' => \&getRated7AlbumTracks,
+			'id' =>  'rated7albums',
+			'namefunction' => \&getRated7AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
+			'contextfunction' => \&isRatedAlbumsValidInContext
+		};
+		$statistics{rated8albums} = {
+			'webfunction' => \&getRated8AlbumsWeb,
+			'playlistfunction' => \&getRated8AlbumTracks,
+			'id' =>  'rated8albums',
+			'namefunction' => \&getRated8AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
+			'contextfunction' => \&isRatedAlbumsValidInContext
+		};
+		$statistics{rated9albums} = {
+			'webfunction' => \&getRated9AlbumsWeb,
+			'playlistfunction' => \&getRated9AlbumTracks,
+			'id' =>  'rated9albums',
+			'namefunction' => \&getRated9AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
+			'contextfunction' => \&isRatedAlbumsValidInContext
+		};
+		$statistics{rated10albums} = {
+			'webfunction' => \&getRated10AlbumsWeb,
+			'playlistfunction' => \&getRated10AlbumTracks,
+			'id' =>  'rated10albums',
+			'namefunction' => \&getRated10AlbumsName,
+			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
+			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_ALBUM_GROUP')]],
+			'contextfunction' => \&isRatedAlbumsValidInContext
+		};
+	}
 	return \%statistics;
 }
 
@@ -317,10 +454,147 @@ sub getRated5TracksName {
 	}
 }
 
+sub getRated6TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'album'})) {
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6');
+	}
+}
+
+sub getRated7TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'album'})) {
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7');
+	}
+}
+
+sub getRated8TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'album'})) {
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8');
+	}
+}
+
+sub getRated9TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'album'})) {
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9');
+	}
+}
+
+sub getRated10TracksName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'album'})) {
+	    my $album = Plugins::TrackStat::Storage::objectForId('album',$params->{'album'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORALBUM')." ".Slim::Utils::Unicode::utf8decode($album->title,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10');
+	}
+}
+
+sub getMinRating {
+	my $rating = shift;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		if($rating>1) {
+			return ($rating-1)*10+4;
+		}
+	}else {
+		if($rating>1) {
+			return ($rating-1)*20+9;
+		}
+	}
+	return 0;	
+}
+
+sub getMaxRating {
+	my $rating = shift;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		if($rating<10) {
+			return $rating*10+4;
+		}
+	}else {
+		if($rating>1) {
+			return $rating*20+9;
+		}
+	}
+	return 100;
+}
 sub getRated1TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedTracksWeb($params,$listLength,0,29);
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(1),getMaxRating(1));
     my %currentstatisticlinks = (
     	'album' => 'toprated',
     	'artist' => 'topratedalbums'
@@ -331,13 +605,13 @@ sub getRated1TracksWeb {
 sub getRated1Tracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,0,29);
+	return getMostPlayedTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedTracksWeb($params,$listLength,29,49);
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(2),getMaxRating(2));
     my %currentstatisticlinks = (
     	'album' => 'toprated',
     	'artist' => 'topratedalbums'
@@ -348,13 +622,13 @@ sub getRated2TracksWeb {
 sub getRated2Tracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,29,49);
+	return getMostPlayedTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedTracksWeb($params,$listLength,49,69);
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(3),getMaxRating(3));
     my %currentstatisticlinks = (
     	'album' => 'toprated',
     	'artist' => 'topratedalbums'
@@ -365,13 +639,13 @@ sub getRated3TracksWeb {
 sub getRated3Tracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,49,69);
+	return getMostPlayedTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedTracksWeb($params,$listLength,69,89);
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(4),getMaxRating(4));
     my %currentstatisticlinks = (
     	'album' => 'toprated',
     	'artist' => 'topratedalbums'
@@ -382,13 +656,13 @@ sub getRated4TracksWeb {
 sub getRated4Tracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,69,89);
+	return getMostPlayedTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5TracksWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedTracksWeb($params,$listLength,89,100);
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(5),getMaxRating(5));
     my %currentstatisticlinks = (
     	'album' => 'toprated',
     	'artist' => 'topratedalbums'
@@ -399,9 +673,89 @@ sub getRated5TracksWeb {
 sub getRated5Tracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,89,100);
+	return getMostPlayedTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
+sub getRated6TracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(6),getMaxRating(6));
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated6Tracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+}
+sub getRated7TracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(7),getMaxRating(7));
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated7Tracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+}
+sub getRated8TracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(8),getMaxRating(8));
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated8Tracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+}
+sub getRated9TracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(9),getMaxRating(9));
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated9Tracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+}
+sub getRated10TracksWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedTracksWeb($params,$listLength,getMinRating(10),getMaxRating(10));
+    my %currentstatisticlinks = (
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated10Tracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+}
 
 sub isRatedAlbumsValidInContext {
 	my $params = shift;
@@ -509,10 +863,101 @@ sub getRated5AlbumsName {
 		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS');
 	}
 }
+sub getRated6AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS');
+	}
+}
+sub getRated7AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS');
+	}
+}
+sub getRated8AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS');
+	}
+}
+sub getRated9AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS');
+	}
+}
+sub getRated10AlbumsName {
+	my $params = shift;
+	if(defined($params->{'artist'})) {
+	    my $artist = Plugins::TrackStat::Storage::objectForId('artist',$params->{'artist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORARTIST')." ".Slim::Utils::Unicode::utf8decode($artist->name,'utf8');
+	}elsif(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS');
+	}
+}
+
 sub getRated1AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedAlbumsWeb($params,$listLength,0,29);
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(1),getMaxRating(1));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -528,13 +973,13 @@ sub getRated1AlbumsWeb {
 sub getRated1AlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,0,29);
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedAlbumsWeb($params,$listLength,29,49);
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(2),getMaxRating(2));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -550,13 +995,13 @@ sub getRated2AlbumsWeb {
 sub getRated2AlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,29,49);
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedAlbumsWeb($params,$listLength,49,69);
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(3),getMaxRating(3));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -572,13 +1017,13 @@ sub getRated3AlbumsWeb {
 sub getRated3AlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,49,69);
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedAlbumsWeb($params,$listLength,69,89);
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(4),getMaxRating(4));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -594,13 +1039,13 @@ sub getRated4AlbumsWeb {
 sub getRated4AlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,69,89);
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5AlbumsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedAlbumsWeb($params,$listLength,89,100);
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(5),getMaxRating(5));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -616,9 +1061,114 @@ sub getRated5AlbumsWeb {
 sub getRated5AlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,89,100);
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
+sub getRated6AlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(6),getMaxRating(6));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated6AlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+}
+sub getRated7AlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(7),getMaxRating(7));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated7AlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+}
+sub getRated8AlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(8),getMaxRating(8));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated8AlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+}
+sub getRated9AlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(9),getMaxRating(9));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated9AlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+}
+sub getRated10AlbumsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedAlbumsWeb($params,$listLength,getMinRating(10),getMaxRating(10));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'album' => 'toprated'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated10AlbumTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+}
 sub isRatedArtistsValidInContext {
 	my $params = shift;
 	if(defined($params->{'genre'})) {
@@ -708,10 +1258,90 @@ sub getRated5ArtistsName {
 	}
 }
 
+sub getRated6ArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS');
+	}
+}
+
+sub getRated7ArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS');
+	}
+}
+
+sub getRated8ArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS');
+	}
+}
+
+sub getRated9ArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS');
+	}
+}
+
+sub getRated10ArtistsName {
+	my $params = shift;
+	if(defined($params->{'genre'})) {
+	    my $genre = Plugins::TrackStat::Storage::objectForId('genre',$params->{'genre'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORGENRE')." ".Slim::Utils::Unicode::utf8decode($genre->name,'utf8');
+	}elsif(defined($params->{'year'})) {
+	    my $year = $params->{'year'};
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORYEAR')." ".$year;
+	}elsif(defined($params->{'playlist'})) {
+	    my $playlist = Plugins::TrackStat::Storage::objectForId('playlist',$params->{'playlist'});
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORPLAYLIST')." ".Slim::Utils::Unicode::utf8decode($playlist->title,'utf8');
+	}else {
+		return string('PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS');
+	}
+}
+
 sub getRated1ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedArtistsWeb($params,$listLength,0,29);
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(1),getMaxRating(1));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -731,13 +1361,13 @@ sub getRated1ArtistsWeb {
 sub getRated1ArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,0,29);
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedArtistsWeb($params,$listLength,29,49);
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(2),getMaxRating(2));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -757,13 +1387,13 @@ sub getRated2ArtistsWeb {
 sub getRated2ArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,29,49);
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedArtistsWeb($params,$listLength,49,69);
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(3),getMaxRating(3));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -783,13 +1413,13 @@ sub getRated3ArtistsWeb {
 sub getRated3ArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,49,69);
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedArtistsWeb($params,$listLength,69,89);
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(4),getMaxRating(4));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -809,13 +1439,13 @@ sub getRated4ArtistsWeb {
 sub getRated4ArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,69,89);
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5ArtistsWeb {
 	my $params = shift;
 	my $listLength = shift;
-	getMostPlayedArtistsWeb($params,$listLength,89,100);
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(5),getMaxRating(5));
     my @statisticlinks = ();
     push @statisticlinks, {
     	'id' => 'toprated',
@@ -835,9 +1465,139 @@ sub getRated5ArtistsWeb {
 sub getRated5ArtistTracks {
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,89,100);
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
+
+sub getRated6ArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(6),getMaxRating(6));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated6ArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+}
+
+sub getRated7ArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(7),getMaxRating(7));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated7ArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+}
+
+sub getRated8ArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(8),getMaxRating(8));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated8ArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+}
+
+sub getRated9ArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(9),getMaxRating(9));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated9ArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+}
+
+sub getRated10ArtistsWeb {
+	my $params = shift;
+	my $listLength = shift;
+	getMostPlayedArtistsWeb($params,$listLength,getMinRating(10),getMaxRating(10));
+    my @statisticlinks = ();
+    push @statisticlinks, {
+    	'id' => 'toprated',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORARTIST_SHORT')
+    };
+    push @statisticlinks, {
+    	'id' => 'topratedalbums',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDALBUMS_FORARTIST_SHORT')
+    };
+    $params->{'substatisticitems'} = \@statisticlinks;
+    my %currentstatisticlinks = (
+    	'artist' => 'topratedalbums'
+    );
+    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
+}
+
+sub getRated10ArtistTracks {
+	my $listLength = shift;
+	my $limit = shift;
+	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+}
 
 sub getMostPlayedTracksWeb {
 	my $params = shift;
@@ -1141,6 +1901,171 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORPLAYLIST_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED5_FORPLAYLIST
 	EN	Songs rated ***** in: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED6
+	EN	Songs rated ******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORALBUM
+	EN	Songs rated ****** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORARTIST
+	EN	Songs rated ****** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORGENRE
+	EN	Songs rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORYEAR
+	EN	Songs rated ****** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6_FORPLAYLIST
+	EN	Songs rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7
+	EN	Songs rated *******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORALBUM
+	EN	Songs rated ******* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORARTIST
+	EN	Songs rated ******* by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORGENRE
+	EN	Songs rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORYEAR
+	EN	Songs rated ******* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7_FORPLAYLIST
+	EN	Songs rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8
+	EN	Songs rated ********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORALBUM
+	EN	Songs rated ******** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORARTIST
+	EN	Songs rated ******** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORGENRE
+	EN	Songs rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORYEAR
+	EN	Songs rated ******** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8_FORPLAYLIST
+	EN	Songs rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9
+	EN	Songs rated *********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORALBUM
+	EN	Songs rated ********* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORARTIST
+	EN	Songs rated ********* by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORGENRE
+	EN	Songs rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORYEAR
+	EN	Songs rated ********* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9_FORPLAYLIST
+	EN	Songs rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10
+	EN	Songs rated **********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORALBUM_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORALBUM
+	EN	Songs rated ********** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORARTIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORARTIST
+	EN	Songs rated ********** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORGENRE_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORGENRE
+	EN	Songs rated ********** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORYEAR_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORYEAR
+	EN	Songs rated ********** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORPLAYLIST_SHORT
+	EN	Songs
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10_FORPLAYLIST
+	EN	Songs rated ********** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ALBUMS
 	EN	Albums rated *
 
@@ -1276,6 +2201,141 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORPLAYLIST_SHORT
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ALBUMS_FORPLAYLIST
 	EN	Albums rated ***** in: 
 
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS
+	EN	Albums rated ******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORARTIST
+	EN	Albums rated ****** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORGENRE
+	EN	Albums rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORYEAR
+	EN	Albums rated ****** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ALBUMS_FORPLAYLIST
+	EN	Albums rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS
+	EN	Albums rated *******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORARTIST
+	EN	Albums rated ******* by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORGENRE
+	EN	Albums rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORYEAR
+	EN	Albums rated ******* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ALBUMS_FORPLAYLIST
+	EN	Albums rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS
+	EN	Albums rated ********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORARTIST
+	EN	Albums rated ******** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORGENRE
+	EN	Albums rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORYEAR
+	EN	Albums rated ******** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ALBUMS_FORPLAYLIST
+	EN	Albums rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS
+	EN	Albums rated *********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORARTIST
+	EN	Albums rated ********* by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORGENRE
+	EN	Albums rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORYEAR
+	EN	Albums rated ********* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ALBUMS_FORPLAYLIST
+	EN	Albums rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS
+	EN	Albums rated **********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORARTIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORARTIST
+	EN	Albums rated ********** by: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORGENRE_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORGENRE
+	EN	Albums rated ********** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORYEAR_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORYEAR
+	EN	Albums rated ********** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORPLAYLIST_SHORT
+	EN	Albums
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ALBUMS_FORPLAYLIST
+	EN	Albums rated ********** in: 
+
 PLUGIN_TRACKSTAT_SONGLIST_RATED1ARTISTS
 	EN	Artists rated *
 
@@ -1380,6 +2440,111 @@ PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST_SHORT
 
 PLUGIN_TRACKSTAT_SONGLIST_RATED5ARTISTS_FORPLAYLIST
 	EN	Artists rated ***** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS
+	EN	Artists rated ******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORGENRE
+	EN	Artists rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORYEAR
+	EN	Artists rated ****** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED6ARTISTS_FORPLAYLIST
+	EN	Artists rated ****** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS
+	EN	Artists rated *******
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORGENRE
+	EN	Artists rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORYEAR
+	EN	Artists rated ******* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED7ARTISTS_FORPLAYLIST
+	EN	Artists rated ******* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS
+	EN	Artists rated ********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORGENRE
+	EN	Artists rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORYEAR
+	EN	Artists rated ******** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED8ARTISTS_FORPLAYLIST
+	EN	Artists rated ******** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS
+	EN	Artists rated *********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORGENRE
+	EN	Artists rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORYEAR
+	EN	Artists rated ********* from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED9ARTISTS_FORPLAYLIST
+	EN	Artists rated ********* in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS
+	EN	Artists rated **********
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORGENRE_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORGENRE
+	EN	Artists rated ********** in: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORYEAR_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORYEAR
+	EN	Artists rated ********** from: 
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORPLAYLIST_SHORT
+	EN	Artists
+
+PLUGIN_TRACKSTAT_SONGLIST_RATED10ARTISTS_FORPLAYLIST
+	EN	Artists rated ********** in: 
 
 PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP
 	EN	Specific rating

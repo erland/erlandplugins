@@ -103,18 +103,30 @@ my %mapping = (
 	'3.hold' => 'saveRating_3',
 	'4.hold' => 'saveRating_4',
 	'5.hold' => 'saveRating_5',
+	'6.hold' => 'saveRating_6',
+	'7.hold' => 'saveRating_7',
+	'8.hold' => 'saveRating_8',
+	'9.hold' => 'saveRating_9',
 	'0.single' => 'numberScroll_0',
 	'1.single' => 'numberScroll_1',
 	'2.single' => 'numberScroll_2',
 	'3.single' => 'numberScroll_3',
 	'4.single' => 'numberScroll_4',
 	'5.single' => 'numberScroll_5',
+	'6.single' => 'numberScroll_6',
+	'7.single' => 'numberScroll_7',
+	'8.single' => 'numberScroll_8',
+	'9.single' => 'numberScroll_9',
 	'0' => 'dead',
 	'1' => 'dead',
 	'2' => 'dead',
 	'3' => 'dead',
 	'4' => 'dead',
-	'5' => 'dead'
+	'5' => 'dead',
+	'6' => 'dead',
+	'7' => 'dead',
+	'8' => 'dead',
+	'9' => 'dead'
 );
 
 my %choiceMapping = (
@@ -124,18 +136,30 @@ my %choiceMapping = (
 	'3.hold' => 'saveRating_3',
 	'4.hold' => 'saveRating_4',
 	'5.hold' => 'saveRating_5',
+	'6.hold' => 'saveRating_6',
+	'7.hold' => 'saveRating_7',
+	'8.hold' => 'saveRating_8',
+	'9.hold' => 'saveRating_9',
 	'0.single' => 'numberScroll_0',
 	'1.single' => 'numberScroll_1',
 	'2.single' => 'numberScroll_2',
 	'3.single' => 'numberScroll_3',
 	'4.single' => 'numberScroll_4',
 	'5.single' => 'numberScroll_5',
+	'6.single' => 'numberScroll_6',
+	'7.single' => 'numberScroll_7',
+	'8.single' => 'numberScroll_8',
+	'9.single' => 'numberScroll_9',
 	'0' => 'dead',
 	'1' => 'dead',
 	'2' => 'dead',
 	'3' => 'dead',
 	'4' => 'dead',
 	'5' => 'dead',
+	'6' => 'dead',
+	'7' => 'dead',
+	'8' => 'dead',
+	'9' => 'dead',
 	'arrow_left' => 'exit_left',
 	'arrow_right' => 'exit_right',
 	'play' => 'play',
@@ -613,7 +637,11 @@ sub getSetModeDataForStatistics {
 						if($trackHandle->rating) {
 							my $rating = $trackHandle->rating;
 							if($rating) {
-								$rating = floor(($rating+10) / 20);
+								if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+									$rating = floor(($rating+5) / 10);
+								}else {
+									$rating = floor(($rating+10) / 20);
+								}
 								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $rating);
 							}
 						}
@@ -667,7 +695,14 @@ sub saveRatingsForCurrentlyPlaying {
 	my $button = shift;
 	my $digit = shift;
 
-	return unless $digit>='0' && $digit<='5';
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		return unless $digit>='0' && $digit<='9';
+		if($digit==0) {
+			$digit=10;
+		}
+	}else{
+		return unless $digit>='0' && $digit<='5';
+	}
 
 	my $playStatus = getPlayerStatusForClient($client);
 	if ($playStatus->isTiming() eq 'true') {
@@ -687,7 +722,11 @@ sub saveRatingsForCurrentlyPlaying {
 			$client->string( 'PLUGIN_TRACKSTAT'),
 			$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
 			3);
-		rateSong($client,$songKey,$digit*20);
+		my $rating = $digit*20;
+		if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			$rating = $digit*10;
+		}
+		rateSong($client,$songKey,$rating);
 	}else {
 		$client->showBriefly(
 			$client->string( 'PLUGIN_TRACKSTAT'),
@@ -700,14 +739,25 @@ sub saveRatingsFromChoice {
 		my $button = shift;
 		my $digit = shift;
 
-	return unless $digit>='0' && $digit<='5';
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		return unless $digit>='0' && $digit<='9';
+		if($digit==0) {
+			$digit=10;
+		}
+	}else{
+		return unless $digit>='0' && $digit<='5';
+	}
 
-		my $listRef = Slim::Buttons::Common::param($client,'listRef');
+	my $listRef = Slim::Buttons::Common::param($client,'listRef');
         my $listIndex = Slim::Buttons::Common::param($client,'listIndex');
         my $item = $listRef->[$listIndex];
         if($item->{'listtype'} eq 'track') {
         	debugMsg("saveRating: $client, ".$item->{'itemobj'}->url.", $digit\n");
-			rateSong($client,$item->{'itemobj'}->url,$digit*20);
+		my $rating = $digit*20;
+		if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			$rating = $digit*10;
+		}
+		rateSong($client,$item->{'itemobj'}->url,$rating);
         	my $title = Slim::Music::Info::standardTitle($client,$item->{'itemobj'});
 			$client->showBriefly(
 				$title,
@@ -749,7 +799,11 @@ sub getTrackInfo {
 						if($trackHandle->rating) {
 							$rating = $trackHandle->rating;
 							if($rating) {
-								$rating = floor(($rating+10) / 20);
+								if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+									$rating = floor(($rating+5) / 10);
+								}else {
+									$rating = floor(($rating+10) / 20);
+								}
 							}
 						}
 				}else {
@@ -786,7 +840,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_ratingchar','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1207,6 +1261,16 @@ sub setupGroup
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATINGCHAR')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_ratingchar"); }
 		},
+	plugin_trackstat_rating_10scale => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATING_10SCALE')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_10SCALE')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale"); }
+		},		
 	);
 	initStatisticPlugins();
 	return (\%setupGroup,\%setupPrefs);
@@ -1240,6 +1304,11 @@ sub baseWebPage {
 	}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playlistlength') {
 		Slim::Utils::Prefs::set("plugin_trackstat_playlist_length",$params->{playlistlength});
 	}
+	my $maxRating = 5;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		$maxRating = 10;
+	}
+	$params->{'pluginTrackStatMaxRating'} = $maxRating;
 	my $playStatus = undef;
 	# without a player, don't do anything
 	if ($client = Slim::Player::Client::getClient($params->{player})) {
@@ -1264,24 +1333,32 @@ sub baseWebPage {
 				if (!$playStatus->currentSongRating()) {
 					$playStatus->currentSongRating(0);
 				}
-				if ($params->{trackstatrating} eq 'up' and $playStatus->currentSongRating() < 5) {
+				if ($params->{trackstatrating} eq 'up' and $playStatus->currentSongRating() < $maxRating) {
 					$playStatus->currentSongRating($playStatus->currentSongRating() + 1);
 				} elsif ($params->{trackstatrating} eq 'down' and $playStatus->currentSongRating() > 0) {
 					$playStatus->currentSongRating($playStatus->currentSongRating() - 1);
-				} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
+				} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating) {
 					$playStatus->currentSongRating($params->{trackstatrating});
 				}
 				
-				rateSong($client,$songKey,$playStatus->currentSongRating()*20);
+				my $rating = $playStatus->currentSongRating()*20;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+					$rating = $playStatus->currentSongRating()*10;
+				}
+				rateSong($client,$songKey,$rating);
 			}elsif($params->{trackstattrackid}) {
-				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
-					rateSong($client,$songKey,$params->{trackstatrating}*20);
+				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating) {
+					my $rating = $params->{trackstatrating}*20;
+					if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+						$rating = $params->{trackstatrating}*10;
+					}
+					rateSong($client,$songKey,$rating);
 				}
 			}
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'albumrating') {
 			my $album = $params->{album};
 			if ($album) {
-				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= 5) {
+				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating) {
 					my $unratedTracks;
 					if(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating")) {
 						$unratedTracks = Plugins::TrackStat::Storage::getTracksOnAlbum($album);
@@ -1289,7 +1366,11 @@ sub baseWebPage {
 						$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($album);
 					}
 					foreach my $url (@$unratedTracks) {
-						rateSong($client,$url,$params->{trackstatrating}*20);
+						my $rating = $params->{trackstatrating}*20;
+						if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+							$rating = $params->{trackstatrating}*10;
+						}
+						rateSong($client,$url,$rating);
 					}
 				}
 			}
@@ -1893,8 +1974,13 @@ sub handleWebStatistics {
 				}
 			}
 
-		  	$params->{'pluginTrackStatGroupRating'} = ($rating && $rating>0?($rating+10)/20:0);
-			$params->{'pluginTrackStatGroupRatingNumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$params->{'pluginTrackStatGroupRating'} = ($rating && $rating>0?($rating+5)/10:0);
+				$params->{'pluginTrackStatGroupRatingNumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$params->{'pluginTrackStatGroupRating'} = ($rating && $rating>0?($rating+10)/20:0);
+				$params->{'pluginTrackStatGroupRatingNumber'} = sprintf("%.2f", $rating/20);
+			}
 
 		}
 		setDynamicPlaylistParams($client,$params);
@@ -2155,6 +2241,11 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_min_album_tracks",2);
 		}
 
+		# Turn off 10 scale ratings by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_10scale",0);
+		}
+
 		initRatingChar();
 		
 		installHook();
@@ -2397,7 +2488,7 @@ sub mixerlink {
         		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
 	        }
         }elsif(defined($levelName) && $levelName eq 'year') {
-        	$form->{'yearid'} = $item->year;
+        	$form->{'yearid'} = $item->id;
         	if(defined($form->{'yearid'})) {
 				if ($::VERSION ge '6.5') {
         			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
@@ -3777,7 +3868,12 @@ sub getRatingDynamicCustomItem
 		debugMsg("Entering getRatingDynamicCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = floor(($trackHandle->rating+10) / 20);
+			my $rating;
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+				$rating = floor(($trackHandle->rating+5) / 10);
+			}else {
+				$rating = floor(($trackHandle->rating+10) / 20);
+			}
 			$string = ($rating?$RATING_CHARACTER x $rating:'');
 		}
 		$ratingDynamicLastUrl = $track->url;
@@ -3797,7 +3893,12 @@ sub getRatingStaticCustomItem
 		debugMsg("Entering getRatingStaticCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = floor(($trackHandle->rating+10) / 20);
+			my $rating;
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+				 $rating = floor(($trackHandle->rating+5) / 10);
+			}else {
+				 $rating = floor(($trackHandle->rating+10) / 20);
+			}
 			debugMsg("rating = $rating\n");
 			if($rating) {
 				$string = ($rating?$RATING_CHARACTER x $rating:'');
@@ -3822,7 +3923,12 @@ sub getRatingNumberCustomItem
 		debugMsg("Entering getRatingNumberCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if($trackHandle && $trackHandle->rating) {
-			my $rating = floor(($trackHandle->rating+10) / 20);
+			my $rating;
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+				$rating = floor(($trackHandle->rating+5) / 10);
+			}else {
+				$rating = floor(($trackHandle->rating+10) / 20);
+			}
 			$string = ($rating?$rating:'');
 		}
 		$ratingNumberLastUrl = $track->url;
@@ -4320,6 +4426,15 @@ SETUP_PLUGIN_TRACKSTAT_RATINGCHAR
 
 SETUP_PLUGIN_TRACKSTAT_RATINGCHAR_DESC
 	EN	The character used to display ratings
+
+PLUGIN_TRACKSTAT_RATING_10SCALE
+	EN	Rating scale from 1-10
+
+SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE
+	EN	Rating scale from 1-10
+
+SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE_DESC
+	EN	Rating scale from 1-10, remote buttons are 1-9 and 0 to put a 10 rating. If not enabled holding 1-5 on remote will set ratings and 0 means unset ratings.
 
 PLUGIN_TRACKSTAT_BACKUP_FILE
 	EN	Backup file

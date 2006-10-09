@@ -169,8 +169,13 @@ sub getTracksWeb {
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
 			$trackInfo{'player'} = $params->{'player'};
 			$trackInfo{'skinOverride'}     = $params->{'skinOverride'};
@@ -286,8 +291,13 @@ sub getAlbumsWeb {
 			displayAsHTML('album', \%trackInfo, $album);
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
@@ -407,8 +417,13 @@ sub getArtistsWeb {
 			displayAsHTML('artist', \%trackInfo, $artist);
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+			  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+			  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
@@ -554,8 +569,13 @@ sub getGenresWeb {
 			displayAsHTML('genre', \%trackInfo, $genre);
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
@@ -701,8 +721,13 @@ sub getYearsWeb {
 			}
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-			$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+				$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
@@ -845,8 +870,13 @@ sub getPlaylistsWeb {
 			displayAsHTML('playlist', \%trackInfo, $playlist);
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
-		  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
-		  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+5)/10:0);
+			  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/10);
+			}else {
+			  	$trackInfo{'rating'} = ($rating && $rating>0?($rating+10)/20:0);
+			  	$trackInfo{'ratingnumber'} = sprintf("%.2f", $rating/20);
+			}
 		  	$trackInfo{'lastPlayed'} = $objectData->{'lastPlayed'};
 		  	$trackInfo{'added'} = $objectData->{'added'};
 		  	$trackInfo{'odd'} = ($itemNumber+1) % 2;
