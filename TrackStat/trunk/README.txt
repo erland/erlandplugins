@@ -65,7 +65,8 @@ will not be increased if you just listen on the first secondes of a track, you h
 play counts and last played time.
 
 To rate a track just hold the numbers 1-5 on the remote down for a while, you will see a message on the Squeezebox display which confirms
-that the rating has been set. 
+that the rating has been set. You can also enable the rating system with 10 scales, in that case numner 1-9 and 0 for 10 will be used to
+rate track.
 
 The TrackStat plugin will add a number of title formats which makes it possible to show the rating information for the current 
 playing track directly on the screen on the Squeezebox in either Now Playing or MusicInfoSCR. Version 2.30 or
