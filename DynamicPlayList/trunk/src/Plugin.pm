@@ -1276,7 +1276,7 @@ sub mixerlink {
 	    }
     }elsif(defined($levelName) && $levelName eq 'year') {
 		$form->{'dynamicplaylist_playlisttype'} = $levelName;
-    	$form->{'yearid'} = $item->year;
+	    	$form->{'yearid'} = $item->id;
     	if(defined($form->{'yearid'})) {
 			if($playListTypes->{$levelName}) {
 				if ($::VERSION ge '6.5') {
@@ -2076,7 +2076,7 @@ sub getTracksForPlaylist {
 	my $result;
 	no strict 'refs';
 	if(UNIVERSAL::can("$plugin","getNextDynamicPlayListTracks")) {
-		my %parameterHash = undef;
+		my %parameterHash;
 		if(defined($playlist->{'parameters'})) {
 			my $parameters = $playlist->{'parameters'};
 			%parameterHash = ();
