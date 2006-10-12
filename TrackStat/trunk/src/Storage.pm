@@ -227,7 +227,11 @@ sub init {
 			if( $sth->fetch() ) {
 				if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
 					$charset = $1;
-					debugMsg("Got tracks charset = $charset\n");
+					my $collate = '';
+					if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+						$collate = $1;
+					}
+					debugMsg("Got tracks charset = $charset and collate = $collate\n");
 					
 					if(defined($charset)) {
 						$sth->finish();
@@ -238,10 +242,18 @@ sub init {
 						if( $sth->fetch() ) {
 							if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
 								my $ts_charset = $1;
-								debugMsg("Got track_statistics charset = $ts_charset\n");
-								if($charset ne $ts_charset) {
-									debugMsg("Converting track_statistics to correct charset=$charset\n");
-									eval { $dbh->do("alter table track_statistics convert to character set $charset") };
+								my $ts_collate = '';
+								if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+									$ts_collate = $1;
+								}
+								debugMsg("Got track_statistics charset = $ts_charset and collate = $ts_collate\n");
+								if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+									debugMsg("Converting track_statistics to correct charset=$charset collate=$collate\n");
+									if(!$collate) {
+										eval { $dbh->do("alter table track_statistics convert to character set $charset") };
+									}else {
+										eval { $dbh->do("alter table track_statistics convert to character set $charset collate $collate") };
+									}
 									if ($@) {
 										debugMsg("Couldn't convert charsets: $@\n");
 									}
@@ -257,10 +269,18 @@ sub init {
 						if( $sth->fetch() ) {
 							if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
 								my $ts_charset = $1;
-								debugMsg("Got track_history charset = $ts_charset\n");
-								if($charset ne $ts_charset) {
-									debugMsg("Converting track_history to correct charset=$charset\n");
-									eval { $dbh->do("alter table track_history convert to character set $charset") };
+								my $ts_collate = '';
+								if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+									$ts_collate = $1;
+								}
+								debugMsg("Got track_history charset = $ts_charset and collate = $ts_collate\n");
+								if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+									debugMsg("Converting track_history to correct charset=$charset collate=$collate\n");
+									if(!$collate) {
+										eval { $dbh->do("alter table track_history convert to character set $charset") };
+									}else {
+										eval { $dbh->do("alter table track_history convert to character set $charset collate $collate") };
+									}
 									if ($@) {
 										debugMsg("Couldn't convert charsets: $@\n");
 									}
