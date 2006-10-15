@@ -655,7 +655,7 @@ sub getSetModeDataForStatistics {
 						}
 						if($trackHandle->lastPlayed) {
 							my $lastPlayed = $trackHandle->lastPlayed;
-							$headerStr = $client->string( 'PLUGIN_TRACKSTAT_LAST_PLAYED').' '.Slim::Utils::Misc::shortDateF($lastPlayed).' '.Slim::Utils::Misc::timeF($lastPlayed);
+							$headerStr = $client->string( 'PLUGIN_TRACKSTAT_LAST_PLAYED').' '.Slim::Utils::DateTime::shortDateF($lastPlayed).' '.Slim::Utils::DateTime::timeF($lastPlayed);
 						}
 					}
 					if(!$displayStr) {
@@ -685,7 +685,12 @@ sub getSetModeDataForStatistics {
 sub enabled() 
 {
 	my $client = shift;
-	return 1;
+	if($::VERSION lt '6.5') {
+		msg("TrackStat: *** At least SlimServer 6.5.0 is required, use an erlier version of TrackStat if you cant upgrade SlimServer ***\n");
+		return 0;
+	}else {
+		return 1;
+	}
 }
 
 my %functions = ();
@@ -792,9 +797,9 @@ sub getTrackInfo {
 							$playedCount = getPlayCount($track);
 						}
 						if($trackHandle->lastPlayed) {
-							$playedDate = Slim::Utils::Misc::shortDateF($trackHandle->lastPlayed).' '.Slim::Utils::Misc::timeF($trackHandle->lastPlayed);
+							$playedDate = Slim::Utils::DateTime::shortDateF($trackHandle->lastPlayed).' '.Slim::Utils::DateTime::timeF($trackHandle->lastPlayed);
 						}elsif(getLastPlayed($track)) {
-							$playedDate = Slim::Utils::Misc::shortDateF(getLastPlayed($track)).' '.Slim::Utils::Misc::timeF(getLastPlayed($track));
+							$playedDate = Slim::Utils::DateTime::shortDateF(getLastPlayed($track)).' '.Slim::Utils::DateTime::timeF(getLastPlayed($track));
 						}
 						if($trackHandle->rating) {
 							$rating = $trackHandle->rating;
@@ -810,7 +815,7 @@ sub getTrackInfo {
 					if($track) {
 						$playedCount = getPlayCount($track);
 						if(getLastPlayed($track)) {
-							$playedDate = Slim::Utils::Misc::shortDateF(getLastPlayed($track)).' '.Slim::Utils::Misc::timeF(getLastPlayed($track));
+							$playedDate = Slim::Utils::DateTime::shortDateF(getLastPlayed($track)).' '.Slim::Utils::DateTime::timeF(getLastPlayed($track));
 						}
 					}
 				}
@@ -840,7 +845,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1271,6 +1276,38 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale"); }
 		},		
+	plugin_trackstat_rating_auto => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATING_AUTO')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_AUTO')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto"); }
+		},		
+	plugin_trackstat_rating_auto_nonrated => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated"); }
+		},		
+	plugin_trackstat_rating_decrease_percent => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent"); }
+		},
+	plugin_trackstat_rating_increase_percent => {
+			'validate'     => \&validateIntWrapper
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_increase_percent"); }
+		},
 	);
 	initStatisticPlugins();
 	return (\%setupGroup,\%setupPrefs);
@@ -2245,6 +2282,26 @@ sub initPlugin
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_10scale",0);
 		}
+		
+		# Turn off automatic ratings by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_auto",0);
+		}
+
+		# Turn on automatic ratings on non rated tracks by default
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_auto_nonrated",1);
+		}
+
+		# Default value for automatic increasing ratings
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_increase_percent"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_increase_percent",80);
+		}
+
+		# Default value for automatic decreasing ratings
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_decrease_percent",50);
+		}
 
 		initRatingChar();
 		
@@ -2731,7 +2788,7 @@ sub uninstallHook()
 
 # These xxxCommand() routines handle commands coming to us
 # through the command callback we have hooked into.
-sub openCommand($$)
+sub openCommand($$$)
 {
 	######################################
 	### Open command
@@ -2739,13 +2796,14 @@ sub openCommand($$)
 
 	# This is the chief way we detect a new song being played, NOT the play command.
 	# Parameter - TrackStatus for current client
+	my $client = shift;
 	my $playStatus = shift;
 
 	# Stop old song, if needed
 	# do this before updating the filename as we need to use it in the stop function
 	if ($playStatus->isTiming() eq "true")
 	{
-		stopTimingSong($playStatus);
+		stopTimingSong($client,$playStatus);
 	}
 	# Parameter - filename of track being played
 	$playStatus->currentTrackOriginalFilename(shift);
@@ -2819,18 +2877,19 @@ sub pauseCommand($$)
 	}
 }
 
-sub stopCommand($)
+sub stopCommand($$)
 {
 	######################################
 	### Stop command
 	######################################
 
 	# Parameter - TrackStatus for current client
+	my $client = shift;
 	my $playStatus = shift;
 
 	if ($playStatus->isTiming() eq "true")
 	{
-		stopTimingSong($playStatus);      
+		stopTimingSong($client,$playStatus);      
 	}
 }
 
@@ -2872,7 +2931,7 @@ sub commandCallback62($)
 	if ($slimCommand eq "open") 
 	{
 		my $trackOriginalFilename = $paramOne;
-		openCommand($playStatus, $trackOriginalFilename);
+		openCommand($client,$playStatus, $trackOriginalFilename);
 	}
 
 	######################################
@@ -2920,7 +2979,7 @@ sub commandCallback62($)
 
 	if ( ($slimCommand eq "stop") ||	(($slimCommand eq "mode") && ($paramOne eq "stop")) )
 	{
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 
 	######################################
@@ -2931,7 +2990,7 @@ sub commandCallback62($)
 	{
 		# If this player syncs with another, we treat it as a stop,
 		# since whatever it is presently playing (if anything) will end.
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 
 	######################################
@@ -2941,7 +3000,7 @@ sub commandCallback62($)
 	# might as well stop timing regardless of type
 	if ( ($slimCommand eq "power") || (($slimCommand eq "mode") && ($paramOne eq "off")) )
 	{
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 	
 	######################################
@@ -2994,7 +3053,7 @@ sub commandCallback65($)
 	# should be using playlist,newsong now...
 	if ($request->isCommand([['playlist'],['open']]) )
 	{
-		openCommand($playStatus,$request->getParam('_path'));
+		openCommand($client,$playStatus,$request->getParam('_path'));
 	}
 
 	######################################
@@ -3027,7 +3086,7 @@ sub commandCallback65($)
 
 	if ( ($request->isCommand([["stop"]])) or ($request->isCommand([['mode'],['stop']])) )
 	{
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 
 	######################################
@@ -3038,7 +3097,7 @@ sub commandCallback65($)
 	{
 		# If this player syncs with another, we treat it as a stop,
 		# since whatever it is presently playing (if anything) will end.
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 
 	######################################
@@ -3046,7 +3105,7 @@ sub commandCallback65($)
 	######################################
 	if ( $request->isCommand([['power']]))
 	{
-		stopCommand($playStatus);
+		stopCommand($client,$playStatus);
 	}
 	debugMsg("Exiting commandCallback65\n");
 }
@@ -3152,9 +3211,10 @@ sub resumeTimingSong($)
 
 # Stop timing the current song
 # (Either stop was hit or we are about to play another one)
-sub stopTimingSong($)
+sub stopTimingSong($$)
 {
 	# Parameter - TrackStatus for current client
+	my $client = shift;
 	my $playStatus = shift;
 
 	if ($playStatus->isTiming() eq "false")
@@ -3176,6 +3236,43 @@ sub stopTimingSong($)
 			#debugMsg("Track was played long enough to count as listen\n");
 			markedAsPlayed($playStatus->client,$playStatus->currentTrackOriginalFilename);
 			# We could also log to history at this point as well...
+		}
+		# If automatic rating is enabled
+		if(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto")) {
+			my $minPlayedTime = Slim::Utils::Prefs::get("plugin_trackstat_min_song_length");
+			if($totalElapsedTimeDuringPlay>=$minPlayedTime) {
+				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename);
+				my $rating = $trackHandle->rating;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated")) {
+					if(!$rating) {
+						debugMsg("Setting default rating 3 on unrated track\n");
+						$rating = 60;
+					}
+				}
+	
+				if($rating) {
+					my $increase = Slim::Utils::Prefs::get("plugin_trackstat_rating_increase_percent");
+					$increase = $increase*$playStatus->currentTrackLength() / 100;
+					my $decrease = Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent");
+					$decrease = $decrease*$playStatus->currentTrackLength() / 100;
+	
+					if($totalElapsedTimeDuringPlay>=$increase && $rating<100) {
+						debugMsg("Increasing rating, played $totalElapsedTimeDuringPlay of required $increase seconds\n");
+						$rating = $rating + 1;
+						rateSong($client,$trackHandle->url,$rating);
+					}elsif($totalElapsedTimeDuringPlay<$decrease && $rating>0) {
+						debugMsg("Decreasing rating, played $totalElapsedTimeDuringPlay of required $decrease seconds\n");
+						$rating = $rating - 1;
+						rateSong($client,$trackHandle->url,$rating);
+					}else {
+						debugMsg("Do not adjust rating, only played $totalElapsedTimeDuringPlay of required $increase seconds\n");
+					}
+				}else {
+					debugMsg("Do not adjust rating on non rated tracks\n");
+				}
+			}else {
+				debugMsg("Do not adjust rating, tracks played shorter than $minPlayedTime seconds will not be automatic rated\n");
+			}
 		}
 	} else {
 		debugMsg("That wasn't a file - ignoring\n");
@@ -4435,6 +4532,42 @@ SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE
 
 SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE_DESC
 	EN	Rating scale from 1-10, remote buttons are 1-9 and 0 to put a 10 rating. If not enabled holding 1-5 on remote will set ratings and 0 means unset ratings.
+
+PLUGIN_TRACKSTAT_RATING_AUTO
+	EN	Automatic rating
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO
+	EN	Automatic rating
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_DESC
+	EN	Automatic adjust ratings. Decrease ratings if skipping to next song in the beginning or increase ratings if playing whole song or skipping at end of song.
+
+PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED
+	EN	Automatic rating of non rated tracks
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED
+	EN	Automatic rating of non rated tracks
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_DESC
+	EN	Automatic adjust ratings also on non rated tracks if automatic ratings has been enabled. Rating will start at 3.
+
+PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT
+	EN	Automatic rating decrease percentage
+
+SETUP_PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT
+	EN	Automatic rating decrease percentage
+
+SETUP_PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT_DESC
+	EN	If automatic rating is enabled, decrease rating if song is skipped before played this percentage of its total time. 
+
+PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT
+	EN	Automatic rating increase percentage
+
+SETUP_PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT
+	EN	Automatic rating increase percentage
+
+SETUP_PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT_DESC
+	EN	If automatic rating is enabled, increase rating if song is played at least this percentage of its total time. 
 
 PLUGIN_TRACKSTAT_BACKUP_FILE
 	EN	Backup file
