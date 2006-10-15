@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' -%]
-[% IF pluginTrackStatSlimserver65 %]
-	[% PROCESS plugins/TrackStat/hreftemplate65 %]
-	[% PROCESS plugins/TrackStat/cmdwrappers65 %]
-	[% PROCESS plugins/TrackStat/css65 %]
-[% END %]
 [% PROCESS plugins/TrackStat/css %]
 
 [%- pwd_list = BLOCK -%]/
@@ -18,9 +13,6 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF pluginTrackStatSlimserver65 %]
-	[% PROCESS plugins/TrackStat/pageheaderinfo65 %]
-[% END %]
 
 <form action="[% webroot %]plugins/TrackStat/saveselectstatistics.html" name="editForm">
 	<table border="0">

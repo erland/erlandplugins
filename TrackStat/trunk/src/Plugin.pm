@@ -574,10 +574,8 @@ sub getSetModeDataForStatistics {
 				$request = $client->execute(['playlist', 'loadtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemobj'}->id)]);
 			}
 			
-			if ($::VERSION ge '6.5') {
-				# indicate request source
-				$request->source('PLUGIN_TRACKSTAT');
-			}
+			# indicate request source
+			$request->source('PLUGIN_TRACKSTAT');
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
@@ -596,10 +594,8 @@ sub getSetModeDataForStatistics {
 				$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$item->{'itemobj'}->id)]);
 			}
 			
-			if ($::VERSION ge '6.5') {
-				# indicate request source
-				$request->source('PLUGIN_TRACKSTAT');
-			}
+			# indicate request source
+			$request->source('PLUGIN_TRACKSTAT');
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -1448,8 +1444,8 @@ sub baseWebPage {
 	if(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh")) {
 		$params->{refresh} = 60 if (!$params->{refresh} || $params->{refresh} > 60);
 	}
-	if ($::VERSION ge '6.5') {
-		$params->{'pluginTrackStatSlimserver65'} = 1;
+	if ($::VERSION ge '7.0') {
+		$params->{'pluginTrackStatSlimserver70'} = 1;
 	}
 	debugMsg("Exiting baseWebPage\n");
 }
@@ -1614,17 +1610,13 @@ sub handlePlayAdd {
 			$first = 0;
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playdynamic') {
 			my $request = $client->execute(['dynamicplaylist', 'playlist', 'play', $params->{'dynamicplaylist'}]);
-			if ($::VERSION ge '6.5') {
-				# indicate request source
-				$request->source('PLUGIN_TRACKSTAT');
-			}
+			# indicate request source
+			$request->source('PLUGIN_TRACKSTAT');
 			return;
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'adddynamic') {
 			my $request = $client->execute(['dynamicplaylist', 'playlist', 'add', $params->{'dynamicplaylist'}]);
-			if ($::VERSION ge '6.5') {
-				# indicate request source
-				$request->source('PLUGIN_TRACKSTAT');
-			}
+			# indicate request source
+			$request->source('PLUGIN_TRACKSTAT');
 			return;
 		}else {
 			return;
@@ -1688,10 +1680,8 @@ sub handlePlayAdd {
 					$request = $client->execute(['playlist', 'addtracks', sprintf('%s=%d', getLinkAttribute('playlist'),$playlist->id)]);
 				}
 			}
-			if ($::VERSION ge '6.5') {
-				# indicate request source
-				$request->source('PLUGIN_TRACKSTAT');
-			}
+			# indicate request source
+			$request->source('PLUGIN_TRACKSTAT');
 			$first = 0;
 		}
 	}
@@ -1758,11 +1748,7 @@ sub getStatisticPlugins {
 
 sub getStatisticPluginsStrings {
 	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-    }else {
-     	@pluginDirs = catdir($Bin, "Plugins");
-    }
+	@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
     my %pluginlist = ();
     $statisticPluginsStrings = "";
 	for my $plugindir (@pluginDirs) {
@@ -1804,11 +1790,7 @@ sub initStatisticPlugins {
 	%statisticItems = ();
 	%statisticTypes = ();
 	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-    }else {
-     	@pluginDirs = catdir($Bin, "Plugins");
-    }
+	@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
     my %pluginlist = ();
 	for my $plugindir (@pluginDirs) {
 		opendir(DIR, catdir($plugindir,"TrackStat","Statistics")) || next;
@@ -2031,11 +2013,7 @@ sub setDynamicPlaylistParams {
 	my ($client, $params) = @_;
 
 	my $dynamicPlaylist;
-	if ($::VERSION ge '6.5') {
-		$dynamicPlaylist = Slim::Utils::PluginManager::enabledPlugin("DynamicPlayList",$client);
-	}else {
-		$dynamicPlaylist = grep(/DynamicPlayList/,Slim::Buttons::Plugins::enabledPlugins($client));
-    }
+	$dynamicPlaylist = Slim::Utils::PluginManager::enabledPlugin("DynamicPlayList",$client);
 	if($dynamicPlaylist && Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist")) {
 		if(!defined($params->{'artist'}) && !defined($params->{'album'}) && !defined($params->{'genre'}) && !defined($params->{'year'}) && !defined($params->{'playlist'})) {
 			$params->{'dynamicplaylist'} = "trackstat_".$params->{'songlistid'};
@@ -2044,20 +2022,12 @@ sub setDynamicPlaylistParams {
 }
 sub getPlayCount {
 	my $track = shift;
-	if ($::VERSION ge '6.5') {
-		return $track->playcount;
-	}else {
-		return $track->{playCount};
-	}
+	return $track->playcount;
 }
 
 sub getLastPlayed {
 	my $track = shift;
-	if ($::VERSION ge '6.5') {
-		return $track->lastplayed;
-	}else {
-		return $track->{lastPlayed};
-	}
+	return $track->lastplayed;
 }
 
 sub initRatingChar {
@@ -2313,11 +2283,7 @@ sub initPlugin
 		
 		no strict 'refs';
 		my @enabledplugins;
-		if ($::VERSION ge '6.5') {
-			@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
-		}else {
-			@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
-		}
+		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
 		for my $plugin (@enabledplugins) {
 			if(UNIVERSAL::can("Plugins::$plugin","setTrackStatRating")) {
 				debugMsg("Added rating support for $plugin\n");
@@ -2339,13 +2305,8 @@ sub initPlugin
 		}
 		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
 			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
-			if ($::VERSION ge '6.5') {
-				Slim::Music::Import->addImporter($class, \%mixerMap);
-				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
-			}else {
-				Slim::Music::Import::addImporter('TRACKSTAT', \%mixerMap);
-				Slim::Music::Import::useImporter('TRACKSTAT', 1);
-			}
+			Slim::Music::Import->addImporter($class, \%mixerMap);
+			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
 		}
 		
 		checkAndPerformScheduledBackup();
@@ -2357,16 +2318,9 @@ sub initPlugin
 	addTitleFormat('TRACKSTATRATINGNUMBER');
 
 
-	if ($::VERSION ge '6.5') {
-		
-		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
-		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
-		Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
-	}else {
-		Slim::Music::Info::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
-		Slim::Music::Info::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
-		Slim::Music::Info::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
-	}
+	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
+	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
+	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
 }
 
 sub checkAndPerformScheduledBackup {
@@ -2470,9 +2424,7 @@ sub mixerFunction {
 				$client->update();
 			}elsif($mixerType eq 'year') {
 				my $year = $currentItem;
-				if ($::VERSION ge '6.5') {
-					$year = $currentItem->id;
-				}
+				$year = $currentItem->id;
 				my %params = (
 					'year' => $year,
 					'statistictype' => 'year',
@@ -2535,23 +2487,12 @@ sub mixerlink {
 		
 	my $levelName = $form->{'levelName'};
 	if($form->{'noTrackStatButton'}) {
-		if ($::VERSION lt '6.5') {
-        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => undef});
-        	}
 	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
-		if ($::VERSION ge '6.5') {
-	        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
-	        }else {
-        		Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
-	        }
+        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
         }elsif(defined($levelName) && $levelName eq 'year') {
         	$form->{'yearid'} = $item->id;
         	if(defined($form->{'yearid'})) {
-				if ($::VERSION ge '6.5') {
-        			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
-        		}else {
-        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
-        		}
+       			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
         	}
         }else {
         	my $attributes = $form->{'attributes'};
@@ -2579,11 +2520,7 @@ sub mixerlink {
 	    	$form->{'currenttrackstatitem'} = $item->id;
 	    	
         	if(defined($form->{'albumid'}) || defined($form->{'playlist'})) {
-			if ($::VERSION ge '6.5') {
-        			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
-        		}else {
-        			Slim::Web::Pages::addLinks("mixer", {'TRACKSTAT' => "plugins/TrackStat/mixerlink.html"}, 1);
-        		}
+       			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
         	}
         }
         return $form;
@@ -2608,11 +2545,7 @@ sub shutdownPlugin {
                 uninstallHook();
 		if(Slim::Utils::Prefs::get("plugin_trackstat_web_enable_mixerfunction") ||
 			Slim::Utils::Prefs::get("plugin_trackstat_enable_mixerfunction")) {
-			if ($::VERSION ge '6.5') {
-				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
-			}else {
-				Slim::Music::Import::useImporter('TRACKSTAT', 0);
-			}
+			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
 		}
         }
 }
@@ -2763,13 +2696,9 @@ sub debugMsg
 sub installHook()
 {  
 	debugMsg("Hook activated.\n");
-	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
-		Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
-		Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
-	} else {
-		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
-	}
+	Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
+	Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
 	$TRACKSTAT_HOOK=1;
 }
 
@@ -2778,11 +2707,7 @@ sub installHook()
 sub uninstallHook()
 {
 	debugMsg("Hook deactivated.\n");
-	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::unsubscribe(\&Plugins::TrackStat::Plugin::commandCallback65);
-	} else {
-		Slim::Control::Command::clearExecuteCallback(\&commandCallback62);
-	}
+	Slim::Control::Request::unsubscribe(\&Plugins::TrackStat::Plugin::commandCallback65);
 	$TRACKSTAT_HOOK=0;
 }
 
@@ -2890,129 +2815,6 @@ sub stopCommand($$)
 	if ($playStatus->isTiming() eq "true")
 	{
 		stopTimingSong($client,$playStatus);      
-	}
-}
-
-
-# This gets called during playback events.
-# We look for events we are interested in, and start and stop our various
-# timers accordingly.
-sub commandCallback62($) 
-{
-	# These are the two passed parameters
-	my $client = shift;
-	my $paramsRef = shift;
-
-	return unless $client;
-
-	# Get the PlayerStatus
-	my $playStatus = getPlayerStatusForClient($client);
-
-	### START DEBUG
-	#debugMsg("====New commands:\n");
-	#foreach my $param (@$paramsRef)
-	#{
-	#   debugMsg("  command: $param\n");
-	#}
-	#showCurrentVariables($playStatus);
-	### END DEBUG
-
-	my $slimCommand = @$paramsRef[0];
-	my $paramOne = @$paramsRef[1];
-
-	return unless $slimCommand;
-
-	######################################
-	### Open command
-	######################################
-
-	# This is the chief way we detect a new song being played, NOT play.
-
-	if ($slimCommand eq "open") 
-	{
-		my $trackOriginalFilename = $paramOne;
-		openCommand($client,$playStatus, $trackOriginalFilename);
-	}
-
-	######################################
-	### Play command
-	######################################
-
-	if( ($slimCommand eq "play") || (($slimCommand eq "mode") && ($paramOne eq "play")) )
-	{
-		playCommand($playStatus);
-	}
-
-	######################################
-	### Pause command
-	######################################
-
-	if ($slimCommand eq "pause")
-	{
-		# This second parameter may not exist,
-		# and so this may be undef. Routine expects this possibility,
-		# so all should be well.
-		pauseCommand($playStatus, $paramOne);
-	}
-
-	if (($slimCommand eq "mode") && ($paramOne eq "pause"))
-	{  
-		# "mode pause" will always put us into pause mode, so fake a "pause 1".
-		pauseCommand($playStatus, 1);
-	}
-
-	######################################
-	### Sleep command
-	######################################
-
-	if ($slimCommand eq "sleep")
-	{
-		# Sleep has no effect on streamed players; is this correct for slimp3s?
-		# I can't test it.
-		#debugMsg("===> Sleep activated! Be sure this works!\n");
-		#pauseCommand($playStatus, undef());
-	}
-
-	######################################
-	### Stop command
-	######################################
-
-	if ( ($slimCommand eq "stop") ||	(($slimCommand eq "mode") && ($paramOne eq "stop")) )
-	{
-		stopCommand($client,$playStatus);
-	}
-
-	######################################
-	### Stop command
-	######################################
-
-	if ( ($slimCommand eq "playlist") && (($paramOne eq "sync") || ($paramOne eq "clear")) )
-	{
-		# If this player syncs with another, we treat it as a stop,
-		# since whatever it is presently playing (if anything) will end.
-		stopCommand($client,$playStatus);
-	}
-
-	######################################
-	## Power command
-	######################################
-	# softsqueeze doesn't seem to send a 2nd param on power on/off
-	# might as well stop timing regardless of type
-	if ( ($slimCommand eq "power") || (($slimCommand eq "mode") && ($paramOne eq "off")) )
-	{
-		stopCommand($client,$playStatus);
-	}
-	
-	######################################
-	## CLI commands
-	######################################
-	if ( ($slimCommand eq "trackstat") ) 
-	{
-		if($paramOne eq "getrating") {
-			getCLIRating62($client,\@$paramsRef);
-		}elsif($paramOne eq "setrating") {
-			setCLIRating62($client,\@$paramsRef);
-		}
 	}
 }
 
@@ -3314,7 +3116,7 @@ sub markedAsPlayed {
 	if ($trackHandle) {
 		$mbId = $trackHandle->mbId;
 		$rating = $trackHandle->rating;
-	}elsif ($::VERSION ge '6.5') {
+	}else {
 		$rating = $track->{rating};
 	}
 	 
@@ -3334,11 +3136,7 @@ sub markedAsPlayed {
 		eval { &{$playCountPlugins{$item}}($client,$url,\%statistic) };
 	}
 	use strict 'refs';
-	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
-	}else {
-		$client->execute(['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
-	}
+	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
 	debugMsg("Exiting markedAsPlayed\n");
 }
 
@@ -3459,11 +3257,7 @@ sub rateSong($$$) {
 	}
 	my $digit = floor(($rating+10)/20);
 	use strict 'refs';
-	if ($::VERSION ge '6.5') {
-		Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
-	}else {
-		$client->execute(['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
-	}
+	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
 	Slim::Music::Info::clearFormatDisplayCache();
 	$ratingStaticLastUrl = undef;
 	$ratingDynamicLastUrl = undef;
@@ -3476,21 +3270,19 @@ sub setTrackStatRating {
 	my $lowrating = floor(($rating+10) / 20);
 	my $track = undef;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-	if ($::VERSION ge '6.5') {
+	eval {
+		$track = Plugins::TrackStat::Storage::objectForUrl($url);
+	};
+	if ($@) {
+		debugMsg("Error retrieving track: $url\n");
+	}
+	if($track) {
+		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			$track = Plugins::TrackStat::Storage::objectForUrl($url);
+			$track->set('rating' => $rating);
+			$track->update();
+			$ds->forceCommit();
 		};
-		if ($@) {
-			debugMsg("Error retrieving track: $url\n");
-		}
-		if($track) {
-			# Run this within eval for now so it hides all errors until this is standard
-			eval {
-				$track->set('rating' => $rating);
-				$track->update();
-				$ds->forceCommit();
-			};
-		}
 	}
 	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
 		my $mmurl = getMusicMagicURL($url);
@@ -3595,69 +3387,6 @@ sub getCLIRating {
 	debugMsg("Exiting getCLIRating\n");
 }
 
-sub getCLIRating62 {
-	debugMsg("Entering getCLIRating62\n");
-	my $client = shift;
-	my $paramsRef = shift;
-	
-	if (scalar(@$paramsRef) lt 3) {
-		debugMsg("Incorrect number of parameters\n");
-		debugMsg("Exiting getCLIRating62\n");
-		return;
-	}
-	if (@$paramsRef[1] ne "getrating") {
-		debugMsg("Incorrect command\n");
-		debugMsg("Exiting getCLIRating62\n");
-		return;
-	}
-	# get our parameters
-  	my $trackId    = @$paramsRef[2];
-  	if(!defined $trackId || $trackId eq '') {
-		debugMsg("_trackid not defined\n");
-		debugMsg("Exiting getCLIRating62\n");
-		return;
-  	}
-  	
-	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-	my $track;
-	if($trackId !~ /^-?\d+$/) {
-		if($trackId =~ /^\/.+$/) {
-			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
-		}
-		# The encapsulation with eval is just to make it more crash safe
-		eval {
-			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
-		};
-		if ($@) {
-			debugMsg("Error retrieving track: $trackId\n");
-		}
-	}else {
-		# The encapsulation with eval is just to make it more crash safe
-		eval {
-			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
-		};
-		if ($@) {
-			debugMsg("Error retrieving track: $trackId\n");
-		}
-	}
-	
-	if(!defined $track || !defined $track->audio) {
-		debugMsg("Track $trackId not found\n");
-		debugMsg("Exiting getCLIRating62\n");
-		return;
-	}
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
-	my $resultRating = 0;
-	my $resultDigit = 0;
-	if($trackHandle && $trackHandle->rating) {
-		$resultRating = $trackHandle->rating;
-		$resultDigit = floor(($trackHandle->rating+10)/20);
-	}
-	push @$paramsRef,"rating:$resultDigit";
-	push @$paramsRef,"ratingpercentage:$resultRating";
-	debugMsg("Exiting getCLIRating62\n");
-}
-
 sub setCLIRating {
 	debugMsg("Entering setCLIRating\n");
 	my $request = shift;
@@ -3727,78 +3456,6 @@ sub setCLIRating {
 	$request->addResult('ratingpercentage', $rating);
 	$request->setStatusDone();
 	debugMsg("Exiting setCLIRating\n");
-}
-
-sub setCLIRating62 {
-	debugMsg("Entering setCLIRating62\n");
-	my $client = shift;
-	my $paramsRef = shift;
-	
-	if (scalar(@$paramsRef) lt 4) {
-		debugMsg("Incorrect number of parameters\n");
-		debugMsg("Exiting setCLIRating62\n");
-		return;
-	}
-	if (@$paramsRef[1] ne "setrating") {
-		debugMsg("Incorrect command\n");
-		debugMsg("Exiting setCLIRating62\n");
-		return;
-	}
-	if(!defined $client) {
-		debugMsg("Client required\n");
-		debugMsg("Exiting setCLIRating62\n");
-		return;
-	}
-
-	# get our parameters
-  	my $trackId    = @$paramsRef[2];
-  	my $rating    = @$paramsRef[3];
-  	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
-		debugMsg("_trackid and _rating not defined\n");
-		debugMsg("Exiting setCLIRating62\n");
-		return;
-  	}
-  	
-	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-	my $track;
-	if($trackId !~ /^-?\d+$/) {
-		if($trackId =~ /^\/.+$/) {
-			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
-		}
-		# The encapsulation with eval is just to make it more crash safe
-		eval {
-			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
-		};
-		if ($@) {
-			debugMsg("Error retrieving track: $trackId\n");
-		}
-	}else {
-		# The encapsulation with eval is just to make it more crash safe
-		eval {
-			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
-		};
-		if ($@) {
-			debugMsg("Error retrieving track: $trackId\n");
-		}
-	}
-	
-	if(!defined $track || !defined $track->audio) {
-		debugMsg("Track $trackId not found\n");
-		debugMsg("Exiting setCLIRating62\n");
-		return;
-	}
-	
-	if($rating =~ /.*%$/) {
-		$rating =~ s/%$//;
-	}else {
-		$rating = $rating*20;
-	}
-	rateSong($client,$track->url,$rating);
-	
-	my $digit = floor(($rating+10)/20);
-	push @$paramsRef,"rating:$digit";
-	push @$paramsRef,"ratingpercentage:$rating";
-	debugMsg("Exiting setCLIRating62\n");
 }
 
 sub gotViaHTTP {
@@ -4139,39 +3796,23 @@ sub validateIsDirOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		if ($::VERSION ge '6.5') {
-			return Slim::Utils::Validate::isDir($arg);
-		}else {
-			return Slim::Web::Setup::validateIsDir($arg);
-		}
+		return Slim::Utils::Validate::isDir($arg);
 	}
 }
 
 sub validateAcceptAllWrapper {
 	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::acceptAll($arg);
-	}else {
-		return Slim::Web::Setup::validateAcceptAll($arg);
-	}
+	return Slim::Utils::Validate::acceptAll($arg);
 }
 
 sub validateIntWrapper {
 	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isInt($arg);
-	}else {
-		return Slim::Web::Setup::validateInt($arg);
-	}
+	return Slim::Utils::Validate::isInt($arg);
 }
 
 sub validateTrueFalseWrapper {
 	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::trueFalse($arg);
-	}else {
-		return Slim::Web::Setup::validateTrueFalse($arg);
-	}
+	return Slim::Utils::Validate::trueFalse($arg);
 }
 
 sub validateIsFileOrEmpty {
@@ -4179,11 +3820,7 @@ sub validateIsFileOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		if ($::VERSION ge '6.5') {
-			return Slim::Utils::Validate::isFile($arg);
-		}else {
-			return Slim::Web::Setup::validateIsFile($arg);
-		}
+		return Slim::Utils::Validate::isFile($arg);
 	}
 }
 
@@ -4192,23 +3829,16 @@ sub validateIsTimeOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		if ($::VERSION ge '6.5') {
-			return Slim::Utils::Validate::isTime($arg);
-		}else {
-			return Slim::Web::Setup::validateTime($arg);
-		}
+		return Slim::Utils::Validate::isTime($arg);
 	}
 }
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5') {
-		if($attr eq 'artist') {
-			$attr = 'contributor';
-		}
-		return $attr.'.id';
+	if($attr eq 'artist') {
+		$attr = 'contributor';
 	}
-	return $attr;
+	return $attr.'.id';
 }
 
 # other people call us externally.

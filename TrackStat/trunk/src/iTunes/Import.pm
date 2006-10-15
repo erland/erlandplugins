@@ -283,11 +283,7 @@ sub scanFunction {
 }
 
 sub getCurrentLocale {
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Unicode::currentLocale();
-	}else {
-		return $Slim::Utils::Unicode::locale;
-	}
+	return Slim::Utils::Unicode::currentLocale();
 }
 sub handleTrack {
 	my $curTrack = shift;

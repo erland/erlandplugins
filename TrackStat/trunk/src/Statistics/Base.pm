@@ -94,25 +94,15 @@ sub displayAsHTML {
 	my $form = shift;
 	my $item = shift;
 	
-	if ($::VERSION ge '6.5') {
-		$item->displayAsHTML($form);
-	}else {
-		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-		my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-        my $levelInfo = $fieldInfo->{$type};
-        &{$levelInfo->{'listItem'}}($ds, $form, $item);
-	}
+	$item->displayAsHTML($form);
 }
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5') {
-		if($attr eq 'artist') {
-			$attr = 'contributor';
-		}
-		return $attr.'.id';
+	if($attr eq 'artist') {
+		$attr = 'contributor';
 	}
-	return $attr;
+	return $attr.'.id';
 }
 
 sub getTracksWeb {
@@ -476,33 +466,22 @@ sub getArtistTracks {
 				debugMsg("Getting tracks for artist: ".$artist->name."\n");
 
 				my $items;
-				if ($::VERSION ge '6.5') {
-					my $sthtracks;
-					if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
-					}else {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
-					}
-					$sthtracks->execute();
-					my $trackId;
-					$sthtracks->bind_columns(undef,\$trackId);
-					my @trackIds = ();
-					while( $sthtracks->fetch()) {
-						push @trackIds,$trackId;
-					}
-					if(scalar(@trackIds)>0) {
-						my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
-						$items = \@result;
-					}
+				my $sthtracks;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
 				}else {
-					my $artistFind = {'artist' => $artist->id };
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $artistFind,
-						'sortBy' => 'random',
-						'limit'  => $limit,
-						'cache'  => 0,
-					});
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+				}
+				$sthtracks->execute();
+				my $trackId;
+				$sthtracks->bind_columns(undef,\$trackId);
+				my @trackIds = ();
+				while( $sthtracks->fetch()) {
+					push @trackIds,$trackId;
+				}
+				if(scalar(@trackIds)>0) {
+					my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
+					$items = \@result;
 				}
 				for my $item (@$items) {
 					push @result, $item;
@@ -627,34 +606,22 @@ sub getGenreTracks {
 
 				debugMsg("Getting tracks for genre: ".$genre->name."\n");
 				my $items;
-				if ($::VERSION ge '6.5') {
-					my $sthtracks;
-					if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by rand() limit $limit");
-					}else {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track where genre_track.genre=$id group by tracks.id order by rand() limit $limit");
-					}
-					$sthtracks->execute();
-					my $trackId;
-					$sthtracks->bind_columns(undef,\$trackId);
-					my @trackIds = ();
-					while( $sthtracks->fetch()) {
-						push @trackIds,$trackId;
-					}
-					if(scalar(@trackIds)>0) {
-						my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
-						$items = \@result;
-					}
+				my $sthtracks;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by rand() limit $limit");
 				}else {
-					my $genreFind = {'genre' => $genre->id };
-
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $genreFind,
-						'sortBy' => 'random',
-						'limit'  => $limit,
-						'cache'  => 0,
-					});
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track where genre_track.genre=$id group by tracks.id order by rand() limit $limit");
+				}
+				$sthtracks->execute();
+				my $trackId;
+				$sthtracks->bind_columns(undef,\$trackId);
+				my @trackIds = ();
+				while( $sthtracks->fetch()) {
+					push @trackIds,$trackId;
+				}
+				if(scalar(@trackIds)>0) {
+					my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
+					$items = \@result;
 				}
 				for my $item (@$items) {
 					push @result, $item;
@@ -715,10 +682,8 @@ sub getYearsWeb {
 		  	my %trackInfo = ();
 			$trackInfo{'noTrackStatButton'} = 1;
 			$trackInfo{'levelName'}  = 'year';
-			if ($::VERSION ge '6.5') {
-				my $yearobj = $objectData->{'itemobj'};
-				displayAsHTML('year', \%trackInfo, $yearobj);
-			}
+			my $yearobj = $objectData->{'itemobj'};
+			displayAsHTML('year', \%trackInfo, $yearobj);
 		  	$trackInfo{'title'} = undef;
 			my $rating = $objectData->{'rating'};
 			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
@@ -777,33 +742,22 @@ sub getYearTracks {
 
 				debugMsg("Getting tracks for year: ".$year."\n");
 				my $items;
-				if ($::VERSION ge '6.5') {
-					my $sthtracks;
-					if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by rand() limit $limit");
-					}else {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks where tracks.year=$id order by rand() limit $limit");
-					}
-					$sthtracks->execute();
-					my $trackId;
-					$sthtracks->bind_columns(undef,\$trackId);
-					my @trackIds = ();
-					while( $sthtracks->fetch()) {
-						push @trackIds,$trackId;
-					}
-					if(scalar(@trackIds)>0) {
-						my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
-						$items = \@result;
-					}
+				my $sthtracks;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+					$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by rand() limit $limit");
 				}else {
-					my $yearFind = {'year' => $year };
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $yearFind,
-						'sortBy' => 'random',
-						'limit'  => $limit,
-						'cache'  => 0,
-					});
+					$sthtracks = $dbh->prepare("select tracks.id from tracks where tracks.year=$id order by rand() limit $limit");
+				}
+				$sthtracks->execute();
+				my $trackId;
+				$sthtracks->bind_columns(undef,\$trackId);
+				my @trackIds = ();
+				while( $sthtracks->fetch()) {
+					push @trackIds,$trackId;
+				}
+				if(scalar(@trackIds)>0) {
+					my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
+					$items = \@result;
 				}
 				for my $item (@$items) {
 					push @result, $item;
@@ -929,33 +883,22 @@ sub getPlaylistTracks {
 				debugMsg("Getting tracks for playlist: ".$playlist->title."\n");
 
 				my $items;
-				if ($::VERSION ge '6.5') {
-					my $sthtracks;
-					if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
-					}else {
-						$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
-					}
-					$sthtracks->execute();
-					my $trackId;
-					$sthtracks->bind_columns(undef,\$trackId);
-					my @trackIds = ();
-					while( $sthtracks->fetch()) {
-						push @trackIds,$trackId;
-					}
-					if(scalar(@trackIds)>0) {
-						my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
-						$items = \@result;
-					}
+				my $sthtracks;
+				if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
 				}else {
-					my $playlistFind = {'playlist' => $playlist->id };
-					$items = $ds->find({
-						'field'  => 'track',
-						'find'   => $playlistFind,
-						'sortBy' => 'random',
-						'limit'  => $limit,
-						'cache'  => 0,
-					});
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
+				}
+				$sthtracks->execute();
+				my $trackId;
+				$sthtracks->bind_columns(undef,\$trackId);
+				my @trackIds = ();
+				while( $sthtracks->fetch()) {
+					push @trackIds,$trackId;
+				}
+				if(scalar(@trackIds)>0) {
+					my @result = Slim::Schema->rs('Track')->search({ 'id' => { 'in' => \@trackIds } });
+					$items = \@result;
 				}
 				for my $item (@$items) {
 					push @result, $item;

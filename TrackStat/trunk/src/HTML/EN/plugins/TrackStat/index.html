@@ -1,9 +1,4 @@
 [% pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' %]
-[% IF !pluginTrackStatSlimserver65 %]
-	[% PROCESS plugins/TrackStat/hreftemplate65 %]
-	[% PROCESS plugins/TrackStat/cmdwrappers65 %]
-	[% PROCESS plugins/TrackStat/css65 %]
-[% END %]
 [% PROCESS plugins/TrackStat/css %]
 [% PROCESS plugins/TrackStat/controls %]
 [% PROCESS plugins/TrackStat/listitems %]
@@ -24,9 +19,6 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginTrackStatSlimserver65 %]
-	[% PROCESS plugins/TrackStat/pageheaderinfo65 %]
-[% END %]
 [% IF refresh > 0 %]  
 	<SCRIPT>
 	<!--

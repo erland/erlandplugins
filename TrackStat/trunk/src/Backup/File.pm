@@ -341,23 +341,21 @@ sub restoreTrack
 	my $rating   = $curTrack->{'rating'};
 
 	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating);	
-	if ($::VERSION ge '6.5') {
-		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-		my $track;
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $track;
+	eval {
+		$track = Plugins::TrackStat::Storage::objectForUrl($url);
+	};
+	if ($@) {
+		debugMsg("Error retrieving track: $url\n");
+	}
+	if($track) {
+		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			$track = Plugins::TrackStat::Storage::objectForUrl($url);
+			$track->set('rating' => $rating);
+			$track->update();
+			$ds->forceCommit();
 		};
-		if ($@) {
-			debugMsg("Error retrieving track: $url\n");
-		}
-		if($track) {
-			# Run this within eval for now so it hides all errors until this is standard
-			eval {
-				$track->set('rating' => $rating);
-				$track->update();
-				$ds->forceCommit();
-			};
-		}
 	}
 }
 

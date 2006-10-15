@@ -32,12 +32,10 @@ use DBI qw(:sql_types);
 use Class::Struct;
 use FindBin qw($Bin);
 use POSIX qw(strftime ceil);
+use Slim::Schema;
 
 if ($] > 5.007) {
 	require Encode;
-}
-if ($::VERSION ge '6.5') {
-	eval "use Slim::Schema";
 }
 
 use Slim::Utils::Misc;
@@ -52,31 +50,18 @@ struct TrackInfo => {
 };
 
 my $driver;
-my $distinct = '';
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5') {
-		return Slim::Schema->storage->dbh();
-	}else {
-		return Slim::Music::Info::getCurrentDataStore()->dbh();
-	}
+	return Slim::Schema->storage->dbh();
 }
 
 sub getCurrentDS {
-	if ($::VERSION ge '6.5') {
-		return 'Slim::Schema';
-	}else {
-		return Slim::Music::Info::getCurrentDataStore();
-	}
+	return 'Slim::Schema';
 }
 
 sub getMusicBrainzId {
 	my $track = shift;
-	if ($::VERSION ge '6.5') {
-		return $track->musicbrainz_id;
-	}else {
-		return $track->{musicbrainz_id};
-	}
+	return $track->musicbrainz_id;
 }
 
 sub commit {
@@ -100,27 +85,20 @@ sub objectForYear {
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5') {
-		if($type eq 'artist') {
-			$type = 'Contributor';
-		}elsif($type eq 'album') {
-			$type = 'Album';
-		}elsif($type eq 'genre') {
-			$type = 'Genre';
-		}elsif($type eq 'track') {
-			$type = 'Track';
-		}elsif($type eq 'playlist') {
-			$type = 'Playlist';
-		}elsif($type eq 'year') {
-			$type = 'Year';
-		}
-		return Slim::Schema->resultset($type)->find($id);
-	}else {
-		if($type eq 'playlist') {
-			$type = 'track';
-		}
-		return getCurrentDS()->objectForId($type,$id);
+	if($type eq 'artist') {
+		$type = 'Contributor';
+	}elsif($type eq 'album') {
+		$type = 'Album';
+	}elsif($type eq 'genre') {
+		$type = 'Genre';
+	}elsif($type eq 'track') {
+		$type = 'Track';
+	}elsif($type eq 'playlist') {
+		$type = 'Playlist';
+	}elsif($type eq 'year') {
+		$type = 'Year';
 	}
+	return Slim::Schema->resultset($type)->find($id);
 }
 
 sub objectsForId {
@@ -130,51 +108,33 @@ sub objectsForId {
 	my @resultArray = ();
 	return \@resultArray unless scalar(@$idArray)>0;
 
-	if ($::VERSION ge '6.5') {
-		if($type eq 'artist') {
-			$type = 'Contributor';
-		}elsif($type eq 'album') {
-			$type = 'Album';
-		}elsif($type eq 'genre') {
-			$type = 'Genre';
-		}elsif($type eq 'track') {
-			$type = 'Track';
-		}elsif($type eq 'playlist') {
-			$type = 'Playlist';
-		}elsif($type eq 'year') {
-			$type = 'Year';
-		}
-		@resultArray = Slim::Schema->resultset($type)->search({ 'id' => { 'in' => $idArray } });
-	}else {
-		if($type eq 'playlist') {
-			$type = 'track';
-		}
-		for my $id (@$idArray) {
-			my $obj = getCurrentDS()->objectForId($type,$id);
-			push @resultArray,$obj;
-		}
+	if($type eq 'artist') {
+		$type = 'Contributor';
+	}elsif($type eq 'album') {
+		$type = 'Album';
+	}elsif($type eq 'genre') {
+		$type = 'Genre';
+	}elsif($type eq 'track') {
+		$type = 'Track';
+	}elsif($type eq 'playlist') {
+		$type = 'Playlist';
+	}elsif($type eq 'year') {
+		$type = 'Year';
 	}
+	@resultArray = Slim::Schema->resultset($type)->search({ 'id' => { 'in' => $idArray } });
 	return \@resultArray;
 }
 
 sub objectForUrl {
 	my $url = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Schema->objectForUrl({
-			'url' => $url
-		});
-	}else {
-		return getCurrentDS()->objectForUrl($url,undef,undef,1);
-	}
+	return Slim::Schema->objectForUrl({
+		'url' => $url
+	});
 }
 
 sub init {
 	$driver = Slim::Utils::Prefs::get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
-    
-    if($driver eq 'mysql') {
-    	$distinct = 'distinct';
-    }
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
     
 	#Check if tables exists and create them if not
 	debugMsg("Checking if track_statistics database table exists\n");
@@ -216,191 +176,168 @@ sub init {
 		Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_added.sql");
 	}
 	
-    if($driver eq 'mysql') {
-		my $sth = $dbh->prepare("show create table tracks");
-		my $charset;
-		eval {
-			debugMsg("Checking charsets on tables\n");
-			$sth->execute();
-			my $line = undef;
-			$sth->bind_col( 2, \$line);
-			if( $sth->fetch() ) {
-				if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
-					$charset = $1;
-					my $collate = '';
-					if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
-						$collate = $1;
+	my $sth = $dbh->prepare("show create table tracks");
+	my $charset;
+	eval {
+		debugMsg("Checking charsets on tables\n");
+		$sth->execute();
+		my $line = undef;
+		$sth->bind_col( 2, \$line);
+		if( $sth->fetch() ) {
+			if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+				$charset = $1;
+				my $collate = '';
+				if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+					$collate = $1;
+				}
+				debugMsg("Got tracks charset = $charset and collate = $collate\n");
+				
+				if(defined($charset)) {
+					$sth->finish();
+					$sth = $dbh->prepare("show create table track_statistics");
+					$sth->execute();
+					$line = undef;
+					$sth->bind_col( 2, \$line);
+					if( $sth->fetch() ) {
+						if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+							my $ts_charset = $1;
+							my $ts_collate = '';
+							if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+								$ts_collate = $1;
+							}
+							debugMsg("Got track_statistics charset = $ts_charset and collate = $ts_collate\n");
+							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+								debugMsg("Converting track_statistics to correct charset=$charset collate=$collate\n");
+								if(!$collate) {
+									eval { $dbh->do("alter table track_statistics convert to character set $charset") };
+								}else {
+									eval { $dbh->do("alter table track_statistics convert to character set $charset collate $collate") };
+								}
+								if ($@) {
+									debugMsg("Couldn't convert charsets: $@\n");
+								}
+							}
+						}
 					}
-					debugMsg("Got tracks charset = $charset and collate = $collate\n");
 					
-					if(defined($charset)) {
-						$sth->finish();
-						$sth = $dbh->prepare("show create table track_statistics");
-						$sth->execute();
-						$line = undef;
-						$sth->bind_col( 2, \$line);
-						if( $sth->fetch() ) {
-							if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
-								my $ts_charset = $1;
-								my $ts_collate = '';
-								if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
-									$ts_collate = $1;
+					$sth->finish();
+					$sth = $dbh->prepare("show create table track_history");
+					$sth->execute();
+					$line = undef;
+					$sth->bind_col( 2, \$line);
+					if( $sth->fetch() ) {
+						if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+							my $ts_charset = $1;
+							my $ts_collate = '';
+							if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+								$ts_collate = $1;
+							}
+							debugMsg("Got track_history charset = $ts_charset and collate = $ts_collate\n");
+							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+								debugMsg("Converting track_history to correct charset=$charset collate=$collate\n");
+								if(!$collate) {
+									eval { $dbh->do("alter table track_history convert to character set $charset") };
+								}else {
+									eval { $dbh->do("alter table track_history convert to character set $charset collate $collate") };
 								}
-								debugMsg("Got track_statistics charset = $ts_charset and collate = $ts_collate\n");
-								if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
-									debugMsg("Converting track_statistics to correct charset=$charset collate=$collate\n");
-									if(!$collate) {
-										eval { $dbh->do("alter table track_statistics convert to character set $charset") };
-									}else {
-										eval { $dbh->do("alter table track_statistics convert to character set $charset collate $collate") };
-									}
-									if ($@) {
-										debugMsg("Couldn't convert charsets: $@\n");
-									}
+								if ($@) {
+									debugMsg("Couldn't convert charsets: $@\n");
 								}
 							}
 						}
-						
-						$sth->finish();
-						$sth = $dbh->prepare("show create table track_history");
-						$sth->execute();
-						$line = undef;
-						$sth->bind_col( 2, \$line);
-						if( $sth->fetch() ) {
-							if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
-								my $ts_charset = $1;
-								my $ts_collate = '';
-								if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
-									$ts_collate = $1;
-								}
-								debugMsg("Got track_history charset = $ts_charset and collate = $ts_collate\n");
-								if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
-									debugMsg("Converting track_history to correct charset=$charset collate=$collate\n");
-									if(!$collate) {
-										eval { $dbh->do("alter table track_history convert to character set $charset") };
-									}else {
-										eval { $dbh->do("alter table track_history convert to character set $charset collate $collate") };
-									}
-									if ($@) {
-										debugMsg("Couldn't convert charsets: $@\n");
-									}
-								}
-							}
-						}
-						
 					}
+					
 				}
 			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
 		}
-		$sth->finish();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
 
-		$sth = $dbh->prepare("show index from track_statistics;");
-		eval {
-			debugMsg("Checking if indexes is needed for track_statistics\n");
-			$sth->execute();
-			my $keyname;
-			$sth->bind_col( 3, \$keyname );
-			my $foundMB = 0;
-			my $foundUrl = 0;
-			my $foundUrlMB = 0;
-			while( $sth->fetch() ) {
-				if($keyname eq "urlIndex") {
-					$foundUrl = 1;
-				}elsif($keyname eq "musicbrainzIndex") {
-					$foundMB = 1;
-				}elsif($keyname eq "url_musicbrainz") {
-					$foundUrlMB = 1;
-				}
+	$sth = $dbh->prepare("show index from track_statistics;");
+	eval {
+		debugMsg("Checking if indexes is needed for track_statistics\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		my $foundUrl = 0;
+		my $foundUrlMB = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "urlIndex") {
+				$foundUrl = 1;
+			}elsif($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}elsif($keyname eq "url_musicbrainz") {
+				$foundUrlMB = 1;
 			}
-			if(!$foundUrl) {
-				msg("TrackStat::Storage: No urlIndex index found in track_statistics, creating index...\n");
-				eval { $dbh->do("create index urlIndex on track_statistics (url(255));") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
-			}
-			if(!$foundMB) {
-				msg("TrackStat::Storage: No musicbrainzIndex index found in track_statistics, creating index...\n");
-				eval { $dbh->do("create index musicbrainzIndex on track_statistics (musicbrainz_id);") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
-			}
-			if($foundUrlMB) {
-				msg("TrackStat::Storage: Dropping old url_musicbrainz index...\n");
-				eval { $dbh->do("drop index url_musicbrainz on track_statistics;") };
-				if ($@) {
-					debugMsg("Couldn't drop index: $@\n");
-				}
-			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
 		}
-		$sth->finish();
+		if(!$foundUrl) {
+			msg("TrackStat::Storage: No urlIndex index found in track_statistics, creating index...\n");
+			eval { $dbh->do("create index urlIndex on track_statistics (url(255));") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundMB) {
+			msg("TrackStat::Storage: No musicbrainzIndex index found in track_statistics, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on track_statistics (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if($foundUrlMB) {
+			msg("TrackStat::Storage: Dropping old url_musicbrainz index...\n");
+			eval { $dbh->do("drop index url_musicbrainz on track_statistics;") };
+			if ($@) {
+				debugMsg("Couldn't drop index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
 
-		$sth = $dbh->prepare("show index from track_history;");
-		eval {
-			debugMsg("Checking if indexes is needed for track_history\n");
-			$sth->execute();
-			my $keyname;
-			$sth->bind_col( 3, \$keyname );
-			my $foundUrlMB = 0;
-			my $foundMB = 0;
-			while( $sth->fetch() ) {
-				if($keyname eq "urlIndex") {
-					$foundUrlMB = 1;
-				}elsif($keyname eq "musicbrainzIndex") {
-					$foundMB = 1;
-				}
+	$sth = $dbh->prepare("show index from track_history;");
+	eval {
+		debugMsg("Checking if indexes is needed for track_history\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundUrlMB = 0;
+		my $foundMB = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "urlIndex") {
+				$foundUrlMB = 1;
+			}elsif($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
 			}
-			if(!$foundUrlMB) {
-				msg("TrackStat::Storage: No urlIndex index found in track_history, creating index...\n");
-				eval { $dbh->do("create index urlIndex on track_history (url(255));") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
-			}
-			if(!$foundMB) {
-				msg("TrackStat::Storage: No musicbrainzIndex index found in track_history, creating index...\n");
-				eval { $dbh->do("create index musicbrainzIndex on track_history (musicbrainz_id);") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
-			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
 		}
-		$sth->finish();
-		
-    }
+		if(!$foundUrlMB) {
+			msg("TrackStat::Storage: No urlIndex index found in track_history, creating index...\n");
+			eval { $dbh->do("create index urlIndex on track_history (url(255));") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundMB) {
+			msg("TrackStat::Storage: No musicbrainzIndex index found in track_history, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on track_history (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
     
-    if($driver eq 'SQLite') {
-		my $sth = $dbh->prepare("select sql from sqlite_master where name='track_history'");
-		eval {
-			debugMsg("Checking if track_history contains autoincrement column\n");
-			$sth->execute();
-			my $sql = undef;
-			$sth->bind_col( 1, \$sql);
-			if( $sth->fetch() ) {
-				if(defined($sql) && ($sql =~ /.*autoincrement.*/)) {
-					debugMsg("Altering track_history table to remove autoincrement\n");
-					Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_history_noautoincrement.sql");
-				}
-			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		}
-		$sth->finish();
-    }
-
-    # Only perform refresh at startup if this has been activated
-    return unless Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup");
+	# Only perform refresh at startup if this has been activated
+	return unless Slim::Utils::Prefs::get("plugin_trackstat_refresh_startup");
 	refreshTracks();
 }
 
@@ -564,7 +501,7 @@ sub getTracksOnAlbum {
 sub saveRating {
 	my ($url,$mbId,$track,$rating) = @_;
 	
-	if(length($url)>255 && ($driver eq 'mysql')) {
+	if(length($url)>255) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 255 characters which is supported\n");
 		return;
 	}
@@ -629,7 +566,7 @@ sub savePlayCountAndLastPlayed
 {
 	my ($url,$mbId,$playCount,$lastPlayed) = @_;
 
-	if(length($url)>255 && ($driver eq 'mysql')) {
+	if(length($url)>255) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 255 characters which is supported\n");
 		return;
 	}
@@ -702,7 +639,7 @@ sub addToHistory
 
 	return unless Slim::Utils::Prefs::get("plugin_trackstat_history_enabled");
 	
-	if(length($url)>255 && ($driver eq 'mysql')) {
+	if(length($url)>255) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 255 characters which is supported\n");
 		return;
 	}
@@ -802,7 +739,7 @@ sub saveTrack
 {
 	my ($url,$mbId,$playCount,$added,$lastPlayed,$rating,$ignoreTrackInSlimserver) = @_;
 		
-	if(length($url)>255 && ($driver eq 'mysql')) {
+	if(length($url)>255) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 255 characters which is supported\n");
 		return;
 	}
@@ -888,7 +825,7 @@ sub mergeTrack()
 {
 	my ($url,$mbId,$playCount,$lastPlayed,$rating) = @_;
 
-	if(length($url)>255 && ($driver eq 'mysql')) {
+	if(length($url)>255) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 255 characters which is supported\n");
 		return;
 	}
@@ -996,108 +933,75 @@ sub refreshTracks
 		
 	my $ds        = getCurrentDS();
 	my $dbh = getCurrentDBH();
-    my $sth;
+	my $sth;
 	my $sthupdate;
 	my $sql;
 	my $sqlupdate;
 	my $count;
 	my $timeMeasure = Time::Stopwatch->new();
-    if($driver eq 'mysql') {
-		$timeMeasure->clear();
-		$timeMeasure->start();
-		$sth = $dbh->prepare("show index from tracks;");
-		eval {
-			debugMsg("Checking if additional indexes are needed for tracks\n");
-			$sth->execute();
-			my $keyname;
-			$sth->bind_col( 3, \$keyname );
-			my $found = 0;
-			while( $sth->fetch() ) {
-				if($keyname eq "trackStatMBIndex") {
-					$found = 1;
-				}
+	$timeMeasure->clear();
+	$timeMeasure->start();
+	$sth = $dbh->prepare("show index from tracks;");
+	eval {
+		debugMsg("Checking if additional indexes are needed for tracks\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $found = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "trackStatMBIndex") {
+				$found = 1;
 			}
-			if(!$found) {
-				msg("TrackStat::Storage: No trackStatMBIndex index found in tracks, creating index...\n");
-				eval { $dbh->do("create index trackStatMBIndex on tracks (musicbrainz_id);") };
-				if ($@) {
-					debugMsg("Couldn't add index: $@\n");
-				}
+		}
+		if(!$found) {
+			msg("TrackStat::Storage: No trackStatMBIndex index found in tracks, creating index...\n");
+			eval { $dbh->do("create index trackStatMBIndex on tracks (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
 			}
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
 		}
-		$sth->finish();
-		$timeMeasure->stop();
-		$timeMeasure->start();
-		debugMsg("Starting to analyze indexes\n");
-		eval {
-	    	$dbh->do("analyze table tracks;");
-	    	$dbh->do("analyze table track_statistics;");
-	    	$dbh->do("analyze table track_history;");
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		debugMsg("Finished analyzing indexes : It took ".$timeMeasure->getElapsedTime()." seconds\n");
-		$timeMeasure->stop();
-    }
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+	$sth->finish();
+	$timeMeasure->stop();
+	$timeMeasure->start();
+	debugMsg("Starting to analyze indexes\n");
+	eval {
+    	$dbh->do("analyze table tracks;");
+    	$dbh->do("analyze table track_statistics;");
+    	$dbh->do("analyze table track_history;");
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	debugMsg("Finished analyzing indexes : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
 	debugMsg("Starting to update urls in statistic data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
-    if($driver eq 'mysql') {
-    	$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<256";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
+	$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<256";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
 		}
-    }else {
-		my $sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url";
-	    if($driver eq 'mysql') {
-	    	$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<256";
-		}
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "UPDATE track_statistics set url=? where musicbrainz_id = ?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-			debugMsg("Got selection after ".$timeMeasure->getElapsedTime()." seconds\n");
-			my( $url,$mbId );
-			$sth->bind_columns( undef, \$url, \$mbId );
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $url, SQL_VARCHAR);
-				$sthupdate->bind_param(2, $mbId, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 	$sth->finish();
 	debugMsg("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
@@ -1107,159 +1011,67 @@ sub refreshTracks
 	$timeMeasure->start();
 	debugMsg("Starting to update musicbrainz id's in statistic data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
-	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
+	$sql = "UPDATE tracks,track_statistics SET track_statistics.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
 		}
-	}else {
-		$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_statistics where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "UPDATE track_statistics set musicbrainz_id=? where url=?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-
-			my( $url,$mbId );
-			$sth->bind_columns( undef, \$url, \$mbId );
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $mbId, SQL_VARCHAR);
-				$sthupdate->bind_param(2, $url, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
 	debugMsg("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 	
-	if ($::VERSION ge '6.5') {
-		$timeMeasure->clear();
-		$timeMeasure->start();
-		debugMsg("Starting to update ratings in standard slimserver database based on urls\n");
-		# Now lets set all ratings not already set in the slimserver standards database
-		if($driver eq 'mysql') {
-			$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
-			$sth = $dbh->prepare( $sql );
+	$timeMeasure->clear();
+	$timeMeasure->start();
+	debugMsg("Starting to update ratings in standard slimserver database based on urls\n");
+	# Now lets set all ratings not already set in the slimserver standards database
+	$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
 			$count = 0;
-			eval {
-				$count = $sth->execute();
-				if($count eq '0E0') {
-					$count = 0;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			}
-		}else {
-			$sql = "SELECT track_statistics.url,track_statistics.rating from tracks,track_statistics where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
-			$sth = $dbh->prepare( $sql );
-			$count = 0;
-			eval {
-				$sth->execute();
-
-				my( $url,$rating );
-				$sth->bind_columns( undef, \$url, \$rating );
-				while( $sth->fetch() ) {
-					my $track = objectForUrl($url);
-					# Run this within eval for now so it hides all errors until this is standard
-					eval {
-						$track->set('rating' => $rating);
-						$track->update();
-					};
-					$count++;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			}
 		}
-
-		$sth->finish();
-		debugMsg("Finished updating ratings in standard slimserver database based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
-		$timeMeasure->stop();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
 	}
+	$sth->finish();
+	debugMsg("Finished updating ratings in standard slimserver database based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
 	debugMsg("Starting to update added times in statistic data based on urls\n");
 	# Now lets set all added times not already set
-	if($driver eq 'mysql') {
-		if ($::VERSION ge '6.5') {
-			$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.timestamp where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null";
-		}else {
-			$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.age where tracks.url=track_statistics.url and track_statistics.added is null and tracks.age is not null";
+	$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.timestamp where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
 		}
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-	}else {
-		if ($::VERSION ge '6.5') {
-			$sql = "SELECT tracks.url,tracks.timestamp from tracks,track_statistics where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null";
-		}else {
-			$sql = "SELECT tracks.url,tracks.age from tracks,track_statistics where tracks.url=track_statistics.url and track_statistics.added is null and tracks.age is not null";
-		}
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "UPDATE track_statistics set added=? where url=?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-
-			my( $url,$age );
-			$sth->bind_columns( undef, \$url, \$age );
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $age, SQL_VARCHAR);
-				$sthupdate->bind_param(2, $url, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -1270,17 +1082,7 @@ sub refreshTracks
 	$timeMeasure->start();
 	debugMsg("Starting to add tracks without added times in statistic data based on urls\n");
 	# Now lets set all new tracks with added times not already set
-	if ($::VERSION ge '6.5') {
-		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null";
-	    if($driver eq 'mysql') {
-	    	$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<256";
-	    }
-	}else {
-		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playCount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playCount,tracks.age,tracks.lastPlayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null";
-	    if($driver eq 'mysql') {
-	    	$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playCount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playCount,tracks.age,tracks.lastPlayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<256";
-		}
-	}
+	$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<256";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1305,8 +1107,33 @@ sub refreshTracks
 	$timeMeasure->start();
 	debugMsg("Starting to update ratings in statistic data based on urls\n");
 	# Now lets set all added times not already set
-	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.rating=tracks.rating where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
+	$sql = "UPDATE tracks,track_statistics SET track_statistics.rating=tracks.rating where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	debugMsg("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
+	if(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled")) {
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		debugMsg("Starting to update urls in track_history based on musicbrainz ids\n");
+		# First lets refresh all urls with musicbrainz id's
+	    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url and length(tracks.url)<256";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1322,87 +1149,6 @@ sub refreshTracks
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
-	}else {
-		$sql = "SELECT tracks.url,tracks.rating from tracks,track_statistics where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "UPDATE track_statistics set rating=? where url=?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-
-			my( $url,$rating );
-			$sth->bind_columns( undef, \$url, \$rating );
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $rating, SQL_VARCHAR);
-				$sthupdate->bind_param(2, $url, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
-	}
-
-	$sth->finish();
-	debugMsg("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
-	$timeMeasure->stop();
-
-	if(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled")) {
-		$timeMeasure->clear();
-		$timeMeasure->start();
-		debugMsg("Starting to update urls in track_history based on musicbrainz ids\n");
-		# First lets refresh all urls with musicbrainz id's
-		if($driver eq 'mysql') {
-	    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url and length(tracks.url)<256";
-			$sth = $dbh->prepare( $sql );
-			$count = 0;
-			eval {
-				$count = $sth->execute();
-				if($count eq '0E0') {
-					$count = 0;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			    eval {
-			    	rollback($dbh); #just die if rollback is failing
-			    };
-			}
-		}else {
-			$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_history where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url";
-			$sth = $dbh->prepare( $sql );
-			$sqlupdate = "UPDATE track_history set url=? where musicbrainz_id = ?";
-			$sthupdate = $dbh->prepare( $sqlupdate );
-			$count = 0;
-			eval {
-				$sth->execute();
-
-				my( $url,$mbId );
-				$sth->bind_columns( undef, \$url, \$mbId );
-				while( $sth->fetch() ) {
-					$sthupdate->bind_param(1, $url, SQL_VARCHAR);
-					$sthupdate->bind_param(2, $mbId, SQL_VARCHAR);
-					$sthupdate->execute();
-					$count++;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			    eval {
-			    	rollback($dbh); #just die if rollback is failing
-			    };
-			}
-			$sthupdate->finish();
-		}
 
 		$sth->finish();
 		debugMsg("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
@@ -1412,49 +1158,21 @@ sub refreshTracks
 		$timeMeasure->start();
 		debugMsg("Starting to update musicbrainz id's in track_history based on urls\n");
 		# Now lets set all musicbrainz id's not already set
-		if($driver eq 'mysql') {
-			$sql = "UPDATE tracks,track_history SET track_history.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
-			$sth = $dbh->prepare( $sql );
-			$count = 0;
-			eval {
-				$count = $sth->execute();
-				if($count eq '0E0') {
-					$count = 0;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			    eval {
-			    	rollback($dbh); #just die if rollback is failing
-			    };
+		$sql = "UPDATE tracks,track_history SET track_history.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
 			}
-		}else {
-			$sql = "SELECT tracks.url,tracks.musicbrainz_id from tracks,track_history where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
-			$sth = $dbh->prepare( $sql );
-			$sqlupdate = "UPDATE track_history set musicbrainz_id=? where url=?";
-			$sthupdate = $dbh->prepare( $sqlupdate );
-			$count = 0;
-			eval {
-				$sth->execute();
-
-				my( $url,$mbId );
-				$sth->bind_columns( undef, \$url, \$mbId );
-				while( $sth->fetch() ) {
-					$sthupdate->bind_param(1, $mbId, SQL_VARCHAR);
-					$sthupdate->bind_param(2, $url, SQL_VARCHAR);
-					$sthupdate->execute();
-					$count++;
-				}
-				commit($dbh);
-			};
-			if( $@ ) {
-			    warn "Database error: $DBI::errstr\n";
-			    eval {
-			    	rollback($dbh); #just die if rollback is failing
-			    };
-			}
-			$sthupdate->finish();
+			commit($dbh);
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
 		}
 
 		$sth->finish();
@@ -1465,10 +1183,7 @@ sub refreshTracks
 		$timeMeasure->start();
 		debugMsg("Starting to add missing entries to history table\n");
 		# Now lets add all tracks to history table which have been played and don't exist in history table
-		$sql = "INSERT INTO track_history (url,musicbrainz_id,played,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null;";
-	    if($driver eq 'mysql') {
-	    	$sql = "INSERT INTO track_history (url,musicbrainz_id,played,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null and length(tracks.url)<256";
-	    }
+		$sql = "INSERT INTO track_history (url,musicbrainz_id,played,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null and length(tracks.url)<256";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1507,48 +1222,21 @@ sub purgeTracks {
 	my $count;
 	debugMsg("Starting to remove statistic data from track_statistics which no longer exists\n");
 	# Remove all tracks from track_statistics if they don't exist in tracks table
-	if($driver eq 'mysql') {
-		$sql = "DELETE from track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
+	$sql = "DELETE from track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
 		}
-	}else {
-		$sql = "select track_statistics.url from track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "DELETE FROM track_statistics where url=?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-
-			my( $url);
-			$sth->bind_columns( undef, \$url);
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $url, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -1556,48 +1244,21 @@ sub purgeTracks {
 
 	debugMsg("Starting to remove statistic data from track_history which no longer exists\n");
 	# Remove all tracks from track_history if they don't exist in tracks table
-	if($driver eq 'mysql') {
-		$sql = "DELETE FROM track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
+	$sql = "DELETE FROM track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
 		}
-	}else {
-		$sql = "select track_history.url from track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
-		$sth = $dbh->prepare( $sql );
-		$sqlupdate = "DELETE FROM track_history where url=?";
-		$sthupdate = $dbh->prepare( $sqlupdate );
-		$count = 0;
-		eval {
-			$sth->execute();
-
-			my( $url);
-			$sth->bind_columns( undef, \$url);
-			while( $sth->fetch() ) {
-				$sthupdate->bind_param(1, $url, SQL_VARCHAR);
-				$sthupdate->execute();
-				$count++;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-		$sthupdate->finish();
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 
 	$sth->finish();
@@ -1629,15 +1290,11 @@ sub executeSQLFile {
         my $file  = shift;
 
         my $sqlFile;
-		if ($::VERSION ge '6.5') {
-			for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
-				opendir(DIR, catdir($plugindir,"TrackStat")) || next;
-        		$sqlFile = catdir($plugindir,"TrackStat", "SQL", $driver, $file);
-        		closedir(DIR);
-        	}
-        }else {
-         	$sqlFile = catdir($Bin, "Plugins", "TrackStat", "SQL", $driver, $file);
-        }
+	for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
+		opendir(DIR, catdir($plugindir,"TrackStat")) || next;
+       		$sqlFile = catdir($plugindir,"TrackStat", "SQL", $driver, $file);
+       		closedir(DIR);
+       	}
 
         debugMsg("Executing SQL file $sqlFile\n");
 
@@ -1704,11 +1361,7 @@ sub getRandomString {
 
 sub getAddedTime {
 	my $track = shift;
-	if ($::VERSION ge '6.5') {
-		return $track->timestamp;
-	}else {
-		return $track->{age};
-	}
+	return $track->timestamp;
 }
 
 # A wrapper to allow us to uniformly turn on & off debug messages
