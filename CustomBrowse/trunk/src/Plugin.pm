@@ -37,6 +37,10 @@ my $browseMenus;
 my $template;
 
 sub getDisplayName {
+	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
+	if($menuName) {
+		Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE', $menuName );
+	}
 	return 'PLUGIN_CUSTOMBROWSE';
 }
 
@@ -929,6 +933,10 @@ sub initPlugin {
 	my %submenu = (
 		'useMode' => 'PLUGIN.CustomBrowse',
 	);
+	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
+	if($menuName) {
+		Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE', $menuName );
+	}
 	Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
 	addPlayerMenus();
 }
@@ -1356,6 +1364,12 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_directory to:$dir\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_directory', $dir);
 	}
+        $prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
+	if (! defined $prefVal) {
+		my $dir=Slim::Utils::Prefs::get('playlistdir');
+		debugMsg("Defaulting plugin_custombrowse_menuname to:".string('PLUGIN_CUSTOMBROWSE')."\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_menuname', string('PLUGIN_CUSTOMBROWSE'));
+	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
 		debugMsg("Defaulting plugin_custombrowse_properties\n");
@@ -1370,7 +1384,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_menuname','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1408,6 +1422,12 @@ sub setupGroup
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_directory"); }
 		},
+	plugin_custombrowse_menuname => {
+			'validate' => \&validateAcceptAllWrapper
+			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_MENUNAME')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_MENUNAME')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_menuname"); }
+		},
 	);
 	return (\%setupGroup,\%setupPrefs);
 }
@@ -1441,7 +1461,11 @@ sub webPages {
 		if ($::VERSION ge '6.5') {
 			readBrowseConfiguration();
 			addWebMenus($value);
-	        	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
+			if($menuName) {
+				Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
+			}
+		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}else {
 	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
@@ -2436,6 +2460,12 @@ PLUGIN_CUSTOMBROWSE_DIRECTORY
 
 SETUP_PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
+
+PLUGIN_CUSTOMBROWSE_MENUNAME
+	EN	Menu name
+
+SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME
+	EN	Menu name (Slimserver 6.5 only, requires restart)
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS
 	EN	Enable/Disable menus
