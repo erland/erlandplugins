@@ -253,9 +253,17 @@ sub getMenuItems {
 		            return \%params;		
 	            }
 	        }elsif($menu->{'menutype'} eq 'mode') {
+		    my @parameters = split(/\|/,$menu->{'menudata'});
+		    my $mode = shift(@parameters);
+		    my %modeParameters = ();
+		    foreach my $keyvalue (@parameters) {
+		    	if($keyvalue =~ /^([^=].*?)=(.*)/) {
+				$modeParameters{$1}=$2;
+			}
+		    }
 	            my %params = (
-	            	'useMode' => $menu->{'menudata'},
-	            	'parameters' => undef			
+	            	'useMode' => $mode,
+	            	'parameters' => \%modeParameters
 	            );
 	            return \%params;		
 	        }elsif($menu->{'menutype'} eq 'folder') {
