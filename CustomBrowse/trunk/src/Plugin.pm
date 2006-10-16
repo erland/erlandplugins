@@ -599,7 +599,7 @@ sub createMix {
 }
 
 sub playAddItem {
-	my ($client,$listRef, $item, $command, $displayString) = @_;
+	my ($client,$listRef, $item, $command, $displayString, $subCall) = @_;
 	my @items = ();
 	if(!defined($item->{'playtype'})) {
 		push @items,$item;
@@ -628,11 +628,22 @@ sub playAddItem {
 	}
 	my $request = undef;
 	my $playedMultiple = undef;
+	my $wasShuffled = undef;
+	my $pos = undef;
+	my $selectedPos = undef;
+	if(!defined($subCall) && $command eq 'loadtracks') {
+		$wasShuffled = Slim::Player::Playlist::shuffle($client);
+		Slim::Player::Playlist::shuffle($client, 0);
+		$pos = 0;
+	}
 	foreach my $it (@items) {
 		if(defined($it->{'itemtype'})) {
 			if($it->{'itemtype'} eq "track") {
 				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
 				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('track'),$it->{'itemid'})]);
+				if(defined($item->{'itemid'}) && $it->{'itemid'} eq $item->{'itemid'}) {
+					$selectedPos = $pos;
+				}
 			}elsif($it->{'itemtype'} eq "album") {
 				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
 				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('album'),$it->{'itemid'})]);
@@ -652,7 +663,7 @@ sub playAddItem {
 				my $subItems = getMenuItems($it);
 				if(ref($subItems) eq 'ARRAY') {
 					for my $subitem (@$subItems) {
-						playAddItem($client,$subItems,$subitem,$command,undef);
+						playAddItem($client,$subItems,$subitem,$command,undef,1);
 						if($command eq 'loadtracks') {
 							$command = 'addtracks';
 						}
@@ -668,7 +679,7 @@ sub playAddItem {
 			my $subItems = getMenuItems($it);
 			if(ref($subItems) eq 'ARRAY') {
 				for my $subitem (@$subItems) {
-					playAddItem($client,$subItems,$subitem,$command,undef);
+					playAddItem($client,$subItems,$subitem,$command,undef,1);
 					if($command eq 'loadtracks') {
 						$command = 'addtracks';
 					}
@@ -679,7 +690,20 @@ sub playAddItem {
 		if($command eq 'loadtracks') {
 			$command = 'addtracks';
 		}
+		if(defined($pos)) {
+			$pos = $pos + 1;
+		}
 	}
+	if(defined($selectedPos)) {
+		$request = $client->execute(['playlist', 'jump', $selectedPos]);
+		if ($::VERSION ge '6.5' && defined($request)) {
+			# indicate request source
+			$request->source('PLUGIN_CUSTOMBROWSE');
+		}
+	}
+	if (!defined($subCall) && $wasShuffled) {
+        	$client->execute(["playlist", "shuffle", 1]);
+        }
 	if(($playedMultiple || defined($request)) && defined($displayString)) {
 		my $line1;
 		my $line2;
