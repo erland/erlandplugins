@@ -31,10 +31,13 @@ use Data::Dumper;
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use HTML::Entities;
+use Scalar::Util qw(blessed);
 
 my $driver;
 my $browseMenus;
+my $browseMixes;
 my $template;
+my $mixer;
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -257,12 +260,23 @@ sub getMenuItems {
 		            return \%params;		
 	            }
 	        }elsif($menu->{'menutype'} eq 'mode') {
-		    my @parameters = split(/\|/,$menu->{'menudata'});
-		    my $mode = shift(@parameters);
+                    my $keywords = combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
+		    my @params = split(/\|/,$menu->{'menudata'});
+		    my $mode = shift(@params);
 		    my %modeParameters = ();
-		    foreach my $keyvalue (@parameters) {
+		    foreach my $keyvalue (@params) {
 		    	if($keyvalue =~ /^([^=].*?)=(.*)/) {
-				$modeParameters{$1}=$2;
+				my $name=$1;
+				my $value=$2;
+				if($name =~ /^([^\.].*?)\.(.*)/) {
+					if(!defined($modeParameters{$1})) {
+						my %hash = ();
+						$modeParameters{$1}=\%hash;
+					}
+					$modeParameters{$1}->{$2}=replaceParameters($value,$keywords);
+				}else {
+					$modeParameters{$name} = replaceParameters($value, $keywords);
+				}
 			}
 		    }
 	            my %params = (
@@ -553,49 +567,304 @@ sub getMenu {
     return \%params;
 }
 
-sub createMix {
-	my ($client,$item) = @_;
-	if(defined($item->{'itemtype'})) {
-		my $Imports = Slim::Music::Import->importers;
+sub checkMix {
+	my ($client, $mix, $item) = @_;
+	if(defined($mix->{'mixchecktype'})) {
+		if($mix->{'mixchecktype'} eq 'sql') {
+			my $mixcheckdata = undef;
+			if(defined($mix->{'mixcheckdata'})) {
+				$mixcheckdata = $mix->{'mixcheckdata'};
+			}else {
+				$mixcheckdata = $mix->{'mixdata'};
+			}
+			my $parameters = getCustomBrowseProperties();
+			$parameters->{'itemid'} = $item->{'itemid'};
+			$parameters->{'itemname'} = $item->{'itemname'};
+			my $keywords = combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
+			
+			my $sql = prepareMenuSQL($mixcheckdata,$keywords);
+			my $sqlItems = getSQLMenuData($sql);
+			if($sqlItems && scalar(@$sqlItems)>0) {
+				return 1;
+			}
+			
+		}elsif($mix->{'mixchecktype'} eq 'function') {
+			if($mix->{'mixcheckdata'} =~ /^(.+)::([^:].*)$/) {
+				my $class = $1;
+				my $function = $2;
+				my $itemObj = undef;
+				my $itemObj = undef;
+				if($item->{'itemtype'} eq "track") {
+					$itemObj = objectForId('track',$item->{'itemid'});
+				}elsif($item->{'itemtype'} eq "album") {
+					$itemObj = objectForId('album',$item->{'itemid'});
+				}elsif($item->{'itemtype'} eq "artist") {
+					$itemObj = objectForId('artist',$item->{'itemid'});
+				}elsif($item->{'itemtype'} eq "year") {
+					if ($::VERSION ge '6.5') {
+						$itemObj = objectForId('year',$item->{'itemid'});
+					}else {
+						$itemObj = $item->{'itemid'};
+					}
+				}elsif($item->{'itemtype'} eq "genre") {
+					$itemObj = objectForId('genre',$item->{'itemid'});
+				}elsif($item->{'itemtype'} eq "playlist") {
+					$itemObj = objectForId('playlist',$item->{'itemid'});
+				}
 
-		my @mixers = ();
-
-#		for my $import (keys %{$Imports}) {
-#			next if !$Imports->{$import}->{'mixer'};
-#			next if !$Imports->{$import}->{'use'};
-#
-#			if ($::VERSION ge '6.5') {
-#				if (eval {$import->mixable($item)}) {
-#					push @mixers, $import;
-#				}
-#			}else {
-#				push @mixers, $import;
-#			}
-#		}
-
-		my $itemObj = undef;
-		if($item->{'itemtype'} eq "track") {
-			$itemObj = objectForId('track',$item->{'itemid'});
-		}elsif($item->{'itemtype'} eq "album") {
-			$itemObj = objectForId('album',$item->{'itemid'});
-		}elsif($item->{'itemtype'} eq "artist") {
-			$itemObj = objectForId('artist',$item->{'itemid'});
-		}elsif($item->{'itemtype'} eq "year") {
-#			$itemObj = objectForId('year',$item->{'itemid'});
-		}elsif($item->{'itemtype'} eq "genre") {
-			$itemObj = objectForId('genre',$item->{'itemid'});
-		}elsif($item->{'itemtype'} eq "playlist") {
-			$itemObj = objectForId('playlist',$item->{'itemid'});
-		}else {
-			debugMsg("Can not create mix for item with itemtype=".$item->{'itemtype'}."\n");
-		}
-
-		if(defined($itemObj)) {
-			msg("CustomBrowse: Creating mix not supported yet\n"); 
+				if(defined($itemObj)) {
+					if(UNIVERSAL::can("$class","$function")) {
+						debugMsg("Calling ${class}->${function}\n");
+						no strict 'refs';
+						my $enabled = eval { $class->$function($itemObj) };
+						if ($@) {
+							debugMsg("Error calling ${class}->${function}: $@\n");
+						}
+						use strict 'refs';
+						if($enabled) {
+							return 1;
+						}
+					}else {
+						debugMsg("Function ${class}->${function} does not exist\n");
+					}
+				}
+			}
 		}
 	}else {
-		debugMsg("Can not play/add item with undefined itemtype\n");
-	}			
+		return 1;
+	}
+	return 0;
+}
+
+sub createMix {
+	my ($client,$item) = @_;
+	my @mixes = ();
+	if(defined($item->{'mix'})) {
+		if(ref($item->{'mix'}) eq 'ARRAY') {
+			my $customMixes = $item->{'mix'};
+			for my $mix (@$customMixes) {
+				if(defined($mix->{'mixtype'}) && defined($mix->{'mixdata'})) {
+					if($mix->{'mixtype'} eq 'allforcategory') {
+						foreach my $key (keys %$browseMixes) {
+							my $globalMix = $browseMixes->{$key};
+							if($globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+								if(checkMix($client, $globalMix, $item)) {
+									push @mixes,$globalMix;
+								}
+							}
+						}
+					}elsif(defined($mix->{'mixname'}))  {
+						if(checkMix($client, $mix, $item)) {
+							push @mixes,$mix;
+						}
+					}
+				}
+			}
+		}else {
+			my $mix = $item->{'mix'};
+			if(defined($mix->{'mixtype'}) && defined($mix->{'mixdata'})) {
+				if($mix->{'mixtype'} eq 'allforcategory') {
+					foreach my $key (keys %$browseMixes) {
+						my $globalMix = $browseMixes->{$key};
+						if($globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+							if(checkMix($client, $globalMix, $item)) {
+								push @mixes,$globalMix;
+							}
+						}
+					}
+				}elsif(defined($mix->{'mixname'}))  {
+					if(checkMix($client, $mix, $item)) {
+						push @mixes,$mix;
+					}
+				}
+			}
+		}
+	}elsif(defined($item->{'itemtype'})) {
+		foreach my $key (keys %$browseMixes) {
+			my $mix = $browseMixes->{$key};
+			if($mix->{'mixcategory'} eq $item->{'itemtype'}) {
+				if(checkMix($client, $mix, $item)) {
+					push @mixes,$mix;
+				}
+			}
+		}
+	}
+
+	for my $mix (@mixes) {
+		debugMsg("Got mix: ".$mix->{'mixname'}."\n");
+	}
+	if(scalar(@mixes)>0) {
+		my $params = {
+			'header'     => string('CREATE_MIX').' {count}',
+			'listRef'    => \@mixes,
+			'name'       => sub { return $_[1]->{'mixname'} },
+			'overlayRef' => sub { return [undef, Slim::Display::Display::symbol('rightarrow')] },
+			'item'       => $item,
+			'onPlay'     => sub { 
+						my ($client,$item) = @_;
+						executeMix($client,$item);
+					},
+			'onAdd'      => sub { 
+						my ($client,$item) = @_;
+						executeMix($client,$item,1);
+					},
+			'onRight'    => sub { 
+						my ($client,$item) = @_;
+						executeMix($client,$item,0);
+					}
+		};
+	
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', $params);
+	}else {
+		debugMsg("No mixes configured for this item\n");
+	}
+}
+
+sub executeMix {
+        my ($client, $mixer, $addOnly) = @_;
+
+	my $item = $client->param('item');
+	debugMsg("Creating mixer ".$mixer->{'mixname'}." for ".$item->{'itemname'}."\n");
+
+	my $parameters = getCustomBrowseProperties();
+	$parameters->{'itemid'} = $item->{'itemid'};
+	$parameters->{'itemname'} = $item->{'itemname'};
+	my $keywords = combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
+
+	if($mixer->{'mixtype'} eq 'sql') {
+		my %playItem = (
+			'playtype' => 'sql',
+			'playdata' => $mixer->{'mixdata'},
+			'itemname' => $mixer->{'mixname'},
+			'parameters' => $keywords
+		);
+		my $command = 'loadtracks';
+		if($addOnly) {
+			$command = 'addtracks';
+		}
+		playAddItem($client,undef,\%playItem,$command);
+		Slim::Buttons::Common::popModeRight($client);
+	}elsif($mixer->{'mixtype'} eq 'mode') {
+		my @params = split(/\|/,$mixer->{'mixdata'});
+		my $mode = shift(@params);
+		my %modeParameters = ();
+		foreach my $keyvalue (@params) {
+			if($keyvalue =~ /^([^=].*?)=(.*)/) {
+				my $name=$1;
+				my $value=$2;
+				if($name =~ /^([^\.].*?)\.(.*)/) {
+					if(!defined($modeParameters{$1})) {
+						my %hash = ();
+						$modeParameters{$1}=\%hash;
+					}
+					$modeParameters{$1}->{$2}=replaceParameters($value,$keywords);
+				}else {
+					$modeParameters{$name} = replaceParameters($value,$keywords);
+				}
+			}
+		}
+		Slim::Buttons::Common::pushModeLeft($client, $mode, \%modeParameters);
+	}elsif($mixer->{'mixtype'} eq 'function') {
+		if($mixer->{'mixdata'} =~ /^(.+)::([^:].*)$/) {
+			my $class = $1;
+			my $function = $2;
+			my $itemObj = undef;
+			my $itemObj = undef;
+			if($item->{'itemtype'} eq "track") {
+				$itemObj = objectForId('track',$item->{'itemid'});
+			}elsif($item->{'itemtype'} eq "album") {
+				$itemObj = objectForId('album',$item->{'itemid'});
+			}elsif($item->{'itemtype'} eq "artist") {
+				$itemObj = objectForId('artist',$item->{'itemid'});
+			}elsif($item->{'itemtype'} eq "year") {
+				if ($::VERSION ge '6.5') {
+					$itemObj = objectForId('year',$item->{'itemid'});
+				}else {
+					$itemObj = $item->{'itemid'};
+				}
+			}elsif($item->{'itemtype'} eq "genre") {
+				$itemObj = objectForId('genre',$item->{'itemid'});
+			}elsif($item->{'itemtype'} eq "playlist") {
+				$itemObj = objectForId('playlist',$item->{'itemid'});
+			}
+				if(defined($itemObj)) {
+				if(UNIVERSAL::can("$class","$function")) {
+					debugMsg("Calling ${class}::${function}\n");
+					no strict 'refs';
+					eval { &{"${class}::${function}"}($client,$itemObj,$addOnly) };
+					if ($@) {
+						debugMsg("Error calling ${class}::${function}: $@\n");
+					}
+					use strict 'refs';
+				}else {
+					debugMsg("Function ${class}::${function} does not exist\n");
+				}
+			}else {
+				debugMsg("Item for itemtype ".$item->{'itemtype'}." could not be found\n");
+			}
+		}
+	}
+}
+
+sub musicMagicMixable {
+	my $class = shift;
+	my $item  = shift;
+
+	if ($::VERSION ge '6.5') {
+		if (blessed($item) && $item->can('musicmagic_mixable')) {
+			return $item->musicmagic_mixable;
+		}
+	}
+}
+
+sub musicMagicMix {
+	my $client = shift;
+	my $item = shift;
+	my $addOnly = shift;
+
+	my $tracks = undef;
+	if(ref($item) eq 'Slim::Schema::Album') {
+		my $trackObj = $item->tracks->next;
+		if($trackObj) {
+			$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$trackObj->path,'album') };
+		}
+	}elsif(ref($item) eq 'Slim::Schema::Track') {
+		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->path,'track') };
+	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
+		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'artist') };
+	}elsif(ref($item) eq 'Slim::Schema::Genre') {
+		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'genre') };
+	}elsif(ref($item) eq 'Slim::Schema::Year') {
+		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->id,'year') };
+	}
+	if ($@) {
+		debugMsg("Error calling MusicMagic plugin: $@\n");
+	}
+	if($tracks && scalar(@$tracks)>0) {
+		my %playItem = (
+			'itemname' => $mixer->{'mixname'},
+		);
+		my $command = 'loadtracks';
+		if($addOnly) {
+			$command = 'addtracks';
+		}
+		playAddItem($client,$tracks,\%playItem,$command);
+		Slim::Buttons::Common::popModeRight($client);
+	}else {
+		my $line2 = $client->doubleString('PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS');
+		if ($::VERSION ge '6.5') {
+			$client->showBriefly({
+				'line'    => [ undef, $line2 ],
+				'overlay' => [ undef, $client->symbols('notesymbol') ],
+			});
+		}else {
+			$client->showBriefly({
+				'line1' => undef,
+				'line2' => $line2,
+				'overlay2' => $client->symbols('notesymbol')
+			});
+		}
+	}
 }
 
 sub playAddItem {
@@ -2158,6 +2427,71 @@ sub parseMenuContent {
         }
 	return $errorMsg;
 }
+
+sub parseMixContent {
+	my $client = shift;
+	my $item = shift;
+	my $content = shift;
+	my $mixes = shift;
+	my $defaultMix = shift;
+
+	my $mixId = $item;
+	$mixId =~ s/\.cb\.mix\.xml//;
+	my $errorMsg = undef;
+        if ( $content ) {
+	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+            my $xml = eval { 	XMLin($content, forcearray => ["item"], keyattr => []) };
+            #debugMsg(Dumper($xml));
+            if ($@) {
+		    $errorMsg = "$@";
+                    errorMsg("CustomBrowse: Failed to parse mix configuration because:\n$@\n");
+            }else {
+		my $include = isMenuEnabled($client,$xml);
+
+		my $disabled = 0;
+		if(defined($xml->{'mix'})) {
+			$xml->{'mix'}->{'id'} = $mixId;
+		}
+		if(defined($xml->{'mix'}) && defined($xml->{'mix'}->{'id'})) {
+			my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_mix_'.escape($xml->{'mix'}->{'id'}).'_enabled');
+			if(defined($enabled) && !$enabled) {
+				$disabled = 1;
+			}elsif(!defined($enabled)) {
+				if(defined($xml->{'defaultdisabled'}) && $xml->{'defaultdisabled'}) {
+					$disabled = 1;
+				}
+			}
+		}
+		
+		if($include && !$disabled) {
+			$xml->{'mix'}->{'enabled'}=1;
+			if($defaultMix) {
+				$xml->{'mix'}->{'defaultmix'} = 1;
+			}
+	                $mixes->{$item} = $xml->{'mix'};
+		}elsif($include && $disabled) {
+			$xml->{'mix'}->{'enabled'}=0;
+			if($defaultMix) {
+				$xml->{'mix'}->{'defaultmix'} = 1;
+			}
+	                $mixes->{$item} = $xml->{'mix'};
+		}
+            }
+    
+            # Release content
+            undef $content;
+        }else {
+            if ($@) {
+                    $errorMsg = "Incorrect information in mix data: $@";
+                    errorMsg("CustomBrowse: Unable to read mix configuration:\n$@\n");
+            }else {
+		$errorMsg = "Incorrect information in mix data";
+                errorMsg("CustomBrowse: Unable to to read mix configuration\n");
+            }
+        }
+	return $errorMsg;
+}
+
 sub parseTemplateContent {
 	my $client = shift;
 	my $key = shift;
@@ -2242,6 +2576,7 @@ sub readBrowseConfiguration {
     debugMsg("Searching for custom browse configuration in: $browseDir\n");
     
     my %localBrowseMenus = ();
+    my %localBrowseMixes = ();
     my @pluginDirs = ();
     if ($::VERSION ge '6.5') {
         @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
@@ -2249,13 +2584,18 @@ sub readBrowseConfiguration {
         @pluginDirs = catdir($Bin, "Plugins");
     }
     for my $plugindir (@pluginDirs) {
-	next unless -d catdir($plugindir,"CustomBrowse","Menus");
-	readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus);
+	if( -d catdir($plugindir,"CustomBrowse","Menus")) {
+		readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus);
+	}
+	if( -d catdir($plugindir,"CustomBrowse","Mixes")) {
+		readMixConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Mixes"),\%localBrowseMixes);
+	}
     }
     if (!defined $browseDir || !-d $browseDir) {
             debugMsg("Skipping custom browse configuration scan - directory is undefined\n");
     }else {
 	    readBrowseConfigurationFromDir($client,0,$browseDir,\%localBrowseMenus);
+	    readMixConfigurationFromDir($client,0,$browseDir,\%localBrowseMixes);
     }
     
     my @menus = ();
@@ -2263,6 +2603,7 @@ sub readBrowseConfiguration {
     	copyKeywords(undef,$localBrowseMenus{$menu});
     }
     $browseMenus = \%localBrowseMenus;
+    $browseMixes = \%localBrowseMixes;
 }
 
 sub readBrowseConfigurationFromDir {
@@ -2291,6 +2632,37 @@ sub readBrowseConfigurationFromDir {
                     errorMsg("CustomBrowse: Unable to open browse configuration file: $path\nBecause of:\n$@\n");
             }else {
                 errorMsg("CustomBrowse: Unable to open browse configuration file: $path\n");
+            }
+        }
+    }
+}
+
+sub readMixConfigurationFromDir {
+    my $client = shift;
+    my $defaultMenu = shift;
+    my $browseDir = shift;
+    my $localBrowseMenus = shift;
+    debugMsg("Loading mix configuration from: $browseDir\n");
+
+    my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"cb.mix.xml");
+    for my $item (@dircontents) {
+
+	next if -d catdir($browseDir, $item);
+
+        my $path = catfile($browseDir, $item);
+
+        # read_file from File::Slurp
+        my $content = eval { read_file($path) };
+        if ( $content ) {
+		my $errorMsg = parseMixContent($client,$item,$content,$localBrowseMenus,$defaultMenu);
+		if($errorMsg) {
+	                errorMsg("CustomBrowse: Unable to open mix configuration file: $path\n$errorMsg\n");
+		}
+        }else {
+            if ($@) {
+                    errorMsg("CustomBrowse: Unable to open mix configuration file: $path\nBecause of:\n$@\n");
+            }else {
+                errorMsg("CustomBrowse: Unable to open mix configuration file: $path\n");
             }
         }
     }
@@ -2398,6 +2770,8 @@ sub objectForId {
 			$type = 'Track';
 		}elsif($type eq 'playlist') {
 			$type = 'Playlist';
+		}elsif($type eq 'year') {
+			$type = 'Year';
 		}
 		return Slim::Schema->resultset($type)->find($id);
 	}else {
@@ -2532,6 +2906,9 @@ PLUGIN_CUSTOMBROWSE_REMOVE_MENU_QUESTION
 
 PLUGIN_CUSTOMBROWSE_REMOVE_MENU
 	EN	Delete
+
+PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS
+	EN	Unable to create mix
 
 EOF
 
