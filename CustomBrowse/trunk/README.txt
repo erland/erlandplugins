@@ -250,6 +250,63 @@ playdata = Contains custom data for the playtype element. This element is option
                         should be played. The SQL statement should return two columns the track
                         identifier and the track title.
 
+mix = A main element for a mix definition, can contain sub elemetnts: mixtype, mixdata, mixcategory, 
+      mixchecktype, mixcheckdata
+
+mixtype = Type of mix, allowed values:
+
+          allforcategory = All globaly defined mixes for the category specified in mixdata shall be included here 
+          sql	         = Mix is defined by a SQL statement
+          mode           = Mix is defined by a mode
+          function       = Mix is defined by a function
+
+mixcategory = Only valid for globaly defined mixes.
+              Defines the category of the mix, menu items without any local defined mix elements will include
+              the categories with the value of itemtype. This also means that its preferable if the
+              mixcategory element is set to one of:
+
+              album
+              artist
+              playlist
+              year
+              track
+              genre
+
+mixdata = Contains custom data for the mixtype element. The allowed values are:
+          
+          mixtype          mixdata
+          -------          -------
+          allforcategory   The name of the category to include global mixes for
+
+          sql              An SQL statement returning one column with the id of the object to include in
+                           the mix
+
+          mode             The name of the mode to enter when mix is launched
+
+          function         The complete name of the function to execute when the mix is launched.
+                           The following parameters will be sent to the function:
+                           $client - The client from where the mix was started
+                           $item - The object which were selected when the mix was started
+                           $addOnly - 1 if add was pressed, else 0
+
+mixchecktype = Type of method to check if mix should be available, can be one of:
+               
+               sql      = An SQL statement is execuced and if it returns any rows the mix is enabled. The SQL
+                          is defined by mixcheckdata element or by mixdata if mixcheckdata does not exist.
+               function = A function is executed and if it returns non 0 the mix is enabled
+
+mixcheckdata = Contains custom data for the mixchecktype element. The allowed values are:
+         
+               mixchecktype     mixcheckdata
+               ------------     ------------
+               sql              An SQL statement returning a single column, it it returns one or several rows
+                                the mix is enabled. 
+
+               function         The complete name of the function to execute, if it returns non 0 the mix is enabled.
+                                The following parameters will be sent to the function:
+                                $class - The class in which the function exists
+                                $item - The object which were selected when the mix requested
+
 Keywords
 --------
 Currently the following keywords are supported in those element that supports keyword replacment.
