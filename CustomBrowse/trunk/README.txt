@@ -47,6 +47,11 @@ interface. The easiest way to learn how to define a custom menu
 is probably to look at the samples that is delived with the plugin and
 are stored in the CustomBrowse/Menus directory. Some definitions and
 samples of the format can be found below.
+It is also possible to create globaly available mixes accessible by holding play down on on
+an item. These has to be put in a *.cb.mix.xml file and stored in the same directory as
+the menu definitions. You can look at the CustomBrowse/Mixes directory in the installed
+plugin to see some samples. Mixes can also be defined in a specific menu as described below
+for the "mix" element.
 
 The following example shows how an "Albums" menu could be
 defined.
