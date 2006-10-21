@@ -1690,7 +1690,19 @@ sub checkDefaults {
 		my @properties = ();
 		push @properties, 'libraryDir='.Slim::Utils::Prefs::get('audiodir');
 		push @properties, 'libraryAudioDirUrl='.Slim::Utils::Misc::fileURLFromPath(Slim::Utils::Prefs::get('audiodir'));
+		push @properties, 'mixsize=20';
 		Slim::Utils::Prefs::set('plugin_custombrowse_properties', \@properties);
+	}else {
+	        my @properties = Slim::Utils::Prefs::getArray('plugin_custombrowse_properties');
+		my $mixsize = undef;
+		for my $property (@properties) {
+			if($property =~ /^mixsize=/) {
+				$mixsize = 1;
+			}
+		}
+		if(!$mixsize) {
+			Slim::Utils::Prefs::push('plugin_custombrowse_properties', 'mixsize=20');
+		}
 	}
 }
 

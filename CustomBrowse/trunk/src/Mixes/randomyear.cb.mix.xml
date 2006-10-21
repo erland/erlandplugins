@@ -5,6 +5,6 @@
 		<mixname>Random</mixname>
 		<mixcategory>year</mixcategory>
 		<mixtype>sql</mixtype>
-		<mixdata>select tracks.id,tracks.title from tracks where tracks.year={itemid} order by rand() limit 20</mixdata>
+		<mixdata>select tracks.id,tracks.title from tracks where tracks.year={itemid} order by rand() limit {custombrowse.mixsize}</mixdata>
 	</mix>
 </custombrowse>
