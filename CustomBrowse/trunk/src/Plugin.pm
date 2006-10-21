@@ -113,7 +113,7 @@ sub setMode {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
-        readBrowseConfiguration($client);
+        #readBrowseConfiguration($client);
         my $params = getMenu($client,undef);
 	if(defined($params)) {
 		if(defined($params->{'useMode'})) {
@@ -647,7 +647,7 @@ sub createMix {
 					if($mix->{'mixtype'} eq 'allforcategory') {
 						foreach my $key (keys %$browseMixes) {
 							my $globalMix = $browseMixes->{$key};
-							if($globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+							if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
 								if(checkMix($client, $globalMix, $item)) {
 									push @mixes,$globalMix;
 								}
@@ -666,7 +666,7 @@ sub createMix {
 				if($mix->{'mixtype'} eq 'allforcategory') {
 					foreach my $key (keys %$browseMixes) {
 						my $globalMix = $browseMixes->{$key};
-						if($globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+						if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
 							if(checkMix($client, $globalMix, $item)) {
 								push @mixes,$globalMix;
 							}
@@ -682,7 +682,7 @@ sub createMix {
 	}elsif(defined($item->{'itemtype'})) {
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
-			if($mix->{'mixcategory'} eq $item->{'itemtype'}) {
+			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $item->{'itemtype'}) {
 				if(checkMix($client, $mix, $item)) {
 					push @mixes,$mix;
 				}
@@ -787,7 +787,7 @@ sub executeMix {
 			}elsif($item->{'itemtype'} eq "playlist") {
 				$itemObj = objectForId('playlist',$item->{'itemid'});
 			}
-				if(defined($itemObj)) {
+			if(defined($itemObj)) {
 				if(UNIVERSAL::can("$class","$function")) {
 					debugMsg("Calling ${class}::${function}\n");
 					no strict 'refs';
@@ -810,9 +810,16 @@ sub musicMagicMixable {
 	my $class = shift;
 	my $item  = shift;
 
-	if ($::VERSION ge '6.5') {
-		if (blessed($item) && $item->can('musicmagic_mixable')) {
-			return $item->musicmagic_mixable;
+	if(Slim::Utils::Prefs::get('musicmagic')) {
+		if(UNIVERSAL::can("Plugins::MusicMagic::Plugin","mixable")) {
+			debugMsg("Calling Plugins::MusicMagic::Plugin->mixable\n");
+			my $enabled = eval { Plugins::MusicMagic::Plugin->mixable($item) };
+			if ($@) {
+				debugMsg("Error calling Plugins::MusicMagic::Plugin->mixable: $@\n");
+			}
+			if($enabled) {
+				return 1;
+			}
 		}
 	}
 }
@@ -822,33 +829,47 @@ sub musicMagicMix {
 	my $item = shift;
 	my $addOnly = shift;
 
-	my $tracks = undef;
+	my $trackUrls = undef;
 	if(ref($item) eq 'Slim::Schema::Album') {
 		my $trackObj = $item->tracks->next;
 		if($trackObj) {
-			$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$trackObj->path,'album') };
+			$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$trackObj->path,'album') };
 		}
 	}elsif(ref($item) eq 'Slim::Schema::Track') {
-		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->path,'track') };
+		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->path,'track') };
 	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
-		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'artist') };
+		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'artist') };
 	}elsif(ref($item) eq 'Slim::Schema::Genre') {
-		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'genre') };
+		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'genre') };
 	}elsif(ref($item) eq 'Slim::Schema::Year') {
-		$tracks = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->id,'year') };
+		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->id,'year') };
 	}
 	if ($@) {
 		debugMsg("Error calling MusicMagic plugin: $@\n");
 	}
-	if($tracks && scalar(@$tracks)>0) {
+	if($trackUrls && scalar(@$trackUrls)>0) {
+		debugMsg("Got mix with ".scalar(@$trackUrls)." tracks\n");
 		my %playItem = (
-			'itemname' => $mixer->{'mixname'},
+			'playtype' => 'all',
+			'itemname' => $mixer->{'mixname'}
 		);
 		my $command = 'loadtracks';
 		if($addOnly) {
 			$command = 'addtracks';
 		}
-		playAddItem($client,$tracks,\%playItem,$command);
+		my @tracks = Slim::Schema->rs('Track')->search({ 'url' => $trackUrls });
+
+		my @trackItems = ();
+		for my $track (@tracks) {
+			my %trackItem = (
+				'itemid' => $track->id,
+				'itemurl' => $track->url,
+				'itemname' => $track->title,
+				'itemtype' => 'track'
+			);
+			push @trackItems,\%trackItem;
+		}
+		playAddItem($client,\@trackItems,\%playItem,$command);
 		Slim::Buttons::Common::popModeRight($client);
 	}else {
 		my $line2 = $client->doubleString('PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS');
@@ -1752,7 +1773,7 @@ sub webPages {
         }
 	if(defined($value)) {
 		if ($::VERSION ge '6.5') {
-			readBrowseConfiguration();
+			#readBrowseConfiguration();
 			addWebMenus($value);
 			my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
 			if($menuName) {
@@ -1806,7 +1827,7 @@ sub addWebMenus {
 sub handleWebList {
         my ($client, $params) = @_;
 
-	if(!defined($params->{'hierarchy'})) {
+	if(defined($params->{'refresh'})) {
 		readBrowseConfiguration($client);
 	}
 	my $items = getPageItemsForContext($client,$params,$browseMenus);
@@ -2267,6 +2288,7 @@ sub handleWebSelectMenus {
 	readBrowseConfiguration($client);
         # Pass on the current pref values and now playing info
         $params->{'pluginCustomBrowseMenus'} = $browseMenus;
+        $params->{'pluginCustomBrowseMixes'} = $browseMixes;
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
@@ -2296,6 +2318,16 @@ sub handleWebSaveSelectMenus {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
 			$browseMenus->{$menu}->{'enabled'}=0;
 			$browseMenus->{$menu}->{'enabledbrowse'}=0;
+                }
+        }
+        foreach my $mix (keys %$browseMixes) {
+                my $mixid = "mix_".escape($browseMixes->{$mix}->{'id'});
+                if($params->{$mixid}) {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$mixid.'_enabled',1);
+			$browseMixes->{$mix}->{'enabled'}=1;
+                }else {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$mixid.'_enabled',0);
+			$browseMixes->{$mix}->{'enabled'}=0;
                 }
         }
         my $value = 'plugins/CustomBrowse/custombrowse_list.html';
@@ -2866,7 +2898,7 @@ SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME
 	EN	Menu name (Slimserver 6.5 only, requires restart)
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS
-	EN	Enable/Disable menus
+	EN	Enable/Disable menus/mixers
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE
 	EN	Select enabled menus
@@ -2879,6 +2911,15 @@ PLUGIN_CUSTOMBROWSE_SELECT_MENUS_NONE
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_ALL
 	EN	All Menus
+
+PLUGIN_CUSTOMBROWSE_SELECT_MIXES_TITLE
+	EN	Select enabled mixers
+
+PLUGIN_CUSTOMBROWSE_SELECT_MIXES_NONE
+	EN	No Mixers
+
+PLUGIN_CUSTOMBROWSE_SELECT_MIXES_ALL
+	EN	All Mixers
 
 PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND
 	EN	No matching songs, albums or artists were found
@@ -2910,6 +2951,8 @@ PLUGIN_CUSTOMBROWSE_REMOVE_MENU
 PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS
 	EN	Unable to create mix
 
+PLUGIN_CUSTOMBROWSE_REFRESH
+	EN	Refresh
 EOF
 
 }
