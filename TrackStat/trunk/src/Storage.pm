@@ -1222,7 +1222,7 @@ sub purgeTracks {
 	my $count;
 	debugMsg("Starting to remove statistic data from track_statistics which no longer exists\n");
 	# Remove all tracks from track_statistics if they don't exist in tracks table
-	$sql = "DELETE from track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
+	$sql = "DELETE from track_statistics USING track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1244,7 +1244,7 @@ sub purgeTracks {
 
 	debugMsg("Starting to remove statistic data from track_history which no longer exists\n");
 	# Remove all tracks from track_history if they don't exist in tracks table
-	$sql = "DELETE FROM track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
+	$sql = "DELETE FROM track_history USING track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
