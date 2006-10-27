@@ -3044,7 +3044,10 @@ sub stopTimingSong($$)
 			my $minPlayedTime = Slim::Utils::Prefs::get("plugin_trackstat_min_song_length");
 			if($totalElapsedTimeDuringPlay>=$minPlayedTime) {
 				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename);
-				my $rating = $trackHandle->rating;
+				my $rating = undef;
+				if(defined($trackHandle)) {
+					$rating = $trackHandle->rating;
+				}
 				if(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated")) {
 					if(!$rating) {
 						debugMsg("Setting default rating 3 on unrated track\n");
@@ -3061,11 +3064,11 @@ sub stopTimingSong($$)
 					if($totalElapsedTimeDuringPlay>=$increase && $rating<100) {
 						debugMsg("Increasing rating, played $totalElapsedTimeDuringPlay of required $increase seconds\n");
 						$rating = $rating + 1;
-						rateSong($client,$trackHandle->url,$rating);
+						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
 					}elsif($totalElapsedTimeDuringPlay<$decrease && $rating>0) {
 						debugMsg("Decreasing rating, played $totalElapsedTimeDuringPlay of required $decrease seconds\n");
 						$rating = $rating - 1;
-						rateSong($client,$trackHandle->url,$rating);
+						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
 					}else {
 						debugMsg("Do not adjust rating, only played $totalElapsedTimeDuringPlay of required $increase seconds\n");
 					}
