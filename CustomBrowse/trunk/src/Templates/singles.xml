@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
+	<database>mysql</database>
 	<template>
 		<name>Singles</name>
 		<description>Singles menu that lists singles. It detect all tracks without any ALBUM tag as a single.</description>

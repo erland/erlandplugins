@@ -8,6 +8,19 @@
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
+			<playtype>sql</playtype>
+			<playdata>
+				select tracks.id,tracks.title from contributor_track,albums,tracks
+				where
+					tracks.id=contributor_track.track and
+					contributor_track.role in (1,5) and
+					contributor_track.contributor={artist} and
+					tracks.album=albums.id and
+					albums.title='No Album' and
+					tracks.audio=1
+				group by tracks.id
+				order by rand()
+			</playdata>
 	        	<menudata>
 				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks,albums
                                 where
