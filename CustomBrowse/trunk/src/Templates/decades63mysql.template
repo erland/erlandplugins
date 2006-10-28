@@ -3,6 +3,8 @@
 	<maxslimserverversion>6.4</maxslimserverversion>
         <database>mysql</database>
 	<menu>
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
 		<menu>
 			<id>year</id>

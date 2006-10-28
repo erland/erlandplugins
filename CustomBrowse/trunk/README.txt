@@ -118,6 +118,14 @@ id = Identification for a specific menu, must be uniqe on the same level.
      The id element is mandatory for all menus besides the top menu. The top menu will
      allways get id equal to the filename.
 
+includedclients = A comma separated list of players that the menu shall be included on.
+                  This element is optional and if not specified the menu will be included
+                  on all players, see also excludedclients element below.
+
+excludedclients = A comma separated list of players that the menu shall be excluded from.
+                  This element is optional and if not specified the menu will be included
+                  on all players, see also includedclients element above.
+
 menuname = Title of the menu, this element is required on the top menu level, its
            never used for dynamic menus in the player interface. In the web interface
            this value is used for the navigation links at the top. The menuname element 

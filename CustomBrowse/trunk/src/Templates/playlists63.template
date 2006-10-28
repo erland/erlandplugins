@@ -2,6 +2,8 @@
 <custombrowse>
 	<maxslimserverversion>6.4</maxslimserverversion>
 	<menu>
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
 		<menu>
 			<id>playlist</id>

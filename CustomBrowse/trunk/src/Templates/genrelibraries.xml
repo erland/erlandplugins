@@ -7,6 +7,8 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Genre Libraries"/>
 		<parameter type="sqlcheckboxes" id="includedgenres" name="Include genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
 		<parameter type="sqlcheckboxes" id="excludedgenres" name="Exclude genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
+		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
+		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>
 </custombrowse>
 

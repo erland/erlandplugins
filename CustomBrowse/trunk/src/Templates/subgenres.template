@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<menu>
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
 		<menu>
 			<id>genre</id>

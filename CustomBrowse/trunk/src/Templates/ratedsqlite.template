@@ -3,6 +3,8 @@
 	<requireplugins>TrackStat</requireplugins>
 	<database>SQLite</database>
 	<menu>
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
 		<menu>
 			<id>rating</id>

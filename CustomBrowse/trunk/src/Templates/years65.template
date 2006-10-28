@@ -2,6 +2,8 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
 		<menu>
 			<id>year</id>

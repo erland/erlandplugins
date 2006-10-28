@@ -125,7 +125,37 @@ sub setMode {
 	        $client->bumpRight();
 	}
 }
+sub isMenuEnabledForClient {
+	my $client = shift;
+	my $menu = shift;
+	
+	if(defined($menu->{'includedclients'})) {
+		if(defined($client)) {
+			my @clients = split(/,/,$menu->{'includedclients'});
+			for my $clientName (@clients) {
+				if($client->name eq $clientName) {
+					return 1;
+				}
+			}
+		}
+		return 0;
+	}elsif(defined($menu->{'excludedclients'})) {
+		if(defined($client)) {
+			my @clients = split(/,/,$menu->{'excludedclients'});
+			for my $clientName (@clients) {
+				if($client->name eq $clientName) {
+					return 0;
+				}
+			}
+		}
+		return 1;
+	}else {
+		return 1;
+	}
+}
+
 sub getMenuItems {
+    my $client = shift;
     my $item = shift;
     my $option = shift;
 
@@ -137,7 +167,9 @@ sub getMenuItems {
             	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
             }
             if($browseMenus->{$menu}->{'enabled'}) {
-	            push @listRef,$browseMenus->{$menu};
+                    if(isMenuEnabledForClient($client,$browseMenus->{$menu})) {
+		            push @listRef,$browseMenus->{$menu};
+                    }		
             }
         }
 	@listRef = sort { $a->{'menuname'} cmp $b->{'menuname'} } @listRef;
@@ -145,10 +177,14 @@ sub getMenuItems {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {
 		foreach my $it (@{$item->{'menu'}}) {
-			push @menus,$it;
+			if(isMenuEnabledForClient($client,$it)) {
+				push @menus,$it;
+			}
 		}
 	}else {
-		push @menus,$item->{'menu'};
+		if(isMenuEnabledForClient($client,$item->{'menu'})) {
+			push @menus,$item->{'menu'};
+		}
 	}
 	foreach my $menu (@menus) {
 		if(!defined($menu->{'menutype'})) {
@@ -465,7 +501,7 @@ sub getMenu {
     }
 
     my @listRef = undef;
-    my $items = getMenuItems($item);
+    my $items = getMenuItems($client,$item);
     if(ref($items) eq 'ARRAY') {
     	@listRef = @$items;
     }else {
@@ -950,7 +986,7 @@ sub playAddItem {
 				debugMsg("Execute $command on ".$it->{'itemname'}."\n");
 				$request = $client->execute(['playlist', $command, sprintf('%s=%d', getLinkAttribute('playlist'),$it->{'itemid'})]);
 			}else {
-				my $subItems = getMenuItems($it);
+				my $subItems = getMenuItems($client,$it);
 				if(ref($subItems) eq 'ARRAY') {
 					for my $subitem (@$subItems) {
 						playAddItem($client,$subItems,$subitem,$command,undef,1);
@@ -966,7 +1002,7 @@ sub playAddItem {
 				$request->source('PLUGIN_CUSTOMBROWSE');
 			}
 		}else {
-			my $subItems = getMenuItems($it);
+			my $subItems = getMenuItems($client,$it);
 			if(ref($subItems) eq 'ARRAY') {
 				for my $subitem (@$subItems) {
 					playAddItem($client,$subItems,$subitem,$command,undef,1);
@@ -1301,7 +1337,7 @@ sub getPageItemsForContext {
 		}
 	}
 	my %result = ();
-	my $items = getMenuItems($item,$params->{'option'});
+	my $items = getMenuItems($client,$item,$params->{'option'});
 	if(ref($items) eq 'ARRAY') {
 		my @resultItems = ();
 		my %pagebar = ();
