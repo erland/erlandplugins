@@ -9,7 +9,7 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
+				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 				where
 					tracks.id=contributor_track.track and
 					contributor_track.contributor=contributors.id and
@@ -19,12 +19,22 @@
 					genre_track.genre=genres.id and
 					genres.name in ([% includedgenres %])
 					[%- END %]
+					[%- IF includedcomment %]
+					and tracks.id=comments.track and
+					comments.value='[% includedcomment %]'
+					[%- END %]
 					[%- IF excludedgenres %]
 					and not exists(select * from genre_track,genres 
 						where 
 							genre_track.track=tracks.id and
 							genre_track.genre=genres.id and
 							genres.name in ([% excludedgenres %]))
+					[%- END %]
+					[%- IF excludedcomment %]
+					and not exists(select * from comments 
+						where 
+							comments.track=tracks.id and
+							comments.value='[% excludedcomment %]')
 					[%- END %]
 				group by contributors.id
 				order by contributors.namesort
@@ -48,7 +58,7 @@
                                         <keyword name="orderby" value="albums.titlesort asc"/>
                                 </option>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %]
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 					where
 						tracks.id=contributor_track.track and
 						contributor_track.role in (1,5) and
@@ -58,6 +68,10 @@
 						genre_track.genre=genres.id and
 						genres.name in ([% includedgenres %])
 						[%- END %]
+						[%- IF includedcomment %]
+						and tracks.id=comments.track and
+						comments.value='[% includedcomment %]'
+						[%- END %]
 						and albums.id=tracks.album
 						[%- IF excludedgenres %]
 						and not exists(select * from genre_track,genres 
@@ -65,6 +79,12 @@
 								genre_track.track=tracks.id and
 								genre_track.genre=genres.id and
 								genres.name in ([% excludedgenres %]))
+						[%- END %]
+						[%- IF excludedcomment %]
+						and not exists(select * from comments 
+							where 
+								comments.track=tracks.id and
+								comments.value='[% excludedcomment %]')
 						[%- END %]
 					group by albums.id
 					order by {orderby}
@@ -76,7 +96,7 @@
 					<playtype>all</playtype>
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %]
+						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 						where
 							tracks.id=contributor_track.track and
 							contributor_track.role in (1,5) and
@@ -86,6 +106,10 @@
 							genre_track.genre=genres.id and
 							genres.name in ([% includedgenres %])
 							[%- END %]
+							[%- IF includedcomment %]
+							and tracks.id=comments.track and
+							comments.value='[% includedcomment %]'
+							[%- END %]
 							and tracks.album={album}
 							[%- IF excludedgenres %]
 							and not exists(select * from genre_track,genres 
@@ -93,6 +117,12 @@
 									genre_track.track=tracks.id and
 									genre_track.genre=genres.id and
 									genres.name in ([% excludedgenres %]))
+							[%- END %]
+							[%- IF excludedcomment %]
+							and not exists(select * from comments 
+								where 
+									comments.track=tracks.id and
+									comments.value='[% excludedcomment %]')
 							[%- END %]
 						group by tracks.id
 						order by tracks.tracknum asc, tracks.titlesort asc
