@@ -553,6 +553,7 @@ sub getTopRatedHistoryAlbumsWeb {
 sub getTopRatedHistoryAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
+	$limit = undef;
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
@@ -614,6 +615,7 @@ sub getTopRatedHistoryArtistTracks {
 	my $beforeAfter = shift;
 	my $beforeAfterTime = shift;
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
+	$limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
 	my $sql;
 	if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks join track_history on tracks.url=track_history.url join contributor_track on tracks.id=contributor_track.track join contributors on contributor_track.contributor=contributors.id join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by contributors.id order by avgrating desc,sumcount desc,$orderBy limit $listLength";

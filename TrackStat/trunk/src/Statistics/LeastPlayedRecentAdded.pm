@@ -288,6 +288,7 @@ sub getLeastPlayedRecentAddedAlbumsWeb {
 sub getLeastPlayedRecentAddedAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
+	$limit = undef;
 	my $recentaddedcmp = shift;
 	if(!defined($recentaddedcmp)) {
 		$recentaddedcmp = '>';

@@ -303,6 +303,7 @@ sub getMostPlayedRecentAddedAlbumsWeb {
 sub getMostPlayedRecentAddedAlbumTracks {
 	my $listLength = shift;
 	my $limit = shift;
+	$limit = undef;
 	my $recentaddedcmp = shift;
 	if(!defined($recentaddedcmp)) {
 		$recentaddedcmp = '>';
@@ -514,7 +515,7 @@ sub getMostPlayedNotRecentAddedAlbumsWeb {
 
 sub getMostPlayedNotRecentAddedAlbumTracks {
 	my $listLength = shift;
-	my $limit = undef;
+	my $limit = shift;
 	return getMostPlayedRecentAddedAlbumTracks($listLength,$limit,'<');
 }
 
