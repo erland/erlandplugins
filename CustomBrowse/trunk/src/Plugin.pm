@@ -2788,7 +2788,7 @@ sub validateTrueFalseWrapper {
 
 sub validateProperty {
 	my $arg = shift;
-	if($arg eq '' || $arg =~ /^[a-zA-Z0-9]+\s*=\s*.+$/) {
+	if($arg eq '' || $arg =~ /^[a-zA-Z0-9_]+\s*=\s*.+$/) {
 		return $arg;
 	}else {
 		return undef;
