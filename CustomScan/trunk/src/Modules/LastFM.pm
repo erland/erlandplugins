@@ -69,15 +69,17 @@ sub scanArtist {
 		#msg("Got xml:\n".Dumper($xml)."\n");
 		my $similarartists = $xml->{'artist'};
 		if($similarartists) {
-			for my $similarartist (@$similarartists) {
-				if(ref($similarartist) eq 'HASH') {
-					if($similarartist->{'match'}>$similarArtistLimit) {
-						my %item = (
-							'name' => 'similarartist',
-							'value' => $similarartist->{'name'}
-						);
-						push @result,\%item;
-						#msg("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
+			if(ref($similarartists) eq 'ARRAY') {
+				for my $similarartist (@$similarartists) {
+					if(ref($similarartist) eq 'HASH') {
+						if($similarartist->{'match'}>$similarArtistLimit) {
+							my %item = (
+								'name' => 'similarartist',
+								'value' => $similarartist->{'name'}
+							);
+							push @result,\%item;
+							#msg("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
+						}
 					}
 				}
 			}
