@@ -49,11 +49,22 @@ sub scanTrack {
 
 			for my $tag (keys %$tags) {
 				if($customTagsHash{$tag}) {
-					my %item = (
-						'name' => $tag,
-						'value' => $tags->{$tag}
-					);
-					push @result,\%item;
+					if(ref($tags->{$tag}) eq 'ARRAY') {
+						my $valueArray = $tags->{$tag};
+						for my $value (@$valueArray) {
+							my %item = (
+								'name' => $tag,
+								'value' => $value
+							);
+							push @result,\%item;
+						}
+					}else {
+						my %item = (
+							'name' => $tag,
+							'value' => $tags->{$tag}
+						);
+						push @result,\%item;
+					}
 				}
 			}
 		}
