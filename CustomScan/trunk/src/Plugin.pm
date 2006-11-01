@@ -31,6 +31,7 @@ use POSIX qw(ceil);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
+use Plugins::CustomScan::Time::Stopwatch;
 
 my $albums = ();
 my $artists = ();
