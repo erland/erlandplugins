@@ -1009,6 +1009,31 @@ sub refreshData
 	$timeMeasure->clear();
 
 	$timeMeasure->start();
+	debugMsg("Starting to update musicbrainz id's in custom scan artist data based on names\n");
+	# Now lets set all musicbrainz id's not already set
+	$sql = "UPDATE contributors,customscan_contributor_attributes SET customscan_contributor_attributes.musicbrainz_id=contributors.musicbrainz_id where contributors.name=customscan_contributor_attributes.name and contributors.musicbrainz_id like '%-%' and customscan_contributor_attributes.musicbrainz_id is null";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	debugMsg("Finished updating musicbrainz id's in custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+	$timeMeasure->clear();
+
+	$timeMeasure->start();
 	debugMsg("Starting to update custom scan artist data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
 	$sql = "UPDATE contributors,customscan_contributor_attributes SET customscan_contributor_attributes.name=contributors.name, customscan_contributor_attributes.contributor=contributors.id where contributors.musicbrainz_id is not null and contributors.musicbrainz_id=customscan_contributor_attributes.musicbrainz_id and (customscan_contributor_attributes.name!=contributors.name or customscan_contributor_attributes.contributor!=contributors.id)";
@@ -1032,10 +1057,36 @@ sub refreshData
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
+
 	$timeMeasure->start();
-	debugMsg("Starting to update musicbrainz id's in custom scan artist data based on urls\n");
+	debugMsg("Starting to update custom scan artist data based on names\n");
+	# First lets refresh all urls with musicbrainz id's
+	$sql = "UPDATE contributors,customscan_contributor_attributes SET customscan_contributor_attributes.contributor=contributors.id where customscan_contributor_attributes.musicbrainz_id is null and contributors.name=customscan_contributor_attributes.name and customscan_contributor_attributes.contributor!=contributors.id";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	$sth->finish();
+	debugMsg("Finished updating custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
+	$timeMeasure->clear();
+
+	$timeMeasure->start();
+	debugMsg("Starting to update musicbrainz id's in custom scan album data based on titles\n");
 	# Now lets set all musicbrainz id's not already set
-	$sql = "UPDATE contributors,customscan_contributor_attributes SET customscan_contributor_attributes.musicbrainz_id=contributors.musicbrainz_id where contributors.name=customscan_contributor_attributes.name and contributors.musicbrainz_id like '%-%' and customscan_contributor_attributes.musicbrainz_id is null";
+	$sql = "UPDATE albums,customscan_album_attributes SET customscan_album_attributes.musicbrainz_id=albums.musicbrainz_id where albums.title=customscan_album_attributes.title and albums.musicbrainz_id like '%-%' and customscan_album_attributes.musicbrainz_id is null";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1053,7 +1104,7 @@ sub refreshData
 	}
 
 	$sth->finish();
-	debugMsg("Finished updating musicbrainz id's in custom scan artist data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	debugMsg("Finished updating musicbrainz id's in custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1079,37 +1130,12 @@ sub refreshData
 	$sth->finish();
 	debugMsg("Finished updating custom scan album data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
-
-	$timeMeasure->clear();
-	$timeMeasure->start();
-	debugMsg("Starting to update musicbrainz id's in custom scan album data based on urls\n");
-	# Now lets set all musicbrainz id's not already set
-	$sql = "UPDATE albums,customscan_album_attributes SET customscan_album_attributes.musicbrainz_id=albums.musicbrainz_id where albums.title=customscan_album_attributes.title and albums.musicbrainz_id like '%-%' and customscan_album_attributes.musicbrainz_id is null";
-	$sth = $dbh->prepare( $sql );
-	$count = 0;
-	eval {
-		$count = $sth->execute();
-		if($count eq '0E0') {
-			$count = 0;
-		}
-		commit($dbh);
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	    eval {
-	    	rollback($dbh); #just die if rollback is failing
-	    };
-	}
-
-	$sth->finish();
-	debugMsg("Finished updating musicbrainz id's in custom scan album data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
-	$timeMeasure->stop();
 	$timeMeasure->clear();
 
 	$timeMeasure->start();
-	debugMsg("Starting to update urls and id in custom scan data based on musicbrainz ids\n");
+	debugMsg("Starting to update custom scan album data based on titles\n");
 	# First lets refresh all urls with musicbrainz id's
-	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
+	$sql = "UPDATE albums,customscan_album_attributes SET customscan_album_attributes.album=albums.id where customscan_album_attributes.musicbrainz_id is null and albums.title=customscan_album_attributes.title and customscan_album_attributes.album!=albums.id";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1126,12 +1152,12 @@ sub refreshData
 	    };
 	}
 	$sth->finish();
-	debugMsg("Finished updating urls and ids in custom scan data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	debugMsg("Finished updating custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
-
 	$timeMeasure->clear();
+
 	$timeMeasure->start();
-	debugMsg("Starting to update musicbrainz id's in custom scan data based on urls\n");
+	debugMsg("Starting to update musicbrainz id's in custom scan track data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
 	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.musicbrainz_id=tracks.musicbrainz_id where tracks.url=customscan_track_attributes.url and tracks.musicbrainz_id like '%-%' and customscan_track_attributes.musicbrainz_id is null";
 	$sth = $dbh->prepare( $sql );
@@ -1151,7 +1177,55 @@ sub refreshData
 	}
 
 	$sth->finish();
-	debugMsg("Finished updating musicbrainz id's in custom scan data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	debugMsg("Finished updating musicbrainz id's in custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+	$timeMeasure->clear();
+
+	$timeMeasure->start();
+	debugMsg("Starting to update custom scan track data based on musicbrainz ids\n");
+	# First lets refresh all urls with musicbrainz id's
+	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	$sth->finish();
+	debugMsg("Finished updating custom scan track data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+	$timeMeasure->clear();
+
+	$timeMeasure->start();
+	debugMsg("Starting to update custom scan track data based on urls\n");
+	# First lets refresh all urls with musicbrainz id's
+	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.track=tracks.id where customscan_track_attributes.musicbrainz_id is null and tracks.url=customscan_track_attributes.url and customscan_track_attributes.track!=tracks.id";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+	$sth->finish();
+	debugMsg("Finished updating custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 }
