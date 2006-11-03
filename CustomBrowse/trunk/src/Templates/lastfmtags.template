@@ -8,9 +8,13 @@
 			<id>lastfmtag</id>
 			<menuname>Artists</menuname>
 			<menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
 			<menudata>
-				select customscan_contributor_attributes.value,customscan_contributor_attributes.value from customscan_contributor_attributes 
+				select customscan_contributor_attributes.value,customscan_contributor_attributes.value,substr(upper(customscan_contributor_attributes.value),1,1) from customscan_contributor_attributes,tracks,contributor_track 
 				where
+					tracks.id=contributor_track.track and
+					contributor_track.role in (1,5) and
+					contributor_track.contributor=customscan_contributor_attributes.contributor and
 					customscan_contributor_attributes.module='cslastfm' and
 					customscan_contributor_attributes.attr='artisttag'
 				group by customscan_contributor_attributes.value
