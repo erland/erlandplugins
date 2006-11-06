@@ -51,7 +51,7 @@
 					</td></tr>
 				</table>
 			[% ELSIF parameter.type == 'checkbox' %]
-				<input type="checkbox" name="menuparameter_[% parameter.id %]" id="menuparameter_[% parameter.id %]" value="[% parameter.value %]">
+				<input type="checkbox" name="menuparameter_[% parameter.id %]" id="menuparameter_[% parameter.id %]" value="1" [% parameter.value ? "checked" : "" %]>
 			[% ELSIF parameter.type == 'checkboxes' or parameter.type == 'sqlcheckboxes'%]
 				<table border="0">[% USE table parameter.values, cols=3, pad=0 %]
 					[%- FOREACH itemrow = table.rows %]
