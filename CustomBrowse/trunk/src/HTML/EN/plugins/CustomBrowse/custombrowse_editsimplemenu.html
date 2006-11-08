@@ -18,10 +18,10 @@
 [% END %]
 
 <table border="0">
-<form action="[% webroot %]plugins/CustomBrowse/custombrowse_newmenu.html" name="editForm" accept-charset="iso8859-1">
-	<tr><td colspan="3"><b>[% "PLUGIN_CUSTOMBROWSE_NEW_MENU_PARAMETERS_TITLE" | string %]</b></td></tr>
+<form action="[% webroot %]plugins/CustomBrowse/custombrowse_savesimplemenu.html" name="editForm" accept-charset="iso8859-1">
+	<tr><td colspan="3"><b>[% "PLUGIN_CUSTOMBROWSE_EDIT_MENU_PARAMETERS_TITLE" | string %]</b></td></tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
-	[%- FOREACH parameter = pluginCustomBrowseNewMenuParameters %]
+	[%- FOREACH parameter = pluginCustomBrowseEditMenuParameters %]
 		<tr>
 			<td>[% parameter.name %]</td>
 			<td>&nbsp;&nbsp;&nbsp;</td>
@@ -34,7 +34,7 @@
 						<select name="menuparameter_[% parameter.id %]">
 						[%- FOREACH item = parameter.values %]
 							[%- itemid = item.id %]
-							<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]">[% item.name | html %]</option>
+							<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]" [% IF item.selected %]selected[% END %]>[% item.name | html %]</option>
 						[%- END %]
 						</select>
 					</td></tr>
@@ -45,7 +45,7 @@
 						<select name="menuparameter_[% parameter.id %]" multiple size="10">
 						[%- FOREACH item = parameter.values %]
 							[%- itemid = item.id %]
-							<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]">[% item.name | html %]</option>
+							<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]" [% IF item.selected %]selected[% END %]>[% item.name | html %]</option>
 						[%- END %]
 						</select>
 					</td></tr>
@@ -61,7 +61,7 @@
 							[%- IF not loop.first %]
 								<td>[% nbsp = "&nbsp"; nbsp.repeat(10) %]</td>
 							[%- END %]
-							<td><input type="checkbox" name="[% itemid %]" id="[% itemid %]" value="1" [% parameter.value ? "checked" : "" %]>
+							<td><input type="checkbox" name="[% itemid %]" id="[% itemid %]" value="1" [% item.selected ? "checked" : "" %]>
 							<label for="[% itemid %]">[% item.name | html %]</label></td>
 						[%- END %]
 						</tr>
@@ -72,6 +72,11 @@
 		</tr>
 		<tr><td>&nbsp;</td></tr>
 	[%- END %]
+	<tr><td>
+	[% "PLUGIN_CUSTOMBROWSE_EDIT_MENU_FILENAME" | string %]: 
+	</td><td>&nbsp;&nbsp;&nbsp;</td><td>
+	<input type="text" name="file" value="[% pluginCustomBrowseEditMenuFileUnescaped %]">
+	</td></tr>
 	<tr>
 		<td>[% "PLUGIN_CUSTOMBROWSE_MENUTYPE" | string %]</td>
 		<td>&nbsp;&nbsp;&nbsp;</td>
@@ -81,7 +86,7 @@
 		</td>
 	</tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
-	<input type="hidden" name="menutemplate" value="[% pluginCustomBrowseNewMenuTemplate %]">
+	<input type="hidden" name="menutemplate" value="[% pluginCustomBrowseEditMenuTemplate %]">
 	<tr><td><input type="submit" value="[% "NEXT" | string %]"></td></tr>
 </form>
 </table>
