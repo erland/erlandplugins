@@ -1907,7 +1907,13 @@ sub handleWebEditMenus {
 
 	readBrowseConfiguration($client);
 
-        $params->{'pluginCustomBrowseMenus'} = $browseMenus;
+	my @menus = ();
+	for my $key (keys %$browseMenus) {
+		push @menus,$browseMenus->{$key};
+	}
+	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
+	
+        $params->{'pluginCustomBrowseMenus'} = \@menus;
 
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
@@ -2041,7 +2047,14 @@ sub handleWebNewMenuTypes {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
-	$params->{'pluginCustomBrowseTemplates'} = readTemplateConfiguration($client);
+	my $templatesHash = readTemplateConfiguration($client);
+	my @templates = ();
+	for my $key (keys %$templatesHash) {
+		push @templates,$templatesHash->{$key};
+	}
+	@templates = sort { $a->{'name'} cmp $b->{'name'} } @templates;
+
+	$params->{'pluginCustomBrowseTemplates'} = \@templates;
 	
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenutypes.html', $params);
 }
@@ -3055,6 +3068,9 @@ sub parseTemplateContent {
                     errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
             }else {
 		my $include = isMenuEnabled($client,$xml);
+		if(defined($xml->{'template'})) {
+			$xml->{'template'}->{'id'} = $key;
+		}
 		if($include && defined($xml->{'template'})) {
 	                $templates->{$key} = $xml->{'template'};
 		}
