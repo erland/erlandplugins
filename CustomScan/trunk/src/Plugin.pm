@@ -163,9 +163,21 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_scan_properties\n");
 		my @properties = ();
 		push @properties, 'customtags=OWNER,ORIGIN';
+		push @properties, 'singlecustomtags=ORIGIN';
 		push @properties, 'lastfmsimilarartistpercent=80';
 		push @properties, 'lastfmtagspercent=10';
 		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
+	}else {
+	        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
+		my $singlecustomtag = undef;
+		for my $property (@properties) {
+			if($property =~ /^singlecustomtags=/) {
+				$singlecustomtag = 1;
+			}
+		}
+		if(!$singlecustomtag) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
+		}
 	}
 }
 

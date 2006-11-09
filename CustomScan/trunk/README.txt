@@ -43,6 +43,8 @@ includes the following scanning modules by default.
 
 CustomTag = A scanning module that reads additional tags from the music files that are not normally stored in the slimserver database.
             The tags read can be configured as a "customtags" property in the Custom Scan settings page in the web interface.
+            By default read tags will be splitted in same way as genres in standard slimserver, if you don't want the tag to be splitted you can also
+            add it to a "singlecustomtags" property in the Custom Scan settings page in the web interface.
 
 LastFM = A scanning module that reads a number of different information from the LastFM database. Please note that the information read
          is only free to use for non commercial usage, see the licence for more information.

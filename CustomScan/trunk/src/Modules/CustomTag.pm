@@ -40,7 +40,17 @@ sub scanTrack {
 	my $tags = Slim::Formats->readTags($track->url);
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
+		my $singleValueTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("singlecustomtags");
 		if($customTagProperty) {
+			my @singleValueTags = ();
+			if($singleValueTagProperty) {
+				@singleValueTags = split(/,/,$singleValueTagProperty);
+			}
+			my %singleValueTagsHash = ();
+			for my $singleValueTag (@singleValueTags) {
+				$singleValueTagsHash{$singleValueTag} = 1;
+			}
+
 			my @customTags = split(/,/,$customTagProperty);
 			my %customTagsHash = ();
 			for my $customTag (@customTags) {
@@ -49,8 +59,13 @@ sub scanTrack {
 
 			for my $tag (keys %$tags) {
 				if($customTagsHash{$tag}) {
-					if(ref($tags->{$tag}) eq 'ARRAY') {
-						my $valueArray = $tags->{$tag};
+					my $values = $tags->{$tag};
+					if(!defined($singleValueTagsHash{$tag})) {
+						my @arrayValues = Slim::Music::Info::splitTag($tags->{$tag});
+						$values = \@arrayValues;
+					}
+					if(ref($values) eq 'ARRAY') {
+						my $valueArray = $values;
 						for my $value (@$valueArray) {
 							my %item = (
 								'name' => $tag,
@@ -61,7 +76,7 @@ sub scanTrack {
 					}else {
 						my %item = (
 							'name' => $tag,
-							'value' => $tags->{$tag}
+							'value' => $values
 						);
 						push @result,\%item;
 					}
