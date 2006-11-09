@@ -10,6 +10,8 @@
 		<parameter type="text" id="level2name" name="Level 2 name" value=""/>
 		<parameter type="text" id="customtag3" name="Level 3 tag name" value=""/>
 		<parameter type="text" id="level3name" name="Level 3 name" value=""/>
+		<parameter type="text" id="customtag4" name="Level 4 tag name" value=""/>
+		<parameter type="text" id="level4name" name="Level 4 name" value=""/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>
