@@ -23,16 +23,16 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<option>
-					<id>byyear</id>
-					<name>Sort by year</name>
-					<menulinks>number</menulinks>
-					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
-				</option>
-				<option>
 					<id>bytitle</id>
 					<name>Sort by title</name>
 					<menulinks>alpha</menulinks>
 					<keyword name="orderby" value="albums.titlesort asc"/>
+				</option>
+				<option>
+					<id>byyear</id>
+					<name>Sort by year</name>
+					<menulinks>number</menulinks>
+					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
 				</option>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,customscan_track_attributes
