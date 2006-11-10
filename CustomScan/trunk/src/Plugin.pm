@@ -67,6 +67,7 @@ sub initPlugin {
 	my $class = shift;
 	initDatabase();
 	if ( !$CUSTOMSCAN_HOOK ) {
+		refreshTitleFormats();
 		installHook();
 	}
 
@@ -178,6 +179,10 @@ sub checkDefaults {
 		if(!$singlecustomtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
 		}
+	}
+	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
+		my @titleFormats = ();
+		Slim::Utils::Prefs::set('plugin_customscan_titleformats', \@titleFormats);
 	}
 }
 
@@ -772,12 +777,24 @@ sub scanTrack {
 	exitScan($moduleKey);
 	return 0;
 }
+sub addTitleFormat
+{
+	my $titleformat = shift;
+	foreach my $format ( Slim::Utils::Prefs::getArray('titleFormat') ) {
+		if($titleformat eq $format) {
+			return;
+		}
+	}
+	my $arrayMax = Slim::Utils::Prefs::getArrayMax('titleFormat');
+	debugMsg("Adding at $arrayMax: $titleformat");
+	Slim::Utils::Prefs::set('titleFormat',$titleformat,$arrayMax+1);
+}
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_properties','plugin_customscan_showmessages'],
+	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_properties','plugin_customscan_titleformats','plugin_customscan_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -828,6 +845,18 @@ sub setupGroup
 			,'changeAddlText' => string('PLUGIN_CUSTOMSCAN_PROPERTIES')
 			,'PrefSize' => 'large'
 		},
+	plugin_customscan_titleformats => {
+			'validate' => \&validateAcceptAllWrapper
+			,'isArray' => 1
+			,'arrayAddExtra' => 1
+			,'arrayDeleteNull' => 1
+			,'arrayDeleteValue' => -1
+			,'arrayBasicValue' => ''
+			,'inputTemplate' => 'setup_input_array_sel.html'
+			,'changeAddlText' => string('PLUGIN_CUSTOMSCAN_TITLEFORMATS')
+			,'PrefSize' => 'large'
+			,'options' => sub {return getAvailableTitleFormats();}
+		},
 	plugin_customscan_showmessages => {
 			'validate'     => \&validateTrueFalseWrapper
 			,'PrefChoose'  => string('PLUGIN_CUSTOMSCAN_SHOW_MESSAGES')
@@ -839,7 +868,49 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customscan_showmessages"); }
 		}
 	);
+
+	refreshTitleFormats();
 	return (\%setupGroup,\%setupPrefs);
+}
+
+sub refreshTitleFormats() {
+        my @titleformats = Slim::Utils::Prefs::getArray('plugin_customscan_titleformats');
+	for my $format (@titleformats) {
+		if($format) {
+			Slim::Music::TitleFormatter::addFormat("CUSTOMSCAN_$format",
+				sub {
+					debugMsg("Retreiving title format: $format\n");
+					my $track = shift;
+					my $result = '';
+					if($format =~ /^([^_]+)_(.+)$/) {
+						my $module = $1;
+						my $attr = $2;
+						eval {
+							my $dbh = getCurrentDBH();
+							my $sth = $dbh->prepare("SELECT value from customscan_track_attributes where module=? and attr=? and track=? group by value");
+							$sth->bind_param(1,$module,SQL_VARCHAR);
+							$sth->bind_param(2,$attr,SQL_VARCHAR);
+							$sth->bind_param(3,$track->id,SQL_INTEGER);
+							$sth->execute();
+							my $value;
+							$sth->bind_col(1, \$value);
+							while($sth->fetch()) {
+								if($result) {
+									$result .= ', ';
+								}
+								$result .= $value;
+							}
+							$sth->finish();
+						};
+						if( $@ ) {
+		    					warn "Database error: $DBI::errstr\n$@\n";
+						}
+					}
+					debugMsg("Finished retreiving title format: $format=$result\n");
+					return $result;
+				});
+		}
+	}
 }
 
 sub webPages {
@@ -1307,6 +1378,30 @@ sub executeSQLFile {
 
         close $fh;
 }
+sub getAvailableTitleFormats {
+	my $dbh = getCurrentDBH();
+	my %result = ();
+	$result{'-1'} = ' ';
+        my @titleformats = Slim::Utils::Prefs::getArray('plugin_customscan_titleformats');
+	for my $format (@titleformats) {
+		if($format) {
+			$result{$format} = "CUSTOMSCAN_$format";
+		}
+	}
+
+	my $sth = $dbh->prepare("SELECT module,attr from customscan_track_attributes group by module,attr");
+	my $module;
+	my $attr;
+	$sth->execute();
+	$sth->bind_col(1,\$module);
+	$sth->bind_col(2, \$attr);
+	if($sth->fetch()) {
+		$result{uc($module)."_".uc($attr)} = "CUSTOMSCAN_TRACK_".uc($module)."_".uc($attr);
+	}
+	$sth->finish();
+
+	return \%result;
+}
 
 sub getCustomScanProperty {
 	my $name = shift;
@@ -1557,6 +1652,12 @@ PLUGIN_CUSTOMSCAN_PROPERTIES
 
 SETUP_PLUGIN_CUSTOMSCAN_PROPERTIES
 	EN	Properties to use in scanning modules
+
+PLUGIN_CUSTOMSCAN_TITLEFORMATS
+	EN	Attributes to make available as title formats
+
+SETUP_PLUGIN_CUSTOMSCAN_TITLEFORMATS
+	EN	Title formats
 
 PLUGIN_CUSTOMSCAN_SCANNING
 	EN	Scanning in progress...

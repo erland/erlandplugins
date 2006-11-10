@@ -68,6 +68,20 @@ customscan_track_attributes
 
 See the next section for more information about how to write your own scanning module. 
 
+In the Custom Scan section of the "Server Settings"/"Plugins" in the web interface it is possible to choose which custom information that should be
+available as title formats. It is only possible to make custom track information available as title formats. You use a custom title format as follows:
+1. Goto "Server Settings/"Plugins" and goto the "Title Formats" parameter in the section for the "Custom Scan" plugin.
+2. Select the title format you like to use, note the exact text
+3. Goto "Server Settings"/"Formatting"/"Title Format"
+4. Add the text from step 2 in one of the existing title formats or at the last line as a completely new title format. You can combine several title format in
+    a long string, for example if you would like a track to be displayed as: "1. A nice track (Erland)" where Erland is the OWNER tag scanned with Custom Scan
+    you would enter:
+    TRACKNUM. TITLE (CUSTOMSCAN_CUSTOMTAG_OWNER)
+5. To actually start using the the title format you:
+    For Web Interface listings: Goto "Server Settings"/"Formatting"/"Title Format" and select the title format you want to use by selecting the radio button.
+    For SqueezeBox Display: Goto "Player Settings for xxx"/"Title Format" and select the title format you want to use bt selecting the title format and 
+                                           selecting the radio button between it
+
 6. PLUGIN DEVELOPERS
 ====================
 A scanning module is implemented in a separate plugin by implemeting a getCustomScanFunctions function. You can see the included LastFM and
