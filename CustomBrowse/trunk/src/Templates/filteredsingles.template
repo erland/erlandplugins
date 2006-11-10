@@ -14,6 +14,9 @@
 			<playdata>
 				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %]
 				where
+					[%- IF lossless %]
+					tracks.lossless=1 and
+					[%- END %]
 					contributor_track.track=tracks.id and
 					contributor_track.role in (1,5) and
 					contributor_track.contributor={artist} and
@@ -39,6 +42,9 @@
 				,genre_track,genres
 				[%- END %]
                                 where
+					[%- IF lossless %]
+					tracks.lossless=1 and
+					[%- END %]
                                         contributors.id=contributor_track.contributor and
                                         contributor_track.track=tracks.id and
                                         contributor_track.role in (1,5) and
@@ -64,6 +70,9 @@
 				<menudata>
 					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %]
 					where 
+						[%- IF lossless %]
+						tracks.lossless=1 and
+						[%- END %]
 						tracks.id=contributor_track.track and 
 						contributor_track.role in (1,5) and
 						contributor_track.contributor={artist} and

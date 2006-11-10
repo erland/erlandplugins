@@ -13,6 +13,9 @@
 	        	<menudata>
 				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 				where
+					[%- IF lossless %]
+					tracks.lossless=1 and
+					[%- END %]
 					tracks.id=contributor_track.track and
 					contributor_track.contributor=contributors.id and
 					contributor_track.role in (1,5)
@@ -62,6 +65,9 @@
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 					where
+						[%- IF lossless %]
+						tracks.lossless=1 and
+						[%- END %]
 						tracks.id=contributor_track.track and
 						contributor_track.role in (1,5) and
 						contributor_track.contributor={artist}
@@ -100,6 +106,9 @@
 					<menudata>
 						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
 						where
+							[%- IF lossless %]
+							tracks.lossless=1 and
+							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.role in (1,5) and
 							contributor_track.contributor={artist}

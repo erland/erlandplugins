@@ -7,6 +7,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Filtered Singles"/>
 		<parameter type="text" id="singlecomment" name="Comment tag" value="single"/>
 		<parameter type="sqlcheckboxes" id="genres" name="Single genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
+		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>
