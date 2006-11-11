@@ -786,7 +786,7 @@ sub addTitleFormat
 		}
 	}
 	my $arrayMax = Slim::Utils::Prefs::getArrayMax('titleFormat');
-	debugMsg("Adding at $arrayMax: $titleformat");
+	debugMsg("Adding at $arrayMax: $titleformat\n");
 	Slim::Utils::Prefs::set('titleFormat',$titleformat,$arrayMax+1);
 }
 
@@ -909,6 +909,7 @@ sub refreshTitleFormats() {
 					debugMsg("Finished retreiving title format: $format=$result\n");
 					return $result;
 				});
+			addTitleFormat("DISC-TRACKNUM. TITLE - CUSTOMSCAN_$format");
 		}
 	}
 }
@@ -1395,8 +1396,8 @@ sub getAvailableTitleFormats {
 	$sth->execute();
 	$sth->bind_col(1,\$module);
 	$sth->bind_col(2, \$attr);
-	if($sth->fetch()) {
-		$result{uc($module)."_".uc($attr)} = "CUSTOMSCAN_TRACK_".uc($module)."_".uc($attr);
+	while($sth->fetch()) {
+		$result{uc($module)."_".uc($attr)} = "CUSTOMSCAN_".uc($module)."_".uc($attr);
 	}
 	$sth->finish();
 
