@@ -16,7 +16,7 @@
 					customscan_album_attributes.module='csamazon' and
 					customscan_album_attributes.attr='avgrating'
 				group by floor((customscan_album_attributes.value+10)/10)*10 
-				order by customscan_album_attributes.value desc
+				order by floor(customscan_album_attributes.value) desc
 			</menudata>
 			<menu>
 				<id>artist</id>
