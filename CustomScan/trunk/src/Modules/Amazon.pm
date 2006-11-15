@@ -35,6 +35,8 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'csamazon',
 		'name' => 'Amazon',
+		'dataproviderlink' => 'http://www.amazon.com',
+		'dataprovidername' => 'Amazon.com',
 		'scanAlbum' => \&scanAlbum,
 	);
 	return \%functions;
@@ -45,6 +47,13 @@ sub scanAlbum {
 	my $album = shift;
 	my @result = ();
 	
+	my $accessKey = Plugins::CustomScan::Plugin::getCustomScanProperty("amazonaccesskey");
+	#If the user doesn't have a access key there is no use to continue
+	if(!$accessKey || $accessKey eq 'XXX') {
+		msg ("CustomScan:Amazon: The Amazon scanning module wont work unless you register your amazon access key, see README.txt for more information\n");
+		return \@result;
+	}
+
 	my $title = unidecode($album->title);
 	my $artist = undef;
 	my $contributors = $album->contributors;
@@ -54,16 +63,10 @@ sub scanAlbum {
 	my $url = undef;
 	if($artist) {
 		debugMsg("Scanning album: ".$title.", artist: ".$artist."\n");
-		#
-		# NOTE!!! 
-		# The AWSAccessKeyId used in the url below is only intended for this application, so if you want to use this code to some other application, please register on amazon.com and get your own key
-		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=0AM2G9T8HTNEXHMDMXR2&Operation=ItemSearch&SearchIndex=Music&Artist=".escape($artist)."&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
+		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=$accessKey&Operation=ItemSearch&SearchIndex=Music&Artist=".escape($artist)."&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
 	}else {
 		debugMsg("Scanning album: ".$title."\n");
-		#
-		# NOTE!!! 
-		# The AWSAccessKeyId used in the url below is only intended for this application, so if you want to use this code to some other application, please register on amazon.com and get your own key
-		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=0AM2G9T8HTNEXHMDMXR2&Operation=ItemSearch&SearchIndex=Music&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
+		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=$accessKey&Operation=ItemSearch&SearchIndex=Music&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
 	}
 	debugMsg("Calling url: $url\n");
 	my $currentTime = time();

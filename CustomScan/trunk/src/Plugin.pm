@@ -172,11 +172,13 @@ sub checkDefaults {
 		push @properties, 'lastfmsimilarartistpercent=80';
 		push @properties, 'lastfmtagspercent=10';
 		push @properties, 'writeamazonrating=0';
+		push @properties, 'amazonaccesskey=XXX';
 		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
 	}else {
 	        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
 		my $singlecustomtag = undef;
 		my $writeamazonrating = undef;
+		my $amazonaccesskey = undef;
 		for my $property (@properties) {
 			if($property =~ /^singlecustomtags=/) {
 				$singlecustomtag = 1;
@@ -184,12 +186,18 @@ sub checkDefaults {
 			if($property =~ /^writeamazonrating=/) {
 				$writeamazonrating = 1;
 			}
+			if($property =~ /^amazonaccesskey=/) {
+				$amazonaccesskey = 1;
+			}
 		}
 		if(!$singlecustomtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
 		}
 		if(!$writeamazonrating) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeamazonrating=0');
+		}
+		if(!$amazonaccesskey) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'amazonaccesskey=XXX');
 		}
 	}
 	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
