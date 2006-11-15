@@ -28,6 +28,7 @@ sub getCustomScanFunctions {
 		'id' => 'customtag',
 		'defaultenabled' => 1,
 		'name' => 'Custom Tag',
+		'alwaysRescanTrack' => 1,
 		'scanTrack' => \&scanTrack
 	);
 	return \%functions;
@@ -49,16 +50,17 @@ sub scanTrack {
 			}
 			my %singleValueTagsHash = ();
 			for my $singleValueTag (@singleValueTags) {
-				$singleValueTagsHash{$singleValueTag} = 1;
+				$singleValueTagsHash{uc($singleValueTag)} = 1;
 			}
 
 			my @customTags = split(/,/,$customTagProperty);
 			my %customTagsHash = ();
 			for my $customTag (@customTags) {
-				$customTagsHash{$customTag} = 1;
+				$customTagsHash{uc($customTag)} = 1;
 			}
 
 			for my $tag (keys %$tags) {
+				$tag = uc($tag);
 				if($customTagsHash{$tag}) {
 					my $values = $tags->{$tag};
 					if(!defined($singleValueTagsHash{$tag})) {
