@@ -6,6 +6,10 @@ The LastFM scanning module uses the webservices from audioscrobbler.
 Please respect audioscrobbler terms of service, the content of the 
 feeds are licensed under the Creative Commons Attribution-NonCommercial-ShareAlike License
 
+The Amazon scanning module uses the webservies from amazon.com
+Please respect amazon.com terms of service, the usage of the 
+feeds are free but restricted to the Amazon Web Services Licensing Agreement
+
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
@@ -52,6 +56,23 @@ LastFM = A scanning module that reads a number of different information from the
          - LastFM tags for the artist (Percent limit of read tags can be configured with a lastfmtagspercent property)
          - Picture url for the artist
          - Similar artists to the scanned artist (Percent limit of similarity of read artists can be configured with a lastfmsimilarartistpercent property)
+
+Amazon = A scanning module that read a number of different information from the amazon.com database related to albums. 
+                 Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.
+                 The module currently read the following additional information for all albums:
+                 - Average customer review
+                 - Subjects/genres for the album
+                 - ASIN (unique amazon id for the album)
+                 The Amazon module can also optionally set the ratings in slimserver/TrackStat, this functionallity is disabled by default but you can
+                 enable it by setting the "writeamazonrating" property to 1 in the Custom Scan settings page in the web interface.
+
+NOTE!!!
+The Amazon and LastFM modules are quite slow, the reason for this is that Amazon and LastFM restricts the number of calls per second towards 
+their services in the licenses. Please respect these licensing rules. This also results in that slimserver will perform quite bad during scanning when
+these scanning modules are active. The information will only be scanned once for each artist/album, so the next time it will only scan new artists/albums
+and will be a lot fast due to this. Approximately scanning time for these modules are:
+- LastFM: 1-2 seconds per artist in your library
+- Amazon: 1-2 seconds per album in your library
 
 The information read by the above modules is just stored in a separate table in the database and cannot be viewed in standard slimserver.
 If you install the SQLPlayList plugin you can use the read information to create smart playlists.

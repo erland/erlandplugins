@@ -41,9 +41,8 @@
 			<td colspan="2"><hr></td>
 		</tr>
 		[% FOREACH module IN pluginCustomScanModules.keys.sort %]
-			[% IF pluginCustomScanModules.$module.enabled %]
 				<tr><td>
-					[% pluginCustomScanModules.$module.name %]</td><td>
+					[% pluginCustomScanModules.$module.name %][% IF !pluginCustomScanModules.$module.enabled %]&nbsp;&nbsp;&nbsp;(disabled)[% END %]</td><td>
 					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/customscan_scan.html?module=[% module %]&type=[% type %]&player=[% player | uri %]"
 								 onclick='if (confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR_QUESTION" | string %]")) 
 										{
@@ -61,7 +60,6 @@
 									return false;'>[% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %]</a>
 				</td></tr>
 				[% odd = (not odd) %]
-			[% END %]
 		[% END %]
 		<tr>
 			<td colspan="2"><hr></td>

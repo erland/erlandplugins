@@ -26,6 +26,7 @@ use Slim::Utils::Misc;
 sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'customtag',
+		'defaultenabled' => 1,
 		'name' => 'Custom Tag',
 		'scanTrack' => \&scanTrack
 	);

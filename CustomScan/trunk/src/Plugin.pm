@@ -6,6 +6,10 @@
 #    Please respect audioscrobbler terms of service, the content of the 
 #    feeds are licensed under the Creative Commons Attribution-NonCommercial-ShareAlike License
 #
+#    The Amazon scanning module uses the webservies from amazon.com
+#    Please respect amazon.com terms of service, the usage of the 
+#    feeds are free but restricted to the Amazon Web Services Licensing Acgreement
+#
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -167,17 +171,25 @@ sub checkDefaults {
 		push @properties, 'singlecustomtags=ORIGIN';
 		push @properties, 'lastfmsimilarartistpercent=80';
 		push @properties, 'lastfmtagspercent=10';
+		push @properties, 'writeamazonrating=0';
 		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
 	}else {
 	        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
 		my $singlecustomtag = undef;
+		my $writeamazonrating = undef;
 		for my $property (@properties) {
 			if($property =~ /^singlecustomtags=/) {
 				$singlecustomtag = 1;
 			}
+			if($property =~ /^writeamazonrating=/) {
+				$writeamazonrating = 1;
+			}
 		}
 		if(!$singlecustomtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
+		}
+		if(!$writeamazonrating) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeamazonrating=0');
 		}
 	}
 	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
@@ -207,7 +219,7 @@ sub getPluginModules {
 					}elsif(defined($data) && defined($data->{'id'}) && defined($data->{'name'})) {
 						$plugins{$fullname} = $data;
 						my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_enabled');
-						if(!defined($enabled) || $enabled) {
+						if((!defined($enabled) && $data->{'defaultenabled'})|| $enabled) {
 							$plugins{$fullname}->{'enabled'} = 1;
 						}else {
 							$plugins{$fullname}->{'enabled'} = 0;
