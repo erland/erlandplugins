@@ -8,7 +8,7 @@ feeds are licensed under the Creative Commons Attribution-NonCommercial-ShareAli
 
 The Amazon scanning module uses the webservies from amazon.com
 Please respect amazon.com terms of service, the usage of the 
-feeds are free but restricted to the Amazon Web Services Licensing Agreement
+feeds are free but restricted to the Amazon Web Services Licensing Agreement.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -65,6 +65,9 @@ Amazon = A scanning module that read a number of different information from the 
                  - ASIN (unique amazon id for the album)
                  The Amazon module can also optionally set the ratings in slimserver/TrackStat, this functionallity is disabled by default but you can
                  enable it by setting the "writeamazonrating" property to 1 in the Custom Scan settings page in the web interface.
+                 The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and
+                 select the "Amazon Web Services" link currently available in the bottom left menu under "Amazon Services". You then enter the
+                 Access Key Id in the "amazonaccesskey" property in the Custom Scan settings page. For example "amazonaccesskey=0AAAAAAABBBBBBCCCC2"
 
 NOTE!!!
 The Amazon and LastFM modules are quite slow, the reason for this is that Amazon and LastFM restricts the number of calls per second towards 

@@ -6,7 +6,7 @@ feeds are licensed under the Creative Commons Attribution-NonCommercial-ShareAli
 
 The Amazon scanning module uses the webservies from amazon.com
 Please respect amazon.com terms of service, the usage of the 
-feeds are free but restricted to the Amazon Web Services Licensing Agreement
+feeds are free but restricted to the Amazon Web Services Licensing Agreement.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
