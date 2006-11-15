@@ -35,6 +35,8 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'cslastfm',
 		'name' => 'LastFM',
+		'dataproviderlink' => 'http://www.last.fm',
+		'dataprovidername' => 'Audioscrobbler/LastFM',
 		'scanArtist' => \&scanArtist,
 	);
 	return \%functions;
