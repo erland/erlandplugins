@@ -69,6 +69,14 @@ Amazon = A scanning module that read a number of different information from the 
                  select the "Amazon Web Services" link currently available in the bottom left menu under "Amazon Services". You then enter the
                  Access Key Id in the "amazonaccesskey" property in the Custom Scan settings page. For example "amazonaccesskey=0AAAAAAABBBBBBCCCC2"
 
+RatingTag = A scanning module that reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
+            MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files.
+            The name of the rating tag read can be configured as a "ratingtag" property in the Custom Scan settings page in the web interface.
+            You can also configure the maximum rating number as a "ratingtagmax" property in the Custom Scan settings page. The POPM tag available
+            in the MP3 standard will always be read if available, but if the file also have a rating tag as specified in the "ratingtag" settings this will be used instead.
+            By default read ratings will be stored in the slimserver database standard tables, but this can be turned of by setting "writeratingtag=0" in the Custom Scan
+            settings page and then the ratings will just be stored in the customscan_track_attributes table.
+
 NOTE!!!
 The Amazon and LastFM modules are quite slow, the reason for this is that Amazon and LastFM restricts the number of calls per second towards 
 their services in the licenses. Please respect these licensing rules. This also results in that slimserver will perform quite bad during scanning when

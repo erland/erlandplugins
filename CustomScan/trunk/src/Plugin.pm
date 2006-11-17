@@ -173,12 +173,17 @@ sub checkDefaults {
 		push @properties, 'lastfmtagspercent=10';
 		push @properties, 'writeamazonrating=0';
 		push @properties, 'amazonaccesskey=XXX';
+		push @properties, 'ratingtag=RATING';
+		push @properties, 'ratingtagmax=100';
 		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
 	}else {
 	        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
 		my $singlecustomtag = undef;
 		my $writeamazonrating = undef;
 		my $amazonaccesskey = undef;
+		my $ratingtag = undef;
+		my $ratingtagmax = undef;
+		my $writeratingtag = undef;
 		for my $property (@properties) {
 			if($property =~ /^singlecustomtags=/) {
 				$singlecustomtag = 1;
@@ -189,6 +194,15 @@ sub checkDefaults {
 			if($property =~ /^amazonaccesskey=/) {
 				$amazonaccesskey = 1;
 			}
+			if($property =~ /^ratingtag=/) {
+				$ratingtag = 1;
+			}
+			if($property =~ /^writeratingtag=/) {
+				$writeratingtag = 1;
+			}
+			if($property =~ /^ratingtagmax=/) {
+				$ratingtagmax = 1;
+			}
 		}
 		if(!$singlecustomtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
@@ -198,6 +212,15 @@ sub checkDefaults {
 		}
 		if(!$amazonaccesskey) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'amazonaccesskey=XXX');
+		}
+		if(!$ratingtag) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'ratingtag=RATING');
+		}
+		if(!$ratingtagmax) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'ratingtagmax=100');
+		}
+		if(!$writeratingtag) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeratingtag=1');
 		}
 	}
 	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
