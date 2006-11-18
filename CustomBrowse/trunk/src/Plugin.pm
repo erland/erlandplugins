@@ -95,6 +95,10 @@ sub getOverlay {
 			$playable = Slim::Display::Display::symbol('notesymbol');
 		}
 	}
+	my $mixes = getMixes($client,$item);
+	if(scalar(@$mixes)>0) {
+		$playable = Slim::Display::Display::symbol('mixable');
+	}
 	if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
 		return [$playable, Slim::Display::Display::symbol('rightarrow')];
 	}elsif(defined($item->{'menu'}) && defined($item->{'menu'}->{'menutype'})) {
@@ -672,8 +676,10 @@ sub checkMix {
 	return 0;
 }
 
-sub createMix {
-	my ($client,$item) = @_;
+sub getMixes {
+	my $client = shift;
+	my $item = shift;
+
 	my @mixes = ();
 	if(defined($item->{'mix'})) {
 		if(ref($item->{'mix'}) eq 'ARRAY') {
@@ -725,14 +731,21 @@ sub createMix {
 			}
 		}
 	}
+	return \@mixes;
+}
 
-	for my $mix (@mixes) {
+sub createMix {
+	my ($client,$item) = @_;
+	my $mixes = getMixes($client,$item);
+	for my $mix (@$mixes) {
 		debugMsg("Got mix: ".$mix->{'mixname'}."\n");
 	}
-	if(scalar(@mixes)>0) {
+	if(scalar(@$mixes)==1) {
+		executeMix($client,$mixes->[0],undef,$item);
+	}elsif(scalar(@$mixes)>0) {
 		my $params = {
 			'header'     => string('CREATE_MIX').' {count}',
-			'listRef'    => \@mixes,
+			'listRef'    => $mixes,
 			'name'       => sub { return $_[1]->{'mixname'} },
 			'overlayRef' => sub { return [undef, Slim::Display::Display::symbol('rightarrow')] },
 			'item'       => $item,
@@ -757,9 +770,11 @@ sub createMix {
 }
 
 sub executeMix {
-        my ($client, $mixer, $addOnly) = @_;
+        my ($client, $mixer, $addOnly,$item) = @_;
 
-	my $item = $client->param('item');
+	if(!defined($item)) {
+		$item = $client->param('item');
+	}
 	debugMsg("Creating mixer ".$mixer->{'mixname'}." for ".$item->{'itemname'}."\n");
 
 	my $parameters = getCustomBrowseProperties();
