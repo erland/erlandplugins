@@ -1972,21 +1972,6 @@ sub handleWebEditMenu {
 				debugMsg("Skipping custom browse configuration - directory is undefined\n");
 			}else {
 				$templateData = loadTemplateData($browseDir,$params->{'menu'}.".cb.values.xml");
-				if(!defined($templateData)) {
-					my @pluginDirs = ();
-					if ($::VERSION ge '6.5') {
-						@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-					}else {
-						@pluginDirs = catdir($Bin, "Plugins");
-					}
-					for my $plugindir (@pluginDirs) {
-						next unless -d catdir($plugindir,"CustomBrowse","Menus");
-						$templateData = loadTemplateData(catdir($plugindir,"CustomBrowse","Menus"),$params->{'menu'}.".cb.values.xml");
-						if(defined($templateData)) {
-							last;
-						}
-					}
-				}
 			}
 			if(!defined($templateData)) {
 				my @pluginDirs = ();
@@ -2916,6 +2901,21 @@ sub parseMenuTemplateContent {
 				}
 				#debugMsg("Setting: ".$p->{'id'}."=".$value."\n");
 				$templateParameters{$p->{'id'}}=$value;
+			}
+			if(defined($template->{'parameter'})) {
+				my $parameters = $template->{'parameter'};
+				for my $p (@$parameters) {
+					if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
+						if(!defined($templateParameters{$p->{'id'}})) {
+							my $value = $p->{'value'};
+							if(!defined($value)) {
+								$value='';
+							}
+							debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
+							$templateParameters{$p->{'id'}} = $value;
+						}
+					}
+				}
 			}
 			my $menuData = fillTemplate($templateFile,\%templateParameters);
 			$menuData = Slim::Utils::Unicode::utf8on($menuData);
