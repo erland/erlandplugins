@@ -3,6 +3,7 @@
 	<template>
 		<id>newartists63.xml</id>
 		<parameter type="text" id="menuname"><value>New Artists</value></parameter>
+		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 	</template>

@@ -3,6 +3,7 @@
 	<template>
 		<id>randomalbumssqlite.xml</id>
 		<parameter type="text" id="menuname"><value>Random Albums</value></parameter>
+		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 	</template>

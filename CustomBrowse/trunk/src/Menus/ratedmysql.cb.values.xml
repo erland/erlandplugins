@@ -3,6 +3,7 @@
 	<template>
 		<id>ratedmysql.xml</id>
 		<parameter type="text" id="menuname"><value>Ratings</value></parameter>
+		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="tenscale"></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
