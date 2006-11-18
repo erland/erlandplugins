@@ -4,6 +4,7 @@
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
+		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>browseitem</id>
 			<menutype>mode</menutype>

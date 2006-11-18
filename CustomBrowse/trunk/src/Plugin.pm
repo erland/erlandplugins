@@ -176,7 +176,24 @@ sub getMenuItems {
                     }		
             }
         }
-	@listRef = sort { $a->{'menuname'} cmp $b->{'menuname'} } @listRef;
+	@listRef = sort { 
+			if(defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
+				if($a->{'menuorder'}!=$b->{'menuorder'}) {
+					return $a->{'menuorder'} <=> $b->{'menuorder'};
+				}
+			}
+			if(defined($a->{'menuorder'}) && !defined($b->{'menuorder'})) {
+				if($a->{'menuorder'}!=50) {
+					return $a->{'menuorder'} <=> 50;
+				}
+			}
+			if(!defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
+				if($b->{'menuorder'}!=50) {
+					return 50 <=> $b->{'menuorder'};
+				}
+			}
+			return $a->{'menuname'} cmp $b->{'menuname'} 
+		} @listRef;
     }elsif(defined($item->{'menu'})) {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {

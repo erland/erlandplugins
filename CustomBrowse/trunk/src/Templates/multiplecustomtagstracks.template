@@ -4,6 +4,7 @@
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
+		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>customtag1</id>
 			<menuname>[% IF level2name %][% level2name %][% ELSE %][% IF customtag2 %][% customtag2 %]s[% ELSE %]Songs[% END %][% END %]</menuname>

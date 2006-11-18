@@ -6,6 +6,7 @@
 		<description>Genres menu that makes it possible to browse genres limited to a specific included/excluded genres</description>
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value="1"/>
 		<parameter type="text" id="menuname" name="Menu name" value="Filtered Genres"/>
+		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="text" id="includedcomment" name="Include comment" value=""/>
 		<parameter type="text" id="excludedcomment" name="Exclude comment" value=""/>
 		<parameter type="sqlcheckboxes" id="includedgenres" name="Include genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
