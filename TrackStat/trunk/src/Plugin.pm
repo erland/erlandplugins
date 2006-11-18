@@ -245,6 +245,15 @@ sub setMode()
 				}
 			}
 		}
+		my $statisticgroup = $client->param('selectedgroup');
+		if($statisticgroup) {
+			for my $item (@listRef) {
+				if(!defined($item->{'item'}) && defined($item->{'childs'}) && $item->{'name'} eq $statisticgroup) {
+					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+					return;
+				}
+			}
+		}
 	}
 
 	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
