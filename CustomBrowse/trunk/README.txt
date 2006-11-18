@@ -60,6 +60,7 @@ defined.
 <custombrowse>
         <menu>
                 <menuname>Albums</menuname>
+		<menuorder>50</menuorder>
                 <menu>
                         <id>album</id>
 			<menuname>Songs</menuname>
@@ -130,6 +131,9 @@ menuname = Title of the menu, this element is required on the top menu level, it
            never used for dynamic menus in the player interface. In the web interface
            this value is used for the navigation links at the top. The menuname element 
            is mandatory for static menus with no menutype element.
+
+menuorder = The sort number of the menu, a number between 1 and 100, default is 50. Lower
+            numbers will be sorted before higher numbers
 
 itemtype = Type of items in the menu, should only be available if the menu items
            represents a single unique database object. The following values are allowed:
