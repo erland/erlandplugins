@@ -4,6 +4,7 @@
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<menuname>[% menuname %]</menuname>
+		[%- IF variousartists %]
 		<menu>
 			<id>variousartist</id>
 			<menuname>Various Artists</menuname>
@@ -62,6 +63,7 @@
 				</menu>
 			</menu>
 		</menu>
+		[%- END %]
 		<menu>
 			<id>artist</id>
 			<menuname>Albums</menuname>
@@ -73,12 +75,15 @@
 				where 
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
-					contributor_album.role in (1,5) and 
+					contributor_album.role in (1,5) 
+					[%- IF variousartists %]
+					and 
 					(
 						albums.compilation is null or 
 						albums.compilation=0 or 
 						{property.variousArtistAutoIdentification}=0
 					)
+					[%- END %]
 				group by contributors.id 
 				order by contributors.namesort asc
 			</menudata>

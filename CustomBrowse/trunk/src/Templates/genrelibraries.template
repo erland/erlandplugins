@@ -7,6 +7,93 @@
 		<menu>
 			<id>artists</id>
 			<menuname>Artists</menuname>
+			[%- IF variousartists %]
+			<menu>
+				<id>variousartist</id>
+				<menuname>Various Artists</menuname>
+				<menutype>sql</menutype>
+				<menudata>
+					select contributors.id,contributors.name from contributors
+					where
+						contributors.name='Various Artists' and
+						{property.variousArtistAutoIdentification}=1
+					group by contributors.id
+				</menudata>
+				<menu>
+				<id>album</id>
+					<menuname>Songs</menuname>
+					<itemtype>album</itemtype>
+					<itemformat>album</itemformat>
+					<menutype>sql</menutype>
+					<option>
+						<id>byyear</id>
+						<name>Sort by year</name>
+						<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+						<menulinks>number</menulinks>
+					</option>
+					<option>
+						<id>bytitle</id>
+						<name>Sort by title</name>
+						<menulinks>alpha</menulinks>
+						<keyword name="orderby" value="albums.titlesort asc"/>
+					</option>
+					<menudata>
+						select albums.id,albums.title from albums,tracks[% IF includedgenres %],genre_track,genres[% END %]
+						where
+							albums.compilation = 1 and
+							tracks.audio=1
+							[%- IF includedgenres %]
+							and tracks.id=genre_track.track and
+							genre_track.genre=genres.id and
+							genres.name in ([% includedgenres %])
+							[%- END %]
+							and albums.id=tracks.album
+							[%- IF excludedgenres %]
+							and not exists(select * from genre_track,genres 
+								where 
+									genre_track.track=tracks.id and
+									genre_track.genre=genres.id and
+									genres.name in ([% excludedgenres %]))
+							[%- END %]
+						group by albums.id
+						order by {orderby}
+	                                </menudata>
+					<menu>
+						<id>track</id>
+						<itemtype>track</itemtype>
+						<itemformat>track</itemformat>
+						<playtype>all</playtype>
+						<menutype>sql</menutype>
+						<menudata>
+							select tracks.id,tracks.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %]
+							where
+								tracks.audio=1 and
+								tracks.album={album}
+								[%- IF includedgenres %]
+								and tracks.id=genre_track.track and
+								genre_track.genre=genres.id and
+								genres.name in ([% includedgenres %])
+								[%- END %]
+								and tracks.album={album}
+								[%- IF excludedgenres %]
+								and not exists(select * from genre_track,genres 
+									where 
+										genre_track.track=tracks.id and
+										genre_track.genre=genres.id and
+										genres.name in ([% excludedgenres %]))
+								[%- END %]
+							group by tracks.id
+							order by tracks.tracknum asc,tracks.titlesort asc
+						</menudata>
+						<menu>
+							<id>trackdetails</id>
+							<menutype>trackdetails</menutype>
+							<menudata>track</menudata>
+						</menu>
+					</menu>
+				</menu>
+			</menu>
+			[%- END %]
 			<menu>
 				<id>artist</id>
 				<menuname>Albums</menuname>
@@ -14,11 +101,19 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF variousartists %],albums[% END %][% IF includedgenres %],genre_track,genres[% END %]
 					where
 						tracks.id=contributor_track.track and
 						contributor_track.contributor=contributors.id and
 						contributor_track.role in (1,5)
+						[%- IF variousartists %]
+						and tracks.album=albums.id and
+						(
+							albums.compilation is null or 
+							albums.compilation=0 or 
+							{property.variousArtistAutoIdentification}=0 
+						) 
+						[%- END %]
 						[%- IF includedgenres %]
 						and tracks.id=genre_track.track and
 						genre_track.genre=genres.id and
@@ -223,6 +318,101 @@
 						[%- END %]
 					order by genres.namesort asc
 				</menudata>
+				[%- IF variousartists %]
+				<menu>
+					<id>variousartist</id>
+					<menuname>Various Artists</menuname>
+					<menutype>sql</menutype>
+					<menudata>
+						select contributors.id,contributors.name from contributors
+						where
+							contributors.name='Various Artists' and
+							{property.variousArtistAutoIdentification}=1
+						group by contributors.id
+					</menudata>
+					<menu>
+					<id>album</id>
+						<menuname>Songs</menuname>
+						<itemtype>album</itemtype>
+						<itemformat>album</itemformat>
+						<menutype>sql</menutype>
+						<option>
+							<id>byyear</id>
+							<name>Sort by year</name>
+							<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+							<menulinks>number</menulinks>
+						</option>
+						<option>
+							<id>bytitle</id>
+							<name>Sort by title</name>
+							<menulinks>alpha</menulinks>
+							<keyword name="orderby" value="albums.titlesort asc"/>
+						</option>
+						<menudata>
+							select albums.id,albums.title from albums,tracks,genre_track,genres
+							where
+								albums.compilation = 1 and
+								tracks.audio=1 and
+								tracks.id=genre_track.track and
+								genre_track.genre={genre}
+								[%- IF includedgenres %]
+								and exists(select * from genre_track,genres 
+									where 
+										genre_track.track=tracks.id and
+										genre_track.genre=genres.id and
+										genres.name in ([% includedgenres %]))
+								[%- END %]
+								and albums.id=tracks.album
+								[%- IF excludedgenres %] 
+								and not exists(select * from genre_track,genres 
+									where 
+										genre_track.track=tracks.id and
+										genre_track.genre=genres.id and
+										genres.name in ([% excludedgenres %]))
+								[%- END %]
+							group by albums.id
+							order by {orderby}
+		                                </menudata>
+						<menu>
+							<id>track</id>
+							<itemtype>track</itemtype>
+							<itemformat>track</itemformat>
+							<playtype>all</playtype>
+							<menutype>sql</menutype>
+							<menudata>
+								select tracks.id,tracks.title from tracks,albums,genre_track,genres
+								where
+									tracks.audio=1 and
+									tracks.album={album} and
+									tracks.id=genre_track.track and
+									genre_track.genre={genre}
+									[%- IF includedgenres %]
+									and exists(select * from genre_track,genres 
+										where 
+											genre_track.track=tracks.id and
+											genre_track.genre=genres.id and
+											genres.name in ([% includedgenres %]))
+									[%- END %]
+									and tracks.album={album}
+									[%- IF excludedgenres %]
+									and not exists(select * from genre_track,genres 
+										where 
+											genre_track.track=tracks.id and
+											genre_track.genre=genres.id and
+											genres.name in ([% excludedgenres %]))
+									[%- END %]
+								group by tracks.id
+								order by tracks.tracknum asc,tracks.titlesort asc
+							</menudata>
+							<menu>
+								<id>trackdetails</id>
+								<menutype>trackdetails</menutype>
+								<menudata>track</menudata>
+							</menu>
+						</menu>
+					</menu>
+				</menu>
+				[%- END %]
 				<menu>
 					<id>artist</id>
 					<menuname>Albums</menuname>
@@ -230,13 +420,21 @@
 				        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 			        	<menudata>
-						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
+						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF variousartists %],albums[% END %]
 						where
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
 							contributor_track.role in (1,5) and
 							tracks.id=genre_track.track and
 							genre_track.genre={genre}
+							[%- IF variousartists %]
+							and tracks.album=albums.id and
+							(
+								albums.compilation is null or 
+								albums.compilation=0 or 
+								{property.variousArtistAutoIdentification}=0 
+							) 
+							[%- END %]
 							[%- IF includedgenres %]
 							and exists(select * from genre_track,genres 
 								where 
