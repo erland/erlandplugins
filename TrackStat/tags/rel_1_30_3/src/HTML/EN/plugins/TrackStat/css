@@ -1,0 +1,13 @@
+<STYLE type="text/css">
+
+div#trackstat_resultlist_controls {
+	float: right; 
+	width: 250px; 
+	text-align: right;
+}
+
+div#trackstat_resultlist_controls_inner {
+	float:right;
+}
+
+</STYLE>
