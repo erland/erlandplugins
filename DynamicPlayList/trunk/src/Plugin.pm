@@ -416,6 +416,7 @@ sub initPlayLists {
 							&& defined($playLists->{$item}) 
 							&& defined($playLists->{$item}->{'parameters'})
 							&& defined($playLists->{$item}->{'parameters'}->{$p})
+							&& defined($playLists->{$item}->{'parameters'}->{$p}->{'name'})
 							&& $playLists->{$item}->{'parameters'}->{$p}->{'name'} eq $playlist->{'parameters'}->{$p}->{'name'}
 							&& defined($playLists->{$item}->{'parameters'}->{$p}->{'value'})) {
 							
@@ -650,6 +651,15 @@ sub setMode {
 					}else {
 						push @listRef, $playListItems->{$menuItemKey};
 					}
+				}
+			}
+		}
+		my $playlistgroup = $client->param('selectedgroup');
+		if($playlistgroup) {
+			for my $item (@listRef) {
+				if(!defined($item->{'playlist'}) && defined($item->{'childs'}) && $item->{'name'} eq $playlistgroup) {
+					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+					return;
 				}
 			}
 		}
@@ -1050,11 +1060,12 @@ sub commandCallback65 {
 	
 	my $client = $request->client();
 
-	if ($request->source() eq 'PLUGIN_DYNAMICPLAYLIST') {
+	if (defined($request->source()) && $request->source() eq 'PLUGIN_DYNAMICPLAYLIST') {
 		return;
+	}elsif(defined($request->source())) {
+		debugMsg("received command initiated by".$request->source()."\n");
 	}
-
-	debugMsg("received command ".($request->getRequestString())." initiated by ".$request->source()."\n");
+	debugMsg("received command ".($request->getRequestString())."\n");
 
 	# because of the filter this should never happen
 	# in addition there are valid commands (rescan f.e.) that have no
