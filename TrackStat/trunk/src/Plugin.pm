@@ -2669,23 +2669,26 @@ sub getPlayerStatusForClient($)
 	my $clientID = Slim::Player::Client::id($client);
 
 	#debugMsg("Asking about client $clientName ($clientID)\n");
-
+	my $key = $client;
+	if(defined($client->syncgroupid)) {
+		$key = "SyncGroup".$client->syncgroupid;
+	}
 	# If we haven't seen this client before, create a new per-client 
 	# playState structure.
-	if (!defined($playerStatusHash{$client}))
+	if (!defined($playerStatusHash{$key}))
 	{
 		debugMsg("Creating new PlayerStatus for $clientName ($clientID)\n");
 
 		# Create new playState structure
-		$playerStatusHash{$client} = TrackStatus->new();
+		$playerStatusHash{$key} = TrackStatus->new();
 
 		# Set appropriate defaults
-		setPlayerStatusDefaults($client, $playerStatusHash{$client});
+		setPlayerStatusDefaults($client, $playerStatusHash{$key});
 	}
 
 	# If it didn't exist, it does now - 
 	# return the playerStatus structure for the client.
-	return $playerStatusHash{$client};
+	return $playerStatusHash{$key};
 }
 
 ################################################
