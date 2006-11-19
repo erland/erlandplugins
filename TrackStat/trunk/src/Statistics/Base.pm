@@ -468,9 +468,9 @@ sub getArtistTracks {
 				my $items;
 				my $sthtracks;
 				if(Slim::Utils::Prefs::get("plugin_trackstat_dynamicplaylist_norepeat")) {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
