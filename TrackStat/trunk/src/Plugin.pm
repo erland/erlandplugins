@@ -3048,7 +3048,7 @@ sub stopTimingSong($$)
 		if (trackWasPlayedEnoughToCountAsAListen($playStatus, $totalElapsedTimeDuringPlay) )
 		{
 			#debugMsg("Track was played long enough to count as listen\n");
-			markedAsPlayed($playStatus->client,$playStatus->currentTrackOriginalFilename);
+			markedAsPlayed($client,$playStatus->currentTrackOriginalFilename);
 			# We could also log to history at this point as well...
 		}
 		# If automatic rating is enabled
