@@ -3,7 +3,7 @@
 [% PROCESS plugins/TrackStat/controls %]
 [% PROCESS plugins/TrackStat/listitems %]
 [%- pwd_list = BLOCK -%]/
-	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]">
+	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
 	</a>
 	[% FOREACH group IN pluginTrackStatStatisticContext %]
@@ -25,7 +25,7 @@
 	setTimeout("aReload()", [% refresh %] * 1000);
 
 	function aReload() {
-	  location.replace("[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %]");
+	  location.replace("[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]");
 	}
 	-->
 	</SCRIPT>
