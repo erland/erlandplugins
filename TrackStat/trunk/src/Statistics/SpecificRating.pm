@@ -202,7 +202,7 @@ sub getStatisticItems {
 			'webfunction' => \&getRated7TracksWeb,
 			'playlistfunction' => \&getRated7Tracks,
 			'id' =>  'rated7',
-			'namefunction' => \&getRated6TracksName,
+			'namefunction' => \&getRated7TracksName,
 			'groups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP'),string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')]],
 			'statisticgroups' => [[string('PLUGIN_TRACKSTAT_SONGLIST_SPECIFICRATING_GROUP')],[string('PLUGIN_TRACKSTAT_SONGLIST_TRACK_GROUP')]],
 			'contextfunction' => \&isRatedTracksValidInContext
