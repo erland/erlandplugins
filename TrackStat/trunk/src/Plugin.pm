@@ -43,6 +43,8 @@ use Class::Struct;
 use POSIX qw(strftime ceil floor);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
+use File::Slurp;
+use XML::Simple;
 
 use Scalar::Util qw(blessed);
 
@@ -1792,6 +1794,150 @@ sub getStatisticPluginsStrings {
 	}
 	$statisticsInitialized = 1;
 	return $statisticPluginsStrings;
+}
+
+sub getSQLPlayListTemplates {
+	my $client = shift;
+	my @templates=();
+	my $statistics = getStatisticPlugins();
+	my @result = ();
+	for my $key (keys %$statistics) {
+		my $item = $statistics->{$key};
+		if(defined($item->{'playlisttemplates'})) {
+			my $playlistTemplates = $item->{'playlisttemplates'};
+			for my $templateId (@$playlistTemplates) {
+				my $template = readTemplateConfiguration($templateId);
+				if(defined($template)) {
+					my %templateItem = (
+						'id' => $templateId,
+						'type' => 'template',
+						'template' => $template
+					);
+					push @result,\%templateItem;
+				}
+			}
+		}
+	}
+	return \@result;
+}
+
+sub getSQLPlayListTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = readTemplateData($templateItem->{'id'});
+	return $data;
+}
+
+
+sub readTemplateData {
+	my $template = shift;
+	debugMsg("Loading template data for $template\n");
+
+	my @pluginDirs = ();
+	if ($::VERSION ge '6.5') {
+		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	}else {
+		@pluginDirs = catdir($Bin, "Plugins");
+	}
+	my $templateDir = undef;
+	for my $plugindir (@pluginDirs) {
+		next unless -d catdir($plugindir,"TrackStat","PlaylistTemplates");
+		$templateDir = catdir($plugindir,"TrackStat","PlaylistTemplates");
+	}
+
+	my $path = catfile($templateDir, $template.".template");
+
+	# read_file from File::Slurp
+	my $content = eval { read_file($path) };
+	return $content;
+}
+
+sub readTemplateConfiguration {
+	my $templateId = shift;
+	debugMsg("Loading template configuration for $templateId\n");
+
+	my @pluginDirs = ();
+	if ($::VERSION ge '6.5') {
+		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	}else {
+		@pluginDirs = catdir($Bin, "Plugins");
+	}
+	my $templateDir = undef;
+	for my $plugindir (@pluginDirs) {
+		next unless -d catdir($plugindir,"TrackStat","PlaylistTemplates");
+		$templateDir = catdir($plugindir,"TrackStat","PlaylistTemplates");
+	}
+
+	my $path = catfile($templateDir, $templateId.".xml");
+
+	# read_file from File::Slurp
+	my $content = eval { read_file($path) };
+	my $template = parseTemplateContent($templateId,$content);
+	if(!$template) {
+		errorMsg("Unable to read template: $path\n");
+	}
+	return $template;
+}
+
+sub parseTemplateContent {
+	my $id = shift;
+	my $content = shift;
+
+	my $template = undef;
+
+        if ( $content ) {
+	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+            my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
+            #debugMsg(Dumper($xml));
+            if ($@) {
+                    errorMsg("TrackStat: Failed to parse playlist template configuration because:\n$@\n");
+            }else {
+		my $include = isTemplateEnabled($xml);
+		if(defined($xml->{'template'})) {
+			$xml->{'template'}->{'id'} = $id;
+		}
+		if($include && defined($xml->{'template'})) {
+	                $template = $xml->{'template'};
+		}
+            }
+    
+            # Release content
+            undef $content;
+        }else {
+            if ($@) {
+                    errorMsg("TrackStat: Unable to read template configuration:\n$@\n");
+            }else {
+                errorMsg("TrackStat: Unable to to read template configuration\n");
+            }
+        }
+	return $template;
+}
+
+sub isTemplateEnabled {
+	my $xml = shift;
+
+	my $include = 1;
+	if(defined($xml->{'minslimserverversion'})) {
+		if($::VERSION lt $xml->{'minslimserverversion'}) {
+			$include = 0;
+		}
+	}
+	if(defined($xml->{'maxslimserverversion'})) {
+		if($::VERSION gt $xml->{'maxslimserverversion'}) {
+			$include = 0;
+		}
+	}
+	if(defined($xml->{'database'}) && $include) {
+		$include = 0;
+		my $driver = Slim::Utils::Prefs::get('dbsource');
+		$driver =~ s/dbi:(.*?):(.*)$/$1/;
+		if($driver eq $xml->{'database'}) {
+			$include = 1;
+		}
+	}
+	return $include;
 }
 
 sub initStatisticPlugins {
