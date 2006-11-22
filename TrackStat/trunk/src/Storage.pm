@@ -533,6 +533,9 @@ sub saveRating {
 	debugMsg("Store rating\n");
 
 	if ($trackHandle) {
+		if(!$rating) {
+			$rating='null';
+		}
 		$sql = ("UPDATE track_statistics set rating=$rating where $queryAttribute = ? or url = ?");
 	} else {
 		my $added = getAddedTime($track);
@@ -543,6 +546,7 @@ sub saveRating {
 		}
 	}
 	my $dbh = getCurrentDBH();
+debugMsg("Execute $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $searchString , SQL_VARCHAR);
@@ -688,6 +692,9 @@ sub addToHistory
 	$sql = undef;
 	if (defined($mbId)) {
 		if (defined($rating)) {
+			if(!$rating) {
+				$rating='null';
+			}
 			if($found) {
 				$sql = "UPDATE track_history set rating=$rating where (url=? or musicbrainz_id='$mbId') and played=$playedTime";
 			}else {
@@ -702,6 +709,9 @@ sub addToHistory
 		}
 	} else {
 		if (defined($rating)) {
+			if(!$rating) {
+				$rating='null';
+			}
 			if($found) {
 				$sql = "UPDATE track_history set rating=$rating where url=? and played=$playedTime";
 			}else {
@@ -1128,6 +1138,31 @@ sub refreshTracks
 	debugMsg("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 
+	$timeMeasure->clear();
+	$timeMeasure->start();
+	debugMsg("Starting to update unrated ratings in statistic data based on null\n");
+	# Now lets set all added times not already set
+	$sql = "UPDATE track_statistics SET track_statistics.rating=null where track_statistics.rating=0";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	debugMsg("Finished updating unrated ratings in statistic data based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
 	if(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled")) {
 		$timeMeasure->clear();
 		$timeMeasure->start();
@@ -1202,6 +1237,31 @@ sub refreshTracks
 
 		$sth->finish();
 		debugMsg("Finished adding missing entries to history table, adding $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		debugMsg("Starting to update unrated ratings in history table based on null\n");
+		# Now lets set all added times not already set
+		$sql = "UPDATE track_history SET track_history.rating=null where track_history.rating=0";
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
+			}
+			commit($dbh);
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+	    	};
+		}
+
+		$sth->finish();
+		debugMsg("Finished updating unrated ratings in history table based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	}
 	$timeMeasure->stop();
 	$timeMeasure->clear();
