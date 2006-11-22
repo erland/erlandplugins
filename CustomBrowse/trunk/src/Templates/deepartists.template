@@ -7,12 +7,12 @@
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>variousartist</id>
-			<menuname>Various Artists</menuname>
+			<menuname>[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]</menuname>
 			<menutype>sql</menutype>
 			<menudata>
 				select contributors.id,contributors.name from contributors
 				where
-					contributors.name='Various Artists' and
+					contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
 					{property.variousArtistAutoIdentification}=1
 				group by contributors.id
 			</menudata>

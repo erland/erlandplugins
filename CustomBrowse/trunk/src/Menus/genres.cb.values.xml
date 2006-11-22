@@ -5,6 +5,7 @@
 		<parameter type="text" id="menuname"><value>Genres</value></parameter>
 		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="variousartists"><value>1</value></parameter>
+		<parameter type="text" id="variousartisttext"><value>Various Artists</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 	</template>
