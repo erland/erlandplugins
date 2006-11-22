@@ -7,6 +7,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tags"/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value="1"/>
+		<parameter type="text" id="variousartisttext" name="Various Artists name" value="Various Artists"/>
 		<parameter type="text" id="customtag" name="Tag name" value="OWNER"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
