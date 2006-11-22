@@ -36,6 +36,19 @@
 					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
 				</option>
 				<menudata>
+					[%- IF showartistwithalbum %]
+					select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes
+					where
+						tracks.audio=1 and 
+						albums.id=tracks.album and 
+						tracks.id=contributor_track.track and
+						contributor_track.contributor=contributors.id and
+						contributor_track.role in (1,5) and
+						tracks.id=customscan_track_attributes.track and
+						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.attr='[% customtag %]' and
+						customscan_track_attributes.value='{customtag}' 
+					[% ELSE %]
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,customscan_track_attributes
 					where 
 						tracks.audio=1 and 
@@ -44,6 +57,7 @@
 						customscan_track_attributes.module='customtag' and
 						customscan_track_attributes.attr='[% customtag %]' and
 						customscan_track_attributes.value='{customtag}' 
+					[%- END %]
 					group by albums.id 
 					order by {orderby}
 				</menudata>

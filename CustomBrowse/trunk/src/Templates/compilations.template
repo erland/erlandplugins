@@ -24,9 +24,19 @@
 				<keyword name="orderby" value="albums.year desc, albums.titlesort asc"/>
 			</option>
 			<menudata>
+				[%- IF showartistwithalbum %]
+				select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from albums,contributor_album,contributors
+				where
+					albums.compilation=1 and
+					albums.id=contributor_album.album and
+					contributor_album.contributor=contributors.id and
+					contributor_album.role in (1,5)
+				group by albums.id
+				[% ELSE %]
 				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums
 				where
 					albums.compilation=1
+				[%- END %]
                                 order by {orderby}
 			</menudata>
 			<menu>

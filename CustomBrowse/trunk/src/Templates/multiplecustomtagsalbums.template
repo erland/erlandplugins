@@ -106,8 +106,16 @@
 								<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
 							</option>
 							<menudata>
+								[%- IF showartistwithalbum %]
+								select albums.id,concat(albums.title, ' (', contributors.name ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %]
+								where 
+									tracks.id=contributor_track.track and
+									contributor_track.role in (1,5) and
+									contributor_track.contributor=contributors.id and
+								[% ELSE %]
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %]
 								where 
+								[%- END %]
 									tracks.audio=1 and 
 									albums.id=tracks.album and 
 									tracks.id=attr1.track and

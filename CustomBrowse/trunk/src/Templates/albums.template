@@ -38,8 +38,17 @@
 				</menudata>
 			</option>
 			<menudata>
-				 select albums.id,albums.title,substr(albums.titlesort,1,1) from albums
-                                                order by {orderby}
+				[%- IF showartistwithalbum %]
+				select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from albums,contributor_album,contributors
+				where
+					albums.id=contributor_album.album and
+					contributor_album.contributor=contributors.id and
+					contributor_album.role in (1,5)
+				group by albums.id
+				[% ELSE %]
+				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums
+				[%- END %]
+				order by {orderby}
 			</menudata>
 			<menu>
 				<id>track</id>
