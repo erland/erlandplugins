@@ -172,6 +172,13 @@ my %choiceMapping = (
 );
 
 sub defaultMap { 
+	if(Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll")) { 
+		for my $key (keys %mapping) {
+			if($key =~ /^\d\.single$/) {
+				$mapping{$key}='dead';
+			}
+		}
+	}
 	return \%mapping; 
 }
 
@@ -717,34 +724,28 @@ sub saveRatingsForCurrentlyPlaying {
 	}
 
 	my $playStatus = getPlayerStatusForClient($client);
-	if ($playStatus->isTiming() eq 'true') {
-		# see if the string is already in the cache
-		my $songKey;
-        my $song = Slim::Player::Playlist::song($client);
-    	$song = $song->url;
-        $songKey = $song;
-        if (Slim::Music::Info::isRemoteURL($song)) {
-                $songKey = Slim::Music::Info::getCurrentTitle($client, $song);
-        }
-        if($playStatus->currentTrackOriginalFilename() eq $songKey) {
-			$playStatus->currentSongRating($digit);
-		}
-    	debugMsg("saveRating: $client, $songKey, $digit\n");
-		$client->showBriefly(
-			$client->string( 'PLUGIN_TRACKSTAT'),
-			$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
-			3);
-		my $rating = $digit*20;
-		if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
-			$rating = $digit*10;
-		}
-		rateSong($client,$songKey,$rating);
-	}else {
-		$client->showBriefly(
-			$client->string( 'PLUGIN_TRACKSTAT'),
-			$client->string( 'PLUGIN_TRACKSTAT_RATING_NO_SONG'),
-			3);
+	# see if the string is already in the cache
+	my $songKey;
+	my $listIndex = $client->param('listIndex');
+	my $song = Slim::Player::Playlist::song($client,$listIndex);
+	$song = $song->url;
+	$songKey = $song;
+	if (Slim::Music::Info::isRemoteURL($song)) {
+		$songKey = Slim::Music::Info::getCurrentTitle($client, $song);
 	}
+	if($playStatus->currentTrackOriginalFilename() eq $songKey) {
+		$playStatus->currentSongRating($digit);
+	}
+	debugMsg("saveRating: $client, $songKey, $digit\n");
+	$client->showBriefly(
+		$client->string( 'PLUGIN_TRACKSTAT'),
+		$client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $digit),
+		3);
+	my $rating = $digit*20;
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		$rating = $digit*10;
+	}
+	rateSong($client,$songKey,$rating);
 }
 sub saveRatingsFromChoice {
 		my $client = shift;
@@ -852,7 +853,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1315,6 +1316,16 @@ sub setupGroup
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_increase_percent"); }
 		},
+	plugin_trackstat_disablenumberscroll => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll"); }
+		},		
 	);
 	initStatisticPlugins();
 	return (\%setupGroup,\%setupPrefs);
@@ -2210,7 +2221,7 @@ sub initPlugin
 		Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.TrackStat.Choice',\%choiceMapping);
 
 		# Alter mapping for functions & buttons in Now Playing mode.
-		Slim::Hardware::IR::addModeDefaultMapping('playlist',\%mapping);
+		Slim::Hardware::IR::addModeDefaultMapping('playlist',defaultMap());
 		my $functref = Slim::Buttons::Playlist::getFunctions();
 		$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying;
 
@@ -2419,6 +2430,11 @@ sub initPlugin
 		# Default value for automatic decreasing ratings
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_decrease_percent",50);
+		}
+
+		# this will disable number scroll by default
+		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll"))) { 
+			Slim::Utils::Prefs::set("plugin_trackstat_disablenumberscroll", 1 ); 
 		}
 
 		initRatingChar();
@@ -4552,6 +4568,15 @@ SETUP_PLUGIN_TRACKSTAT_CLEAR
 
 SETUP_PLUGIN_TRACKSTAT_CLEAR_DESC
 	EN	This will remove all existing TrackStat data.<br><b>WARNING!</b><br>If you have not made an backup of the information it will be lost forever.
+
+PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL
+	EN	Disable number scroll
+
+SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL
+	EN	Disable number scroll
+
+SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL_DESC
+	EN	This will disable the scrolling functionallity on SqueezeBox while single clicking a number on the remote, usefull for universial remotes which can cause a single click before the hold action for set rating is executed.<br><b>Note!</b><br>You have to restart slimserver after changing this option.
 
 PLUGIN_TRACKSTAT_NO_TRACK
 	EN	No statistics found
