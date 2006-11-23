@@ -58,7 +58,37 @@ my %choiceMapping = (
         'add.hold' => 'insert_0',
         'search' => 'passback',
         'stop' => 'passback',
-        'pause' => 'passback'
+        'pause' => 'passback',
+	'0.hold' => 'saveRating_0',
+	'1.hold' => 'saveRating_1',
+	'2.hold' => 'saveRating_2',
+	'3.hold' => 'saveRating_3',
+	'4.hold' => 'saveRating_4',
+	'5.hold' => 'saveRating_5',
+	'6.hold' => 'saveRating_6',
+	'7.hold' => 'saveRating_7',
+	'8.hold' => 'saveRating_8',
+	'9.hold' => 'saveRating_9',
+	'0.single' => 'numberScroll_0',
+	'1.single' => 'numberScroll_1',
+	'2.single' => 'numberScroll_2',
+	'3.single' => 'numberScroll_3',
+	'4.single' => 'numberScroll_4',
+	'5.single' => 'numberScroll_5',
+	'6.single' => 'numberScroll_6',
+	'7.single' => 'numberScroll_7',
+	'8.single' => 'numberScroll_8',
+	'9.single' => 'numberScroll_9',
+	'0' => 'dead',
+	'1' => 'dead',
+	'2' => 'dead',
+	'3' => 'dead',
+	'4' => 'dead',
+	'5' => 'dead',
+	'6' => 'dead',
+	'7' => 'dead',
+	'8' => 'dead',
+	'9' => 'dead'
 );
 
 # Returns the display text for the currently selected item in the menu
@@ -1288,6 +1318,35 @@ sub initPlugin {
 	checkDefaults();
 	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
 	$choiceFunctions{'create_mix'} = sub {Slim::Buttons::Input::Choice::callCallback('onCreateMix', @_)};
+	$choiceFunctions{'saveRating'} = sub {
+		my $client = shift;
+		my $button = shift;
+		my $digit = shift;
+		my $listIndex = Slim::Buttons::Common::param($client,'listIndex');
+		my $listRef = Slim::Buttons::Common::param($client,'listRef');
+		my $item  = $listRef->[$listIndex];
+		my $trackStat;
+		if ($::VERSION ge '6.5') {
+			$trackStat = Slim::Utils::PluginManager::enabledPlugin('TrackStat',$client);
+		}else {
+			$trackStat = grep(/TrackStat/,Slim::Buttons::Plugins::enabledPlugins($client));
+		}
+
+		if($trackStat && defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'track' && (Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale") || $digit<=5)) {
+			my $rating = $digit*20;
+			if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+				$rating = $digit*10;
+			}
+			$rating .= '%';
+			my $request = $client->execute(['trackstat', 'setrating', sprintf('%d', $item->{'itemid'}),$rating]);
+			$request->source('PLUGIN_CUSTOMBROWSE');
+			$client->showBriefly(
+				$client->string( 'PLUGIN_TRACKSTAT'),
+				$client->string( 'PLUGIN_TRACKSTAT_RATING').('* ' x $digit),
+				3);
+		}
+		
+	};
 	$choiceFunctions{'insert'} = sub {Slim::Buttons::Input::Choice::callCallback('onInsert', @_)};
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Choice',\%choiceFunctions,\&Slim::Buttons::Input::Choice::setMode);
 	for my $buttonPressMode (qw{repeat hold hold_release single double}) {
