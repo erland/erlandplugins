@@ -11,7 +11,7 @@ div#trackstat_resultlist_controls_inner {
 }
 
 .trackstat_resultlist_item {
-	width:67%;
+	width:50%;
 }
 
 </STYLE>

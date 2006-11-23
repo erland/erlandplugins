@@ -1415,7 +1415,7 @@ sub baseWebPage {
 			if ($album) {
 				if ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating) {
 					my $unratedTracks;
-					if(Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating")) {
+					if($params->{trackstatrating}==0 || Slim::Utils::Prefs::get("plugin_trackstat_force_grouprating")) {
 						$unratedTracks = Plugins::TrackStat::Storage::getTracksOnAlbum($album);
 					}else {
 						$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($album);
@@ -4637,6 +4637,9 @@ PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS
 
 PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION
 	EN	This will change all ratings not already set on this album, is this what you want to do ?
+
+PLUGIN_TRACKSTAT_REMOVE_ALBUM_RATINGS_WARNING
+	EN	This will remove all ratings set on this album, is this what you want to do ?
 
 PLUGIN_TRACKSTAT_GROUP_RATING_QUESTION_FORCE
 	EN	This will change all ratings on this album old ratings will be lost, is this what you want to do ?

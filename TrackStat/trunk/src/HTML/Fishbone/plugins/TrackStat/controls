@@ -46,6 +46,7 @@
 					[% END %]
 				[% END %]
 			[% END %]
+			<a class="trackstat_resultlist_controls_link" href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=0&trackstattrackid=[% item.itemobj.id%][% statisticparameters %][% pluginTrackStatStatisticContextPath %]" border="0"><img src="[% webroot %]plugins/TrackStat/html/images/b_delete.gif" width=11 height=11 title="Unrate"></a>
 			[% IF !pluginTrackStatShowMixerLinks %]
 				<a class="trackstat_resultlist_controls_link"><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13></a>
 			[% END %]

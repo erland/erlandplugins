@@ -7,11 +7,15 @@ div#trackstat_resultlist_controls {
 }
 
 div#trackstat_resultlist_controls_inner {
-	float:right;
+}
+a#trackstat_resultlist_controls_link {
+	vertical-align: 
+	top;padding: 0px;
+	margin: 0px;
 }
 
 .trackstat_resultlist_item {
-	width:67%;
+	width:65%;
 }
 
 </STYLE>

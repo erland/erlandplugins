@@ -14,4 +14,8 @@ a#trackstat_resultlist_controls_link {
 	margin: 0px;
 }
 
+.trackstat_resultlist_item {
+	width:76%;
+}
+
 </STYLE>
