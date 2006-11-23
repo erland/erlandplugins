@@ -1,6 +1,6 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
-select tracks.url from
+select url from
 	(select tracks.url from tracks
 		join track_statistics on
 			tracks.url=track_statistics.url

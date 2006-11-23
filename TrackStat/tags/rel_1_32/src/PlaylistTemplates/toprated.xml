@@ -6,7 +6,7 @@
 		<description>Random playlist with only top rated songs</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="TrackStat Top Rated Songs"/>
 		<parameter type="text" id="playlistgroups" name="Groups" value=""/>
-		<parameter type="text" id="noofalbums" name="Use this number of albums" value="20"/>
+		<parameter type="text" id="nooftracks" name="Use this number of songs" value="20"/>
 		<parameter type="checkbox" id="notrepeat" name="Do not repeat tracks within same playlist" value="1"/>
 	</template>
 </trackstat>
