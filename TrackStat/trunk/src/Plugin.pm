@@ -3992,7 +3992,13 @@ sub validateIsFileOrEmpty {
 	if(!$arg || $arg eq '') {
 		return $arg;
 	}else {
-		return Slim::Utils::Validate::isFile($arg);
+		my $result = Slim::Utils::Validate::isFile($arg);
+		if($result) {
+			if(-f $result) {
+				return $result;
+			}
+		}
+		return undef;
 	}
 }
 
