@@ -2218,6 +2218,13 @@ sub initPlugin
 			$choiceMapping{'stop.' . $buttonPressMode} = 'passback';
 			$choiceMapping{'pause.' . $buttonPressMode} = 'passback';
 		}
+		if(Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll")) { 
+			for my $key (keys %mapping) {
+				if($key =~ /^\d\.single$/) {
+					$mapping{$key}='dead';
+				}
+			}
+		}
 		Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.TrackStat.Choice',\%choiceMapping);
 
 		# Alter mapping for functions & buttons in Now Playing mode.
@@ -2432,9 +2439,9 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_decrease_percent",50);
 		}
 
-		# this will disable number scroll by default
+		# this will enable number scroll by default
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll"))) { 
-			Slim::Utils::Prefs::set("plugin_trackstat_disablenumberscroll", 1 ); 
+			Slim::Utils::Prefs::set("plugin_trackstat_disablenumberscroll", 0 ); 
 		}
 
 		initRatingChar();
