@@ -450,7 +450,8 @@ sub handleCharElement {
 
 		#$iBase = Slim::Utils::Misc::pathFromFileURL($iBase);
 		$iBase = strip_automounter($value);
-		
+		$iBase =~ s/\(/\\\(/;
+		$iBase =~ s/\)/\\\)/;
 		debugMsg("found the music folder: $iBase\n");
 
 		return;
