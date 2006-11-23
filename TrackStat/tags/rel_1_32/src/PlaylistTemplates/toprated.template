@@ -18,5 +18,5 @@ select tracks.url from
 		[%- END %]
 		order by track_statistics.rating desc,rand()
 		[% IF !notrepeat %]offset 'PlaylistOffset'[% END %]
-		[% IF nooftracks %]limit [% nooftracks %][% ELSE %]limit 1[%END %]) as toprated)
+		[% IF nooftracks %]limit [% nooftracks %][% ELSE %]limit 1[%END %]) as toprated
 	order by rand();
