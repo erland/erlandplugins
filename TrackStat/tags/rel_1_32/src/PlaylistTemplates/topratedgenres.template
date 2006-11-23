@@ -13,7 +13,7 @@ select genre from
 		left join track_statistics on 
 			tracks.url = track_statistics.url 
 		join genre_track on 
-			tracks.id=gener_track.track
+			tracks.id=genre_track.track
 		[%- IF notrepeat %]
 		left join dynamicplaylist_history on 
 			tracks.id=dynamicplaylist_history.id 
