@@ -1341,8 +1341,8 @@ sub initPlugin {
 			my $request = $client->execute(['trackstat', 'setrating', sprintf('%d', $item->{'itemid'}),$rating]);
 			$request->source('PLUGIN_CUSTOMBROWSE');
 			$client->showBriefly(
-				$client->string( 'PLUGIN_TRACKSTAT'),
-				$client->string( 'PLUGIN_TRACKSTAT_RATING').('* ' x $digit),
+				$client->string( 'PLUGIN_CUSTOMBROWSE_TRACKSTAT'),
+				$client->string( 'PLUGIN_CUSTOMBROWSE_TRACKSTAT_RATING').(' *' x $digit),
 				3);
 		}
 		
@@ -3642,6 +3642,11 @@ PLUGIN_CUSTOMBROWSE_MENUTYPE_SIMPLE
 PLUGIN_CUSTOMBROWSE_MENUTYPE_ADVANCED
 	EN	Customize
 
+PLUGIN_CUSTOMBROWSE_TRACKSTAT
+	EN	TrackStat
+
+PLUGIN_CUSTOMBROWSE_TRACKSTAT_RATING
+	EN	Rating:
 EOF
 
 }
