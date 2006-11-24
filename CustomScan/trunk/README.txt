@@ -49,6 +49,7 @@ CustomTag = A scanning module that reads additional tags from the music files th
             The tags read can be configured as a "customtags" property in the Custom Scan settings page in the web interface.
             By default read tags will be splitted in same way as genres in standard slimserver, if you don't want the tag to be splitted you can also
             add it to a "singlecustomtags" property in the Custom Scan settings page in the web interface.
+            The mapping between MP3 ID3 standard frame names to tag names can be found in the Modules/CustomTag.pm file.
 
 LastFM = A scanning module that reads a number of different information from the LastFM database. Please note that the information read
          is only free to use for non commercial usage, see the licence for more information.
@@ -67,7 +68,9 @@ Amazon = A scanning module that read a number of different information from the 
                  enable it by setting the "writeamazonrating" property to 1 in the Custom Scan settings page in the web interface.
                  The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and
                  select the "Amazon Web Services" link currently available in the bottom left menu under "Amazon Services". You then enter the
-                 Access Key Id in the "amazonaccesskey" property in the Custom Scan settings page. For example "amazonaccesskey=0AAAAAAABBBBBBCCCC2"
+                 Access Key Id in the "amazonaccesskey" property in the Custom Scan settings page. For example "amazonaccesskey=0AAAAAAABBBBBBCCCC2".
+                 Genres/subjects imported are only imported  if they are shorter than the "amazonmaxsubjectlength" property which can be configured in the
+                 Custom Scan settings page.
 
 RatingTag = A scanning module that reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
             MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files.
