@@ -91,13 +91,16 @@ sub scanAlbum {
 			#debugMsg("Got xml:\n".Dumper($xml)."\n");
 			if($hits && scalar(@$hits)>0) {
 				my $firstHit = $hits->[0];
+				my $maxSubjectLength = Plugins::CustomScan::Plugin::getCustomScanProperty("amazonmaxsubjectlength");
 				my $subjects = $firstHit->{'Subjects'}->{'Subject'};
 				for my $subject (@$subjects) {
-					my %item = (
-						'name' => 'subject',
-						'value' => $subject
-					);
-					push @result,\%item;
+					if(!defined($maxSubjectLength) || length($subject)<$maxSubjectLength) {
+						my %item = (
+							'name' => 'subject',
+							'value' => $subject
+						);
+						push @result,\%item;
+					}
 				}
 				my $averageRating = $firstHit->{'CustomerReviews'}->{'AverageRating'};
 				if(defined($averageRating)){

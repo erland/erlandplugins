@@ -173,6 +173,7 @@ sub checkDefaults {
 		push @properties, 'lastfmtagspercent=10';
 		push @properties, 'writeamazonrating=0';
 		push @properties, 'amazonaccesskey=XXX';
+		push @properties, 'amazonmaxsubjectlength=40';
 		push @properties, 'ratingtag=RATING';
 		push @properties, 'ratingtagmax=100';
 		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
@@ -181,6 +182,7 @@ sub checkDefaults {
 		my $singlecustomtag = undef;
 		my $writeamazonrating = undef;
 		my $amazonaccesskey = undef;
+		my $amazonmaxsubjectlength = undef;
 		my $ratingtag = undef;
 		my $ratingtagmax = undef;
 		my $writeratingtag = undef;
@@ -203,6 +205,9 @@ sub checkDefaults {
 			if($property =~ /^ratingtagmax=/) {
 				$ratingtagmax = 1;
 			}
+			if($property =~ /^amazonmaxsubjectlength=/) {
+				$amazonmaxsubjectlength = 1;
+			}
 		}
 		if(!$singlecustomtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
@@ -221,6 +226,9 @@ sub checkDefaults {
 		}
 		if(!$writeratingtag) {
 			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeratingtag=1');
+		}
+		if(!$amazonmaxsubjectlength) {
+			Slim::Utils::Prefs::push('plugin_customscan_properties', 'amazonmaxsubjectlength=40');
 		}
 	}
 	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
@@ -744,7 +752,6 @@ sub scanTrack {
 	if($tracks) {
 		$track = $tracks->next;
 		while(defined($track) && !$track->audio) {
-			msg("CustomScan: Skipping track ".$track->title."\n");
 			$track = $tracks->next;
 		}
 	}
