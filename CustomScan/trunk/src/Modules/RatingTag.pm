@@ -53,7 +53,7 @@ sub scanTrack {
 	debugMsg("Scanning track: ".$track->title."\n");
 
 	my $writeratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("writeratingtag");
-	if($track->contentType() eq 'mp3') {
+	if($track->content_type() eq 'mp3') {
 		my %rawTags = ();
 		my $file = Slim::Utils::Misc::pathFromFileURL($track->url);
 		open(my $fh, $file);
