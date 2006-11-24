@@ -22,6 +22,165 @@ use warnings;
 package Plugins::CustomScan::Modules::CustomTag;
 
 use Slim::Utils::Misc;
+use MP3::Info;
+
+my %rawTagNames = (
+	'TT1' => 'CONTENTGROUP',
+	'TIT1' => 'CONTENTGROUP',
+	'TT2' => 'TITLE',
+	'TIT2' => 'TITLE',
+	'TT3' => 'SUBTITLE',
+	'TIT3' => 'SUBTITLE',
+	'TP1' => 'ARTIST',
+	'TPE1' => 'ARTIST',
+	'TP2' => 'BAND',
+	'TPE2' => 'BAND',
+	'TP3' => 'CONDUCTOR',
+	'TPE3' => 'CONDUCTOR',
+	'TP4' => 'MIXARTIST',
+	'TPE4' => 'MIXARTIST',
+	'TCM' => 'COMPOSER',
+	'TCOM' => 'COMPOSER',
+	'TXT' => 'LYRICIST',
+	'TEXT' => 'LYRICIST',
+	'TLA' => 'LANGUAGE',
+	'TLAN' => 'LANGUAGE',
+	'TCO' => 'CONTENTTYPE', #GENRE
+	'TCON' => 'CONTENTTYPE', #GENRE
+	'TAL' => 'ALBUM',
+	'TALB' => 'ALBUM',
+	'TRK' => 'TRACKNUM',
+	'TRCK' => 'TRACKNUM',
+	'TPA' => 'PARTINSET', #SET
+	'TPOS' => 'PARTINSET', #SET
+	'TRC' => 'ISRC',
+	'TSRC' => 'ISRC',
+	'TDA' => 'DATE',
+	'TDAT' => 'DATE',
+	'TYE' => 'YEAR',
+	'TYER' => 'YEAR',
+	'TIM' => 'TIME',
+	'TIME' => 'TIME',
+	'TRD' => 'RECORDINGDATES',
+	'TRDA' => 'RECORDINGDATES',
+	'TRDC' => 'RECORDINGTIME', #YEAR
+	'TOR' => 'ORIGYEAR',
+	'TORY' => 'ORIGYEAR',
+	'TDOR' => 'ORIGRELEASETIME',
+	'TBP' => 'BPM',
+	'TBPM' => 'BPM',
+	'TMT' => 'MEDIATYPE',
+	'TMED' => 'MEDIATYPE',
+	'TFT' => 'FILETYPE',
+	'TFLT' => 'FILETYPE',
+	'TCR' => 'COPYRIGHT',
+	'TCOP' => 'COPYRIGHT',
+	'TPB' => 'PUBLISHER',
+	'TPUB' => 'PUBLISHER',
+	'TEN' => 'ENCODEDBY',
+	'TENC' => 'ENCODEDBY',
+	'TSS' => 'ENCODERSETTINGS',
+	'TSSE' => 'ENCODERSETTINGS',
+	'TLE' => 'SONGLEN',
+	'TLEN' => 'SONGLEN',
+	'TSI' => 'SIZE',
+	'TSIZ' => 'SIZE',
+	'TDY' => 'PLAYLISTDELAY',
+	'TDLY' => 'PLAYLISTDELAY',
+	'TKE' => 'INITIALKEY',
+	'TKEY' => 'INITIALKEY',
+	'TOT' => 'ORIGALBUM',
+	'TOAL' => 'ORIGALBUM',
+	'TOF' => 'ORIGFILENAME',
+	'TOFN' => 'ORIGFILENAME',
+	'TOA' => 'ORIGARTIST',
+	'TOPE' => 'ORIGARTIST',
+	'TOL' => 'ORIGLYRICIST',
+	'TOLY' => 'ORIGLYRICIST',
+	'TOWN' => 'FILEOWNER',
+	'TRSN' => 'NETRADIOSTATION',
+	'TRSO' => 'NETRADIOOWNER',
+	'TSST' => 'SETSUBTITLE',
+	'TMOO' => 'MOOD',
+	'TPRO' => 'PRODUCEDNOTICE',
+	'TDEN' => 'ENCODINGTIME',
+	'TDRL' => 'RELEASETIME',
+	'TDTG' => 'TAGGINGTIME',
+	'TSOA' => 'ALBUMSORTORDER',
+	'TSOP' => 'PERFORMERSORTORDER',
+	'TSOT' => 'TITLESORTORDER',
+	'TXX' => 'USERTEXT',
+	'TXXX' => 'USERTEXT',
+	'WAF' => 'WWWAUDIOFILE',
+	'WOAF' => 'WWWAUDIOFILE',
+	'WAR' => 'WWWARTIST',
+	'WOAR' => 'WWWARTIST',
+	'WAS' => 'WWWAUDIOSOURCE',
+	'WOAS' => 'WWWAUDIOSOURCE',
+	'WCM' => 'WWWCOMMERCIALINFO',
+	'WCOM' => 'WWWCOMMERCIALINFO',
+	'WCP' => 'WWWCOPYRIGHT',
+	'WCOP' => 'WWWCOPYRIGHT',
+	'WPB' => 'WWWPUBLISHER',
+	'WPUB' => 'WWWPUBLISHER',
+	'WORS' => 'WWWRADIOPAGE',
+	'WPAY' => 'WWWPAYMENT',
+	'WXX' => 'WWWUSER',
+	'WXXX' => 'WWWUSER',
+	'IPL' => 'INVOLVEDPEOPLE',
+	'IPLS' => 'INVOLVEDPEOPLE',
+	'TMCL' => 'MUSICIANCREDITLIST',
+	'TIPL' => 'INVOLVEDPEOPLE2',
+	#'ULT' => 'UNSYNCEDLYRICS',
+	#'USLT' => 'UNSYNCEDLYRICS',
+	#'COM' => 'COMMENT',
+	#'COMM' => 'COMMENT',
+	#'USER' => 'TERMSOFUSE',
+	#'UFI' => 'UNIQUEFILEID',
+	#'UFID' => 'UNIQUEFILEID',
+	#'MCI' => 'CDID',
+	#'MCDI' => 'CDID',
+	#'ETC' => 'EVENTTIMING',
+	#'ETCO' => 'EVENTTIMING',
+	#'MLL' => 'MPEGLOOKUP',
+	#'MLLT' => 'MPEGLOOKUP',
+	#'STC' => 'SYNCEDTEMPO',
+	#'SYTC' => 'SYNCEDTEMPO',
+	#'SLT' => 'SYNCEDLYRICS',
+	#'SYLT' => 'SYNCEDLYRICS',
+	#'RVA' => 'VOLUMEADJ',
+	#'RVAD' => 'VOLUMEADJ',
+	#'RVA2' => 'VOLUMEADJ2',
+	#'EQU' => 'EQUALIZATION',
+	#'EQUA' => 'EQUALIZATION',
+	#'EQU2' => 'EQUALIZATION2',
+	#'REV' => 'REVERB',
+	#'RVRB' => 'REVERB',
+	#'PIC' => 'PICTURE',
+	#'APIC' => 'PICTURE',
+	#'GEO' => 'GENERALOBJECT',
+	#'GEOB' => 'GENERALOBJECT',
+	#'CNT' => 'PLAYCOUNTER',
+	#'PCNT' => 'PLAYCOUNTER',
+	#'POP' => 'POPULARIMETER',
+	#'POPM' => 'POPULARIMETER',
+	#'BUF' => 'BUFFERSIZE',
+	#'RBUF' => 'BUFFERSIZE',
+	#'CRM' => 'CRYPTEDMETA',
+	#'CRA' => 'AUDIOCRYPTO',
+	#'AENC' => 'AUDIOCRYPTO',
+	#'LNK' => 'LINKEDINFO',
+	#'LINK' => 'LINKEDINFO',
+	#'POSS' => 'POSITIONSYNC',
+	#'COMR' => 'COMMERCIAL',
+	#'ENCR' => 'CRYPTOREG',
+	#'GRID' => 'GROUPINGREG',
+	#'PRIV' => 'PRIVATE',
+	#'OWNE' => 'OWNERSHIP',
+	#'SIGN' => 'SIGNATURE',
+	#'SEEK' => 'SEEKFRAME',
+	#'ASPI' => 'AUDIOSEEKPOINT'
+);
 
 sub getCustomScanFunctions {
 	my %functions = (
@@ -40,6 +199,14 @@ sub scanTrack {
 	my @result = ();
 	debugMsg("Scanning track: ".$track->title."\n");
 	my $tags = Slim::Formats->readTags($track->url);
+	if($track->content_type() eq 'mp3') {
+		eval {
+			getRawMP3Tags($track->url,$tags);
+		};
+		if ($@) {
+			msg("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
+		}
+	}
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
 		my $singleValueTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("singlecustomtags");
@@ -88,6 +255,27 @@ sub scanTrack {
 		}
 	}
 	return \@result;
+}
+
+
+sub getRawMP3Tags {
+	my $url = shift;
+	my $tags = shift;
+
+
+	my $file = Slim::Utils::Misc::pathFromFileURL($url);
+	open(my $fh, $file);
+	my %rawTags = ();
+	MP3::Info::_get_v2tag($fh, 2, 1, \%rawTags);
+	for my $t (keys %rawTags) {
+		if(defined($rawTagNames{$t})) {
+			my $tagName = $rawTagNames{$t};
+			if(!defined($tags->{$tagName})) {
+				$tags->{$tagName} = $rawTags{$t};
+			}
+		}
+	}
+	close($fh);
 }
 
 sub debugMsg
