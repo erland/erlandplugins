@@ -53,13 +53,13 @@ sub scanTrack {
 	debugMsg("Scanning track: ".$track->title."\n");
 
 	my $writeratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("writeratingtag");
-	if(uc($track->url) =~ /MP3$/) {
+	if($track->contentType() eq 'mp3') {
 		my %rawTags = ();
 		my $file = Slim::Utils::Misc::pathFromFileURL($track->url);
 		open(my $fh, $file);
 		MP3::Info::_get_v2tag($fh, 2, 1, \%rawTags);
 		for my $t (keys %rawTags) {
-			if($t eq 'POPM') {
+			if($t eq 'POPM' || $t eq 'POP') {
 				my @bytes = unpack "C*",$rawTags{$t};
 				my $email=1;
 				my $rating = 0;
