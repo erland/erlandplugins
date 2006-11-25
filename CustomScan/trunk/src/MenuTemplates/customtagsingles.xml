@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<database>mysql</database>
-	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<name>Custom Tag Singles</name>
 		<description>Singles menu that lists singles. It detect all tracks with a specific COMMENT tag or a specific custom tag as a single, requires Custom Scan plugin</description>

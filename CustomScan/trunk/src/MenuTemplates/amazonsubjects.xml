@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<name>Amazon Genres</name>
 		<description>Genres menu that makes it possible to browse your artists by Amazon genres, requires the Custom Scan plugin</description>

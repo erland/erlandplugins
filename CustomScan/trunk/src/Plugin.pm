@@ -36,6 +36,7 @@ use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Plugins::CustomScan::Time::Stopwatch;
+use Plugins::CustomScan::Template::Reader;
 
 my $albums = ();
 my $artists = ();
@@ -293,6 +294,34 @@ sub getPluginModules {
 		use strict 'refs';
 	}
 	return \%plugins;
+}
+
+sub getSQLPlayListTemplates {
+	my $client = shift;
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','PlaylistTemplates','xml');
+}
+sub getCustomBrowseTemplates {
+	my $client = shift;
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','MenuTemplates','xml');
+}
+
+sub getSQLPlayListTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','PlaylistTemplates',$templateItem->{'id'});
+	return $data;
+}
+
+
+sub getCustomBrowseTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','MenuTemplates',$templateItem->{'id'});
+	return $data;
 }
 
 sub fullRescan {

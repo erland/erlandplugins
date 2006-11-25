@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<name>LastFM Tags</name>
 		<description>Genres menu that makes it possible to browse your artists by LastFM tags, requires the Custom Scan plugin</description>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<name>Amazon Ratings</name>
 		<description>Menu that makes it possible to browse your artists by Amazon customer ratings, requires the Custom Scan plugin</description>

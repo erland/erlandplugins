@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<name>LastFM Similar Artists</name>
 		<description>Artists menu that lets you select and artist and then select an artist similar to the selected on based on LastFM data and then browse as usual, it requires the Custom Scan plugin</description>
