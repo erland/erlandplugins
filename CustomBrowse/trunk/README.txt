@@ -338,3 +338,17 @@ Keywords can also be defined as a keyword element in the xml file, this is usefu
 to change keyword values in different option element, but might also be usefull if you want to
 define some part of a SQL statement in one place instead of repeating it in every statement.
 
+Templates
+---------
+It is possible to configure a template directory in the settings page for Custom Browse in the web
+interface. By doing this you can add your own menu templates. Templates are use full if you start to
+customize the menu configuration in several similar menus, in that situation you can instead choose to
+create a template with some parameters, where each menu just have different values on the parameters.
+
+A menu template consists of two files:
+
+xxx.template     : The menu configuration which can contain [% yyy %] keywords that will be replaced with
+                   real values when the menu is created.
+
+xxx.xml          : A description of the template and a definition of the parameterse that the user shall enter.
+                   See the templates in the CustomBrowse/Templates directory for some samples.

@@ -1268,13 +1268,18 @@ sub getTemplate {
 		}
 		my @include_path = ();
 		my $templateDir = undef;
+		
+		$templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+		if($templateDir) {
+			push @include_path,$templateDir;
+		}
+
 		for my $plugindir (@pluginDirs) {
 			next unless -d catdir($plugindir,'CustomBrowse/Templates');
 			$templateDir = catdir($plugindir,'CustomBrowse/Templates');
 			push @include_path,$templateDir;
 		}
-	
-	
+
 		$template = Template->new({
 	
 	                INCLUDE_PATH => \@include_path,
@@ -1839,7 +1844,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_menuname','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1876,6 +1881,13 @@ sub setupGroup
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_directory"); }
+		},
+	plugin_custombrowse_template_directory => {
+			'validate' => \&validateIsDirWrapper
+			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_template_directory"); }
 		},
 	plugin_custombrowse_menuname => {
 			'validate' => \&validateAcceptAllWrapper
@@ -2909,7 +2921,13 @@ sub readTemplateConfiguration {
 		}
 	}
 	use strict 'refs';
-    return \%templates;
+
+	my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+	if($templateDir && -d $templateDir) {
+		readTemplateConfigurationFromDir($client,$templateDir,\%templates);
+	}
+
+	return \%templates;
 }
 
 sub readTemplateConfigurationFromDir {
@@ -3667,8 +3685,14 @@ SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
 
+PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
+	EN	Browse templates directory
+
 SETUP_PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
+
+SETUP_PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
+	EN	Browse templates directory
 
 PLUGIN_CUSTOMBROWSE_MENUNAME
 	EN	Menu name
