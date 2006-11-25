@@ -1399,8 +1399,10 @@ sub addPlayerMenus {
 			'selectedMenu' => $browseMenus->{$menu}->{'id'}
 		);
 		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenu);
+		Slim::Buttons::Home::addMenuOption($name,\%submenu);
             }else {
                 Slim::Buttons::Home::delSubMenu('BROWSE_MUSIC',$name);
+		Slim::Buttons::Home::delMenuOption($name);
             }
         }
 }
@@ -3580,7 +3582,7 @@ PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE
 	EN	Select enabled menus
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_BROWSE_TITLE
-	EN	Show in<br>browse menu
+	EN	Show in<br>browse and home menu
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_NONE
 	EN	No Menus
