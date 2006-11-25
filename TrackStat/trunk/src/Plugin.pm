@@ -1335,7 +1335,9 @@ sub webPages {
 	my %pages = (
 		"index\.htm" => \&handleWebIndex,
 		"selectstatistics\.(?:htm|xml)" => \&handleWebSelectStatistics,
-		"saveselectstatistics\.(?:htm|xml)" => \&handleWebSaveSelectStatistics
+		"saveselectstatistics\.(?:htm|xml)" => \&handleWebSaveSelectStatistics,
+		"selectfavourites\.(?:htm|xml)" => \&handleWebSelectFavourites,
+		"saveselectfavourites\.(?:htm|xml)" => \&handleWebSaveSelectFavourites
 	);
 	
 	my $statistics = getStatisticPlugins();
@@ -1741,6 +1743,30 @@ sub handleWebSelectStatistics {
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/selectstatistics.html', $params);
 }
 
+sub handleWebSelectFavourites {
+	my ($client, $params) = @_;
+
+	baseWebPage($client, $params);
+	my $statistics = getStatisticPlugins();
+	my @statisticItems = ();
+	for my $item (keys %$statistics) {
+		my %itemData = ();
+		$itemData{'id'} = $statistics->{$item}->{'id'};
+		if(defined($statistics->{$item}->{'namefunction'})) {
+			$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
+		}else {
+			$itemData{'name'} = $statistics->{$item}->{'name'};
+		}
+		$itemData{'enabled'} = $statistics->{$item}->{'trackstat_statistic_favourite'};
+		push @statisticItems, \%itemData;
+	}
+	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
+	$params->{'pluginTrackStatStatisticItems'} = \@statisticItems;
+	$params->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/2;
+	
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/selectfavourites.html', $params);
+}
+
 sub handleWebSaveSelectStatistics {
 	my ($client, $params) = @_;
 
@@ -1749,11 +1775,31 @@ sub handleWebSaveSelectStatistics {
 	foreach my $statistic (keys %$statistics) {
 		my $statisticid = "statistic_".$statistics->{$statistic}->{'id'};
 		if($params->{$statisticid}) {
-			Slim::Utils::Prefs::set('plugin_trackstat_statistics_'.$statistic.'_enabled',1);
+			Slim::Utils::Prefs::delete('plugin_trackstat_statistics_'.$statistic.'_enabled');
 			$statistics->{$statistic}->{'trackstat_statistic_enabled'} = 1;
 		}else {
 			Slim::Utils::Prefs::set('plugin_trackstat_statistics_'.$statistic.'_enabled',0);
 			$statistics->{$statistic}->{'trackstat_statistic_enabled'} = 0;
+		}
+	}
+	$params->{'path'} = "plugins/TrackStat/index.html";
+	initStatisticPlugins();
+	handleWebIndex($client, $params);
+}
+
+sub handleWebSaveSelectFavourites {
+	my ($client, $params) = @_;
+
+	my $statistics = getStatisticPlugins($client);
+	my $first = 1;
+	foreach my $statistic (keys %$statistics) {
+		my $statisticfavouriteid = "statistic_".$statistics->{$statistic}->{'id'};
+		if($params->{$statisticfavouriteid}) {
+			Slim::Utils::Prefs::set('plugin_trackstat_statistics_'.$statistic.'_favourite',1);
+			$statistics->{$statistic}->{'trackstat_statistic_favourite'} = 1;
+		}else {
+			Slim::Utils::Prefs::delete('plugin_trackstat_statistics_'.$statistic.'_favourite');
+			$statistics->{$statistic}->{'trackstat_statistic_favourite'} = 1;
 		}
 	}
 	$params->{'path'} = "plugins/TrackStat/index.html";
@@ -1994,7 +2040,27 @@ sub initStatisticPlugins {
 							if(Slim::Utils::Prefs::get("plugin_trackstat_deep_hierarchy") || !defined($groups)) {
 								$groups = $items{'groups'};
 							}
-							if(defined($groups)) {
+							my $favourite = Slim::Utils::Prefs::get('plugin_trackstat_statistics_'.$item.'_favourite');
+							if(defined($favourite) && $favourite) {
+								$items{'trackstat_statistic_favourite'} = 1;
+							}else {
+								$items{'trackstat_statistic_favourite'} = 0;
+							}
+							if(!defined($groups)) {
+								my @emptyArray = ();
+								$groups = \@emptyArray;
+							}
+							if($favourite) {
+								my @favouriteGroups = ();
+								for my $g (@$groups) {
+									push @favouriteGroups,$g;
+								}
+								my @favouriteGroup = ();
+								push @favouriteGroup, string('PLUGIN_TRACKSTAT_FAVOURITES');
+								push @favouriteGroups,\@favouriteGroup;
+								$groups = \@favouriteGroups;
+							}
+							if(scalar(@$groups)>0) {
 								for my $currentgroups (@$groups) {
 									my $currentLevel = \%statisticItems;
 									my $grouppath = '';
@@ -4636,8 +4702,17 @@ PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK
 PLUGIN_TRACKSTAT_SELECT_STATISTICS
 	EN	Hide/Show
 
+PLUGIN_TRACKSTAT_FAVOURITES
+	EN	Favorites
+
+PLUGIN_TRACKSTAT_SELECT_FAVOURITES
+	EN	Select favorites
+
 PLUGIN_TRACKSTAT_SELECT_STATISTICS_TITLE
 	EN	Select which statistics to view
+
+PLUGIN_TRACKSTAT_SELECT_FAVOURITES_TITLE
+	EN	Select favorites
 
 PLUGIN_TRACKSTAT_SELECT_STATISTICS_ALL
 	EN	Select all
