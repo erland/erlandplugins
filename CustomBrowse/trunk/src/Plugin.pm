@@ -2332,12 +2332,13 @@ sub handleWebNewMenu {
 	my $templateFile = $params->{'menutemplate'};
 	my $menuFile = $templateFile;
 	$templateFile =~ s/\.xml$/.template/;
-	$menuFile =~ s/\.xml$/.cb.xml/;
+	$menuFile =~ s/\.xml$//;
 	my $templates = readTemplateConfiguration($client);
 	my $template = $templates->{$params->{'menutemplate'}};
 	my $menytype = $params->{'menutype'};
 
 	if($menytype eq 'advanced') {
+		$menuFile .= ".cb.xml";
 		my %templateParameters = ();
 		if(defined($template->{'parameter'})) {
 			my $parameters = $template->{'parameter'};
@@ -2350,7 +2351,23 @@ sub handleWebNewMenu {
 				}
 			}
 		}
-		my $menuData = fillTemplate($templateFile,\%templateParameters);
+		my $templateFileData = undef;
+		my $doParsing = 1;
+		if(defined($template->{'custombrowse_plugin_template'})) {
+			my $pluginTemplate = $template->{'custombrowse_plugin_template'};
+			if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
+				$doParsing = 0;
+			}
+			$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
+		}else {
+			$templateFileData = $templateFile;
+		}
+		my $menuData = undef;
+		if($doParsing) {
+			$menuData = fillTemplate($templateFileData,\%templateParameters);
+		}else {
+			$menuData = $templateFileData;
+		}
 		$menuData = Slim::Utils::Unicode::utf8on($menuData);
 		$menuData = Slim::Utils::Unicode::utf8encode_locale($menuData);
 		$menuData = encode_entities($menuData);
@@ -2363,13 +2380,13 @@ sub handleWebNewMenu {
 		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($menuFile);
 	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenu.html', $params);
 	}else {
+		$menuFile .= ".cb.values.xml";
 		my %templateParameters = ();
 		for my $p (keys %$params) {
 			if($p =~ /^menuparameter_/) {
 				$templateParameters{$p}=$params->{$p};
 			}
 		}
-		$menuFile =~ s/\.cb\.xml$/.cb.values.xml/;
 		$params->{'pluginCustomBrowseEditMenuParameters'} = \%templateParameters;
 		$params->{'pluginCustomBrowseNewMenuTemplate'} = $params->{'menutemplate'};
 		$params->{'pluginCustomBrowseEditMenuFile'} = $menuFile;
@@ -2404,7 +2421,23 @@ sub handleWebSaveSimpleMenu {
 				}
 			}
 		}
-		my $menuData = fillTemplate($templateFile,\%templateParameters);
+		my $templateFileData = undef;
+		my $doParsing = 1;
+		if(defined($template->{'custombrowse_plugin_template'})) {
+			my $pluginTemplate = $template->{'custombrowse_plugin_template'};
+			if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
+				$doParsing = 0;
+			}
+			$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
+		}else {
+			$templateFileData = $templateFile;
+		}
+		my $menuData = undef;
+		if($doParsing) {
+			$menuData = fillTemplate($templateFileData,\%templateParameters);
+		}else {
+			$menuData = $templateFileData;
+		}
 		$menuData = Slim::Utils::Unicode::utf8on($menuData);
 		$menuData = Slim::Utils::Unicode::utf8encode_locale($menuData);
 		$menuData = encode_entities($menuData);
@@ -2832,18 +2865,50 @@ sub handleWebSaveSelectMenus {
 
 
 sub readTemplateConfiguration {
-    my $client = shift;
-    my @pluginDirs = ();
-    if ($::VERSION ge '6.5') {
-        @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-    }else {
-        @pluginDirs = catdir($Bin, "Plugins");
-    }
-    my %templates = ();
-    for my $plugindir (@pluginDirs) {
-	next unless -d catdir($plugindir,"CustomBrowse","Templates");
-	readTemplateConfigurationFromDir($client,catdir($plugindir,"CustomBrowse","Templates"),\%templates);
-    }
+	my $client = shift;
+	my @pluginDirs = ();
+	if ($::VERSION ge '6.5') {
+		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	}else {
+		@pluginDirs = catdir($Bin, "Plugins");
+	}
+	my %templates = ();
+	for my $plugindir (@pluginDirs) {
+		next unless -d catdir($plugindir,"CustomBrowse","Templates");
+		readTemplateConfigurationFromDir($client,catdir($plugindir,"CustomBrowse","Templates"),\%templates);
+	}
+
+	no strict 'refs';
+	my @enabledplugins;
+	if ($::VERSION ge '6.5') {
+		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+	}else {
+		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+	}
+
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("Plugins::$plugin","getCustomBrowseTemplates") && UNIVERSAL::can("Plugins::$plugin","getCustomBrowseTemplateData")) {
+			debugMsg("Getting menu templates for: $plugin\n");
+			my $items = eval { &{"Plugins::${plugin}::getCustomBrowseTemplates"}($client) };
+			if ($@) {
+				debugMsg("Error getting menu templates from $plugin: $@\n");
+			}
+			for my $item (@$items) {
+				my $template = $item->{'template'};
+				$template->{'custombrowse_plugin_template'}=$item;
+				$template->{'custombrowse_plugin'} = "Plugins::${plugin}";
+				my $templateId = $item->{'id'};
+				if($plugin =~ /^([^:]+)::.*$/) {
+					$templateId = lc($1)."_".$item->{'id'};
+				}
+				$template->{'id'} = $templateId;
+				debugMsg("Adding template: $templateId\n");
+				#debugMsg(Dumper($template));
+				$templates{$templateId} = $template;
+			}
+		}
+	}
+	use strict 'refs';
     return \%templates;
 }
 
@@ -3010,7 +3075,23 @@ sub parseMenuTemplateContent {
 					}
 				}
 			}
-			my $menuData = fillTemplate($templateFile,\%templateParameters);
+			my $templateFileData = undef;
+			my $doParsing = 1;
+			if(defined($template->{'custombrowse_plugin_template'})) {
+				my $pluginTemplate = $template->{'custombrowse_plugin_template'};
+				if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
+					$doParsing = 0;
+				}
+				$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
+			}else {
+				$templateFileData = $templateFile;
+			}
+			my $menuData = undef;
+			if($doParsing) {
+				$menuData = fillTemplate($templateFileData,\%templateParameters);
+			}else {
+				$menuData = $templateFileData;
+			}
 			$menuData = Slim::Utils::Unicode::utf8on($menuData);
 			$menuData = Slim::Utils::Unicode::utf8encode_locale($menuData);
 			#$menuData = encode_entities($menuData);
@@ -3377,6 +3458,26 @@ sub loadMenuData {
 	debugMsg("Loading of menu data succeeded\n");
     }
     return $content;
+}
+
+sub getPluginTemplateData {
+	my $client = shift;
+	my $template = shift;
+	my $parameters = shift;
+	debugMsg("Get template data from plugin\n");
+	my $plugin = $template->{'custombrowse_plugin'};
+	my $pluginTemplate = $template->{'custombrowse_plugin_template'};
+	my $templateFileData = undef;
+	no strict 'refs';
+	if(UNIVERSAL::can("$plugin","getCustomBrowseTemplateData")) {
+		debugMsg("Calling: $plugin :: getCustomBrowseTemplateData\n");
+		$templateFileData =  eval { &{"${plugin}::getCustomBrowseTemplateData"}($client,$pluginTemplate,$parameters) };
+		if ($@) {
+			debugMsg("Error retreiving menu template data from $plugin: $@\n");
+		}
+	}
+	use strict 'refs';
+	return \$templateFileData;
 }
 
 sub loadTemplateData {
