@@ -404,10 +404,17 @@ sub initPlayLists {
 						Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$item.'_enabled',$enabled);
 					}
 				}
-				if(!defined $enabled || $enabled==1) {
+				if(!defined $enabled || $enabled) {
 					$playlist->{'dynamicplaylistenabled'} = 1;
 				}else {
 					$playlist->{'dynamicplaylistenabled'} = 0;
+				}
+
+				my $favourite = Slim::Utils::Prefs::get('plugin_dynamicplaylist_playlist_'.$item.'_favourite');
+				if(defined($favourite) && $favourite) {
+					$playlist->{'dynamicplaylistfavourite'} = 1;
+				}else {
+					$playlist->{'dynamicplaylistfavourite'} = 0;
 				}
 
 				if(defined($playlist->{'parameters'})) {
@@ -431,7 +438,21 @@ sub initPlayLists {
 				if(!defined($groups)) {
 					$groups = getDefaultGroups();
 				}
-				if(defined($groups)) {
+				if(!defined($groups)) {
+					my @emptyArray = ();
+					$groups = \@emptyArray;
+				}
+				if($favourite && Slim::Utils::Prefs::get("plugin_dynamicplaylist_favouritesname")) {
+					my @favouriteGroups = ();
+					for my $g (@$groups) {
+						push @favouriteGroups,$g;
+					}
+					my @favouriteGroup = ();
+					push @favouriteGroup, Slim::Utils::Prefs::get("plugin_dynamicplaylist_favouritesname");
+					push @favouriteGroups,\@favouriteGroup;
+					$groups = \@favouriteGroups;
+				}
+				if(scalar(@$groups)>0) {
 					for my $currentgroups (@$groups) {
 						my $currentLevel = \%localPlayListItems;
 						my $grouppath = '';
@@ -1825,9 +1846,15 @@ sub handleWebSaveSelectPlaylists {
 	foreach my $playlist (keys %$playLists) {
 		my $playlistid = "playlist_".$playLists->{$playlist}{'dynamicplaylistid'};
 		if($params->{$playlistid}) {
-			Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$playlist.'_enabled',1);
+			Slim::Utils::Prefs::delete('plugin_dynamicplaylist_playlist_'.$playlist.'_enabled');
 		}else {
 			Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$playlist.'_enabled',0);
+		}
+		my $playlistfavouriteid = "playlistfavourite_".$playLists->{$playlist}{'dynamicplaylistid'};
+		if($params->{$playlistfavouriteid}) {
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_playlist_'.$playlist.'_favourite',1);
+		}else {
+			Slim::Utils::Prefs::delete('plugin_dynamicplaylist_playlist_'.$playlist.'_favourite');
 		}
 	}
 	
@@ -1947,14 +1974,20 @@ sub checkDefaults {
 		# Default to show mixer links
 		debugMsg("Defaulting plugin_dynamicplaylist_enable_mixerfunction to 1\n");
 		Slim::Utils::Prefs::set("plugin_dynamicplaylist_enable_mixerfunction",1);
+
 	}
+	if(!defined(Slim::Utils::Prefs::get("plugin_dynamicplaylist_favouritesname"))) {
+		debugMsg("Defaulting plugin_dynamicplaylist_favouritesname to ".string('PLUGIN_DYNAMICPLAYLIST_FAVOURITES')."\n");
+		Slim::Utils::Prefs::set("plugin_dynamicplaylist_favouritesname",string('PLUGIN_DYNAMICPLAYLIST_FAVOURITES'));
+	}
+
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2042,6 +2075,13 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction"); }
+		},
+	plugin_dynamicplaylist_favouritesname => {
+			'validate' => \&validateAcceptAllWrapper
+			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_favouritesname"); }
+			,'PrefSize' => 'large'
 		}
 	);
 	return (\%setupGroup,\%setupPrefs);
@@ -2133,7 +2173,7 @@ sub cliGetPlaylists {
   	my $all = $request->getParam('_all');
   	initPlayLists($client);
 	initPlayListTypes();
-  	if(!defined $all && $all ne 'all') {
+  	if(!defined($all) || $all ne 'all') {
   		$all = undef;
   	}
   	my $count = 0;
@@ -2709,6 +2749,12 @@ PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC
 PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME
+	EN	Favourites group name
+
+PLUGIN_DYNAMICPLAYLIST_FAVOURITES
+	EN	Favourites
+
 PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS
 	EN	Include saved playlists
 
@@ -2795,6 +2841,12 @@ PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE
 	EN	Select enabled playlists
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS_TITLE
+	EN	Select enabled playlist groups
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_FAVOURITES_TITLE
+	EN	Select favourites
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_NONE
 	EN	No Playlists
