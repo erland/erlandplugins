@@ -82,7 +82,6 @@ sub readTemplateData {
 		next unless -d catdir($plugindir,$mainPlugin,$dir);
 		$templateDir = catdir($plugindir,$mainPlugin,$dir);
 	}
-msg("*** TrackStat\n");
 	my $path = catfile($templateDir, $template.".template");
 
 	# read_file from File::Slurp

@@ -1867,7 +1867,6 @@ sub getSQLPlayListTemplateData {
 	my $client = shift;
 	my $templateItem = shift;
 	my $parameterValues = shift;
-	msg("*** ".$templateItem->{'id'}."\n");
 	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','PlaylistTemplates',$templateItem->{'id'});
 	return $data;
 }
