@@ -120,12 +120,19 @@ following keys:
 
 id = A unique identifier of the scanning module, will be used as module when storing the information in the database
 name = A user friendly name of the scanning module that shall be shown to the user
+description = A user friendly description of the scanning module that shall be shown to the user
 scanArtist = A pointer to the function that shall be called when scanning an artist, if not specified artists will not be scanned by this module.
 scanAlbum = A pointer to the function that shall be called when scanning an album, if not specified albums will not be scanned by this module.
 scanTrack = A pointer to the function that shall be called when scanning a track, if not specified tracks will not be scanned by this module.
 alwaysRescanArtist = If set to 1, old artist data will always be deleted before scanning. If not specified only artists with no previous data will be scanned.
 alwaysRescanAlbum = If set to 1, old album data will always be deleted before scanning. If not specified only albums with no previous data will be scanned.
 alwaysRescanTrack = If set to 1, old track data will always be deleted before scanning. If not specified only tracks with no previous data will be scanned.
+properties = An array of properties, where each property hash contains the following:
+    id = Unique identifier for the property
+    name = User friendly name of the property shown to the user
+    description = Additional description of the property shown to the user
+    type = One of "text" or "checkbox" depending of the type of property
+    value = Default value of the property
 
 scanArtist function will get a contributor object as in-parameter when called, it will be called once for each artist in the slimserver database.
 scanAlbum function will get an album object as in-parameter when called, it will be called once for each album in the slimserver database.
