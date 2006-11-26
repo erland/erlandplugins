@@ -46,7 +46,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'ratingtag',
 				'name' => 'Rating tag name',
-				'description' => 'The name of the rating tag to read ratings from',
+				'description' => 'The name of the rating tag to read ratings from, can be several tags separated by a comma',
 				'type' => 'text',
 				'value' => 'RATING'
 			},
@@ -122,10 +122,15 @@ sub scanTrack {
 	my $ratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("ratingtag");
 	my $ratingtagmax = Plugins::CustomScan::Plugin::getCustomScanProperty("ratingtagmax");
 	if($ratingtag && $ratingtagmax) {
+		my @ratingTags = split(/\s*,\s*/,$ratingtag);
+		my %ratingTagsHash = ();
+		for my $tag (@ratingTags) {
+			$ratingTagsHash{uc($tag)} = 1;
+		}
 		my $tags = Slim::Formats->readTags($track->url);
 		if(defined($tags)) {
 			for my $tag (keys %$tags) {
-				if(uc($tag) eq uc($ratingtag)) {
+				if(defined($ratingTagsHash{uc($tag)})) {
 					my $ratingNumber = $tags->{$tag};
 					if($ratingNumber && $ratingNumber =~ /^\d+$/) {
 						$ratingNumber = floor($ratingNumber*100/$ratingtagmax);
