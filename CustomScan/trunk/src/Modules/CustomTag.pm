@@ -22,6 +22,7 @@ use warnings;
 package Plugins::CustomScan::Modules::CustomTag;
 
 use Slim::Utils::Misc;
+use Slim::Utils::Unicode;
 use MP3::Info;
 
 my %rawTagNames = (
@@ -295,8 +296,22 @@ sub getRawMP3Tags {
 			my $tagName = $rawTagNames{$t};
 			if(!defined($tags->{$tagName})) {
 				my $value = $rawTags->{$t};
+				my $encoding = '';
+				if($value =~ /^(.)/) { 
+					$encoding = $1;
+					if($encoding eq "\001" || $encoding eq "\002" || $encoding eq "\003") {
+						# strip first char (text encoding)
+						$value =~ s/^.//;
+					}
+				}
+				if ($encoding eq "\001" || $encoding eq "\002") { 
+					$value =  eval { Slim::Utils::Unicode::decode('utf16', $value) } || Slim::Utils::Unicode::decode('utf16le', $value);
+				} elsif ($encoding eq "\003") {
+					$value =  Slim::Utils::Unicode::decode('utf8', $value);
+				}
 				# Remove null character at end
 				$value =~ s/\0$//;
+				$value =~ s/^\0//;
 				$tags->{$tagName} = $value;
 			}
 		}
