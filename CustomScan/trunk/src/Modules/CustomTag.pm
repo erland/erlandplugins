@@ -281,18 +281,18 @@ sub getRawMP3Tags {
 
 
 	my $file = Slim::Utils::Misc::pathFromFileURL($url);
-	open(my $fh, $file);
-	my %rawTags = ();
-	MP3::Info::_get_v2tag($fh, 2, 1, \%rawTags);
-	for my $t (keys %rawTags) {
+	my $rawTags = MP3::Info::get_mp3tag($file,2,1);
+	for my $t (keys %$rawTags) {
 		if(defined($rawTagNames{$t})) {
 			my $tagName = $rawTagNames{$t};
 			if(!defined($tags->{$tagName})) {
-				$tags->{$tagName} = $rawTags{$t};
+				my $value = $rawTags->{$t};
+				# Remove null character at end
+				$value =~ s/\0$//;
+				$tags->{$tagName} = $value;
 			}
 		}
 	}
-	close($fh);
 }
 
 sub debugMsg

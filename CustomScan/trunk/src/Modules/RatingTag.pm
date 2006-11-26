@@ -77,13 +77,11 @@ sub scanTrack {
 
 	my $writeratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("writeratingtag");
 	if($track->content_type() eq 'mp3') {
-		my %rawTags = ();
 		my $file = Slim::Utils::Misc::pathFromFileURL($track->url);
-		open(my $fh, $file);
-		MP3::Info::_get_v2tag($fh, 2, 1, \%rawTags);
-		for my $t (keys %rawTags) {
+		my $rawTags = MP3::Info::get_mp3tag($file,2,1);
+		for my $t (keys %$rawTags) {
 			if($t eq 'POPM' || $t eq 'POP') {
-				my @bytes = unpack "C*",$rawTags{$t};
+				my @bytes = unpack "C*",$rawTags->{$t};
 				my $email=1;
 				my $rating = 0;
 				my $emailText = '';
@@ -120,7 +118,6 @@ sub scanTrack {
 				}
 			}
 		}
-		close($fh);
 	}
 	my $ratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("ratingtag");
 	my $ratingtagmax = Plugins::CustomScan::Plugin::getCustomScanProperty("ratingtagmax");
