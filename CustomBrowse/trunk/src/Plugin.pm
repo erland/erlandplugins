@@ -1138,6 +1138,8 @@ sub replaceParameters {
         for my $param (keys %$parameters) {
             my $value = $dbh->quote($parameters->{$param});
 	    $value = substr($value, 1, -1);
+	    $value = Slim::Utils::Unicode::utf8on($value);
+	    $value = Slim::Utils::Unicode::utf8encode_locale($value);
             $originalValue =~ s/\{$param\}/$value/g;
         }
     }
@@ -1531,10 +1533,13 @@ sub getPageItemsForContext {
 						$it->{'externalurl'}=$url;
 					}
 				}else {
+					my $id = $it->{'itemid'};
+					$id = Slim::Utils::Unicode::utf8on($id);
+					$id = Slim::Utils::Unicode::utf8encode_locale($id);
 					if(defined($context)) {
-						$it->{'url'}=$context->{'url'}.','.$it->{'id'}.$context->{'valueUrl'}.'&'.$it->{'id'}.'='.=escape($it->{'itemid'});
+						$it->{'url'}=$context->{'url'}.','.$it->{'id'}.$context->{'valueUrl'}.'&'.$it->{'id'}.'='.=escape($id);
 					}else {
-						$it->{'url'}='&hierarchy='.$it->{'id'}.'&'.$it->{'id'}.'='.escape($it->{'itemid'});
+						$it->{'url'}='&hierarchy='.$it->{'id'}.'&'.$it->{'id'}.'='.escape($id);
 					}
 				}
 			}
@@ -1565,9 +1570,7 @@ sub getPageItemsForContext {
 					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
 				}
 			}
-			if(defined($it->{'externalurl'}) || defined($it->{'url'})) {
-				push @resultItems, $it;
-			}
+			push @resultItems, $it;
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$prevLetter = $it->{'itemlink'};
 			}
