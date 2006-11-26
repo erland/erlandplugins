@@ -165,73 +165,19 @@ sub checkDefaults {
 	if(!defined(Slim::Utils::Prefs::get("plugin_customscan_auto_rescan"))) {
 		Slim::Utils::Prefs::set("plugin_customscan_auto_rescan",1);
 	}
-	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_properties'))) {
-		debugMsg("Defaulting plugin_scan_properties\n");
-		my @properties = ();
-		push @properties, 'customtags=OWNER,ORIGIN';
-		push @properties, 'singlecustomtags=ORIGIN';
-		push @properties, 'lastfmsimilarartistpercent=80';
-		push @properties, 'lastfmtagspercent=10';
-		push @properties, 'writeamazonrating=0';
-		push @properties, 'amazonaccesskey=XXX';
-		push @properties, 'amazonmaxsubjectlength=40';
-		push @properties, 'ratingtag=RATING';
-		push @properties, 'ratingtagmax=100';
-		Slim::Utils::Prefs::set('plugin_customscan_properties', \@properties);
-	}else {
-	        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
-		my $singlecustomtag = undef;
-		my $writeamazonrating = undef;
-		my $amazonaccesskey = undef;
-		my $amazonmaxsubjectlength = undef;
-		my $ratingtag = undef;
-		my $ratingtagmax = undef;
-		my $writeratingtag = undef;
-		for my $property (@properties) {
-			if($property =~ /^singlecustomtags=/) {
-				$singlecustomtag = 1;
+
+	$modules = getPluginModules();
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		my $properties = $module->{'properties'};
+		for my $property (@$properties) {
+			my $value = getCustomScanProperty($property->{'id'});
+			if(!defined($value)) {
+				setCustomScanProperty($property->{'id'},$property->{'value'});
 			}
-			if($property =~ /^writeamazonrating=/) {
-				$writeamazonrating = 1;
-			}
-			if($property =~ /^amazonaccesskey=/) {
-				$amazonaccesskey = 1;
-			}
-			if($property =~ /^ratingtag=/) {
-				$ratingtag = 1;
-			}
-			if($property =~ /^writeratingtag=/) {
-				$writeratingtag = 1;
-			}
-			if($property =~ /^ratingtagmax=/) {
-				$ratingtagmax = 1;
-			}
-			if($property =~ /^amazonmaxsubjectlength=/) {
-				$amazonmaxsubjectlength = 1;
-			}
-		}
-		if(!$singlecustomtag) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'singlecustomtags=ORIGIN');
-		}
-		if(!$writeamazonrating) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeamazonrating=0');
-		}
-		if(!$amazonaccesskey) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'amazonaccesskey=XXX');
-		}
-		if(!$ratingtag) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'ratingtag=RATING');
-		}
-		if(!$ratingtagmax) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'ratingtagmax=100');
-		}
-		if(!$writeratingtag) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'writeratingtag=1');
-		}
-		if(!$amazonmaxsubjectlength) {
-			Slim::Utils::Prefs::push('plugin_customscan_properties', 'amazonmaxsubjectlength=40');
 		}
 	}
+
 	if (!defined(Slim::Utils::Prefs::get('plugin_customscan_titleformats'))) {
 		my @titleFormats = ();
 		Slim::Utils::Prefs::set('plugin_customscan_titleformats', \@titleFormats);
@@ -873,7 +819,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_properties','plugin_customscan_titleformats','plugin_customscan_showmessages'],
+	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_titleformats','plugin_customscan_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -913,17 +859,6 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customscan_auto_rescan"); }
 		},		
-	plugin_customscan_properties => {
-			'validate' => \&validateProperty
-			,'isArray' => 1
-			,'arrayAddExtra' => 1
-			,'arrayDeleteNull' => 1
-			,'arrayDeleteValue' => ''
-			,'arrayBasicValue' => ''
-			,'inputTemplate' => 'setup_input_array_txt.html'
-			,'changeAddlText' => string('PLUGIN_CUSTOMSCAN_PROPERTIES')
-			,'PrefSize' => 'large'
-		},
 	plugin_customscan_titleformats => {
 			'validate' => \&validateAcceptAllWrapper
 			,'isArray' => 1
@@ -997,8 +932,8 @@ sub webPages {
 	my %pages = (
                 "customscan_list\.(?:htm|xml)"     => \&handleWebList,
                 "customscan_scan\.(?:htm|xml)"     => \&handleWebScan,
-		"customscan_selectmodules\.(?:htm|xml)" => \&handleWebSelectModules,
-		"customscan_saveselectmodules\.(?:htm|xml)" => \&handleWebSaveSelectModules,
+		"customscan_settings\.(?:htm|xml)" => \&handleWebSettings,
+		"customscan_savesettings\.(?:htm|xml)" => \&handleWebSaveSettings,
         );
 
         my $value = 'customscan_list.html';
@@ -1024,6 +959,95 @@ sub handleWebList {
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_list.html', $params);
 }
 
+sub handleWebSettings {
+	my ($client, $params) = @_;
+
+	if(!$modules) {
+		$modules = getPluginModules();
+	}
+	my $module = $modules->{$params->{'module'}};
+
+
+	$params->{'pluginCustomScanModuleId'} = $params->{'module'};
+	$params->{'pluginCustomScanModuleEnabled'} = $module->{'enabled'};
+	$params->{'pluginCustomScanModuleName'} = $module->{'name'};
+	$params->{'pluginCustomScanModuleDescription'} = $module->{'description'};
+	my @properties = ();
+	my $moduleProperties = $module->{'properties'};
+	for my $property (@$moduleProperties) {
+		my %p = (
+			'id' => $property->{'id'},
+			'name' => $property->{'name'},
+			'description' => $property->{'description'},
+			'type' => $property->{'type'}
+		);
+		my $value = getCustomScanProperty($property->{'id'});
+		if(!defined($value)) {
+			$value = $property->{'value'};
+		}
+		$p{'value'} = $value;
+		push @properties,\%p;
+	}	
+	$params->{'pluginCustomScanModuleProperties'} = \@properties;
+
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginCustomScanSlimserver70'} = 1;
+	}
+	
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_settings.html', $params);
+}
+
+sub handleWebSaveSettings {
+	my ($client, $params) = @_;
+
+	if(!$modules) {
+		$modules = getPluginModules();
+	}
+	my $module = $modules->{$params->{'module'}};
+	
+	my $moduleProperties = $module->{'properties'};
+
+	foreach my $property (@$moduleProperties) {
+		my $propertyid = "property_".$property->{'id'};
+		if($params->{$propertyid}) {
+			setCustomScanProperty($property->{'id'},$params->{$propertyid});
+		}else {
+			if($property->{'type'} eq 'checkbox') {
+				setCustomScanProperty($property->{'id'},0);
+			}else {
+				setCustomScanProperty($property->{'id'},'');
+			}
+		}
+	}
+	if($params->{'moduleenabled'}) {
+		$module->{'enabled'} = 1;
+		Slim::Utils::Prefs::set('plugin_customscan_module_'.$module->{'id'}.'_enabled',1);
+	}else {
+		$module->{'enabled'} = 0;
+		Slim::Utils::Prefs::set('plugin_customscan_module_'.$module->{'id'}.'_enabled',0);
+	}
+	handleWebList($client, $params);
+}
+
+sub setCustomScanProperty {
+	my $name = shift;
+	my $value = shift;
+
+        my @properties = Slim::Utils::Prefs::getArray('plugin_customscan_properties');
+	my $propertyexists = undef;
+	my $index = 0;
+	for my $property (@properties) {
+		if($property =~ /^$name=/) {
+			$propertyexists = 1;
+			Slim::Utils::Prefs::set('plugin_customscan_properties',"$name=$value",$index);
+		}
+		$index = $index+1;
+	}
+	if(!$propertyexists) {
+		Slim::Utils::Prefs::push('plugin_customscan_properties', "$name=$value");
+	}
+}
+
 sub handleWebScan {
 	my ($client, $params) = @_;
 	if($params->{'module'} eq 'allmodules') {
@@ -1040,36 +1064,6 @@ sub handleWebScan {
 		}
 	}
 	return handleWebList($client, $params);
-}
-
-sub handleWebSelectModules {
-	my ($client, $params) = @_;
-
-	# Pass on the current pref values and now playing info
-	$params->{'pluginCustomScanModules'} = getPluginModules();
-	if ($::VERSION ge '7.0') {
-		$params->{'pluginCustomScanSlimserver70'} = 1;
-	}
-	
-	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_selectmodules.html', $params);
-}
-
-sub handleWebSaveSelectModules {
-	my ($client, $params) = @_;
-
-	my $modules = getPluginModules();
-	my $first = 1;
-	my $sql = '';
-	foreach my $module (keys %$modules) {
-		my $moduleid = "module_".$modules->{$module}->{'id'};
-		if($params->{$moduleid}) {
-			Slim::Utils::Prefs::set('plugin_customscan_module_'.$modules->{$module}->{'id'}.'_enabled',1);
-		}else {
-			Slim::Utils::Prefs::set('plugin_customscan_module_'.$modules->{$module}->{'id'}.'_enabled',0);
-		}
-	}
-	
-	handleWebList($client, $params);
 }
 
 sub initDatabase {
@@ -1697,17 +1691,11 @@ SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN
 SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN_DESC
 	EN	This will activate/deactivate the automatic rescan after a slimserver rescan has been performed
 
-PLUGIN_CUSTOMSCAN_SELECT_MODULES
-	EN	Enable/Disable scanning modules 
+PLUGIN_CUSTOMSCAN_SETTINGS_TITLE
+	EN	Settings
 
-PLUGIN_CUSTOMSCAN_SELECT_MODULES_TITLE
-	EN	Select enabled modules
-
-PLUGIN_CUSTOMSCAN_SELECT_MODULES_NONE
-	EN	No modules
-
-PLUGIN_CUSTOMSCAN_SELECT_MODULES_ALL
-	EN	All modules
+PLUGIN_CUSTOMSCAN_PROPERTIES_TITLE
+	EN	Configurable properties
 
 PLUGIN_CUSTOMSCAN_SCAN_CLEAR
 	EN	Clear
@@ -1727,12 +1715,6 @@ PLUGIN_CUSTOMSCAN_SCAN_RESCAN_ALL
 PLUGIN_CUSTOMSCAN_SCAN_CLEAR_ALL_QUESTION
 	EN	Are you sure you want to completely remove all data for all modules ?
 
-PLUGIN_CUSTOMSCAN_PROPERTIES
-	EN	Properties to use in scanning modules
-
-SETUP_PLUGIN_CUSTOMSCAN_PROPERTIES
-	EN	Properties to use in scanning modules
-
 PLUGIN_CUSTOMSCAN_TITLEFORMATS
 	EN	Attributes to make available as title formats
 
@@ -1744,6 +1726,9 @@ PLUGIN_CUSTOMSCAN_SCANNING
 
 PLUGIN_CUSTOMSCAN_REFRESH
 	EN	Refresh scanning status
+
+PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED
+	EN	Enable in automatic and full scans
 EOF
 
 }

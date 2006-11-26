@@ -187,8 +187,25 @@ sub getCustomScanFunctions {
 		'id' => 'customtag',
 		'defaultenabled' => 1,
 		'name' => 'Custom Tag',
+		'description' => "This module scans information from custom tags in your music files<br><br>The mapping between MP3 ID3 standard frame names to tag names can be found in the Modules/CustomTag.pm file, the names shall in most cases be the same as shown in your tagging software",
 		'alwaysRescanTrack' => 1,
-		'scanTrack' => \&scanTrack
+		'scanTrack' => \&scanTrack,
+		'properties' => [
+			{
+				'id' => 'customtags',
+				'name' => 'Tags to scan',
+				'description' => 'Comma separated list with the tags that shall be scanned',
+				'type' => 'text',
+				'value' => 'OWNER,ORIGIN'
+			},
+			{
+				'id' => 'singlecustomtags',
+				'name' => 'Single value tags',
+				'description' => 'Comma separated list with scanned tags that shall not be splitted to several values separated by ;. These tags must also be added to "Tags to scan" to be included in the scan',
+				'type' => 'text',
+				'value' => 'ORIGIN'
+			}
+		]
 	);
 	return \%functions;
 		

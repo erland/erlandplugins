@@ -42,7 +42,7 @@
 		</tr>
 		[% FOREACH module IN pluginCustomScanModules.keys.sort %]
 				<tr><td>
-					[% pluginCustomScanModules.$module.name %][% IF !pluginCustomScanModules.$module.enabled %]&nbsp;&nbsp;&nbsp;(disabled)[% END %]</td><td>
+					<a href="[% webroot %]plugins/CustomScan/customscan_settings.html?module=[% module %]&player=[% player | uri %]">[% pluginCustomScanModules.$module.name %]</a>[% IF !pluginCustomScanModules.$module.enabled %]&nbsp;&nbsp;&nbsp;(disabled)[% END %]</td><td>
 					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/customscan_scan.html?module=[% module %]&type=[% type %]&player=[% player | uri %]"
 								 onclick='if (confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR_QUESTION" | string %]")) 
 										{
@@ -61,13 +61,6 @@
 				</td><td>[% IF pluginCustomScanModules.$module.dataprovidername %]<a href="[% pluginCustomScanModules.$module.dataproviderlink %]" target="_blank">[% pluginCustomScanModules.$module.dataprovidername %]</a>[% END %]</td></tr>
 				[% odd = (not odd) %]
 		[% END %]
-		<tr>
-			<td colspan="3"><hr></td>
-		</tr>
-
-		<tr>
-			<td colspan="3"><a href="[% webroot %]plugins/CustomScan/customscan_selectmodules.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSCAN_SELECT_MODULES" | string %]</a></td>
-		</tr>
 	</table>
 </form>
 [% PROCESS pagefooter.html %]

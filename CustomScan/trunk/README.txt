@@ -46,17 +46,17 @@ The purpose of the plugin is provide a framework for scanning modules that retri
 includes the following scanning modules by default.
 
 CustomTag = A scanning module that reads additional tags from the music files that are not normally stored in the slimserver database.
-            The tags read can be configured as a "customtags" property in the Custom Scan settings page in the web interface.
+            The tags read can be in the Custom Scan web interface.
             By default read tags will be splitted in same way as genres in standard slimserver, if you don't want the tag to be splitted you can also
-            add it to a "singlecustomtags" property in the Custom Scan settings page in the web interface.
+            add it to the "Single value tags" settings in the Custom Scan web interface.
             The mapping between MP3 ID3 standard frame names to tag names can be found in the Modules/CustomTag.pm file.
 
 LastFM = A scanning module that reads a number of different information from the LastFM database. Please note that the information read
          is only free to use for non commercial usage, see the licence for more information.
          The module currently reads the following additional information for all artists:
-         - LastFM tags for the artist (Percent limit of read tags can be configured with a lastfmtagspercent property)
+         - LastFM tags for the artist (Percent limit of read tags can be configured in web interface)
          - Picture url for the artist
-         - Similar artists to the scanned artist (Percent limit of similarity of read artists can be configured with a lastfmsimilarartistpercent property)
+         - Similar artists to the scanned artist (Percent limit of similarity of read artists can be configured in web interface)
 
 Amazon = A scanning module that read a number of different information from the amazon.com database related to albums. 
                  Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.
@@ -65,20 +65,15 @@ Amazon = A scanning module that read a number of different information from the 
                  - Subjects/genres for the album
                  - ASIN (unique amazon id for the album)
                  The Amazon module can also optionally set the ratings in slimserver/TrackStat, this functionallity is disabled by default but you can
-                 enable it by setting the "writeamazonrating" property to 1 in the Custom Scan settings page in the web interface.
-                 The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and
-                 select the "Amazon Web Services" link currently available in the bottom left menu under "Amazon Services". You then enter the
-                 Access Key Id in the "amazonaccesskey" property in the Custom Scan settings page. For example "amazonaccesskey=0AAAAAAABBBBBBCCCC2".
-                 Genres/subjects imported are only imported  if they are shorter than the "amazonmaxsubjectlength" property which can be configured in the
-                 Custom Scan settings page.
+                 enable it in the Custom Scan web interface.
+		 Genres/subjects imported are only imported  if they are shorter than the setting which can be configured in the
+                 Custom Scan web interface.
 
 RatingTag = A scanning module that reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
             MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files.
-            The name of the rating tag read can be configured as a "ratingtag" property in the Custom Scan settings page in the web interface.
-            You can also configure the maximum rating number as a "ratingtagmax" property in the Custom Scan settings page. The POPM tag available
-            in the MP3 standard will always be read if available, but if the file also have a rating tag as specified in the "ratingtag" settings this will be used instead.
-            By default read ratings will be stored in the slimserver database standard tables, but this can be turned of by setting "writeratingtag=0" in the Custom Scan
-            settings page and then the ratings will just be stored in the customscan_track_attributes table.
+            The name of the rating tag read can be configured in the Custom Scan web interface.
+            By default read ratings will be stored in the slimserver database standard tables, but this can be turned off in the Custom Scan
+            web interface and then the ratings will just be stored in the customscan_track_attributes table.
 
 NOTE!!!
 The Amazon and LastFM modules are quite slow, the reason for this is that Amazon and LastFM restricts the number of calls per second towards 

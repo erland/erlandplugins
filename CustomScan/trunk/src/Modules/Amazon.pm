@@ -35,9 +35,31 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'csamazon',
 		'name' => 'Amazon',
+		'description' => "This module scans amazon.com for all your albums, the scanned information is average customer ratings and amazon subjects/genres related to each album. <br><br><b>Note!</b><br>The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and select the \"Amazon Web Services\" link currently available in the bottom left menu under \"Amazon Services\"<br><br>Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.<br><br>The Amazon module is quite slow, the reason for this is that Amazon restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that slimserver will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each album, so the next time it will only scan new albums and will be a lot faster due to this. Approximately scanning time are 1-2 seconds per album in your library",
 		'dataproviderlink' => 'http://www.amazon.com',
 		'dataprovidername' => 'Amazon.com',
 		'scanAlbum' => \&scanAlbum,
+		'properties' => [
+			{
+				'id' => 'amazonaccesskey',
+				'name' => 'Amazon Access Key',
+				'description' => 'You need to apply for a amazon access key from amazon.com and enter it here',
+				'type' => 'text',
+				'value' => 'XXX'
+			},
+			{
+				'id' => 'amazonmaxsubjectlength',
+				'name' => 'Ignore genres longer than',
+				'type' => 'text',
+				'value' => 40
+			},
+			{
+				'name' => 'Update slimserver ratings',
+				'id' => 'writeamazonrating',
+				'type' => 'checkbox',
+				'value' => 0
+			}
+		]
 	);
 	return \%functions;
 		

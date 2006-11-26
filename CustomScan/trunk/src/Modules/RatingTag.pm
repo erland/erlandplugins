@@ -31,9 +31,32 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'ratingtag',
 		'name' => 'Rating Tag',
+		'description' => "This module reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
+            MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files. The POPM tag available in the MP3 standard will always be read if available, but if the file also have a rating tag as specified below this will be used instead",
 		'alwaysRescanTrack' => 1,
 		'scanInit' => \&scanInit,
-		'scanTrack' => \&scanTrack
+		'scanTrack' => \&scanTrack,
+		'properties' => [
+			{
+				'id' => 'writeratingtag',
+				'name' => 'Write ratings to slimserver',
+				'type' => 'checkbox',
+				'value' => 1
+			},
+			{
+				'id' => 'ratingtag',
+				'name' => 'Rating tag name',
+				'description' => 'The name of the rating tag to read ratings from',
+				'type' => 'text',
+				'value' => 'RATING'
+			},
+			{
+				'id' => 'ratingtagmax',
+				'name' => 'Max rating value',
+				'type' => 'text',
+				'value' => 100
+			}
+		]
 	);
 	return \%functions;
 		

@@ -35,9 +35,26 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'cslastfm',
 		'name' => 'LastFM',
+		'description' => "This module scans lastfm.com for all your artists, the scanned information included similar artists and lastfm tags for the artist<br><br>Please note that the information read is only free to use for non commercial usage, see the LastFM licence for more information.<br><br>The LastFM module is quite slow, the reason for this is that LastFM restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that slimserver will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each artist, so the next time it will only scan new artists and will be a lot faster due to this. Approximately scanning time for this module is 1-2 seconds per artist in your library",
 		'dataproviderlink' => 'http://www.last.fm',
 		'dataprovidername' => 'Audioscrobbler/LastFM',
 		'scanArtist' => \&scanArtist,
+		'properties' => [
+			{
+				'id' => 'lastfmsimilarartistpercent',
+				'name' => 'Similarity percentage',
+				'description' => 'The percentage of similarity that an artist must have to be included as a similar artist',
+				'type' => 'text',
+				'value' => 80
+			},
+			{
+				'id' => 'lastfmtagspercent',
+				'name' => 'Tag percentage',
+				'description' => 'The percentage a tag must have to be included',
+				'type' => 'text',
+				'value' => 10
+			}
+		]
 	);
 	return \%functions;
 		
