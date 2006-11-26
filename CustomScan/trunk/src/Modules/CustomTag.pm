@@ -230,14 +230,14 @@ sub scanTrack {
 		if($customTagProperty) {
 			my @singleValueTags = ();
 			if($singleValueTagProperty) {
-				@singleValueTags = split(/,/,$singleValueTagProperty);
+				@singleValueTags = split(/\s*,\s*/,$singleValueTagProperty);
 			}
 			my %singleValueTagsHash = ();
 			for my $singleValueTag (@singleValueTags) {
 				$singleValueTagsHash{uc($singleValueTag)} = 1;
 			}
 
-			my @customTags = split(/,/,$customTagProperty);
+			my @customTags = split(/\s*,\s*/,$customTagProperty);
 			my %customTagsHash = ();
 			for my $customTag (@customTags) {
 				$customTagsHash{uc($customTag)} = 1;
@@ -254,18 +254,26 @@ sub scanTrack {
 					if(ref($values) eq 'ARRAY') {
 						my $valueArray = $values;
 						for my $value (@$valueArray) {
+							$value =~ s/^\s*//;
+							$value =~ s/\s*$//;
+							if($value ne '') {
+								my %item = (
+									'name' => $tag,
+									'value' => $value
+								);
+								push @result,\%item;
+							}
+						}
+					}else {
+						$values =~ s/^\s*//;
+						$values =~ s/\s*$//;
+						if($values ne '') {
 							my %item = (
 								'name' => $tag,
-								'value' => $value
+								'value' => $values
 							);
 							push @result,\%item;
 						}
-					}else {
-						my %item = (
-							'name' => $tag,
-							'value' => $values
-						);
-						push @result,\%item;
 					}
 				}
 			}
