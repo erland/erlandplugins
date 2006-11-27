@@ -2109,9 +2109,10 @@ sub handleWebEditMenu {
 						for my $v (@$values) {
 							$valuesHash{$v} = $v;
 						}
-						if(%valuesHash) {
-							$currentParameterValues{$p->{'id'}} = \%valuesHash;
+						if(!%valuesHash) {
+							$valuesHash{''} = '';
 						}
+						$currentParameterValues{$p->{'id'}} = \%valuesHash;
 					}
 					if(defined($template->{'parameter'})) {
 						my $parameters = $template->{'parameter'};
@@ -2418,12 +2419,13 @@ sub handleWebSaveSimpleMenu {
 	my $templateFile = $params->{'menutemplate'};
 	my $menuFile = $templateFile;
 	$templateFile =~ s/\.xml$/.template/;
-	$menuFile =~ s/\.xml$/.cb.xml/;
+	$menuFile =~ s/\.xml$//;
 	my $templates = readTemplateConfiguration($client);
 	my $template = $templates->{$params->{'menutemplate'}};
 	my $menytype = $params->{'menutype'};
 
 	if($menytype eq 'advanced') {
+		$menuFile .= ".cb.xml";
 		my %templateParameters = ();
 		if(defined($template->{'parameter'})) {
 			my $parameters = $template->{'parameter'};
@@ -2466,7 +2468,6 @@ sub handleWebSaveSimpleMenu {
 		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($menuFile);
 	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
 	}else {
-	my ($client, $params) = @_;
 		$params->{'pluginCustomBrowseError'} = undef;
 	
 		if (!$params->{'file'}) {
