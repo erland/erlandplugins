@@ -22,16 +22,28 @@
 				<menuname>Albums</menuname>
 				<menutype>sql</menutype>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes,albums,tracks 
+					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
+					join tracks on 
+						tracks.id=customscan_track_attributes.track
+					join albums on
+						tracks.album=albums.id
+					[%- IF customsorttag %]
+					left join customscan_track_attributes as attr2 on
+						tracks.id=attr2.track and
+						attr2.module='customtag' and
+						attr2.attr='[% customsorttag %]'
+					[%- END %]
 					where
 						tracks.audio=1 and
 						albums.compilation = 1 and
-						tracks.album=albums.id and
-						tracks.id=customscan_track_attributes.track and
 						customscan_track_attributes.module='customtag' and
 						customscan_track_attributes.attr='[% customtag %]'
 					group by customscan_track_attributes.value
+					[%- IF customsorttag %]
+					order by ifnull(attr2.value,customscan_track_attributes.value) asc
+					[%- ELSE %]
 					order by customscan_track_attributes.value asc
+					[%- END %]
 				</menudata>
 				<menu>
 					<id>album</id>
@@ -123,15 +135,26 @@
 				<menuname>Albums</menuname>
 				<menutype>sql</menutype>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes,contributor_track
-					where
+					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
+					join contributor_track on
 						contributor_track.track=customscan_track_attributes.track and
-						contributor_track.role in (1,5) and
+						contributor_track.role in (1,5)
+					[%- IF customsorttag %]
+					left join customscan_track_attributes as attr2 on
+						customscan_track_attributes.track=attr2.track and
+						attr2.module='customtag' and
+						attr2.attr='[% customsorttag %]'
+					[%- END %]
+					where
 						contributor_track.contributor={artist} and
 						customscan_track_attributes.module='customtag' and
 						customscan_track_attributes.attr='[% customtag %]'
 					group by customscan_track_attributes.value
+					[%- IF customsorttag %]
+					order by ifnull(attr2.value,customscan_track_attributes.value) asc
+					[%- ELSE %]
 					order by customscan_track_attributes.value asc
+					[%- END %]
 				</menudata>
 				<menu>
 					<id>album</id>

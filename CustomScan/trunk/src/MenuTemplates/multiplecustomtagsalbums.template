@@ -12,11 +12,21 @@
 			<menulinks>alpha</menulinks>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+				[%- IF customsorttag1 %]
+				left join customscan_track_attributes as sortattr on
+					customscan_track_attributes.track=sortattr.track and
+					sortattr.module='customtag' and
+					sortattr.attr='[% customsorttag1 %]'
+				[%- END %]
 				where
 					customscan_track_attributes.module='customtag' and
 					customscan_track_attributes.attr='[% customtag1 %]'
 				group by customscan_track_attributes.value
+				[%- IF customsorttag1 %]
+				order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+				[%- ELSE %]
 				order by customscan_track_attributes.value asc
+				[%- END %]
 			</menudata>
 			[%- IF customtag2 %]
 			<menu>
@@ -25,16 +35,27 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes, customscan_track_attributes attr1 
-					where
-						customscan_track_attributes.module='customtag' and
-						customscan_track_attributes.attr='[% customtag2 %]' and
+					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+					join customscan_track_attributes as attr1 on
 						customscan_track_attributes.track=attr1.track and
 						attr1.module='customtag' and
 						attr1.attr='[% customtag1 %]' and
 						attr1.value='{customtag1}'
+					[%- IF customsorttag2 %]
+					left join customscan_track_attributes as sortattr on
+						customscan_track_attributes.track=sortattr.track and
+						sortattr.module='customtag' and
+						sortattr.attr='[% customsorttag2 %]'
+					[%- END %]
+					where
+						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.attr='[% customtag2 %]'
 					group by customscan_track_attributes.value
+					[%- IF customsorttag2 %]
+					order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+					[%- ELSE %]
 					order by customscan_track_attributes.value asc
+					[%- END %]
 				</menudata>
 			[%- END %]
 				[%- IF customtag3 %]
@@ -44,20 +65,32 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes, customscan_track_attributes attr1, customscan_track_attributes attr2  
-						where
-							customscan_track_attributes.module='customtag' and
-							customscan_track_attributes.attr='[% customtag3 %]' and
+						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+						join customscan_track_attributes as attr1 on
 							customscan_track_attributes.track=attr1.track and
 							attr1.module='customtag' and
 							attr1.attr='[% customtag1 %]' and
-							attr1.value='{customtag1}' and
+							attr1.value='{customtag1}'
+						join customscan_track_attributes as attr2 on
 							customscan_track_attributes.track=attr2.track and
 							attr2.module='customtag' and
 							attr2.attr='[% customtag2 %]' and
 							attr2.value='{customtag2}'
+						[%- IF customsorttag3 %]
+						left join customscan_track_attributes as sortattr on
+							customscan_track_attributes.track=sortattr.track and
+							sortattr.module='customtag' and
+							sortattr.attr='[% customsorttag3 %]'
+						[%- END %]
+						where
+							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.attr='[% customtag3 %]'
 						group by customscan_track_attributes.value
+						[%- IF customsorttag3 %]
+						order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+						[%- ELSE %]
 						order by customscan_track_attributes.value asc
+						[%- END %]
 					</menudata>
 				[%- END %]
 					[%- IF customtag4 %]
@@ -67,24 +100,37 @@
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes, customscan_track_attributes attr1, customscan_track_attributes attr2, customscan_track_attributes attr3
-							where
-								customscan_track_attributes.module='customtag' and
-								customscan_track_attributes.attr='[% customtag4 %]' and
+							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+							join customscan_track_attributes as attr1 on
 								customscan_track_attributes.track=attr1.track and
 								attr1.module='customtag' and
 								attr1.attr='[% customtag1 %]' and
-								attr1.value='{customtag1}' and
+								attr1.value='{customtag1}'
+							join customscan_track_attributes as attr2 on
 								customscan_track_attributes.track=attr2.track and
 								attr2.module='customtag' and
 								attr2.attr='[% customtag2 %]' and
-								attr2.value='{customtag2}' and
+								attr2.value='{customtag2}'
+							join customscan_track_attributes as attr3 on
 								customscan_track_attributes.track=attr3.track and
 								attr3.module='customtag' and
 								attr3.attr='[% customtag3 %]' and
 								attr3.value='{customtag3}'
+							[%- IF customsorttag4 %]
+							left join customscan_track_attributes as sortattr on
+								customscan_track_attributes.track=sortattr.track and
+								sortattr.module='customtag' and
+								sortattr.attr='[% customsorttag4 %]'
+							[%- END %]
+							where
+								customscan_track_attributes.module='customtag' and
+								customscan_track_attributes.attr='[% customtag4 %]'
 							group by customscan_track_attributes.value
+							[%- IF customsorttag4 %]
+							order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+							[%- ELSE %]
 							order by customscan_track_attributes.value asc
+							[%- END %]
 						</menudata>
 					[%- END %]
 						<menu>
