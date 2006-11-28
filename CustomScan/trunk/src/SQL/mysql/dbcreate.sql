@@ -6,6 +6,7 @@ CREATE TABLE customscan_contributor_attributes (
   module varchar(40) NOT NULL,
   attr varchar (255) NOT NULL,
   value varchar(255),
+  valuesort varchar(255),
   index contributor_attr_idx (contributor,module,attr,id),
   primary key (id)
 ) TYPE=InnoDB;
@@ -18,6 +19,7 @@ CREATE TABLE customscan_album_attributes (
   module varchar(40) NOT NULL,
   attr varchar (255) NOT NULL,
   value varchar(255),
+  valuesort varchar(255),
   index album_attr_idx (album,module,attr,id),
   primary key (id)
 ) TYPE=InnoDB;
@@ -30,6 +32,7 @@ CREATE TABLE customscan_track_attributes (
   module varchar(40) NOT NULL,
   attr varchar (255) NOT NULL,
   value varchar(255),
+  valuesort varchar(255),
   index track_attr_idx (track,module,attr,id),
   primary key (id)
 ) TYPE=InnoDB;

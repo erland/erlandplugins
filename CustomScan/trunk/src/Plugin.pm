@@ -599,8 +599,7 @@ sub scanArtist {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value) values (?,?,?,?,?,?)";
-
+							$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value,valuesort) values (?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $artist->id , SQL_INTEGER);
@@ -613,6 +612,7 @@ sub scanArtist {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -687,7 +687,7 @@ sub scanAlbum {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value) values (?,?,?,?,?,?)";
+							$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value,valuesort) values (?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $album->id , SQL_INTEGER);
@@ -700,6 +700,7 @@ sub scanAlbum {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -769,7 +770,7 @@ sub scanTrack {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value) values (?,?,?,?,?,?)";
+							$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort) values (?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $track->id , SQL_INTEGER);
@@ -782,6 +783,7 @@ sub scanTrack {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -1083,6 +1085,12 @@ sub initDatabase {
 	unless ($tblexists) {
 		debugMsg("Create database table\n");
 		executeSQLFile("dbcreate.sql");
+	}
+
+	eval { $dbh->do("select valuesort from customscan_track_attributes limit 1;") };
+	if ($@) {
+		debugMsg("Create database table column valuesort\n");
+		executeSQLFile("dbupgrade_valuesort.sql");
 	}
 
 	my $sth = $dbh->prepare("show create table tracks");
