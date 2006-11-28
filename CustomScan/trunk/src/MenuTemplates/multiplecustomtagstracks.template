@@ -18,14 +18,24 @@
 					sortattr.module='customtag' and
 					sortattr.attr='[% customsorttag1 %]'
 				[%- END %]
+				[%- IF customtag1artistsort %]
+				left join contributors on
+					customscan_track_attributes.value=contributors.name
+				[%- END %]
 				where
 					customscan_track_attributes.module='customtag' and
 					customscan_track_attributes.attr='[% customtag1 %]'
 				group by customscan_track_attributes.value
 				[%- IF customsorttag1 %]
-				order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+				[%- IF customtag1artistsort %]
+				order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 				[%- ELSE %]
-				order by customscan_track_attributes.value asc
+				order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+				[%- END %]
+				[%- ELSIF customtag1artistsort %]
+				order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+				[%- ELSE %]
+				order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
 				[%- END %]
 			</menudata>
 			[%- IF customtag2 %]
@@ -47,14 +57,24 @@
 						sortattr.module='customtag' and
 						sortattr.attr='[% customsorttag2 %]'
 					[%- END %]
+					[%- IF customtag2artistsort %]
+					left join contributors on
+						customscan_track_attributes.value=contributors.name
+					[%- END %]
 					where
 						customscan_track_attributes.module='customtag' and
 						customscan_track_attributes.attr='[% customtag2 %]'
 					group by customscan_track_attributes.value
 					[%- IF customsorttag2 %]
-					order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+					[%- IF customtag2artistsort %]
+					order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 					[%- ELSE %]
-					order by customscan_track_attributes.value asc
+					order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+					[%- END %]
+					[%- ELSIF customtag2artistsort %]
+					order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+					[%- ELSE %]
+					order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
 					[%- END %]
 				</menudata>
 			[%- END %]
@@ -82,14 +102,24 @@
 							sortattr.module='customtag' and
 							sortattr.attr='[% customsorttag3 %]'
 						[%- END %]
+						[%- IF customtag3artistsort %]
+						left join contributors on
+							customscan_track_attributes.value=contributors.name
+						[%- END %]
 						where
 							customscan_track_attributes.module='customtag' and
 							customscan_track_attributes.attr='[% customtag3 %]'
 						group by customscan_track_attributes.value
 						[%- IF customsorttag3 %]
-						order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+						[%- IF customtag3artistsort %]
+						order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 						[%- ELSE %]
-						order by customscan_track_attributes.value asc
+						order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+						[%- END %]
+						[%- ELSIF customtag3artistsort %]
+						order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+						[%- ELSE %]
+						order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
 						[%- END %]
 					</menudata>
 				[%- END %]
@@ -122,14 +152,24 @@
 								sortattr.module='customtag' and
 								sortattr.attr='[% customsorttag4 %]'
 							[%- END %]
+							[%- IF customtag4artistsort %]
+							left join contributors on
+								customscan_track_attributes.value=contributors.name
+							[%- END %]
 							where
 								customscan_track_attributes.module='customtag' and
 								customscan_track_attributes.attr='[% customtag4 %]'
 							group by customscan_track_attributes.value
 							[%- IF customsorttag4 %]
-							order by ifnull(sortattr.value,customscan_track_attributes.value) asc
+							[%- IF customtag4artistsort %]
+							order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 							[%- ELSE %]
-							order by customscan_track_attributes.value asc
+							order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+							[%- END %]
+							[%- ELSIF customtag4artistsort %]
+							order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+							[%- ELSE %]
+							order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
 							[%- END %]
 						</menudata>
 					[%- END %]
@@ -143,7 +183,7 @@
 								<id>byalbum</id>
 								<name>Sort by album</name>
 								<menulinks>number</menulinks>
-								<keyword name="orderby" value="tracks.album,tracks.tracknum asc,tracks.titlesort asc"/>
+								<keyword name="orderby" value="tracks.album,tracks.disc asc,tracks.tracknum asc,tracks.titlesort asc"/>
 							</option>
 							<option>
 								<id>bytitle</id>

@@ -17,14 +17,24 @@
 					attr2.module='customtag' and
 					attr2.attr='[% customsorttag %]'
 				[%- END %]
+				[%- IF customtagartistsort %]
+				left join contributors on
+					customscan_track_attributes.value=contributors.name
+				[%- END %]
 				where
 					customscan_track_attributes.module='customtag' and
 					customscan_track_attributes.attr='[% customtag %]'
 				group by customscan_track_attributes.value
 				[%- IF customsorttag %]
-				order by ifnull(attr2.value,customscan_track_attributes.value) asc
+				[%- IF customtagartistsort %]
+				order by ifnull(contributors.namesort,ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 				[%- ELSE %]
-				order by customscan_track_attributes.value asc
+				order by ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+				[%- END %]
+				[%- ELSIF customtagartistsort %]
+				order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+				[%- ELSE %]
+				order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
 				[%- END %]
 			</menudata>
 			[%- IF variousartists %]
@@ -176,7 +186,7 @@
 								customscan_track_attributes.attr='[% customtag %]' and
 								customscan_track_attributes.value='{customtag}' 
 							group by tracks.id 
-							order by tracks.tracknum asc,tracks.titlesort asc
+							order by tracks.disc asc,tracks.tracknum asc,tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>
