@@ -205,6 +205,13 @@ sub getCustomScanFunctions {
 				'description' => 'Comma separated list with scanned tags that shall not be splitted to several values separated by ;. These tags must also be added to "Tags to scan" to be included in the scan',
 				'type' => 'text',
 				'value' => 'ORIGIN'
+			},
+			{
+				'id' => 'customsorttags',
+				'name' => 'Sort tag mapping',
+				'description' => 'Comma separated list with the tags and their corresponding sort tag, for example: "ORIGARTIST=ORIGARTISTSORT,OWNER=OWNERSORT". If the scanned tag shall be used for sorting the tag does not have to be listed here.',
+				'type' => 'text',
+				'value' => ''
 			}
 		]
 	);
@@ -227,6 +234,7 @@ sub scanTrack {
 	}
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
+		my $customSortTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customsorttags");
 		my $singleValueTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("singlecustomtags");
 		if($customTagProperty) {
 			my @singleValueTags = ();
@@ -244,6 +252,16 @@ sub scanTrack {
 				$customTagsHash{uc($customTag)} = 1;
 			}
 
+			my @customSortTags = split(/\s*,\s*/,$customSortTagProperty);
+			my %customSortTagsHash = ();
+			for my $customSortTag (@customSortTags) {
+				if($customSortTag =~ /^\s*(.*)\s*=\s*(.*).*$/) {
+					my $tag = $1;
+					my $sortTag = $2;
+					$customSortTagsHash{uc($tag)} = uc($sortTag);
+				}
+			}
+
 			for my $tag (keys %$tags) {
 				$tag = uc($tag);
 				if($customTagsHash{$tag}) {
@@ -252,8 +270,23 @@ sub scanTrack {
 						my @arrayValues = Slim::Music::Info::splitTag($tags->{$tag});
 						$values = \@arrayValues;
 					}
+					my $sortValues = undef;
+					my $sortTag = $customSortTagsHash{$tag};
+					if(defined($sortTag)) {
+						for my $key (keys %$tags) {
+							if(uc($sortTag) eq uc($key)) {
+								$sortValues = $tags->{$key};
+								if(!defined($singleValueTagsHash{$tag})) {
+									my @arrayValues = Slim::Music::Info::splitTag($tags->{$key});
+									$sortValues = \@arrayValues;
+								}
+								last;
+							}
+						}
+					}
 					if(ref($values) eq 'ARRAY') {
 						my $valueArray = $values;
+						my $index = 0;
 						for my $value (@$valueArray) {
 							$value =~ s/^\s*//;
 							$value =~ s/\s*$//;
@@ -262,8 +295,22 @@ sub scanTrack {
 									'name' => $tag,
 									'value' => $value
 								);
+								if(defined($sortValues)) {
+									my $sortValue = undef;
+									if(ref($sortValues) eq 'ARRAY') {
+										if(scalar(@$sortValues)>$index) {
+											$sortValue = $sortValues->[$index];
+										}
+									}elsif($index==0) {
+										$sortValue = $sortValues;
+									}
+									if(defined($sortValue)) {
+										$item{'valuesort'} = $sortValue;
+									}
+								}
 								push @result,\%item;
 							}
+							$index = $index + 1;
 						}
 					}else {
 						$values =~ s/^\s*//;
@@ -273,6 +320,12 @@ sub scanTrack {
 								'name' => $tag,
 								'value' => $values
 							);
+							if(defined($sortValues)) {
+								if(ref($sortValues) eq 'ARRAY') {
+									$sortValues = $sortValues->[0];
+								}
+								$item{'valuesort'} = $sortValues;
+							}
 							push @result,\%item;
 						}
 					}
