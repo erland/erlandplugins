@@ -16,31 +16,27 @@
 [% IF !pluginCustomBrowseSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
 [% END %]
-[% PROCESS plugins/CustomBrowse/catchtab.js %]
 
-<form action="[% webroot %]plugins/CustomBrowse/custombrowse_savenewsimplemenu.html" name="editForm" accept-charset="iso8859-1">
+<form action="[% webroot %]plugins/CustomBrowse/custombrowse_downloadmenu.html" name="editForm" accept-charset="iso8859-1">
+	[% IF pluginCustomBrowseRedirect %]<input type="hidden" name="redirect" value="1">[% END %]
+	<input type="hidden" name="menutemplate" value="[% pluginCustomBrowseTemplate %]">
 	<table>
-	<tr><td>
-	[% "PLUGIN_CUSTOMBROWSE_EDIT_MENU_FILENAME" | string %]: 
-	</td><td>
-	<input type="text" name="file" size="40" value="[% pluginCustomBrowseEditMenuFileUnescaped %]">
+	<tr><td colspan="2">
+	<br><div style="color:red;">[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE_WARNING" |string %]</div><br>
 	</td></tr>
 	<tr><td>
-	[% "PLUGIN_CUSTOMBROWSE_EDIT_MENU_OVERWRITE" | string %]: 
+	[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_NAME" | string %]: 
+	</td><td>
+	<input type="text" name="customname" size="40" value="[% pluginCustomBrowseUniqueId %]">
+	</td></tr>
+	<tr><td>
+	[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE" | string %]: 
 	</td><td>
 	<input type="checkbox" name="overwrite" id="overwrite" value="1">
 	</td></tr>
-	[%- FOREACH parameter IN pluginCustomBrowseEditMenuParameters.keys.sort %]
-		<input type="hidden" name="[% parameter %]" value="[% pluginCustomBrowseEditMenuParameters.$parameter | html %]">
-	[% END %]
-	<input type="hidden" name="menutemplate" value="[% pluginCustomBrowseNewMenuTemplate %]">
 	[% IF pluginCustomBrowseError %]
 	<tr><td colspan="2">
 	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
-	</td></tr>
-	[% ELSIF pluginCustomBrowseEditMenuSizeWarning %]
-	<tr><td colspan="2">
-	<br><div style="color:red;">Warning:<br>[% pluginCustomBrowseEditMenuSizeWarning %]</div><br>
 	</td></tr>
 	[% END %]
 	<tr><td>&nbsp;</td></tr>
@@ -48,4 +44,5 @@
 	<input type="submit" value="[% "SAVE" | string %]">
 	</td></tr>
 	</table>
+</form>
 [% PROCESS pagefooter.html %]

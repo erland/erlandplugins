@@ -38,6 +38,7 @@ my $browseMenus;
 my $browseMixes;
 my $template;
 my $mixer;
+my $soapLiteError = 0;
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -1323,6 +1324,29 @@ sub initPlugin {
 	my $class = shift;
 	
 	checkDefaults();
+
+	$soapLiteError = 0;
+	eval "use SOAP::Lite";
+	if ($@) {
+		my @pluginDirs = ();
+		if ($::VERSION ge '6.5') {
+			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		}else {
+			@pluginDirs = catdir($Bin, "Plugins");
+		}
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,"CustomBrowse","libs");
+			push @INC,catdir($plugindir,"CustomBrowse","libs");
+			last;
+		}
+		debugMsg("Using internal implementation of SOAP::Lite\n");
+		eval "use SOAP::Lite";
+		if ($@) {
+			$soapLiteError = 1;
+			msg("CustomBrowse: ERROR! Cant load internal implementation of SOAP::Lite, download/publish functionallity will not be available\n");
+		}
+	}
+
 	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
 	$choiceFunctions{'create_mix'} = sub {Slim::Buttons::Input::Choice::callCallback('onCreateMix', @_)};
 	$choiceFunctions{'saveRating'} = sub {
@@ -1821,6 +1845,11 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_menuname to:".string('PLUGIN_CUSTOMBROWSE')."\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_menuname', string('PLUGIN_CUSTOMBROWSE'));
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_download_url');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_download_url\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_download_url', 'http://localhost:8180/datacollection/services/DataCollection');
+	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
 		debugMsg("Defaulting plugin_custombrowse_properties\n");
@@ -1915,6 +1944,13 @@ sub webPages {
                 "custombrowse_newmenutypes\.(?:htm|xml)"     => \&handleWebNewMenuTypes,
                 "custombrowse_newmenuparameters\.(?:htm|xml)"     => \&handleWebNewMenuParameters,
                 "custombrowse_newmenu\.(?:htm|xml)"     => \&handleWebNewMenu,
+		"custombrowse_login\.(?:htm|xml)"      => \&handleWebLogin,
+		"custombrowse_downloadnewmenus\.(?:htm|xml)"      => \&handleWebDownloadNewMenus,
+		"custombrowse_downloadmenus\.(?:htm|xml)"      => \&handleWebDownloadMenus,
+		"custombrowse_downloadmenu\.(?:htm|xml)"      => \&handleWebDownloadMenu,
+		"custombrowse_publishmenuparameters\.(?:htm|xml)"      => \&handleWebPublishMenuParameters,
+		"custombrowse_publishmenu\.(?:htm|xml)"      => \&handleWebPublishMenu,
+		"custombrowse_deletemenutype\.(?:htm|xml)"      => \&handleWebDeleteMenuType,
                 "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
@@ -2041,29 +2077,8 @@ sub handleWebEditMenu {
 	my $menuId = $params->{'menu'};
 	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
 		if(!defined($browseMenus->{$menuId}->{'simple'})) {
-			my $data = undef;
+			my $data = loadMenuDataFromAnyDir($params->{'menu'}.".cb.xml");
 
-			my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
-			if (!defined $browseDir || !-d $browseDir) {
-				debugMsg("Skipping custom browse configuration - directory is undefined\n");
-			}else {
-				$data = loadMenuData($browseDir,$params->{'menu'}.".cb.xml");
-			}
-			if(!defined($data)) {
-				my @pluginDirs = ();
-				if ($::VERSION ge '6.5') {
-					@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-				}else {
-					@pluginDirs = catdir($Bin, "Plugins");
-				}
-				for my $plugindir (@pluginDirs) {
-					next unless -d catdir($plugindir,"CustomBrowse","Menus");
-					$data = loadMenuData(catdir($plugindir,"CustomBrowse","Menus"),$params->{'menu'}.".cb.xml");
-					if(defined($data)) {
-						last;
-					}
-				}
-			}
 			if($data) {
 				$data = encode_entities($data);
 			}
@@ -2073,29 +2088,7 @@ sub handleWebEditMenu {
 
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
 		}else {
-			my $templateData = undef;
-
-			my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
-			if (!defined $browseDir || !-d $browseDir) {
-				debugMsg("Skipping custom browse configuration - directory is undefined\n");
-			}else {
-				$templateData = loadTemplateData($browseDir,$params->{'menu'}.".cb.values.xml");
-			}
-			if(!defined($templateData)) {
-				my @pluginDirs = ();
-				if ($::VERSION ge '6.5') {
-					@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-				}else {
-					@pluginDirs = catdir($Bin, "Plugins");
-				}
-				for my $plugindir (@pluginDirs) {
-					next unless -d catdir($plugindir,"CustomBrowse","Menus");
-					$templateData = loadTemplateData(catdir($plugindir,"CustomBrowse","Menus"),$params->{'menu'}.".cb.values.xml");
-					if(defined($templateData)) {
-						last;
-					}
-				}
-			}
+			my $templateData = loadTemplateValues($params->{'menu'});
 
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
@@ -2136,19 +2129,126 @@ sub handleWebEditMenu {
 	return handleWebEditMenus($client,$params);
 }
 
+sub loadTemplateValues {
+	my $menu = shift;
+	my $templateData = undef;
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	if (!defined $browseDir || !-d $browseDir) {
+		debugMsg("Skipping custom browse configuration - directory is undefined\n");
+	}else {
+		$templateData = loadTemplateData($browseDir,$menu.".cb.values.xml");
+	}
+	if(!defined($templateData)) {
+		my @pluginDirs = ();
+		if ($::VERSION ge '6.5') {
+			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		}else {
+			@pluginDirs = catdir($Bin, "Plugins");
+		}
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,"CustomBrowse","Menus");
+			$templateData = loadTemplateData(catdir($plugindir,"CustomBrowse","Menus"),$menu.".cb.values.xml");
+			if(defined($templateData)) {
+				last;
+			}
+		}
+	}
+	return $templateData;
+}
+
+sub structureMenuTypes {
+	my $templates = shift;
+	
+	my %templatesHash = ();
+	
+	for my $key (keys %$templates) {
+		my $plugin = $templates->{$key}->{'custombrowse_plugin'};
+		if(defined($templates->{$key}->{'customtemplate'})) {
+			$plugin = 'ZZZ';
+		}
+		if(!defined($plugin)) {
+			$plugin = 'AAA';
+		}
+		my $array = $templatesHash{$plugin};
+		if(!defined($array)) {
+			my @newArray = ();
+			$array = \@newArray;
+			$templatesHash{$plugin} = $array;
+		}
+		push @$array,$templates->{$key};
+	}
+	for my $key (keys %templatesHash) {
+		my $array = $templatesHash{$key};
+		my @sortedArray = sort { uc($a->{'name'}) cmp uc($b->{'name'}) } @$array;
+		$templatesHash{$key} = \@sortedArray;
+	}
+	return \%templatesHash;
+}
+
+sub handleWebDeleteMenuType {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	my $templateDir = Slim::Utils::Prefs::get("plugin_custombrowse_template_directory");
+	if (defined $templateDir && -d $templateDir) {
+		my $templateId = $params->{'menutemplate'};
+		my $path = catfile($templateDir, $templateId);
+		if(-e $path) {
+			debugMsg("Deleting: ".$path."\n");
+			unlink($path) or do {
+				warn "Unable to delete file: ".$path.": $! \n";
+			}
+		}
+		$templateId =~ s/\.xml$/.template/;
+		$path = catfile($templateDir, $templateId);
+		if(-e $path) {
+			debugMsg("Deleting: ".$path."\n");
+			unlink($path) or do {
+				warn "Unable to delete file: ".$path.": $! \n";
+			}
+		}
+	}
+	return handleWebNewMenuTypes($client,$params);
+}
+
 sub handleWebNewMenuTypes {
 	my ($client, $params) = @_;
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 	my $templatesHash = readTemplateConfiguration($client);
-	my @templates = ();
-	for my $key (keys %$templatesHash) {
-		push @templates,$templatesHash->{$key};
-	}
-	@templates = sort { $a->{'name'} cmp $b->{'name'} } @templates;
+	my @collections = ();
+	my $structuredTemplates = structureMenuTypes($templatesHash);
 
-	$params->{'pluginCustomBrowseTemplates'} = \@templates;
+	for my $key (sort keys %$structuredTemplates) {
+		my $name = $key;
+		if($name eq 'AAA') {
+			$name = 'Builtin menus';
+		}elsif($name eq 'ZZZ') {
+			$name = 'Custom or downloaded menus';
+		}else {
+			$name =~ s/^Plugins:://;
+			$name =~ s/::Plugin$//;
+			$name .= ' menus';
+		}
+		my %collection = (
+			'name' => $name,
+			'templates' => $structuredTemplates->{$key}
+		);
+		push @collections,\%collection;
+	}
+
+	my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+	if(!defined($templateDir) || !-d $templateDir) {
+		$params->{'pluginCustomBrowseDownloadMessage'} = 'You have to specify a template directory before you can download menus';
+	}
+	if(!defined($params->{'pluginCustomBrowseDownloadMessage'}) && $soapLiteError) {
+		$params->{'pluginCustomBrowseDownloadMessage'} = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
+	}
+
+	$params->{'pluginCustomBrowseTemplates'} = \@collections;
+	$params->{'pluginCustomBrowsePostUrl'} = "custombrowse_newmenuparameters.html";
 	
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenutypes.html', $params);
 }
@@ -2171,11 +2271,467 @@ sub handleWebNewMenuParameters {
 			}
 		}
 		$params->{'pluginCustomBrowseNewMenuParameters'} = \@parametersToSelect;
-	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenuparameters.html', $params);
+	}
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenuparameters.html', $params);
+}
+
+
+
+
+
+
+
+
+
+
+
+sub handleWebLogin {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	$params->{'pluginCustomBrowseLoginMenu'} = $params->{'menu'};
+	$params->{'pluginCustomBrowseLoginUser'} = Slim::Utils::Prefs::get("plugin_custombrowse_login_user");
+	$params->{'pluginCustomBrowseLoginPassword'} = Slim::Utils::Prefs::get("plugin_custombrowse_login_password");
+	
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_login_user")) {
+	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
 	}else {
-		return handleWebNewMenu($client,$params);
+	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
 	}
 }
+
+sub handleWebPublishMenuParameters {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+
+	if($params->{'anonymous'}) {
+		$params->{'username'} = undef;
+		$params->{'password'} = undef;
+	}
+	$params->{'pluginCustomBrowseLoginMenu'} = $params->{'menu'};
+	$params->{'pluginCustomBrowseLoginUser'} = $params->{'username'};
+	$params->{'pluginCustomBrowseLoginPassword'} = $params->{'password'};
+	$params->{'pluginCustomBrowseLoginFirstName'} = $params->{'firstname'};
+	$params->{'pluginCustomBrowseLoginLastName'} = $params->{'lastname'};
+	$params->{'pluginCustomBrowseLoginEMail'} = $params->{'email'};
+
+	my $versionError = checkWebServiceVersion();
+	if(defined($versionError)) {
+		$params->{'pluginCustomBrowseError'} = $versionError;
+		if($params->{'register'}) {
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
+		}else {
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
+		}
+	}
+
+	if($params->{'register'}) {
+		if(!$params->{'username'} || !$params->{'password'} || !$params->{'firstname'} || !$params->{'lastname'}) {
+			$params->{'pluginCustomBrowseError'} = "Please provide all information";
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
+		}
+		my $email = $params->{'email'};
+		if(!defined($email)) {
+			$email = '';
+		}
+		my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->registerUser($params->{'username'},$params->{'password'},$params->{'firstname'},$params->{'lastname'},$email);
+		unless($answer->fault) {
+			Slim::Utils::Prefs::set("plugin_custombrowse_login_user",$params->{'username'});
+			Slim::Utils::Prefs::set("plugin_custombrowse_login_password",$params->{'password'});
+		}else {
+			$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
+		}
+	}elsif(!$params->{'anonymous'}){
+		my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->loginUser($params->{'username'},$params->{'password'});
+		unless($answer->fault) {
+			Slim::Utils::Prefs::set("plugin_custombrowse_login_user",$params->{'username'});
+			Slim::Utils::Prefs::set("plugin_custombrowse_login_password",$params->{'password'});
+		}else {
+			$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
+		}
+	}
+
+	my $menuId = $params->{'menu'};
+	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
+		if(defined($browseMenus->{$menuId}->{'simple'})) {
+			my $templateData = loadTemplateValues($menuId);
+			$menuId =~ s/^published_//;
+			if(defined($templateData)) {
+				my $templates = readTemplateConfiguration($client);
+				my $template = $templates->{$templateData->{'id'}};
+				if(defined($template)) {
+					$params->{'pluginCustomBrowsePublishName'} = $browseMenus->{$menuId}->{'menuname'};
+					$params->{'pluginCustomBrowsePublishDescription'} = $template->{'description'};
+					$params->{'pluginCustomBrowsePublishUniqueId'} = $menuId;
+					if(defined($template->{'downloadidentifier'})) {
+						$params->{'pluginCustomBrowsePublishOverwrite'} = 1;
+					}
+					return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
+				}
+			}
+		}else {
+			$menuId =~ s/^published_//;
+			$params->{'pluginCustomBrowsePublishName'} = $browseMenus->{$menuId}->{'menuname'};
+			$params->{'pluginCustomBrowsePublishUniqueId'} = $menuId;
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
+		}
+	}
+	$params->{'pluginCustomBrowseError'} = "Failed to read selected menu";
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
+}
+
+sub niceFault {
+	my $fault = shift;
+	if(defined($fault)) {
+		$fault =~ s/^.*?Exception.*?:\s*//;
+	}
+	return $fault;
+}
+sub updateTemplateBeforePublish {
+	my $templateData = shift;
+	my $name = shift;
+	my $description = shift;
+
+	$templateData =~ s/<templatefile>.*<\/templatefile>//m;
+	if(defined($name)) {
+		$templateData =~ s/<name>.*<\/name>/<name>$name<\/name>/m;
+		$templateData =~ s/id="menuname" name="(.*?)" value=".*"/id="menuname" name="$1" value="$name"/;
+	}
+	if(defined($description)) {
+		$templateData =~ s/<description>.*<\/description>/<description>$description<\/description>/m;
+	}
+	$templateData =~ s/\s*<downloadidentifier>.*<\/downloadidentifier>//m;
+	$templateData =~ s/\s*<lastchanged>.*<\/lastchanged>//m;
+
+	return $templateData;
+}
+sub handleWebPublishMenu {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+
+	$params->{'pluginCustomBrowseLoginMenu'} = $params->{'menu'};
+	$params->{'pluginCustomBrowseLoginUser'} = $params->{'username'};
+	$params->{'pluginCustomBrowseLoginPassword'} = $params->{'password'};
+	$params->{'pluginCustomBrowsePublishName'} = $params->{'menuname'};
+	$params->{'pluginCustomBrowsePublishDescription'} = $params->{'menudescription'};
+	$params->{'pluginCustomBrowsePublishUniqueId'} = $params->{'menuuniqueid'};
+	$params->{'pluginCustomBrowsePublishOverwrite'} = $params->{'overwrite'};
+	my $overwriteFlag = 0;
+	if($params->{'overwrite'}) {
+		$overwriteFlag = 1;
+	}
+
+	if(!$params->{'menuname'} || !$params->{'menudescription'} || !$params->{'menuuniqueid'}) {
+		$params->{'pluginCustomBrowseError'} = "All parameters must be specified";
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
+	}
+	my $menuId = $params->{'menu'};
+	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
+		my $publishData = undef;
+		if($params->{'menuuniqueid'} !~ /^published_/) {
+			$params->{'menuuniqueid'} = 'published_'.$params->{'menuuniqueid'};
+		}
+		if(defined($browseMenus->{$menuId}->{'simple'})) {
+			my $templateData = loadTemplateValues($menuId);
+			if(defined($templateData)) {
+				my $templates = readTemplateConfiguration($client);
+				my $template = $templates->{$templateData->{'id'}};
+				if(defined($template)) {
+					my $templateFile = $menuId.".template";
+					if(defined($template->{'templatefile'})) {
+						$templateFile = $template->{'templatefile'};
+					}
+					my $templateXml = loadTemplateDataFromAnyDir($menuId.'.xml');
+					$templateXml = updateTemplateBeforePublish($templateXml,$params->{'menuname'},$params->{'menudescription'});
+					$publishData = '';
+					$publishData .= '<entry>';
+					$publishData .= '<id>'.$params->{'menuuniqueid'}.'</id>';
+					$publishData .= '<title>'.$params->{'menuname'}.'</title>';
+					$publishData .= '<description>'.$params->{'menudescription'}.'</description>';
+					$publishData .= '<data>';
+					$publishData .= '<type>xml</type>';
+					$publishData .= '<content>'.encode_entities($templateXml,"&<>\'\"").'</content>';
+					$publishData .= '</data>';
+					$publishData .= '<data>';
+					$publishData .= '<type>template</type>';
+					$publishData .= '<content>'.encode_entities(loadTemplateDataFromAnyDir($templateFile),"&<>\'\"").'</content>';
+					$publishData .= '</data>';
+					$publishData .= '</entry>';
+				}
+			}
+		}else {
+			my $templateXml = '';
+			$templateXml .= '<?xml version="1.0" encoding="utf-8"?>'."\n";
+			$templateXml .= '<custombrowse>'."\n";
+			$templateXml .= '	<template>'."\n";
+			$templateXml .= '		<name>'.$params->{'menuname'}.'</name>'."\n";
+			$templateXml .= '		<description>'.$params->{'menudescription'}.'</description>'."\n";
+			$templateXml .= '		<parameter type="text" id="menuname" name="Menu name" value="'.$params->{'menuname'}.'"/>'."\n";
+			$templateXml .= '	</template>'."\n";
+			$templateXml .= '</custombrowse>'."\n";
+ 
+                
+			my $templateData = loadMenuDataFromAnyDir($menuId.'.cb.xml');
+			$templateData =~ s/<menuname>.*?<\/menuname>/<menuname>[% menuname %]<\/menuname>/;
+			#$templateData  .= "-- PlaylistName:[% playlistname %]\n";
+			#$templateData  .= "-- PlaylistGroups:[% playlistgroups %]\n";
+			#$templateData  .= $playlist->{'fulltext'};
+			# TODO
+
+			$publishData = '';
+			$publishData .= '<entry>';
+			$publishData .= '<id>'.$params->{'menuuniqueid'}.'</id>';
+			$publishData .= '<title>'.$params->{'menuname'}.'</title>';
+			$publishData .= '<description>'.$params->{'menudescription'}.'</description>';
+			$publishData .= '<data>';
+			$publishData .= '<type>xml</type>';
+			$publishData .= '<content>'.encode_entities($templateXml,"&<>\'\"").'</content>';
+			$publishData .= '</data>';
+			$publishData .= '<data>';
+			$publishData .= '<type>template</type>';
+			$publishData .= '<content>'.encode_entities($templateData,"&<>\'\"").'</content>';
+			$publishData .= '</data>';
+			$publishData .= '</entry>';
+		}
+		if(defined($publishData)) {
+			my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->addDataEntry($params->{'username'},$params->{'password'},"CustomBrowse",0,$overwriteFlag, $publishData);
+			unless ($answer->fault) {
+				return handleWebEditMenus($client, $params);
+			}else {
+				$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+				return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
+			}
+		}
+	}
+	$params->{'pluginCustomBrowseError'} = "Failed to read selected menu";
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
+}
+
+sub checkWebServiceVersion {
+	my $answer = undef;
+	eval {
+		$answer = SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->apiVersion();
+	};
+	if ($@) {
+		return "Unable to contact web service";
+	}
+	unless ($answer->fault) {
+		if($answer->result() =~ /^(\d+)\.(\d+)$/) {
+			if($1 ne "1") {
+				return "This version of CustomBrowse plugin is incompatible with the current download service, please upgrade";
+			}else {
+				return undef;
+			}
+		}else {
+			return "This version of CustomBrowse plugin is incompatible with the current download service, please upgrade";
+		}
+	} else {
+		return "Unable to contact web service, ".niceFault($answer->faultstring);
+	}
+}
+
+sub handleWebDownloadMenus {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	
+	my $versionError = checkWebServiceVersion();
+	if(defined($versionError)) {
+		$params->{'pluginCustomBrowseError'} = $versionError;
+		return handleWebNewMenuTypes($client,$params);
+	}
+
+	my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntries("CustomBrowse");
+	unless ($answer->fault) {
+		my $result = $answer->result();
+		my $xml = eval { XMLin($result, forcearray => ['collection','entry'], keyattr => []) };
+		my $collections = $xml->{'collection'};
+		if(defined($collections)) {
+			my @collectionTemplates = ();
+			for my $collection (@$collections) {
+				my %collectionTemplate = (
+					'id' => $collection->{'id'},
+					'name' => $collection->{'title'},
+					'user' => $collection->{'username'}
+				);
+				if(defined($collection->{'description'}) && ref($collection->{'description'}) ne 'HASH') {
+					$collectionTemplate{'description'} = $collection->{'description'};
+				}else {
+					$collectionTemplate{'description'} = '';
+				}
+				if($collectionTemplate{'user'} eq 'CustomBrowse') {
+					$collectionTemplate{'user'} = 'anonymous';
+				}
+				if($collectionTemplate{'name'} eq 'CustomBrowse') {
+					$collectionTemplate{'name'} = 'Downloadable menus';
+				}
+				if($collectionTemplate{'description'} eq 'Collection for CustomBrowse') {
+					$collectionTemplate{'description'} = '';
+				}
+
+				my $entries = $collection->{'entries'}->{'entry'};
+				if(defined($entries)) {
+					my @entryTemplates = ();
+					for my $entry (@$entries) {
+						my %template = (
+							'id' => $entry->{'id'},
+							'name' => $entry->{'title'},
+							'description' => $entry->{'description'},
+							'lastchanged' => $entry->{'lastchanged'}
+						);
+						push @entryTemplates, \%template;
+					}
+					if(scalar(@entryTemplates>0)) {
+						$collectionTemplate{'templates'} = \@entryTemplates;
+					}
+				}
+				if(defined($collectionTemplate{'templates'})) {
+					push @collectionTemplates, \%collectionTemplate;
+				}
+			}
+			$params->{'pluginCustomBrowseTemplates'} = \@collectionTemplates;
+			$params->{'pluginCustomBrowsePostUrl'} = "custombrowse_downloadmenu.html";
+	        	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenutypes.html', $params);
+		}
+		$params->{'pluginCustomBrowseError'} = "No menus available to download";
+		return handleWebNewMenuTypes($client,$params);
+	}else {
+		$params->{'pluginCustomBrowseError'} = "Unable to reach download site: ".niceFault($answer->faultstring);
+		return handleWebNewMenuTypes($client,$params);
+	}
+}
+
+sub handleWebDownloadNewMenus {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+
+	my $templates = readTemplateConfiguration($client);
+	my $error = '';
+	my $message = '';
+	for my $key (%$templates) {
+		my $template = $templates->{$key};
+		if(defined($template->{'downloadidentifier'})) {
+			my $identifier = $key;
+			$identifier =~ s/\.xml$//;
+			my $result = downloadMenu($template->{'downloadidentifier'},$identifier);
+			if(defined($result->{'error'})) {
+				$error .= $template->{'name'}.": ".$result->{'error'}."<br>";
+			}
+			$message .= "- ".$template->{'name'}." (".$key.")<br>";
+		}
+	}
+	if($message ne '') {
+		$params->{'pluginCustomBrowseMessage'} = "Downloaded following menus:<br>".$message;
+	}
+	if($error ne '') {
+		$params->{'pluginCustomBrowseError'} = $error;
+	}
+	return handleWebEditMenus($client,$params);
+}
+
+sub handleWebDownloadMenu {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	my $result = downloadMenu($params->{'menutemplate'},$params->{'customname'},$params->{'overwrite'});
+	if(defined($result->{'error'})) {
+		$params->{'pluginCustomBrowseError'} = $result->{'error'};
+	        return handleWebDownloadMenus($client,$params);
+	}
+	if($result->{'filenamecollision'}) {
+		$params->{'pluginCustomBrowseTemplate'} = $params->{'menutemplate'};
+		$params->{'pluginCustomBrowseUniqueId'} = $result->{'template'};
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_savedownloadedmenu.html', $params);
+	}else {
+		$params->{'menutemplate'} = $result->{'template'};
+		return handleWebNewMenuParameters($client,$params);
+	}
+}
+
+sub downloadMenu {
+	my $id = shift;
+	my $customname = shift;
+	my $overwrite = shift;
+	my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntry($id);
+	my %result = ();
+	unless ($answer->fault) {
+		my $result = $answer->result();
+		my $xml = eval { XMLin($result, forcearray => ['data'], keyattr => []) };
+		my $template = $xml->{'uniqueid'};
+		if(!defined($customname)) {
+			$customname = $template;
+		}
+		my $datas = $xml->{'datas'}->{'data'};
+		if(defined($datas)) {
+			my %dataToStore = ();
+			for my $data (@$datas) {
+				if($data->{'type'} eq 'template') {
+					my $content = $data->{'content'};
+					$dataToStore{$data->{'type'}} = $content;
+				}elsif($data->{'type'} eq 'xml') {
+					my $content = $data->{'content'};
+					$content =~ s/\s*<downloadidentifier>.*<\/downloadidentifier>//m;
+					$content =~ s/<template>/<template>\n\t\t<downloadidentifier>$id<\/downloadidentifier>/m;
+					if(defined($xml->{'lastchanged'})) {
+						$content =~ s/\s*<lastchanged>.*<\/lastchanged>//m;
+						my $lastchanged = $xml->{'lastchanged'};
+						$content =~ s/<\/downloadidentifier>/<\/downloadidentifier>\n\t\t<lastchanged>$lastchanged<\/lastchanged>/m;
+					}
+					$dataToStore{$data->{'type'}} = $content;
+				}
+			}
+			if(defined($dataToStore{'template'}) && defined($dataToStore{'xml'})) {
+				my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+				for my $key (keys %dataToStore) {
+					my $file = $customname.".".$key;
+					my $url = catfile($templateDir,$file);
+					if(-e $url && !$overwrite) {
+						$result{'filenamecollision'} = 1;
+						$result{'template'} = $customname;
+						return \%result;
+					}
+					my $fh;
+					open($fh,"> $url") or do {
+						$result{'error'} = 'Error saving downloaded menu';
+					        return \%result;
+					};
+					debugMsg("Writing to file: $url\n");
+					print $fh $dataToStore{$key};
+					debugMsg("Writing to file succeeded\n");
+					close $fh;
+				}
+				$result{'template'} = $customname.'.xml';
+				return \%result;
+			}
+			$result{'error'} = "Unable to download menu";
+			return \%result;
+		}
+		$result{'error'} = "No menus available to download";
+		return \%result;
+	}else {
+		$result{'error'} = "Unable to reach download site";
+		return \%result;
+	}
+}
+
+
+
+
+
+
+
+
 
 sub addValuesToTemplateParameter {
 	my $p = shift;
@@ -2525,15 +3081,29 @@ sub handleWebSaveNewSimpleMenu {
 		$params->{'pluginCustomBrowseError'} = 'No custom menu dir configured';
 	}
 	my $file = unescape($params->{'file'});
+	my $customFile = $file;
+	$customFile =~ s/\.cb\.values\.xml$/.cb.xml/;
 	my $url = catfile($browseDir, $file);
-	
-	if(!defined($params->{'pluginCustomBrowseError'}) && -e $url) {
+	my $customUrl = catfile($browseDir, $customFile);
+
+	if(!defined($params->{'pluginCustomBrowseError'}) && -e $url && !$params->{'overwrite'}) {
 		$params->{'pluginCustomBrowseError'} = 'Invalid filename, file already exist';
+	}
+	if(!defined($params->{'pluginCustomBrowseError'}) && -e $customUrl && !$params->{'overwrite'}) {
+		$params->{'pluginCustomBrowseError'} = 'Invalid filename, customized menu with this name already exist';
 	}
 
 	if(!saveSimpleMenu($client,$params,$url)) {
 		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newsimplemenu.html', $params);
 	}else {
+		if($params->{'overwrite'}) {
+			if(-e $customUrl) {
+				debugMsg("Deleting $url\n");
+				unlink($customUrl) or do {
+					warn "Unable to delete file: ".$customUrl.": $! \n";
+				}
+			}
+		}
 		return handleWebEditMenus($client,$params)
 	}
 }
@@ -2649,7 +3219,7 @@ sub saveSimpleMenu {
 	my $fh;
 
 	if(!($url =~ /.*\.cb\.values\.xml$/)) {
-		$params->{'pluginCustomBrowseError'} = 'Filename must end with .cb.xml';
+		$params->{'pluginCustomBrowseError'} = 'Filename must end with .cb.values.xml';
 	}
 #	if(!($params->{'pluginCustomBrowseError'})) {
 #		my %templates = ();
@@ -2702,6 +3272,7 @@ sub saveSimpleMenu {
 			}
 		}		
 		$params->{'pluginCustomBrowseEditMenuParameters'} = \%parameters;
+		$params->{'pluginCustomBrowseNewMenuTemplate'} = $params->{'menutemplate'};
 		$params->{'pluginCustomBrowseEditMenuFile'} = $params->{'file'};
 		$params->{'pluginCustomBrowseEditMenuFileUnescaped'} = unescape($params->{'pluginCustomBrowseEditMenuFile'});
 		if ($::VERSION ge '6.5') {
@@ -2928,7 +3499,7 @@ sub readTemplateConfiguration {
 
 	my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
 	if($templateDir && -d $templateDir) {
-		readTemplateConfigurationFromDir($client,$templateDir,\%templates);
+		readTemplateConfigurationFromDir($client,$templateDir,\%templates,1);
 	}
 
 	return \%templates;
@@ -2938,6 +3509,7 @@ sub readTemplateConfigurationFromDir {
     my $client = shift;
     my $browseDir = shift;
     my $templates = shift;
+    my $customtemplate = shift;
     debugMsg("Loading template configuration from: $browseDir\n");
 
     my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"xml");
@@ -2949,7 +3521,7 @@ sub readTemplateConfigurationFromDir {
 
         # read_file from File::Slurp
         my $content = eval { read_file($path) };
-	my $error = parseTemplateContent($client,$item,$content,$templates);
+	my $error = parseTemplateContent($client,$item,$content,$templates, $customtemplate);
 	if($error) {
 		errorMsg("Unable to read: $path\n");
 	}
@@ -3010,6 +3582,8 @@ sub parseMenuContent {
 			}
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
+			}else {
+				$xml->{'menu'}->{'custommenu'} = 1;
 			}
 	                $menus->{$menuId} = $xml->{'menu'};
 		}elsif($include && $disabled) {
@@ -3017,6 +3591,8 @@ sub parseMenuContent {
 			$xml->{'menu'}->{'enabledbrowse'}=0;
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
+			}else {
+				$xml->{'menu'}->{'custommenu'} = 1;
 			}
 	                $menus->{$menuId} = $xml->{'menu'};
 		}
@@ -3161,6 +3737,8 @@ sub parseMenuTemplateContent {
 					}
 					if($defaultMenu) {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
+					}elsif(defined($template->{'customtemplate'})) {
+						$xml->{'menu'}->{'custommenu'} = 1;
 					}
 			                $menus->{$menuId} = $xml->{'menu'};
 				}elsif($include && $disabled) {
@@ -3168,6 +3746,8 @@ sub parseMenuTemplateContent {
 					$xml->{'menu'}->{'enabledbrowse'}=0;
 					if($defaultMenu) {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
+					}elsif(defined($template->{'customtemplate'})) {
+						$xml->{'menu'}->{'custommenu'} = 1;
 					}
 			                $menus->{$menuId} = $xml->{'menu'};
 				}
@@ -3253,6 +3833,7 @@ sub parseTemplateContent {
 	my $key = shift;
 	my $content = shift;
 	my $templates = shift;
+	my $customtemplate = shift;
 
 	my $errorMsg = undef;
         if ( $content ) {
@@ -3266,6 +3847,9 @@ sub parseTemplateContent {
 		my $include = isMenuEnabled($client,$xml);
 		if(defined($xml->{'template'})) {
 			$xml->{'template'}->{'id'} = $key;
+			if($customtemplate) {
+				$xml->{'template'}->{'customtemplate'} = 1;
+			}
 		}
 		if($include && defined($xml->{'template'})) {
 	                $templates->{$key} = $xml->{'template'};
@@ -3460,6 +4044,62 @@ sub readMixConfigurationFromDir {
             }
         }
     }
+}
+
+sub loadMenuDataFromAnyDir {
+	my $file = shift;
+	my $data = undef;
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	if (!defined $browseDir || !-d $browseDir) {
+		debugMsg("Skipping custom browse configuration - directory is undefined\n");
+	}else {
+		$data = loadMenuData($browseDir,$file);
+	}
+	if(!defined($data)) {
+		my @pluginDirs = ();
+		if ($::VERSION ge '6.5') {
+			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		}else {
+			@pluginDirs = catdir($Bin, "Plugins");
+		}
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,"CustomBrowse","Menus");
+			$data = loadMenuData(catdir($plugindir,"CustomBrowse","Menus"),$file);
+			if(defined($data)) {
+				last;
+			}
+		}
+	}
+	return $data;
+}
+
+sub loadTemplateDataFromAnyDir {
+	my $file = shift;
+	my $data = undef;
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_template_directory");
+	if (!defined $browseDir || !-d $browseDir) {
+		debugMsg("Skipping custom browse configuration - directory is undefined\n");
+	}else {
+		$data = loadMenuData($browseDir,$file);
+	}
+	if(!defined($data)) {
+		my @pluginDirs = ();
+		if ($::VERSION ge '6.5') {
+			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		}else {
+			@pluginDirs = catdir($Bin, "Plugins");
+		}
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,"CustomBrowse","Templates");
+			$data = loadMenuData(catdir($plugindir,"CustomBrowse","Templates"),$file);
+			if(defined($data)) {
+				last;
+			}
+		}
+	}
+	return $data;
 }
 
 sub loadMenuData {
@@ -3755,6 +4395,9 @@ PLUGIN_CUSTOMBROWSE_EDIT_MENU_PARAMETERS_TITLE
 PLUGIN_CUSTOMBROWSE_REMOVE_MENU_QUESTION
 	EN	Are you sure you want to delete this menu ?
 
+PLUGIN_CUSTOMBROWSE_REMOVE_MENU_TYPE_QUESTION
+	EN	Removing a menu type might cause problems later if it is used in existing menus, are you really sure you want to delete this menu type ?
+
 PLUGIN_CUSTOMBROWSE_REMOVE_MENU
 	EN	Delete
 
@@ -3778,6 +4421,90 @@ PLUGIN_CUSTOMBROWSE_TRACKSTAT
 
 PLUGIN_CUSTOMBROWSE_TRACKSTAT_RATING
 	EN	Rating:
+
+PLUGIN_CUSTOMBROWSE_LOGIN_USER
+	EN	Username
+
+PLUGIN_CUSTOMBROWSE_LOGIN_PASSWORD
+	EN	Password
+
+PLUGIN_CUSTOMBROWSE_LOGIN_FIRSTNAME
+	EN	First name
+
+PLUGIN_CUSTOMBROWSE_LOGIN_LASTNAME
+	EN	Last name
+
+PLUGIN_CUSTOMBROWSE_LOGIN_EMAIL
+	EN	e-mail
+
+PLUGIN_CUSTOMBROWSE_ANONYMOUSLOGIN
+	EN	Anonymous
+
+PLUGIN_CUSTOMBROWSE_LOGIN
+	EN	Login
+
+PLUGIN_CUSTOMBROWSE_REGISTERLOGIN
+	EN	Register &amp; Login
+
+PLUGIN_CUSTOMBROWSE_REGISTER_TITLE
+	EN	Register a new user
+
+PLUGIN_CUSTOMBROWSE_LOGIN_TITLE
+	EN	Login
+
+PLUGIN_CUSTOMBROWSE_DOWNLOAD_MENUS
+	EN	Download more menus
+
+PLUGIN_CUSTOMBROWSE_PUBLISH_MENU
+	EN	Publish
+
+PLUGIN_CUSTOMBROWSE_PUBLISH
+	EN	Publish
+
+PLUGIN_CUSTOMBROWSE_PUBLISHPARAMETERS_TITLE
+	EN	Please specify information about the menu
+
+PLUGIN_CUSTOMBROWSE_PUBLISH_NAME
+	EN	Name
+
+PLUGIN_CUSTOMBROWSE_PUBLISH_DESCRIPTION
+	EN	Description
+
+PLUGIN_CUSTOMBROWSE_PUBLISH_ID
+	EN	Unique identifier
+
+PLUGIN_CUSTOMBROWSE_LASTCHANGED
+	EN	Last changed
+
+PLUGIN_CUSTOMBROWSE_PUBLISHMESSAGE
+	EN	Thanks for choosing to publish your menu. The advantage of publishing a menu is that other users can use it and it will also be used for ideas of new functionallity in the Custom Browse plugin. Publishing a menu is also a great way of improving the functionality in the Custom Browse plugin by showing the developer what types of menus you use, besides those already included with the plugin.
+
+PLUGIN_CUSTOMBROWSE_REGISTERMESSAGE
+	EN	You can choose to publish your menu either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the menu, you will get credit for it and you will also be sure that no one else can update or change your published menu. The e-mail adress will only be used to contact you if I have some questions to you regarding one of your menus, it will not show up on any web pages. If you already have registered a user, just hit the Login button.
+
+PLUGIN_CUSTOMBROWSE_LOGINMESSAGE
+	EN	You can choose to publish your menu either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the menu, you will get credit for it and you will also be sure that no one else can update or change your published menu. Hit the &quot;Register &amp; Login&quot; button if you have not previously registered.
+
+PLUGIN_CUSTOMBROWSE_PUBLISHMESSAGE_DESCRIPTION
+	EN	It is important that you enter a good description of your menu, describe what your menu do and if it is based on one of the existing menus it is a good idea to mention this and describe which extensions you have made. <br><br>It is also a good idea to try to make the &quot;Unique identifier&quot; as uniqe as possible as this will be used for filename when downloading the menu. This is especially important if you have choosen to publish your menu anonymously as it can easily be overwritten if the identifier is not unique. Please try to not use spaces and language specific characters in the unique identifier since these could cause problems on some operating systems.
+
+PLUGIN_CUSTOMBROWSE_REFRESH_DOWNLOADED_MENUS
+	EN	Download last version of existing menus
+
+PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE_WARNING
+	EN	A menu type with that name already exists, please change the name or select to overwrite the existing menu type
+
+PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE
+	EN	Overwrite existing
+
+PLUGIN_CUSTOMBROWSE_PUBLISH_OVERWRITE
+	EN	Overwrite existing
+
+PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_NAME
+	EN	Unique identifier
+
+PLUGIN_CUSTOMBROWSE_EDIT_MENU_OVERWRITE
+	EN	Overwrite existing
 EOF
 
 }
