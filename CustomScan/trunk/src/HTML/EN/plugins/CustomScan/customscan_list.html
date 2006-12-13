@@ -15,7 +15,15 @@
 	<table width="100%">
 		[% IF pluginCustomScanScanning %]
 		<tr>
-		<td colspan="2"><strong>[% "PLUGIN_CUSTOMSCAN_SCANNING" | string %]</strong>&nbsp;&nbsp;&nbsp;(<a href="[% webroot %]plugins/CustomScan/customscan_list.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSCAN_REFRESH" | string %]</a>)</td>
+		<td colspan="2"><strong>[% "PLUGIN_CUSTOMSCAN_SCANNING" | string %]</strong>&nbsp;&nbsp;&nbsp;(<a href="[% webroot %]plugins/CustomScan/customscan_list.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSCAN_REFRESH" | string %]</a>)&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/customscan_list.html?player=[% player | uri %]" onclick='if (confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_ABORT_QUESTION" | string %]")) 
+						{
+							document.scanForm.module.value = "allmodules";
+							document.scanForm.type.value = "abort";
+							document.scanForm.submit();
+							return false;
+						} else {
+							return false;
+						};'>[% "PLUGIN_CUSTOMSCAN_SCAN_ABORT" | string %]</a></td>
 		</tr>
 		[% END %]
 		<tr>

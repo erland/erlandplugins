@@ -42,6 +42,7 @@ my $albums = ();
 my $artists = ();
 my $tracks = ();
 my $scanningInProgress = 0;
+my $scanningAborted = 0;
 
 my $modules = ();
 my @pluginDirs = ();
@@ -280,6 +281,7 @@ sub fullRescan {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
 		return 0;
 	}
+	$scanningAborted = 0;
 	refreshData();
 
 	$scanningInProgress = 1;
@@ -367,6 +369,14 @@ sub moduleClear {
 	}
 }
 
+sub fullAbort {
+	if($scanningInProgress) {
+		$scanningAborted = 1;
+		msg("CustomScan: Aborting scanning...\n");
+		return 0;
+	}
+}
+
 sub fullClear {
 	if($scanningInProgress) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
@@ -434,6 +444,7 @@ sub exitScan {
 			use strict 'refs';
 		}
 	}
+	$scanningAborted = 0;
 	$scanningInProgress = 0;
 	debugMsg("Rescan finished\n");
 }
@@ -628,7 +639,9 @@ sub scanArtist {
 				}
 			}
 		}
-		return 1;
+		if(!$scanningAborted) {
+			return 1;
+		}
 	}
 	initAlbumScan($moduleKey);
 	return 0;
@@ -716,7 +729,9 @@ sub scanAlbum {
 				}
 			}
 		}
-		return 1;
+		if(!$scanningAborted) {
+			return 1;
+		}
 	}
 	initTrackScan($moduleKey);
 	return 0;
@@ -727,7 +742,8 @@ sub scanTrack {
 	my $track = undef;
 	if($tracks) {
 		$track = $tracks->next;
-		while(defined($track) && !$track->audio) {
+		# Skip non audio tracks and tracks with url longer than 255 characters
+		while(defined($track) && !$track->audio && length($track->url)<=255) {
 			$track = $tracks->next;
 		}
 	}
@@ -799,7 +815,9 @@ sub scanTrack {
 				}
 			}
 		}
-		return 1;
+		if(!$scanningAborted) {
+			return 1;
+		}
 	}
 	exitScan($moduleKey);
 	return 0;
@@ -1057,6 +1075,8 @@ sub handleWebScan {
 			fullRescan();
 		}elsif($params->{'type'} eq 'clear') {
 			fullClear();
+		}elsif($params->{'type'} eq 'abort') {
+			fullAbort();
 		}
 	}else {
 		if($params->{'type'} eq 'scan') {
@@ -1083,17 +1103,34 @@ sub initDatabase {
 		}
 	}
 	unless ($tblexists) {
-		debugMsg("Create database table\n");
+		msg("CustomScan: Creating database tables\n");
 		executeSQLFile("dbcreate.sql");
 	}
 
 	eval { $dbh->do("select valuesort from customscan_track_attributes limit 1;") };
 	if ($@) {
-		debugMsg("Create database table column valuesort\n");
+		msg("CustomScan: Upgrading database adding table column valuesort, please wait...\n");
 		executeSQLFile("dbupgrade_valuesort.sql");
 	}
 
-	my $sth = $dbh->prepare("show create table tracks");
+	my $sth = $dbh->prepare("show create table customscan_track_attributes");
+	eval {
+		debugMsg("Checking datatype on customscan_track_attributes\n");
+		$sth->execute();
+		my $line = undef;
+		$sth->bind_col( 2, \$line);
+		if( $sth->fetch() ) {
+			if(defined($line) && (lc($line) =~ /url.*(text|mediumtext)/m)) {
+				msg("CustomScan: Upgrading database changing type of url column, please wait...\n");
+				executeSQLFile("dbupgrade_url_type.sql");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show create table tracks");
 	my $charset;
 	eval {
 		debugMsg("Checking charsets on tables\n");
@@ -1123,8 +1160,93 @@ sub initDatabase {
 	    warn "Database error: $DBI::errstr\n";
 	}
 	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_album_attributes;");
+	eval {
+		debugMsg("Checking if indexes is needed for customscan_album_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}
+		}
+		if(!$foundMB) {
+			msg("CustomScan: No musicbrainzIndex index found in customscan_album_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_album_attributes (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_contributor_attributes;");
+	eval {
+		debugMsg("Checking if indexes is needed for customscan_contributor_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}
+		}
+		if(!$foundMB) {
+			msg("CustomScan: No musicbrainzIndex index found in customscan_contributor_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_contributor_attributes (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_track_attributes;");
+	eval {
+		debugMsg("Checking if indexes is needed for customscan_track_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		my $foundUrl = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}elsif($keyname eq "urlIndex") {
+				$foundUrl = 1;
+			}
+		}
+		if(!$foundMB) {
+			msg("CustomScan: No musicbrainzIndex index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_track_attributes (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundUrl) {
+			msg("CustomScan: No urlIndex index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index urlIndex on customscan_track_attributes (url(255));") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	$sth->finish();
+
 	if(Slim::Utils::Prefs::get("plugin_customscan_refresh_startup")) {
+		msg("CustomScan: Synchronizing Custom Scan data, please wait...\n");
 		refreshData();
+		msg("CustomScan: Synchronization finished\n");
 	}
 }
 sub updateCharSet {
@@ -1349,7 +1471,7 @@ sub refreshData
 	$timeMeasure->start();
 	debugMsg("Starting to update custom scan track data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
-	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
+	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<256";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1722,6 +1844,12 @@ PLUGIN_CUSTOMSCAN_SCAN_RESCAN_ALL
 
 PLUGIN_CUSTOMSCAN_SCAN_CLEAR_ALL_QUESTION
 	EN	Are you sure you want to completely remove all data for all modules ?
+
+PLUGIN_CUSTOMSCAN_SCAN_ABORT
+	EN	Abort
+
+PLUGIN_CUSTOMSCAN_SCAN_ABORT_QUESTION
+	EN	Are you sure you want to abort the scanning process ?
 
 PLUGIN_CUSTOMSCAN_TITLEFORMATS
 	EN	Attributes to make available as title formats

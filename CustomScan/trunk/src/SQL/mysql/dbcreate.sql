@@ -27,7 +27,7 @@ CREATE TABLE customscan_album_attributes (
 CREATE TABLE customscan_track_attributes (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   track int(10),
-  url text NOT NULL,
+  url varchar (255) NOT NULL,
   musicbrainz_id varchar(40),
   module varchar(40) NOT NULL,
   attr varchar (255) NOT NULL,
