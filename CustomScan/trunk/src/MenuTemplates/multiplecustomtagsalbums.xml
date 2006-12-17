@@ -22,6 +22,7 @@
 		<parameter type="text" id="level4name" name="Level 4 name" value=""/>
 		<parameter type="text" id="customsorttag4" name="Level 4 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag4artistsort" name="Level 4 sort by ARTISTSORT" value=""/>
+		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>
