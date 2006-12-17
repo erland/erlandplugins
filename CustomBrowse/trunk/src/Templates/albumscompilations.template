@@ -61,7 +61,9 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					[%- IF playalltracks %]
 					<playtype>all</playtype>
+					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks 
@@ -119,7 +121,9 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					[%- IF playalltracks %]
 					<playtype>all</playtype>
+					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks 

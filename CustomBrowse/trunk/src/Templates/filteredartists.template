@@ -46,7 +46,9 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					[%- IF playalltracks %]
 					<playtype>all</playtype>
+					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks,albums
@@ -170,7 +172,9 @@
 					<id>track</id>
 					<itemtype>track</itemtype>
 					<itemformat>track</itemformat>
+					[%- IF playalltracks %]
 					<playtype>all</playtype>
+					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
 						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]

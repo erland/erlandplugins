@@ -4,6 +4,7 @@
 		<id>newalbums63.xml</id>
 		<parameter type="text" id="menuname"><value>New Albums</value></parameter>
 		<parameter type="text" id="menuorder"><value>50</value></parameter>
+		<parameter type="text" id="playalltracks"><value>1</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 	</template>

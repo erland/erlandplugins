@@ -13,6 +13,7 @@
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value="1"/>
 		<parameter type="text" id="variousartisttext" name="Various Artists name" value="Various Artists"/>
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
+		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>
