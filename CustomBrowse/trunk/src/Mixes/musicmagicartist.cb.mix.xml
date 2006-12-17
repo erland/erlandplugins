@@ -9,5 +9,7 @@
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::CustomBrowse::Plugin::musicMagicMixable</mixcheckdata>
 		<mixdata>Plugins::CustomBrowse::Plugin::musicMagicMix</mixdata>
+		<mixurl>plugins/MusicMagic/musicmagic_mix.html?artist={itemid}</mixurl>
+		<miximage>html/images/b_mmmix.gif</miximage>
 	</mix>
 </custombrowse>

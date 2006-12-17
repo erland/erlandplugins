@@ -90,6 +90,18 @@
 		[% WRAPPER $container %]
 			[% FOREACH item = pluginCustomBrowseItems %]
 				[% BLOCK controls %]
+					[% IF item.mixable %]
+						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+					[% ELSE %]
+					[% FOREACH mix = item.mixes %]
+						[% IF mix.url %]
+							<a href="[% webroot %][% mix.url %]&player=[% player | uri %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
+						[% ELSE %]
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
+						[% END %]
+					[% END %]
+					[% END %]
+
 					[% IF item.playtype != 'none' %]
 						[% IF item.attributes %]
 							[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]

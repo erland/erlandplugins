@@ -818,7 +818,7 @@ sub createMix {
 }
 
 sub executeMix {
-        my ($client, $mixer, $addOnly,$item) = @_;
+        my ($client, $mixer, $addOnly,$item, $web) = @_;
 
 	if(!defined($item)) {
 		$item = $client->param('item');
@@ -842,8 +842,10 @@ sub executeMix {
 			$command = 'addtracks';
 		}
 		playAddItem($client,undef,\%playItem,$command);
-		Slim::Buttons::Common::popModeRight($client);
-	}elsif($mixer->{'mixtype'} eq 'mode') {
+		if(!$web) {
+			Slim::Buttons::Common::popModeRight($client);
+		}
+	}elsif($mixer->{'mixtype'} eq 'mode' && !$web) {
 		my @params = split(/\|/,$mixer->{'mixdata'});
 		my $mode = shift(@params);
 		my %modeParameters = ();
@@ -890,7 +892,7 @@ sub executeMix {
 				if(UNIVERSAL::can("$class","$function")) {
 					debugMsg("Calling ${class}::${function}\n");
 					no strict 'refs';
-					eval { &{"${class}::${function}"}($client,$itemObj,$addOnly) };
+					eval { &{"${class}::${function}"}($client,$itemObj,$addOnly,$web) };
 					if ($@) {
 						debugMsg("Error calling ${class}::${function}: $@\n");
 					}
@@ -927,6 +929,7 @@ sub musicMagicMix {
 	my $client = shift;
 	my $item = shift;
 	my $addOnly = shift;
+	my $web = shift;
 
 	my $trackUrls = undef;
 	if(ref($item) eq 'Slim::Schema::Album') {
@@ -969,20 +972,24 @@ sub musicMagicMix {
 			push @trackItems,\%trackItem;
 		}
 		playAddItem($client,\@trackItems,\%playItem,$command);
-		Slim::Buttons::Common::popModeRight($client);
+		if(!$web) {
+			Slim::Buttons::Common::popModeRight($client);
+		}
 	}else {
-		my $line2 = $client->doubleString('PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS');
-		if ($::VERSION ge '6.5') {
-			$client->showBriefly({
-				'line'    => [ undef, $line2 ],
-				'overlay' => [ undef, $client->symbols('notesymbol') ],
-			});
-		}else {
-			$client->showBriefly({
-				'line1' => undef,
-				'line2' => $line2,
-				'overlay2' => $client->symbols('notesymbol')
-			});
+		if(!$web) {
+			my $line2 = $client->doubleString('PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS');
+			if ($::VERSION ge '6.5') {
+				$client->showBriefly({
+					'line'    => [ undef, $line2 ],
+					'overlay' => [ undef, $client->symbols('notesymbol') ],
+				});
+			}else {
+				$client->showBriefly({
+					'line1' => undef,
+					'line2' => $line2,
+					'overlay2' => $client->symbols('notesymbol')
+				});
+			}
 		}
 	}
 }
@@ -1594,6 +1601,32 @@ sub getPageItemsForContext {
 					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
 				}
 			}
+			my $mixes = getMixes($client,$it);
+			if(scalar(@$mixes)>0) {
+				my @webMixes = ();
+				for my $mix (@$mixes) {
+					my %webMix = (
+						'name' => $mix->{'mixname'},
+						'id' => $mix->{'id'}
+					);
+					my $image = $mix->{'miximage'};
+					if(defined($image)) {
+						$webMix{'image'} = $image;
+					}
+					my $url = $mix->{'mixurl'};
+					if(defined($url)) {
+						my $parameters = getCustomBrowseProperties();
+						$parameters->{'itemid'} = $it->{'itemid'};
+						$parameters->{'itemname'} = $it->{'itemname'};
+						my $keywords = combineKeywords($it->{'keywordparameters'},$it->{'parameters'},$parameters);
+						$url = replaceParameters($url,$keywords);
+						$webMix{'url'} = $url;
+					}
+					push @webMixes,\%webMix;
+				}
+				$it->{'mixes'} = \@webMixes;
+				#$it->{'mixable'} = 1;
+			}
 			push @resultItems, $it;
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$prevLetter = $it->{'itemlink'};
@@ -1951,6 +1984,8 @@ sub webPages {
 		"custombrowse_publishmenuparameters\.(?:htm|xml)"      => \&handleWebPublishMenuParameters,
 		"custombrowse_publishmenu\.(?:htm|xml)"      => \&handleWebPublishMenu,
 		"custombrowse_deletemenutype\.(?:htm|xml)"      => \&handleWebDeleteMenuType,
+                "custombrowse_mix\.(?:htm|xml)"     => \&handleWebMix,
+                "custombrowse_executemix\.(?:htm|xml)"     => \&handleWebExecuteMix,
                 "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
@@ -3390,6 +3425,162 @@ sub handleWebAddAll {
 	return handleWebPlayAdd($client,$params,1,0);
 }
 
+sub handleWebMix {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	return unless $client;
+	if(!defined($params->{'hierarchy'})) {
+		readBrowseConfiguration($client);
+	}
+	my $item = undef;
+	my $nextitem = undef;
+	my $contextItems = getContext($client,$params,$browseMenus,0);
+	my @contexts = @$contextItems;
+
+	my $currentcontext = undef;
+	if(scalar(@contexts)>1) {
+		my $context = @contexts[scalar(@contexts)-2];
+		$item = $context->{'item'};
+		$item->{'parameters'} = $context->{'parameters'};
+	}
+	if(scalar(@contexts)>0) {
+		$currentcontext = @contexts[scalar(@contexts)-1];
+		$nextitem = $currentcontext->{'item'};
+		$nextitem->{'parameters'} = $currentcontext->{'parameters'};
+	}
+	my $items = getMenuItems($client,$item);
+	my $selecteditem = undef;
+	for my $it (@$items) {
+		if($it->{'itemid'} eq $params->{$nextitem->{'id'}}) {
+			$selecteditem = $it;
+		}
+	}
+	if(defined($selecteditem)) {
+		my $mixes = getMixes($client,$selecteditem);
+		my @webMixes = ();
+		for my $mix (@$mixes) {
+			my %webMix = (
+				'name' => $mix->{'mixname'},
+				'id' => $mix->{'id'}
+			);
+			my $image = $mix->{'miximage'};
+			if(defined($image)) {
+				$mix->{'image'} = $image;
+			}
+			my $url = $mix->{'mixurl'};
+			if(defined($url)) {
+				my $parameters = getCustomBrowseProperties();
+				$parameters->{'itemid'} = $selecteditem->{'itemid'};
+				$parameters->{'itemname'} = $selecteditem->{'itemname'};
+				my $keywords = combineKeywords($selecteditem->{'keywordparameters'},$selecteditem->{'parameters'},$parameters);
+				$url = replaceParameters($url,$keywords);
+				$webMix{'url'} = $url;
+			}
+			push @webMixes,\%webMix;
+		}
+		if(scalar(@webMixes)>1) {
+			$params->{'pluginCustomBrowseMixes'} = \@webMixes;
+			$params->{'pluginCustomBrowseItemUrl'} = $currentcontext->{'url'}.$currentcontext->{'valueUrl'};
+			pop @$contextItems;
+			$params->{'pluginCustomBrowseContext'} = $contextItems;
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_listmixes.html', $params);
+		}elsif(scalar(@webMixes)>0) {
+			if(!defined(@webMixes->[0]->{'url'})) {
+				$params->{'mix'} = @webMixes->[0]->{'id'};
+				return handleWebExecuteMix($client,$params);
+			}else {
+				$params->{'pluginCustomBrowseRedirect'} = @webMixes->[0]->{'url'};
+				return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_redirect.html', $params);
+			}
+		}
+	}
+	
+	#Go back to current page if no mixers could be found
+	my $hierarchy = $params->{'hierarchy'};
+	if(defined($hierarchy)) {
+		my @hierarchyItems = (split /,/, $hierarchy);
+		my $newHierarchy = '';
+		my $i=0;
+		my $noOfHierarchiesToUse = scalar(@hierarchyItems)-1;
+		foreach my $hierarchyItem (@hierarchyItems) {
+			if($i && $i<$noOfHierarchiesToUse) {
+				$newHierarchy = $newHierarchy.',';
+			}
+			if($i<$noOfHierarchiesToUse) {
+				$newHierarchy = $hierarchyItem;
+			}
+			$i=$i+1;
+		}
+		$params->{'hierarchy'} = $newHierarchy;
+	}
+	return handleWebList($client,$params);
+}
+
+sub handleWebExecuteMix {
+	my ($client, $params) = @_;
+        if ($::VERSION ge '6.5') {
+                $params->{'pluginCustomBrowseSlimserver65'} = 1;
+        }
+	return unless $client;
+	if(!defined($params->{'hierarchy'})) {
+		readBrowseConfiguration($client);
+	}
+	my $item = undef;
+	my $nextitem = undef;
+	my $contextItems = getContext($client,$params,$browseMenus,0);
+	my @contexts = @$contextItems;
+
+	my $currentcontext = undef;
+	if(scalar(@contexts)>1) {
+		my $context = @contexts[scalar(@contexts)-2];
+		$item = $context->{'item'};
+		$item->{'parameters'} = $context->{'parameters'};
+	}
+	if(scalar(@contexts)>0) {
+		$currentcontext = @contexts[scalar(@contexts)-1];
+		$nextitem = $currentcontext->{'item'};
+		$nextitem->{'parameters'} = $currentcontext->{'parameters'};
+	}
+	my $items = getMenuItems($client,$item);
+	my $selecteditem = undef;
+	for my $it (@$items) {
+		if($it->{'itemid'} eq $params->{$nextitem->{'id'}}) {
+			$selecteditem = $it;
+		}
+	}
+	if(defined($selecteditem)) {
+		my $mixes = getMixes($client,$selecteditem);
+		for my $mix (@$mixes) {
+			if($mix->{'id'} eq $params->{'mix'}) {
+				executeMix($client,$mix,0,$selecteditem,1);
+				last;
+			}
+		}
+	}
+	
+	#Go back to current page if no mixers could be found
+	my $hierarchy = $params->{'hierarchy'};
+	if(defined($hierarchy)) {
+		my @hierarchyItems = (split /,/, $hierarchy);
+		my $newHierarchy = '';
+		my $i=0;
+		my $noOfHierarchiesToUse = scalar(@hierarchyItems)-1;
+		foreach my $hierarchyItem (@hierarchyItems) {
+			if($i && $i<$noOfHierarchiesToUse) {
+				$newHierarchy = $newHierarchy.',';
+			}
+			if($i<$noOfHierarchiesToUse) {
+				$newHierarchy = $hierarchyItem;
+			}
+			$i=$i+1;
+		}
+		$params->{'hierarchy'} = $newHierarchy;
+	}
+	return handleWebList($client,$params);
+}
+
 # Draws the plugin's select menus web page
 sub handleWebSelectMenus {
         my ($client, $params) = @_;
@@ -4505,6 +4696,9 @@ PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_NAME
 
 PLUGIN_CUSTOMBROWSE_EDIT_MENU_OVERWRITE
 	EN	Overwrite existing
+
+PLUGIN_CUSTOMBROWSE_SELECT_MIXES
+	EN	Select mix to create
 EOF
 
 }

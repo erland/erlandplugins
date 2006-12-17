@@ -8,5 +8,7 @@
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::TrackStat::Plugin::mixable</mixcheckdata>
 		<mixdata>PLUGIN.TrackStat::Plugin|genre={itemid}|statistictype=genre|flatlist=1</mixdata>
+		<mixurl>plugins/TrackStat/allalbums.html?&amp;genre={itemid}&amp;flatlist=1</mixurl>
+		<miximage>plugins/TrackStat/html/images/mixbutton.gif</miximage>
 	</mix>
 </custombrowse>
