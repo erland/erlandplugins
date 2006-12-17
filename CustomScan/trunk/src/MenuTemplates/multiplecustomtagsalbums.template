@@ -240,6 +240,7 @@
 									where 
 										tracks.audio=1 and 
 										tracks.id=attr1.track and
+										tracks.album={album} and
 										attr1.module='customtag' and
 										attr1.attr='[% customtag1 %]' and
 										attr1.value='{customtag1}' 
