@@ -4,6 +4,7 @@
 		<name>Custom Artist Tags</name>
 		<description>Menu that makes it possible to browse your artists by a custom tag, the artist is selected first and then the custom tag, for example ORIGARTIST, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Artist Tags"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value=""/>
 		<parameter type="text" id="variousartisttext" name="Various Artists name" value="Various Artists"/>

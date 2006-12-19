@@ -5,6 +5,7 @@
 		<name>Custom Tag Singles</name>
 		<description>Singles menu that lists singles. It detect all tracks with a specific COMMENT tag or a specific custom tag as a single, requires Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tag Singles"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="text" id="singlecomment" name="Comment tag" value=""/>
 		<parameter type="text" id="customtag" name="Custom tag name" value="SINGLE"/>
