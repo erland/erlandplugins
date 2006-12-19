@@ -1896,7 +1896,7 @@ sub checkDefaults {
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_download_url');
 	if (! defined $prefVal) {
 		debugMsg("Defaulting plugin_custombrowse_download_url\n");
-		Slim::Utils::Prefs::set('plugin_custombrowse_download_url', 'http://localhost:8180/datacollection/services/DataCollection');
+		Slim::Utils::Prefs::set('plugin_custombrowse_download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
 	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
