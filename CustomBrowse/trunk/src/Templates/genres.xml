@@ -4,6 +4,7 @@
 		<name>Genres</name>
 		<description>Genres menu that works the same way as the standard slimserver genres menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genres"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value="1"/>
 		<parameter type="text" id="variousartisttext" name="Various Artists name" value="Various Artists"/>

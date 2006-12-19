@@ -5,6 +5,7 @@
 		<name>Filtered Albums</name>
 		<description>Albums menu that makes it possible to browse albums limited to a specific included/excluded genres and comment</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Filtered Albums"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album" value=""/>
 		<parameter type="text" id="includedcomment" name="Include comment" value=""/>

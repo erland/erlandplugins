@@ -35,6 +35,7 @@ use Scalar::Util qw(blessed);
 
 my $driver;
 my $browseMenus;
+my $browseMenusFlat;
 my $browseMixes;
 my $template;
 my $mixer;
@@ -193,6 +194,7 @@ sub getMenuItems {
     my $client = shift;
     my $item = shift;
     my $option = shift;
+    my $mainBrowseMenu = shift;
 
     my @listRef = ();
 
@@ -239,6 +241,11 @@ sub getMenuItems {
 		}
 	}
 	foreach my $menu (@menus) {
+		if($menu->{'topmenu'} && ((defined($client) && $client->param('mainBrowseMenu')) || $mainBrowseMenu)) {
+			if(!$menu->{'enabledbrowse'}) {
+				next;
+			}
+		}
 		if(!defined($menu->{'menutype'})) {
 	                my %menuItem = (
 	                    'itemid' => $menu->{'id'},
@@ -539,7 +546,6 @@ sub escapeSubDir {
 sub getMenu {
     my $client = shift;
     my $item = shift;
-
     my $selectedMenu = $client->param('selectedMenu');
     if(!defined($item) && defined($selectedMenu)) {
         for my $menu (keys %$browseMenus) {
@@ -595,11 +601,11 @@ sub getMenu {
 		}
 	}
     }
-
     # use PLUGIN.CustomBrowse.Choice to display the list of feeds
     my %params = (
             header     => $menuTitle.' {count}',
             listRef    => \@listRef,
+            mainBrowseMenu => $client->param('mainBrowseMenu'),
             lookupRef  => sub {
 				my ($index) = @_;
 				my $sortListRef = Slim::Buttons::Common::param($client,'listRef');
@@ -1432,12 +1438,18 @@ sub addPlayerMenus {
             	$name = $browseMenus->{$menu}->{'menuname'};
             }
             if($browseMenus->{$menu}->{'enabledbrowse'}) {
-		my %submenu = (
+		my %submenubrowse = (
 			'useMode' => 'PLUGIN.CustomBrowse',
-			'selectedMenu' => $browseMenus->{$menu}->{'id'}
+			'selectedMenu' => $browseMenus->{$menu}->{'id'},
+			'mainBrowseMenu' => 1
 		);
-		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenu);
-		Slim::Buttons::Home::addMenuOption($name,\%submenu);
+		my %submenuhome = (
+			'useMode' => 'PLUGIN.CustomBrowse',
+			'selectedMenu' => $browseMenus->{$menu}->{'id'},
+			'mainBrowseMenu' => 1
+		);
+		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenubrowse);
+		Slim::Buttons::Home::addMenuOption($name,\%submenuhome);
             }else {
                 Slim::Buttons::Home::delSubMenu('BROWSE_MUSIC',$name);
 		Slim::Buttons::Home::delMenuOption($name);
@@ -1468,7 +1480,7 @@ sub getPageItemsForContext {
 		}
 	}
 	my %result = ();
-	my $items = getMenuItems($client,$item,$params->{'option'});
+	my $items = getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'});
 	if(ref($items) eq 'ARRAY') {
 		my @resultItems = ();
 		my %pagebar = ();
@@ -1571,6 +1583,9 @@ sub getPageItemsForContext {
 						$it->{'url'}=$context->{'url'}.','.$it->{'id'}.$context->{'valueUrl'}.'&'.$it->{'id'}.'='.=escape($id);
 					}else {
 						$it->{'url'}='&hierarchy='.$it->{'id'}.'&'.$it->{'id'}.'='.escape($id);
+					}
+					if((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'}) {
+						$it->{'url'} .= "&mainBrowseMenu=1";
 					}
 				}
 			}
@@ -1738,7 +1753,7 @@ sub getContext {
 		my $item = undef;
 		foreach my $menuKey (keys %$currentItems) {
 			my $menu = $currentItems->{$menuKey};
-			if($menu->{'id'} eq $group) {
+			if($menu->{'id'} eq escape($group)) {
 				$item = $menu;
 			}
 		}
@@ -1793,12 +1808,12 @@ sub getSubContext {
 		my $item = undef;
 		if(ref($currentItems) eq 'ARRAY') {
 			for my $menu (@$currentItems) {
-				if($menu->{'id'} eq $group) {
+				if($menu->{'id'} eq escape($group)) {
 					$item = $menu;
 				}
 			}
 		}else {
-			if($currentItems->{'id'} eq $group) {
+			if($currentItems->{'id'} eq escape($group)) {
 				$item = $currentItems;
 			}
 		}
@@ -2044,7 +2059,7 @@ sub addWebMenus {
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
 		}else {
 			debugMsg("Adding menu: $name\n");
-		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".escape($browseMenus->{$menu}->{'id'} )});
+		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".escape($browseMenus->{$menu}->{'id'} )."&mainBrowseMenu=1"});
 		}
             }else {
 		debugMsg("Removing menu: $name\n");
@@ -2070,6 +2085,9 @@ sub handleWebList {
 	$params->{'pluginCustomBrowseItems'} = $items->{'items'};
 	$params->{'pluginCustomBrowseContext'} = $context;
 	$params->{'pluginCustomBrowseSelectedOption'} = $params->{'option'};
+	if($params->{'mainBrowseMenu'}) {
+		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
+	}
 
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
@@ -2087,8 +2105,8 @@ sub handleWebEditMenus {
 	readBrowseConfiguration($client);
 
 	my @menus = ();
-	for my $key (keys %$browseMenus) {
-		push @menus,$browseMenus->{$key};
+	for my $key (keys %$browseMenusFlat) {
+		push @menus,$browseMenusFlat->{$key};
 	}
 	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
 	
@@ -2110,8 +2128,8 @@ sub handleWebEditMenu {
 		$params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 	my $menuId = $params->{'menu'};
-	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
-		if(!defined($browseMenus->{$menuId}->{'simple'})) {
+	if(defined($params->{'menu'}) && defined($browseMenusFlat->{$menuId})) {
+		if(!defined($browseMenusFlat->{$menuId}->{'simple'})) {
 			my $data = loadMenuDataFromAnyDir($params->{'menu'}.".cb.xml");
 
 			if($data) {
@@ -2392,15 +2410,15 @@ sub handleWebPublishMenuParameters {
 	}
 
 	my $menuId = $params->{'menu'};
-	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
-		if(defined($browseMenus->{$menuId}->{'simple'})) {
+	if(defined($params->{'menu'}) && defined($browseMenusFlat->{$menuId})) {
+		if(defined($browseMenusFlat->{$menuId}->{'simple'})) {
 			my $templateData = loadTemplateValues($menuId);
 			$menuId =~ s/^published_//;
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
 				my $template = $templates->{$templateData->{'id'}};
 				if(defined($template)) {
-					$params->{'pluginCustomBrowsePublishName'} = $browseMenus->{$menuId}->{'menuname'};
+					$params->{'pluginCustomBrowsePublishName'} = $browseMenusFlat->{$menuId}->{'menuname'};
 					$params->{'pluginCustomBrowsePublishDescription'} = $template->{'description'};
 					$params->{'pluginCustomBrowsePublishUniqueId'} = $menuId;
 					if(defined($template->{'downloadidentifier'})) {
@@ -2411,7 +2429,7 @@ sub handleWebPublishMenuParameters {
 			}
 		}else {
 			$menuId =~ s/^published_//;
-			$params->{'pluginCustomBrowsePublishName'} = $browseMenus->{$menuId}->{'menuname'};
+			$params->{'pluginCustomBrowsePublishName'} = $browseMenusFlat->{$menuId}->{'menuname'};
 			$params->{'pluginCustomBrowsePublishUniqueId'} = $menuId;
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
 		}
@@ -2468,12 +2486,12 @@ sub handleWebPublishMenu {
 		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
 	}
 	my $menuId = $params->{'menu'};
-	if(defined($params->{'menu'}) && defined($browseMenus->{$menuId})) {
+	if(defined($params->{'menu'}) && defined($browseMenusFlat->{$menuId})) {
 		my $publishData = undef;
 		if($params->{'menuuniqueid'} !~ /^published_/) {
 			$params->{'menuuniqueid'} = 'published_'.$params->{'menuuniqueid'};
 		}
-		if(defined($browseMenus->{$menuId}->{'simple'})) {
+		if(defined($browseMenusFlat->{$menuId}->{'simple'})) {
 			my $templateData = loadTemplateValues($menuId);
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
@@ -3088,7 +3106,7 @@ sub handleWebRemoveMenu {
         }
 	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
 	my $file = unescape($params->{'menu'});
-	if(defined($browseMenus->{$params->{'menu'}}->{'simple'})) {
+	if(defined($browseMenusFlat->{$params->{'menu'}}->{'simple'})) {
 		$file .= ".cb.values.xml";
 	}else {
 		$file .= ".cb.xml";
@@ -3587,7 +3605,7 @@ sub handleWebSelectMenus {
 
 	readBrowseConfiguration($client);
         # Pass on the current pref values and now playing info
-        $params->{'pluginCustomBrowseMenus'} = $browseMenus;
+        $params->{'pluginCustomBrowseMenus'} = $browseMenusFlat;
         $params->{'pluginCustomBrowseMixes'} = $browseMixes;
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
@@ -3601,23 +3619,23 @@ sub handleWebSaveSelectMenus {
         my ($client, $params) = @_;
 
 	readBrowseConfiguration($client);
-        foreach my $menu (keys %$browseMenus) {
-                my $menuid = "menu_".escape($browseMenus->{$menu}->{'id'});
-                my $menubrowseid = "menubrowse_".escape($browseMenus->{$menu}->{'id'});
+        foreach my $menu (keys %$browseMenusFlat) {
+                my $menuid = "menu_".escape($browseMenusFlat->{$menu}->{'id'});
+                my $menubrowseid = "menubrowse_".escape($browseMenusFlat->{$menu}->{'id'});
                 if($params->{$menuid}) {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',1);
-			$browseMenus->{$menu}->{'enabled'}=1;
+			$browseMenusFlat->{$menu}->{'enabled'}=1;
 			if($params->{$menubrowseid}) {
                 	        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',1);
-				$browseMenus->{$menu}->{'enabledbrowse'}=1;
+				$browseMenusFlat->{$menu}->{'enabledbrowse'}=1;
 	                }else {
         			Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',0);
-				$browseMenus->{$menu}->{'enabledbrowse'}=0;
+				$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
                 	}
                 }else {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
-			$browseMenus->{$menu}->{'enabled'}=0;
-			$browseMenus->{$menu}->{'enabledbrowse'}=0;
+			$browseMenusFlat->{$menu}->{'enabled'}=0;
+			$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
                 }
         }
         foreach my $mix (keys %$browseMixes) {
@@ -3630,6 +3648,7 @@ sub handleWebSaveSelectMenus {
 			$browseMixes->{$mix}->{'enabled'}=0;
                 }
         }
+	$params->{'refresh'} = 1;
         my $value = 'plugins/CustomBrowse/custombrowse_list.html';
         if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
                 $value = undef;
@@ -3740,7 +3759,7 @@ sub parseMenuContent {
 
 		my $disabled = 0;
 		if(defined($xml->{'menu'})) {
-			$xml->{'menu'}->{'id'} = $menuId;
+			$xml->{'menu'}->{'id'} = escape($menuId);
 		}
 		if(defined($xml->{'menu'}) && defined($xml->{'menu'}->{'id'})) {
 			my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_menu_'.escape($xml->{'menu'}->{'id'}).'_enabled');
@@ -3764,6 +3783,7 @@ sub parseMenuContent {
 			}
 		}
 		
+		$xml->{'menu'}->{'topmenu'} = 1;
 		if($include && !$disabled) {
 			$xml->{'menu'}->{'enabled'}=1;
 			if($disabledBrowse) {
@@ -3893,7 +3913,7 @@ sub parseMenuTemplateContent {
 			}else {
 				my $disabled = 0;
 				if(defined($xml->{'menu'})) {
-					$xml->{'menu'}->{'id'} = $menuId;
+					$xml->{'menu'}->{'id'} = escape($menuId);
 				}
 	
 				if(defined($xml->{'menu'}) && defined($xml->{'menu'}->{'id'})) {
@@ -3919,6 +3939,7 @@ sub parseMenuTemplateContent {
 				}
 			
 				$xml->{'menu'}->{'simple'} = 1;
+				$xml->{'menu'}->{'topmenu'} = 1;
 				if($include && !$disabled) {
 					$xml->{'menu'}->{'enabled'}=1;
 					if($disabledBrowse) {
@@ -4139,8 +4160,127 @@ sub readBrowseConfiguration {
     foreach my $menu (keys %localBrowseMenus) {
     	copyKeywords(undef,$localBrowseMenus{$menu});
     }
-    $browseMenus = \%localBrowseMenus;
+    $browseMenus = structureBrowseMenus(\%localBrowseMenus);
+    $browseMenusFlat = \%localBrowseMenus;
     $browseMixes = \%localBrowseMixes;
+}
+
+sub structureBrowseMenus {
+	my $menus = shift;
+	my %localMenuItems = ();
+	my @localMenuItemsArray  = ();
+
+	for my $menuKey (keys %$menus) {
+		my $menu = $menus->{$menuKey};
+		my $group = $menu->{'menugroup'};
+		if(defined($group) && $menu->{'enabled'}) {
+			my $currentLevel = \@localMenuItemsArray;
+			my $grouppath = 'group';
+			my $enabled = 1;
+			my @currentgroups = split(/\//,$group);
+			for my $group (@currentgroups) {
+				my $groupId = $group;
+				$groupId =~ s/^\s*//g;
+				$groupId =~ s/\s*$//g;
+				$grouppath .= "_".escape($groupId);
+				#debugMsg("Got group: ".$grouppath."\n");
+				my $existingItem = undef;
+				for my $item (@$currentLevel) {
+					if($item->{'id'} eq 'group_'.escape($groupId)) {
+						$existingItem = $item;
+						last;
+					}
+				}
+				if(defined($existingItem)) {
+					if($enabled && $menu->{'enabled'}) {
+						$existingItem->{'enabled'} = 1;
+					}
+					if($enabled && $menu->{'enabledbrowse'}) {
+						$existingItem->{'enabledbrowse'} = 1;
+					}
+					if(defined($menu->{'includedclients'})) {
+						if(defined($existingItem->{'includedclients'})) {
+							my @existingClients = split(/,/,$existingItem->{'includedclients'});
+							my @clients = split(/,/,$menu->{'includedclients'});
+							for my $clientName (@clients) {
+								my $bFound = 0;
+								for my $existingClientName (@existingClients) {
+									if($existingClientName eq $clientName) {
+										$bFound = 1;
+									}
+								}
+								if(!$bFound) {
+									$existingItem->{'includedclients'} .= ",$clientName";
+								}
+							}
+						}
+					}else {
+						$existingItem->{'includedclients'} = undef;
+					}
+					if(defined($menu->{'excludedclients'})) {
+						if(defined($existingItem->{'excludedclients'})) {
+							my @existingClients = split(/,/,$existingItem->{'excludedclients'});
+							my @clients = split(/,/,$menu->{'excludedclients'});
+							my $excludedClients = '';
+							for my $clientName (@clients) {
+								my $bFound = 0;
+								for my $existingClientName (@existingClients) {
+									if($existingClientName eq $clientName) {
+										$bFound = 1;
+									}
+								}
+								if($bFound) {
+									if($excludedClients ne '') {
+										$excludedClients .= ",";
+									}
+									$excludedClients .= $clientName;
+								}
+							}
+							if($excludedClients eq '') {
+								$existingItem->{'excludedclients'} = undef;
+							}else {
+								$existingItem->{'excludedclients'} = $excludedClients;
+							}
+						}
+					}else {
+						$existingItem->{'excludedclients'} = undef;
+					}
+
+					$currentLevel = $existingItem->{'menu'};
+				}else {
+					my @level = ();
+					my %currentItemGroup = (
+						'id' => 'group_'.escape($groupId),
+						'topmenu' => 1,
+						'menu' => \@level,
+						'menuname' => $groupId,
+					);
+					if($enabled && $menu->{'enabled'}) {
+						$currentItemGroup{'enabled'} = 1;
+					}
+					if($enabled && $menu->{'enabledbrowse'}) {
+						$currentItemGroup{'enabledbrowse'} = 1;
+					}
+					if(defined($menu->{'includedclients'})) {
+						$currentItemGroup{'includedclients'} = $menu->{'includedclients'};
+					}
+					if(defined($menu->{'excludedclients'})) {
+						$currentItemGroup{'excludedclients'} = $menu->{'excludedclients'};
+					}
+
+					push @$currentLevel,\%currentItemGroup;
+					$currentLevel = \@level;
+				}
+			}
+			push @$currentLevel,$menu;
+		}else {
+			push @localMenuItemsArray,$menu
+		}
+	}
+	for my $item (@localMenuItemsArray) {
+		$localMenuItems{$item->{'id'}} = $item;
+	}
+	return \%localMenuItems;
 }
 
 sub readBrowseConfigurationFromDir {

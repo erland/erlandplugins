@@ -6,11 +6,16 @@
 [% END %]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
+	[% IF !pluginCustomBrowseMainBrowseMenu %]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
 		[% "PLUGIN_CUSTOMBROWSE" | string %]
 	</a>
+	[% ELSE %]
+		[% skipPrefix = 1 %]
+	[% END %]
 	[% FOREACH group IN pluginCustomBrowseContext %]
-                &nbsp;/&nbsp;<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %]">[% group.name %]</a>
+                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name %]</a>
+		[% skipPrefix = 0 %]
         [% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
@@ -141,7 +146,7 @@
 <br>
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_selectmenus.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS" | string %]</a>&nbsp;&nbsp;&nbsp;
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_editmenus.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_EDIT_MENUS" | string %]</a>&nbsp;&nbsp;&nbsp;
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]&refresh=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a>
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a>
 <br>
 </td></tr>
 [% PROCESS pagefooter.html %]

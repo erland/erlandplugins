@@ -5,6 +5,7 @@
 		<name>Genre Libraries</name>
 		<description>Libraries menu that makes it possible to browse artist, genre, album limited to a specific included/excluded genres</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genre Libraries"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album" value=""/>
 		<parameter type="checkbox" id="variousartists" name="Various Artists section" value="1"/>

@@ -127,6 +127,10 @@ excludedclients = A comma separated list of players that the menu shall be exclu
                   This element is optional and if not specified the menu will be included
                   on all players, see also includedclients element above.
 
+menugroup = Group in which the menu should  be placed, a / separated string, for example
+            "Group1/SubGroup1" (without quotation marks. Optional parameter that only should
+            be specified if you want to place the menu in a group.
+
 menuname = Title of the menu, this element is required on the top menu level, its
            never used for dynamic menus in the player interface. In the web interface
            this value is used for the navigation links at the top. The menuname element 
