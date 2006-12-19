@@ -2375,9 +2375,9 @@ sub handleWebPublishMenuParameters {
 	if(defined($versionError)) {
 		$params->{'pluginCustomBrowseError'} = $versionError;
 		if($params->{'register'}) {
-			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
-		}else {
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
+		}else {
+			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
 		}
 	}
 
@@ -2390,21 +2390,29 @@ sub handleWebPublishMenuParameters {
 		if(!defined($email)) {
 			$email = '';
 		}
-		my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->registerUser($params->{'username'},$params->{'password'},$params->{'firstname'},$params->{'lastname'},$email);
-		unless($answer->fault) {
+		my $answer= eval { SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->registerUser($params->{'username'},$params->{'password'},$params->{'firstname'},$params->{'lastname'},$email); };
+		unless (!defined($answer) || $answer->fault) {
 			Slim::Utils::Prefs::set("plugin_custombrowse_login_user",$params->{'username'});
 			Slim::Utils::Prefs::set("plugin_custombrowse_login_password",$params->{'password'});
 		}else {
-			$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			if(defined($answer)) {
+				$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			}else {
+				$params->{'pluginCustomBrowseError'} = "Unable to reach publish site";
+			}
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_register.html', $params);
 		}
 	}elsif(!$params->{'anonymous'}){
-		my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->loginUser($params->{'username'},$params->{'password'});
-		unless($answer->fault) {
+		my $answer= eval {SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->loginUser($params->{'username'},$params->{'password'});};
+		unless (!defined($answer) || $answer->fault) {
 			Slim::Utils::Prefs::set("plugin_custombrowse_login_user",$params->{'username'});
 			Slim::Utils::Prefs::set("plugin_custombrowse_login_password",$params->{'password'});
 		}else {
-			$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			if(defined($answer)) {
+				$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+			}else {
+				$params->{'pluginCustomBrowseError'} = "Unable to reach publish site";
+			}
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_login.html', $params);
 		}
 	}
@@ -2554,11 +2562,15 @@ sub handleWebPublishMenu {
 			$publishData .= '</entry>';
 		}
 		if(defined($publishData)) {
-			my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->addDataEntry($params->{'username'},$params->{'password'},"CustomBrowse",0,$overwriteFlag, $publishData);
-			unless ($answer->fault) {
+			my $answer= eval {SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->addDataEntry($params->{'username'},$params->{'password'},"CustomBrowse",0,$overwriteFlag, $publishData);};
+			unless (!defined($answer) || $answer->fault) {
 				return handleWebEditMenus($client, $params);
 			}else {
-				$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+				if(defined($answer)) {
+					$params->{'pluginCustomBrowseError'} = niceFault($answer->faultstring);
+				}else {
+					$params->{'pluginCustomBrowseError'} = "Unable to reach publish site";
+				}
 				return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_publishmenuparameters.html', $params);
 			}
 		}
@@ -2573,7 +2585,7 @@ sub checkWebServiceVersion {
 		$answer = SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->apiVersion();
 	};
 	if ($@) {
-		return "Unable to contact web service";
+		return "Unable to contact download/publish site";
 	}
 	unless ($answer->fault) {
 		if($answer->result() =~ /^(\d+)\.(\d+)$/) {
@@ -2586,7 +2598,7 @@ sub checkWebServiceVersion {
 			return "This version of CustomBrowse plugin is incompatible with the current download service, please upgrade";
 		}
 	} else {
-		return "Unable to contact web service, ".niceFault($answer->faultstring);
+		return "Unable to contact download/publish site, ".niceFault($answer->faultstring);
 	}
 }
 
@@ -2602,8 +2614,8 @@ sub handleWebDownloadMenus {
 		return handleWebNewMenuTypes($client,$params);
 	}
 
-	my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntries("CustomBrowse");
-	unless ($answer->fault) {
+	my $answer= eval {SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntries("CustomBrowse");};
+	unless (!defined($answer) || $answer->fault) {
 		my $result = $answer->result();
 		my $xml = eval { XMLin($result, forcearray => ['collection','entry'], keyattr => []) };
 		my $collections = $xml->{'collection'};
@@ -2657,7 +2669,11 @@ sub handleWebDownloadMenus {
 		$params->{'pluginCustomBrowseError'} = "No menus available to download";
 		return handleWebNewMenuTypes($client,$params);
 	}else {
-		$params->{'pluginCustomBrowseError'} = "Unable to reach download site: ".niceFault($answer->faultstring);
+		if(defined($answer)) {
+			$params->{'pluginCustomBrowseError'} = "Unable to reach download site: ".niceFault($answer->faultstring);
+		}else {
+			$params->{'pluginCustomBrowseError'} = "Unable to reach download site";
+		}
 		return handleWebNewMenuTypes($client,$params);
 	}
 }
@@ -2679,8 +2695,9 @@ sub handleWebDownloadNewMenus {
 			my $result = downloadMenu($template->{'downloadidentifier'},$identifier);
 			if(defined($result->{'error'})) {
 				$error .= $template->{'name'}.": ".$result->{'error'}."<br>";
+			}else {
+				$message .= "- ".$template->{'name'}." (".$key.")<br>";
 			}
-			$message .= "- ".$template->{'name'}." (".$key.")<br>";
 		}
 	}
 	if($message ne '') {
@@ -2716,9 +2733,9 @@ sub downloadMenu {
 	my $id = shift;
 	my $customname = shift;
 	my $overwrite = shift;
-	my $answer= SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntry($id);
+	my $answer= eval {SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntry($id) };
 	my %result = ();
-	unless ($answer->fault) {
+	unless (!defined($answer) || $answer->fault) {
 		my $result = $answer->result();
 		my $xml = eval { XMLin($result, forcearray => ['data'], keyattr => []) };
 		my $template = $xml->{'uniqueid'};
