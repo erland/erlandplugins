@@ -127,7 +127,7 @@ sub playRandom {
 		clearPlayListHistory($client);
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
-	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type) {
+	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type || !$addOnly) {
 		$offset = 0;
 	}
 
@@ -221,6 +221,8 @@ sub playRandom {
 				# Record current mix type and the time it was started.
 				# Do this last to prevent menu items changing too soon
 				$mixInfo{$client}->{'type'} = $type;
+			}
+			if($mixInfo{$client}->{'type'} eq $type) {
 				$mixInfo{$client}->{'offset'} = $offset;
 			}
 		}else {
@@ -581,12 +583,12 @@ sub addParameterValues {
 	
 	if(defined($sql)) {
 		my $dbh = getCurrentDBH();
-    	eval {
+		eval {
 			my $sth = $dbh->prepare( $sql );
 			debugMsg("Executing value list: $sql\n");
 			$sth->execute() or do {
-	            debugMsg("Error executing: $sql\n");
-	            $sql = undef;
+	            		debugMsg("Error executing: $sql\n");
+	            		$sql = undef;
 			};
 			if(defined($sql)) {
 				my $id;
@@ -1942,6 +1944,20 @@ sub checkDefaults {
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_includesavedplaylists', 1);
 	}
 
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_randomsavedplaylists');
+	if (! defined $prefVal) {
+		# Default to standard playlist directory
+		debugMsg("Defaulting plugin_dynamicplaylist_randomsavedplaylists to 0\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_randomsavedplaylists', 0);
+	}
+
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_fullsavedplaylists');
+	if (! defined $prefVal) {
+		# Default to standard playlist directory
+		debugMsg("Defaulting plugin_dynamicplaylist_fullsavedplaylists to 0\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_fullsavedplaylists', 0);
+	}
+
 	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_ungrouped');
 	if (! defined $prefVal) {
 		# Default to show ungrouped playlists on top
@@ -1987,7 +2003,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2016,6 +2032,26 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_includesavedplaylists"); }
+		},		
+	plugin_dynamicplaylist_randomsavedplaylists => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_randomsavedplaylists"); }
+		},		
+	plugin_dynamicplaylist_fullsavedplaylists => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_fullsavedplaylists"); }
 		},		
 	plugin_dynamicplaylist_number_of_tracks => {
 			'validate' => \&validateIntWrapper
@@ -2483,17 +2519,82 @@ sub getNextDynamicPlayListTracks {
 
 	debugMsg("Getting tracks for standard playlist: ".$dynamicplaylist->{'name'}."\n");
 	my $playlist = objectForId('playlist',$dynamicplaylist->{'id'});
-	my $iterator = $playlist->tracks;
+	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_fullsavedplaylists")) {
+		$limit = undef;
+	}
+	my @tracks = ();
+	if(!Slim::Utils::Prefs::get("plugin_dynamicplaylist_randomsavedplaylists")) {
+		my $iterator = $playlist->tracks;
+		@tracks = $iterator->slice(0,$iterator->count);
+	}else {
+		$offset = 0;
+		my $dbh = getCurrentDBH();
+		my $rand = "random()";
+		if($driver eq 'mysql') {
+			$rand = "rand()";
+		}
+		my $sql = "select playlist_track.track from playlist_track left join dynamicplaylist_history on playlist_track.track=dynamicplaylist_history.id where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
+		if(defined($limit)) {
+			$sql .= " limit $limit";
+		}
+		eval {
+			my $sth = $dbh->prepare($sql);
+			$sth->execute() or do {
+	            		$sql = undef;
+			};
+			if(defined($sql)) {
+				my $id;
+				$sth->bind_columns( undef, \$id);
+				my @trackIds = ();
+				while( $sth->fetch() ) {
+				  	push @trackIds, $id;
+			  	}
+				if(scalar(@trackIds)>0) {
+					if ($::VERSION ge '6.5') {
+						@tracks = Slim::Schema->resultset('Track')->search({ 'id' => { 'in' => \@trackIds } });
+					}else {
+						for my $trackId (@trackIds) {
+							my $track = objectForId('track',$trackId);
+							if(defined($track)) {
+								push @tracks,$track;
+							}
+						}
+					}
+					fisher_yates_shuffle(\@tracks);
+				}
+			}
+			$sth->finish();
+		};		
+		if( $@ ) {
+			warn "Database error: $DBI::errstr\n$@\n";
+		}
+	}
 	my $count = 0;
-	for my $item ($iterator->slice(0,$iterator->count)) {
+	my $itemCount = 0;
+	for my $item (@tracks) {
 		if($count >= $offset) {
+			$itemCount++;
 			push @result, $item;
 		}
 		$count++;
+		if(defined($limit) && $itemCount>=$limit) {
+			last;
+		}
 	}
 	debugMsg("Got ".scalar(@result)." tracks\n");
 	
 	return \@result;
+}
+
+sub fisher_yates_shuffle {
+    my $myarray = shift;  
+    my $i = @$myarray;
+    if(scalar(@$myarray)>1) {
+	    while (--$i) {
+	        my $j = int rand ($i+1);
+	        @$myarray[$i,$j] = @$myarray[$j,$i];
+	    }
+    }
 }
 
 sub addToPlayListHistory
@@ -2758,6 +2859,12 @@ PLUGIN_DYNAMICPLAYLIST_FAVOURITES
 PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS
 	EN	Include saved playlists
 
+PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS
+	EN	Play saved playlist in random
+
+PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS
+	EN	Add all tracks in saved playlists immediately
+
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
 
@@ -2784,6 +2891,12 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS
 	EN	Saved playlists
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_RANDOMSAVEDPLAYLISTS
+	EN	Random saved playlists
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_FULLSAVEDPLAYLISTS
+	EN	Whole saved playlists
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
