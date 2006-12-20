@@ -33,7 +33,7 @@
 		[% WRAPPER contentcontainer %]
 			[%- FOREACH menu IN pluginCustomBrowseMenus %]
 				[% BLOCK controls %]
-					[% IF menu.custommenu %]
+					[% IF menu.custommenu and !menu.downloadedmenu %]
 						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_login.html?menu=[% menu.id |uri %]&player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_PUBLISH_MENU" | string %]</a> 
 					[% END %]
 					[% IF !menu.defaultmenu %]

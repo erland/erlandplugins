@@ -3975,6 +3975,9 @@ sub parseMenuTemplateContent {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
 					}elsif(defined($template->{'customtemplate'})) {
 						$xml->{'menu'}->{'custommenu'} = 1;
+						if(defined($template->{'downloadidentifier'})) {
+							$xml->{'menu'}->{'downloadedmenu'} = 1;
+						}
 					}
 			                $menus->{$menuId} = $xml->{'menu'};
 				}elsif($include && $disabled) {
@@ -3984,6 +3987,9 @@ sub parseMenuTemplateContent {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
 					}elsif(defined($template->{'customtemplate'})) {
 						$xml->{'menu'}->{'custommenu'} = 1;
+						if(defined($template->{'downloadidentifier'})) {
+							$xml->{'menu'}->{'downloadedmenu'} = 1;
+						}
 					}
 			                $menus->{$menuId} = $xml->{'menu'};
 				}
@@ -4887,7 +4893,7 @@ PLUGIN_CUSTOMBROWSE_SELECT_MIXES
 	EN	Select mix to create
 
 PLUGIN_CUSTOMBROWSE_DOWNLOAD_QUESTION
-	EN	This operation will download latest version of all menus, this might take some time. Are you sure you want to continue ?
+	EN	This operation will download latest version of all menus, this might take some time. Please note that this will overwrite any local changes you have made in built-in or previously downloaded menu types. Are you sure you want to continue ?
 EOF
 
 }
