@@ -20,7 +20,7 @@
 
 
     	<tr valign="top"><td></td><td colspan="4">
-		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_newmenutypes.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_NEW_MENU" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomBrowse/custombrowse_downloadnewmenus.html?player=[% player | uri %]" [% IF pluginCustomBrowseDownloadMessage %]onClick="alert('[% pluginCustomBrowseDownloadMessage %]');return false;"[% END %]>[% "PLUGIN_CUSTOMBROWSE_REFRESH_DOWNLOADED_MENUS" | string %]</a>
+		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_newmenutypes.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_NEW_MENU" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomBrowse/custombrowse_downloadnewmenus.html?player=[% player | uri %]" [% IF pluginCustomBrowseDownloadMessage %]onClick="alert('[% pluginCustomBrowseDownloadMessage %]');return false;"[% ELSE %]onClick="return confirm('[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_QUESTION" |string %]');"[% END %]>[% "PLUGIN_CUSTOMBROWSE_REFRESH_DOWNLOADED_MENUS" | string %]</a>
 		<br>
 		<br>
 		[% IF pluginCustomBrowseError %]
