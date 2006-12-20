@@ -2,6 +2,7 @@
 <trackstat>
 	<database>mysql</database>
 	<template>
+		<downloadidentifier>75</downloadidentifier>
 		<name>TrackStat Top rated albums</name>
 		<description>Random playlist with only top rated albums</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="TrackStat Top Rated Albums"/>

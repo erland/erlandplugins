@@ -2,6 +2,7 @@
 <trackstat>
 	<database>mysql</database>
 	<template>
+		<downloadidentifier>73</downloadidentifier>
 		<name>TrackStat recently added albums</name>
 		<description>Random playlist with recently/not recently added albums</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="TrackStat Recently Added Albums"/>
