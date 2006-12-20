@@ -2,6 +2,7 @@
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
+		<downloadidentifier>68</downloadidentifier>
 		<name>Random for custom tag</name>
 		<description>Random songs for user selectable custom tag, requires Custom Scan plugin</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="Random for custom tag"/>
