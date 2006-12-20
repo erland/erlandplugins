@@ -209,24 +209,7 @@ sub getMenuItems {
                     }		
             }
         }
-	@listRef = sort { 
-			if(defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
-				if($a->{'menuorder'}!=$b->{'menuorder'}) {
-					return $a->{'menuorder'} <=> $b->{'menuorder'};
-				}
-			}
-			if(defined($a->{'menuorder'}) && !defined($b->{'menuorder'})) {
-				if($a->{'menuorder'}!=50) {
-					return $a->{'menuorder'} <=> 50;
-				}
-			}
-			if(!defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
-				if($b->{'menuorder'}!=50) {
-					return 50 <=> $b->{'menuorder'};
-				}
-			}
-			return $a->{'menuname'} cmp $b->{'menuname'} 
-		} @listRef;
+	sortMenu(\@listRef);
     }elsif(defined($item->{'menu'})) {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {
@@ -2218,6 +2201,9 @@ sub structureMenuTypes {
 		my $plugin = $templates->{$key}->{'custombrowse_plugin'};
 		if(defined($templates->{$key}->{'customtemplate'})) {
 			$plugin = 'ZZZ';
+			if(defined($templates->{$key}->{'downloadsection'})) {
+				$plugin .= $templates->{$key}->{'downloadsection'};
+			}
 		}
 		if(!defined($plugin)) {
 			$plugin = 'AAA';
@@ -2280,6 +2266,8 @@ sub handleWebNewMenuTypes {
 			$name = 'Builtin menus';
 		}elsif($name eq 'ZZZ') {
 			$name = 'Custom or downloaded menus';
+		}elsif($name =~ /^ZZZ(.+)$/) {
+			$name = $1;
 		}else {
 			$name =~ s/^Plugins:://;
 			$name =~ s/::Plugin$//;
@@ -2467,6 +2455,7 @@ sub updateTemplateBeforePublish {
 		$templateData =~ s/<description>.*<\/description>/<description>$description<\/description>/m;
 	}
 	$templateData =~ s/\s*<downloadidentifier>.*<\/downloadidentifier>//m;
+	$templateData =~ s/\s*<downloadsection>.*<\/downloadsection>//m;
 	$templateData =~ s/\s*<lastchanged>.*<\/lastchanged>//m;
 
 	return $templateData;
@@ -2687,14 +2676,17 @@ sub handleWebDownloadNewMenus {
 	my $templates = readTemplateConfiguration($client);
 	my $error = '';
 	my $message = '';
-	for my $key (%$templates) {
+	for my $key (sort keys %$templates) {
 		my $template = $templates->{$key};
 		if(defined($template->{'downloadidentifier'})) {
 			my $identifier = $key;
 			$identifier =~ s/\.xml$//;
-			my $result = downloadMenu($template->{'downloadidentifier'},$identifier);
+			if(defined($template->{'custombrowse_plugin_template'})) {
+				$identifier = undef;
+			}
+			my $result = downloadMenu($template->{'downloadidentifier'},$identifier,1,1);
 			if(defined($result->{'error'})) {
-				$error .= $template->{'name'}.": ".$result->{'error'}."<br>";
+				$error .= $template->{'name'}."(".$template->{'id'}.") : ".$result->{'error'}."<br>";
 			}else {
 				$message .= "- ".$template->{'name'}." (".$key.")<br>";
 			}
@@ -2733,6 +2725,8 @@ sub downloadMenu {
 	my $id = shift;
 	my $customname = shift;
 	my $overwrite = shift;
+	my $onlyOverwrite = shift;
+
 	my $answer= eval {SOAP::Lite->uri('http://erland.homeip.net/datacollection')->proxy(Slim::Utils::Prefs::get("plugin_custombrowse_download_url"))->getEntry($id) };
 	my %result = ();
 	unless (!defined($answer) || $answer->fault) {
@@ -2741,10 +2735,22 @@ sub downloadMenu {
 		my $template = $xml->{'uniqueid'};
 		if(!defined($customname)) {
 			$customname = $template;
+		}elsif($onlyOverwrite && $customname ne $template) {
+			$result{'error'} = "Id doesnt match name, must be downloaded manually";
+			return \%result;
 		}
 		my $datas = $xml->{'datas'}->{'data'};
 		if(defined($datas)) {
 			my %dataToStore = ();
+			my $username = $xml->{'collection'}->{'username'};
+			if($username eq 'CustomBrowse') {
+				$username = 'anonymous';
+			}
+			my $title = $xml->{'collection'}->{'title'};
+			if($title eq 'CustomBrowse') {
+				$title = 'Downloaded playlists';
+			}
+			my $downloadsection = $title." (by ".$username.")";
 			for my $data (@$datas) {
 				if($data->{'type'} eq 'template') {
 					my $content = $data->{'content'};
@@ -2752,7 +2758,8 @@ sub downloadMenu {
 				}elsif($data->{'type'} eq 'xml') {
 					my $content = $data->{'content'};
 					$content =~ s/\s*<downloadidentifier>.*<\/downloadidentifier>//m;
-					$content =~ s/<template>/<template>\n\t\t<downloadidentifier>$id<\/downloadidentifier>/m;
+					$content =~ s/\s*<downloadsection>.*<\/downloadsection>//m;
+					$content =~ s/<template>/<template>\n\t\t<downloadsection>$downloadsection<\/downloadsection>\n\t\t<downloadidentifier>$id<\/downloadidentifier>/m;
 					if(defined($xml->{'lastchanged'})) {
 						$content =~ s/\s*<lastchanged>.*<\/lastchanged>//m;
 						my $lastchanged = $xml->{'lastchanged'};
@@ -4286,6 +4293,7 @@ sub structureBrowseMenus {
 					}
 
 					push @$currentLevel,\%currentItemGroup;
+					sortMenu($currentLevel);
 					$currentLevel = \@level;
 				}
 			}
@@ -4300,6 +4308,27 @@ sub structureBrowseMenus {
 	return \%localMenuItems;
 }
 
+sub sortMenu {
+	my $menu = shift;
+	@$menu = sort { 
+		if(defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
+			if($a->{'menuorder'}!=$b->{'menuorder'}) {
+				return $a->{'menuorder'} <=> $b->{'menuorder'};
+			}
+		}
+		if(defined($a->{'menuorder'}) && !defined($b->{'menuorder'})) {
+			if($a->{'menuorder'}!=50) {
+				return $a->{'menuorder'} <=> 50;
+			}
+		}
+		if(!defined($a->{'menuorder'}) && defined($b->{'menuorder'})) {
+			if($b->{'menuorder'}!=50) {
+				return 50 <=> $b->{'menuorder'};
+			}
+		}
+		return $a->{'menuname'} cmp $b->{'menuname'} 
+	} @$menu;
+}
 sub readBrowseConfigurationFromDir {
     my $client = shift;
     my $defaultMenu = shift;
