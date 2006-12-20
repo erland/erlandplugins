@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>50</downloadidentifier>
 		<name>SlimServer New Music</name>
 		<description>Standard SlimServer New Music menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="New Music"/>

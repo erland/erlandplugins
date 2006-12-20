@@ -3,6 +3,7 @@
 	<database>mysql</database>
 	<requireplugins>TrackStat</requireplugins>
 	<template>
+		<downloadidentifier>44</downloadidentifier>
 		<name>Ratings</name>
 		<description>Menu that make it possible to browse music by track ratings</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Ratings"/>

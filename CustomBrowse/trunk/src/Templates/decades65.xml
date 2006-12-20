@@ -2,6 +2,7 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<template>
+		<downloadidentifier>26</downloadidentifier>
 		<name>Decades</name>
 		<description>Menu to browse music by decades</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Decades"/>

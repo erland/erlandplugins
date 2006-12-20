@@ -2,6 +2,7 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<template>
+		<downloadidentifier>37</downloadidentifier>
 		<name>Genre Libraries</name>
 		<description>Libraries menu that makes it possible to browse artist, genre, album limited to a specific included/excluded genres</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genre Libraries"/>

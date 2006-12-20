@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>21</downloadidentifier>
 		<name>Bands</name>
 		<description>Menu similar to the standard slimserver artists menu but it only show bands</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Bands"/>

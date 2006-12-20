@@ -2,6 +2,7 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<template>
+		<downloadidentifier>40</downloadidentifier>
 		<name>New Albums</name>
 		<description>New Albums menu that works the same way as the standard slimserver New Music menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="New Albums"/>

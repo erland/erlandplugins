@@ -2,6 +2,7 @@
 <custombrowse>
 	<database>mysql</database>
 	<template>
+		<downloadidentifier>43</downloadidentifier>
 		<name>Random Albums</name>
 		<description>Random Albums menu that lists 20 random albums from your library</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Random Albums"/>

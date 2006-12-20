@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>52</downloadidentifier>
 		<name>SlimServer Years</name>
 		<description>Standard SlimServer Years menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Years"/>

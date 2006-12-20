@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>22</downloadidentifier>
 		<name>Bitrates</name>
 		<description>Bitrates menu that make it possible to browse music by bitrate or lossless/not lossless</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Bitrates"/>

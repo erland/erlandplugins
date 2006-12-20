@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>47</downloadidentifier>
 		<name>SlimServer Albums</name>
 		<description>Standard SlimServer Albums menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Albums"/>
