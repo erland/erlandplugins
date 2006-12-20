@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>57</downloadidentifier>
 		<name>Amazon Ratings</name>
 		<description>Menu that makes it possible to browse your artists by Amazon customer ratings, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Amazon Ratings"/>

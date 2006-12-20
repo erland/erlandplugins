@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>65</downloadidentifier>
 		<name>Custom Tags Songs</name>
 		<description>Menu that makes it possible to browse your songs by a custom tag, for example OWNER, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tags Songs"/>

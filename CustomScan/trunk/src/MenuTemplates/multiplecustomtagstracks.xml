@@ -2,6 +2,7 @@
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
+		<downloadidentifier>60</downloadidentifier>
 		<name>Custom Multiple Tags Songs</name>
 		<description>Menu that makes it possible to browse your songs by multiple custom tags, for example CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Multiple Tags Songs"/>

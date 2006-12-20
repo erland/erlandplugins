@@ -2,6 +2,7 @@
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
+		<downloadidentifier>59</downloadidentifier>
 		<name>Custom Multiple Tags Albums</name>
 		<description>Menu that makes it possible to browse your albums by multiple custom tags, for example CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Multiple Tags Albums"/>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
+		<downloadidentifier>61</downloadidentifier>
 		<name>Custom Scan Info</name>
 		<description>Menu that makes it possible to test which data has been scanned with Custom Scan, basically this is a testing menu and will probably not be usefull for anything else than verifying that the scanned data is correct</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Scan Info"/>
