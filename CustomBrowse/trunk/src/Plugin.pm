@@ -113,6 +113,9 @@ sub getDisplayText {
             if(!defined($name) || $name eq '') {
 		$name = $item->{'menuname'};
             }
+            if(defined($name) && $name =~ /{.*}/) {
+		$name = replaceParameters($name,$item->{'parameters'});
+            }
 	}
 	return $name;
 }
@@ -562,6 +565,9 @@ sub getMenu {
 	}elsif(defined($item->{'menuname'})) {
 		$menuTitle = $item->{'menuname'};
 	}
+	if(defined($menuTitle) && $menuTitle =~ /{.*}/) {
+		$menuTitle = replaceParameters($menuTitle,$item->{'parameters'});
+	}
     }
 
     my $sorted = '0';
@@ -646,7 +652,11 @@ sub getMenu {
 }
 
 sub checkMix {
-	my ($client, $mix, $item) = @_;
+	my ($client, $mix, $item, $web) = @_;
+
+	if(defined($web) && $web && $mix->{'mixtype'} eq 'menu') {
+		return 0;
+	}
 	if(defined($mix->{'mixchecktype'})) {
 		if($mix->{'mixchecktype'} eq 'sql') {
 			my $mixcheckdata = undef;
@@ -717,6 +727,7 @@ sub checkMix {
 sub getMixes {
 	my $client = shift;
 	my $item = shift;
+	my $web = shift;
 
 	my @mixes = ();
 	if(defined($item->{'mix'})) {
@@ -728,13 +739,13 @@ sub getMixes {
 						foreach my $key (keys %$browseMixes) {
 							my $globalMix = $browseMixes->{$key};
 							if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
-								if(checkMix($client, $globalMix, $item)) {
+								if(checkMix($client, $globalMix, $item, $web)) {
 									push @mixes,$globalMix;
 								}
 							}
 						}
 					}elsif(defined($mix->{'mixname'}))  {
-						if(checkMix($client, $mix, $item)) {
+						if(checkMix($client, $mix, $item,$web)) {
 							push @mixes,$mix;
 						}
 					}
@@ -747,13 +758,13 @@ sub getMixes {
 					foreach my $key (keys %$browseMixes) {
 						my $globalMix = $browseMixes->{$key};
 						if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
-							if(checkMix($client, $globalMix, $item)) {
+							if(checkMix($client, $globalMix, $item,$web)) {
 								push @mixes,$globalMix;
 							}
 						}
 					}
 				}elsif(defined($mix->{'mixname'}))  {
-					if(checkMix($client, $mix, $item)) {
+					if(checkMix($client, $mix, $item,$web)) {
 						push @mixes,$mix;
 					}
 				}
@@ -763,12 +774,13 @@ sub getMixes {
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
 			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $item->{'itemtype'}) {
-				if(checkMix($client, $mix, $item)) {
+				if(checkMix($client, $mix, $item,$web)) {
 					push @mixes,$mix;
 				}
 			}
 		}
 	}
+	@mixes = sort { $a->{'mixname'} cmp $b->{'mixname'} } @mixes;
 	return \@mixes;
 }
 
@@ -855,6 +867,33 @@ sub executeMix {
 			}
 		}
 		Slim::Buttons::Common::pushModeLeft($client, $mode, \%modeParameters);
+	}elsif($mixer->{'mixtype'} eq 'menu') {
+		my $mixdata = $mixer->{'mixdata'};
+		$mixdata->{'parameters'} = $parameters;
+		my $keywords = $mixdata->{'keyword'};
+		my @keywordArray = ();
+		if(defined($keywords) && ref($keywords) eq 'ARRAY') {
+			@keywordArray = @$keywords;
+		}elsif(defined($keywords)) {
+			push @keywordArray,$keywords;
+		}
+		for my $keyword (@keywordArray) {
+			$mixdata->{'parameters'}->{$keyword->{'name'}} = replaceParameters($keyword->{'value'},$parameters);
+		}
+		$mixdata->{'value'} = $mixer->{'id'};
+		if(!defined($mixdata->{'menu'}->{'id'})) {
+			$mixdata->{'menu'}->{'id'} = $mixer->{'id'};
+		}
+		my $modeParameters = getMenu($client,$mixdata);
+		if(defined($modeParameters)) {
+			if(defined($modeParameters->{'useMode'})) {
+				Slim::Buttons::Common::pushModeLeft($client, $modeParameters->{'useMode'}, $modeParameters->{'parameters'});
+			}else {
+				Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $modeParameters);
+			}
+		}else {
+	        	$client->bumpRight();
+		}
 	}elsif($mixer->{'mixtype'} eq 'function') {
 		if($mixer->{'mixdata'} =~ /^(.+)::([^:].*)$/) {
 			my $class = $1;
@@ -1217,7 +1256,7 @@ sub getSQLMenuData {
 			$sth->finish();
 		};
 		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
+		    warn "Database error: $DBI::errstr\n$@\n";
 		}		
 	}
 	return \@result;
@@ -1609,7 +1648,7 @@ sub getPageItemsForContext {
 					$it->{'attributes'} = sprintf('&%s=%d', getLinkAttribute('playlist'),$it->{'itemid'});
 				}
 			}
-			my $mixes = getMixes($client,$it);
+			my $mixes = getMixes($client,$it,1);
 			if(scalar(@$mixes)>0) {
 				my @webMixes = ();
 				for my $mix (@$mixes) {
@@ -1630,7 +1669,9 @@ sub getPageItemsForContext {
 						$url = replaceParameters($url,$keywords);
 						$webMix{'url'} = $url;
 					}
-					push @webMixes,\%webMix;
+					if($mix->{'mixtype'} ne 'menu') {
+						push @webMixes,\%webMix;
+					}
 				}
 				$it->{'mixes'} = \@webMixes;
 				#$it->{'mixable'} = 1;
@@ -3510,7 +3551,7 @@ sub handleWebMix {
 		}
 	}
 	if(defined($selecteditem)) {
-		my $mixes = getMixes($client,$selecteditem);
+		my $mixes = getMixes($client,$selecteditem,1);
 		my @webMixes = ();
 		for my $mix (@$mixes) {
 			my %webMix = (
@@ -3603,7 +3644,7 @@ sub handleWebExecuteMix {
 		}
 	}
 	if(defined($selecteditem)) {
-		my $mixes = getMixes($client,$selecteditem);
+		my $mixes = getMixes($client,$selecteditem,1);
 		for my $mix (@$mixes) {
 			if($mix->{'id'} eq $params->{'mix'}) {
 				executeMix($client,$mix,0,$selecteditem,1);
