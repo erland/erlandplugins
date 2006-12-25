@@ -1863,6 +1863,11 @@ sub getCustomBrowseTemplates {
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','MenuTemplates','xml');
 }
 
+sub getCustomBrowseMixes {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','Mixes','xml','mix');
+}
+
 sub getSQLPlayListTemplateData {
 	my $client = shift;
 	my $templateItem = shift;
