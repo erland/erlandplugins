@@ -76,8 +76,23 @@ sub initPlugin {
 		refreshTitleFormats();
 		installHook();
 	}
-
 	checkDefaults();
+	if(!$modules) {
+		$modules = getPluginModules();
+	}
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		my $initFunction = $module->{'initModule'};
+		if(defined($module->{'initModule'})) {
+			no strict 'refs';
+			debugMsg("Calling: initModule on $key\n");
+			eval { &{$module->{'initModule'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call initModule on module $key: $@\n");
+			}
+			use strict 'refs';
+		}
+	}
 }
 
 sub shutdownPlugin {
@@ -85,6 +100,21 @@ sub shutdownPlugin {
         if ($CUSTOMSCAN_HOOK) {
                 uninstallHook();
         }
+	if(!$modules) {
+		for my $key (keys %$modules) {
+			my $module = $modules->{$key};
+			my $initFunction = $module->{'exitModule'};
+			if(defined($module->{'exitModule'})) {
+				no strict 'refs';
+				debugMsg("Calling: exitModule on $key\n");
+				eval { &{$module->{'exitModule'}}(); };
+				if ($@) {
+					msg("CustomScan: Failed to call exitModule on module $key: $@\n");
+				}
+				use strict 'refs';
+			}
+		}
+	}
 }
 
 # Hook the plugin to the play events.
