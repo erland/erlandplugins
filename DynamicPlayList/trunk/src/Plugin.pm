@@ -33,6 +33,7 @@ use Class::Struct;
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Scalar::Util qw(blessed);
+use Plugins::DynamicPlayList::Template::Reader;
 
 
 my $driver;
@@ -2451,6 +2452,11 @@ sub cliStopPlaylist62 {
 	playRandom($client, 'disable');
 	
 	debugMsg("Exiting cliStopPlaylist62\n");
+}
+
+sub getCustomBrowseMixes {
+	my $client = shift;
+	return Plugins::DynamicPlayList::Template::Reader::getTemplates($client,'DynamicPlayList','Mixes','xml','mix');
 }
 
 sub getDynamicPlayLists {
