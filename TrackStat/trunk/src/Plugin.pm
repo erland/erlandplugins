@@ -362,6 +362,47 @@ sub getDisplayText {
 	return $name;
 }
 
+sub getDetailsDisplayText {
+	my ($client, $item) = @_;
+
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $item->{'itemobj'}->url,undef,$item->{'itemobj'});
+	my $displayStr;
+	my $headerStr;
+	if($trackHandle) {
+		if($trackHandle->rating) {
+			my $rating = $trackHandle->rating;
+			if($rating) {
+				if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+					$rating = floor(($rating+5) / 10);
+				}else {
+					$rating = floor(($rating+10) / 20);
+				}
+				$displayStr = $client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $rating);
+			}
+			if($trackHandle->playCount) {
+				my $playCount = $trackHandle->playCount;
+				if($displayStr) {
+					$displayStr .= '    '.$client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
+				}else {
+					$displayStr = $client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
+				}
+			}
+			if($trackHandle->lastPlayed) {
+				my $lastPlayed = $trackHandle->lastPlayed;
+				$headerStr = $client->string( 'PLUGIN_TRACKSTAT_LAST_PLAYED').' '.Slim::Utils::DateTime::shortDateF($lastPlayed).' '.Slim::Utils::DateTime::timeF($lastPlayed);
+			}
+		}
+	}
+	if(!$displayStr) {
+		$displayStr = $client->string( 'PLUGIN_TRACKSTAT_NO_TRACK');
+	}
+	if(!$headerStr) {
+		$headerStr = $client->string( 'PLUGIN_TRACKSTAT');
+	}
+
+	return $displayStr;
+}
+
 sub getDataDisplayText {
 	my ($client, $item) = @_;
 
@@ -420,6 +461,15 @@ sub getOverlay {
 		return [Slim::Display::Display::symbol('rightarrow'),Slim::Display::Display::symbol('notesymbol')];
 	}else {
 		return [undef, Slim::Display::Display::symbol('rightarrow')];
+	}
+}
+
+sub getDetailsOverlay {
+	my ($client, $item) = @_;
+	if(defined($item->{'itemobj'})) {
+		return [undef, Slim::Display::Display::symbol('rightarrow')];
+	}else {
+		return [undef, undef];
 	}
 }
 
@@ -536,6 +586,34 @@ sub getSetModeDataForSubItems {
 	return \%params;
 }
 
+sub getDetailItems {
+	my $client = shift;
+	my $currentItem = shift;
+	my $header = shift;
+
+	my @listRef = ();
+	push @listRef, $currentItem;
+
+	my %params = (
+		header     => $header,
+		listRef    => \@listRef,
+		name       => \&getDetailsDisplayText,
+		overlayRef => \&getDetailsOverlay,
+		modeName   => 'PLUGIN.TrackStat::Plugin::Details',
+		parentMode => Slim::Buttons::Common::param($client,'parentMode'),
+		onRight    => sub {
+			my ($client, $item) = @_;
+			my $track = $item->{'itemobj'};
+			if(defined($track)) {
+				Slim::Buttons::Common::pushModeLeft($client,'trackinfo',{'track' => $track});
+			}else {
+				Slim::Display::Animation::bumpRight($client);
+			}
+		}
+	);
+	return \%params;
+}
+
 sub getSetModeDataForStatistics {
 	my $client = shift;
 	my $item = shift;
@@ -646,44 +724,18 @@ sub getSetModeDataForStatistics {
 			}else {
 				if($item->{'listtype'} eq 'track') {
 					my $trackHandle = Plugins::TrackStat::Storage::findTrack( $item->{'itemobj'}->url,undef,$item->{'itemobj'});
-					my $displayStr;
 					my $headerStr;
 					if($trackHandle) {
-						if($trackHandle->rating) {
-							my $rating = $trackHandle->rating;
-							if($rating) {
-								if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
-									$rating = floor(($rating+5) / 10);
-								}else {
-									$rating = floor(($rating+10) / 20);
-								}
-								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $rating);
-							}
-						}
-						if($trackHandle->playCount) {
-							my $playCount = $trackHandle->playCount;
-							if($displayStr) {
-								$displayStr .= '    '.$client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
-							}else {
-								$displayStr = $client->string( 'PLUGIN_TRACKSTAT_PLAY_COUNT').' '.$playCount;
-							}
-						}
 						if($trackHandle->lastPlayed) {
 							my $lastPlayed = $trackHandle->lastPlayed;
 							$headerStr = $client->string( 'PLUGIN_TRACKSTAT_LAST_PLAYED').' '.Slim::Utils::DateTime::shortDateF($lastPlayed).' '.Slim::Utils::DateTime::timeF($lastPlayed);
 						}
 					}
-					if(!$displayStr) {
-						$displayStr = $client->string( 'PLUGIN_TRACKSTAT_NO_TRACK');
-					}
 					if(!$headerStr) {
 						$headerStr = $client->string( 'PLUGIN_TRACKSTAT');
 					}
 
-					$client->showBriefly(
-						$headerStr,
-						$displayStr,
-						1);
+					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getDetailItems($client,$item,$headerStr));
 				}else {
 					Slim::Display::Animation::bumpRight($client);
 				}
