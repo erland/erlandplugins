@@ -2,6 +2,7 @@
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
+		<downloadidentifier>81</downloadidentifier>
 		<name>Random for LastFM similar artists</name>
 		<description>Random songs with artist similar to user selectable artist according to LastFM, requires Custom Scan plugin</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="Random for LastFM similar artists"/>
