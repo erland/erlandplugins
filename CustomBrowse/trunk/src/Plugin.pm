@@ -605,6 +605,7 @@ sub getMenu {
             name       => \&getDisplayText,
             overlayRef => \&getOverlay,
             modeName   => 'PLUGIN.CustomBrowse'.$modeNamePostFix,
+            parentMode => Slim::Buttons::Common::param($client,'parentMode'),
             onCreateMix     => sub {
                     my ($client, $item) = @_;
                     createMix($client, $item);
@@ -1016,10 +1017,19 @@ sub playAddItem {
 	my $wasShuffled = undef;
 	my $pos = undef;
 	my $selectedPos = undef;
+	my $postPlay = 0;
 	if(!defined($subCall) && $command eq 'loadtracks') {
 		$wasShuffled = Slim::Player::Playlist::shuffle($client);
 		Slim::Player::Playlist::shuffle($client, 0);
+		$request = $client->execute(['playlist', 'clear']);
+		if ($::VERSION ge '6.5' && defined($request)) {
+			# indicate request source
+			$request->source('PLUGIN_CUSTOMBROWSE');
+		}
 		$pos = 0;
+		$selectedPos = 0;
+		$postPlay = 1;
+		$command = 'addtracks';
 	}
 	foreach my $it (@items) {
 		if(defined($it->{'itemtype'})) {
@@ -4169,6 +4179,7 @@ sub readBrowseConfiguration {
         @pluginDirs = catdir($Bin, "Plugins");
     }
     my $templates = readTemplateConfiguration($client);
+    readMixConfigurationFromPlugins($client,\%localBrowseMixes);
     for my $plugindir (@pluginDirs) {
 	if( -d catdir($plugindir,"CustomBrowse","Menus")) {
 		readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus);
@@ -4427,6 +4438,54 @@ sub readMixConfigurationFromDir {
             }
         }
     }
+}
+
+sub readMixConfigurationFromPlugins {
+	my $client = shift;
+	my $mixes = shift;
+
+	no strict 'refs';
+	my @enabledplugins;
+	if ($::VERSION ge '6.5') {
+		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+	}else {
+		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+	}
+
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("Plugins::$plugin","getCustomBrowseMixes")) {
+			debugMsg("Getting mixes for: $plugin\n");
+			my $items = eval { &{"Plugins::${plugin}::getCustomBrowseMixes"}($client) };
+			if ($@) {
+				debugMsg("Error getting mixes from $plugin: $@\n");
+			}
+			for my $item (@$items) {
+				my $mix = $item->{'mix'};
+				$mix->{'custombrowse_plugin_mix'}=$item;
+				$mix->{'custombrowse_plugin'} = "Plugins::${plugin}";
+				my $mixId = $item->{'id'};
+				if($plugin =~ /^([^:]+)::.*$/) {
+					$mixId = lc($1)."_".$item->{'id'};
+				}
+				$mix->{'id'} = $mixId;
+				debugMsg("Adding mix: $mixId\n");
+				#debugMsg(Dumper($mix));
+				my $enabled = Slim::Utils::Prefs::get('plugin_custombrowse_mix_'.escape($mix->{'id'}).'_enabled');
+				if(!defined($enabled)) {
+					if(defined($mix->{'defaultdisabled'}) && $mix->{'defaultdisabled'}) {
+						$enabled = 0;
+					}else {
+						$enabled = 1;
+					}
+				}
+		
+				$mix->{'enabled'}=$enabled;
+
+				$mixes->{$mixId} = $mix;
+			}
+		}
+	}
+	use strict 'refs';
 }
 
 sub loadMenuDataFromAnyDir {
