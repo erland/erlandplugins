@@ -19,6 +19,9 @@
 					contributor_track.contributor=customscan_contributor_attributes.contributor and
 					customscan_contributor_attributes.module='cslastfm' and
 					customscan_contributor_attributes.attr='artisttag'
+					[%- IF tagpercent %]
+					and (customscan_contributor_attributes.extravalue is null or customscan_contributor_attributes.extravalue>[% tagpercent %])
+					[%- END %]
 				group by customscan_contributor_attributes.value
 				order by customscan_contributor_attributes.value asc
 			</menudata>
@@ -39,6 +42,9 @@
 						customscan_contributor_attributes.module='cslastfm' and
 						customscan_contributor_attributes.attr='artisttag' and
 						customscan_contributor_attributes.value='{lastfmtag}' 
+						[%- IF tagpercent %]
+						and (customscan_contributor_attributes.extravalue is null or customscan_contributor_attributes.extravalue>[% tagpercent %])
+						[%- END %]
 					group by contributors.id 
 					order by contributors.namesort asc
 				</menudata>
