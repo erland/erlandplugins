@@ -36,8 +36,12 @@ sub getTemplates {
 	my $mainPlugin = shift;
 	my $directory = shift;
 	my $extension = shift;
+	my $templateType = shift;
 	my @result = ();
 	my @pluginDirs = ();
+	if(!defined($templateType)) {
+		$templateType = 'template';
+	}
 	if ($::VERSION ge '6.5') {
 		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	}else {
@@ -51,12 +55,12 @@ sub getTemplates {
 			next if -d catdir($templateDir,$item);
 			my $templateId = $item;
 			$templateId =~ s/\.$extension$//;
-			my $template = readTemplateConfiguration($templateId,catdir($templateDir,$item));
+			my $template = readTemplateConfiguration($templateId,catdir($templateDir,$item),$templateType);
 			if(defined($template)) {
 				my %templateItem = (
 					'id' => $templateId,
-					'type' => 'template',
-					'template' => $template
+					'type' => $templateType,
+					$templateType => $template
 				);
 				push @result,\%templateItem;
 			}
@@ -93,11 +97,12 @@ sub readTemplateData {
 sub readTemplateConfiguration {
 	my $templateId = shift;
 	my $path = shift;
+	my $templateType = shift;
 	#debugMsg("Loading template configuration for $templateId\n");
 
 	# read_file from File::Slurp
 	my $content = eval { read_file($path) };
-	my $template = parseTemplateContent($templateId,$content);
+	my $template = parseTemplateContent($templateId,$templateType,$content);
 	if(!$template) {
 		msg("Unable to read template: $path\n");
 	}
@@ -106,6 +111,7 @@ sub readTemplateConfiguration {
 
 sub parseTemplateContent {
 	my $id = shift;
+	my $templateType = shift;
 	my $content = shift;
 
 	my $template = undef;
@@ -115,14 +121,14 @@ sub parseTemplateContent {
             my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
             #debugMsg(Dumper($xml));
             if ($@) {
-                    msg("Failed to parse template configuration for $id because:\n$@\n");
+                    msg("Failed to parse $templateType configuration for $id because:\n$@\n");
             }else {
 		my $include = isTemplateEnabled($xml);
-		if(defined($xml->{'template'})) {
-			$xml->{'template'}->{'id'} = $id;
+		if(defined($xml->{$templateType})) {
+			$xml->{$templateType}->{'id'} = $id;
 		}
-		if($include && defined($xml->{'template'})) {
-	                $template = $xml->{'template'};
+		if($include && defined($xml->{$templateType})) {
+	                $template = $xml->{$templateType};
 		}
             }
     
@@ -130,9 +136,9 @@ sub parseTemplateContent {
             undef $content;
         }else {
             if ($@) {
-                    msg("Unable to read template configuration for $id:\n$@\n");
+                    msg("Unable to read $templateType configuration for $id:\n$@\n");
             }else {
-                msg("Unable to to read template configuration for $id\n");
+                msg("Unable to to read $templateType configuration for $id\n");
             }
         }
 	return $template;
