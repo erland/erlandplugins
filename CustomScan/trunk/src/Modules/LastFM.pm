@@ -94,7 +94,8 @@ sub scanArtist {
 						if($similarartist->{'match'}>$similarArtistLimit) {
 							my %item = (
 								'name' => 'similarartist',
-								'value' => $similarartist->{'name'}
+								'value' => $similarartist->{'name'},
+								'extravalue' => $similarartist->{'match'}
 							);
 							push @result,\%item;
 							#msg("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
@@ -143,7 +144,8 @@ sub scanArtist {
 				if($tag->{'count'}>$topTagsLimit) {
 					my %item = (
 						'name' => 'artisttag',
-						'value' => $tag->{'name'}
+						'value' => $tag->{'name'},
+						'extravalue' => $tag->{'count'}
 					);
 					push @result,\%item;
 					#msg("CustomScan::LastFM: Adding tag: ".$tag->{'name'}."\n");
