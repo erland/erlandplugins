@@ -11,8 +11,9 @@
 			<menuname>Artists</menuname>
 			<itemtype>genre</itemtype>
 			<menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
 			<menudata>
-				select genres.id,genres.name from genres 
+				select genres.id,genres.name,substr(genres.namesort,1,1) from genres 
 				order by genres.namesort asc
 			</menudata>
 			[%- IF variousartists %]
