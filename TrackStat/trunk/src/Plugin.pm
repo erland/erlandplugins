@@ -1938,6 +1938,72 @@ sub getCustomBrowseTemplateData {
 	return $data;
 }
 
+sub getCustomSkipFilterTypes {
+	my @result = ();
+	my %rated = (
+		'id' => 'trackstat_rated',
+		'name' => 'Rated (TrackStat)',
+		'description' => 'Skip tracks with a low rating'
+	);
+	if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+		$rated{'parameters'} = [
+			{
+				'id' => 'rating',
+				'type' => 'singlelist',
+				'name' => 'Maximum rating to skip',
+				'data' => "14=* (0-14),24=** (0-24),34=*** (0-34),44=**** (0-44),54=***** (0-54),64=****** (0-64),74=******* (0-74),84=******** (0-84),94=********* (0-94),100=********** (0-100)",
+				'value' => 44
+			}
+		];
+	}else {
+		$rated{'parameters'} = [
+			{
+				'id' => 'rating',
+				'type' => 'singlelist',
+				'name' => 'Maximum rating to skip',
+				'data' => "29=* (0-29),49=** (0-49),69=*** (0-69),89=**** (0-89),100=***** (0-100)",
+				'value' => 49
+			}
+		];
+	}
+	
+	push @result, \%rated;
+	my %notrated = (
+		'id' => 'trackstat_notrated',
+		'name' => 'Not rated (TrackStat)',
+		'description' => 'Skip tracks without a rating'
+	);
+	push @result, \%notrated;
+	return \@result;
+}
+
+sub checkCustomSkipFilterType {
+	my $client = shift;
+	my $filter = shift;
+	my $track = shift;
+
+	my $parameters = $filter->{'parameter'};
+	if($filter->{'id'} eq 'trackstat_rated') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'rating') {
+				my $ratings = $parameter->{'value'};
+				my $rating = $ratings->[0] if(defined($ratings) && scalar(@$ratings)>0);
+				
+				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+				if(defined($trackHandle) && defined($trackHandle->rating) && $trackHandle->rating<=$rating) {
+					return 1;
+				}
+			}
+		}
+	}elsif($filter->{'id'} eq 'trackstat_notrated') {
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && defined($trackHandle->rating)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 sub initStatisticPlugins {
 	%statisticPlugins = ();
 	%statisticItems = ();
