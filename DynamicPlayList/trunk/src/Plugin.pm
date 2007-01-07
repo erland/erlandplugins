@@ -42,11 +42,13 @@ my %stopcommands = ();
 my %mixInfo      = ();
 my $htmlTemplate = 'plugins/DynamicPlayList/dynamicplaylist_list.html';
 my $ds = getCurrentDS();
+my $filters = undef;
 my $playLists = undef;
 my $playListTypes = undef;
 my $playListItems = undef;
 
 my %plugins = ();
+my %filterPlugins = ();
 my %disablePlaylist = (
 	'dynamicplaylistid' => 'disable', 
 	'name' => ''
@@ -59,6 +61,36 @@ sub getDisplayName {
 	return 'PLUGIN_DYNAMICPLAYLIST';
 }
 
+sub filterTracks {
+	my $client = shift;
+	my $items = shift;
+	initFilters();
+	my @resultItems = ();
+	for my $item (@$items) {
+		my $result = 1;
+		for my $key (keys %$filters) {
+			next unless $result;
+
+			my $filter = $filters->{$key};
+			if($filter->{'dynamicplaylistenabled'}) {
+				my $id = $filter->{'dynamicplaylistfilterid'};
+				my $plugin = $filterPlugins{$id};
+				no strict 'refs';
+				debugMsg("Calling: $plugin :: executeDynamicPlayListFilter with: ".$filter->{'name'}.", ".$item->title."\n");
+				$result =  eval { &{"${plugin}::executeDynamicPlayListFilter"}($client,$filter,$item) };
+				if ($@) {
+					debugMsg("Error filtering tracks with $plugin: $@\n");
+				}
+				use strict 'refs';
+			}
+		}
+		if($result) {
+			push @resultItems,$item;
+		}
+	}
+	return \@resultItems;
+}
+
 # Find tracks matching parameters and add them to the playlist
 sub findAndAdd {
 	my ($client, $type, $offset, $limit, $addOnly) = @_;
@@ -66,15 +98,36 @@ sub findAndAdd {
 	debugMsg("Starting random selection of $limit items for type: $type\n");
 	
 	my $playlist = getPlayList($client,$type);
-	my $items = getTracksForPlaylist($client,$playlist,$limit,$offset);
+	my $items = undef;
+	my $filteredItems = undef;
+	my $noOfItems = 0;
+	my $noOfFilteredItems = 0;
+	my $noOfRetiresDueToFilteredTracks = Slim::Utils::Prefs::get('plugin_dynamicplaylist_skipped_tracks_retries')|| 20;
+	for my $i (1..$noOfRetiresDueToFilteredTracks) {
+		$items = getTracksForPlaylist($client,$playlist,$limit,$offset+$noOfItems);
+		return 0 if !defined $items || scalar(@$items)==0;
 
-	return if !defined $items;
-	
-	my $noOfItems = (scalar @$items);
-	debugMsg("Find returned ".$noOfItems." items\n");
+		$noOfItems = $noOfItems + (scalar @$items);
+		debugMsg("Find returned ".(scalar @$items)." items\n");
+		
+		$filteredItems = filterTracks($client,$items);
+		if(defined($filteredItems) && scalar(@$filteredItems)>0) {
+			$noOfFilteredItems = (scalar @$filteredItems);
+			debugMsg("Find returned ".$noOfFilteredItems." items after filtering\n");
+			last;
+		}else {
+			foreach my $it (@$items) {
+				addToPlayListHistory($client,$it);
+			}
+			if(defined($limit)) {
+				$limit = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_tracks');
+			}
+		}
+	}
+	return 0 if !defined $filteredItems || scalar(@$filteredItems)==0;
 			
 	# Pull the first track off to add / play it if needed.
-	my $item = shift @{$items};
+	my $item = shift @{$filteredItems};
 
 	if ($item && ref($item)) {
 		my $string = $item->title;
@@ -92,13 +145,15 @@ sub findAndAdd {
 
 		# Add the remaining items to the end
 		if (! defined $limit || $limit > 1 || $noOfItems>1) {
-			debugMsg("Adding ".(scalar @$items)." tracks to end of playlist\n");
+			debugMsg("Adding ".(scalar @$filteredItems)." tracks to end of playlist\n");
 			foreach my $it (@$items) {
 				addToPlayListHistory($client,$it);
 			}
-			$request = $client->execute(['playlist', 'addtracks', 'listRef', $items]);
-			if ($::VERSION ge '6.5') {
-				$request->source('PLUGIN_DYNAMICPLAYLIST');
+			if($noOfFilteredItems>1) {
+				$request = $client->execute(['playlist', 'addtracks', 'listRef', $filteredItems]);
+				if ($::VERSION ge '6.5') {
+					$request->source('PLUGIN_DYNAMICPLAYLIST');
+				}
 			}
 		}
 	} 
@@ -192,7 +247,6 @@ sub playRandom {
 										 $string, $showTime);
 				}
 			}
-
 		}elsif($showFeedback) {
 				if (Slim::Buttons::Common::mode($client) !~ /^SCREENSAVER./) {
 					$client->showBriefly(string('PLUGIN_DYNAMICPLAYLIST_NOW_PLAYING_FAILED'),
@@ -246,7 +300,7 @@ sub getDisplayText {
 		}
 	}
 	# if showing the current mode, show altered string
-	if ($mixInfo{$client} && $id eq $mixInfo{$client}->{'type'}) {
+	if ($mixInfo{$client} && defined($mixInfo{$client}->{'type'}) && $id eq $mixInfo{$client}->{'type'}) {
 		return $name." (".string('PLUGIN_DYNAMICPLAYLIST_PLAYING').")";
 		
 	# if a mode is active, handle the temporarily added disable option
@@ -277,7 +331,7 @@ sub getOverlay {
 		return [undef, Slim::Display::Display::symbol('rightarrow')];
 	}elsif(!defined($item->{'playlist'})) {
 		return [undef, Slim::Display::Display::symbol('rightarrow')];
-	}elsif (!$mixInfo{$client} || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
+	}elsif (!defined($mixInfo{$client}) || !defined($mixInfo{$client}->{'type'}) || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
 		if(defined($item->{'playlist'}->{'parameters'})) {
 			return [Slim::Display::Display::symbol('rightarrow'), Slim::Display::Display::symbol('notesymbol')];
 		}else {
@@ -526,6 +580,47 @@ sub initPlayLists {
 }
 
 
+sub initFilters {
+	debugMsg("Searching for filters\n");
+	
+	my %localFilters = ();
+	
+	no strict 'refs';
+	my @enabledplugins;
+	if ($::VERSION ge '6.5') {
+		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+	}else {
+		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+	}
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("Plugins::$plugin","getDynamicPlayListFilters") && UNIVERSAL::can("Plugins::$plugin","executeDynamicPlayListFilter")) {
+			debugMsg("Getting filters for: $plugin\n");
+			my $items = eval { &{"Plugins::${plugin}::getDynamicPlayListFilters"}() };
+			if ($@) {
+				debugMsg("Error getting filters from $plugin: $@\n");
+			}
+			for my $item (keys %$items) {
+				$filterPlugins{$item} = "Plugins::${plugin}";
+				my $filter = $items->{$item};
+				debugMsg("Got filters: ".$filter->{'name'}."\n");
+				$filter->{'dynamicplaylistfilterid'} = $item;
+				$filter->{'dynamicplaylistfilterplugin'} = $plugin;
+				my $enabled = Slim::Utils::Prefs::get('plugin_dynamicplaylist_filter_'.$item.'_enabled');
+				if((defined($enabled) && $enabled) || (!defined($enabled) && defined($filter->{'defaultenabled'}) && $filter->{'defaultenabled'})) {
+					$filter->{'dynamicplaylistenabled'} = 1;
+				}else {
+					$filter->{'dynamicplaylistenabled'} = 0;
+				}
+
+				$localFilters{$item} = $filter;
+			}
+		}
+	}
+	use strict 'refs';
+
+	$filters = \%localFilters;
+}
+
 sub addParameterValues {
 	my $client = shift;
 	my $listRef = shift;
@@ -639,6 +734,7 @@ sub setMode {
 	}
 
 	my @listRef = ();
+	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
 	my $playlisttype = $client->param('playlisttype');
@@ -950,13 +1046,13 @@ sub requestNextParameter {
 		for(my $i=1;$i<=$parameterId;$i++) {
 			$playlist->{'parameters'}->{$i}->{'value'} = $client->param('dynamicplaylist_parameter_'.$i)->{'id'};
 		}
-		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
 		for(my $i=1;$i<=$parameterId;$i++) {
 			Slim::Buttons::Common::popMode($client);
 		}
 		if(defined($client->param('extrapopmode'))) {
 			Slim::Buttons::Common::popMode($client);
 		}
+		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
 
 		$client->update();
 	}
@@ -988,13 +1084,13 @@ sub requestFirstParameter {
 		for($i=1;$i<$nextParameters{'dynamicplaylist_nextparameter'};$i++) {
 			$playlist->{'parameters'}->{$i}->{'value'} = $params->{'dynamicplaylist_parameter_'.$i}->{'id'};
 		}
-		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
 		for(my $i=1;$i<$nextParameters{'dynamicplaylist_nextparameter'};$i++) {
 			Slim::Buttons::Common::popMode($client);
 		}
 		if(defined($nextParameters{'extrapopmode'})) {
 			Slim::Buttons::Common::popMode($client);
 		}
+		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
 		$client->update();
 	}
 }
@@ -1012,10 +1108,6 @@ sub commandCallback62 {
 	debugMsg("received command ".(join(' ', @$paramsRef))."\n");
 
 	if (!defined $client) {
-
-		if ($::d_plugins) {
-			debugMsg("No client!\n");
-		}
 		return;
 	}
 	
@@ -1096,9 +1188,6 @@ sub commandCallback65 {
 	# client so the bt() is strange here
 	if (!defined $client || !defined $mixInfo{$client}->{'type'}) {
 
-		if ($::d_plugins) {
-			debugMsg("No client!\n");
-		}
 		return;
 	}
 	
@@ -1377,6 +1466,7 @@ sub initPlugin {
 	
 	checkDefaults();
 	initDatabase();
+	clearPlayListHistory();
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.ChooseParameters', getFunctions(), \&setModeChooseParameters);
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList', getFunctions(), \&setMode);
 	
@@ -1410,7 +1500,7 @@ sub initPlugin {
 	}else {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
 	}
-
+	initFilters();
 }
 sub title {
 	return 'DYNAMICPLAYLIST';
@@ -1458,6 +1548,8 @@ sub webPages {
 		"dynamicplaylist_settings\.(?:htm|xml)" => \&handleWebSettings,
 		"dynamicplaylist_selectplaylists\.(?:htm|xml)" => \&handleWebSelectPlaylists,
 		"dynamicplaylist_saveselectplaylists\.(?:htm|xml)" => \&handleWebSaveSelectPlaylists,
+		"dynamicplaylist_selectfilters\.(?:htm|xml)" => \&handleWebSelectFilters,
+		"dynamicplaylist_saveselectfilters\.(?:htm|xml)" => \&handleWebSaveSelectFilters,
 	);
 
 	my $value = $htmlTemplate;
@@ -1477,6 +1569,7 @@ sub handleWebList {
 	my ($client, $params) = @_;
 
 	# Pass on the current pref values and now playing info
+	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
 	my $playlist = undef;
@@ -1633,6 +1726,29 @@ sub handleWebSelectPlaylists {
 	return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_selectplaylists.html', $params);
 }
 
+sub handleWebSelectFilters {
+	my ($client, $params) = @_;
+
+	# Pass on the current pref values and now playing info
+	initFilters();
+	initPlayLists($client);
+	initPlayListTypes();
+	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	my $name = undef;
+	if($playlist) {
+		$name = $playlist->{'name'};
+	}
+	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
+	}
+	$params->{'pluginDynamicPlayListFilters'} = $filters;
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
+	}
+	
+	return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_selectfilters.html', $params);
+}
 sub getPlayListContext {
 	my $client = shift;
 	my $params = shift;
@@ -1866,6 +1982,24 @@ sub handleWebSaveSelectPlaylists {
 	handleWebList($client, $params);
 }
 
+sub handleWebSaveSelectFilters {
+	my ($client, $params) = @_;
+
+	initFilters();
+	my $first = 1;
+	my $sql = '';
+	foreach my $key (keys %$filters) {
+		my $filterid = "filter_".$filters->{$key}{'dynamicplaylistfilterid'};
+		if($params->{$filterid}) {
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_filter_'.$key.'_enabled',1);
+		}else {
+			Slim::Utils::Prefs::set('plugin_dynamicplaylist_filter_'.$key.'_enabled',0);
+		}
+	}
+	
+	handleWebList($client, $params);
+}
+
 sub savePlayListGroups {
 	my $items = shift;
 	my $params = shift;
@@ -1919,6 +2053,13 @@ sub checkDefaults {
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_number_of_tracks', 10);
 	}
 	
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_skipped_tracks_retries');
+	if (! defined $prefVal || $prefVal !~ /^$|^[0-9]+$/) {
+		# Default to keeping all tracks
+		debugMsg("Defaulting plugin_dynamicplaylist_skipped_tracks_retries to 20\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_skipped_tracks_retries', 20);
+	}
+
 	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_old_tracks');
 	if (! defined $prefVal || $prefVal !~ /^$|^[0-9]+$/) {
 		# Default to keeping all tracks
@@ -2004,7 +2145,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_skipped_tracks_retries','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2059,6 +2200,12 @@ sub setupGroup
 			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
 			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_number_of_tracks"); }
+		},
+	plugin_dynamicplaylist_skipped_tracks_retries => {
+			'validate' => \&validateIntWrapper
+			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_skipped_tracks_retries"); }
 		},
 	plugin_dynamicplaylist_number_of_old_tracks => {
 			'validate' => \&validateIntOrEmpty
@@ -2627,16 +2774,28 @@ sub addToPlayListHistory
 	$sth->finish();
 }
 sub clearPlayListHistory {
+	my $client = shift;
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
 
-	my $sql = "DELETE FROM dynamicplaylist_history";
-	my $sth = $dbh->prepare($sql);
-	eval {
-		$sth->execute();
-		commit($dbh);
-	};
+	my $sth = undef;
+	if(!defined($client)) {
+		my $sql = "DELETE FROM dynamicplaylist_history";
+		$sth = $dbh->prepare($sql);
+		eval {
+			$sth->execute();
+			commit($dbh);
+		};
+	}else {
+		my $sql = "DELETE FROM dynamicplaylist_history where client=?";
+		$sth = $dbh->prepare($sql);
+		eval {
+			$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
+			$sth->execute();
+			commit($dbh);
+		};
+	}
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n";
 	    eval {
@@ -2874,6 +3033,9 @@ PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
 
+PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES
+	EN	Number of retires when filtering
+
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
 
@@ -2906,6 +3068,9 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_FULLSAVEDPLAYLISTS
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
+
+PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES
+	EN	Number of retries when filtering
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
@@ -2961,6 +3126,12 @@ PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE
 	EN	Select enabled playlists
 
+PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS
+	EN	Enable/Disable filters 
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_TITLE
+	EN	Select enabled filters
+
 PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS_TITLE
 	EN	Select enabled playlist groups
 
@@ -2973,11 +3144,20 @@ PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_NONE
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_ALL
 	EN	All Playlists
 
+PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_NONE
+	EN	No filters
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_ALL
+	EN	All filters
+
 PLUGIN_DYNAMICPLAYLIST_NEXT
 	EN	Next
 
 PLUGIN_DYNAMICPLAYLIST_PARAMETERS_TITLE
 	EN	Enter additional parameters for playlist
+
+PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_CONFIGURE
+	EN	Configure filter
 EOF
 
 }
