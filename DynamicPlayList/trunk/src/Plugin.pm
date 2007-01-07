@@ -650,7 +650,8 @@ sub addParameterValues {
 					
 					if(defined($id)) {
 						my %listitem = (
-							'id' => $id
+							'id' => $id,
+							'value' => $id
 						);
 						if(defined($name)) {
 							$listitem{'name'}=$name;
@@ -693,6 +694,7 @@ sub addParameterValues {
 				while( $sth->fetch() ) {
 					my %listitem = (
 						'id' => $id,
+						'value' => $id,
 						'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
 					);
 				  	push @$listRef, \%listitem;
