@@ -484,7 +484,15 @@ sub exitScan {
 
 sub initArtistScan {
 	my $moduleKey = shift;
-	$artists = Slim::Schema->resultset('Contributor');
+	my @joins = ();
+	push @joins, 'contributorTracks';
+	$artists = Slim::Schema->resultset('Contributor')->search(
+		{'contributorTracks.role' => {'in' => [1,5]}},
+		{
+			'group_by' => 'me.id',
+			'join' => \@joins
+		}
+	);
 	debugMsg("Got ".$artists->count." artists\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
@@ -666,6 +674,7 @@ sub scanArtist {
 							    eval {
 							    	rollback($dbh); #just die if rollback is failing
 							    };
+							    debugMsg("Error values: ".$artist->id.", ".$artist->name.", ".$artist->musicbrainz_id.", ".$moduleId.", ".$attribute->{'name'}.", ".$attribute->{'value'}.", ".$attribute->{'valuesort'}.", ".$attribute->{'extravalue'}."\n");
 						   	}
 							$sth->finish();
 						}
