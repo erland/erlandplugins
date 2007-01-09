@@ -1231,7 +1231,7 @@ sub getSQLMenuData {
 	            $sql = undef;
 			};
 
-	        if ($sql =~ /^SELECT+/oi) {
+	        if ($sql =~ /^\(*SELECT+/oi) {
 				debugMsg("Executing and collecting: $sql\n");
 				my $id;
                                 my $name;
