@@ -25,7 +25,11 @@
 					tracks.audio=1
 					[%- IF singlecomment %]
 					and comments.track=tracks.id and
+					[%- IF containssinglecomment %]
+					comments.value like '%[% singlecomment %]%'
+					[% ELSE %]
 					comments.value='[% singlecomment %]'
+					[%- END %]
 					[%- END %]
 					[%- IF customtag %]
 					and tracks.id=customscan_track_attributes.track and
@@ -54,7 +58,11 @@
 					tracks.audio=1
 					[%- IF singlecomment %]
 					and comments.track=tracks.id and
+					[%- IF containssinglecomment %]
+					comments.value like '%[% singlecomment %]%'
+					[% ELSE %]
 					comments.value='[% singlecomment %]'
+					[%- END %]
 					[%- END %]
 					[%- IF customtag %]
 					and tracks.id=customscan_track_attributes.track
@@ -84,7 +92,11 @@
 						tracks.audio=1
 						[%- IF singlecomment %]
 						and comments.track=tracks.id and
+						[%- IF containssinglecomment %]
+						comments.value like '%[% singlecomment %]%'
+						[% ELSE %]
 						comments.value='[% singlecomment %]'
+						[%- END %]
 						[%- END %]
 						and tracks.id=customscan_track_attributes.track and
 						customscan_track_attributes.module='customtag' and
@@ -108,7 +120,11 @@
 						tracks.audio=1
 						[%- IF singlecomment %]
 						and comments.track=tracks.id and
+						[%- IF containssinglecomment %]
+						comments.value like '%[% singlecomment %]%'
+						[% ELSE %]
 						comments.value='[% singlecomment %]'
+						[%- END %]
 						[%- END %]
 						and tracks.id=customscan_track_attributes.track
 						and customscan_track_attributes.module='customtag'
@@ -135,7 +151,11 @@
 							tracks.audio=1
 							[%- IF singlecomment %]
 							and comments.track=tracks.id and
+							[%- IF containssinglecomment %]
+							comments.value like '%[% singlecomment %]%'
+							[% ELSE %]
 							comments.value='[% singlecomment %]'
+							[%- END %]
 							[%- END %]
 							[%- IF customtag %]
 							and tracks.id=customscan_track_attributes.track

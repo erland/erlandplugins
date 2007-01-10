@@ -8,6 +8,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tag Singles"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
+		<parameter type="checkbox" id="containssinglecomment" name="Check comment tag for sub strings" value=""/>
 		<parameter type="text" id="singlecomment" name="Comment tag" value=""/>
 		<parameter type="text" id="customtag" name="Custom tag name" value="SINGLE"/>
 		<parameter type="text" id="customtagvalue" name="Custom tag value" value=""/>
