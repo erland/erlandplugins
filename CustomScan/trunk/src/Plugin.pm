@@ -46,6 +46,7 @@ my $scanningAborted = 0;
 
 my $modules = ();
 my @pluginDirs = ();
+my $PLUGINVERSION = '1.14';
 
 # Indicator if hooked or not
 # 0= No
@@ -1020,6 +1021,7 @@ sub handleWebList {
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginCustomScanSlimserver70'} = 1;
 	}
+	$params->{'pluginCustomScanVersion'} = $PLUGINVERSION;
 	
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_list.html', $params);
 }
@@ -1218,14 +1220,25 @@ sub initDatabase {
 		my $keyname;
 		$sth->bind_col( 3, \$keyname );
 		my $foundMB = 0;
+		my $foundValue = 0;
 		while( $sth->fetch() ) {
 			if($keyname eq "musicbrainzIndex") {
 				$foundMB = 1;
+			}
+			if($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
 			}
 		}
 		if(!$foundMB) {
 			msg("CustomScan: No musicbrainzIndex index found in customscan_album_attributes, creating index...\n");
 			eval { $dbh->do("create index musicbrainzIndex on customscan_album_attributes (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundValue) {
+			msg("CustomScan: No module_attr_value_idx index found in customscan_album_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_album_attributes (module,attr,value);") };
 			if ($@) {
 				debugMsg("Couldn't add index: $@\n");
 			}
@@ -1242,14 +1255,24 @@ sub initDatabase {
 		my $keyname;
 		$sth->bind_col( 3, \$keyname );
 		my $foundMB = 0;
+		my $foundValue = 0;
 		while( $sth->fetch() ) {
 			if($keyname eq "musicbrainzIndex") {
 				$foundMB = 1;
+			}elsif($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
 			}
 		}
 		if(!$foundMB) {
 			msg("CustomScan: No musicbrainzIndex index found in customscan_contributor_attributes, creating index...\n");
 			eval { $dbh->do("create index musicbrainzIndex on customscan_contributor_attributes (musicbrainz_id);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundValue) {
+			msg("CustomScan: No module_attr_value_idx index found in customscan_contributor_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_contributor_attributes (module,attr,value);") };
 			if ($@) {
 				debugMsg("Couldn't add index: $@\n");
 			}
@@ -1267,11 +1290,14 @@ sub initDatabase {
 		$sth->bind_col( 3, \$keyname );
 		my $foundMB = 0;
 		my $foundUrl = 0;
+		my $foundValue = 0;
 		while( $sth->fetch() ) {
 			if($keyname eq "musicbrainzIndex") {
 				$foundMB = 1;
 			}elsif($keyname eq "urlIndex") {
 				$foundUrl = 1;
+			}elsif($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
 			}
 		}
 		if(!$foundMB) {
@@ -1284,6 +1310,13 @@ sub initDatabase {
 		if(!$foundUrl) {
 			msg("CustomScan: No urlIndex index found in customscan_track_attributes, creating index...\n");
 			eval { $dbh->do("create index urlIndex on customscan_track_attributes (url(255));") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundValue) {
+			msg("CustomScan: No module_attr_value_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_track_attributes (module,attr,value);") };
 			if ($@) {
 				debugMsg("Couldn't add index: $@\n");
 			}

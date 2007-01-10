@@ -69,6 +69,12 @@
 				</td><td>[% IF pluginCustomScanModules.$module.dataprovidername %]<a href="[% pluginCustomScanModules.$module.dataproviderlink %]" target="_blank">[% pluginCustomScanModules.$module.dataprovidername %]</a>[% END %]</td></tr>
 				[% odd = (not odd) %]
 		[% END %]
+		<tr>
+			<td colspan="3"><hr></td>
+		</tr>
+		<tr>
+			<td colspan="3"><div style="float:right;">([% "PLUGIN_CUSTOMSCAN" | string %] [% pluginCustomScanVersion %])</div></td>
+		</tr>
 	</table>
 </form>
 [% PROCESS pagefooter.html %]
