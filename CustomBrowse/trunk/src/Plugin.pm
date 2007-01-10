@@ -40,6 +40,7 @@ my $browseMixes;
 my $template;
 my $mixer;
 my $soapLiteError = 0;
+my $PLUGINVERSION = '1.16';
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -2129,6 +2130,7 @@ sub handleWebList {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
+	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
 }
@@ -2802,6 +2804,7 @@ sub downloadMenu {
 				$title = 'Downloaded playlists';
 			}
 			my $downloadsection = $title." (by ".$username.")";
+			my $incompatibleVersions = 0;
 			for my $data (@$datas) {
 				if($data->{'type'} eq 'template') {
 					my $content = $data->{'content'};
@@ -2816,7 +2819,22 @@ sub downloadMenu {
 						my $lastchanged = $xml->{'lastchanged'};
 						$content =~ s/<\/downloadidentifier>/<\/downloadidentifier>\n\t\t<lastchanged>$lastchanged<\/lastchanged>/m;
 					}
-					$dataToStore{$data->{'type'}} = $content;
+					if($content =~ /<minpluginversion>(\d+)\.(\d+).*<\/minpluginversion>/) {
+						my $downloadMajor = $1;
+						my $downloadMinor = $2;
+						if($PLUGINVERSION =~ /(\d+)\.(\d+).*/) {
+							my $pluginMajor = $1;
+							my $pluginMinor = $2;
+
+							if($pluginMajor>=$downloadMajor && $pluginMinor>=$downloadMinor) {
+								$dataToStore{$data->{'type'}} = $content;
+							}else {
+								$incompatibleVersions = 1;
+							}
+						}
+					}else {
+						$dataToStore{$data->{'type'}} = $content;
+					}
 				}
 			}
 			if(defined($dataToStore{'template'}) && defined($dataToStore{'xml'})) {
@@ -2841,8 +2859,11 @@ sub downloadMenu {
 				}
 				$result{'template'} = $customname.'.xml';
 				return \%result;
+			}elsif($incompatibleVersions) {
+				$result{'error'} = "Unable to download menu, newer plugin version required";
+			}else {
+				$result{'error'} = "Unable to download menu";
 			}
-			$result{'error'} = "Unable to download menu";
 			return \%result;
 		}
 		$result{'error'} = "No menus available to download";
