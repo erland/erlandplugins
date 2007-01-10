@@ -37,7 +37,11 @@
 						[%- END %]
 						[%- IF includedcomment %]
 						and tracks.id=comments.track and
+						[%- IF containsincludedcomment %]
+						comments.value like '%[% includedcomment %]%'
+						[% ELSE %]
 						comments.value='[% includedcomment %]'
+						[%- END %]
 						[%- END %]
 						and albums.id=tracks.album
 						[%- IF excludedgenres %]
@@ -51,7 +55,11 @@
 						and not exists(select * from comments 
 							where 
 								comments.track=tracks.id and
-								comments.value='[% excludedcomment %]')
+								[%- IF containsexcludedcomment %]
+								comments.value like '%[% excludedcomment %]%'
+								[% ELSE %]
+								comments.value='[% excludedcomment %]'
+								[%- END %])
 						[%- END %]
 					group by albums.id
 					order by contributors.namesort asc,albums.year desc
@@ -77,7 +85,12 @@
 					[%- END %]
 					[%- IF includedcomment %]
 					tracks.id=comments.track and
-					comments.value='[% includedcomment %]' and
+					[%- IF containsincludedcomment %]
+					comments.value like '%[% includedcomment %]%'
+					[% ELSE %]
+					comments.value='[% includedcomment %]'
+					[%- END %]
+					and
 					[%- END %]
 					albums.id=tracks.album
 					[%- IF excludedgenres %]
@@ -91,7 +104,11 @@
 					and not exists(select * from comments 
 						where 
 							comments.track=tracks.id and
-							comments.value='[% excludedcomment %]')
+							[%- IF containsexcludedcomment %]
+							comments.value like '%[% excludedcomment %]%'
+							[% ELSE %]
+							comments.value='[% excludedcomment %]'
+							[%- END %])
 					[%- END %]
 				group by albums.id
 				order by albums.titlesort asc
@@ -117,7 +134,12 @@
 						[%- END %]
 						[%- IF includedcomment %]
 						tracks.id=comments.track and
-						comments.value='[% includedcomment %]' and
+						[%- IF containsincludedcomment %]
+						comments.value like '%[% includedcomment %]%'
+						[% ELSE %]
+						comments.value='[% includedcomment %]'
+						[%- END %]
+						and
 						[%- END %]
 						tracks.album={album}
 						[%- IF excludedgenres %]
@@ -131,7 +153,11 @@
 						and not exists(select * from comments 
 							where 
 								comments.track=tracks.id and
-								comments.value='[% excludedcomment %]')
+								[%- IF containsexcludedcomment %]
+								comments.value like '%[% excludedcomment %]%'
+								[% ELSE %]
+								comments.value='[% excludedcomment %]'
+								[%- END %])
 						[%- END %]
 					group by tracks.id
 					order by tracks.tracknum asc, tracks.titlesort asc

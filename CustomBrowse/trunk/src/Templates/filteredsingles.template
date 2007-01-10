@@ -25,7 +25,11 @@
 					tracks.audio=1
 					[%- IF singlecomment %]
 					and comments.track=tracks.id and
+					[%- IF containssinglecomment %]
+					comments.value like '%[% singlecomment %]%'
+					[% ELSE %]
 					comments.value='[% singlecomment %]'
+					[%- END %]
 					[%- END %]
 					[%- IF genres %]
 					and genre_track.track=tracks.id and
@@ -53,7 +57,11 @@
 					tracks.audio=1
 					[%- IF singlecomment %]
 					and comments.track=tracks.id and
+					[%- IF containssinglecomment %]
+					comments.value like '%[% singlecomment %]%'
+					[% ELSE %]
 					comments.value='[% singlecomment %]'
+					[%- END %]
 					[%- END %]
 					[%- IF genres %]
 					and genre_track.track=tracks.id and
@@ -81,7 +89,11 @@
 						tracks.audio=1
 						[%- IF singlecomment %]
 						and comments.track=tracks.id and
+						[%- IF containssinglecomment %]
+						comments.value like '%[% singlecomment %]%'
+						[% ELSE %]
 						comments.value='[% singlecomment %]'
+						[%- END %]
 						[%- END %]
 						[%- IF genres %]
 						and genre_track.track=tracks.id and
