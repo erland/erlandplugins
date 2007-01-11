@@ -40,7 +40,7 @@ my $browseMixes;
 my $template;
 my $mixer;
 my $soapLiteError = 0;
-my $PLUGINVERSION = '1.15';
+my $PLUGINVERSION = '1.16';
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
