@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sqlplaylist>
+	<minpluginversion>1.16</minpluginversion>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
 		<downloadidentifier>81</downloadidentifier>
