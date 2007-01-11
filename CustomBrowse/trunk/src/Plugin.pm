@@ -40,7 +40,7 @@ my $browseMixes;
 my $template;
 my $mixer;
 my $soapLiteError = 0;
-my $PLUGINVERSION = '1.16';
+my $PLUGINVERSION = '1.15';
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -4216,6 +4216,19 @@ sub isMenuEnabled {
 			$include = 1;
 		}
 	}
+	if($include && defined($xml->{'minpluginversion'}) && $xml->{'minpluginversion'} =~ /(\d+)\.(\d+).*/) {
+		my $downloadMajor = $1;
+		my $downloadMinor = $2;
+		if($PLUGINVERSION =~ /(\d+)\.(\d+).*/) {
+			my $pluginMajor = $1;
+			my $pluginMinor = $2;
+			if($pluginMajor>=$downloadMajor && $pluginMinor>=$downloadMinor) {
+				$include = 1;
+			}else {
+				$include = 0;
+			}
+		}
+	}	
 	if(defined($xml->{'database'}) && $include) {
 		$include = 0;
 		my $driver = Slim::Utils::Prefs::get('dbsource');
