@@ -1457,6 +1457,9 @@ sub initPlugin {
 	}
 	Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
 	addPlayerMenus();
+        if ($::VERSION ge '6.5') {
+		delSlimserverPlayerMenus();
+	}
 }
 
 sub addPlayerMenus {
@@ -1953,6 +1956,13 @@ sub checkDefaults {
 			Slim::Utils::Prefs::push('plugin_custombrowse_properties', 'mixsize=20');
 		}
 	}
+	my $slimserverMenus = getSlimserverMenus();
+	for my $menu (@$slimserverMenus) {
+		$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_'.$menu->{'id'}.'_enabled');
+		if(! defined $prefVal) {
+			Slim::Utils::Prefs::set('plugin_custombrowse_slimservermenu_'.$menu->{'id'}.'_enabled',1);
+		}
+	}
 }
 
 sub setupGroup
@@ -2059,12 +2069,55 @@ sub webPages {
 				Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
 			}
 		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			delSlimserverWebMenus();
 		}else {
 	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
 	}
 
         return (\%pages);
+}
+
+sub delSlimserverWebMenus {
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_artist_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ARTIST' => undef });
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_genre_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_GENRE' => undef });
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_album_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ALBUM' => undef });
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_year_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_YEAR' => undef });
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_newmusic_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_NEW_MUSIC' => undef });
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_playlist_enabled')) {
+		Slim::Web::Pages->addPageLinks("browse", {'SAVED_PLAYLISTS' => undef });
+	}
+}
+
+sub delSlimserverPlayerMenus {
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_artist_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ARTIST');
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_genre_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_GENRE');
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_album_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ALBUM');
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_year_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_YEAR');
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_newmusic_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_NEW_MUSIC');
+	}
+	if(!Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_playlist_enabled')) {
+		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'SAVED_PLAYLISTS');
+	}
 }
 
 sub addWebMenus {
@@ -3703,11 +3756,57 @@ sub handleWebSelectMenus {
         # Pass on the current pref values and now playing info
         $params->{'pluginCustomBrowseMenus'} = $browseMenusFlat;
         $params->{'pluginCustomBrowseMixes'} = $browseMixes;
+
+	if ($::VERSION ge '6.5') {
+		$params->{'pluginCustomBrowseSlimserverMenus'} = getSlimserverMenus();
+	}
+
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_selectmenus.html', $params);
+}
+
+sub getSlimserverMenus {
+	my @slimserverMenus = ();
+	my %browseByAlbum = (
+		'id' => 'album',
+		'name' => string('BROWSE_BY_ALBUM'),
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_album_enabled')
+	);
+	push @slimserverMenus,\%browseByAlbum;
+	my %browseByArtist = (
+		'id' => 'artist',
+		'name' => string('BROWSE_BY_ARTIST'),
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_artist_enabled')
+	);
+	push @slimserverMenus,\%browseByArtist;
+	my %browseByGenre = (
+		'id' => 'genre',
+		'name' => string('BROWSE_BY_GENRE'),
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_genre_enabled')
+	);
+	push @slimserverMenus,\%browseByGenre;
+	my %browseByYear = (
+		'id' => 'year',
+		'name' => string('BROWSE_BY_YEAR'),
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_year_enabled')
+	);
+	push @slimserverMenus,\%browseByYear;
+	my %browseNewMusic = (
+		'id' => 'newmusic',
+		'name' => string('BROWSE_NEW_MUSIC'),
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_newmusic_enabled')
+	);
+	push @slimserverMenus,\%browseNewMusic;
+	my %browsePlaylist = (
+		'id' => 'playlist',
+		'name' => string('SAVED_PLAYLISTS').' (Player menu)',
+		'enabled' => Slim::Utils::Prefs::get('plugin_custombrowse_slimservermenu_playlist_enabled')
+	);
+	push @slimserverMenus,\%browsePlaylist;
+	return \@slimserverMenus;
 }
 
 # Draws the plugin's web page
@@ -3744,6 +3843,15 @@ sub handleWebSaveSelectMenus {
 			$browseMixes->{$mix}->{'enabled'}=0;
                 }
         }
+	my $slimserverMenus = getSlimserverMenus();
+        foreach my $menu (@$slimserverMenus) {
+                my $menuid = "slimservermenu_".escape($menu->{'id'});
+                if($params->{$menuid}) {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',1);
+                }else {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
+                }
+        }
 	$params->{'refresh'} = 1;
         my $value = 'plugins/CustomBrowse/custombrowse_list.html';
         if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
@@ -3751,6 +3859,8 @@ sub handleWebSaveSelectMenus {
         }
 	if ($::VERSION ge '6.5') {
 		addWebMenus($value);
+		delSlimserverWebMenus();
+		delSlimserverPlayerMenus();
 	}
 	addPlayerMenus();
         handleWebList($client, $params);
@@ -4884,6 +4994,9 @@ PLUGIN_CUSTOMBROWSE_SELECT_MIXES_NONE
 
 PLUGIN_CUSTOMBROWSE_SELECT_MIXES_ALL
 	EN	All Mixers
+
+PLUGIN_CUSTOMBROWSE_SELECT_SLIMSERVER_MENUS_TITLE
+	EN	Select enabled slimserver menus (changes requires slimserver restart)
 
 PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND
 	EN	No matching songs, albums or artists were found

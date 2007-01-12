@@ -156,6 +156,17 @@
 	// -->
 	</script>
 	<br><br>
+	<table border="0">
+		<tr><td><b>[% "PLUGIN_CUSTOMBROWSE_SELECT_SLIMSERVER_MENUS_TITLE" | string %]</b></td></tr>
+		[%- FOREACH menu IN pluginCustomBrowseSlimserverMenus %]
+			<tr>
+				[%- menuid = "slimservermenu_" _ menu.id %]
+				<td><input type="checkbox" name="[% menuid %]" id="[% menuid %]" value="1" [% menu.enabled ? "checked" : "" %]>
+				<label for="[% menuid %]">[% menu.name | html %]</label></td></td>
+			</tr>
+		[%- END %]
+	</table>
+	<br><br>
 	<input type="submit" value="[% "SAVE" | string %]">
 	[% IF !pluginCustomBrowseSlimserver65 %]
 		<br><b>Note!</b> The "Show in browse menu" setting does not affect web interface in slimserver 6.3.* and earlier
