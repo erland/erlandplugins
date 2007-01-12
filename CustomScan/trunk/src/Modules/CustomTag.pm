@@ -246,19 +246,23 @@ sub scanTrack {
 				$singleValueTagsHash{uc($singleValueTag)} = 1;
 			}
 
-			my @customTags = split(/\s*,\s*/,$customTagProperty);
 			my %customTagsHash = ();
-			for my $customTag (@customTags) {
-				$customTagsHash{uc($customTag)} = 1;
+			if(defined($customTagProperty) && $customTagProperty) {
+				my @customTags = split(/\s*,\s*/,$customTagProperty);
+				for my $customTag (@customTags) {
+					$customTagsHash{uc($customTag)} = 1;
+				}
 			}
 
-			my @customSortTags = split(/\s*,\s*/,$customSortTagProperty);
 			my %customSortTagsHash = ();
-			for my $customSortTag (@customSortTags) {
-				if($customSortTag =~ /^\s*(.*)\s*=\s*(.*).*$/) {
-					my $tag = $1;
-					my $sortTag = $2;
-					$customSortTagsHash{uc($tag)} = uc($sortTag);
+			if(defined($customSortTagProperty) && $customSortTagProperty) {
+				my @customSortTags = split(/\s*,\s*/,$customSortTagProperty);
+				for my $customSortTag (@customSortTags) {
+					if($customSortTag =~ /^\s*(.*)\s*=\s*(.*).*$/) {
+						my $tag = $1;
+						my $sortTag = $2;
+						$customSortTagsHash{uc($tag)} = uc($sortTag);
+					}
 				}
 			}
 
