@@ -57,6 +57,21 @@ sub getCustomSkipFilterTypes {
 		'description' => 'Skip songs in zapped playlist'
 	);
 	push @result, \%zapped;
+	my %track = (
+		'id' => 'track',
+		'name' => 'Song',
+		'mixtype' => 'track',
+		'description' => 'Skip selected song',
+		'mixonly' => 1, 
+		'parameters' => [
+			{
+				'id' => 'url',
+				'type' => 'text',
+				'name' => 'Song to skip'
+			}
+		]
+	);
+	push @result, \%track;
 	my %artist = (
 		'id' => 'artist',
 		'name' => 'Artist',
@@ -287,9 +302,9 @@ sub checkCustomSkipFilterType {
 			if($parameter->{'id'} eq 'name') {
 				my $names = $parameter->{'value'};
 				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
-				my $genres = $track->genres();
-				if(defined($genres)) {
-					for my $genre (@$genres) {
+				my @genres = $track->genres();
+				if(defined(@genres)) {
+					for my $genre (@genres) {
 						if($genre->name eq $name) {
 							return 1;
 						}
@@ -302,10 +317,10 @@ sub checkCustomSkipFilterType {
 			if($parameter->{'id'} eq 'name') {
 				my $names = $parameter->{'value'};
 				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
-				my $genres = $track->genres();
-				if(defined($genres)) {
+				my @genres = $track->genres();
+				if(defined(@genres)) {
 					my $found = 0;
-					for my $genre (@$genres) {
+					for my $genre (@genres) {
 						if($genre->name eq $name) {
 							$found = 1;
 						}
@@ -366,6 +381,7 @@ sub executeDynamicPlayListFilter {
 		my $filter = getCurrentFilter($client);
 		my $skippercentage = 0;
 		if(defined($filter)) {
+			removeExpiredFilterItems($filter);
 			my $filteritems = $filter->{'filter'};
 			for my $filteritem (@$filteritems) {
 				next unless $skippercentage<100;
@@ -392,7 +408,6 @@ sub executeDynamicPlayListFilter {
 							}
 						}
 					}
-				}else {
 				}
 			}
 		}
@@ -420,24 +435,7 @@ sub getDisplayText {
 		my $filter = $item->{'filter'};
 		my $filteritem = $item->{'filteritem'};
 		if(defined($filteritem)) {
-			my $parameters = $filteritem->{'parameter'};
-			$name = $item->{'id'}.". ".$filteritem->{'id'}." ";
-			my $firstParameter = 1;
-			for my $parameter (@$parameters) {
-				if(!$firstParameter) {
-					$name.=",";
-				}
-				my $first = 1;
-				my $values = $parameter->{'value'};
-				for my $value (@$values) {
-					if(!$first) {
-						$name.=",";
-					}
-					$name.=$value;
-					$first = 0;
-				}
-				$firstParameter = 0;
-			}
+			$name = $filteritem->{'displayname'};
 		}elsif(defined($filter)) {
 			$name = $item->{'filter'}->{'name'};
 			my $filter = getCurrentFilter($client);
@@ -503,6 +501,14 @@ sub initFilterTypes {
 						'value' => 100
 					);
 					push @allparameters, \%percentageParameter;
+					my %validParameter = (
+						'id' => 'customskipvalidtime',
+						'type' => 'timelist',
+						'name' => 'Valid',
+						'data' => '900=15 minutes,1800=30 minutes,3600=1 hour,10800=3 hours,21600=6 hours,86400=24 hours,604800=1 week,1209600=2 weeks,2419200=4 weeks,7776000=3 months,15552000=6 months,0=Forever',
+						'value' => 0
+					);
+					push @allparameters, \%validParameter;
 					$filter->{'customskipparameters'} = \@allparameters;
 					$filter->{'customskipid'} = $id;
 					$filter->{'customskipplugin'} = $plugin;
@@ -632,7 +638,7 @@ sub setModeMix {
 	my @listRef = ();
 	for my $key (keys %$filterTypes) {
 		my $filterType = $filterTypes->{$key};
-		if(!defined($selectedFilterType) || (defined($filterType->{'mixtype'}) && $filterType->{'mixtype'} eq $selectedFilterType)) {
+		if((!defined($selectedFilterType) && !$filterType->{'mixonly'})|| (defined($filterType->{'mixtype'}) && $filterType->{'mixtype'} eq $selectedFilterType)) {
 			my %item = (
 				'id' => $filterType->{'id'},
 				'value' => $filterType->{'id'},
@@ -696,14 +702,24 @@ sub setModeMix {
 								my $itemValues = $itemParameter->{'value'};
 								if(defined($itemValues) && scalar(@$itemValues)==1) {
 									my $itemValue = $itemValues->[0];
-									addValuesToFilterParameter($parameter);
+									my %currentValues = (
+										$client->param('customskip_parameter_1') => $client->param('customskip_parameter_1')
+									);
+									addValuesToFilterParameter($parameter,\%currentValues);
 									my $values = $parameter->{'values'};
-									for my $item (@$values) {
-										if($itemValue eq $item->{'value'}) {
-											if($item->{'id'} eq $client->param('customskip_parameter_1')) {
-												$parameterValues{'filteritem'} = $i;
+									if(defined($values)) {
+										for my $item (@$values) {
+											if($itemValue eq $item->{'value'}) {
+												if($item->{'id'} eq $client->param('customskip_parameter_1')) {
+													$parameterValues{'filteritem'} = $i;
+												}
+												last;
 											}
-											last;
+										}
+									}else {
+										my $value = $parameter->{'value'};
+										if($value eq $client->param('customskip_parameter_1')) {
+											$parameterValues{'filteritem'} = $i;
 										}
 									}
 								}
@@ -785,7 +801,15 @@ sub setModeChooseParameters {
 	}
 	addValuesToFilterParameter($parameter,$currentValues);
 	my $values = $parameter->{'values'};
-	@listRef = @$values;
+	if(defined($values)) {
+		@listRef = @$values;
+	}else {
+		my %item = (
+			'id' => $parameter->{'value'},
+			'name' => $parameter->{'value'}
+		);
+		push @listRef,\%item;
+	}
 
 	my $name = $parameter->{'name'};
 	my %params = (
@@ -996,7 +1020,10 @@ sub saveFilterItem {
 		my $i = 1;
 		for my $p (@$parameters) {
 			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-				addValuesToFilterParameter($p);
+				my %itemValue = (
+					$client->param('customskip_parameter_'.$i) => $client->param('customskip_parameter_'.$i)
+				);
+				addValuesToFilterParameter($p,\%itemValue);
 				my $values = getValueOfFilterParameter($client,$p,$i,"&<>\'\"");
 				if(scalar(@$values)>0) {
 					my %savedParameter = (
@@ -1121,6 +1148,15 @@ sub mixerFunction {
 		if($mixerType eq 'track') {
 			my @listRef = ();
 			my $itemobj = objectForId('track',$currentItem->id);
+			if($mixTypes->{'track'}) {
+				my %item = (
+					'id' => 'Song '.$itemobj->id,
+					'value' => 'Song '.$itemobj->id,
+					'name' => 'Song: '.$itemobj->title,
+					'item' => $itemobj
+				);
+				push @listRef,\%item;
+			}
 			if($mixTypes->{'album'}) {
 				my $album = $itemobj->album();
 				if(defined($album)) {
@@ -1179,7 +1215,16 @@ sub mixerFunction {
 					debugMsg("Do something on right for ".$item->{'item'}."\n");
 					my $blessed = blessed($item->{'item'});
 
-					if($blessed eq 'Slim::Schema::Album') {
+					if($blessed eq 'Slim::Schema::Track') {
+						my %p = (
+							'filtertype' => 'track',
+							'customskip_parameter_1' => $item->{'item'}->url,
+							'extrapopmode' => 1
+						);
+						Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+						$client->update();
+
+					}elsif($blessed eq 'Slim::Schema::Album') {
 						my %p = (
 							'filtertype' => 'album',
 							'customskip_parameter_1' => $item->{'item'}->id,
@@ -1476,7 +1521,7 @@ sub newSongCallback
 			}
 			if(!$keep) {
 				$client->execute(["playlist", "deleteitem", $track->url]);
-				debugMsg("*** Removing song from client playlist\n");
+				debugMsg("Removing song from client playlist\n");
 			}
 		}
 	}	
@@ -1942,7 +1987,7 @@ sub addValuesToFilterParameter {
 			}
 		}
 		$p->{'values'} = $listValues;
-	}elsif($p->{'type'} =~ '.*list$' || $p->{'type'} =~ '.*checkboxes$') {
+	}elsif($p->{'type'} =~ '.*multiplelist$' || $p->{'type'} =~ '.*singlelist$' || $p->{'type'} =~ '.*checkboxes$') {
 		my @listValues = ();
 		my @values = split(/,/,$p->{'data'});
 		for my $value (@values){
@@ -1968,6 +2013,45 @@ sub addValuesToFilterParameter {
 			for my $v (@listValues) {
 				if($p->{'value'} eq $v->{'value'}) {
 					$v->{'selected'} = 1;
+				}
+			}
+		}
+		$p->{'values'} = \@listValues;
+	}elsif($p->{'type'} =~ '.*timelist$') {
+		my @listValues = ();
+		my @values = split(/,/,$p->{'data'});
+		my $currentTime = time();
+		for my $value (@values){
+			my @idName = split(/=/,$value);
+			my $itemTime = undef;
+			my $itemName = undef;
+			if(@idName->[0]==0) {
+				$itemTime = 0;
+				$itemName = "Forever";
+			}else {
+				$itemTime = $currentTime+@idName->[0];
+				$itemName = @idName->[1].' ('.Slim::Utils::DateTime::shortDateF($itemTime).' '.Slim::Utils::DateTime::timeF($itemTime).')';
+			}
+			my %listValue = (
+				'id' => $itemTime,
+				'name' => $itemName
+			);
+			if((!defined($currentValues) || defined($currentValues->{0})) && $p->{'value'} eq @idName->[0]) {
+				$listValue{'selected'} = 1;
+			}
+			push @listValues, \%listValue;
+		}
+		if(defined($currentValues)) {
+			for my $value (keys %$currentValues) {
+				if($value!=0) {
+					my $itemTime = $value;
+					my $itemName = Slim::Utils::DateTime::shortDateF($itemTime).' '.Slim::Utils::DateTime::timeF($itemTime);
+					my %listValue = (
+						'id' => $itemTime,
+						'name' => $itemName,
+						'selected' => 1
+					);
+					push @listValues, \%listValue;
 				}
 			}
 		}
@@ -2024,6 +2108,11 @@ sub getValueOfFilterParameterWeb {
 				last;
 			}
 		}
+		return \@result;
+	}elsif($parameter->{'type'} =~ /.*timelist$/) {
+		my @result = ();
+		my $selectedValue = $params->{'filterparameter_'.$parameter->{'id'}};
+		push @result,$selectedValue;
 		return \@result;
 	}else{
 		my @result = ();
@@ -2090,8 +2179,15 @@ sub getValueOfFilterParameter {
 			}
 		}
 		return \@result;
+	}elsif($parameter->{'type'} =~ /.*timelist$/) {
+		my @result = ();
+		my $selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+		push @result,$selectedValue;
+		return \@result;
 	}else{
 		my @result = ();
+		my $selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+		push @result,$selectedValue;
 		return \@result;
 	}
 }
@@ -2225,9 +2321,54 @@ sub initFilters {
 		readFiltersFromDir($client,$browseDir,\%localFilters, $filterTypes);
 	}
     
+	for my $key (keys %localFilters) {
+		my $filter = $localFilters{$key};
+		removeExpiredFilterItems($filter);
+	}
 	$filters = \%localFilters;
 }
 
+sub removeExpiredFilterItems {
+	my $filter = shift;
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	return unless defined $browseDir && -d $browseDir;
+
+	my $filteritems = $filter->{'filter'};
+	my @removeItems = ();
+	my $i = 0;
+	for my $filteritem (@$filteritems) {
+		my $parameters = $filteritem->{'parameter'};
+		for my $p (@$parameters) {
+			if($p->{'id'} eq 'customskipvalidtime') {
+				my $values = $p->{'value'};
+				if(defined($values) && scalar(@$values)>0 && $values->[0]>0) {
+					if($values->[0] < time()) {
+						debugMsg("Remove expired filter item ".($i+1)."\n");
+						push @removeItems,$i;
+					}
+				}
+			}
+		}
+		$i = $i + 1;
+	}
+	if(scalar(@removeItems)>0) {
+		my $i=0;
+		for my $index (@removeItems) {
+			splice(@$filteritems,$index-$i,1);
+			$i = $i - 1;
+		}
+		$filter->{'filter'} = $filteritems;
+		my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+		if (defined $browseDir || -d $browseDir) {
+			my $file = unescape($filter->{'id'});
+			my $url = catfile($browseDir, $file);
+			if(-e $url) {
+				saveFilter($url,$filter);
+			}
+		}
+	}
+}
 sub readFiltersFromDir {
 	my $client = shift;
 	my $browseDir = shift;
@@ -2282,6 +2423,7 @@ sub parseFilterContent {
 			for my $filter (@$filters) {
 				my $filterType = $filterTypes->{$filter->{'id'}};
 				if(defined($filterType)) {
+					my $displayName = $filterType->{'name'};
 					my %filterParameters = ();
 					my $parameters = $filter->{'parameter'};
 					for my $p (@$parameters) {
@@ -2315,6 +2457,32 @@ sub parseFilterContent {
 							}
 						}
 					}
+					$displayName .= ' ';
+					my $displayParameters = $filterType->{'customskipparameters'};
+					for my $p (@$displayParameters) {
+						my $displayed = 0;
+						if(defined($filterParameters{$p->{'id'}})) {
+							if($p->{'id'} eq 'customskippercentage') {
+								if($filterParameters{$p->{'id'}}<100) {
+									$displayName .= $filterParameters{$p->{'id'}}."%";
+									$displayed = 1;
+								}
+							}elsif($p->{'type'} =~ '.*timelist$') {
+								if($filterParameters{$p->{'id'}}>0) {
+									$displayName .= Slim::Utils::DateTime::shortDateF($filterParameters{$p->{'id'}}).' '.Slim::Utils::DateTime::timeF($filterParameters{$p->{'id'}});
+									$displayed = 1;
+
+								}
+							}else {
+								$displayName .= decode_entities($filterParameters{$p->{'id'}});
+								$displayed = 1;
+							}
+							if($displayed) {
+								$displayName .= ', ';
+							}
+						}
+					}
+					$filter->{'displayname'} = $displayName;
 					$filter->{'parametervalues'} = \%filterParameters;
 
 				}else {

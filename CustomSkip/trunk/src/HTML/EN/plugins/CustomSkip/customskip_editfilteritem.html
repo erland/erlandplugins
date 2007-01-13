@@ -28,7 +28,7 @@
 			<td>
 			[% IF parameter.type == 'text' %]
 				<input type="text" name="filterparameter_[% parameter.id %]" value="[% parameter.value %]">
-			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist'%]
+			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'timelist' or parameter.type == 'sqlsinglelist'%]
 				<table border="0">
 					<tr><td>
 						<select name="filterparameter_[% parameter.id %]">

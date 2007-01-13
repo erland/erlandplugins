@@ -44,16 +44,7 @@
 					<a href="[% webroot %]plugins/CustomSkip/customskip_editfilteritem.html?player=[% player | uri %]&filter=[% pluginCustomSkipFilter.id %]&filteritem=[% itemNo %]" title="[% itemNo %]">[% "PLUGIN_CUSTOMSKIP_EDIT_FILTERITEM" | string %]</a>
 				[% END %]
 				[%- WRAPPER contentitem controls='controls' %]
-					[% itemNo %]. [% item.id %]
-					[% FOREACH parameter IN item.parameter %]
-						[% parameter.id %]=
-						[%- first = 1 -%]
-						[%- FOREACH value IN parameter.value %]
-							[%- IF !first %], [% END -%]
-							[%- value %]
-							[% first = 0 %]
-						[%- END %]
-					[% END %]
+					[% itemNo %]. [% item.displayname %]
 				[% END %]
 				[% odd = (not odd) %]
 				[% itemNo = itemNo + 1 %]
