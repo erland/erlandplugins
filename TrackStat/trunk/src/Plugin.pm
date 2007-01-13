@@ -61,6 +61,8 @@ use Plugins::TrackStat::Storage;
 use vars qw($VERSION);
 $VERSION = substr(q$Revision$,10);
 
+my $PLUGINVERSION = '1.36';
+
 #################################################
 ### Global constants - do not change casually ###
 #################################################
@@ -1524,6 +1526,8 @@ sub baseWebPage {
 	if ($::VERSION ge '7.0') {
 		$params->{'pluginTrackStatSlimserver70'} = 1;
 	}
+	$params->{'pluginTrackStatVersion'} = $PLUGINVERSION;
+
 	debugMsg("Exiting baseWebPage\n");
 }
 	
