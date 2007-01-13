@@ -26,12 +26,15 @@
 
 	[% WRAPPER contentcontainer %]
 
+		<tr>
+			<td colspan="4">&nbsp;</td>
+		</tr>
 			[%- WRAPPER contentitem %]
 				[% "PLUGIN_CUSTOMSKIP_CHOOSE_BELOW" | string %]
 			[% END %]
 
 		<tr>
-			<td>&nbsp;</td>
+			<td colspan="4"><hr></td>
 		</tr>
 
 			[% odd = 1 %]
@@ -57,7 +60,7 @@
 			<td colspan="4"><hr></td>
 		</tr>
 		<tr>
-			<td colspan="4"><a href="[% webroot %]plugins/CustomSkip/customskip_newfilter.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSKIP_NEW_FILTER" | string %]</a>[% IF pluginCustomSkipActiveFilter %]&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomSkip/customskip_disablefilter.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSKIP_DISABLE_FILTER" | string %]</a>[% END %]</td>
+			<td colspan="4"><a href="[% webroot %]plugins/CustomSkip/customskip_newfilter.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSKIP_NEW_FILTER" | string %]</a>[% IF pluginCustomSkipActiveFilter %]&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomSkip/customskip_disablefilter.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMSKIP_DISABLE_FILTER" | string %]</a>[% END %]<div style="float:right;">([% "PLUGIN_CUSTOMSKIP" | string %] [% pluginCustomSkipVersion %])</div></td>
 		</tr>
 	[% END %]
 </form>

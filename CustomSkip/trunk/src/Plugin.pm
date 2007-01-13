@@ -41,6 +41,7 @@ my $filterTypes = undef;
 my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
+my $PLUGINVERSION = '1.1';
 
 my %filterPlugins = ();
 	
@@ -573,7 +574,7 @@ sub setMode {
 				
 			}elsif($item->{'id'} eq 'disable' && defined($key)) {
 				$currentFilter{$key} = undef;
-				$client->prefDelete('plugin_customskip_filter');
+				$client->prefSet('plugin_customskip_filter',0);
 				$client->showBriefly(
 					$client->string( 'PLUGIN_CUSTOMSKIP'),
 					$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
@@ -601,7 +602,7 @@ sub setMode {
 						$key = "SyncGroup".$client->syncgroupid;
 					}
 					$currentFilter{$key} = undef;
-					$client->prefDelete('plugin_customskip_filter');
+					$client->prefSet('plugin_customskip_filter',0);
 					$client->showBriefly(
 						$client->string( 'PLUGIN_CUSTOMSKIP'),
 						$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
@@ -1369,6 +1370,17 @@ sub initPlugin {
 
 	initFilterTypes();
 	initFilters();
+	if(scalar(keys %$filters)==0) {
+		my $url = Slim::Utils::Prefs::get('plugin_customskip_directory');
+		if(-e $url) {
+			my %filter = (
+				'id' => 'defaultfilterset.cs.xml',
+				'name' => 'Default Filter Set'
+			);
+			saveFilter(catfile($url, "defaultfilterset.cs.xml"),\%filter);
+			initFilters();
+		}
+	}
 	my %mixerMap = ();
 	if(Slim::Utils::Prefs::get("plugin_customskip_web_show_mixerlinks")) {
 #		$mixerMap{'mixerlink'} = \&mixerlink;
@@ -1488,6 +1500,14 @@ sub getCurrentFilter {
 			if(defined($filter) && defined($filters->{$filter})) {
 				$currentFilter{$key} = $filter;
 				return $filters->{$filter};
+			}else {
+				if(scalar(keys %$filters)==1 && defined($filters->{'defaultfilterset.cs.xml'})) {
+					my $filteritems = $filters->{'defaultfilterset.cs.xml'}->{'filter'};
+					if(!defined($filteritems) || scalar(@$filteritems)==0) {
+						$currentFilter{$key} = 'defaultfilterset.cs.xml';
+						$client->prefSet('plugin_customskip_filter','defaultfilterset.cs.xml');
+					}
+				}
 			}
 		}	
 	}
@@ -1507,6 +1527,8 @@ sub handleWebList {
 		$params->{'pluginCustomSkipSlimserver65'} = 1;
 	}
 	
+	$params->{'pluginCustomSkipVersion'} = $PLUGINVERSION;
+
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
 
@@ -1533,7 +1555,7 @@ sub handleWebDisableFilter {
 			$key = "SyncGroup".$client->syncgroupid;
 		}
 		$currentFilter{$key} = undef;
-		$client->prefDelete('plugin_customskip_filter');
+		$client->prefSet('plugin_customskip_filter',0);
 	}
 	return handleWebList($client,$params);
 }
@@ -1563,6 +1585,10 @@ sub handleWebSaveNewFilter {
 		$params->{'pluginCustomSkipError'} = 'No custom skip directory configured';
 	}
 	my $file = unescape($params->{'file'});
+	if(defined($file) && $file ne '' && !($file =~ /^.*\..*$/)) {
+		$file .=".cs.xml";
+		$params->{'file'} = $params->{'file'}.".cs.xml";
+	}
 	my $url = catfile($browseDir, $file);
 	
 	if(!defined($params->{'pluginCustomSkipError'}) && -e $url) {
@@ -2583,9 +2609,6 @@ CUSTOMSKIP
 PLUGIN_CUSTOMSKIP
 	EN	Custom Skip
 
-PLUGIN_CUSTOMSKIP_CHOOSE_BELOW
-	EN	Choose a filter:
-
 PLUGIN_CUSTOMSKIP_SETUP_GROUP
 	EN	Custom Skip
 
@@ -2611,31 +2634,31 @@ SETUP_PLUGIN_CUSTOMSKIP_DIRECTORY
 	EN	Filter directory
 
 PLUGIN_CUSTOMSKIP_CHOOSE_BELOW
-	EN	Choose a filter for skipping music:
+	EN	Choose a filter set for skipping music:
 
 PLUGIN_CUSTOMSKIP_NEW_FILTER
-	EN	Create new filter
+	EN	Create new filter set
 
 PLUGIN_CUSTOMSKIP_NEW_FILTER_TITLE
-	EN	Enter attributes for new filter
+	EN	Enter attributes for new filter set
 
 PLUGIN_CUSTOMSKIP_EDIT_FILTER_NAME
-	EN	Filter Name
+	EN	Filter Set Name
 
 PLUGIN_CUSTOMSKIP_EDIT_FILTER_FILE_NAME
 	EN	File name
 
 PLUGIN_CUSTOMSKIP_NEW_FILTER_TYPES_TITLE
-	EN	Select type of new filter item
+	EN	Select type of filter item to add to filter set
 
 PLUGIN_CUSTOMSKIP_EDIT_FILTER_PARAMETERS_TITLE
-	EN	Enter filter parameters
+	EN	Enter filter item parameters
 
 PLUGIN_CUSTOMSKIP_DELETE_FILTER
 	EN	Delete
 
 PLUGIN_CUSTOMSKIP_DELETE_FILTER_QUESTION
-	EN	Are you sure you want to delete this filter ?
+	EN	Are you sure you want to delete this filter set ?
 
 PLUGIN_CUSTOMSKIP_EDIT_FILTER
 	EN	Edit
@@ -2656,7 +2679,7 @@ PLUGIN_CUSTOMSKIP_EDIT_FILTERITEM
 	EN	Edit
 
 PLUGIN_CUSTOMSKIP_ACTIVE
-	EN	Active filter
+	EN	Active filter set
 
 PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER
 	EN	Activating 
@@ -2683,13 +2706,16 @@ PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE
 	EN	Select type of skip filter
 
 PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS
-	EN	Added to filter
+	EN	Updated filter set
 
 PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE
-	EN	Failed to add filter
+	EN	Update failed
 
 PLUGIN_CUSTOMSKIP_SELECT_MIX_ITEM
 	EN	Select item to filter on
+
+PLUGIN_CUSTOMSKIP_SELECT_FILTER_SET
+	EN	Select this filter set for skipping music
 EOF
 
 }
