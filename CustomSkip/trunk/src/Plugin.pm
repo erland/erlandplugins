@@ -203,7 +203,7 @@ sub getCustomSkipFilterTypes {
 				'id' => 'year',
 				'type' => 'sqlsinglelist',
 				'name' => 'Max year to skip',
-				'data' => 'select year,year,year from tracks group by year order by year desc' 
+				'data' => 'select year,year,year from tracks where year is not null and year!=0 group by year order by year desc' 
 			}
 		]
 	);
@@ -218,7 +218,7 @@ sub getCustomSkipFilterTypes {
 				'id' => 'year',
 				'type' => 'sqlsinglelist',
 				'name' => 'Min year to skip',
-				'data' => 'select year,year,year from tracks group by year order by year desc' 
+				'data' => 'select year,year,year from tracks where year is not null and year!=0 group by year order by year desc' 
 			}
 		]
 	);
@@ -380,6 +380,28 @@ sub checkCustomSkipFilterType {
 				my $length = $lengths->[0] if(defined($lengths) && scalar(@$lengths)>0);
 				
 				if($track->durationSeconds>=$length) {
+					return 1;
+				}
+			}
+		}
+	}elsif($filter->{'id'} eq 'maxyear') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'year') {
+				my $years = $parameter->{'value'};
+				my $year = $years->[0] if(defined($years) && scalar(@$years)>0);
+				
+				if(defined($track->year) && $track->year!=0 && $track->year<=$year) {
+					return 1;
+				}
+			}
+		}
+	}elsif($filter->{'id'} eq 'minyear') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'year') {
+				my $years = $parameter->{'value'};
+				my $year = $years->[0] if(defined($years) && scalar(@$years)>0);
+				
+				if(defined($track->year) && $track->year!=0 && $track->year>=$year) {
 					return 1;
 				}
 			}
