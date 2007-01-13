@@ -341,6 +341,52 @@ sub init {
 	refreshTracks();
 }
 
+sub getLastPlayedArtist {
+	my $artistId = shift;
+	my $ds = getCurrentDS();
+	
+	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,tracks.lastPlayed)) FROM tracks,track_statistics,contributor_track where tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=?";
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare( $sql );
+	my $result = undef;
+	eval {
+		$sth->bind_param(1, $artistId , SQL_INTEGER);
+		$sth->execute();
+
+		$sth->bind_columns( undef, \$result);
+		$sth->fetch();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+
+	$sth->finish();
+	return $result;
+}
+
+sub getLastPlayedAlbum {
+	my $albumId = shift;
+	my $ds = getCurrentDS();
+	
+	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,tracks.lastPlayed)) FROM tracks,track_statistics where tracks.url=track_statistics.url and tracks.album=?";
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare( $sql );
+	my $result = undef;
+	eval {
+		$sth->bind_param(1, $albumId , SQL_INTEGER);
+		$sth->execute();
+
+		$sth->bind_columns( undef, \$result);
+		$sth->fetch();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n";
+	}
+
+	$sth->finish();
+	return $result;
+}
+
 sub findTrack {
 	my $track_url = shift;
 	my $mbId      = shift;

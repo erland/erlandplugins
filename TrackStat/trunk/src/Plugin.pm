@@ -1978,6 +1978,51 @@ sub getCustomSkipFilterTypes {
 		'description' => 'Skip tracks without a rating'
 	);
 	push @result, \%notrated;
+	my %recentlyplayedtracks = (
+		'id' => 'trackstat_recentlyplayedtrack',
+		'name' => 'Recently played songs',
+		'description' => 'Skip songs that have been recently played',
+		'parameters' => [
+			{
+				'id' => 'time',
+				'type' => 'singlelist',
+				'name' => 'Time between',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'value' => 3600 
+			}
+		]
+	);
+	push @result, \%recentlyplayedtracks;
+	my %recentlyplayedalbums = (
+		'id' => 'trackstat_recentlyplayedalbum',
+		'name' => 'Recently played albums',
+		'description' => 'Skip songs from albums that have been recently played',
+		'parameters' => [
+			{
+				'id' => 'time',
+				'type' => 'singlelist',
+				'name' => 'Time between',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'value' => 600 
+			}
+		]
+	);
+	push @result, \%recentlyplayedalbums;
+	my %recentlyplayedartists = (
+		'id' => 'trackstat_recentlyplayedartist',
+		'name' => 'Recently played artists',
+		'description' => 'Skip songs by artists that have been recently played',
+		'parameters' => [
+			{
+				'id' => 'time',
+				'type' => 'singlelist',
+				'name' => 'Time between',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'value' => 600 
+			}
+		]
+	);
+	push @result, \%recentlyplayedartists;
 	return \@result;
 }
 
@@ -1986,6 +2031,7 @@ sub checkCustomSkipFilterType {
 	my $filter = shift;
 	my $track = shift;
 
+	my $currentTime = time();
 	my $parameters = $filter->{'parameter'};
 	if($filter->{'id'} eq 'trackstat_rated') {
 		for my $parameter (@$parameters) {
@@ -1997,12 +2043,66 @@ sub checkCustomSkipFilterType {
 				if(defined($trackHandle) && defined($trackHandle->rating) && $trackHandle->rating<=$rating) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'trackstat_notrated') {
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
 		if(defined($trackHandle) && defined($trackHandle->rating)) {
 			return 1;
+		}
+	}elsif($filter->{'id'} eq 'trackstat_recentlyplayedtrack') {
+		my $matching = 0;
+		my $time = undef;
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'time') {
+				my $times = $parameter->{'value'};
+				my $time = $times->[0] if(defined($times) && scalar(@$times)>0);
+
+				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+				if(defined($trackHandle) && $trackHandle->lastPlayed) {
+					if($currentTime - $trackHandle->lastPlayed < $time) {
+						return 1;
+					}
+				}
+			}
+		}
+	}elsif($filter->{'id'} eq 'trackstat_recentlyplayedartist') {
+		my $matching = 0;
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'time') {
+				my $times = $parameter->{'value'};
+				my $time = $times->[0] if(defined($times) && scalar(@$times)>0);
+
+				my $artist = $track->artist();
+				if(defined($artist)) {
+					my $lastPlayed = Plugins::TrackStat::Storage::getLastPlayedArtist($artist->id);
+					if(defined($lastPlayed)) {
+						if($currentTime - $lastPlayed < $time) {
+							return 1;
+						}
+					}
+				}
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'trackstat_recentlyplayedalbum') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'time') {
+				my $times = $parameter->{'value'};
+				my $time = $times->[0] if(defined($times) && scalar(@$times)>0);
+
+				my $album = $track->album();
+				if(defined($album)) {
+					my $lastPlayed = Plugins::TrackStat::Storage::getLastPlayedArtist($album->id);
+					if(defined($lastPlayed)) {
+						if($currentTime - $lastPlayed < $time) {
+							return 1;
+						}
+					}
+				}
+				last;
+			}
 		}
 	}
 	return 0;
