@@ -1863,7 +1863,7 @@ sub saveFilter {
 		return 'Filename must end with .cs.xml';
 	}
 	my $data = "";
-	$data .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<customskip>\n\t<name>".$filter->{'name'}."</name>\n";
+	$data .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<customskip>\n\t<name>".encode_entities($filter->{'name'},"&<>\'\"")."</name>\n";
 	my $filterItems = $filter->{'filter'};
 	for my $filterItem (@$filterItems) {
 		$data .= "\t<filter>\n\t\t<id>".$filterItem->{'id'}."</id>\n";
