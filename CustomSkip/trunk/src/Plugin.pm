@@ -32,6 +32,7 @@ use File::Slurp;
 use XML::Simple;
 use Data::Dumper;
 use HTML::Entities;
+use Plugins::CustomSkip::Template::Reader;
 
 
 my $driver;
@@ -192,6 +193,36 @@ sub getCustomSkipFilterTypes {
 		]
 	);
 	push @result, \%notplaylist;
+	my %maxyear = (
+		'id' => 'maxyear',
+		'name' => 'Max Year',
+		'mixtype' => 'year',
+		'description' => 'Skip songs older or equal to selected year',
+		'parameters' => [
+			{
+				'id' => 'year',
+				'type' => 'sqlsinglelist',
+				'name' => 'Max year to skip',
+				'data' => 'select year,year,year from tracks group by year order by year desc' 
+			}
+		]
+	);
+	push @result, \%maxyear;
+	my %minyear = (
+		'id' => 'minyear',
+		'name' => 'Min Year',
+		'mixtype' => 'year',
+		'description' => 'Skip songs newer or equal to selected year',
+		'parameters' => [
+			{
+				'id' => 'year',
+				'type' => 'sqlsinglelist',
+				'name' => 'Min year to skip',
+				'data' => 'select year,year,year from tracks group by year order by year desc' 
+			}
+		]
+	);
+	push @result, \%minyear;
 	my %shortsongs = (
 		'id' => 'shortsongs',
 		'name' => 'Short songs',
@@ -356,6 +387,11 @@ sub checkCustomSkipFilterType {
 	}
 
 	return 0;
+}
+
+sub getCustomBrowseMixes {
+	my $client = shift;
+	return Plugins::CustomSkip::Template::Reader::getTemplates($client,'CustomSkip','Mixes','xml','mix');
 }
 
 sub getDynamicPlayListFilters {
@@ -1123,6 +1159,125 @@ sub getFilterItemsMenu {
 	return \%params;
 }
 
+sub trackMix {
+	my $client = shift;
+	my $item = shift;
+	my $addOnly = shift;
+	my $web = shift;
+
+	if(!$mixTypes) {
+		initFilterTypes();
+	}
+
+	if(ref($item) eq 'Slim::Schema::Track') {
+
+		my @listRef = ();
+		my $itemobj = objectForId('track',$item->id);
+		if($mixTypes->{'track'}) {
+			my %item = (
+				'id' => 'Song '.$itemobj->id,
+				'value' => 'Song '.$itemobj->id,
+				'name' => 'Song: '.$itemobj->title,
+				'item' => $itemobj
+			);
+			push @listRef,\%item;
+		}
+		if($mixTypes->{'album'}) {
+			my $album = $itemobj->album();
+			if(defined($album)) {
+				my %item = (
+					'id' => 'Album '.$album->id,
+					'value' => 'Album '.$album->id,
+					'name' => 'Album: '.$album->title,
+					'item' => $album
+				);
+				push @listRef,\%item;
+			}
+		}
+		if($mixTypes->{'artist'}) {
+			my @artists = $itemobj->contributors();
+			for my $artist (@artists) {
+				my %item = (
+					'id' => 'Artist '.$artist->id,
+					'value' => 'Artist '.$artist->id,
+					'name' => 'Artist: '.$artist->name,
+					'item' => $artist
+				);
+				push @listRef,\%item;
+			}
+		}
+		if($mixTypes->{'genre'}) {
+			my @genres = $itemobj->genres();
+			for my $genre (@genres) {
+				my %item = (
+					'id' => 'Genre '.$genre->id,
+					'value' => 'Genre '.$genre->id,
+					'name' => 'Genre: '.$genre->name,
+					'item' => $genre
+				);
+				push @listRef,\%item;
+			}
+		}
+		@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
+			# use INPUT.Choice to display the list of feeds
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP_SELECT_MIX_ITEM} {count}',
+			listRef    => \@listRef,
+			name       => \&getDisplayText,
+			overlayRef => \&getOverlay,
+			parentMode => 'PLUGIN.CustomSkipMix',
+			onPlay     => sub {
+				my ($client, $item) = @_;
+				debugMsg("Do nothing on play\n");
+			},
+			onAdd      => sub {
+				my ($client, $item) = @_;
+				debugMsg("Do nothing on add\n");
+			},
+			onRight    => sub {
+				my ($client, $item) = @_;
+				debugMsg("Do something on right for ".$item->{'item'}."\n");
+				my $blessed = blessed($item->{'item'});
+					if($blessed eq 'Slim::Schema::Track') {
+					my %p = (
+						'filtertype' => 'track',
+						'customskip_parameter_1' => $item->{'item'}->url,
+						'extrapopmode' => 1
+					);
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+					$client->update();
+					}elsif($blessed eq 'Slim::Schema::Album') {
+					my %p = (
+						'filtertype' => 'album',
+						'customskip_parameter_1' => $item->{'item'}->id,
+						'extrapopmode' => 1
+					);
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+					$client->update();
+					}elsif($blessed eq 'Slim::Schema::Contributor') {
+					my %p = (
+						'filtertype' => 'artist',
+						'customskip_parameter_1' => $item->{'item'}->id,
+						'extrapopmode' => 1
+					);
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+					$client->update();
+				}elsif($blessed eq 'Slim::Schema::Genre') {
+					my %p = (
+						'filtertype' => 'genre',
+						'customskip_parameter_1' => $item->{'item'}->id,
+						'extrapopmode' => 1
+					);
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+					$client->update();
+				}else {
+					$client->bumpRight();
+				}
+			},
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}
+}
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
@@ -1146,115 +1301,8 @@ sub mixerFunction {
 			$mixerType='album';
 		}
 		if($mixerType eq 'track') {
-			my @listRef = ();
-			my $itemobj = objectForId('track',$currentItem->id);
-			if($mixTypes->{'track'}) {
-				my %item = (
-					'id' => 'Song '.$itemobj->id,
-					'value' => 'Song '.$itemobj->id,
-					'name' => 'Song: '.$itemobj->title,
-					'item' => $itemobj
-				);
-				push @listRef,\%item;
-			}
-			if($mixTypes->{'album'}) {
-				my $album = $itemobj->album();
-				if(defined($album)) {
-					my %item = (
-						'id' => 'Album '.$album->id,
-						'value' => 'Album '.$album->id,
-						'name' => 'Album: '.$album->title,
-						'item' => $album
-					);
-					push @listRef,\%item;
-				}
-			}
-			if($mixTypes->{'artist'}) {
-				my @artists = $itemobj->contributors();
-				for my $artist (@artists) {
-					my %item = (
-						'id' => 'Artist '.$artist->id,
-						'value' => 'Artist '.$artist->id,
-						'name' => 'Artist: '.$artist->name,
-						'item' => $artist
-					);
-					push @listRef,\%item;
-				}
-			}
-			if($mixTypes->{'genre'}) {
-				my @genres = $itemobj->genres();
-				for my $genre (@genres) {
-					my %item = (
-						'id' => 'Genre '.$genre->id,
-						'value' => 'Genre '.$genre->id,
-						'name' => 'Genre: '.$genre->name,
-						'item' => $genre
-					);
-					push @listRef,\%item;
-				}
-			}
-			@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
-
-			# use INPUT.Choice to display the list of feeds
-			my %params = (
-				header     => '{PLUGIN_CUSTOMSKIP_SELECT_MIX_ITEM} {count}',
-				listRef    => \@listRef,
-				name       => \&getDisplayText,
-				overlayRef => \&getOverlay,
-				parentMode => 'PLUGIN.CustomSkipMix',
-				onPlay     => sub {
-					my ($client, $item) = @_;
-					debugMsg("Do nothing on play\n");
-				},
-				onAdd      => sub {
-					my ($client, $item) = @_;
-					debugMsg("Do nothing on add\n");
-				},
-				onRight    => sub {
-					my ($client, $item) = @_;
-					debugMsg("Do something on right for ".$item->{'item'}."\n");
-					my $blessed = blessed($item->{'item'});
-
-					if($blessed eq 'Slim::Schema::Track') {
-						my %p = (
-							'filtertype' => 'track',
-							'customskip_parameter_1' => $item->{'item'}->url,
-							'extrapopmode' => 1
-						);
-						Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
-						$client->update();
-
-					}elsif($blessed eq 'Slim::Schema::Album') {
-						my %p = (
-							'filtertype' => 'album',
-							'customskip_parameter_1' => $item->{'item'}->id,
-							'extrapopmode' => 1
-						);
-						Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
-						$client->update();
-
-					}elsif($blessed eq 'Slim::Schema::Contributor') {
-						my %p = (
-							'filtertype' => 'artist',
-							'customskip_parameter_1' => $item->{'item'}->id,
-							'extrapopmode' => 1
-						);
-						Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
-						$client->update();
-					}elsif($blessed eq 'Slim::Schema::Genre') {
-						my %p = (
-							'filtertype' => 'genre',
-							'customskip_parameter_1' => $item->{'item'}->id,
-							'extrapopmode' => 1
-						);
-						Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
-						$client->update();
-					}else {
-						$client->bumpRight();
-					}
-				},
-			);
-			Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+			customBrowseTrackMix($client,$currentItem);
+			return;
 		}elsif($mixTypes->{$mixerType}) { 
 			if($mixerType eq 'album') {
 				my $itemobj = objectForId('album',$currentItem->id);
