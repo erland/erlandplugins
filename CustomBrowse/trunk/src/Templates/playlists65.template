@@ -14,8 +14,12 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks 
+				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library %],multilibrary_track[% END %] 
 				where 
+					[%- IF library %]
+					playlist_track.track=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.content_type!='cpl' and 
 					tracks.id=playlist_track.playlist 
 				group by tracks.id 
@@ -27,8 +31,12 @@
 				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from tracks,playlist_track 
+					select tracks.id,tracks.title from tracks,playlist_track[% IF library %],multilibrary_track[% END %] 
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						playlist_track.track=tracks.id and 
 						playlist_track.playlist={playlist} 

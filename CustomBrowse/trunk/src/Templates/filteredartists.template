@@ -37,8 +37,12 @@
 					<keyword name="orderby" value="albums.titlesort asc"/>
 				</option>
 				<menudata>
-					select albums.id,albums.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+					select albums.id,albums.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -87,8 +91,12 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+						select tracks.id,tracks.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]
@@ -143,8 +151,12 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF variousartists %],albums[% END %][% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors[% IF variousartists %],albums[% END %][% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 				where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -211,8 +223,12 @@
                                         <keyword name="orderby" value="albums.titlesort asc"/>
                                 </option>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -262,8 +278,12 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]

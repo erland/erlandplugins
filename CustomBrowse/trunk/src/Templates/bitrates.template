@@ -11,8 +11,12 @@
 			<menuname>Artists</menuname>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id,tracks.title from tracks
+				select tracks.id,tracks.title from tracks[% IF library %],multilibrary_track[% END %]
 				where 
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.audio=1 and 
 					(
 						(
@@ -29,8 +33,12 @@
 			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
-				select case when lossless=1 then 'Lossless' else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks 
+				select case when lossless=1 then 'Lossless' else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library %],multilibrary_track[% END %] 
 				where 
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					audio=1 
 				group by calculatedbitrate
 				order by calculatedbitrate desc
@@ -41,8 +49,12 @@
 				<itemtype>artist</itemtype>
 				<playtype>sql</playtype>
 				<playdata>
-					select tracks.id,tracks.title from tracks,contributor_track
+					select tracks.id,tracks.title from tracks,contributor_track[% IF library %],multilibrary_track[% END %]
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						contributor_track.track=tracks.id and 
 						contributor_track.contributor={artist} and 
@@ -63,8 +75,12 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track[% IF library %],multilibrary_track[% END %]
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
@@ -90,8 +106,12 @@
 					<itemformat>album</itemformat>
 					<playtype>sql</playtype>
 					<playdata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums
+						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %]
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 
 							tracks.album={album} and 
@@ -124,8 +144,12 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_album,albums 
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_album,albums[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
 							tracks.album=contributor_album.album and 
@@ -153,8 +177,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,albums
+							select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %]
 							where 
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 

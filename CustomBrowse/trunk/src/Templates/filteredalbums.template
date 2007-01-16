@@ -22,8 +22,12 @@
                                 <name>Sort by artist</name>
                                 <menulinks>number</menulinks>
                                 <menudata>
-					select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+					select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -67,14 +71,18 @@
                         </option>
                         <menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+				select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 				where
 					tracks.id=contributor_track.track and
 					contributor_track.role in (1,5) and
 					contributor_track.contributor=contributors.id and
 				[% ELSE %]
-				select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+				select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 				[%- END %]
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -122,8 +130,12 @@
 				[%- END %]
                                 <menutype>sql</menutype>
                                 <menudata>
-					select tracks.id,tracks.title from tracks[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %]
+					select tracks.id,tracks.title from tracks[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]

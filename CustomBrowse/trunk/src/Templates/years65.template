@@ -13,7 +13,12 @@
 			<itemtype>year</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select years.id,case when years.id&gt;0 then years.id else 'Unknown' end from years 
+				select years.id,case when years.id&gt;0 then years.id else 'Unknown' end from years[% IF library %],multilibrary_year[% END %] 
+				[%- IF library %]
+				where
+					years.id=multilibrary_year.year and
+					multilibrary_year.library=[% library %]
+				[%- END %]
 				order by years.id desc
 			</menudata>
 			<menu>
@@ -33,8 +38,12 @@
 					<name>Sort by artist</name>
 					<menulinks>number</menulinks>
 					<menudata>
-						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks
+						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks[% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
 							contributor_track.role in (1,5) and
@@ -45,8 +54,12 @@
 					</menudata>
 				</option>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library %],multilibrary_track[% END %] 
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						albums.id=tracks.album and
 						tracks.year={year} 
 					group by albums.id
@@ -61,8 +74,12 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks 
+						select tracks.id,tracks.title from tracks[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							tracks.album={album} and 
 							tracks.year={year} 

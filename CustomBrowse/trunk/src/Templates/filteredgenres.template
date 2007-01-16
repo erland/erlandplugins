@@ -13,10 +13,14 @@
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			<menudata>
-				select genres.id,genres.name,substr(genres.namesort,1,1) from genres[% IF includedcomment or lossless %],tracks,genre_track[% END %][% IF includedcomment %],comments[% END %] 
+				select genres.id,genres.name,substr(genres.namesort,1,1) from genres[% IF includedcomment or lossless %],tracks,genre_track[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %] 
 				[%- IF excludedgenres or includedcomment or excludedcomment or lossless %]
 				where 
 				[%- END %]
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -84,8 +88,12 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %]
+						select albums.id,albums.title from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]
@@ -137,8 +145,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,albums,genre_track[% IF includedcomment %],comments[% END %]
+							select tracks.id,tracks.title from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
 								[%- END %]
@@ -196,8 +208,12 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF variousartists %],albums[% END %][% IF includedcomment %],comments[% END %]
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF variousartists %],albums[% END %][% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -268,8 +284,12 @@
 	                                        <keyword name="orderby" value="albums.titlesort asc"/>
 	                                </option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %]
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]
@@ -323,8 +343,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF includedcomment %],comments[% END %]
+							select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library %],multilibrary_track[% END %]
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
 								[%- END %]

@@ -13,8 +13,12 @@
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select contributors.id,contributors.name from contributors,tracks,contributor_track,albums 
+				select contributors.id,contributors.name from contributors,tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
 				where 
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
 					contributor_track.contributor=contributors.id and
@@ -31,8 +35,12 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from tracks,contributor_track,albums 
+					select albums.id,albums.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						albums.id=tracks.album and 
 						tracks.id=contributor_track.track and 
@@ -49,8 +57,12 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums 
+						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 
 							tracks.album={album} and 

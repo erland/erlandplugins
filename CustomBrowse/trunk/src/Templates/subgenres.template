@@ -13,10 +13,16 @@
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			<menudata>
-				select genres.id,genres.name,substr(genres.namesort,1,1) from genres 
-				[%- IF toplevelgenres %]
+				select genres.id,genres.name,substr(genres.namesort,1,1) from genres[% IF library %],multilibrary_genre[% END %] 
+				[%- IF toplevelgenres or library %]
 				where 
+					[%- IF library %]
+					genres.id=multilibrary_genre.genre and
+					multilibrary_genre.library=[% library %] [% IF toplevelgenres %]and[% END %]
+					[%- END %]
+					[%- IF toplevelgenres %]
 					genres.name in ([% toplevelgenres %])
+					[% END %]
 				[%- END %]
 				order by genres.namesort asc
 			</menudata>
@@ -27,8 +33,12 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks 
+					select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks[% IF library %],multilibrary_track[% END %] 
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.id = genre_track.track and
 						genres.id = genre_track.genre and
 						genres.id != {genre} and
@@ -46,8 +56,12 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks 
+						select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.id = genre_track.track and
 							genres.id = genre_track.genre and
 							genres.id != {genre} and
@@ -70,8 +84,12 @@
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks 
+							select genres.id,concat(genres.name,'/'),substr(genres.namesort,1,1) from genres,genre_track,tracks[% IF library %],multilibrary_track[% END %]
 							where 
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.id = genre_track.track and
 								genres.id = genre_track.genre and
 								genres.id != {genre} and
@@ -99,8 +117,12 @@
 						        <menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 					        	<menudata>
-								select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
+								select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF library %],multilibrary_track[% END %]
 								where
+									[%- IF library %]
+									tracks.id=multilibrary_track.track and
+									multilibrary_track.library=[% library %] and
+									[%- END %]
 									tracks.id=contributor_track.track and
 									contributor_track.contributor=contributors.id and
 									contributor_track.role in (1,5)
@@ -140,8 +162,12 @@
 				                                        <keyword name="orderby" value="albums.titlesort asc"/>
 				                                </option>
 								<menudata>
-									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track
+									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 									where
+										[%- IF library %]
+										tracks.id=multilibrary_track.track and
+										multilibrary_track.library=[% library %] and
+										[%- END %]
 										tracks.id=contributor_track.track and
 										contributor_track.role in (1,5) and
 										contributor_track.contributor={artist}
@@ -172,8 +198,12 @@
 									[%- END %]
 									<menutype>sql</menutype>
 									<menudata>
-										select tracks.id,tracks.title from tracks,contributor_track,genre_track
+										select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 										where
+											[%- IF library %]
+											tracks.id=multilibrary_track.track and
+											multilibrary_track.library=[% library %] and
+											[%- END %]
 											tracks.id=contributor_track.track and
 											contributor_track.role in (1,5) and
 											contributor_track.contributor={artist}
@@ -211,8 +241,12 @@
 					        <menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 				        	<menudata>
-							select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
+							select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF library %],multilibrary_track[% END %]
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.id=contributor_track.track and
 								contributor_track.contributor=contributors.id and
 								contributor_track.role in (1,5)
@@ -248,8 +282,12 @@
 			                                        <keyword name="orderby" value="albums.titlesort asc"/>
 			                                </option>
 							<menudata>
-								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track
+								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 								where
+									[%- IF library %]
+									tracks.id=multilibrary_track.track and
+									multilibrary_track.library=[% library %] and
+									[%- END %]
 									tracks.id=contributor_track.track and
 									contributor_track.role in (1,5) and
 									contributor_track.contributor={artist}
@@ -276,8 +314,12 @@
 								[%- END %]
 								<menutype>sql</menutype>
 								<menudata>
-									select tracks.id,tracks.title from tracks,contributor_track,genre_track
+									select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 									where
+										[%- IF library %]
+										tracks.id=multilibrary_track.track and
+										multilibrary_track.library=[% library %] and
+										[%- END %]
 										tracks.id=contributor_track.track and
 										contributor_track.role in (1,5) and
 										contributor_track.contributor={artist}
@@ -311,8 +353,12 @@
 				        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 			        	<menudata>
-						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
+						select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
 							contributor_track.role in (1,5)
@@ -344,8 +390,12 @@
 		                                        <keyword name="orderby" value="albums.titlesort asc"/>
 		                                </option>
 						<menudata>
-							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track
+							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.id=contributor_track.track and
 								contributor_track.role in (1,5) and
 								contributor_track.contributor={artist}
@@ -368,8 +418,12 @@
 							[%- END %]
 							<menutype>sql</menutype>
 							<menudata>
-								select tracks.id,tracks.title from tracks,contributor_track,genre_track
+								select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 								where
+									[%- IF library %]
+									tracks.id=multilibrary_track.track and
+									multilibrary_track.library=[% library %] and
+									[%- END %]
 									tracks.id=contributor_track.track and
 									contributor_track.role in (1,5) and
 									contributor_track.contributor={artist}
@@ -399,8 +453,12 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.id=contributor_track.track and
 						contributor_track.contributor=contributors.id and
 						contributor_track.role in (1,5)
@@ -428,8 +486,12 @@
 	                                        <keyword name="orderby" value="albums.titlesort asc"/>
 	                                </option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.role in (1,5) and
 							contributor_track.contributor={artist}
@@ -448,8 +510,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,genre_track
+							select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF library %],multilibrary_track[% END %]
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.id=contributor_track.track and
 								contributor_track.role in (1,5) and
 								contributor_track.contributor={artist}

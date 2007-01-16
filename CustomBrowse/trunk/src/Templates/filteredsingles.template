@@ -14,8 +14,12 @@
 			<menulinks>alpha</menulinks>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %]
+				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library %],multilibrary_track[% END %]
 				where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -40,7 +44,7 @@
 				order by rand()
                         </playdata>
 	        	<menudata>
-				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks
+				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks[% IF library %],multilibrary_track[% END %]
 				[%- IF singlecomment %]
 				,comments
 				[%- END %]
@@ -48,6 +52,10 @@
 				,genre_track,genres
 				[%- END %]
                                 where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -78,8 +86,12 @@
 				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %]
+					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library %],multilibrary_track[% END %]
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]

@@ -14,8 +14,12 @@
 			<menuname>Artists</menuname>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id, tracks.title from tracks,track_statistics
+				select tracks.id, tracks.title from tracks,track_statistics[% IF library %],multilibrary_track[% END %]
 				where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.url=track_statistics.url and
 					[%- IF tenscale %]
 					ifnull(track_statistics.rating,0)&gt;={rating}-5 and ifnull(track_statistics.rating,0)&lt;{rating}+5
@@ -27,16 +31,22 @@
 			<menutype>sql</menutype>
 			<menudata>
 				[%- IF tenscale %]
-				select ifnull(floor((rating+5)/10)*10,0),case when rating is null then 'Unrated' else concat(floor((rating+5)/10),' stars') end from track_statistics 
+				select ifnull(floor((track_statistics.rating+5)/10)*10,0),case when track_statistics.rating is null then 'Unrated' else concat(floor((track_statistics.rating+5)/10),' stars') end from track_statistics[% IF library %],tracks,multilibrary_track[% END %] 
 				[%- ELSE %]
-				select ifnull(floor((rating+10)/20)*20,0),case when rating is null then 'Unrated' else concat(floor((rating+10)/20),' stars') end from track_statistics 
+				select ifnull(floor((track_statistics.rating+10)/20)*20,0),case when track_statistics.rating is null then 'Unrated' else concat(floor((track_statistics.rating+10)/20),' stars') end from track_statistics[% IF library %],tracks,multilibrary_track[% END %] 
+				[%- END %]
+				[%- IF library %]
+				where
+					tracks.url=track_statistics.url and
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %]
 				[%- END %]
 				[%- IF tenscale %]
-				group by floor((rating+5)/10)*10 
+				group by floor((track_statistics.rating+5)/10)*10 
 				[%- ELSE %]
-				group by floor((rating+10)/20)*20 
+				group by floor((track_statistics.rating+10)/20)*20 
 				[%- END %]
-				order by rating desc
+				order by track_statistics.rating desc
 			</menudata>
 			<menu>
 				<id>artist</id>
@@ -44,8 +54,12 @@
 				<itemtype>artist</itemtype>
 				<playtype>sql</playtype>
 				<playdata>
-					select tracks.id,tracks.title from tracks,track_statistics,contributor_track
+					select tracks.id,tracks.title from tracks,track_statistics,contributor_track[% IF library %],multilibrary_track[% END %]
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.url = track_statistics.url and
 						tracks.id = contributor_track.track and
 						contributor_track.role in (1,5) and 
@@ -61,8 +75,12 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,track_statistics
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,track_statistics[% IF library %],multilibrary_track[% END %]
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
@@ -83,8 +101,12 @@
 					<itemformat>album</itemformat>
 					<playtype>sql</playtype>
 					<playdata>
-						select tracks.id,tracks.title from tracks,track_statistics,contributor_track
+						select tracks.id,tracks.title from tracks,track_statistics,contributor_track[% IF library %],multilibrary_track[% END %]
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.url = track_statistics.url and
 							tracks.id = contributor_track.track and
 							contributor_track.role in (1,5) and
@@ -101,8 +123,12 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,track_statistics 
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,track_statistics[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
 							tracks.id=contributor_track.track and 
@@ -125,8 +151,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,albums,track_statistics
+							select tracks.id,tracks.title from tracks,contributor_track,albums,track_statistics[% IF library %],multilibrary_track[% END %]
 							where 
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 
