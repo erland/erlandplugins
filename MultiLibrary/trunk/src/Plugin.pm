@@ -565,9 +565,7 @@ sub initPlugin {
 	initDatabase();
 	initLibraries();
 	if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup")) {
-		msg("MultiLibrary: Synchronizing libraries data, please wait...\n");
 		refreshLibraries();
-		msg("MultiLibrary: Synchronization finished\n");
 	}
 	if ( !$MULTILIBRARY_HOOK ) {
 		installHook();
@@ -619,6 +617,7 @@ sub rescanCallback($)
 }
 
 sub refreshLibraries {
+	msg("MultiLibrary: Synchronizing libraries data, please wait...\n");
 	eval {
 		my $dbh = getCurrentDBH();
 		my $libraryIds = '';
@@ -755,6 +754,7 @@ sub refreshLibraries {
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n$@\n";
 	}		
+	msg("MultiLibrary: Synchronization finished\n");
 }
 
 
@@ -1375,6 +1375,9 @@ sub handleWebSaveNewSimpleLibrary {
 	}else {
 		$params->{'donotrefresh'} = 1;
 		initLibraries($client);
+		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+			refreshLibraries();
+		}
 		return handleWebList($client,$params)
 	}
 }
@@ -1461,6 +1464,9 @@ sub handleWebSaveSimpleLibrary {
 		}else {
 			$params->{'donotrefresh'} = 1;
 			initLibraries($client);
+			if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+				refreshLibraries();
+			}
 			return handleWebList($client,$params)
 		}
 	}
@@ -1498,12 +1504,20 @@ sub getTemplate {
 	                        'utf8encode'    => \&Slim::Utils::Unicode::utf8encode,
 	                        'utf8on'        => \&Slim::Utils::Unicode::utf8on,
 	                        'utf8off'       => \&Slim::Utils::Unicode::utf8off,
+	                        'fileurl'       => \&templateFileURLFromPath,
 	                },
 	
 	                EVAL_PERL => 1,
 	        });
 	}
 	return $template;
+}
+
+sub templateFileURLFromPath {
+	my $path = shift;
+	$path = Slim::Utils::Misc::fileURLFromPath($path);
+	$path =~ s/%/%%/g;
+	return $path;
 }
 
 sub fillTemplate {
@@ -2257,8 +2271,8 @@ sub handleWebSaveLibrary {
 		}
 		$params->{'donotrefresh'} = 1;
 		initLibraries($client);
-		if($params->{'play'}) {
-			#handlePlayOrAdd($client, $library->{'id'});
+		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+			refreshLibraries();
 		}
 		return handleWebList($client,$params)
 	}
@@ -2303,6 +2317,9 @@ sub handleWebSaveNewLibrary {
 	}else {
 		$params->{'donotrefresh'} = 1;
 		initLibraries($client);
+		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+			refreshLibraries();
+		}
 		return handleWebList($client,$params)
 	}
 
@@ -2494,13 +2511,17 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_rescan', 1);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_refresh_save');
+	if (! defined $prefVal) {
+		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_save', 1);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_showmessages'],
+	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_showmessages'],
 	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2519,6 +2540,36 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_showmessages"); }
+		},		
+	plugin_multilibrary_refresh_rescan => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_rescan"); }
+		},		
+	plugin_multilibrary_refresh_startup => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup"); }
+		},		
+	plugin_multilibrary_refresh_save => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save"); }
 		},		
 	plugin_multilibrary_library_directory => {
 			'validate' => \&validateIsDirWrapper
@@ -2989,6 +3040,25 @@ PLUGIN_MULTILIBRARY_REFRESH_LIBRARIES
 
 PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY
 	EN	Activating
+
+PLUGIN_MULTILIBRARY_REFRESH_RESCAN
+	EN	Refresh libraries after rescan
+
+SETUP_PLUGIN_MULTILIBRARY_REFRESH_RESCAN
+	EN	Rescan refresh
+
+PLUGIN_MULTILIBRARY_REFRESH_STARTUP
+	EN	Refresh libraries at slimserver startup
+
+SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP
+	EN	Startup refresh
+
+PLUGIN_MULTILIBRARY_REFRESH_SAVE
+	EN	Refresh libraries after library has been save
+
+SETUP_PLUGIN_MULTILIBRARY_REFRESH_SAVE
+	EN	Refresh on save
+
 EOF
 
 }
