@@ -188,6 +188,7 @@ sub selectLibrary {
 	if(defined($key) && defined($libraryId) && defined($libraries->{$libraryId})) {
 		$currentLibrary{$key} = $libraryId;
 		$client->prefSet('plugin_multilibrary_activelibrary',$libraryId);
+		$client->prefSet('plugin_multilibrary_activelibraryno',$libraries->{$libraryId}->{'libraryno'});
 		if($showUser) {
 			$client->showBriefly(
 				$client->string( 'PLUGIN_MULTILIBRARY'),
@@ -1066,6 +1067,7 @@ sub getCurrentLibrary {
 						if(isLibraryEnabledForClient($client,$libraries->{$key})) {
 							$currentLibrary{$key} = $key;
 							$client->prefSet('plugin_multilibrary_activelibrary',$key);
+							$client->prefSet('plugin_multilibrary_activelibraryno',$libraries->{$key}->{'libraryno'});
 							return $libraries->{$key};
 						}
 					}
