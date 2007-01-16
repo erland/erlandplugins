@@ -336,6 +336,7 @@ A keyword will be replaced with the real value before its used.
 {custombrowse.audiodir} = The music directory
 {custombrowse.audiodirurl} = The url of the music directory
 {property.xxx} = The value of the xxx configuration parameter, slimserver.pref for exact name.
+{clientproperty.xxx} = The value of the xxx configuration parameter for the current player, slimserver.pref for exact name.
 {xxx} The value of the keyword with name xxx or the id of the selected item in the menu with id xxx
 
 Keywords can also be defined as a keyword element in the xml file, this is useful for example
