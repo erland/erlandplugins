@@ -254,6 +254,41 @@ sub initLibraries {
 
 }
 
+sub getCustomSkipFilterTypes {
+	my @result = ();
+	my %notactive = (
+		'id' => 'multilibrary_notactive',
+		'name' => 'Not Active Library',
+		'description' => 'Skip tracks which dont exist in currently active library'
+	);
+	push @result, \%notactive;
+	return \@result;
+}
+
+sub checkCustomSkipFilterType	 {
+	my $client = shift;
+	my $filter = shift;
+	my $track = shift;
+
+	if($filter->{'id'} eq 'multilibrary_notactive') {
+		my $dbh = getCurrentDBH();
+		my $library = getCurrentLibrary($client);
+		if(defined($library)) {
+			my $sth = $dbh->prepare("select track from multilibrary_track where library=? and track=?");
+			$sth->bind_param(1,$library->{'libraryno'},SQL_INTEGER);
+			$sth->bind_param(2,$track->id,SQL_INTEGER);
+			$sth->execute();
+			my $id = undef;
+			$sth->bind_col(1, \$id);
+			if(!$sth->fetch()) {
+				return 1;
+			}
+		}
+
+	}
+	return 0;
+}
+
 sub getCustomBrowseMenus {
 	my $client = shift;
 	my @result = ();
