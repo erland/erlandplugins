@@ -90,8 +90,7 @@
 	<input type="hidden" name="librarytemplate" value="[% pluginMultiLibraryEditLibraryTemplate %]">
 	[% IF pluginMultiLibraryEditLibraryType %]<input type="hidden" name="type" value="[% pluginMultiLibraryEditLibraryType %]">[% END %]
 	[% IF pluginMultiLibraryRedirect %]<input type="hidden" name="redirect" value="1">[% END %]
-	<input type="hidden" name="play" value="">
-	<tr><td colspan="3"><input type="submit" value="[% "PLUGIN_MULTILIBRARY_SAVE" | string %]">&nbsp;&nbsp;&nbsp;<input type="button" value="[% "PLUGIN_MULTILIBRARY_SAVEPLAY" | string %]" onclick='document.editForm.play.value = "1";document.editForm.submit();'></td></tr>
+	<tr><td colspan="3"><input type="submit" value="[% "PLUGIN_MULTILIBRARY_SAVE" | string %]"></td></tr>
 </form>
 </table>
 [% PROCESS pagefooter.html %]
