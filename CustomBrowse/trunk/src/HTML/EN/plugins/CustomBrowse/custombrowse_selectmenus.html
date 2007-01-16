@@ -20,13 +20,13 @@
 <form action="[% webroot %]plugins/CustomBrowse/custombrowse_saveselectmenus.html" name="editForm">
 	<table border="0">
 		<tr><td><b>[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS_BROWSE_TITLE" | string %]</b></td><td colspan="2"><b>[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE" | string %]</b></td></tr>
-		[%- FOREACH menu IN pluginCustomBrowseMenus.keys.sort %]
+		[%- FOREACH menu IN pluginCustomBrowseMenus %]
 			<tr>
-				[%- menuid = "menu_" _ pluginCustomBrowseMenus.$menu.id %]
-				[%- menubrowseid = "menubrowse_" _ pluginCustomBrowseMenus.$menu.id %]
-				<td><input type="checkbox" name="[% menubrowseid %]" id="[% menubrowseid %]" value="1" [% pluginCustomBrowseMenus.$menu.enabledbrowse ? "checked" : "" %] onclick="changeNumSelected(this)"></td>
-				<td><input type="checkbox" name="[% menuid %]" id="[% menuid %]" value="1" [% pluginCustomBrowseMenus.$menu.enabled ? "checked" : "" %] onclick="changeNumSelected(this)">
-				<label for="[% menuid %]">[% pluginCustomBrowseMenus.$menu.menuname | html %]</label></td><td>&nbsp;&nbsp;([% menu %])</td>
+				[%- menuid = "menu_" _ menu.id %]
+				[%- menubrowseid = "menubrowse_" _ menu.id %]
+				<td><input type="checkbox" name="[% menubrowseid %]" id="[% menubrowseid %]" value="1" [% menu.enabledbrowse ? "checked" : "" %] onclick="changeNumSelected(this)"></td>
+				<td><input type="checkbox" name="[% menuid %]" id="[% menuid %]" value="1" [% menu.enabled ? "checked" : "" %] onclick="changeNumSelected(this)">
+				<label for="[% menuid %]">[% menu.menuname | html %]</label></td><td>&nbsp;&nbsp;([% menu.id %])</td>
 			</tr>
 		[%- END %]
 	</table>

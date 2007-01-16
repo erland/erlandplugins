@@ -149,4 +149,9 @@
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
 </td></tr>
+[% IF pluginCustomBrowseError %]
+	<tr><td colspan="4">
+	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
+	</td></tr>
+[% END %]
 [% PROCESS pagefooter.html %]

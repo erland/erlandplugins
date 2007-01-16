@@ -40,7 +40,8 @@ my $browseMixes;
 my $template;
 my $mixer;
 my $soapLiteError = 0;
-my $PLUGINVERSION = '1.16';
+my $PLUGINVERSION = '1.17';
+my $sqlerrors = '';
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -1220,7 +1221,6 @@ sub getSQLMenuData {
 	my $ds = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
-	my $sqlerrors = "";
     	for my $sql (split(/[;]/,$sqlstatements)) {
     	eval {
 			$sql =~ s/^\s+//g;
@@ -1258,6 +1258,7 @@ sub getSQLMenuData {
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n$@\n";
+		    $sqlerrors .= "Running: $sql got error: <br>".$DBI::errstr;
 		}		
 	}
 	return \@result;
@@ -1269,7 +1270,6 @@ sub getSQLTemplateData {
 	my $ds = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
-	my $sqlerrors = "";
     	for my $sql (split(/[;]/,$sqlstatements)) {
     	eval {
 			$sql =~ s/^\s+//g;
@@ -1302,6 +1302,7 @@ sub getSQLTemplateData {
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n";
+		    $sqlerrors .= "Running: $sql got error: <br>".$DBI::errstr;
 		}		
 	}
 	return \@result;
@@ -2159,6 +2160,7 @@ sub addWebMenus {
 sub handleWebList {
         my ($client, $params) = @_;
 
+	$sqlerrors = '';
 	if(defined($params->{'refresh'})) {
 		readBrowseConfiguration($client);
 	}
@@ -2183,6 +2185,9 @@ sub handleWebList {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
+	if($sqlerrors && $sqlerrors ne '') {
+		$params->{'pluginCustomBrowseError'} = $sqlerrors;
+	}
 	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
@@ -2195,7 +2200,15 @@ sub handleWebEditMenus {
 
 	my @menus = ();
 	for my $key (keys %$browseMenusFlat) {
-		push @menus,$browseMenusFlat->{$key};
+		my %webmenu = ();
+		my $menu = $browseMenusFlat->{$key};
+		for my $key (keys %$menu) {
+			$webmenu{$key} = $menu->{$key};
+		} 
+		if(defined($webmenu{'menuname'}) && defined($webmenu{'menugroup'})) {
+			$webmenu{'menuname'} = $webmenu{'menugroup'}.'/'.$webmenu{'menuname'};
+		}
+		push @menus,\%webmenu;
 	}
 	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
 	
@@ -2230,7 +2243,7 @@ sub handleWebEditMenu {
 
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenu.html', $params);
 		}else {
-			my $templateData = loadTemplateValues($params->{'menu'});
+			my $templateData = loadTemplateValues($client,$params->{'menu'});
 
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
@@ -2254,8 +2267,14 @@ sub handleWebEditMenu {
 						my @parametersToSelect = ();
 						for my $p (@$parameters) {
 							if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-								addValuesToTemplateParameter($p,$currentParameterValues{$p->{'id'}});
-								push @parametersToSelect,$p;
+								my $useParameter = 1;
+								if(defined($p->{'requireplugins'})) {
+									$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+								}
+								if($useParameter) {
+									addValuesToTemplateParameter($p,$currentParameterValues{$p->{'id'}});
+									push @parametersToSelect,$p;
+								}
 							}
 						}
 						$params->{'pluginCustomBrowseEditMenuParameters'} = \@parametersToSelect;
@@ -2272,13 +2291,32 @@ sub handleWebEditMenu {
 }
 
 sub loadTemplateValues {
+	my $client = shift;
 	my $menu = shift;
 	my $templateData = undef;
-	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
-	if (!defined $browseDir || !-d $browseDir) {
-		debugMsg("Skipping custom browse configuration - directory is undefined\n");
-	}else {
-		$templateData = loadTemplateData($browseDir,$menu.".cb.values.xml");
+
+	my $menuItem = $browseMenusFlat->{$menu};
+	if(defined($menuItem->{'custombrowse_plugin'})) {
+		my $content  = getPluginMenuData($client,$menuItem);
+		if ( $content ) {
+			$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+			my $xml = eval { XMLin($content, forcearray => ["parameter","value"], keyattr => []) };
+			#debugMsg(Dumper($valuesXml));
+			if ($@) {
+				errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
+			}else {
+				$templateData = $xml->{'template'};
+			}
+		}
+	}
+
+	if(!defined($templateData)) {
+		my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+		if (!defined $browseDir || !-d $browseDir) {
+			debugMsg("Skipping custom browse configuration - directory is undefined\n");
+		}else {
+			$templateData = loadTemplateData($browseDir,$menu.".cb.values.xml");
+		}
 	}
 	if(!defined($templateData)) {
 		my @pluginDirs = ();
@@ -2413,23 +2451,20 @@ sub handleWebNewMenuParameters {
 		my @parametersToSelect = ();
 		for my $p (@$parameters) {
 			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-				addValuesToTemplateParameter($p);
-				push @parametersToSelect,$p;
+				my $useParameter = 1;
+				if(defined($p->{'requireplugins'})) {
+					$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+				}
+				if($useParameter) {
+					addValuesToTemplateParameter($p);
+					push @parametersToSelect,$p;
+				}
 			}
 		}
 		$params->{'pluginCustomBrowseNewMenuParameters'} = \@parametersToSelect;
 	}
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_newmenuparameters.html', $params);
 }
-
-
-
-
-
-
-
-
-
 
 
 sub handleWebLogin {
@@ -2514,7 +2549,7 @@ sub handleWebPublishMenuParameters {
 	my $menuId = $params->{'menu'};
 	if(defined($params->{'menu'}) && defined($browseMenusFlat->{$menuId})) {
 		if(defined($browseMenusFlat->{$menuId}->{'simple'})) {
-			my $templateData = loadTemplateValues($menuId);
+			my $templateData = loadTemplateValues($client,$menuId);
 			$menuId =~ s/^published_//;
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
@@ -2595,7 +2630,7 @@ sub handleWebPublishMenu {
 			$params->{'menuuniqueid'} = 'published_'.$params->{'menuuniqueid'};
 		}
 		if(defined($browseMenusFlat->{$menuId}->{'simple'})) {
-			my $templateData = loadTemplateValues($menuId);
+			my $templateData = loadTemplateValues($client,$menuId);
 			if(defined($templateData)) {
 				my $templates = readTemplateConfiguration($client);
 				my $template = $templates->{$templateData->{'id'}};
@@ -2927,20 +2962,20 @@ sub downloadMenu {
 	}
 }
 
-
-
-
-
-
-
-
-
 sub addValuesToTemplateParameter {
 	my $p = shift;
 	my $currentValues = shift;
 
 	if($p->{'type'} =~ '^sql.*') {
 		my $listValues = getSQLTemplateData($p->{'data'});
+		if($p->{'type'} =~ /.*optional.*/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @$listValues,\%empty;
+		}
 		if(defined($currentValues)) {
 			for my $v (@$listValues) {
 				if($currentValues->{$v->{'value'}}) {
@@ -2964,6 +2999,14 @@ sub addValuesToTemplateParameter {
 				$listValue{'value'} = @idName->[0];
 			}
 			push @listValues, \%listValue;
+		}
+		if($p->{'type'} =~ /.*optional.*list$/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @listValues,\%empty;
 		}
 		if(defined($currentValues)) {
 			for my $v (@listValues) {
@@ -3074,9 +3117,9 @@ sub getXMLValueOfTemplateParameter {
 			if($selectedValue eq $item->{'id'}) {
 				$result = $result.'<value>';
 				if($parameter->{'quotevalue'}) {
-					$result = encode_entities($item->{'value'});
+					$result = $result.encode_entities($item->{'value'});
 				}else {
-					$result = encode_entities($item->{'value'});
+					$result = $result.encode_entities($item->{'value'});
 				}
 				$result = $result.'</value>';
 				last;
@@ -3119,9 +3162,15 @@ sub handleWebNewMenu {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getValueOfTemplateParameter($params,$p);
-					$templateParameters{$p->{'id'}} = $value;
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+					}
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getValueOfTemplateParameter($params,$p);
+						$templateParameters{$p->{'id'}} = $value;
+					}
 				}
 			}
 		}
@@ -3190,9 +3239,15 @@ sub handleWebSaveSimpleMenu {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getValueOfTemplateParameter($params,$p);
-					$templateParameters{$p->{'id'}} = $value;
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+					}
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getValueOfTemplateParameter($params,$p);
+						$templateParameters{$p->{'id'}} = $value;
+					}
 				}
 			}
 		}
@@ -3448,14 +3503,20 @@ sub saveSimpleMenu {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getXMLValueOfTemplateParameter($params,$p);
-					if($p->{'quotevalue'}) {
-						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
-					}else {
-						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
 					}
-					$data .= $value.'</parameter>';
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getXMLValueOfTemplateParameter($params,$p);
+						if($p->{'quotevalue'}) {
+							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
+						}else {
+							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
+						}
+						$data .= $value.'</parameter>';
+					}
 				}
 			}
 		}
@@ -3754,7 +3815,21 @@ sub handleWebSelectMenus {
 
 	readBrowseConfiguration($client);
         # Pass on the current pref values and now playing info
-        $params->{'pluginCustomBrowseMenus'} = $browseMenusFlat;
+	my @menus = ();
+	for my $key (keys %$browseMenusFlat) {
+		my %webmenu = ();
+		my $menu = $browseMenusFlat->{$key};
+		for my $key (keys %$menu) {
+			$webmenu{$key} = $menu->{$key};
+		} 
+		if(defined($webmenu{'menuname'}) && defined($webmenu{'menugroup'})) {
+			$webmenu{'menuname'} = $webmenu{'menugroup'}.'/'.$webmenu{'menuname'};
+		}
+		push @menus,\%webmenu;
+	}
+	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
+
+        $params->{'pluginCustomBrowseMenus'} = \@menus;
         $params->{'pluginCustomBrowseMixes'} = $browseMixes;
 
 	if ($::VERSION ge '6.5') {
@@ -4029,6 +4104,21 @@ sub parseMenuContent {
 	return $errorMsg;
 }
 
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			if ($::VERSION ge '6.5') {
+				$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+			}else {
+				$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
+			}
+		}
+	}
+	return $enabledPlugin;
+}
 sub parseMenuTemplateContent {
 	my $client = shift;
 	my $item = shift;
@@ -4086,6 +4176,11 @@ sub parseMenuTemplateContent {
 							}
 							debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
 							$templateParameters{$p->{'id'}} = $value;
+						}
+						if(defined($p->{'requireplugins'})) {
+							if(!isPluginsInstalled($client,$p->{'requireplugins'})) {
+								$templateParameters{$p->{'id'}} = undef;
+							}
 						}
 					}
 				}
@@ -4365,6 +4460,7 @@ sub readBrowseConfiguration {
     }
     my $templates = readTemplateConfiguration($client);
     readMixConfigurationFromPlugins($client,\%localBrowseMixes);
+    readBrowseConfigurationFromPlugins($client,\%localBrowseMenus,$templates);
     for my $plugindir (@pluginDirs) {
 	if( -d catdir($plugindir,"CustomBrowse","Menus")) {
 		readBrowseConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus);
@@ -4500,6 +4596,7 @@ sub structureBrowseMenus {
 				}
 			}
 			push @$currentLevel,$menu;
+			sortMenu($currentLevel);
 		}else {
 			push @localMenuItemsArray,$menu
 		}
@@ -4673,6 +4770,55 @@ sub readMixConfigurationFromPlugins {
 	use strict 'refs';
 }
 
+sub readBrowseConfigurationFromPlugins {
+	my $client = shift;
+	my $localBrowseMenus = shift;
+	my $templates = shift;
+
+	no strict 'refs';
+	my @enabledplugins;
+	if ($::VERSION ge '6.5') {
+		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+	}else {
+		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+	}
+
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("Plugins::$plugin","getCustomBrowseMenus")) {
+			debugMsg("Getting menus for: $plugin\n");
+			my $items = eval { &{"Plugins::${plugin}::getCustomBrowseMenus"}($client) };
+			if ($@) {
+				debugMsg("Error getting menus from $plugin: $@\n");
+			}
+			for my $item (@$items) {
+				my $menu = $item->{'menu'};
+				my $menuId = $item->{'id'};
+				if($plugin =~ /^([^:]+)::.*$/) {
+					$menuId = lc($1)."_".$item->{'id'};
+				}
+				if($item->{'type'} eq 'simple') {
+					my $errorMsg = parseMenuTemplateContent($client,$menuId,$menu,$localBrowseMenus,1, $templates);
+					if($errorMsg) {
+	                			errorMsg("CustomBrowse: Unable to open plugin browse configuration: $plugin(".$item->{'id'}.")\n$errorMsg\n");
+					}else {
+						$localBrowseMenus->{$menuId}->{'custombrowse_plugin_menu'}=$item;
+						$localBrowseMenus->{$menuId}->{'custombrowse_plugin'} = "Plugins::${plugin}";
+					}
+				}else {
+					my $errorMsg = parseMenuContent($client,$menuId,$menu,$localBrowseMenus,1);
+					if($errorMsg) {
+		                		errorMsg("CustomBrowse: Unable to open plugin browse configuration: $plugin(".$item->{'id'}.")\n$errorMsg\n");
+					}else {
+						$localBrowseMenus->{$menuId}->{'custombrowse_plugin_menu'}=$item;
+						$localBrowseMenus->{$menuId}->{'custombrowse_plugin'} = "Plugins::${plugin}";
+					}
+				}
+			}
+		}
+	}
+	use strict 'refs';
+}
+
 sub loadMenuDataFromAnyDir {
 	my $file = shift;
 	my $data = undef;
@@ -4767,6 +4913,25 @@ sub getPluginTemplateData {
 	}
 	use strict 'refs';
 	return \$templateFileData;
+}
+
+sub getPluginMenuData {
+	my $client = shift;
+	my $menu = shift;
+
+	my $plugin = $menu->{'custombrowse_plugin'};
+	my $pluginMenu = $menu->{'custombrowse_plugin_menu'};
+	my $menuFileData = undef;
+	no strict 'refs';
+	if(UNIVERSAL::can("$plugin","getCustomBrowseMenuData")) {
+		debugMsg("Calling: $plugin :: getCustomBrowseMenuData\n");
+		$menuFileData =  eval { &{"${plugin}::getCustomBrowseMenuData"}($client,$pluginMenu) };
+		if ($@) {
+			debugMsg("Error retreiving menu data from $plugin: $@\n");
+		}
+	}
+	use strict 'refs';
+	return $menuFileData;
 }
 
 sub loadTemplateData {
