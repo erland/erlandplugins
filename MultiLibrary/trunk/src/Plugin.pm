@@ -68,6 +68,102 @@ sub getLibrary {
 	return $libraries->{$type};
 }
 
+sub getDisplayText {
+	my ($client, $item) = @_;
+
+	my $name = '';
+	if($item) {
+		$name = $item->{'libraryname'};
+		my $library = getCurrentLibrary($client);
+		if(defined($library) && $library->{'id'} eq $item->{'id'}) {
+			$name .= " (active)";
+		}
+
+	}
+	return $name;
+}
+
+
+# Returns the overlay to be display next to items in the menu
+sub getOverlay {
+	my ($client, $item) = @_;
+	my $library = getCurrentLibrary($client);
+	my $itemId = $item->{'id'};
+	if(defined($itemId) && defined($library) && $itemId eq $library->{'id'}) {
+		return [undef, undef];
+	}else {
+		return [undef, Slim::Display::Display::symbol('notesymbol')];
+	}
+}
+
+sub setMode {
+	my $client = shift;
+	my $method = shift;
+	
+	if ($method eq 'pop') {
+		Slim::Buttons::Common::popMode($client);
+		return;
+	}
+
+	my @listRef = ();
+	initLibraries();
+	for my $library (keys %$libraries) {
+		my %item = (
+			'id' => $library,
+			'value' => $library,
+			'libraryname' => $libraries->{$library}->{'name'}
+		);
+		push @listRef, \%item;
+	}
+
+	# use INPUT.Choice to display the list of feeds
+	my %params = (
+		header     => '{PLUGIN_MULTILIBRARY} {count}',
+		listRef    => \@listRef,
+		name       => \&getDisplayText,
+		overlayRef => \&getOverlay,
+		modeName   => 'PLUGIN.MultiLibrary',
+		parentMode => 'PLUGIN.MultiLibrary',
+		onPlay     => sub {
+			my ($client, $item) = @_;
+			selectLibrary($client,$item->{'id'},1);
+		},
+		onAdd      => sub {
+			my ($client, $item) = @_;
+			debugMsg("Do nothing on add\n");
+		},
+		onRight    => sub {
+			my ($client, $item) = @_;
+			selectLibrary($client,$item->{'id'},1);
+		},
+	);
+	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+}
+
+sub selectLibrary {
+	my $client = shift;
+	my $libraryId = shift;
+	my $showUser = shift;
+
+	my $key = undef;
+	if(defined($client)) {
+		$key = $client;
+		if(defined($client->syncgroupid)) {
+			$key = "SyncGroup".$client->syncgroupid;
+		}
+	}
+	if(defined($key) && defined($libraryId) && defined($libraries->{$libraryId})) {
+		$currentLibrary{$key} = $libraryId;
+		$client->prefSet('plugin_multilibrary_activelibrary',$libraryId);
+		if($showUser) {
+			$client->showBriefly(
+				$client->string( 'PLUGIN_MULTILIBRARY'),
+				$client->string( 'PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY').": ".$libraries->{$libraryId}->{'name'},
+				1);
+		}
+		
+	}
+}
 sub initLibraries {
 	my $client = shift;
 	my @pluginDirs = ();
@@ -935,14 +1031,7 @@ sub handleWebSelectLibrary {
 	my ($client, $params) = @_;
 	initLibraries($client);
 
-	if(defined($client) && defined($params->{'type'}) && defined($libraries->{$params->{'type'}})) {
-		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
-		$currentLibrary{$key} = $params->{'type'};
-		$client->prefSet('plugin_multilibrary_activelibrary',$params->{'type'});
-	}
+	selectLibrary($client,$params->{'type'});
 	return handleWebList($client,$params);
 }
 
@@ -2897,6 +2986,9 @@ PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY
 
 PLUGIN_MULTILIBRARY_REFRESH_LIBRARIES
 	EN	Refresh libraries
+
+PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY
+	EN	Activating
 EOF
 
 }
