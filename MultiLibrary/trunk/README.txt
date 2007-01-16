@@ -42,7 +42,6 @@ to define sub libraries within the main library.
 Sub libraries can be defined using:
 - Directory paths
 - Genres
-- Custom tags (Requires Custom Scan plugin)
 - Comment tags
 
 To use the sub libraries you will need the Custom Browse plugin, the standard slimserver menus
