@@ -195,7 +195,7 @@ sub getCustomSkipFilterTypes {
 	push @result, \%notplaylist;
 	my %maxyear = (
 		'id' => 'maxyear',
-		'name' => 'Max Year',
+		'name' => 'Less Than Year',
 		'mixtype' => 'year',
 		'description' => 'Skip songs older or equal to selected year',
 		'parameters' => [
@@ -210,7 +210,7 @@ sub getCustomSkipFilterTypes {
 	push @result, \%maxyear;
 	my %minyear = (
 		'id' => 'minyear',
-		'name' => 'Min Year',
+		'name' => 'Greater Than Year',
 		'mixtype' => 'year',
 		'description' => 'Skip songs newer or equal to selected year',
 		'parameters' => [
@@ -1511,7 +1511,15 @@ sub initPlugin {
 	}
 	debugMsg("CustomSkip: Registering hook.\n");
 	Slim::Control::Request::subscribe(\&newSongCallback, [['playlist'], ['newsong']]);
+	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
+
+sub lateInitPlugin {
+	initFilterTypes();
+	initFilters();
+	return 0;
+}
+
 sub title {
 	return 'CUSTOMSKIP';
 }
