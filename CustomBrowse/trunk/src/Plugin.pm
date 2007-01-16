@@ -116,7 +116,7 @@ sub getDisplayText {
 		$name = $item->{'menuname'};
             }
             if(defined($name) && $name =~ /{.*}/) {
-		$name = replaceParameters($name,$item->{'parameters'});
+		$name = replaceParameters($client,$name,$item->{'parameters'});
             }
 	}
 	return $name;
@@ -299,7 +299,7 @@ sub getMenuItems {
 			$menudata = $menu->{'menudata'};
 		    }
                     my $keywords = combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
-	            my $sql = prepareMenuSQL($menudata,$keywords);
+	            my $sql = prepareMenuSQL($client,$menudata,$keywords);
 	            my $menuData = getSQLMenuData($sql);
 	            for my $dataItem (@$menuData) {
 	                my %menuItem = (
@@ -356,9 +356,9 @@ sub getMenuItems {
 						my %hash = ();
 						$modeParameters{$1}=\%hash;
 					}
-					$modeParameters{$1}->{$2}=replaceParameters($value,$keywords);
+					$modeParameters{$1}->{$2}=replaceParameters($client,$value,$keywords);
 				}else {
-					$modeParameters{$name} = replaceParameters($value, $keywords);
+					$modeParameters{$name} = replaceParameters($client,$value, $keywords);
 				}
 			}
 		    }
@@ -370,7 +370,7 @@ sub getMenuItems {
 	        }elsif($menu->{'menutype'} eq 'folder') {
 	            my $dir = $menu->{'menudata'};
                     my $keywords = combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
-	            $dir = replaceParameters($dir,$keywords);
+	            $dir = replaceParameters($client,$dir,$keywords);
 	            $dir = Slim::Utils::Unicode::utf8off($dir);
 	            for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 			my $subdirname = $subdir;
@@ -568,7 +568,7 @@ sub getMenu {
 		$menuTitle = $item->{'menuname'};
 	}
 	if(defined($menuTitle) && $menuTitle =~ /{.*}/) {
-		$menuTitle = replaceParameters($menuTitle,$item->{'parameters'});
+		$menuTitle = replaceParameters($client,$menuTitle,$item->{'parameters'});
 	}
     }
 
@@ -672,7 +672,7 @@ sub checkMix {
 			$parameters->{'itemname'} = $item->{'itemname'};
 			my $keywords = combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 			
-			my $sql = prepareMenuSQL($mixcheckdata,$keywords);
+			my $sql = prepareMenuSQL($client,$mixcheckdata,$keywords);
 			my $sqlItems = getSQLMenuData($sql);
 			if($sqlItems && scalar(@$sqlItems)>0) {
 				return 1;
@@ -862,9 +862,9 @@ sub executeMix {
 						my %hash = ();
 						$modeParameters{$1}=\%hash;
 					}
-					$modeParameters{$1}->{$2}=replaceParameters($value,$keywords);
+					$modeParameters{$1}->{$2}=replaceParameters($client,$value,$keywords);
 				}else {
-					$modeParameters{$name} = replaceParameters($value,$keywords);
+					$modeParameters{$name} = replaceParameters($client,$value,$keywords);
 				}
 			}
 		}
@@ -880,7 +880,7 @@ sub executeMix {
 			push @keywordArray,$keywords;
 		}
 		for my $keyword (@keywordArray) {
-			$mixdata->{'parameters'}->{$keyword->{'name'}} = replaceParameters($keyword->{'value'},$parameters);
+			$mixdata->{'parameters'}->{$keyword->{'name'}} = replaceParameters($client,$keyword->{'value'},$parameters);
 		}
 		$mixdata->{'value'} = $mixer->{'id'};
 		if(!defined($mixdata->{'menu'}->{'id'})) {
@@ -1039,7 +1039,7 @@ sub playAddItem {
 	}elsif($item->{'playtype'} eq 'sql') {
 		if(defined($item->{'playdata'})) {
                     my $keywords = combineKeywords($item->{'keywordparameters'},undef,$item->{'parameters'});
-	            my $sql = prepareMenuSQL($item->{'playdata'},$keywords);
+	            my $sql = prepareMenuSQL($client,$item->{'playdata'},$keywords);
 	            my $sqlItems = getSQLMenuData($sql);
 		    foreach my $sqlItem (@$sqlItems) {
 			my %addItem = (
@@ -1168,16 +1168,18 @@ sub playAddItem {
 	}
 }
 sub prepareMenuSQL {
+    my $client = shift;
     my $sql = shift;
     my $parameters = shift;
     
     debugMsg("Preparing SQL: $sql\n");
-    $sql = replaceParameters($sql,$parameters);
+    $sql = replaceParameters($client,$sql,$parameters);
 
     return $sql;
 }
 
 sub replaceParameters {
+    my $client = shift;
     my $originalValue = shift;
     my $parameters = shift;
     my $dbh = getCurrentDBH();
@@ -1209,6 +1211,19 @@ sub replaceParameters {
 		$originalValue =~ s/\{property\.$1\}/$propertyValue/g;
 	}else {
 		$originalValue =~ s/\{property\..*?\}//g;
+	}
+    }
+    while($originalValue =~ m/\{clientproperty\.(.*?)\}/) {
+	my $propertyValue = undef;
+	if(defined($client)) {
+		$propertyValue = $client->prefGet($1);
+	}
+	if(defined($propertyValue)) {
+		$propertyValue = $dbh->quote($propertyValue);
+	    	$propertyValue = substr($propertyValue, 1, -1);
+		$originalValue =~ s/\{clientproperty\.$1\}/$propertyValue/g;
+	}else {
+		$originalValue =~ s/\{clientproperty\..*?\}//g;
 	}
     }
 
@@ -1609,7 +1624,7 @@ sub getPageItemsForContext {
 					if(defined($it->{'menu'}->{'menuurl'})) {
 						my $url = $it->{'menu'}->{'menuurl'};
 						my $keywords = combineKeywords($it->{'menu'}->{'keywordparameters'},undef,$params);
-						$url = replaceParameters($url,$keywords);
+						$url = replaceParameters($client,$url,$keywords);
 						$it->{'externalurl'}=$url;
 					}
 				}else {
@@ -1671,7 +1686,7 @@ sub getPageItemsForContext {
 						$parameters->{'itemid'} = $it->{'itemid'};
 						$parameters->{'itemname'} = $it->{'itemname'};
 						my $keywords = combineKeywords($it->{'keywordparameters'},$it->{'parameters'},$parameters);
-						$url = replaceParameters($url,$keywords);
+						$url = replaceParameters($client,$url,$keywords);
 						$webMix{'url'} = $url;
 					}
 					if($mix->{'mixtype'} ne 'menu') {
@@ -2064,7 +2079,7 @@ sub webPages {
 	if(defined($value)) {
 		if ($::VERSION ge '6.5') {
 			#readBrowseConfiguration();
-			addWebMenus($value);
+			addWebMenus(undef,$value);
 			my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
 			if($menuName) {
 				Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
@@ -2122,6 +2137,7 @@ sub delSlimserverPlayerMenus {
 }
 
 sub addWebMenus {
+	my $client = shift;
 	my $value = shift;
         for my $menu (keys %$browseMenus) {
             if(!defined($browseMenus->{$menu}->{'value'})) {
@@ -2142,7 +2158,7 @@ sub addWebMenus {
 			if(defined($browseMenus->{$menu}->{'menu'}->{'menuurl'})) {
 				$url = $browseMenus->{$menu}->{'menu'}->{'menuurl'};
 				my $keywords = combineKeywords($browseMenus->{$menu}->{'menu'}->{'keywordparameters'});
-				$url = replaceParameters($url,$keywords);
+				$url = replaceParameters($client,$url,$keywords);
 			}
 			debugMsg("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
@@ -2224,7 +2240,9 @@ sub handleWebEditMenus {
 sub handleWebEditMenu {
         my ($client, $params) = @_;
 
-	readBrowseConfiguration($client);
+	if(!defined($browseMenusFlat)) {
+		readBrowseConfiguration($client);
+	}
 	
         if ($::VERSION ge '6.5') {
 		$params->{'pluginCustomBrowseSlimserver65'} = 1;
@@ -2232,7 +2250,10 @@ sub handleWebEditMenu {
 	my $menuId = $params->{'menu'};
 	if(defined($params->{'menu'}) && defined($browseMenusFlat->{$menuId})) {
 		if(!defined($browseMenusFlat->{$menuId}->{'simple'})) {
-			my $data = loadMenuDataFromAnyDir($params->{'menu'}.".cb.xml");
+			my $data = loadMenuDataFromPlugin($client,$browseMenusFlat->{$menuId});
+			if(!defined($data)) {
+				$data = loadMenuDataFromAnyDir($params->{'menu'}.".cb.xml");
+			}
 
 			if($data) {
 				$data = encode_entities($data);
@@ -2669,7 +2690,10 @@ sub handleWebPublishMenu {
 			$templateXml .= '</custombrowse>'."\n";
  
                 
-			my $templateData = loadMenuDataFromAnyDir($menuId.'.cb.xml');
+			my $templateData = loadMenuDataFromPlugin($client,$browseMenusFlat->{$menuId});
+			if(!defined($templateData)) {
+				$templateData = loadMenuDataFromAnyDir($menuId.'.cb.xml');
+			}
 			$templateData =~ s/<menuname>.*?<\/menuname>/<menuname>[% menuname %]<\/menuname>/;
 			#$templateData  .= "-- PlaylistName:[% playlistname %]\n";
 			#$templateData  .= "-- PlaylistGroups:[% playlistgroups %]\n";
@@ -3703,7 +3727,7 @@ sub handleWebMix {
 				$parameters->{'itemid'} = $selecteditem->{'itemid'};
 				$parameters->{'itemname'} = $selecteditem->{'itemname'};
 				my $keywords = combineKeywords($selecteditem->{'keywordparameters'},$selecteditem->{'parameters'},$parameters);
-				$url = replaceParameters($url,$keywords);
+				$url = replaceParameters($client,$url,$keywords);
 				$webMix{'url'} = $url;
 			}
 			push @webMixes,\%webMix;
@@ -3933,7 +3957,7 @@ sub handleWebSaveSelectMenus {
                 $value = undef;
         }
 	if ($::VERSION ge '6.5') {
-		addWebMenus($value);
+		addWebMenus($client,$value);
 		delSlimserverWebMenus();
 		delSlimserverPlayerMenus();
 	}
@@ -4819,6 +4843,15 @@ sub readBrowseConfigurationFromPlugins {
 	use strict 'refs';
 }
 
+sub loadMenuDataFromPlugin {
+	my $client = shift;
+	my $menuItem = shift;
+	if(defined($menuItem->{'custombrowse_plugin'})) {
+		my $content  = getPluginMenuData($client,$menuItem);
+		return $content;
+	}
+	return undef;
+}
 sub loadMenuDataFromAnyDir {
 	my $file = shift;
 	my $data = undef;
