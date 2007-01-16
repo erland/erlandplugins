@@ -801,23 +801,27 @@ sub refreshLibraries {
 							$sth->execute();
 							$sth->finish();
 							
-							$sth = $dbh->prepare('INSERT INTO multilibrary_album (library,album) SELECT ?,tracks.album FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track group by tracks.album');
+							$sth = $dbh->prepare('INSERT INTO multilibrary_album (library,album) SELECT ?,tracks.album FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library=? group by tracks.album');
 							$sth->bind_param(1,$id,SQL_INTEGER);
+							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
 		
-							$sth = $dbh->prepare('INSERT INTO multilibrary_contributor (library,contributor) SELECT ?,contributor_track.contributor FROM tracks,contributor_track,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=contributor_track.track group by contributor_track.contributor');
+							$sth = $dbh->prepare('INSERT INTO multilibrary_contributor (library,contributor) SELECT ?,contributor_track.contributor FROM tracks,contributor_track,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=contributor_track.track and multilibrary_track.library=? group by contributor_track.contributor');
 							$sth->bind_param(1,$id,SQL_INTEGER);
+							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
 
-							$sth = $dbh->prepare('INSERT INTO multilibrary_year (library,year) SELECT ?,tracks.year FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track group by tracks.year');
+							$sth = $dbh->prepare('INSERT INTO multilibrary_year (library,year) SELECT ?,tracks.year FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library=? group by tracks.year');
 							$sth->bind_param(1,$id,SQL_INTEGER);
+							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
 
-							$sth = $dbh->prepare('INSERT INTO multilibrary_genre (library,genre) SELECT ?,genre_track.genre FROM tracks,genre_track,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=genre_track.track group by genre_track.genre');
+							$sth = $dbh->prepare('INSERT INTO multilibrary_genre (library,genre) SELECT ?,genre_track.genre FROM tracks,genre_track,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=genre_track.track and multilibrary_track.library=? group by genre_track.genre');
 							$sth->bind_param(1,$id,SQL_INTEGER);
+							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
 						}
