@@ -370,7 +370,6 @@ sub getCustomBrowseMenuData {
 					'libraryno' => $library->{'libraryno'},
 					'libraryname' => $library->{'name'}
 				);
-debugMsg("*** Got: ".$library->{'name'}."\n");
 				$content = replaceParameters($content,\%parameters);
 				return $content;
 			}
