@@ -96,6 +96,36 @@ sub getOverlay {
 	}
 }
 
+sub isLibraryEnabledForClient {
+	my $client = shift;
+	my $library = shift;
+	
+	if(defined($library->{'includedclients'})) {
+		if(defined($client)) {
+			my @clients = split(/,/,$library->{'includedclients'});
+			for my $clientName (@clients) {
+				if($client->name eq $clientName) {
+					return 1;
+				}
+			}
+		}
+		return 0;
+	}elsif(defined($library->{'excludedclients'})) {
+		if(defined($client)) {
+			my @clients = split(/,/,$library->{'excludedclients'});
+			for my $clientName (@clients) {
+				if($client->name eq $clientName) {
+					return 0;
+				}
+			}
+		}
+		return 1;
+	}else {
+		return 1;
+	}
+}
+
+
 sub setMode {
 	my $client = shift;
 	my $method = shift;
@@ -108,13 +138,16 @@ sub setMode {
 	my @listRef = ();
 	initLibraries();
 	for my $library (keys %$libraries) {
-		my %item = (
-			'id' => $library,
-			'value' => $library,
-			'libraryname' => $libraries->{$library}->{'name'}
-		);
-		push @listRef, \%item;
+		if(isLibraryEnabledForClient($client,$libraries->{$library})) {
+			my %item = (
+				'id' => $library,
+				'value' => $library,
+				'libraryname' => $libraries->{$library}->{'name'}
+			);
+			push @listRef, \%item;
+		}
 	}
+	@listRef = sort { $a->{'libraryname'} cmp $b->{'libraryname'} } @listRef;
 
 	# use INPUT.Choice to display the list of feeds
 	my %params = (
@@ -249,6 +282,16 @@ sub getCustomBrowseMenus {
 						'libraryno' => $library->{'libraryno'},
 						'libraryname' => $library->{'name'}
 					);
+					if(defined($library->{'includedclients'})) {
+						$parameters{'includedclients'} = '<value>'.$library->{'includedclients'}.'</value>';
+					}else {
+						$parameters{'includedclients'} = '';
+					}
+					if(defined($library->{'excludedclients'})) {
+						$parameters{'excludedclients'} = '<value>'.$library->{'excludedclients'}.'</value>';
+					}else {
+						$parameters{'excludedclients'} = '';
+					}
 					$content = replaceParameters($content,\%parameters);
 					my %templateItem = (
 						'id' => $libraryid.'_'.$templateId,
@@ -976,24 +1019,27 @@ sub getCurrentLibrary {
 		if(defined($client->syncgroupid)) {
 			$key = "SyncGroup".$client->syncgroupid;
 		}
-		if(defined($currentLibrary{$key})) {
+		if(defined($currentLibrary{$key}) && defined($libraries->{$currentLibrary{$key}}) && isLibraryEnabledForClient($client,$libraries->{$currentLibrary{$key}})) {
 			return $libraries->{$currentLibrary{$key}};
 		}else {
 			my $library = $client->prefGet('plugin_multilibrary_activelibrary');
-			if(defined($library) && defined($libraries->{$library})) {
+			if(defined($library) && defined($libraries->{$library}) && isLibraryEnabledForClient($client,$libraries->{$library})) {
 				$currentLibrary{$key} = $library;
 				return $libraries->{$library};
 			}else {
 				if(scalar(keys %$libraries)==1) {
 					for my $key (keys %$libraries) {
-						$currentLibrary{$key} = $key;
-						$client->prefSet('plugin_multilibrary_activelibrary',$key);
-						return $libraries->{$key};
+						if(isLibraryEnabledForClient($client,$libraries->{$key})) {
+							$currentLibrary{$key} = $key;
+							$client->prefSet('plugin_multilibrary_activelibrary',$key);
+							return $libraries->{$key};
+						}
 					}
 				}
 			}
 		}	
 	}
+	$client->prefDelete('plugin_multilibrary_activelibrary');
 	return undef;
 }
 
@@ -1007,7 +1053,21 @@ sub handleWebList {
 	}
 	my $library = getCurrentLibrary($client);
 	my $name = undef;
-	$params->{'pluginMultiLibraryLibraries'} = $libraries;
+	my @weblibraries = ();
+	for my $key (keys %$libraries) {
+		my %weblibrary = ();
+		my $lib = $libraries->{$key};
+		for my $attr (keys %$lib) {
+			$weblibrary{$attr} = $lib->{$attr};
+		}
+		if(!isLibraryEnabledForClient($client,\%weblibrary)) {
+			$weblibrary{'enabled'} = 0;
+		}
+		push @weblibraries,\%weblibrary;
+	}
+	@weblibraries = sort { $a->{'name'} cmp $b->{'name'} } @weblibraries;
+
+	$params->{'pluginMultiLibraryLibraries'} = \@weblibraries;
 	$params->{'pluginMultiLibraryActiveLibrary'} = $library;
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginMultiLibrarySlimserver65'} = 1;

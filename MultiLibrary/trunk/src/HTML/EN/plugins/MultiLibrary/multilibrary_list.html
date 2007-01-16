@@ -36,15 +36,19 @@
 			</tr>
 
 				[% odd = 1 %]
-				[% FOREACH type IN pluginMultiLibraryLibraries.keys %]
+				[% FOREACH library IN pluginMultiLibraryLibraries %]
 					[% BLOCK controls %]
-						[%- IF !pluginMultiLibraryLibraries.$type.defaultlibrary %]
-						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_removelibrary.html?type=[% type |uri %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY_QUESTION" | string %]')">[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY" | string %]</a>
+						[%- IF !library.defaultlibrary %]
+						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_removelibrary.html?type=[% library.id |uri %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY_QUESTION" | string %]')">[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY" | string %]</a>
 						[%- END %]
-						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_editlibrary.html?type=[% type |uri %]&player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_EDIT_LIBRARY" | string %]</a>
+						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_editlibrary.html?type=[% library.id |uri %]&player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_EDIT_LIBRARY" | string %]</a>
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
-						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_selectlibrary.html?type=[% type |uri %]&player=[% player | uri %]">[% IF pluginMultiLibraryActiveLibrary && pluginMultiLibraryActiveLibrary.id == type %]<b>[% pluginMultiLibraryLibraries.$type.name %]</b>[% ELSE %][% pluginMultiLibraryLibraries.$type.name %][% END %]</a>
+						[% IF library.enabled %]
+						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_selectlibrary.html?type=[% library.id |uri %]&player=[% player | uri %]">[% IF pluginMultiLibraryActiveLibrary && pluginMultiLibraryActiveLibrary.id == library.id %]<b>[% library.name %]</b>[% ELSE %][% library.name %][% END %]</a>
+						[% ELSE %]
+						[% library.name %]
+						[% END %]
 					[% END %]
 				[% odd = (not odd) %]
 				[% END %]

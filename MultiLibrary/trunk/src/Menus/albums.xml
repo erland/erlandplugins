@@ -8,7 +8,7 @@
 		<parameter type="text" id="showartistwithalbum"></parameter>
 		<parameter type="text" id="playalltracks"><value>1</value></parameter>
 		<parameter type="text" id="library"><value>{libraryno}</value></parameter>
-		<parameter type="text" id="includedclients"></parameter>
-		<parameter type="text" id="excludedclients"></parameter>
+		<parameter type="text" id="includedclients">{includedclients}</parameter>
+		<parameter type="text" id="excludedclients">{excludedclients}</parameter>
 	</template>
 </custombrowse>
