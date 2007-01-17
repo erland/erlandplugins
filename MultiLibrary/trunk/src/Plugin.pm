@@ -1079,7 +1079,9 @@ sub getCurrentLibrary {
 			}
 		}	
 	}
-	$client->prefDelete('plugin_multilibrary_activelibrary');
+	if(defined($client)) {
+		$client->prefDelete('plugin_multilibrary_activelibrary');
+	}
 	return undef;
 }
 
@@ -1131,7 +1133,10 @@ sub handleWebSelectLibrary {
 	my ($client, $params) = @_;
 	initLibraries($client);
 
-	selectLibrary($client,$params->{'type'});
+	if($params->{'type'}) {
+		my $libraryId = unescape($params->{'type'});
+		selectLibrary($client,$libraryId);
+	}
 	return handleWebList($client,$params);
 }
 
@@ -1148,10 +1153,11 @@ sub handleWebEditLibrary {
 	}
 
 	if ($params->{'type'}) {
-		my $library = getLibrary($client,$params->{'type'});
+		my $libraryId = unescape($params->{'type'});
+		my $library = getLibrary($client,$libraryId);
 		if($library) {
 			if(defined($library->{'simple'})) {
-				my $templateData = loadTemplateValues($params->{'type'}.".ml.values.xml");
+				my $templateData = loadTemplateValues($libraryId.".ml.values.xml");
 	
 				if(defined($templateData)) {
 					my $templates = readTemplateConfiguration($client);
@@ -1183,7 +1189,7 @@ sub handleWebEditLibrary {
 							}
 							$params->{'pluginMultiLibraryEditLibraryParameters'} = \@parametersToSelect;
 						}
-						$params->{'pluginMultiLibraryEditLibraryFile'} = $params->{'type'}.".ml.values.xml";
+						$params->{'pluginMultiLibraryEditLibraryFile'} = $libraryId.".ml.values.xml";
 						$params->{'pluginMultiLibraryEditLibraryTemplate'} = $templateData->{'id'};
 						$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($params->{'pluginMultiLibraryEditLibraryFile'});
 						return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editsimplelibrary.html', $params);
@@ -1387,6 +1393,17 @@ sub handleWebNewLibrary {
 	my $templates = readTemplateConfiguration($client);
 	my $template = $templates->{$params->{'librarytemplate'}};
 	my $menytype = $params->{'librarytype'};
+	
+	my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
+	if (defined $browseDir && -d $browseDir) {
+		if(-e catfile($browseDir,unescape($libraryFile).".ml.xml") || -e catfile($browseDir,unescape($libraryFile).".ml.values.xml")) {
+			my $i=1;
+			while(-e catfile($browseDir,unescape($libraryFile).$i.".ml.xml") || -e catfile($browseDir,unescape($libraryFile).$i.".ml.values.xml")) {
+				$i = $i + 1;
+			}
+			$libraryFile .= $i;
+		}
+	}
 
 	if($menytype eq 'advanced') {
 		$libraryFile .= ".ml.xml";
@@ -1460,6 +1477,11 @@ sub handleWebSaveNewSimpleLibrary {
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginMultiLibraryError'} = 'No library directory configured';
 	}
+
+	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
+		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
+	}
+
 	my $file = unescape($params->{'file'});
 	my $url = catfile($browseDir, $file);
 	
@@ -1556,6 +1578,10 @@ sub handleWebSaveSimpleLibrary {
 		if (!defined $browseDir || !-d $browseDir) {
 			$params->{'pluginMultiLibraryError'} = 'No library directory configured';
 		}
+		if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
+			$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
+		}
+
 		my $file = unescape($params->{'file'});
 		my $url = catfile($browseDir, $file);
 		
@@ -1615,8 +1641,10 @@ sub getTemplate {
 
 sub templateFileURLFromPath {
 	my $path = shift;
-	$path = Slim::Utils::Misc::fileURLFromPath($path);
-	$path =~ s/%/%%/g;
+	$path = Slim::Utils::Misc::fileURLFromPath(decode_entities($path));
+	$path =~ s/\\/\\\\/g;
+	$path =~ s/%/\\%/g;
+	$path = encode_entities($path,"&<>\'\"");
 	return $path;
 }
 
@@ -2170,7 +2198,6 @@ sub parseTemplateLibraryContent {
 				}
 				$libraryData = Slim::Utils::Unicode::utf8on($libraryData);
 				$libraryData = Slim::Utils::Unicode::utf8encode_locale($libraryData);
-			
 				my $xml = eval { XMLin($libraryData, forcearray => ["item"], keyattr => []) };
 				#debugMsg(Dumper($xml));
 				if ($@) {
@@ -2345,6 +2372,10 @@ sub handleWebSaveLibrary {
 	if (!defined $libraryDir || !-d $libraryDir) {
 		$params->{'pluginMultiLibraryError'} = 'No library dir defined';
 	}
+	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
+		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
+	}
+
 	my $url = catfile($libraryDir, unescape($params->{'file'}));
 	if (!-e $url && !defined($params->{'deletesimple'})) {
 		$params->{'pluginMultiLibraryError'} = 'File doesnt exist';
@@ -2403,7 +2434,7 @@ sub handleWebSaveNewLibrary {
 		$params->{'pluginMultiLibraryError'} = 'File name must end with .ml.xml';
 	}
 	
-	if($params->{'file'} !~ /^[0-9A-Za-z\._\- ]*$/) {
+	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
 		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
 	}
 
@@ -2433,27 +2464,28 @@ sub handleWebRemoveLibrary {
 	}
 
 	if ($params->{'type'}) {
-		my $library = getLibrary($client,$params->{'type'});
+		my $libraryId = unescape($params->{'type'});
+		my $library = getLibrary($client,$libraryId);
 		if($library) {
 			my $libraryDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
 			
 			if (!defined $libraryDir || !-d $libraryDir) {
 				warn "No library dir defined\n"
 			}else {
-				my $file = $params->{'type'};
+				my $file = $libraryId;
 				if(defined($library->{'simple'})) {
 					$file .= ".ml.values.xml";
 				}else {
 					$file .= ".ml.xml";
 				}
 				debugMsg("Deleteing library: ".$file."\n");
-				my $url = catfile($libraryDir, unescape($file));
+				my $url = catfile($libraryDir, $file);
 				unlink($url) or do {
 					warn "Unable to delete file: ".$url.": $! \n";
 				}
 			}
 		}else {
-			warn "Cannot find: ".$params->{'type'}."\n";
+			warn "Cannot find: ".$libraryId."\n";
 		}
 	}
 
