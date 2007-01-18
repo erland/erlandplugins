@@ -42,7 +42,7 @@ my $template;
 my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.0';
+my $PLUGINVERSION = '1.1';
 
 # Indicator if hooked or not
 # 0= No
