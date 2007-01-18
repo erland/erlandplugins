@@ -318,6 +318,9 @@ sub getCustomBrowseMenus {
 						'libraryno' => $library->{'libraryno'},
 						'libraryname' => $library->{'name'}
 					);
+					if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
+						$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
+					}
 					if(defined($library->{'includedclients'})) {
 						$parameters{'includedclients'} = '<value>'.$library->{'includedclients'}.'</value>';
 					}else {
@@ -371,6 +374,19 @@ sub getCustomBrowseMenuData {
 					'libraryno' => $library->{'libraryno'},
 					'libraryname' => $library->{'name'}
 				);
+				if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
+					$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
+				}
+				if(defined($library->{'includedclients'})) {
+					$parameters{'includedclients'} = '<value>'.$library->{'includedclients'}.'</value>';
+				}else {
+					$parameters{'includedclients'} = '';
+				}
+				if(defined($library->{'excludedclients'})) {
+					$parameters{'excludedclients'} = '<value>'.$library->{'excludedclients'}.'</value>';
+				}else {
+					$parameters{'excludedclients'} = '';
+				}
 				$content = replaceParameters($content,\%parameters);
 				return $content;
 			}
