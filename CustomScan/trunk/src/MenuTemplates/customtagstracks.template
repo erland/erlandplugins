@@ -12,6 +12,11 @@
 			<menutype>sql</menutype>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+				[%- IF library %]
+				join multilibrary_track on
+					customscan_track_attributes.track=multilibrary_track.track and
+					multilibrary_track.library=[% library %]
+				[%- END %]
 				[%- IF customsorttag %]
 				left join customscan_track_attributes as attr2 on
 					customscan_track_attributes.track=attr2.track and
@@ -59,8 +64,12 @@
 					<keyword name="orderby" value="tracks.titlesort asc"/>
 				</option>
 				<menudata>
-					select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes
+					select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=customscan_track_attributes.track and
 						customscan_track_attributes.module='customtag' and

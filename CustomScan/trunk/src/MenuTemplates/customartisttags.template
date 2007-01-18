@@ -26,6 +26,11 @@
 					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
 					join tracks on 
 						tracks.id=customscan_track_attributes.track
+					[%- IF library %]
+					join multilibrary_track on
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %]
+					[%- END %]
 					join albums on
 						tracks.album=albums.id
 					[%- IF customsorttag %]
@@ -75,8 +80,12 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title from albums,tracks,customscan_track_attributes
+						select albums.id,albums.title from albums,tracks,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 						where
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							albums.compilation = 1 and
 							tracks.album=albums.id and
 							tracks.id=customscan_track_attributes.track and
@@ -95,8 +104,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,customscan_track_attributes
+							select tracks.id,tracks.title from tracks,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 							where
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.audio=1 and
 								tracks.album={album} and
 								tracks.id=customscan_track_attributes.track and
@@ -123,8 +136,12 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,customscan_track_attributes[% IF variousartists %],albums[% END %]
+				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,customscan_track_attributes[% IF variousartists %],albums[% END %][% IF library %],multilibrary_track[% END %] 
 				where 
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
 					contributor_track.contributor=contributors.id and 
@@ -152,6 +169,11 @@
 					join contributor_track on
 						contributor_track.track=customscan_track_attributes.track and
 						contributor_track.role in (1,5)
+					[%- IF library %]
+					join multilibrary_track on
+						contributor_track.track=multilibrary_track.track and
+						multilibrary_track.library=[% library %]
+					[%- END %]
 					[%- IF customsorttag %]
 					left join customscan_track_attributes as attr2 on
 						customscan_track_attributes.track=attr2.track and
@@ -198,8 +220,12 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,customscan_track_attributes
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
 							tracks.id=contributor_track.track and 
@@ -221,8 +247,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,albums,customscan_track_attributes
+							select tracks.id,tracks.title from tracks,contributor_track,albums,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 							where 
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 

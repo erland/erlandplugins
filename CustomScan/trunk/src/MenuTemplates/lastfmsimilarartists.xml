@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minpluginversion>1.16</minpluginversion>
+	<minpluginversion>1.17</minpluginversion>
 	<template>
 		<downloadidentifier>66</downloadidentifier>
 		<name>LastFM Similar Artists</name>
@@ -11,6 +11,7 @@
 		<parameter type="text" id="similaritypercent" name="Minimum similarity percent (1-100)" value=""/>
 		<parameter type="checkbox" id="multipleways" name="Show similarities in both ways" value="1"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
+		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>

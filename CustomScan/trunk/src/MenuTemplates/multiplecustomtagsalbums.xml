@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
+	<minpluginversion>1.17</minpluginversion>
 	<template>
 		<downloadidentifier>59</downloadidentifier>
 		<name>Custom Multiple Tags Albums</name>
@@ -25,6 +26,7 @@
 		<parameter type="text" id="customsorttag4" name="Level 4 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag4artistsort" name="Level 4 sort by ARTISTSORT" value=""/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
+		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>

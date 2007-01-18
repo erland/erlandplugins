@@ -14,8 +14,12 @@
 			<menulinks>alpha</menulinks>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF customtag %],customscan_track_attributes[% END %]
+				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF customtag %],customscan_track_attributes[% END %][% IF library %],multilibrary_track[% END %] 
 				where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -41,7 +45,7 @@
 				order by rand()
                         </playdata>
 	        	<menudata>
-				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks
+				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks[% IF library %],multilibrary_track[% END %] 
 				[%- IF singlecomment %]
 				,comments
 				[%- END %]
@@ -49,6 +53,10 @@
 				,customscan_track_attributes
 				[%- END %]
                                 where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
 					[%- END %]
@@ -81,8 +89,12 @@
 				<menulinks>alpha</menulinks>
 				<playtype>sql</playtype>
 				<playdata>
-					select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %],customscan_track_attributes
+					select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %],customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 					where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -106,11 +118,15 @@
 					order by rand()
 	                        </playdata>
 		        	<menudata>
-					select distinct customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from contributors,contributor_track,tracks,customscan_track_attributes
+					select distinct customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from contributors,contributor_track,tracks,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
 					[%- IF singlecomment %]
 					,comments
 					[%- END %]
 	                                where
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
 						[%- END %]
@@ -140,8 +156,12 @@
 					<itemformat>track</itemformat>
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF customtag %],customscan_track_attributes[% END %]
+						select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF customtag %],customscan_track_attributes[% END %][% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]

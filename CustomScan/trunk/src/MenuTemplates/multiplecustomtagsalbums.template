@@ -13,6 +13,11 @@
 			<menulinks>alpha</menulinks>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+				[%- IF library %]
+				join multilibrary_track on
+					customscan_track_attributes.track=multilibrary_track.track and
+					multilibrary_track.library=[% library %]
+				[%- END %]
 				[%- IF customsorttag1 %]
 				left join customscan_track_attributes as sortattr on
 					customscan_track_attributes.track=sortattr.track and
@@ -47,6 +52,11 @@
 				<menulinks>alpha</menulinks>
 				<menudata>
 					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+					[%- IF library %]
+					join multilibrary_track on
+						customscan_track_attributes.track=multilibrary_track.track and
+						multilibrary_track.library=[% library %]
+					[%- END %]
 					join customscan_track_attributes as attr1 on
 						customscan_track_attributes.track=attr1.track and
 						attr1.module='customtag' and
@@ -87,6 +97,11 @@
 					<menulinks>alpha</menulinks>
 					<menudata>
 						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+						[%- IF library %]
+						join multilibrary_track on
+							customscan_track_attributes.track=multilibrary_track.track and
+							multilibrary_track.library=[% library %]
+						[%- END %]
 						join customscan_track_attributes as attr1 on
 							customscan_track_attributes.track=attr1.track and
 							attr1.module='customtag' and
@@ -132,6 +147,11 @@
 						<menulinks>alpha</menulinks>
 						<menudata>
 							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+							[%- IF library %]
+							join multilibrary_track on
+								customscan_track_attributes.track=multilibrary_track.track and
+								multilibrary_track.library=[% library %]
+							[%- END %]
 							join customscan_track_attributes as attr1 on
 								customscan_track_attributes.track=attr1.track and
 								attr1.module='customtag' and
@@ -194,15 +214,19 @@
 							</option>
 							<menudata>
 								[%- IF showartistwithalbum %]
-								select albums.id,concat(albums.title, ' (', contributors.name ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %]
+								select albums.id,concat(albums.title, ' (', contributors.name ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][% IF library %],multilibrary_track[% END %] 
 								where 
 									tracks.id=contributor_track.track and
 									contributor_track.role in (1,5) and
 									contributor_track.contributor=contributors.id and
 								[% ELSE %]
-								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %]
+								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][% IF library %],multilibrary_track[% END %] 
 								where 
 								[%- END %]
+									[%- IF library %]
+									tracks.id=multilibrary_track.track and
+									multilibrary_track.library=[% library %] and
+									[%- END %]
 									tracks.audio=1 and 
 									albums.id=tracks.album and 
 									tracks.id=attr1.track and
@@ -239,8 +263,12 @@
 								[%- END %]
 								<menutype>sql</menutype>
 								<menudata>
-									select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %]
+									select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][% IF library %],multilibrary_track[% END %] 
 									where 
+										[%- IF library %]
+										tracks.id=multilibrary_track.track and
+										multilibrary_track.library=[% library %] and
+										[%- END %]
 										tracks.audio=1 and 
 										tracks.id=attr1.track and
 										tracks.album={album} and

@@ -11,8 +11,12 @@
 			<menuname>Artists</menuname>
 			<menutype>sql</menutype>
 			<menudata>
-				select floor((customscan_album_attributes.value+5)/10)*10,concat(format(floor((customscan_album_attributes.value+5)/10)/2,1),' stars') from customscan_album_attributes,tracks,albums 
+				select floor((customscan_album_attributes.value+5)/10)*10,concat(format(floor((customscan_album_attributes.value+5)/10)/2,1),' stars') from customscan_album_attributes,tracks,albums[% IF library %],multilibrary_track[% END %] 
 				where
+					[%- IF library %]
+					tracks.id=multilibrary_track.track and
+					multilibrary_track.library=[% library %] and
+					[%- END %]
 					tracks.album=albums.id and
 					albums.id=customscan_album_attributes.album and
 					customscan_album_attributes.module='csamazon' and
@@ -27,8 +31,12 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,customscan_album_attributes 
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,customscan_album_attributes[% IF library %],multilibrary_track[% END %]  
 					where 
+						[%- IF library %]
+						tracks.id=multilibrary_track.track and
+						multilibrary_track.library=[% library %] and
+						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
@@ -59,8 +67,12 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,customscan_album_attributes
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,customscan_album_attributes[% IF library %],multilibrary_track[% END %] 
 						where 
+							[%- IF library %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% library %] and
+							[%- END %]
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
 							tracks.id=contributor_track.track and 
@@ -82,8 +94,12 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,albums
+							select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
 							where 
+								[%- IF library %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% library %] and
+								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 
