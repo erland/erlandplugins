@@ -2482,6 +2482,9 @@ sub handleWebRemoveLibrary {
 				my $url = catfile($libraryDir, $file);
 				unlink($url) or do {
 					warn "Unable to delete file: ".$url.": $! \n";
+				};
+				if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+					refreshLibraries();
 				}
 			}
 		}else {
