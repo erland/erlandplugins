@@ -1515,6 +1515,12 @@ sub handleWebSaveNewSimpleLibrary {
 		initLibraries($client);
 		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
 			refreshLibraries();
+			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
+				no strict 'refs';
+				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
+				use strict 'refs';
+
+			}
 		}
 		return handleWebList($client,$params)
 	}
@@ -1608,6 +1614,11 @@ sub handleWebSaveSimpleLibrary {
 			initLibraries($client);
 			if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
 				refreshLibraries();
+				if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
+					no strict 'refs';
+					eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
+					use strict 'refs';
+				}
 			}
 			return handleWebList($client,$params)
 		}
@@ -2421,6 +2432,11 @@ sub handleWebSaveLibrary {
 		initLibraries($client);
 		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
 			refreshLibraries();
+			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
+				no strict 'refs';
+				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
+				use strict 'refs';
+			}
 		}
 		return handleWebList($client,$params)
 	}
@@ -2467,6 +2483,11 @@ sub handleWebSaveNewLibrary {
 		initLibraries($client);
 		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
 			refreshLibraries();
+			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
+				no strict 'refs';
+				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
+				use strict 'refs';
+			}
 		}
 		return handleWebList($client,$params)
 	}
@@ -2502,6 +2523,11 @@ sub handleWebRemoveLibrary {
 				};
 				if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
 					refreshLibraries();
+					if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
+						no strict 'refs';
+						eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
+						use strict 'refs';
+					}
 				}
 			}
 		}else {
