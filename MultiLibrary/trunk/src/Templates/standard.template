@@ -2,6 +2,9 @@
 <multilibrary>
 	<library>
 		<name>[% libraryname %]</name>
+		[%- IF menugroup %]
+		<menugroup>[% menugroup %]</menugroup>
+		[%- END %]
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<track>

@@ -4,6 +4,7 @@
 		<name>Standard library</name>
 		<description>Standard library with some different options</description>
 		<parameter type="text" id="libraryname" name="Library name" value="Standard library"/>
+		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="directory1" name="Directory 1" value=""/>
 		<parameter type="text" id="directory2" name="Directory 2" value=""/>
 		<parameter type="text" id="directory3" name="Directory 3" value=""/>
