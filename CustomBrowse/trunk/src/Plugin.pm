@@ -38,6 +38,7 @@ my $browseMenus;
 my $browseMenusFlat;
 my $browseMixes;
 my $template;
+my $templates;
 my $mixer;
 my $soapLiteError = 0;
 my $PLUGINVERSION = '1.17';
@@ -2267,7 +2268,9 @@ sub handleWebEditMenu {
 			my $templateData = loadTemplateValues($client,$params->{'menu'});
 
 			if(defined($templateData)) {
-				my $templates = readTemplateConfiguration($client);
+				if(!defined($templates)) {
+					$templates = readTemplateConfiguration($client);
+				}
 				my $template = $templates->{$templateData->{'id'}};
 				if(defined($template)) {
 					my %currentParameterValues = ();
@@ -2276,7 +2279,9 @@ sub handleWebEditMenu {
 						my $values = $p->{'value'};
 						my %valuesHash = ();
 						for my $v (@$values) {
-							$valuesHash{$v} = $v;
+							if(ref($v) ne 'HASH') {
+								$valuesHash{$v} = $v;
+							}
 						}
 						if(!%valuesHash) {
 							$valuesHash{''} = '';
@@ -2421,9 +2426,9 @@ sub handleWebNewMenuTypes {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
-	my $templatesHash = readTemplateConfiguration($client);
+	$templates = readTemplateConfiguration($client);
 	my @collections = ();
-	my $structuredTemplates = structureMenuTypes($templatesHash);
+	my $structuredTemplates = structureMenuTypes($templates);
 
 	for my $key (sort keys %$structuredTemplates) {
 		my $name = $key;
@@ -2465,7 +2470,9 @@ sub handleWebNewMenuParameters {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 	$params->{'pluginCustomBrowseNewMenuTemplate'} = $params->{'menutemplate'};
-	my $templates = readTemplateConfiguration($client);
+	if(!defined($templates)) {
+		$templates = readTemplateConfiguration($client);
+	}
 	my $template = $templates->{$params->{'menutemplate'}};
 	if(defined($template->{'parameter'})) {
 		my $parameters = $template->{'parameter'};
@@ -2573,7 +2580,9 @@ sub handleWebPublishMenuParameters {
 			my $templateData = loadTemplateValues($client,$menuId);
 			$menuId =~ s/^published_//;
 			if(defined($templateData)) {
-				my $templates = readTemplateConfiguration($client);
+				if(!defined($templates)) {
+					$templates = readTemplateConfiguration($client);
+				}
 				my $template = $templates->{$templateData->{'id'}};
 				if(defined($template)) {
 					$params->{'pluginCustomBrowsePublishName'} = $browseMenusFlat->{$menuId}->{'menuname'};
@@ -2653,7 +2662,9 @@ sub handleWebPublishMenu {
 		if(defined($browseMenusFlat->{$menuId}->{'simple'})) {
 			my $templateData = loadTemplateValues($client,$menuId);
 			if(defined($templateData)) {
-				my $templates = readTemplateConfiguration($client);
+				if(!defined($templates)) {
+					$templates = readTemplateConfiguration($client);
+				}
 				my $template = $templates->{$templateData->{'id'}};
 				if(defined($template)) {
 					my $templateFile = $menuId.".template";
@@ -2838,7 +2849,9 @@ sub handleWebDownloadNewMenus {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
 
-	my $templates = readTemplateConfiguration($client);
+	if(!defined($templates)) {
+		$templates = readTemplateConfiguration($client);
+	}
 	my $error = '';
 	my $message = '';
 	for my $key (sort keys %$templates) {
@@ -3174,7 +3187,9 @@ sub handleWebNewMenu {
 	my $menuFile = $templateFile;
 	$templateFile =~ s/\.xml$/.template/;
 	$menuFile =~ s/\.xml$//;
-	my $templates = readTemplateConfiguration($client);
+	if(!defined($templates)) {
+		$templates = readTemplateConfiguration($client);
+	}
 	my $template = $templates->{$params->{'menutemplate'}};
 	my $menytype = $params->{'menutype'};
 
@@ -3251,7 +3266,9 @@ sub handleWebSaveSimpleMenu {
 	my $menuFile = $templateFile;
 	$templateFile =~ s/\.xml$/.template/;
 	$menuFile =~ s/\.xml$//;
-	my $templates = readTemplateConfiguration($client);
+	if(!defined($templates)) {
+		$templates = readTemplateConfiguration($client);
+	}
 	my $template = $templates->{$params->{'menutemplate'}};
 	my $menytype = $params->{'menutype'};
 
@@ -3517,7 +3534,9 @@ sub saveSimpleMenu {
 		};
 	}
 	if(!($params->{'pluginCustomBrowseError'})) {
-		my $templates = readTemplateConfiguration($client);
+		if(!defined($templates)) {
+			$templates = readTemplateConfiguration($client);
+		}
 		my $template = $templates->{$params->{'menutemplate'}};
 		my %templateParameters = ();
 		my $data = "";
@@ -3837,7 +3856,9 @@ sub handleWebExecuteMix {
 sub handleWebSelectMenus {
         my ($client, $params) = @_;
 
-	readBrowseConfiguration($client);
+	if(!defined($browseMenusFlat)) {
+		readBrowseConfiguration($client);
+	}
         # Pass on the current pref values and now playing info
 	my @menus = ();
 	for my $key (keys %$browseMenusFlat) {
@@ -3912,24 +3933,30 @@ sub getSlimserverMenus {
 sub handleWebSaveSelectMenus {
         my ($client, $params) = @_;
 
-	readBrowseConfiguration($client);
+	if(!defined($browseMenusFlat)) {
+		readBrowseConfiguration($client);
+	}
         foreach my $menu (keys %$browseMenusFlat) {
                 my $menuid = "menu_".escape($browseMenusFlat->{$menu}->{'id'});
                 my $menubrowseid = "menubrowse_".escape($browseMenusFlat->{$menu}->{'id'});
                 if($params->{$menuid}) {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',1);
 			$browseMenusFlat->{$menu}->{'enabled'}=1;
-			if($params->{$menubrowseid}) {
-                	        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',1);
-				$browseMenusFlat->{$menu}->{'enabledbrowse'}=1;
-	                }else {
-        			Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',0);
-				$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
-                	}
+			if(!defined($browseMenusFlat->{$menu}->{'forceenabledbrowse'})) {
+				if($params->{$menubrowseid}) {
+                	        	Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',1);
+					$browseMenusFlat->{$menu}->{'enabledbrowse'}=1;
+		                }else {
+	        			Slim::Utils::Prefs::set('plugin_custombrowse_'.$menubrowseid.'_enabled',0);
+					$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
+	                	}
+			}
                 }else {
                         Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
 			$browseMenusFlat->{$menu}->{'enabled'}=0;
-			$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
+			if(!defined($browseMenusFlat->{$menu}->{'forceenabledbrowse'})) {
+				$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
+			}
                 }
         }
         foreach my $mix (keys %$browseMixes) {
@@ -4063,6 +4090,14 @@ sub parseMenuContent {
 		my $include = isMenuEnabled($client,$xml);
 
 		my $disabled = 0;
+		my $forceEnabledBrowse = undef;
+		if(defined($xml->{'enabledbrowse'})) {
+			if(ref($xml->{'enabledbrowse'}) ne 'HASH') {
+				$forceEnabledBrowse = $xml->{'enabledbrowse'};
+			}else {
+				$forceEnabledBrowse = '';
+			}
+		}
 		if(defined($xml->{'menu'})) {
 			$xml->{'menu'}->{'id'} = escape($menuId);
 		}
@@ -4090,11 +4125,16 @@ sub parseMenuContent {
 		
 		$xml->{'menu'}->{'topmenu'} = 1;
 		if($include && !$disabled) {
-			$xml->{'menu'}->{'enabled'}=1;
-			if($disabledBrowse) {
-				$xml->{'menu'}->{'enabledbrowse'}=0;
+			$xml->{'menu'}->{'enabled'}=1;	
+			if(!defined($forceEnabledBrowse)) {
+				if($disabledBrowse) {
+					$xml->{'menu'}->{'enabledbrowse'}=0;
+				}else {
+					$xml->{'menu'}->{'enabledbrowse'}=1;
+				}
 			}else {
-				$xml->{'menu'}->{'enabledbrowse'}=1;
+				$xml->{'menu'}->{'forcedenabledbrowse'} = 1;
+				$xml->{'menu'}->{'enabledbrowse'}=$forceEnabledBrowse;
 			}
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
@@ -4104,7 +4144,12 @@ sub parseMenuContent {
 	                $menus->{$menuId} = $xml->{'menu'};
 		}elsif($include && $disabled) {
 			$xml->{'menu'}->{'enabled'}=0;
-			$xml->{'menu'}->{'enabledbrowse'}=0;
+			if(!defined($forceEnabledBrowse)) {
+				$xml->{'menu'}->{'enabledbrowse'}=0;
+			}else {
+				$xml->{'menu'}->{'forcedenabledbrowse'} = 1;
+				$xml->{'menu'}->{'enabledbrowse'}=$forceEnabledBrowse;
+			}
 			if($defaultMenu) {
 				$xml->{'menu'}->{'defaultmenu'} = 1;
 			}else {
@@ -4150,6 +4195,7 @@ sub parseMenuTemplateContent {
 	my $menus = shift;
 	my $defaultMenu = shift;
 	my $templates = shift;
+	my $onlyLibrarySupported = shift;
 	my $dbh = getCurrentDBH();
 
 	my $menuId = $item;
@@ -4163,6 +4209,14 @@ sub parseMenuTemplateContent {
 			$errorMsg = "$@";
 			errorMsg("CustomBrowse: Failed to parse menu configuration because:\n$@\n");
 		}else {
+			my $forceEnabledBrowse = undef;
+			if(defined($valuesXml->{'enabledbrowse'})) {
+				if(ref($valuesXml->{'enabledbrowse'}) ne 'HASH') {
+					$forceEnabledBrowse = $valuesXml->{'enabledbrowse'};
+				}else {
+					$forceEnabledBrowse = '';
+				}
+			}
 			my $templateId = $valuesXml->{'template'}->{'id'};
 			my $template = $templates->{$templateId};
 			$templateId =~s/\.xml//;
@@ -4173,29 +4227,42 @@ sub parseMenuTemplateContent {
 			my $templateFile = $templateId.".template";
 			my %templateParameters = ();
 			my $parameters = $valuesXml->{'template'}->{'parameter'};
+			my $notLibrarySupported = 0;
 			for my $p (@$parameters) {
 				my $values = $p->{'value'};
 				my $value = '';
 				for my $v (@$values) {
-					if($value ne '') {
-						$value .= ',';
+					if(ref($v) ne 'HASH') {
+						if($value ne '') {
+							$value .= ',';
+						}
+						if($p->{'quotevalue'}) {
+							$value .= $dbh->quote(encode_entities($v));
+						}else {
+							$value .= encode_entities($v);
+						}
 					}
-					if($p->{'quotevalue'}) {
-						$value .= $dbh->quote(encode_entities($v));
-					}else {
-						$value .= encode_entities($v);
+				}
+				if($p->{'id'} eq 'library') {
+					my $values = $p->{'value'};
+					if(defined($values) && scalar(@$values)>0 && ref($values->[0]) ne 'HASH') {
+						$notLibrarySupported = 1;
+						if($onlyLibrarySupported) {
+							return undef;
+						}
 					}
 				}
 				#debugMsg("Setting: ".$p->{'id'}."=".$value."\n");
 				$templateParameters{$p->{'id'}}=$value;
 			}
+			my $librarySupported = 0;
 			if(defined($template->{'parameter'})) {
 				my $parameters = $template->{'parameter'};
 				for my $p (@$parameters) {
 					if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
 						if(!defined($templateParameters{$p->{'id'}})) {
 							my $value = $p->{'value'};
-							if(!defined($value)) {
+							if(!defined($value) || ref($value) eq 'HASH') {
 								$value='';
 							}
 							debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
@@ -4207,7 +4274,13 @@ sub parseMenuTemplateContent {
 							}
 						}
 					}
+					if($p->{'id'} eq 'library' && !$notLibrarySupported) {
+						$librarySupported = 1;
+					}
 				}
+			}
+			if($onlyLibrarySupported && !$librarySupported) {
+				return undef;
 			}
 			my $templateFileData = undef;
 			my $doParsing = 1;
@@ -4265,12 +4338,20 @@ sub parseMenuTemplateContent {
 			
 				$xml->{'menu'}->{'simple'} = 1;
 				$xml->{'menu'}->{'topmenu'} = 1;
+				if($librarySupported) {
+					$xml->{'menu'}->{'librarysupported'} = 1;
+				}
 				if($include && !$disabled) {
 					$xml->{'menu'}->{'enabled'}=1;
-					if($disabledBrowse) {
-						$xml->{'menu'}->{'enabledbrowse'}=0;
+					if(!defined($forceEnabledBrowse)) {
+						if($disabledBrowse) {
+							$xml->{'menu'}->{'enabledbrowse'}=0;
+						}else {
+							$xml->{'menu'}->{'enabledbrowse'}=1;
+						}
 					}else {
-						$xml->{'menu'}->{'enabledbrowse'}=1;
+						$xml->{'menu'}->{'forceenabledbrowse'}=1;
+						$xml->{'menu'}->{'enabledbrowse'}=$forceEnabledBrowse;
 					}
 					if($defaultMenu) {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
@@ -4283,7 +4364,12 @@ sub parseMenuTemplateContent {
 			                $menus->{$menuId} = $xml->{'menu'};
 				}elsif($include && $disabled) {
 					$xml->{'menu'}->{'enabled'}=0;
-					$xml->{'menu'}->{'enabledbrowse'}=0;
+					if(!defined($forceEnabledBrowse)) {
+						$xml->{'menu'}->{'enabledbrowse'}=0;
+					}else {
+						$xml->{'menu'}->{'forceenabledbrowse'}=1;
+						$xml->{'menu'}->{'enabledbrowse'}=$forceEnabledBrowse;
+					}
 					if($defaultMenu) {
 						$xml->{'menu'}->{'defaultmenu'} = 1;
 					}elsif(defined($template->{'customtemplate'})) {
@@ -4482,7 +4568,7 @@ sub readBrowseConfiguration {
     }else {
         @pluginDirs = catdir($Bin, "Plugins");
     }
-    my $templates = readTemplateConfiguration($client);
+    $templates = readTemplateConfiguration($client);
     readMixConfigurationFromPlugins($client,\%localBrowseMixes);
     readBrowseConfigurationFromPlugins($client,\%localBrowseMenus,$templates);
     for my $plugindir (@pluginDirs) {
@@ -4509,6 +4595,129 @@ sub readBrowseConfiguration {
     $browseMenus = structureBrowseMenus(\%localBrowseMenus);
     $browseMenusFlat = \%localBrowseMenus;
     $browseMixes = \%localBrowseMixes;
+}
+
+sub getMultiLibraryMenus {
+	my $client = shift;
+
+	my $browseDir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	debugMsg("Searching for custom browse configuration in: $browseDir\n");
+    
+	my %localBrowseMenus = ();
+	my @pluginDirs = ();
+	if ($::VERSION ge '6.5') {
+		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	}else {
+		@pluginDirs = catdir($Bin, "Plugins");
+	}
+	if(!defined($templates)) {
+		$templates = readTemplateConfiguration($client);
+	}
+	readBrowseConfigurationFromPlugins($client,\%localBrowseMenus,$templates,'MultiLibrary::Plugin',1);
+	for my $plugindir (@pluginDirs) {
+		if( -d catdir($plugindir,"CustomBrowse","Menus")) {
+			readBrowseTemplateConfigurationFromDir($client,1,catdir($plugindir,"CustomBrowse","Menus"),\%localBrowseMenus, $templates,1);
+		}
+	}
+	if (!defined $browseDir || !-d $browseDir) {
+		debugMsg("Skipping custom browse configuration scan - directory is undefined\n");
+	}else {
+		readBrowseTemplateConfigurationFromDir($client,0,$browseDir,\%localBrowseMenus, $templates,1);
+	}
+    
+	foreach my $menu (keys %localBrowseMenus) {
+		copyKeywords(undef,$localBrowseMenus{$menu});
+	}
+    
+	my @result = ();
+	for my $menuKey (keys %localBrowseMenus) {
+		my $menu = $localBrowseMenus{$menuKey};
+		if(defined($menu->{'simple'})) {
+			if($menu->{'librarysupported'}) {
+				my $xml = loadTemplateValues($client,$menuKey);
+				my $templateId = $xml->{'id'};
+				my $template = $templates->{$templateId};
+				my $templateParameters = $template->{'parameter'};
+				my $valueParameters = $xml->{'parameter'};
+				for my $tp (@$templateParameters) {
+					my $found = 0;
+					for my $vp (@$valueParameters) {
+						if($vp->{'id'} eq $tp->{'id'}) {
+							$found = 1;
+							last;
+						}
+					}
+					if(!$found && ($tp->{'id'} eq 'library' || $tp->{'id'} eq 'menuname' || $tp->{'id'} eq 'menugroup' || $tp->{'id'} eq 'includedclients' || $tp->{'id'} eq 'excludedclients')) {
+						my %newParameter = (
+							'id' => $tp->{'id'},
+							'quotevalue' => $tp->{'quotevalue'}
+						);
+						push @$valueParameters,\%newParameter;
+					}
+				}
+				my $data = "";
+				$data .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<custombrowse>\n\t<template>\n\t\t<id>".$templateId."</id>";
+				my $menuname = undef;
+				my $menugroup = undef;
+				for my $p (@$valueParameters) {
+					if($p->{'id'} eq 'menuname') {
+						my $values = $p->{'value'};
+						if(defined($values) && scalar(@$values)>0) {
+							$menuname = $values->[0];
+						}
+					}elsif($p->{'id'} eq 'library') {
+						my @values = ();
+						push @values,'{libraryno}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'menugroup') {
+						my $currentValues = $p->{'value'};
+						if(defined($currentValues) && scalar(@$currentValues)>0) {
+							$menugroup = $currentValues->[0];
+						}
+						my @values = ();
+						push @values,'{libraryname}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'includedclients') {
+						my @values = ();
+						push @values,'{includedclients}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'excludedclients') {
+						my @values = ();
+						push @values,'{excludedclients}';
+						$p->{'value'} = \@values;
+					}
+					my $values = $p->{'value'};
+					my $value = '';
+					if(defined($values)) {
+						if(scalar(@$values)>0) {
+							for my $v (@$values) {
+								$value .= '<value>';
+								$value .= $v;
+								$value .= '</value>';
+							}
+						}
+					}
+					if($p->{'quotevalue'}) {
+						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
+					}else {
+						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
+					}
+					$data .= $value.'</parameter>';
+				}
+				$data .= "\n\t</template>\n</custombrowse>\n";
+				if(defined($menuname)) {
+					my %menu = (
+						'id' => $menuKey,
+						'name' => $menuname,
+						'group' => $menugroup,
+						'content' => $data
+					);
+					push @result,\%menu;
+				}
+			}
+		}
+	}
+	return \@result;
 }
 
 sub structureBrowseMenus {
@@ -4613,7 +4822,6 @@ sub structureBrowseMenus {
 					if(defined($menu->{'excludedclients'})) {
 						$currentItemGroup{'excludedclients'} = $menu->{'excludedclients'};
 					}
-
 					push @$currentLevel,\%currentItemGroup;
 					sortMenu($currentLevel);
 					$currentLevel = \@level;
@@ -4689,6 +4897,7 @@ sub readBrowseTemplateConfigurationFromDir {
     my $browseDir = shift;
     my $localBrowseMenus = shift;
     my $templates = shift;
+    my $onlyLibrarySupported = shift;
     debugMsg("Loading browse template configuration from: $browseDir\n");
 
     my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"cb.values.xml");
@@ -4701,7 +4910,7 @@ sub readBrowseTemplateConfigurationFromDir {
         # read_file from File::Slurp
         my $content = eval { read_file($path) };
         if ( $content ) {
-		my $errorMsg = parseMenuTemplateContent($client,$item,$content,$localBrowseMenus,$defaultMenu, $templates);
+		my $errorMsg = parseMenuTemplateContent($client,$item,$content,$localBrowseMenus,$defaultMenu, $templates, $onlyLibrarySupported);
 		if($errorMsg) {
 	                errorMsg("CustomBrowse: Unable to open browse configuration file: $path\n$errorMsg\n");
 		}
@@ -4798,6 +5007,8 @@ sub readBrowseConfigurationFromPlugins {
 	my $client = shift;
 	my $localBrowseMenus = shift;
 	my $templates = shift;
+	my $excludePlugins = shift;
+	my $onlyLibrarySupported = shift;
 
 	no strict 'refs';
 	my @enabledplugins;
@@ -4806,14 +5017,25 @@ sub readBrowseConfigurationFromPlugins {
 	}else {
 		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
 	}
-
+	
+	my %excludePluginsHash = ();
+	if($excludePlugins) {
+		my @items = split(/\,/,$excludePlugins);
+		for my $item (@items) {
+			$excludePluginsHash{$item} = 1;
+		}
+	}
 	for my $plugin (@enabledplugins) {
+		if($excludePluginsHash{$plugin}) {
+			next;
+		}
 		if(UNIVERSAL::can("Plugins::$plugin","getCustomBrowseMenus")) {
 			debugMsg("Getting menus for: $plugin\n");
 			my $items = eval { &{"Plugins::${plugin}::getCustomBrowseMenus"}($client) };
 			if ($@) {
 				debugMsg("Error getting menus from $plugin: $@\n");
 			}
+			debugMsg("Got ".scalar(@$items)." menus from $plugin\n");
 			for my $item (@$items) {
 				my $menu = $item->{'menu'};
 				my $menuId = $item->{'id'};
@@ -4821,14 +5043,14 @@ sub readBrowseConfigurationFromPlugins {
 					$menuId = lc($1)."_".$item->{'id'};
 				}
 				if($item->{'type'} eq 'simple') {
-					my $errorMsg = parseMenuTemplateContent($client,$menuId,$menu,$localBrowseMenus,1, $templates);
+					my $errorMsg = parseMenuTemplateContent($client,$menuId,$menu,$localBrowseMenus,1, $templates, $onlyLibrarySupported);
 					if($errorMsg) {
 	                			errorMsg("CustomBrowse: Unable to open plugin browse configuration: $plugin(".$item->{'id'}.")\n$errorMsg\n");
 					}else {
 						$localBrowseMenus->{$menuId}->{'custombrowse_plugin_menu'}=$item;
 						$localBrowseMenus->{$menuId}->{'custombrowse_plugin'} = "Plugins::${plugin}";
 					}
-				}else {
+				}elsif(!$onlyLibrarySupported) {
 					my $errorMsg = parseMenuContent($client,$menuId,$menu,$localBrowseMenus,1);
 					if($errorMsg) {
 		                		errorMsg("CustomBrowse: Unable to open plugin browse configuration: $plugin(".$item->{'id'}.")\n$errorMsg\n");

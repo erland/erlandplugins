@@ -24,7 +24,7 @@
 			<tr>
 				[%- menuid = "menu_" _ menu.id %]
 				[%- menubrowseid = "menubrowse_" _ menu.id %]
-				<td><input type="checkbox" name="[% menubrowseid %]" id="[% menubrowseid %]" value="1" [% menu.enabledbrowse ? "checked" : "" %] onclick="changeNumSelected(this)"></td>
+				<td>[% IF !menu.forceenabledbrowse %]<input type="checkbox" name="[% menubrowseid %]" id="[% menubrowseid %]" value="1" [% menu.enabledbrowse ? "checked" : "" %] onclick="changeNumSelected(this)">[% ELSE %]<input type="checkbox" name="locked_[% menubrowseid %]" value="1" [% menu.enabledbrowse ? "checked" : "" %] disabled>[% END %]</td>
 				<td><input type="checkbox" name="[% menuid %]" id="[% menuid %]" value="1" [% menu.enabled ? "checked" : "" %] onclick="changeNumSelected(this)">
 				<label for="[% menuid %]">[% menu.menuname | html %]</label></td><td>&nbsp;&nbsp;([% menu.id %])</td>
 			</tr>
