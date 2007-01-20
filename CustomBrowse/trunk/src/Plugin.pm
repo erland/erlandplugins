@@ -3979,16 +3979,6 @@ sub handleWebSaveSelectMenus {
                 }
         }
 	$params->{'refresh'} = 1;
-        my $value = 'plugins/CustomBrowse/custombrowse_list.html';
-        if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
-                $value = undef;
-        }
-	if ($::VERSION ge '6.5') {
-		addWebMenus($client,$value);
-		delSlimserverWebMenus();
-		delSlimserverPlayerMenus();
-	}
-	addPlayerMenus();
         handleWebList($client, $params);
 }
 
@@ -4595,6 +4585,17 @@ sub readBrowseConfiguration {
     $browseMenus = structureBrowseMenus(\%localBrowseMenus);
     $browseMenusFlat = \%localBrowseMenus;
     $browseMixes = \%localBrowseMixes;
+    
+    my $value = 'plugins/CustomBrowse/custombrowse_list.html';
+    if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
+        $value = undef;
+    }
+    if ($::VERSION ge '6.5') {
+        addWebMenus($client,$value);
+        delSlimserverWebMenus();
+        delSlimserverPlayerMenus();
+    }
+    addPlayerMenus();
 }
 
 sub getMultiLibraryMenus {
