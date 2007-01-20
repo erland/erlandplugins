@@ -1511,6 +1511,7 @@ sub initPlugin {
 	}
 	debugMsg("CustomSkip: Registering hook.\n");
 	Slim::Control::Request::subscribe(\&newSongCallback, [['playlist'], ['newsong']]);
+	Slim::Control::Request::addDispatch(['customskip','setfilter', '_filterid'], [1, 0, 0, \&setCLIFilter]);
 	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
@@ -1562,6 +1563,54 @@ sub webPages {
 
 	return (\%pages,$value);
 }
+
+sub setCLIFilter {
+	debugMsg("Entering setCLIFilter\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['customskip'],['setfilter']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting setCLIFilter\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting setCLIFilter\n");
+		return;
+	}
+
+	# get our parameters
+  	my $filterId    = $request->getParam('_filterid');
+  	if(!defined $filterId || $filterId eq '') {
+		debugMsg("_filterid not defined\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIFilter\n");
+		return;
+  	}
+  	
+	initFilters();
+
+	if(!defined($filters->{$filterId})) {
+		debugMsg("Unknown filter $filterId\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIFilter\n");
+		return;
+  	}
+	my $key = $client;
+	if(defined($client->syncgroupid)) {
+		$key = "SyncGroup".$client->syncgroupid;
+	}
+	$currentFilter{$key} = $filterId;
+	$client->prefSet('plugin_customskip_filter',$filterId);
+
+	$request->addResult('filter', $filterId);
+	$request->setStatusDone();
+	debugMsg("Exiting setCLIFilter\n");
+}
+
 
 sub newSongCallback 
 {
@@ -2366,6 +2415,24 @@ sub getFilters {
 		my $filter = $filters->{$key};
 		debugMsg("Adding filter: ".$filter->{'id'}."\n");
 		push @result, $filter;
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+
+sub getAvailableFilters {
+	my $client = shift;
+	my @result = ();
+	
+	initFilters($client);
+	foreach my $key (keys %$filters) {
+		my $filter = $filters->{$key};
+		my %item = (
+			'id' => $key,
+			'name' => $filter->{'name'},
+			'value' => $key
+		);
+		push @result, \%item;
 	}
 	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
 	return \@result;
