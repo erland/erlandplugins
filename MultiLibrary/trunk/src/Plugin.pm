@@ -197,6 +197,28 @@ sub selectLibrary {
 				$client->string( 'PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY').": ".$libraries->{$libraryId}->{'name'},
 				1);
 		}
+		if(defined($libraries->{$libraryId}->{'action'})) {
+			my $actionValue = $libraries->{$libraryId}->{'action'};
+			my @actions = ();
+			if(ref($actionValue) eq 'ARRAY') {
+				@actions = @$actionValue;
+			}else {
+				push @actions,$actionValue;
+			}
+			for my $action  (@actions) {
+				if($action->{'type'} eq 'cli') {
+					eval { 
+						debugMsg("Executing action: ".$action->{'type'}.", ".$action->{'data'}."\n");
+						my @parts = split(/ /,$action->{'data'});
+						my $request = $client->execute(\@parts);
+						$request->source('PLUGIN_MULTILIBRARY');
+					};
+					if ($@) {
+						errorMsg("MultiLibrary: Failed to execute action:".$action->{'type'}.", ".$action->{'data'}.":$@\n");
+					}
+				}
+			}
+		}
 		
 	}
 }
@@ -1210,15 +1232,13 @@ sub getCurrentLibrary {
 		}else {
 			my $library = $client->prefGet('plugin_multilibrary_activelibrary');
 			if(defined($library) && defined($libraries->{$library}) && isLibraryEnabledForClient($client,$libraries->{$library})) {
-				$currentLibrary{$key} = $library;
+				selectLibrary($client,$library);
 				return $libraries->{$library};
 			}else {
 				if(scalar(keys %$libraries)==1) {
 					for my $key (keys %$libraries) {
 						if(isLibraryEnabledForClient($client,$libraries->{$key})) {
-							$currentLibrary{$key} = $key;
-							$client->prefSet('plugin_multilibrary_activelibrary',$key);
-							$client->prefSet('plugin_multilibrary_activelibraryno',$libraries->{$key}->{'libraryno'});
+							selectLibrary($client,$key);
 							return $libraries->{$key};
 						}
 					}
@@ -1828,6 +1848,14 @@ sub addValuesToTemplateParameter {
 
 	if($p->{'type'} =~ '^sql.*') {
 		my $listValues = getSQLTemplateData($p->{'data'});
+		if($p->{'type'} =~ /.*optional.*/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @$listValues,\%empty;
+		}
 		if(defined($currentValues)) {
 			for my $v (@$listValues) {
 				if($currentValues->{$v->{'value'}}) {
@@ -1838,6 +1866,14 @@ sub addValuesToTemplateParameter {
 		$p->{'values'} = $listValues;
 	}elsif($p->{'type'} =~ 'function.*') {
 		my $listValues = getFunctionTemplateData($p->{'data'});
+		if($p->{'type'} =~ /.*optional.*list$/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @$listValues,\%empty;
+		}
 		if(defined($currentValues)) {
 			for my $v (@$listValues) {
 				if($currentValues->{$v->{'value'}}) {
@@ -1861,6 +1897,14 @@ sub addValuesToTemplateParameter {
 				$listValue{'value'} = @idName->[0];
 			}
 			push @listValues, \%listValue;
+		}
+		if($p->{'type'} =~ /.*optional.*list$/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @listValues,\%empty;
 		}
 		if(defined($currentValues)) {
 			for my $v (@listValues) {
@@ -2360,13 +2404,15 @@ sub parseTemplateLibraryContent {
 					my $values = $p->{'value'};
 					my $value = '';
 					for my $v (@$values) {
-						if($value ne '') {
-							$value .= ',';
-						}
-						if($p->{'quotevalue'}) {
-							$value .= $dbh->quote(encode_entities($v,"&<>\'\""));
-						}else {
-							$value .= encode_entities($v,"&<>\'\"");
+						if(defined($v) && ref($v) ne 'HASH') {
+							if($value ne '') {
+								$value .= ',';
+							}
+							if($p->{'quotevalue'}) {
+								$value .= $dbh->quote(encode_entities($v,"&<>\'\""));
+							}else {
+								$value .= encode_entities($v,"&<>\'\"");
+							}
 						}
 					}
 					$templateParameters{$p->{'id'}}=$value;

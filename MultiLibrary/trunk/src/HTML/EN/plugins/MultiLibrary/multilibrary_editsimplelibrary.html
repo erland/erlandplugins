@@ -28,7 +28,7 @@
 			<td>
 			[% IF parameter.type == 'text' %]
 				<input type="text" name="libraryparameter_[% parameter.id %]" value="[% parameter.value %]">
-			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist' or parameter.type == 'functionsinglelist' %]
+			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist' or parameter.type == 'functionsinglelist' or parameter.type == 'optionalsinglelist' or parameter.type == 'sqloptionalsinglelist' or parameter.type == 'functionoptionalsinglelist'%]
 				<table border="0">
 					<tr><td>
 						<select name="libraryparameter_[% parameter.id %]">
@@ -39,7 +39,7 @@
 						</select>
 					</td></tr>
 				</table>
-			[% ELSIF parameter.type == 'multiplelist' or parameter.type == 'sqlmultiplelist' or parameter.type == 'functionmultiplelist'%]
+			[% ELSIF parameter.type == 'multiplelist' or parameter.type == 'sqlmultiplelist' or parameter.type == 'functionmultiplelist' or parameter.type == 'optionalmultiplelist' or parameter.type == 'sqloptionalmultiplelist' or parameter.type == 'functionoptionalmultiplelist'%]
 				<table border="0">
 					<tr><td>
 						<select name="libraryparameter_[% parameter.id %]" multiple size="10">

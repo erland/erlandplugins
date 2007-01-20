@@ -66,5 +66,11 @@
 			</data>
 		</track>
 		<menus>[% internalmenus %][% IF custombrowsemenus %],[% custombrowsemenus %][% END %]</menus>
+		[%- IF customskipfilter %]
+		<action>
+			<type>cli</type>
+			<data>customskip setfilter [% customskipfilter %]</data>
+		</action>
+		[%- END %]
 	</library>
 </multilibrary>
