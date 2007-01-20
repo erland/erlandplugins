@@ -287,6 +287,34 @@ sub getCustomSkipFilterTypes {
 		'description' => 'Skip tracks which dont exist in currently active library'
 	);
 	push @result, \%notactive;
+	my %notinlibrary = (
+		'id' => 'multilibrary_notinlibrary',
+		'name' => 'Not Library',
+		'description' => 'Skip tracks which dont exist in selected library',
+		'parameters' => [
+			{
+				'id' => 'library',
+				'type' => 'sqlsinglelist',
+				'name' => 'Library not to skip',
+				'data' => 'select id,name,id from multilibrary_libraries order by name' 
+			}
+		]
+	);
+	push @result, \%notinlibrary;
+	my %inlibrary = (
+		'id' => 'multilibrary_inlibrary',
+		'name' => 'Library',
+		'description' => 'Skip tracks which exist in selected library',
+		'parameters' => [
+			{
+				'id' => 'library',
+				'type' => 'sqlsinglelist',
+				'name' => 'Library to skip',
+				'data' => 'select id,name,id from multilibrary_libraries order by name' 
+			}
+		]
+	);
+	push @result, \%inlibrary;
 	return \@result;
 }
 
@@ -295,6 +323,7 @@ sub checkCustomSkipFilterType	 {
 	my $filter = shift;
 	my $track = shift;
 
+	my $parameters = $filter->{'parameter'};
 	if($filter->{'id'} eq 'multilibrary_notactive') {
 		my $dbh = getCurrentDBH();
 		my $library = getCurrentLibrary($client);
@@ -310,7 +339,45 @@ sub checkCustomSkipFilterType	 {
 			}
 		}
 
+	}elsif($filter->{'id'} eq 'multilibrary_notinlibrary') {
+		my $dbh = getCurrentDBH();
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'library') {
+				my $libraries = $parameter->{'value'};
+				my $library = $libraries->[0] if(defined($libraries) && scalar(@$libraries)>0);
+
+				my $sth = $dbh->prepare("select track from multilibrary_track where library=? and track=?");
+				$sth->bind_param(1,$library,SQL_INTEGER);
+				$sth->bind_param(2,$track->id,SQL_INTEGER);
+				$sth->execute();
+				my $id = undef;
+				$sth->bind_col(1, \$id);
+				if(!$sth->fetch()) {
+					return 1;
+				}
+			}
+		}
+
+	}elsif($filter->{'id'} eq 'multilibrary_inlibrary') {
+		my $dbh = getCurrentDBH();
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'library') {
+				my $libraries = $parameter->{'value'};
+				my $library = $libraries->[0] if(defined($libraries) && scalar(@$libraries)>0);
+	
+				my $sth = $dbh->prepare("select track from multilibrary_track where library=? and track=?");
+				$sth->bind_param(1,$library,SQL_INTEGER);
+				$sth->bind_param(2,$track->id,SQL_INTEGER);
+				$sth->execute();
+				my $id = undef;
+				$sth->bind_col(1, \$id);
+				if($sth->fetch()) {
+					return 1;
+				}
+			}
+		}
 	}
+
 	return 0;
 }
 
