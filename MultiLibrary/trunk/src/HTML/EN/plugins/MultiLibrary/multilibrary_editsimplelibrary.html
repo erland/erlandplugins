@@ -28,7 +28,7 @@
 			<td>
 			[% IF parameter.type == 'text' %]
 				<input type="text" name="libraryparameter_[% parameter.id %]" value="[% parameter.value %]">
-			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist'%]
+			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist' or parameter.type == 'functionsinglelist' %]
 				<table border="0">
 					<tr><td>
 						<select name="libraryparameter_[% parameter.id %]">
@@ -39,7 +39,7 @@
 						</select>
 					</td></tr>
 				</table>
-			[% ELSIF parameter.type == 'multiplelist' or parameter.type == 'sqlmultiplelist'%]
+			[% ELSIF parameter.type == 'multiplelist' or parameter.type == 'sqlmultiplelist' or parameter.type == 'functionmultiplelist'%]
 				<table border="0">
 					<tr><td>
 						<select name="libraryparameter_[% parameter.id %]" multiple size="10">
@@ -52,7 +52,7 @@
 				</table>
 			[% ELSIF parameter.type == 'checkbox' %]
 				<input type="checkbox" name="libraryparameter_[% parameter.id %]" id="libraryparameter_[% parameter.id %]" value="1" [% parameter.value ? "checked" : "" %]>
-			[% ELSIF parameter.type == 'checkboxes' or parameter.type == 'sqlcheckboxes'%]
+			[% ELSIF parameter.type == 'checkboxes' or parameter.type == 'sqlcheckboxes' or parameter.type == 'functioncheckboxes'%]
 				<table border="0">[% USE table parameter.values, cols=3, pad=0 %]
 					[%- FOREACH itemrow = table.rows %]
 						<tr>
