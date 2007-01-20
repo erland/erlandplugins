@@ -56,11 +56,11 @@
 				group by albums.id
 				[% ELSE %]
 				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums[% IF library %],multilibrary_album[% END %]
+				[%- IF library %]
 				where
-					[%- IF library %]
 					albums.id=multilibrary_album.album and
 					multilibrary_album.library=[% library %]
-					[%- END %]
+				[%- END %]
 				[%- END %]
 				order by {orderby}
 			</menudata>
