@@ -196,6 +196,39 @@ sub isMenuEnabledForClient {
 	}
 }
 
+sub isMenuEnabledForLibrary {
+	my $client = shift;
+	my $menu = shift;
+	
+	my $library = undef;
+	if(defined($client)) {
+		$library = $client->prefGet('plugin_multilibrary_activelibraryno');
+	}
+	if(defined($menu->{'includedlibraries'})) {
+		if(defined($library)) {
+			my @libraries = split(/,/,$menu->{'includedlibraries'});
+			for my $libraryName (@libraries) {
+				if($library eq $libraryName) {
+					return 1;
+				}
+			}
+		}
+		return 0;
+	}elsif(defined($menu->{'excludedlibraries'})) {
+		if(defined($library)) {
+			my @libraries = split(/,/,$menu->{'excludedlibraries'});
+			for my $libraryName (@libraries) {
+				if($library eq $libraryName) {
+					return 0;
+				}
+			}
+		}
+		return 1;
+	}else {
+		return 1;
+	}
+}
+
 sub getMenuItems {
     my $client = shift;
     my $item = shift;
@@ -210,7 +243,7 @@ sub getMenuItems {
             	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
             }
             if($browseMenus->{$menu}->{'enabled'}) {
-                    if(isMenuEnabledForClient($client,$browseMenus->{$menu})) {
+                    if(isMenuEnabledForClient($client,$browseMenus->{$menu}) && isMenuEnabledForLibrary($client,$browseMenus->{$menu})) {
 		            push @listRef,$browseMenus->{$menu};
                     }		
             }
@@ -220,12 +253,12 @@ sub getMenuItems {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {
 		foreach my $it (@{$item->{'menu'}}) {
-			if(isMenuEnabledForClient($client,$it)) {
+			if(isMenuEnabledForClient($client,$it) && isMenuEnabledForLibrary($client,$it)) {
 				push @menus,$it;
 			}
 		}
 	}else {
-		if(isMenuEnabledForClient($client,$item->{'menu'})) {
+		if(isMenuEnabledForClient($client,$item->{'menu'}) && isMenuEnabledForLibrary($client,$item->{'menu'})) {
 			push @menus,$item->{'menu'};
 		}
 	}
@@ -4801,6 +4834,53 @@ sub structureBrowseMenus {
 					}else {
 						$existingItem->{'excludedclients'} = undef;
 					}
+					if(defined($menu->{'includedlibraries'})) {
+						if(defined($existingItem->{'includedlibraries'})) {
+							my @existingLibraries = split(/,/,$existingItem->{'includedlibraries'});
+							my @libraries = split(/,/,$menu->{'includedlibraries'});
+							for my $libraryName (@libraries) {
+								my $bFound = 0;
+								for my $existingLibraryName (@existingLibraries) {
+									if($existingLibraryName eq $libraryName) {
+										$bFound = 1;
+									}
+								}
+								if(!$bFound) {
+									$existingItem->{'includedlibraries'} .= ",$libraryName";
+								}
+							}
+						}
+					}else {
+						$existingItem->{'includedlibraries'} = undef;
+					}
+					if(defined($menu->{'excludedlibraries'})) {
+						if(defined($existingItem->{'excludedlibraries'})) {
+							my @existingLibraries = split(/,/,$existingItem->{'excludedlibraries'});
+							my @libraries = split(/,/,$menu->{'excludedlibraries'});
+							my $excludedLibraries = '';
+							for my $libraryName (@libraries) {
+								my $bFound = 0;
+								for my $existingLibraryName (@existingLibraries) {
+									if($existingLibraryName eq $libraryName) {
+										$bFound = 1;
+									}
+								}
+								if($bFound) {
+									if($excludedLibraries ne '') {
+										$excludedLibraries .= ",";
+									}
+									$excludedLibraries .= $libraryName;
+								}
+							}
+							if($excludedLibraries eq '') {
+								$existingItem->{'excludedlibraries'} = undef;
+							}else {
+								$existingItem->{'excludedlibraries'} = $excludedLibraries;
+							}
+						}
+					}else {
+						$existingItem->{'excludedlibraries'} = undef;
+					}
 
 					$currentLevel = $existingItem->{'menu'};
 				}else {
@@ -4822,6 +4902,12 @@ sub structureBrowseMenus {
 					}
 					if(defined($menu->{'excludedclients'})) {
 						$currentItemGroup{'excludedclients'} = $menu->{'excludedclients'};
+					}
+					if(defined($menu->{'includedlibraries'})) {
+						$currentItemGroup{'includedlibraries'} = $menu->{'includedlibraries'};
+					}
+					if(defined($menu->{'excludedlibraries'})) {
+						$currentItemGroup{'excludedlibraries'} = $menu->{'excludedlibraries'};
 					}
 					push @$currentLevel,\%currentItemGroup;
 					sortMenu($currentLevel);
