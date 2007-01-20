@@ -995,8 +995,7 @@ sub replaceParameters {
 
     if(defined($parameters)) {
         for my $param (keys %$parameters) {
-            my $value = $dbh->quote($parameters->{$param});
-	    $value = substr($value, 1, -1);
+            my $value = encode_entities($parameters->{$param},"&<>\'\"");
 	    $value = Slim::Utils::Unicode::utf8on($value);
 	    $value = Slim::Utils::Unicode::utf8encode_locale($value);
             $originalValue =~ s/\{$param\}/$value/g;
@@ -1005,7 +1004,7 @@ sub replaceParameters {
     while($originalValue =~ m/\{property\.(.*?)\}/) {
 	my $propertyValue = Slim::Utils::Prefs::get($1);
 	if(defined($propertyValue)) {
-		$propertyValue = $dbh->quote($propertyValue);
+		$propertyValue = encode_entities($propertyValue,"&<>\'\"");
 	    	$propertyValue = substr($propertyValue, 1, -1);
 		$originalValue =~ s/\{property\.$1\}/$propertyValue/g;
 	}else {
