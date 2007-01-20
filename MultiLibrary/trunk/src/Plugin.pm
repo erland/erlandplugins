@@ -92,9 +92,9 @@ sub getOverlay {
 	my $library = getCurrentLibrary($client);
 	my $itemId = $item->{'id'};
 	if(defined($itemId) && defined($library) && $itemId eq $library->{'id'}) {
-		return [undef, undef];
+		return [Slim::Display::Display::symbol('notesymbol'), Slim::Display::Display::symbol('rightarrow')];
 	}else {
-		return [undef, Slim::Display::Display::symbol('notesymbol')];
+		return [undef, Slim::Display::Display::symbol('rightarrow')];
 	}
 }
 
@@ -150,10 +150,21 @@ sub setMode {
 		}
 	}
 	@listRef = sort { $a->{'libraryname'} cmp $b->{'libraryname'} } @listRef;
+	my $currentLibrary = getCurrentLibrary($client);
+	my $i = undef;
+	if(defined($currentLibrary)) {
+		$i = 0;
+		for my $item (@listRef) {
+			if($item->{'id'} eq $currentLibrary->{'id'}) {
+				last;
+			}
+			$i = $i + 1;
+		}
+	}
 
 	# use INPUT.Choice to display the list of feeds
 	my %params = (
-		header     => '{PLUGIN_MULTILIBRARY} {count}',
+		header     => '{PLUGIN_MULTILIBRARY_SELECT} {count}',
 		listRef    => \@listRef,
 		name       => \&getDisplayText,
 		overlayRef => \&getOverlay,
@@ -162,6 +173,7 @@ sub setMode {
 		onPlay     => sub {
 			my ($client, $item) = @_;
 			selectLibrary($client,$item->{'id'},1);
+			Slim::Buttons::Common::pushMode($client, 'playlist');
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
@@ -170,8 +182,12 @@ sub setMode {
 		onRight    => sub {
 			my ($client, $item) = @_;
 			selectLibrary($client,$item->{'id'},1);
+			Slim::Buttons::Common::pushMode($client, 'playlist');
 		},
 	);
+	if(defined($i)) {
+		$params{'listIndex'} = $i;
+	}
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
 }
 
@@ -899,6 +915,7 @@ sub installHook()
 {  
 	debugMsg("Hook activated.\n");
 	Slim::Control::Request::subscribe(\&Plugins::MultiLibrary::Plugin::rescanCallback,[['rescan']]);
+	Slim::Control::Request::subscribe(\&Plugins::MultiLibrary::Plugin::powerCallback,[['power']]);
 	$MULTILIBRARY_HOOK=1;
 }
 
@@ -908,6 +925,7 @@ sub uninstallHook()
 {
 	debugMsg("Hook deactivated.\n");
 	Slim::Control::Request::unsubscribe(\&Plugins::MultiLibrary::Plugin::rescanCallback);
+	Slim::Control::Request::unsubscribe(\&Plugins::MultiLibrary::Plugin::powerCallback);
 	$MULTILIBRARY_HOOK=0;
 }
 
@@ -929,6 +947,30 @@ sub rescanCallback($)
 
 	}
 	debugMsg("Exiting rescanCallback\n");
+}
+
+sub powerCallback($) 
+{
+	debugMsg("Entering powerCallback\n");
+	# These are the two passed parameters
+	my $request=shift;
+	my $client = $request->client();
+	if(Slim::Utils::Prefs::get('plugin_multilibrary_question_startup')) {
+
+		######################################
+		## Rescan finished
+		######################################
+		if ( defined($client) && $request->isCommand([['power']]) )
+		{
+			my $power = $request->getParam('_newvalue');
+			if($power) {
+				debugMsg("Asking for library\n");
+				Slim::Buttons::Common::pushMode($client,'PLUGIN.MultiLibrary::Plugin',undef);
+				$client->update();
+			}
+		}
+	}
+	debugMsg("Exiting powerCallback\n");
 }
 
 sub refreshLibraries {
@@ -2975,13 +3017,17 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_save', 1);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_question_startup');
+	if (! defined $prefVal) {
+		Slim::Utils::Prefs::set('plugin_multilibrary_question_startup', 0);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_showmessages'],
+	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_showmessages'],
 	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -3020,6 +3066,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup"); }
+		},		
+	plugin_multilibrary_question_startup => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_question_startup"); }
 		},		
 	plugin_multilibrary_refresh_save => {
 			'validate'     => \&validateTrueFalseWrapper
@@ -3513,12 +3569,20 @@ PLUGIN_MULTILIBRARY_REFRESH_STARTUP
 SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP
 	EN	Startup refresh
 
+PLUGIN_MULTILIBRARY_QUESTION_STARTUP
+	EN	Ask for library at startup
+
+SETUP_PLUGIN_MULTILIBRARY_QUESTION_STARTUP
+	EN	Ask for library
+
 PLUGIN_MULTILIBRARY_REFRESH_SAVE
 	EN	Refresh libraries after library has been save
 
 SETUP_PLUGIN_MULTILIBRARY_REFRESH_SAVE
 	EN	Refresh on save
 
+PLUGIN_MULTILIBRARY_SELECT
+	EN	Select a library
 EOF
 
 }
