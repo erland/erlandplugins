@@ -13,10 +13,10 @@
 			<menulinks>alpha</menulinks>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
-				[%- IF library %]
+				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
-					multilibrary_track.library=[% library %]
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				[%- IF customsorttag1 %]
 				left join customscan_track_attributes as sortattr on
@@ -52,10 +52,10 @@
 				<menulinks>alpha</menulinks>
 				<menudata>
 					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						customscan_track_attributes.track=multilibrary_track.track and
-						multilibrary_track.library=[% library %]
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					join customscan_track_attributes as attr1 on
 						customscan_track_attributes.track=attr1.track and
@@ -97,10 +97,10 @@
 					<menulinks>alpha</menulinks>
 					<menudata>
 						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						join multilibrary_track on
 							customscan_track_attributes.track=multilibrary_track.track and
-							multilibrary_track.library=[% library %]
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 						[%- END %]
 						join customscan_track_attributes as attr1 on
 							customscan_track_attributes.track=attr1.track and
@@ -147,10 +147,10 @@
 						<menulinks>alpha</menulinks>
 						<menudata>
 							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							join multilibrary_track on
 								customscan_track_attributes.track=multilibrary_track.track and
-								multilibrary_track.library=[% library %]
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 							[%- END %]
 							join customscan_track_attributes as attr1 on
 								customscan_track_attributes.track=attr1.track and
@@ -215,11 +215,11 @@
 								<keyword name="orderby" value="tracks.titlesort asc"/>
 							</option>
 							<menudata>
-								select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][% IF library %],multilibrary_track[% END %] 
+								select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][% IF library or activelibrary %],multilibrary_track[% END %] 
 								where 
-									[%- IF library %]
+									[%- IF library or activelibrary %]
 									tracks.id=multilibrary_track.track and
-									multilibrary_track.library=[% library %] and
+									multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 									[%- END %]
 									tracks.audio=1 and 
 									tracks.id=attr1.track and

@@ -12,10 +12,10 @@
 			<menutype>sql</menutype>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
-				[%- IF library %]
+				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
-					multilibrary_track.library=[% library %]
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				[%- IF customsorttag %]
 				left join customscan_track_attributes as attr2 on
@@ -64,11 +64,11 @@
 					<keyword name="orderby" value="tracks.titlesort asc"/>
 				</option>
 				<menudata>
-					select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes[% IF library %],multilibrary_track[% END %] 
+					select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=customscan_track_attributes.track and
