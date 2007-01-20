@@ -419,15 +419,17 @@ sub getAvailableCustomBrowseMenus {
 	my $client = shift;
 
 	my @result = ();
-	my $menus = getCustomBrowseMenuTemplates($client);
-	if(defined($menus)) {
-		for my $menu (@$menus) {
-			my %item = (
-				'id' => $menu->{'id'},
-				'name' => $menu->{'name'},
-				'value' => $menu->{'id'}
-			);
-			push @result,\%item;
+	if(Slim::Utils::Prefs::get('plugin_multilibrary_custombrowse_menus')) {
+		my $menus = getCustomBrowseMenuTemplates($client);
+		if(defined($menus)) {
+			for my $menu (@$menus) {
+				my %item = (
+					'id' => $menu->{'id'},
+					'name' => $menu->{'name'},
+					'value' => $menu->{'id'}
+				);
+				push @result,\%item;
+			}
 		}
 	}
 	return \@result;
@@ -3021,13 +3023,17 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_question_startup', 0);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_custombrowse_menus');
+	if (! defined $prefVal) {
+		Slim::Utils::Prefs::set('plugin_multilibrary_custombrowse_menus', 1);
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_showmessages'],
+	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_showmessages'],
 	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -3086,6 +3092,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save"); }
+		},		
+	plugin_multilibrary_custombrowse_menus => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_custombrowse_menus"); }
 		},		
 	plugin_multilibrary_library_directory => {
 			'validate' => \&validateIsDirWrapper
@@ -3568,6 +3584,12 @@ PLUGIN_MULTILIBRARY_REFRESH_STARTUP
 
 SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP
 	EN	Startup refresh
+
+PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
+	EN	Selectable Custom Browse menus
+
+SETUP_PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
+	EN	Custom Browse menus
 
 PLUGIN_MULTILIBRARY_QUESTION_STARTUP
 	EN	Ask for library at startup
