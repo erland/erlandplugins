@@ -14,11 +14,11 @@
 			<menulinks>alpha</menulinks>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library %],multilibrary_track[% END %]
+				select tracks.id, tracks.title from tracks,contributor_track[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 				where
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
@@ -44,7 +44,7 @@
 				order by rand()
                         </playdata>
 	        	<menudata>
-				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks[% IF library %],multilibrary_track[% END %]
+				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 				[%- IF singlecomment %]
 				,comments
 				[%- END %]
@@ -52,9 +52,9 @@
 				,genre_track,genres
 				[%- END %]
                                 where
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
@@ -86,11 +86,11 @@
 				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and

@@ -14,11 +14,11 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library %],multilibrary_track[% END %] 
+				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					playlist_track.track=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.content_type!='cpl' and 
 					tracks.id=playlist_track.playlist 
@@ -31,11 +31,11 @@
 				<itemformat>track</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from tracks,playlist_track[% IF library %],multilibrary_track[% END %] 
+					select tracks.id,tracks.title from tracks,playlist_track[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						playlist_track.track=tracks.id and 

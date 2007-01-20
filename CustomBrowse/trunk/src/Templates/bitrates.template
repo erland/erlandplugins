@@ -11,11 +11,11 @@
 			<menuname>Artists</menuname>
 			<playtype>sql</playtype>
 			<playdata>
-				select tracks.id,tracks.title from tracks[% IF library %],multilibrary_track[% END %]
+				select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 				where 
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.audio=1 and 
 					(
@@ -33,11 +33,11 @@
 			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
-				select case when lossless=1 then 'Lossless' else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library %],multilibrary_track[% END %] 
+				select case when lossless=1 then 'Lossless' else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					audio=1 
 				group by calculatedbitrate
@@ -49,11 +49,11 @@
 				<itemtype>artist</itemtype>
 				<playtype>sql</playtype>
 				<playdata>
-					select tracks.id,tracks.title from tracks,contributor_track[% IF library %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from tracks,contributor_track[% IF library or activelibrary %],multilibrary_track[% END %]
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						contributor_track.track=tracks.id and 
@@ -75,11 +75,11 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track[% IF library %],multilibrary_track[% END %]
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track[% IF library or activelibrary %],multilibrary_track[% END %]
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
@@ -106,11 +106,11 @@
 					<itemformat>album</itemformat>
 					<playtype>sql</playtype>
 					<playdata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %]
+						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %]
 						where 
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% library %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 
@@ -144,11 +144,11 @@
 						<keyword name="orderby" value="albums.titlesort asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_album,albums[% IF library %],multilibrary_track[% END %] 
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_album,albums[% IF library or activelibrary %],multilibrary_track[% END %] 
 						where 
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% library %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
@@ -177,11 +177,11 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %]
+							select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %]
 							where 
-								[%- IF library %]
+								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
-								multilibrary_track.library=[% library %] and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 

@@ -14,6 +14,7 @@
 		<parameter type="sqlcheckboxes" id="genres" name="Single genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
+		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 	</template>

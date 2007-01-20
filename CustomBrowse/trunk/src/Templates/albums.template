@@ -29,11 +29,11 @@
 				<name>Sort by artist</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_album,contributors[% IF library %],multilibrary_album[% END %]
+					select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
-						multilibrary_album.library=[% library %] and
+						multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						albums.id=contributor_album.album and
 						contributor_album.contributor=contributors.id and
@@ -44,22 +44,24 @@
 			</option>
 			<menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library %],multilibrary_album[% END %]
+				select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 				where
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					albums.id=multilibrary_album.album and
-					multilibrary_album.library=[% library %] and
+					multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					albums.id=contributor_album.album and
 					contributor_album.contributor=contributors.id and
 					contributor_album.role in (1,5)
 				group by albums.id
 				[% ELSE %]
-				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums[% IF library %],multilibrary_album[% END %]
-				[%- IF library %]
+				select albums.id,albums.title,substr(albums.titlesort,1,1) from albums[% IF library or activelibrary %],multilibrary_album[% END %]
+				[%- IF library or activelibrary %]
 				where
-					albums.id=multilibrary_album.album and
-					multilibrary_album.library=[% library %]
+					albums.id=multilibrary_album.album
+					[%- IF library %]
+					and multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					[%- END %]
 				[%- END %]
 				[%- END %]
 				order by {orderby}
@@ -73,11 +75,11 @@
 				[%- END %]
 				<menutype>sql</menutype>
 				<menudata>
-					select tracks.id,tracks.title from tracks[% IF library %],multilibrary_track[% END %] 
+					select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						tracks.album={album} 

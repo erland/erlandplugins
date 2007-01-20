@@ -13,11 +13,11 @@
 			<itemtype>artist</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select contributors.id,contributors.name from contributors,tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
+				select contributors.id,contributors.name from contributors,tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
-					[%- IF library %]
+					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% library %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
@@ -35,11 +35,11 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
+					select albums.id,albums.title from tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						albums.id=tracks.album and 
@@ -57,11 +57,11 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library %],multilibrary_track[% END %] 
+						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %] 
 						where 
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% library %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 

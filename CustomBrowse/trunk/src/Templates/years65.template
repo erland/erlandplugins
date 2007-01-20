@@ -13,11 +13,11 @@
 			<itemtype>year</itemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
-				select years.id,case when years.id&gt;0 then years.id else 'Unknown' end from years[% IF library %],multilibrary_year[% END %] 
-				[%- IF library %]
+				select years.id,case when years.id&gt;0 then years.id else 'Unknown' end from years[% IF library or activelibrary %],multilibrary_year[% END %] 
+				[%- IF library or activelibrary %]
 				where
 					years.id=multilibrary_year.year and
-					multilibrary_year.library=[% library %]
+					multilibrary_year.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				order by years.id desc
 			</menudata>
@@ -38,11 +38,11 @@
 					<name>Sort by artist</name>
 					<menulinks>number</menulinks>
 					<menudata>
-						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks[% IF library %],multilibrary_track[% END %]
+						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 						where
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% library %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
@@ -54,11 +54,11 @@
 					</menudata>
 				</option>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library %],multilibrary_track[% END %] 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library %]
+						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% library %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						albums.id=tracks.album and
 						tracks.year={year} 
@@ -74,11 +74,11 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks[% IF library %],multilibrary_track[% END %] 
+						select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 						where 
-							[%- IF library %]
+							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% library %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							tracks.album={album} and 
