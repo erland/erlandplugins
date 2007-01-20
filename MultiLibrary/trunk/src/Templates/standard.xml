@@ -18,6 +18,9 @@
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
+		<parameter type="functioncheckboxes" id="internalmenus" name="Included internal menus" value="1" data="Plugins::MultiLibrary::Plugin,getAvailableInternalMenus"/>
+		<parameter type="functioncheckboxes" id="custombrowsemenus" name="Included Custom Browse menus" value="0" data="Plugins::MultiLibrary::Plugin,getAvailableCustomBrowseMenus"/>
+		<parameter type="checkbox" id="enabledbrowse" name="Show in home menu" value="1"/>
 	</template>
 </multilibrary>
 

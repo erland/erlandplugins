@@ -43,6 +43,8 @@ my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
 my $PLUGINVERSION = '1.1';
+my $internalMenus = undef;
+my $customBrowseMenus = undef;
 
 # Indicator if hooked or not
 # 0= No
@@ -110,7 +112,7 @@ sub isLibraryEnabledForClient {
 			}
 		}
 		return 0;
-	}elsif(defined($library->{'excludedclients'})) {
+	}elsif(defined($library->{'excludedclients'} && ref($library->{'excludedclients'}) ne 'HASH')) {
 		if(defined($client)) {
 			my @clients = split(/,/,$library->{'excludedclients'});
 			for my $clientName (@clients) {
@@ -290,58 +292,84 @@ sub checkCustomSkipFilterType	 {
 	return 0;
 }
 
-sub getCustomBrowseMenus {
+sub getAvailableInternalMenus {
 	my $client = shift;
-	my @result = ();
 
-	for my $libraryid (keys %$libraries) {
-		my $library = $libraries->{$libraryid};
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
+	my @result = ();
+	my $menus = getInternalMenuTemplates($client);
+	if(defined($menus)) {
+		for my $menu (@$menus) {
+			my %item = (
+				'id' => $menu->{'id'},
+				'name' => $menu->{'name'},
+				'value' => $menu->{'id'}
+			);
+			push @result,\%item;
 		}
-		for my $plugindir (@pluginDirs) {
-			my $templateDir = catdir($plugindir,'MultiLibrary','Menus');
-			next unless -d $templateDir;
-			my @dircontents = Slim::Utils::Misc::readDirectory($templateDir,'xml');
-			for my $item (@dircontents) {
-				next if -d catdir($templateDir,$item);
-				my $templateId = $item;
-				$templateId =~ s/\.xml$//;
-				my $path = catfile($templateDir,$item);
-				my $content = eval { read_file($path) };
-				if(defined($content)) {
-					my %parameters = (
-						'libraryid' => $libraryid,
-						'libraryno' => $library->{'libraryno'},
-						'libraryname' => $library->{'name'}
-					);
-					if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
-						$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
+	}
+	return \@result;
+}
+
+sub getAvailableCustomBrowseMenus {
+	my $client = shift;
+
+	my @result = ();
+	my $menus = getCustomBrowseMenuTemplates($client);
+	if(defined($menus)) {
+		for my $menu (@$menus) {
+			my %item = (
+				'id' => $menu->{'id'},
+				'name' => $menu->{'name'},
+				'value' => $menu->{'id'}
+			);
+			push @result,\%item;
+		}
+	}
+	return \@result;
+}
+
+sub getInternalMenuTemplates {
+	my $client = shift;
+	my @pluginDirs = ();
+	if ($::VERSION ge '6.5') {
+		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	}else {
+		@pluginDirs = catdir($Bin, "Plugins");
+	}
+	my @result = ();
+	for my $plugindir (@pluginDirs) {
+		my $templateDir = catdir($plugindir,'MultiLibrary','Menus');
+		next unless -d $templateDir;
+		my @dircontents = Slim::Utils::Misc::readDirectory($templateDir,'xml');
+		for my $item (@dircontents) {
+			next if -d catdir($templateDir,$item);
+			my $templateId = $item;
+			$templateId =~ s/\.xml$//;
+			my $path = catfile($templateDir,$item);
+			my $content = eval { read_file($path) };
+			if(defined($content)) {
+				$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+				my $xml = eval { 	XMLin($content, forcearray => ["parameter","value"], keyattr => []) };
+				if(defined($xml)) {
+					my $parameters = $xml->{'template'}->{'parameter'};
+					my $menuname = undef;
+					for my $p (@$parameters) {
+						if($p->{'id'} eq 'menuname') {
+							my $values = $p->{'value'};
+							if(defined($values) && scalar(@$values)>0) {
+								$menuname = $values->[0];
+								last;
+							}
+						}
 					}
-					if(defined($library->{'includedclients'})) {
-						$parameters{'includedclients'} = '<value>'.$library->{'includedclients'}.'</value>';
-					}else {
-						$parameters{'includedclients'} = '';
+					if(defined($menuname)) {
+						my %menu = (
+							'id' => 'ml_'.$templateId,
+							'name' => $menuname,
+							'content' => $content
+						);
+						push @result,\%menu;
 					}
-					if(defined($library->{'excludedclients'})) {
-						$parameters{'excludedclients'} = '<value>'.$library->{'excludedclients'}.'</value>';
-					}else {
-						$parameters{'excludedclients'} = '';
-					}
-					$content = replaceParameters($content,\%parameters);
-					my %templateItem = (
-						'id' => $libraryid.'_'.$templateId,
-						'libraryid' => $libraryid,
-						'libraryno' => $library->{'libraryno'},
-						'libraryname' => $library->{'name'},
-						'librarytype' => $item,
-						'type' => 'simple',
-						'menu' => $content
-					);
-					push @result,\%templateItem;
 				}
 			}
 		}
@@ -349,47 +377,151 @@ sub getCustomBrowseMenus {
 	return \@result;
 }
 
+sub getCustomBrowseMenuTemplates {
+	my $client = shift;
+	my @result = ();
+	if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","getMultiLibraryMenus")) {
+		debugMsg("Getting library templates from Custom Browse\n");
+		no strict 'refs';
+		my $items = eval { &{"Plugins::CustomBrowse::Plugin::getMultiLibraryMenus"}($client) };
+		if ($@) {
+			debugMsg("Error getting templates: $@\n");
+		}
+		use strict 'refs';
+		for my $item (@$items) {
+			my %menu = (
+				'id' => $item->{'id'},
+				'name' => $item->{'name'},
+				'group' => $item->{'group'},
+				'content' => $item->{'content'}
+			);
+			if(defined($item->{'group'}) && $item->{'group'} ne '') {
+				$menu{'name'} = $item->{'group'}.'/'.$item->{'name'};
+			}
+			push @result,\%menu;
+		}
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+sub getCustomBrowseMenus {
+	my $client = shift;
+	my @result = ();
+	$internalMenus = getInternalMenuTemplates($client);
+	$customBrowseMenus = getCustomBrowseMenuTemplates($client);
+
+	for my $libraryid (keys %$libraries) {
+		my $library = $libraries->{$libraryid};
+		my $menusValue = $library->{'menus'};
+		my %menus = ();
+		my @menusArray = ();
+		if($menusValue) {
+			@menusArray = split(/\,/,$menusValue);
+			for  my $menu (@menusArray) {
+				$menus{$menu} = 1;
+			}
+		}
+		my %availableMenus = ();
+		for my $menu (@$internalMenus) {
+			if($menus{$menu->{'id'}}) {
+				$availableMenus{$menu->{'id'}} = $menu;
+			}
+		}
+		for my $menu (@$customBrowseMenus) {
+			if($menus{$menu->{'id'}}) {
+				$availableMenus{$menu->{'id'}} = $menu;
+			}
+		}
+		for my $menuKey (keys %availableMenus) {
+			my $menu = $availableMenus{$menuKey};
+			my $content = getMenuContent($library,$menu);
+			my %templateItem = (
+				'id' => $libraryid.'_'.$menuKey,
+				'libraryid' => $libraryid,
+				'libraryno' => $library->{'libraryno'},
+				'libraryname' => $library->{'name'},
+				'librarytype' => $menuKey,
+				'type' => 'simple',
+				'menu' => $content
+			);
+			push @result,\%templateItem;
+		}
+	}
+	return \@result;
+}
+
+sub getMenuContent {
+	my $library = shift;
+	my $menu = shift;
+	my %parameters = (
+		'libraryid' => $library->{'id'},
+		'libraryno' => $library->{'libraryno'},
+		'libraryname' => $library->{'name'}
+	);
+	if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
+		$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
+	}
+	if(defined($library->{'includedclients'})) {
+		$parameters{'includedclients'} = $library->{'includedclients'};
+	}else {
+		$parameters{'includedclients'} = '';
+	}
+	if(defined($library->{'excludedclients'})) {
+		$parameters{'excludedclients'} = $library->{'excludedclients'};
+	}else {
+		$parameters{'excludedclients'} = '';
+	}
+	if(defined($library->{'enabledbrowse'})) {
+		if($menu->{'content'} !~ /<enabledbrowse>.*<\/enabledbrowse>/) {
+			my $data = $menu->{'content'};
+			$data =~ s/<template>/<enabledbrowse>{enabledbrowse}<\/enabledbrowse>\n\t<template>/m;
+			$menu->{'content'} = $data;
+		}
+		if(ref($library->{'enabledbrowse'}) ne 'HASH') {
+			$parameters{'enabledbrowse'} = $library->{'enabledbrowse'};
+		}else {
+			$parameters{'enabledbrowse'} = '';
+		}
+	}else {
+		$parameters{'enabledbrowse'} = '';
+	}
+	if(defined($menu->{'group'}) && $menu->{'group'} ne '') {
+		$parameters{'libraryname'} = $parameters{'libraryname'}."/".$menu->{'group'};
+	}
+	my $content = replaceParameters($menu->{'content'},\%parameters);
+					
+	return $content;
+}
 sub getCustomBrowseMenuData {
 	my $client = shift;
 	my $menu = shift;
 
 	if(defined($menu->{'libraryid'}) && defined($libraries->{$menu->{'libraryid'}})) {
-		my $library = $libraries->{$menu->{'libraryid'}};
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
+		if(!defined($customBrowseMenus)) {
+			$customBrowseMenus = getCustomBrowseMenuTemplates($client);
 		}
-		for my $plugindir (@pluginDirs) {
-			my $templateDir = catdir($plugindir,'MultiLibrary','Menus');
-			next unless -d $templateDir;
-			next if -d catdir($templateDir,$menu->{'librarytype'});
-			my $templateId = $menu->{'libraryid'};
-			my $path = catfile($templateDir,$menu->{'librarytype'});
-			my $content = eval { read_file($path) };
-			if(defined($content)) {
-				my %parameters = (
-					'libraryid' => $menu->{'libraryid'},
-					'libraryno' => $library->{'libraryno'},
-					'libraryname' => $library->{'name'}
-				);
-				if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
-					$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
-				}
-				if(defined($library->{'includedclients'})) {
-					$parameters{'includedclients'} = '<value>'.$library->{'includedclients'}.'</value>';
-				}else {
-					$parameters{'includedclients'} = '';
-				}
-				if(defined($library->{'excludedclients'})) {
-					$parameters{'excludedclients'} = '<value>'.$library->{'excludedclients'}.'</value>';
-				}else {
-					$parameters{'excludedclients'} = '';
-				}
-				$content = replaceParameters($content,\%parameters);
-				return $content;
+		my $selectedMenu = undef;
+		for my $m (@$customBrowseMenus) {
+			if($m->{'id'} eq $menu->{'librarytype'}) {
+				$selectedMenu = $m;
+				last;
 			}
+		}
+		if(!defined($selectedMenu)) {
+			if(!defined($internalMenus)) {
+				$internalMenus = getInternalMenuTemplates($client);
+			}
+			for my $m (@$internalMenus) {
+				if($m->{'id'} eq $menu->{'librarytype'}) {
+					$selectedMenu = $m;
+					last;
+				}
+			}
+		}
+		if(defined($selectedMenu)) {
+			my $library = $libraries->{$menu->{'libraryid'}};
+			my $content = getMenuContent($library,$selectedMenu);
+			return $content;
 		}
 	}
 	return undef;
@@ -1390,6 +1522,7 @@ sub handleWebNewLibraryParameters {
 			}
 		}
 	}
+	
 	$params->{'pluginMultiLibraryNewLibraryParameters'} = \@parametersToSelect;
         return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newlibraryparameters.html', $params);
 }
@@ -1704,6 +1837,16 @@ sub addValuesToTemplateParameter {
 			}
 		}
 		$p->{'values'} = $listValues;
+	}elsif($p->{'type'} =~ 'function.*') {
+		my $listValues = getFunctionTemplateData($p->{'data'});
+		if(defined($currentValues)) {
+			for my $v (@$listValues) {
+				if($currentValues->{$v->{'value'}}) {
+					$v->{'selected'} = 1;
+				}
+			}
+		}
+		$p->{'values'} = $listValues;
 	}elsif($p->{'type'} =~ '.*list$' || $p->{'type'} =~ '.*checkboxes$') {
 		my @listValues = ();
 		my @values = split(/,/,$p->{'data'});
@@ -1982,6 +2125,31 @@ sub getSQLTemplateData {
 	return \@result;
 }
 
+sub getFunctionTemplateData {
+	my $data = shift;
+    	my @params = split(/\,/,$data);
+	my @result =();
+	if(scalar(@params)==2) {
+		my $object = @params->[0];
+		my $function = @params->[1];
+		if(UNIVERSAL::can($object,$function)) {
+			debugMsg("Getting values for: $function\n");
+			no strict 'refs';
+			my $items = eval { &{$object.'::'.$function}() };
+			if( $@ ) {
+			    warn "Function call error: $@\n";
+			}		
+			use strict 'refs';
+			if(defined($items)) {
+				@result = @$items;
+			}
+		}
+	}else {
+		debugMsg("Error getting values for: $data, incorrect number of parameters ".scalar(@params)."\n");
+	}
+	return \@result;
+}
+
 sub readLibrariesFromDir {
     my $client = shift;
     my $defaultLibrary = shift;
@@ -2070,10 +2238,12 @@ sub readTemplateConfiguration {
 	for my $plugin (@enabledplugins) {
 		if(UNIVERSAL::can("Plugins::$plugin","getMultiLibraryTemplates") && UNIVERSAL::can("Plugins::$plugin","getMultiLibraryTemplateData")) {
 			debugMsg("Getting library templates for: $plugin\n");
+			no strict 'refs';
 			my $items = eval { &{"Plugins::${plugin}::getMultiLibraryTemplates"}($client) };
 			if ($@) {
 				debugMsg("Error getting library templates from $plugin: $@\n");
 			}
+			use strict 'refs';
 			for my $item (@$items) {
 				my $template = $item->{'template'};
 				$template->{'multilibrary_plugin_template'}=$item;
