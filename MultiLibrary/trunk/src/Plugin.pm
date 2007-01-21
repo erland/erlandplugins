@@ -42,7 +42,7 @@ my $template;
 my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.2';
+my $PLUGINVERSION = '1.1';
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
 
@@ -522,7 +522,7 @@ sub getCustomBrowseMenus {
 		my $menusValue = $library->{'menus'};
 		my %menus = ();
 		my @menusArray = ();
-		if($menusValue) {
+		if(defined($menusValue))  {
 			@menusArray = split(/\,/,$menusValue);
 			for  my $menu (@menusArray) {
 				$menus{$menu} = 1;
@@ -530,7 +530,7 @@ sub getCustomBrowseMenus {
 		}
 		my %availableMenus = ();
 		for my $menu (@$internalMenus) {
-			if($menus{$menu->{'id'}}) {
+			if($menus{$menu->{'id'}} || !defined($menusValue)) {
 				$availableMenus{$menu->{'id'}} = $menu;
 			}
 		}
@@ -702,140 +702,6 @@ sub parseLibraryContent {
 	return $errorMsg;
 }
 
-sub parseLibraryTemplateContent {
-	my $client = shift;
-	my $item = shift;
-	my $content = shift;
-	my $libraries = shift;
-	my $defaultLibrary = shift;
-	my $templates = shift;
-	my $dbh = getCurrentDBH();
-
-	my $libraryId = $item;
-	$libraryId =~ s/\.ml\.values\.xml//;
-	my $errorMsg = undef;
-        if ( $content ) {
-		$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-		my $valuesXml = eval { XMLin($content, forcearray => ["parameter","value"], keyattr => []) };
-		#debugMsg(Dumper($valuesXml));
-		if ($@) {
-			$errorMsg = "$@";
-			errorMsg("MultiLibrary: Failed to parse library configuration because:\n$@\n");
-		}else {
-			my $templateId = $valuesXml->{'template'}->{'id'};
-			my $template = $templates->{$templateId};
-			$templateId =~s/\.xml//;
-			my $include = undef;
-			if($template) {
-				$include = 1;
-			}
-			my $templateFile = $templateId.".template";
-			my %templateParameters = ();
-			my $parameters = $valuesXml->{'template'}->{'parameter'};
-			for my $p (@$parameters) {
-				my $values = $p->{'value'};
-				my $value = '';
-				for my $v (@$values) {
-					if($value ne '') {
-						$value .= ',';
-					}
-					if($p->{'quotevalue'}) {
-						$value .= $dbh->quote(encode_entities($v));
-					}else {
-						$value .= encode_entities($v);
-					}
-				}
-				#debugMsg("Setting: ".$p->{'id'}."=".$value."\n");
-				$templateParameters{$p->{'id'}}=$value;
-			}
-			if(defined($template->{'parameter'})) {
-				my $parameters = $template->{'parameter'};
-				for my $p (@$parameters) {
-					if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-						if(!defined($templateParameters{$p->{'id'}})) {
-							my $value = $p->{'value'};
-							if(!defined($value)) {
-								$value='';
-							}
-							debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
-							$templateParameters{$p->{'id'}} = $value;
-						}
-					}
-				}
-			}
-			my $templateFileData = undef;
-			my $doParsing = 1;
-			if(defined($template->{'multilibrary_plugin_template'})) {
-				my $pluginTemplate = $template->{'multilibrary_plugin_template'};
-				if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
-					$doParsing = 0;
-				}
-				$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
-			}else {
-				$templateFileData = $templateFile;
-			}
-			my $libraryData = undef;
-			if($doParsing) {
-				$libraryData = fillTemplate($templateFileData,\%templateParameters);
-			}else {
-				$libraryData = $templateFileData;
-			}
-			$libraryData = Slim::Utils::Unicode::utf8on($libraryData);
-			$libraryData = Slim::Utils::Unicode::utf8encode_locale($libraryData);
-			#$libraryData = encode_entities($libraryData);
-			
-			my $xml = eval { 	XMLin($libraryData, forcearray => ["item"], keyattr => []) };
-			#debugMsg(Dumper($xml));
-			if ($@) {
-				$errorMsg = "$@";
-				errorMsg("MultiLibrary: Failed to parse library configuration because:\n$@\n");
-			}else {
-				my $disabled = 0;
-				if(defined($xml->{'library'})) {
-					$xml->{'library'}->{'id'} = escape($libraryId);
-				}
-	
-				if(defined($xml->{'library'}) && defined($xml->{'library'}->{'id'})) {
-					my $enabled = Slim::Utils::Prefs::get('plugin_multilibrary_library_'.escape($xml->{'library'}->{'id'}).'_enabled');
-					if(defined($enabled) && !$enabled) {
-						$disabled = 1;
-					}elsif(!defined($enabled)) {
-						if(defined($xml->{'defaultdisabled'}) && $xml->{'defaultdisabled'}) {
-							$disabled = 1;
-						}
-					}
-				}
-			
-				$xml->{'library'}->{'simple'} = 1;
-				if($include && !$disabled) {
-					$xml->{'library'}->{'enabled'}=1;
-					if($defaultLibrary) {
-						$xml->{'library'}->{'defaultlibrary'} = 1;
-					}elsif(defined($template->{'customtemplate'})) {
-						$xml->{'library'}->{'customlibrary'} = 1;
-					}
-			                $libraries->{$libraryId} = $xml->{'library'};
-				}elsif($include && $disabled) {
-					$xml->{'library'}->{'enabled'}=0;
-					if($defaultLibrary) {
-						$xml->{'library'}->{'defaultlibrary'} = 1;
-					}elsif(defined($template->{'customtemplate'})) {
-						$xml->{'library'}->{'customlibrary'} = 1;
-					}
-			                $libraries->{$libraryId} = $xml->{'library'};
-				}
-			}
-	    
-			# Release content
-			undef $libraryData;
-			undef $content;
-		}
-	}else {
-		$errorMsg = "Incorrect information in library data";
-		errorMsg("MultiLibrary: Unable to to read library configuration\n");
-	}
-	return $errorMsg;
-}
 
 sub isLibraryEnabled {
 	my $client = shift;
@@ -1450,7 +1316,9 @@ sub handleWebEditLibrary {
 							}
 							my %valuesHash = ();
 							for my $v (@$values) {
-								$valuesHash{$v} = $v;
+								if(ref($v) ne 'HASH') {
+									$valuesHash{$v} = $v;
+								}
 							}
 							if(%valuesHash) {
 								$currentParameterValues{$p->{'id'}} = \%valuesHash;
@@ -1461,8 +1329,14 @@ sub handleWebEditLibrary {
 							my @parametersToSelect = ();
 							for my $p (@$parameters) {
 								if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-									addValuesToTemplateParameter($p,$currentParameterValues{$p->{'id'}});
-									push @parametersToSelect,$p;
+									my $useParameter = 1;
+									if(defined($p->{'requireplugins'})) {
+										$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+									}
+									if($useParameter) {
+										addValuesToTemplateParameter($p,$currentParameterValues{$p->{'id'}});
+										push @parametersToSelect,$p;
+									}
 								}
 							}
 							$params->{'pluginMultiLibraryEditLibraryParameters'} = \@parametersToSelect;
@@ -1491,6 +1365,22 @@ sub handleWebEditLibrary {
 		}
 	}
 	return handleWebList($client,$params);
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			if ($::VERSION ge '6.5') {
+				$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+			}else {
+				$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
+			}
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub loadLibraryDataFromAnyDir {
@@ -1647,8 +1537,14 @@ sub handleWebNewLibraryParameters {
 		my $parameters = $template->{'parameter'};
 		for my $p (@$parameters) {
 			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-				addValuesToTemplateParameter($p);
-				push @parametersToSelect,$p;
+				my $useParameter = 1;
+				if(defined($p->{'requireplugins'})) {
+					$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+				}
+				if($useParameter) {
+					addValuesToTemplateParameter($p);
+					push @parametersToSelect,$p;
+				}
 			}
 		}
 	}
@@ -1692,9 +1588,15 @@ sub handleWebNewLibrary {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getValueOfTemplateParameter($params,$p);
-					$templateParameters{$p->{'id'}} = $value;
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+					}
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getValueOfTemplateParameter($params,$p);
+						$templateParameters{$p->{'id'}} = $value;
+					}
 				}
 			}
 		}
@@ -1813,9 +1715,15 @@ sub handleWebSaveSimpleLibrary {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getValueOfTemplateParameter($params,$p);
-					$templateParameters{$p->{'id'}} = $value;
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
+					}
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getValueOfTemplateParameter($params,$p);
+						$templateParameters{$p->{'id'}} = $value;
+					}
 				}
 			}
 		}
@@ -1991,6 +1899,12 @@ sub addValuesToTemplateParameter {
 					$v->{'selected'} = 1;
 				}
 			}
+		}else {
+			for my $v (@$listValues) {
+				if($p->{'value'}) {
+					$v->{'selected'} = 1;
+				}
+			}
 		}
 		$p->{'values'} = $listValues;
 	}elsif($p->{'type'} =~ '.*list$' || $p->{'type'} =~ '.*checkboxes$') {
@@ -2086,6 +2000,57 @@ sub getValueOfTemplateParameter {
 			}
 		}else {
 			$result = '';
+		}
+	}
+	if(defined($result)) {
+		$result = Slim::Utils::Unicode::utf8on($result);
+		$result = Slim::Utils::Unicode::utf8encode_locale($result);
+	}
+	return $result;
+}
+
+sub getDefaultValueOfTemplateParameter {
+	my $parameter = shift;
+
+	my $result = undef;
+	my $dbh = getCurrentDBH();
+	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
+		my $values = $parameter->{'values'};
+		$result = '';
+		for my $item (@$values) {
+			if(defined($item->{'selected'})) {
+				if($result) {
+					$result = $result.',';
+				}
+				if($parameter->{'quotevalue'}) {
+					$result = $result.$dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
+				}else {
+					$result = $result.encode_entities($item->{'value'},"&<>\'\"");
+				}
+			}
+		}
+	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
+		my $values = $parameter->{'values'};
+		$result = '';
+		for my $item (@$values) {
+			if(defined($item->{'selected'})) {
+				if($parameter->{'quotevalue'}) {
+					$result = $dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
+				}else {
+					$result = encode_entities($item->{'value'},"&<>\'\"");
+				}
+				last;
+			}
+		}
+	}else{
+		my $value = $parameter->{'value'};
+		if(!defined($value) || ref($value) eq 'HASH') {
+			$value='';
+		}
+		if($parameter->{'quotevalue'}) {
+			$result = $dbh->quote(encode_entities($value,"&<>\'\""));
+		}else {
+			$result = encode_entities($value,"&<>\'\"");
 		}
 	}
 	if(defined($result)) {
@@ -2529,6 +2494,27 @@ sub parseTemplateLibraryContent {
 					$templateParameters{$p->{'id'}}=$value;
 				}
 
+				if(defined($template->{'parameter'})) {
+					my $parameters = $template->{'parameter'};
+					for my $p (@$parameters) {
+						if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
+							if(!defined($templateParameters{$p->{'id'}})) {
+								my $value = '';
+								if(defined($p->{'value'}) && $p->{'value'} && ref($p->{'value'}) ne 'HASH') {
+									addValuesToTemplateParameter($p);
+									$value = getDefaultValueOfTemplateParameter($p);
+								}
+								debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
+								$templateParameters{$p->{'id'}} = $value;
+							}
+							if(defined($p->{'requireplugins'})) {
+								if(!isPluginsInstalled($client,$p->{'requireplugins'})) {
+									$templateParameters{$p->{'id'}} = undef;
+								}
+							}
+						}
+					}
+				}
 				my $templateFileData = undef;
 				my $doParsing = 1;
 				if(defined($template->{'multilibrary_plugin_template'})) {
@@ -2889,14 +2875,20 @@ sub saveSimpleLibrary {
 			my @parametersToSelect = ();
 			for my $p (@$parameters) {
 				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					addValuesToTemplateParameter($p);
-					my $value = getXMLValueOfTemplateParameter($params,$p);
-					if($p->{'quotevalue'}) {
-						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
-					}else {
-						$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
+					my $useParameter = 1;
+					if(defined($p->{'requireplugins'})) {
+						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
 					}
-					$data .= $value.'</parameter>';
+					if($useParameter) {
+						addValuesToTemplateParameter($p);
+						my $value = getXMLValueOfTemplateParameter($params,$p);
+						if($p->{'quotevalue'}) {
+							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
+						}else {
+							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
+						}
+						$data .= $value.'</parameter>';
+					}
 				}
 			}
 		}
