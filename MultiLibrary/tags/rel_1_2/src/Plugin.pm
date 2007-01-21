@@ -42,7 +42,7 @@ my $template;
 my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.1';
+my $PLUGINVERSION = '1.2';
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
 
