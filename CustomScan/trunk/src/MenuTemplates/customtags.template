@@ -113,7 +113,7 @@
 								customscan_track_attributes.attr='[% customtag %]' and
 								customscan_track_attributes.value='{customtag}' 
 							group by tracks.id
-							order by tracks.tracknum asc,tracks.titlesort asc
+							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>
