@@ -192,7 +192,7 @@
 										[%- END %])
 								[%- END %]
 							group by tracks.id
-							order by tracks.tracknum asc,tracks.titlesort asc
+							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>
@@ -393,7 +393,7 @@
 										[%- END %])
 								[%- END %]
 							group by tracks.id
-							order by tracks.tracknum asc, tracks.titlesort asc
+							order by tracks.disc,tracks.tracknum asc, tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>

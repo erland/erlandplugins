@@ -69,7 +69,7 @@
 									tracks.album={album} and
 									tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 								group by tracks.id
-								order by tracks.tracknum asc,tracks.titlesort asc
+								order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 							</menudata>
 							<menu>
 								<id>trackdetails</id>
@@ -151,7 +151,7 @@
 									contributor_track.contributor={artist} and
 									tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 								group by tracks.id 
-								order by tracks.tracknum asc,tracks.titlesort asc
+								order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 							</menudata>
 							<menu>
 								<id>trackdetails</id>
@@ -215,7 +215,7 @@
 		                                                tracks.audio=1 and
 		                                                tracks.album={album} and
 								tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
-		                                        order by tracks.tracknum,tracks.titlesort asc
+		                                        order by tracks.disc,tracks.tracknum,tracks.titlesort asc
 		                                </menudata>
 		                                <menu>
 		                                        <id>trackdetails</id>
@@ -303,7 +303,7 @@
 										tracks.album={album} and
 										tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 									group by tracks.id
-									order by tracks.tracknum asc,tracks.titlesort asc
+									order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 								</menudata>
 								<menu>
 									<id>trackdetails</id>
@@ -390,7 +390,7 @@
 										genre_track.genre={genre} and
 										tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 									group by tracks.id 
-									order by tracks.tracknum asc,tracks.titlesort asc
+									order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 								</menudata>
 								<menu>
 									<id>trackdetails</id>

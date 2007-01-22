@@ -85,7 +85,7 @@
 							tracks.audio=1 and 
 							tracks.album={album} and 
 							tracks.year={year} 
-						order by tracks.tracknum asc,tracks.titlesort asc
+						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</menudata>
 					<menu>
 						<id>trackdetails</id>

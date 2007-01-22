@@ -115,7 +115,7 @@
 						genres.name in ([% genres %])
 						[%- END %]
 					group by tracks.id 
-					order by tracks.titlesort asc
+					order by tracks.disc,tracks.titlesort asc
 				</menudata>
 				<menu>
 					<id>trackdetails</id>

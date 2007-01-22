@@ -139,7 +139,7 @@
 								track_statistics.rating&gt;={rating}-10 and track_statistics.rating&lt;{rating}+10
 								[%- END %]
 							group by tracks.id 
-							order by tracks.tracknum asc,tracks.titlesort asc
+							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>

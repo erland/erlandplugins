@@ -54,7 +54,7 @@
 							tracks.audio=1 and
 							tracks.album={album}
 						group by tracks.id
-						order by tracks.tracknum asc,tracks.titlesort asc
+						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</menudata>
 					<menu>
 						<id>trackdetails</id>
@@ -150,7 +150,7 @@
 								tracks.album={album} and 
 								contributor_track.contributor={artist} 
 							group by tracks.id 
-							order by tracks.tracknum asc,tracks.titlesort asc
+							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 						</menudata>
 						<menu>
 							<id>trackdetails</id>

@@ -123,7 +123,7 @@
 							tracks.year&gt;={year} and
 							tracks.year&lt;{year}+10
 						group by tracks.id 
-						order by tracks.tracknum asc,tracks.titlesort asc
+						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</menudata>
 					<menu>
 						<id>trackdetails</id>

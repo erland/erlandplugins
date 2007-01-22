@@ -110,7 +110,7 @@
 									tracks.id=genre_track.track and 
 									genre_track.genre={genre} 
 								group by tracks.id 
-								order by tracks.tracknum asc,tracks.titlesort asc
+								order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 							</menudata>
 							<menu>
 								<id>trackdetails</id>

@@ -33,7 +33,7 @@
 						playlist_track.track=tracks.id and 
 						playlist_track.playlist={playlist} 
 					group by tracks.id 
-					order by tracks.tracknum asc,tracks.titlesort asc
+					order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 				</menudata>
 				<menu>
 					<id>trackdetails</id>
