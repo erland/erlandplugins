@@ -1084,6 +1084,10 @@ sub saveFilterItem {
 				addValuesToFilterParameter($p,\%itemValue);
 				my $values = getValueOfFilterParameter($client,$p,$i,"&<>\'\"");
 				if(scalar(@$values)>0) {
+					my $j = 0;
+					for my $value (@$values) {
+						$values->[$j] = decode_entities($value);
+					}
 					my %savedParameter = (
 						'id' => $p->{'id'},
 						'value' => $values
@@ -2008,6 +2012,10 @@ sub saveFilterItemWeb {
 					addValuesToFilterParameter($p);
 					my $values = getValueOfFilterParameterWeb($params,$p,"&<>\'\"");
 					if(scalar(@$values)>0) {
+						my $j = 0;
+						for my $value (@$values) {
+							$values->[$j] = decode_entities($value);
+						}
 						my %savedParameter = (
 							'id' => $p->{'id'},
 							'value' => $values
@@ -2072,7 +2080,7 @@ sub saveFilter {
 				my $values = $parameter->{'value'};
 				if(scalar(@$values)>0) {
 					for my $value  (@$values) {
-						$data .= "\t\t\t<value>".$value."</value>\n";
+						$data .= "\t\t\t<value>".encode_entities($value)."</value>\n";
 					}
 				}
 				$data .= "\t\t</parameter>\n";
