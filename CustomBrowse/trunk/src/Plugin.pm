@@ -41,7 +41,7 @@ my $template;
 my $templates;
 my $mixer;
 my $soapLiteError = 0;
-my $PLUGINVERSION = '1.18';
+my $PLUGINVERSION = '1.18.1';
 my $sqlerrors = '';
 
 sub getDisplayName {
