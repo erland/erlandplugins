@@ -4771,6 +4771,9 @@ sub structureBrowseMenus {
 				my $groupId = $group;
 				$groupId =~ s/^\s*//g;
 				$groupId =~ s/\s*$//g;
+				my $groupName = $groupId;
+				# ' character in group ids are a bad idea
+				$groupId =~ s/\'/_/g;
 				$grouppath .= "_".escape($groupId);
 				#debugMsg("Got group: ".$grouppath."\n");
 				my $existingItem = undef;
@@ -4889,7 +4892,7 @@ sub structureBrowseMenus {
 						'id' => 'group_'.escape($groupId),
 						'topmenu' => 1,
 						'menu' => \@level,
-						'menuname' => $groupId,
+						'menuname' => $groupName,
 					);
 					if($enabled && $menu->{'enabled'}) {
 						$currentItemGroup{'enabled'} = 1;
