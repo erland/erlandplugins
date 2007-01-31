@@ -41,8 +41,9 @@ my $template;
 my $templates;
 my $mixer;
 my $soapLiteError = 0;
-my $PLUGINVERSION = '1.18.1';
+my $PLUGINVERSION = '1.19';
 my $sqlerrors = '';
+my %uPNPCache = ();
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -196,6 +197,44 @@ sub isMenuEnabledForClient {
 	}
 }
 
+sub isMenuEnabledForCheck {
+	my $client = shift;
+	my $menu = shift;
+	
+	if(defined($menu->{'enabledcheckfunction'})) {
+		my @params = split(/\|/,$menu->{'enabledcheckfunction'});
+		if(scalar(@params)>=2) {
+			my $object = @params->[0];
+			my $function = @params->[1];
+			if(UNIVERSAL::can($object,$function)) {
+				my %callParams = ();
+				my $i = 0;
+				for my $keyvalue (@params) {
+					if($i>=2) {
+						if($keyvalue =~ /^([^=].*?)=(.*)/) {
+							my $name=$1;
+							my $value=$2;
+							$callParams{$name}=$value;
+						}
+					}
+					$i = $i + 1;
+				}
+				debugMsg("Checking menu enabled with: $function\n");
+				no strict 'refs';
+				my $result = eval { &{$object.'::'.$function}(\%callParams) };
+				if( $@ ) {
+				    warn "Function call error: $@\n";
+				}		
+				use strict 'refs';
+				if(!$result) {
+					return 0;
+				}
+			}
+		}
+	}
+	return 1;
+}
+
 sub isMenuEnabledForLibrary {
 	my $client = shift;
 	my $menu = shift;
@@ -243,7 +282,7 @@ sub getMenuItems {
             	$browseMenus->{$menu}->{'value'} = $browseMenus->{$menu}->{'id'};
             }
             if($browseMenus->{$menu}->{'enabled'}) {
-                    if(isMenuEnabledForClient($client,$browseMenus->{$menu}) && isMenuEnabledForLibrary($client,$browseMenus->{$menu})) {
+                    if(isMenuEnabledForClient($client,$browseMenus->{$menu}) && isMenuEnabledForLibrary($client,$browseMenus->{$menu}) && isMenuEnabledForCheck($client,$browseMenus->{$menu})) {
 		            push @listRef,$browseMenus->{$menu};
                     }		
             }
@@ -253,12 +292,12 @@ sub getMenuItems {
 	my @menus = ();
 	if(ref($item->{'menu'}) eq 'ARRAY') {
 		foreach my $it (@{$item->{'menu'}}) {
-			if(isMenuEnabledForClient($client,$it) && isMenuEnabledForLibrary($client,$it)) {
+			if(isMenuEnabledForClient($client,$it) && isMenuEnabledForLibrary($client,$it) && isMenuEnabledForCheck($client,$it)) {
 				push @menus,$it;
 			}
 		}
 	}else {
-		if(isMenuEnabledForClient($client,$item->{'menu'}) && isMenuEnabledForLibrary($client,$item->{'menu'})) {
+		if(isMenuEnabledForClient($client,$item->{'menu'}) && isMenuEnabledForLibrary($client,$item->{'menu'}) && isMenuEnabledForCheck($client,$item->{'menu'})) {
 			push @menus,$item->{'menu'};
 		}
 	}
@@ -1313,6 +1352,31 @@ sub getSQLMenuData {
 	return \@result;
 }
 
+sub getFunctionTemplateData {
+	my $data = shift;
+    	my @params = split(/\,/,$data);
+	my @result =();
+	if(scalar(@params)==2) {
+		my $object = @params->[0];
+		my $function = @params->[1];
+		if(UNIVERSAL::can($object,$function)) {
+			debugMsg("Getting values for: $function\n");
+			no strict 'refs';
+			my $items = eval { &{$object.'::'.$function}() };
+			if( $@ ) {
+			    warn "Function call error: $@\n";
+			}		
+			use strict 'refs';
+			if(defined($items)) {
+				@result = @$items;
+			}
+		}
+	}else {
+		debugMsg("Error getting values for: $data, incorrect number of parameters ".scalar(@params)."\n");
+	}
+	return \@result;
+}
+
 sub getSQLTemplateData {
 	my $sqlstatements = shift;
 	my @result =();
@@ -1416,11 +1480,49 @@ sub fillTemplate {
 	return $output;
 }
 
+sub uPNPCallback {
+	my $device = shift;
+	my $event = shift;
+
+	if($event eq 'add') {
+		debugMsg("Adding uPNP ".$device->getfriendlyname."\n");
+		$uPNPCache{$device->getudn} = $device;
+	}else {
+		debugMsg("Removing uPNP ".$device->getfriendlyname."\n");
+		$uPNPCache{$device->getudn} = undef;
+	}
+}
+
+sub getAvailableuPNPDevices {
+	my @result = ();
+	for my $key (keys %uPNPCache) {
+		my $device = $uPNPCache{$key};
+		my %item = (
+			'id' => $device->getudn,
+			'name' => $device->getfriendlyname,
+			'value' => $device->getudn
+		);
+		push @result,\%item;
+	}
+	return \@result;
+}
+
+sub isuPNPDeviceAvailable {
+	my $params = shift;
+	if(defined($params->{'device'})) {
+		if(defined($uPNPCache{$params->{'device'}})) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 sub initPlugin {
 	my $class = shift;
 	
 	checkDefaults();
-
+	Slim::Utils::UPnPMediaServer::registerCallback( \&uPNPCallback )
+;
 	$soapLiteError = 0;
 	eval "use SOAP::Lite";
 	if ($@) {
@@ -3049,6 +3151,30 @@ sub addValuesToTemplateParameter {
 		if(defined($currentValues)) {
 			for my $v (@$listValues) {
 				if($currentValues->{$v->{'value'}}) {
+					$v->{'selected'} = 1;
+				}
+			}
+		}
+		$p->{'values'} = $listValues;
+	}elsif($p->{'type'} =~ 'function.*') {
+		my $listValues = getFunctionTemplateData($p->{'data'});
+		if($p->{'type'} =~ /.*optional.*list$/) {
+			my %empty = (
+				'id' => '',
+				'name' => '',
+				'value' => ''
+			);
+			unshift @$listValues,\%empty;
+		}
+		if(defined($currentValues)) {
+			for my $v (@$listValues) {
+				if($currentValues->{$v->{'value'}}) {
+					$v->{'selected'} = 1;
+				}
+			}
+		}else {
+			for my $v (@$listValues) {
+				if($p->{'value'}) {
 					$v->{'selected'} = 1;
 				}
 			}
