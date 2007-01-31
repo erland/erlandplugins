@@ -1621,7 +1621,9 @@ sub initPlugin {
 	if($menuName) {
 		Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE', $menuName );
 	}
-	Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
+	if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
+		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
+	}
 	addPlayerMenus();
         if ($::VERSION ge '6.5') {
 		delSlimserverPlayerMenus();
@@ -2085,6 +2087,11 @@ sub checkDefaults {
 		Slim::Utils::Prefs::set('plugin_custombrowse_showmessages', 0);
 	}
 
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_menuinsidebrowse to 1\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_menuinsidebrowse', 1);
+	}
         $prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_directory');
 	if (! defined $prefVal) {
 		my $dir=Slim::Utils::Prefs::get('playlistdir');
@@ -2135,7 +2142,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2154,6 +2161,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_showmessages"); }
+		},
+	plugin_custombrowse_menuinsidebrowse => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_menuinsidebrowse"); }
 		},		
 	plugin_custombrowse_properties => {
 			'validate' => \&validateProperty
@@ -2234,14 +2251,20 @@ sub webPages {
 			if($menuName) {
 				Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
 			}
-		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
+			        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			}
 			delSlimserverWebMenus();
 		}else {
 	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
 	}
 
-        return (\%pages);
+	if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
+	        return (\%pages);
+	}else {
+		return (\%pages,$value);
+	}
 }
 
 sub delSlimserverWebMenus {
@@ -5594,11 +5617,17 @@ PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC
 PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
+	EN	Show Custom Browse menu inside Browse menu (requires slimserver restart)
+
 PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
+
+SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
+	EN	Menu position
 
 SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
