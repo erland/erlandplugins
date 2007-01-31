@@ -6,7 +6,12 @@
 		[% IF menugroup %]<menugroup>[% menugroup %]</menugroup>[% END %]
 		<menuname>[% menuname %]</menuname>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
-		<enabledcheckfunction>Plugins::CustomBrowse::Plugin|isuPNPDeviceAvailable|device=[% deviceudn %]</enabledcheckfunction>
+		<enabledcheck>
+			<item>
+				<type>function</type>
+				<data>Plugins::CustomBrowse::Plugin|isuPNPDeviceAvailable|device=[% deviceudn %]</data>
+			</item>
+		</enabledcheck>
 		<menu>
 			<id>radio</id>
 			<menutype>mode</menutype>

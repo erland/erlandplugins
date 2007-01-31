@@ -201,33 +201,46 @@ sub isMenuEnabledForCheck {
 	my $client = shift;
 	my $menu = shift;
 	
-	if(defined($menu->{'enabledcheckfunction'})) {
-		my @params = split(/\|/,$menu->{'enabledcheckfunction'});
-		if(scalar(@params)>=2) {
-			my $object = @params->[0];
-			my $function = @params->[1];
-			if(UNIVERSAL::can($object,$function)) {
-				my %callParams = ();
-				my $i = 0;
-				for my $keyvalue (@params) {
-					if($i>=2) {
-						if($keyvalue =~ /^([^=].*?)=(.*)/) {
-							my $name=$1;
-							my $value=$2;
-							$callParams{$name}=$value;
+	if(defined($menu->{'enabledcheck'})) {
+		my @checkItems = ();
+		my $items = $menu->{'enabledcheck'}->{'item'};
+		if(ref($items) eq 'ARRAY') {
+			@checkItems = @$items;
+		}else {
+			push @checkItems,$items;
+		}
+		for my $item (@checkItems) {
+			my $type = $item->{'type'};
+			my $data = $item->{'data'};
+			if($type eq 'function') {
+				my @params = split(/\|/,$data);
+				if(scalar(@params)>=2) {
+					my $object = @params->[0];
+					my $function = @params->[1];
+					if(UNIVERSAL::can($object,$function)) {
+						my %callParams = ();
+						my $i = 0;
+						for my $keyvalue (@params) {
+							if($i>=2) {
+								if($keyvalue =~ /^([^=].*?)=(.*)/) {
+									my $name=$1;
+									my $value=$2;
+									$callParams{$name}=$value;
+								}
+							}
+							$i = $i + 1;
+						}
+						debugMsg("Checking menu enabled with: $function\n");
+						no strict 'refs';
+						my $result = eval { &{$object.'::'.$function}($client,\%callParams) };
+						if( $@ ) {
+						    warn "Function call error: $@\n";
+						}		
+						use strict 'refs';
+						if(!$result) {
+							return 0;
 						}
 					}
-					$i = $i + 1;
-				}
-				debugMsg("Checking menu enabled with: $function\n");
-				no strict 'refs';
-				my $result = eval { &{$object.'::'.$function}(\%callParams) };
-				if( $@ ) {
-				    warn "Function call error: $@\n";
-				}		
-				use strict 'refs';
-				if(!$result) {
-					return 0;
 				}
 			}
 		}
@@ -1508,6 +1521,7 @@ sub getAvailableuPNPDevices {
 }
 
 sub isuPNPDeviceAvailable {
+	my $client = shift;
 	my $params = shift;
 	if(defined($params->{'device'})) {
 		if(defined($uPNPCache{$params->{'device'}})) {
