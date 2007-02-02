@@ -30,6 +30,9 @@
 					tracks.lossless=1 and
 					[%- END %]
 					tracks.audio=1
+					[%- IF includedcontenttypes %]
+					and tracks.content_type in ([% includedcontenttypes %])
+					[%- END %]
 					[%- IF includedgenres %]
 					and exists(select * from genre_track,genres 
 						where 

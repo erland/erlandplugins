@@ -16,6 +16,7 @@
 		<parameter type="sqlcheckboxes" id="includedgenres" name="Include genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
 		<parameter type="sqlcheckboxes" id="excludedgenres" name="Exclude genres" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
+		<parameter type="sqlcheckboxes" id="includedcontenttypes" name="Include file types" value="0" data="select content_type,content_type,content_type from tracks where audio=1 group by content_type order by content_type asc" quotevalue="1"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 		<parameter type="functioncheckboxes" id="internalmenus" name="Included internal menus" value="1" data="Plugins::MultiLibrary::Plugin,getAvailableInternalMenus"/>
