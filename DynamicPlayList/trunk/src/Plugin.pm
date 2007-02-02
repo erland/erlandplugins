@@ -629,15 +629,15 @@ sub addParameterValues {
 	debugMsg("Getting values for ".$parameter->{'name'}." of type ".$parameter->{'type'}."\n");
 	my $sql = undef;
 	if(lc($parameter->{'type'}) eq 'album') {
-		$sql = "select id,title from albums order by titlesort";
+		$sql = "select id,title,substr(titlesort,1,1) from albums order by titlesort";
 	}elsif(lc($parameter->{'type'}) eq 'artist') {
-		$sql = "select id,name from contributors where namesort is not null order by namesort";
+		$sql = "select id,name,substr(namesort,1,1) from contributors where namesort is not null order by namesort";
 	}elsif(lc($parameter->{'type'}) eq 'genre') {
-		$sql = "select id,name from genres order by namesort";
+		$sql = "select id,name,substr(namesort,1,1) from genres order by namesort";
 	}elsif(lc($parameter->{'type'}) eq 'year') {
 		$sql = "select year,year from tracks where year is not null group by year order by year";
 	}elsif(lc($parameter->{'type'}) eq 'playlist') {
-		$sql = "select playlist_track.playlist,tracks.title from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
+		$sql = "select playlist_track.playlist,tracks.title,substr(tracks.titlesort,1,1) from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
 	}elsif(lc($parameter->{'type'}) eq 'list') {
 		my $value = $parameter->{'definition'};
 		if(defined($value) && $value ne "" ) {
@@ -647,6 +647,7 @@ sub addParameterValues {
 					my @valueItemArray = split(/:/,$valueItem);
 					my $id = shift @valueItemArray;
 					my $name = shift @valueItemArray;
+					my $sortlink = shift @valueItemArray;
 					
 					if(defined($id)) {
 						my %listitem = (
@@ -657,6 +658,9 @@ sub addParameterValues {
 							$listitem{'name'}=$name;
 						}else {
 							$listitem{'name'}=$id;
+						}
+						if(defined($sortlink)) {
+							$listitem{'sortlink'}=$sortlink;
 						}
 					  	push @$listRef, \%listitem;
 					}
@@ -690,13 +694,17 @@ sub addParameterValues {
 			if(defined($sql)) {
 				my $id;
 				my $name;
-				$sth->bind_columns( undef, \$id,\$name);
+				my $sortlink;
+				$sth->bind_columns( undef, \$id,\$name,\$sortlink);
 				while( $sth->fetch() ) {
 					my %listitem = (
 						'id' => $id,
 						'value' => $id,
 						'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
 					);
+					if(defined($sortlink)) {
+						$listitem{'sortlink'} = Slim::Utils::Unicode::utf8decode($sortlink,'utf8');
+					}
 				  	push @$listRef, \%listitem;
 			  	}
 			  	debugMsg("Added ".scalar(@$listRef)." items to value list\n");
@@ -896,10 +904,28 @@ sub setModeChooseParameters {
 	my @listRef = ();
 	addParameterValues($client,\@listRef, $parameter);
 
+	my $sorted = '0';
+	if(scalar(@listRef)>0) {
+		my $firstItem = @listRef->[0];
+		if(defined($firstItem->{'sortlink'})) {
+			$sorted = 'L';
+		}
+	}
 	my $name = $parameter->{'name'};
 	my %params = (
 		header     => "$name {count}",
 		listRef    => \@listRef,
+		lookupRef  => sub {
+				my ($index) = @_;
+				my $sortListRef = Slim::Buttons::Common::param($client,'listRef');
+				my $sortItem  = $sortListRef->[$index];
+				if(defined($sortItem->{'sortlink'})) {
+					return $sortItem->{'sortlink'};
+				}else {
+					return $sortItem->{'name'};
+				}
+			},
+		isSorted   => $sorted,
 		name       => \&getChooseParametersDisplayText,
 		overlayRef => \&getChooseParametersOverlay,
 		modeName   => 'PLUGIN.DynamicPlayList.ChooseParameters',
