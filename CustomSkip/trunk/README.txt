@@ -27,36 +27,8 @@ This archive should contain the following files:
 - license.txt (the license)
 - *.pm (The application itself)
 
-4. INSTALLATION
-===============
-Unzip to the Plugins directory in the Slimserver installation.
-
-5. USAGE
-========
-This plugin makes it possible put a filter on all playlists, it works best together with the
-Dynamic Playlist plugin but also works for other type of playlists. You are able to define a filter
-and tracks matching the filter will not be played. By default the filtering is only activated for
-Dynamic Playlist plugin playlists, goto the settings page if you want to activate the filtering
-for other type of playlists.
-
-6. PLUGIN DEVELOPERS
-====================
-You can implement your own filter types by implementing the methods described below
-in your plugin. The plugin must be enabled for it to be detected by the Custom Skip plugin.
-
-getCustomSkipFilterTypes:
--------------------------
-# Returns an array with a an entry for each filter, 'album' in the sample below
-# The filter entry must contain a 'name' but it can also contain additional items which you
-# need later when tracks are filtered through the filter.
-# This method will be called by the Custom Skip plugin when a list of existing filters is needed
-# See the methods in the Plugin.pm file for a sample
-
-checkCustomSkipFilterType:
---------------------------
-# Returns 1 if the track shall be skipped else 0, this method will be called by Custom Skip plugin
-# when a track shall be checked against a filter
-# filter = This is the same map for the filter as you returned in the getCustomFilters method
-# track = The track object of the track that shall be checked agains the filter
-# See the method in the Plugin.pm file for a sample
+4. INSTALLATION AND USAGE
+=========================
+See the official Wiki for more information at:
+http://wiki.erland.homeip.net/index.php/Category:SlimServer
 
