@@ -1,6 +1,11 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
 select tracks.url from tracks 
+	[%- IF library or activelibrary %]
+	join multilibrary_track on
+		tracks.id=multilibrary_track.track and
+		multilibrary_track.library=[% IF activelibrary %]'PlaylistActiveLibrary'[% ELSE %][% library %][% END %]
+	[%- END %]
 	left join track_statistics t1 on 
 		tracks.url=t1.url 
 	left join track_statistics t2 on 

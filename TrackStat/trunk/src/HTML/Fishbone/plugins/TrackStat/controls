@@ -11,7 +11,7 @@
 			[% item.ratingnumber %]
 			&nbsp;
 		[% END %]
-		[% IF item.listtype != 'track' %]
+		[% IF item.listtype != 'track' or player==''%]
 			[% loop = 0 %]
 			[% WHILE loop < pluginTrackStatMaxRating %]
 				[% loop = loop + 1 %]
@@ -32,7 +32,7 @@
 		[% ELSIF item.listtype == 'track' %]
 			<a class="trackstat_resultlist_controls_link"><img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=4 height=13 border="0"></a>
 		[% END %]
-		[% IF item.listtype == 'track' %]
+		[% IF item.listtype == 'track' and player!=''%]
 			[% loop = 0 %]
 			[% WHILE loop < pluginTrackStatMaxRating %]
 				[% loop = loop + 1 %]

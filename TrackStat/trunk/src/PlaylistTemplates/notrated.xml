@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <trackstat>
 	<database>mysql</database>
+	<minpluginversion>1.17</minpluginversion>
 	<template>
 		<downloadidentifier>72</downloadidentifier>
 		<name>TrackStat not rated songs</name>
@@ -8,6 +9,8 @@
 		<parameter type="text" id="playlistname" name="Playlist name" value="TrackStat Not Rated Songs"/>
 		<parameter type="text" id="playlistgroups" name="Groups" value=""/>
 		<parameter type="checkbox" id="notrepeat" name="Do not repeat tracks within same playlist" value="1"/>
+		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>
+		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 	</template>
 </trackstat>
 
