@@ -438,6 +438,7 @@ sub executeDynamicPlayListFilter {
 	if(!defined($filter) || $filter->{'name'} eq 'Custom Skip') {
 		my $filter = getCurrentFilter($client);
 		my $skippercentage = 0;
+		my $retrylater = undef;
 		if(defined($filter)) {
 			removeExpiredFilterItems($filter);
 			my $filteritems = $filter->{'filter'};
@@ -465,16 +466,31 @@ sub executeDynamicPlayListFilter {
 								}
 							}
 						}
+						if($p->{'id'} eq 'customskipretrylater') {
+							my $values = $p->{'value'};
+							if(defined($values) && scalar(@$values)>0) {
+								if(!defined($retrylater)) {
+									$retrylater = $values->[0];
+								}
+							}
+						}
 					}
 				}
 			}
+		}
+		if(!defined($retrylater)) {
+			$retrylater = 0;
 		}
 		if($skippercentage>0) {
 			my $rnd = int rand (99);
 			if($skippercentage<$rnd) {
 				return 1;
 			}else {
-				return 0;
+				if($retrylater) {
+					return -1;
+				}else {
+					return 0;
+				}
 			}
 		}else {
 			return 1;
@@ -567,6 +583,14 @@ sub initFilterTypes {
 						'value' => 0
 					);
 					push @allparameters, \%validParameter;
+					my %retryLaterParameter = (
+						'id' => 'customskipretrylater',
+						'type' => 'singlelist',
+						'name' => 'Retry later',
+						'data' => '0=No,1=Yes',
+						'value' => 0
+					);
+					push @allparameters, \%retryLaterParameter;
 					$filter->{'customskipparameters'} = \@allparameters;
 					$filter->{'customskipid'} = $id;
 					$filter->{'customskipplugin'} = $plugin;
