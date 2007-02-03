@@ -635,7 +635,7 @@ sub addParameterValues {
 	}elsif(lc($parameter->{'type'}) eq 'genre') {
 		$sql = "select id,name,substr(namesort,1,1) from genres order by namesort";
 	}elsif(lc($parameter->{'type'}) eq 'year') {
-		$sql = "select year,year from tracks where year is not null group by year order by year";
+		$sql = "select year,year from tracks where year is not null group by year order by year desc";
 	}elsif(lc($parameter->{'type'}) eq 'playlist') {
 		$sql = "select playlist_track.playlist,tracks.title,substr(tracks.titlesort,1,1) from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
 	}elsif(lc($parameter->{'type'}) eq 'list') {
@@ -679,6 +679,16 @@ sub addParameterValues {
 				debugMsg("Replacing ".$parameterid." with ".$value."\n");
 				$sql =~ s/$parameterid/$value/g;
 			}
+			my $activeLibrary = 0;
+			if(isPluginsInstalled($client,'MultiLibrary::Plugin')) {
+				$activeLibrary = $client->prefGet('plugin_multilibrary_activelibraryno');
+				if(!defined($activeLibrary)) {
+					$activeLibrary = 0;
+				}
+			}
+			my $parameterid = "\'PlaylistActiveLibrary\'";
+			debugMsg("Replacing $parameterid with ".$activeLibrary."\n");
+			$sql =~ s/$parameterid/$activeLibrary/g;
 		}
 	}
 	
@@ -694,8 +704,13 @@ sub addParameterValues {
 			if(defined($sql)) {
 				my $id;
 				my $name;
-				my $sortlink;
-				$sth->bind_columns( undef, \$id,\$name,\$sortlink);
+				my $sortlink = undef;
+				eval {
+					$sth->bind_columns( undef, \$id,\$name,\$sortlink);
+				};
+				if( $@ ) {
+					$sth->bind_columns( undef, \$id,\$name);
+				}
 				while( $sth->fetch() ) {
 					my %listitem = (
 						'id' => $id,
@@ -715,6 +730,22 @@ sub addParameterValues {
 		    warn "Database error: $DBI::errstr\n";
 		}		
 	}
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			if ($::VERSION ge '6.5') {
+				$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+			}else {
+				$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
+			}
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub printPlayListItems {
