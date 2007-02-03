@@ -282,6 +282,43 @@ sub playRandom {
 	# If this is a new mix, clear playlist history
 	if ($continuousMode && !$addOnly || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
 		clearPlayListHistory($client);
+		# Executing actions related to new mix
+		
+		if(!$addOnly) {
+			my $stopactions = undef;
+			my $startactions = undef;
+			if(defined($mixInfo{$client}->{'type'})) {
+				my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+				if(defined($playlist)) {
+					if(defined($playlist->{'stopactions'})) {
+						$stopactions = $playlist->{'stopactions'};
+					}
+				}
+			}
+			if($type ne 'disable') {
+				my $playlist = getPlayList($client,$type);
+				if(defined($playlist)) {
+					if(defined($playlist->{'startactions'})) {
+						$startactions = $playlist->{'startactions'};
+					}
+				}
+			}
+			my @actions = ();
+			if(defined($stopactions)) {
+				push @actions,@$stopactions;
+			}
+			if(defined($startactions)) {
+				push @actions,@$startactions;
+			}
+			for my $action (@actions) {
+				if(defined($action->{'type'}) && lc($action->{'type'}) eq 'cli' && defined($action->{'data'})) {
+					debugMsg("Executing action: ".$action->{'type'}.", ".$action->{'data'}."\n");
+					my @parts = split(/ /,$action->{'data'});
+					my $request = $client->execute(\@parts);
+					$request->source('PLUGIN_DYNAMICPLAYLIST');
+				}
+			}
+		}
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
 	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type || !$addOnly) {
