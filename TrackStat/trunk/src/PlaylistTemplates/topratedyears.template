@@ -8,6 +8,10 @@
 [%- IF tracksperyear %]
 -- PlaylistOptionNoOfTracks:[% tracksperyear %]
 [%- END %]
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 select year from 
 	(select tracks.year,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating from tracks 
 		[%- IF library or activelibrary %]

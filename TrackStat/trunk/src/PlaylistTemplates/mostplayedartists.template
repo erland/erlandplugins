@@ -8,6 +8,10 @@
 [%- IF tracksperartist %]
 -- PlaylistOptionNoOfTracks:[% tracksperartist %]
 [%- END %]
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 select contributor from 
 	(select contributor_track.contributor,sum(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as sumcount from tracks 
 		[%- IF library or activelibrary %]

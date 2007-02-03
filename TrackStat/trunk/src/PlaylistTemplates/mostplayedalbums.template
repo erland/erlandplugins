@@ -8,6 +8,10 @@
 [%- IF tracksperalbum %]
 -- PlaylistOptionNoOfTracks:[% tracksperalbum %]
 [%- END %]
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 select id from 
 	(select albums.id,avg(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks 
 		[%- IF library or activelibrary %]
