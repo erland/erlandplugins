@@ -2406,6 +2406,13 @@ sub handleWebEditMenus {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomBrowseSlimserver65'} = 1;
         }
+	my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+	if(!defined($templateDir) || !-d $templateDir) {
+		$params->{'pluginCustomBrowseDownloadMessage'} = 'You have to specify a template directory before you can download menus';
+	}
+	if(!defined($params->{'pluginCustomBrowseDownloadMessage'}) && $soapLiteError) {
+		$params->{'pluginCustomBrowseDownloadMessage'} = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
+	}
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_editmenus.html', $params);
 }
