@@ -35,6 +35,7 @@ use FindBin qw($Bin);
 use Scalar::Util qw(blessed);
 use Plugins::DynamicPlayList::Template::Reader;
 
+my $PLUGINVERSION = '1.12';
 
 my $driver;
 my %stopcommands = ();
@@ -1650,6 +1651,7 @@ sub handleWebList {
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginDynamicPlayListSlimserver65'} = 1;
 	}
+	$params->{'pluginDynamicPlayListVersion'} = $PLUGINVERSION;
 	
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
