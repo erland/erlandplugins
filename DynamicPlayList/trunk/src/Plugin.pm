@@ -62,6 +62,105 @@ sub getDisplayName {
 	return 'PLUGIN_DYNAMICPLAYLIST';
 }
 
+sub getCustomSkipFilterTypes {
+	my @result = ();
+
+	my %recentlyaddedalbums = (
+		'id' => 'dynamicplaylist_recentlyaddedalbum',
+		'name' => 'Recently added album',
+		'description' => 'Skip songs from albums that have been recently added to current dynamic playlist',
+		'parameters' => [
+			{
+				'id' => 'nooftracks',
+				'type' => 'singlelist',
+				'name' => 'Songs between',
+				'data' => '1=1 song,2=2 songs,2=3 songs,4=4 songs,5=5 songs,10=10 songs,20=20 songs,30=30 songs,50=50 songs',
+				'value' => 10 
+			}
+		]
+	);
+	push @result, \%recentlyaddedalbums;
+	my %recentlyaddedartists = (
+		'id' => 'dynamicplaylist_recentlyaddedartist',
+		'name' => 'Recently added artist',
+		'description' => 'Skip songs by artists that have been recently added to current dynamic playlist',
+		'parameters' => [
+			{
+				'id' => 'nooftracks',
+				'type' => 'singlelist',
+				'name' => 'Songs between',
+				'data' => '1=1 song,2=2 songs,2=3 songs,4=4 songs,5=5 songs,10=10 songs,20=20 songs,30=30 songs,50=50 songs',
+				'value' => 10 
+			}
+		]
+	);
+	push @result, \%recentlyaddedartists;
+	return \@result;
+}
+
+sub checkCustomSkipFilterType {
+	my $client = shift;
+	my $filter = shift;
+	my $track = shift;
+
+	my $currentTime = time();
+	my $parameters = $filter->{'parameter'};
+	my $sql = undef;
+	my $result = 0;
+	my $dbh = getCurrentDBH();
+	if($filter->{'id'} eq 'dynamicplaylist_recentlyaddedartist') {
+		my $matching = 0;
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'nooftracks') {
+				my $values = $parameter->{'value'};
+				my $nooftracks = $values->[0] if(defined($values) && scalar(@$values)>0);
+
+				my $artist = $track->artist();
+				if(defined($artist) && defined($client) && defined($nooftracks)) {
+					my $artistid = $artist->id;
+					my $clientid = $dbh->quote($client->macaddress());
+					$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join contributor_track on contributor_track.track=dynamicplaylist_history.id where contributor_track.contributor=$artistid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)"
+				}
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'dynamicplaylist_recentlyaddedalbum') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'nooftracks') {
+				my $values = $parameter->{'value'};
+				my $nooftracks = $values->[0] if(defined($values) && scalar(@$values)>0);
+
+				my $album = $track->album();
+
+				if(defined($album) && defined($client) && defined($nooftracks)) {
+					my $albumid = $album->id;
+					my $clientid = $dbh->quote($client->macaddress());
+					$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join tracks on tracks.id=dynamicplaylist_history.id where tracks.album=$albumid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)"
+				}
+				last;
+			}
+		}
+	}
+	if(defined($sql)) {
+		eval {
+			my $sth = $dbh->prepare( $sql );
+			debugMsg("Executing skip filter SQL: $sql\n");
+			$sth->execute() or do {
+	            		debugMsg("Error executing: $sql\n");
+	            		$sql = undef;
+			};
+			if(defined($sql)) {
+				my $position;
+				$sth->bind_columns( undef, \$position);
+				if( $sth->fetch() ) {
+					$result = 1;
+				}
+			}
+		}
+	}
+	return $result;
+}
+
 sub filterTracks {
 	my $client = shift;
 	my $items = shift;
@@ -70,7 +169,7 @@ sub filterTracks {
 	for my $item (@$items) {
 		my $result = 1;
 		for my $key (keys %$filters) {
-			next unless $result;
+			last unless defined($result) && ($result==1 || $result==-1);
 
 			my $filter = $filters->{$key};
 			if($filter->{'dynamicplaylistenabled'}) {
@@ -78,15 +177,23 @@ sub filterTracks {
 				my $plugin = $filterPlugins{$id};
 				no strict 'refs';
 				debugMsg("Calling: $plugin :: executeDynamicPlayListFilter with: ".$filter->{'name'}.", ".$item->title."\n");
-				$result =  eval { &{"${plugin}::executeDynamicPlayListFilter"}($client,$filter,$item) };
+				my $res =  eval { &{"${plugin}::executeDynamicPlayListFilter"}($client,$filter,$item) };
+				if($result==1 || !defined($res) || $res==0) {
+					$result = $res;
+				}
 				if ($@) {
 					debugMsg("Error filtering tracks with $plugin: $@\n");
 				}
 				use strict 'refs';
 			}
 		}
-		if($result) {
+		my $skipped = 1;
+		if(defined($result) && $result == 1) {
+			$skipped = 0;
 			push @resultItems,$item;
+		}
+		if(!defined($result) || $result != -1) {
+			addToPlayListHistory($client,$item,$skipped);
 		}
 	}
 	return \@resultItems;
@@ -117,9 +224,6 @@ sub findAndAdd {
 			debugMsg("Find returned ".$noOfFilteredItems." items after filtering\n");
 			last;
 		}else {
-			foreach my $it (@$items) {
-				addToPlayListHistory($client,$it);
-			}
 			if(defined($limit)) {
 				$limit = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_tracks');
 			}
@@ -134,7 +238,6 @@ sub findAndAdd {
 		my $string = $item->title;
 		debugMsg("".($addOnly ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n");
 
-		addToPlayListHistory($client,$item);
 		# Replace the current playlist with the first item / track or add it to end
 		my $request = $client->execute(['playlist', $addOnly ? 'addtracks' : 'loadtracks',
 		                  sprintf('%s=%d', getLinkAttribute('track'),$item->id)]);
@@ -147,9 +250,6 @@ sub findAndAdd {
 		# Add the remaining items to the end
 		if (! defined $limit || $limit > 1 || $noOfItems>1) {
 			debugMsg("Adding ".(scalar @$filteredItems)." tracks to end of playlist\n");
-			foreach my $it (@$items) {
-				addToPlayListHistory($client,$it);
-			}
 			if($noOfFilteredItems>1) {
 				$request = $client->execute(['playlist', 'addtracks', 'listRef', $filteredItems]);
 				if ($::VERSION ge '6.5') {
@@ -1581,6 +1681,12 @@ sub initDatabase {
 		debugMsg("Create database table\n");
 		executeSQLFile("dbcreate.sql");
 	}
+	eval { $dbh->do("select skipped from dynamicplaylist_history limit 1;") };
+	if ($@) {
+		debugMsg("Create database table column skipped in dynamicplaylist_history\n");
+		executeSQLFile("dbupgrade_skipped.sql");
+	}
+
 }
 
 sub shutdownPlugin {
@@ -2813,13 +2919,13 @@ sub fisher_yates_shuffle {
 
 sub addToPlayListHistory
 {
-	my ($client,$track) = @_;
+	my ($client,$track,$skipped) = @_;
 
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
 
-	my $sth = $dbh->prepare( "INSERT INTO dynamicplaylist_history (client,id,url,added) values (?,".$track->id.", ?, ".time().")" );
+	my $sth = $dbh->prepare( "INSERT INTO dynamicplaylist_history (client,id,url,added,skipped) values (?,".$track->id.", ?, ".time().",".$skipped.")" );
 	eval {
 		$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
 		$sth->bind_param(2, $track->url , SQL_VARCHAR);

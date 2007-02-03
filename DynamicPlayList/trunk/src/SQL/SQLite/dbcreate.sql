@@ -3,5 +3,6 @@ CREATE TABLE dynamicplaylist_history (
   position integer NOT NULL primary key,
   id integer NOT NULL,
   url varchar NOT NULL,
-  added integer NOT NULL
+  added integer NOT NULL,
+  skipped integer DEFAULT NULL
 );
