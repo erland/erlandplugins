@@ -42,6 +42,7 @@ my $filterTypes = undef;
 my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
+my %currentSecondaryFilter = ();
 my $PLUGINVERSION = '1.3';
 
 my %filterPlugins = ();
@@ -437,12 +438,23 @@ sub executeDynamicPlayListFilter {
 	
 	if(!defined($filter) || $filter->{'name'} eq 'Custom Skip') {
 		my $filter = getCurrentFilter($client);
+		my $secondaryFilter = getCurrentSecondaryFilter($client);
 		my $skippercentage = 0;
 		my $retrylater = undef;
-		if(defined($filter)) {
-			removeExpiredFilterItems($filter);
-			my $filteritems = $filter->{'filter'};
-			for my $filteritem (@$filteritems) {
+		if(defined($filter) || defined($secondaryFilter)) {
+			my @filteritems = ();
+			if(defined($filter)) {
+				removeExpiredFilterItems($filter);
+				my $primaryfilteritems = $filter->{'filter'};
+				push @filteritems,@$primaryfilteritems;
+			}
+			if(defined($secondaryFilter)) {
+				removeExpiredFilterItems($secondaryFilter);
+				my $secondaryfilteritems = $secondaryFilter->{'filter'};
+				push @filteritems,@$secondaryfilteritems;
+			}
+			
+			for my $filteritem (@filteritems) {
 				next unless $skippercentage<100;
 			
 				my $id = $filteritem->{'id'};
@@ -515,6 +527,11 @@ sub getDisplayText {
 			my $filter = getCurrentFilter($client);
 			if(defined($filter) && $item->{'id'} eq $filter->{'id'}) {
 				$name .= " (active)";
+			}else {
+				my $secondaryfilter = getCurrentSecondaryFilter($client);
+				if(defined($secondaryfilter) && $item->{'id'} eq $secondaryfilter->{'id'}) {
+					$name .= " (active secondary)";
+				}
 			}
 		}elsif($item->{'id'} eq 'disable') {
 			$name = $client->string( 'PLUGIN_CUSTOMSKIP_DISABLE_FILTER');
@@ -528,6 +545,7 @@ sub getDisplayText {
 sub getOverlay {
 	my ($client, $item) = @_;
 	my $filter = getCurrentFilter($client);
+	my $secondaryfilter = getCurrentSecondaryFilter($client);
 	my $itemFilter = $item->{'filter'};
 	if(defined($itemFilter) && !defined($item->{'filteritem'}) && $item->{'id'} ne 'newitem' && (!defined($filter) || $itemFilter->{'id'} ne $filter->{'id'})) {
 		return [Slim::Display::Display::symbol('notesymbol'), Slim::Display::Display::symbol('rightarrow')];
@@ -655,6 +673,7 @@ sub setMode {
 			if(defined($item->{'filter'}) && defined($key)) {
 				$currentFilter{$key} = $item->{'id'};
 				$client->prefSet('plugin_customskip_filter',$item->{'id'});
+				$currentSecondaryFilter{$key} = undef;
 				$client->showBriefly(
 					$client->string( 'PLUGIN_CUSTOMSKIP'),
 					$client->string( 'PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER').": ".$item->{'filter'}->{'name'},
@@ -663,6 +682,7 @@ sub setMode {
 			}elsif($item->{'id'} eq 'disable' && defined($key)) {
 				$currentFilter{$key} = undef;
 				$client->prefSet('plugin_customskip_filter',0);
+				$currentSecondaryFilter{$key} = undef;
 				$client->showBriefly(
 					$client->string( 'PLUGIN_CUSTOMSKIP'),
 					$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
@@ -691,6 +711,7 @@ sub setMode {
 					}
 					$currentFilter{$key} = undef;
 					$client->prefSet('plugin_customskip_filter',0);
+					$currentSecondaryFilter{$key} = undef;
 					$client->showBriefly(
 						$client->string( 'PLUGIN_CUSTOMSKIP'),
 						$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
@@ -1540,6 +1561,9 @@ sub initPlugin {
 	debugMsg("CustomSkip: Registering hook.\n");
 	Slim::Control::Request::subscribe(\&newSongCallback, [['playlist'], ['newsong']]);
 	Slim::Control::Request::addDispatch(['customskip','setfilter', '_filterid'], [1, 0, 0, \&setCLIFilter]);
+	Slim::Control::Request::addDispatch(['customskip','setsecondaryfilter', '_filterid'], [1, 0, 0, \&setCLISecondaryFilter]);
+	Slim::Control::Request::addDispatch(['customskip','clearfilter', '_filterid'], [1, 0, 0, \&clearCLIFilter]);
+	Slim::Control::Request::addDispatch(['customskip','clearsecondaryfilter', '_filterid'], [1, 0, 0, \&clearCLISecondaryFilter]);
 	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
@@ -1639,6 +1663,109 @@ sub setCLIFilter {
 	debugMsg("Exiting setCLIFilter\n");
 }
 
+sub setCLISecondaryFilter {
+	debugMsg("Entering setCLISecondaryFilter\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['customskip'],['setsecondaryfilter']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting setCLISecondaryFilter\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting setCLISecondaryFilter\n");
+		return;
+	}
+
+	# get our parameters
+  	my $filterId    = $request->getParam('_filterid');
+  	if(!defined $filterId || $filterId eq '') {
+		debugMsg("_filterid not defined\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLISecondaryFilter\n");
+		return;
+  	}
+  	
+	initFilters();
+
+	if(!defined($filters->{$filterId})) {
+		debugMsg("Unknown filter $filterId\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLISecondaryFilter\n");
+		return;
+  	}
+	my $key = $client;
+	if(defined($client->syncgroupid)) {
+		$key = "SyncGroup".$client->syncgroupid;
+	}
+	$currentSecondaryFilter{$key} = $filterId;
+
+	$request->addResult('filter', $filterId);
+	$request->setStatusDone();
+	debugMsg("Exiting setCLISecondaryFilter\n");
+}
+
+sub clearCLIFilter {
+	debugMsg("Entering clearCLIFilter\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['customskip'],['clearfilter']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting setCLIFilter\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting clearCLIFilter\n");
+		return;
+	}
+
+	my $key = $client;
+	if(defined($client->syncgroupid)) {
+		$key = "SyncGroup".$client->syncgroupid;
+	}
+	$currentFilter{$key} = undef;
+	$client->prefSet('plugin_customskip_filter',0);
+	$currentSecondaryFilter{$key} = undef;
+
+	$request->setStatusDone();
+	debugMsg("Exiting clearCLIFilter\n");
+}
+
+sub clearCLISecondaryFilter {
+	debugMsg("Entering clearCLISecondaryFilter\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['customskip'],['clearsecondaryfilter']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting clearCLISecondaryFilter\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting clearCLISecondaryFilter\n");
+		return;
+	}
+
+	my $key = $client;
+	if(defined($client->syncgroupid)) {
+		$key = "SyncGroup".$client->syncgroupid;
+	}
+	$currentSecondaryFilter{$key} = undef;
+
+	$request->setStatusDone();
+	debugMsg("Exiting clearCLISecondaryFilter\n");
+}
 
 sub newSongCallback 
 {
@@ -1714,6 +1841,24 @@ sub getCurrentFilter {
 	return undef;
 }
 
+sub getCurrentSecondaryFilter {
+	my $client = shift;
+	if(defined($client)) {
+		if(!$filters) {
+			initFilterTypes();
+			initFilters();
+		}
+		my $key = $client;
+		if(defined($client->syncgroupid)) {
+			$key = "SyncGroup".$client->syncgroupid;
+		}
+		if(defined($currentSecondaryFilter{$key})) {
+			return $filters->{$currentSecondaryFilter{$key}};
+		}	
+	}
+	return undef;
+}
+
 # Draws the plugin's web page
 sub handleWebList {
 	my ($client, $params) = @_;
@@ -1723,6 +1868,7 @@ sub handleWebList {
 
 	$params->{'pluginCustomSkipFilters'} = getFilters($client);
 	$params->{'pluginCustomSkipActiveFilter'} = getCurrentFilter($client);
+	$params->{'pluginCustomSkipActiveSecondaryFilter'} = getCurrentSecondaryFilter($client);
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginCustomSkipSlimserver65'} = 1;
 	}
@@ -1743,6 +1889,7 @@ sub handleWebSelectFilter {
 		}
 		$currentFilter{$key} = $params->{'filter'};
 		$client->prefSet('plugin_customskip_filter',$params->{'filter'});
+		$currentSecondaryFilter{$key} = undef;
 	}
 	return handleWebList($client,$params);
 }
@@ -1755,6 +1902,7 @@ sub handleWebDisableFilter {
 			$key = "SyncGroup".$client->syncgroupid;
 		}
 		$currentFilter{$key} = undef;
+		$currentSecondaryFilter{$key} = undef;
 		$client->prefSet('plugin_customskip_filter',0);
 	}
 	return handleWebList($client,$params);

@@ -11,9 +11,9 @@
 	</a>
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
-	[% IF pluginCustomSkipActiveFilter != '' %]
+	[% IF pluginCustomSkipActiveFilter != '' or pluginCustomSkipActiveSecondaryFilter != ''%]
 		<strong>[% "PLUGIN_CUSTOMSKIP_ACTIVE" | string %]:</strong>
-		<span class="exboldnowplaying">[% pluginCustomSkipActiveFilter.name %]</span>
+		<span class="exboldnowplaying">[% IF pluginCustomSkipActiveFilter != '' %][% pluginCustomSkipActiveFilter.name %][% END %][% IF pluginCustomSkipActiveSecondaryFilter != ''%] (secondary [% pluginCustomSkipActiveSecondaryFilter.name %])[% END %]</span>
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
