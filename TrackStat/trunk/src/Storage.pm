@@ -810,8 +810,17 @@ sub saveTrack
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId,$track,$ignoreTrackInSlimserver);
 	my $sql;
 	
-	if ($playCount) {
-		debugMsg("Marking as played in storage: $playCount\n");
+	if (defined($playCount) || defined($lastPlayed) ||defined($added) ) {
+		if(!defined($playCount)) {
+			$playCount = 'NULL';
+		}
+		if(!defined($added)) {
+			$added = 'NULL';
+		}
+		if(!defined($lastPlayed)) {
+			$lastPlayed = 'NULL';
+		}
+		debugMsg("Saving play count, last played and added time in storage: $playCount, $lastPlayed, $added\n");
 
 		my $key = $url;
 
@@ -824,7 +833,7 @@ sub saveTrack
 			    $key = $mbId;
 			}
 
-			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where $queryParameter = ?";
+			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed, added=$added where $queryParameter = ?";
 		}else {
 			if (defined($mbId)) {
 				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, '$mbId', $playCount, $added, $lastPlayed)";
