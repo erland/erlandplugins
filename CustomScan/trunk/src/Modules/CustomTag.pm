@@ -271,7 +271,7 @@ sub scanTrack {
 				if($customTagsHash{$tag}) {
 					my $values = $tags->{$tag};
 					if(!defined($singleValueTagsHash{$tag})) {
-						my @arrayValues = Slim::Music::Info::splitTag($tags->{$tag});
+						my @arrayValues = splitTag($tags->{$tag});
 						$values = \@arrayValues;
 					}
 					my $sortValues = undef;
@@ -281,7 +281,7 @@ sub scanTrack {
 							if(uc($sortTag) eq uc($key)) {
 								$sortValues = $tags->{$key};
 								if(!defined($singleValueTagsHash{$tag})) {
-									my @arrayValues = Slim::Music::Info::splitTag($tags->{$key});
+									my @arrayValues = splitTag($tags->{$key});
 									$sortValues = \@arrayValues;
 								}
 								last;
@@ -340,6 +340,22 @@ sub scanTrack {
 	return \@result;
 }
 
+sub splitTag {
+	my $value = shift;
+
+	my @arrayValues = ();
+	if(ref($value) eq 'ARRAY') {
+		for my $v (@$value) {
+			my @subArrayValues = Slim::Music::Info::splitTag($v);
+			if(scalar(@subArrayValues)>0) {
+				push @arrayValues,@subArrayValues;
+			}
+		}
+	}else {
+		@arrayValues = Slim::Music::Info::splitTag($value);
+	}
+	return @arrayValues;
+}
 
 sub getRawMP3Tags {
 	my $url = shift;
