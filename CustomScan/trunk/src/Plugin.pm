@@ -657,7 +657,7 @@ sub scanArtist {
 							eval {
 								$sth->bind_param(1, $artist->id , SQL_INTEGER);
 								$sth->bind_param(2, $artist->name , SQL_VARCHAR);
-								if($artist->musicbrainz_id =~ /.+-.+/) {
+								if(defined($artist->musicbrainz_id) && $artist->musicbrainz_id =~ /.+-.+/) {
 									$sth->bind_param(3,  $artist->musicbrainz_id, SQL_VARCHAR);
 								}else {
 									$sth->bind_param(3,  undef, SQL_VARCHAR);
@@ -749,7 +749,7 @@ sub scanAlbum {
 							eval {
 								$sth->bind_param(1, $album->id , SQL_INTEGER);
 								$sth->bind_param(2, $album->title , SQL_VARCHAR);
-								if($album->musicbrainz_id =~ /.+-.+/) {
+								if(defined($album->musicbrainz_id) && $album->musicbrainz_id =~ /.+-.+/) {
 									$sth->bind_param(3,  $album->musicbrainz_id, SQL_VARCHAR);
 								}else {
 									$sth->bind_param(3,  undef, SQL_VARCHAR);
@@ -836,7 +836,7 @@ sub scanTrack {
 							eval {
 								$sth->bind_param(1, $track->id , SQL_INTEGER);
 								$sth->bind_param(2, $track->url , SQL_VARCHAR);
-								if($track->musicbrainz_id =~ /.+-.+/) {
+								if(defined($track->musicbrainz_id) && $track->musicbrainz_id =~ /.+-.+/) {
 									$sth->bind_param(3,  $track->musicbrainz_id, SQL_VARCHAR);
 								}else {
 									$sth->bind_param(3,  undef, SQL_VARCHAR);
