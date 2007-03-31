@@ -98,6 +98,33 @@ sub getCustomSkipFilterTypes {
 	return \@result;
 }
 
+sub getNoOfItemsInHistory {
+	my $client = shift;
+
+	my $result = 0;
+	my $dbh = getCurrentDBH();
+	eval {
+		my $clientid = $dbh->quote($client->macaddress());
+		my $sql = "select count(position) from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0";
+		my $sth = $dbh->prepare( $sql );
+		debugMsg("Executing history count SQL: $sql\n");
+		$sth->execute() or do {
+            		debugMsg("Error executing: $sql\n");
+            		$sql = undef;
+		};
+		if(defined($sql)) {
+			my $count = undef;
+			$sth->bind_columns( undef, \$count);
+			if( $sth->fetch() ) {
+				$result = $count;
+			}
+		}
+	};
+	if ($@) {
+		debugMsg("Error history count: $@\n");
+	}
+	return $result;
+}
 sub checkCustomSkipFilterType {
 	my $client = shift;
 	my $filter = shift;
@@ -119,7 +146,12 @@ sub checkCustomSkipFilterType {
 				if(defined($artist) && defined($client) && defined($nooftracks)) {
 					my $artistid = $artist->id;
 					my $clientid = $dbh->quote($client->macaddress());
-					$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join contributor_track on contributor_track.track=dynamicplaylist_history.id where contributor_track.contributor=$artistid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)"
+					my $noOfItems = getNoOfItemsInHistory($client);
+					if($noOfItems<=$nooftracks) {
+						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join contributor_track on contributor_track.track=dynamicplaylist_history.id where contributor_track.contributor=$artistid and dynamicplaylist_history.client=$clientid";
+					}else {
+						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join contributor_track on contributor_track.track=dynamicplaylist_history.id where contributor_track.contributor=$artistid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)";
+					}
 				}
 				last;
 			}
@@ -135,7 +167,12 @@ sub checkCustomSkipFilterType {
 				if(defined($album) && defined($client) && defined($nooftracks)) {
 					my $albumid = $album->id;
 					my $clientid = $dbh->quote($client->macaddress());
-					$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join tracks on tracks.id=dynamicplaylist_history.id where tracks.album=$albumid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)"
+					my $noOfItems = getNoOfItemsInHistory($client);
+					if($noOfItems<=$nooftracks) {
+						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join tracks on tracks.id=dynamicplaylist_history.id where tracks.album=$albumid and dynamicplaylist_history.client=$clientid";
+					}else {
+						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join tracks on tracks.id=dynamicplaylist_history.id where tracks.album=$albumid and dynamicplaylist_history.client=$clientid and dynamicplaylist_history.position>(select position from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0 order by position desc limit 1 offset $nooftracks)";
+					}
 				}
 				last;
 			}
@@ -156,6 +193,9 @@ sub checkCustomSkipFilterType {
 					$result = 1;
 				}
 			}
+		};
+		if ($@) {
+			debugMsg("Error executing filter: $@\n");
 		}
 	}
 	return $result;
