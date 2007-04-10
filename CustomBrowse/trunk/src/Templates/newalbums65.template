@@ -17,7 +17,7 @@
 	                <menutype>sql</menutype>
 	                <menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', contributors.name ,')')) from tracks,albums,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					tracks.id=contributor_track.track and
 					contributor_track.role in (1,5) and
