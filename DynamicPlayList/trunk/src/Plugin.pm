@@ -1843,13 +1843,17 @@ sub handleWebList {
 sub handleWebMix {
 	my ($client, $params) = @_;
 	if (defined $client && $params->{'type'}) {
-		my $playlist = getPlayList($client,$params->{'type'});
-		if(!defined($playlist)) {
-			debugMsg("Playlist not found:".$params->{'type'}."\n");
-		}elsif(defined($playlist->{'parameters'})) {
-			return handleWebMixParameters($client,$params);
+		if($params->{'type'} eq 'disable') {
+			playRandom($client, 'disable');
 		}else {
-			playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1, 1);
+			my $playlist = getPlayList($client,$params->{'type'});
+			if(!defined($playlist)) {
+				debugMsg("Playlist not found:".$params->{'type'}."\n");
+			}elsif(defined($playlist->{'parameters'})) {
+				return handleWebMixParameters($client,$params);
+			}else {
+				playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1, 1);
+			}
 		}
 	}
 	return handleWebList($client, $params);
