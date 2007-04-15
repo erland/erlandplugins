@@ -326,10 +326,9 @@ sub readItemConfiguration {
 
 sub webEditItems {
         my ($self, $client, $params) = @_;
-
-	my $itemConfiguration = $self->readItemConfiguration($client);
-	my $items = $itemConfiguration->{'menus'};
-	$self->items($items);
+	
+	Plugins::CustomBrowse::Plugin::readBrowseConfiguration($client);
+	my $items = $self->items;
 
 	my @webitems = ();
 	for my $key (keys %$items) {
