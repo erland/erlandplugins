@@ -254,6 +254,7 @@ sub readItemConfiguration {
 	my $client = shift;
 	my $onlyWithLibrarySupport = shift;
 	my $excludedPlugins = shift;
+	my $storeInCache = shift;
 	
 	my $dir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
     	$self->debugCallback->("Searching for item configuration in: $dir\n");
@@ -307,6 +308,10 @@ sub readItemConfiguration {
 		if(!$onlyWithLibrarySupport) {
 			$self->mixDirectoryHandler()->readFromDir($client,$dir,\%localMixes,\%globalcontext);
 		}
+	}
+
+	if($storeInCache) {
+		$self->items(\%localItems);
 	}
 
 	my %result = (

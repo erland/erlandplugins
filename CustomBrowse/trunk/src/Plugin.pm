@@ -2727,7 +2727,7 @@ sub handleWebSaveSelectMenus {
 sub readBrowseConfiguration {
 	my $client = shift;
 
-	my $itemConfiguration = getConfigManager()->readItemConfiguration($client);
+	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,undef,undef,1);
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	$templates = $itemConfiguration->{'templates'};
 
