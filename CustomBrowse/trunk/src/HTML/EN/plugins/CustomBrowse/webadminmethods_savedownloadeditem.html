@@ -1,5 +1,5 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% IF !pluginCustomBrowseSlimserver65 %]
+[% IF !pluginWebAdminMethodsSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
 	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
 	[% PROCESS plugins/CustomBrowse/css65 %]
@@ -13,13 +13,13 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginCustomBrowseSlimserver65 %]
+[% IF !pluginWebAdminMethodsSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
 [% END %]
 
-<form action="[% webroot %]plugins/CustomBrowse/custombrowse_downloadmenu.html" name="editForm" accept-charset="iso8859-1">
-	[% IF pluginCustomBrowseRedirect %]<input type="hidden" name="redirect" value="1">[% END %]
-	<input type="hidden" name="menutemplate" value="[% pluginCustomBrowseTemplate %]">
+<form action="[% webroot %]plugins/CustomBrowse/webadminmethods_downloaditem.html" name="editForm" accept-charset="iso8859-1">
+	[% IF pluginWebAdminMethodsRedirect %]<input type="hidden" name="redirect" value="[% pluginWebAdminMethodsRedirect %]">[% END %]
+	<input type="hidden" name="itemtemplate" value="[% pluginWebAdminMethodsTemplate %]">
 	<table>
 	<tr><td colspan="2">
 	<br><div style="color:red;">[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE_WARNING" |string %]</div><br>
@@ -27,16 +27,16 @@
 	<tr><td>
 	[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_NAME" | string %]: 
 	</td><td>
-	<input type="text" name="customname" size="40" value="[% pluginCustomBrowseUniqueId %]">
+	<input type="text" name="customname" size="40" value="[% pluginWebAdminMethodsUniqueId %]">
 	</td></tr>
 	<tr><td>
 	[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_TEMPLATE_OVERWRITE" | string %]: 
 	</td><td>
 	<input type="checkbox" name="overwrite" id="overwrite" value="1">
 	</td></tr>
-	[% IF pluginCustomBrowseError %]
+	[% IF pluginWebAdminMethodsError %]
 	<tr><td colspan="2">
-	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
+	<br><div style="color:red;">Error:<br>[% pluginWebAdminMethodsError %]</div><br>
 	</td></tr>
 	[% END %]
 	<tr><td>&nbsp;</td></tr>

@@ -1,5 +1,5 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% IF !pluginCustomBrowseSlimserver65 %]
+[% IF !pluginWebAdminMethodsSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
 	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
 	[% PROCESS plugins/CustomBrowse/css65 %]
@@ -13,42 +13,43 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginCustomBrowseSlimserver65 %]
+[% IF !pluginWebAdminMethodsSlimserver65 %]
 	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
 [% END %]
 
 <table border="0">
-<form action="[% webroot %]plugins/CustomBrowse/custombrowse_publishmenu.html" name="editForm" accept-charset="iso8859-1">
-	<input type="hidden" name="menu" value="[% pluginCustomBrowseLoginMenu %]">
-	<input type="hidden" name="username" value="[% pluginCustomBrowseLoginUser %]">
-	<input type="hidden" name="password" value="[% pluginCustomBrowseLoginPassword %]">
+<form action="[% webroot %]plugins/CustomBrowse/webadminmethods_publishitem.html" name="editForm" accept-charset="iso8859-1">
+	[% IF pluginWebAdminMethodsRedirect %]<input type="hidden" name="redirect" value="[% pluginWebAdminMethodsRedirect %]">[% END %]
+	<input type="hidden" name="item" value="[% pluginWebAdminMethodsLoginItem %]">
+	<input type="hidden" name="username" value="[% pluginWebAdminMethodsLoginUser %]">
+	<input type="hidden" name="password" value="[% pluginWebAdminMethodsLoginPassword %]">
 	<tr><td colspan="3"><b>[% "PLUGIN_CUSTOMBROWSE_PUBLISHPARAMETERS_TITLE" | string %]</b></td></tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
 	</td></tr>
-	[% IF pluginCustomBrowseError %]
+	[% IF pluginWebAdminMethodsError %]
 	<tr><td colspan="2">
-	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
+	<br><div style="color:red;">Error:<br>[% pluginWebAdminMethodsError %]</div><br>
 	</td></tr>
 	[% END %]
 	<tr>
 		<td>[% "PLUGIN_CUSTOMBROWSE_PUBLISH_NAME" | string %]</td>
 		<td>&nbsp;&nbsp;&nbsp;</td>
-		<td><input type="text" name="menuname" size="40" value="[% pluginCustomBrowsePublishName %]"></td>
+		<td><input type="text" name="itemname" size="40" value="[% pluginWebAdminMethodsPublishName %]"></td>
 	</tr>
 	<tr>
 		<td>[% "PLUGIN_CUSTOMBROWSE_PUBLISH_DESCRIPTION" | string %]</td>
 		<td>&nbsp;&nbsp;&nbsp;</td>
-		<td><textarea name="menudescription" cols="40" rows="5">[% pluginCustomBrowsePublishDescription %]</textarea></td>
+		<td><textarea name="itemdescription" cols="40" rows="5">[% pluginWebAdminMethodsPublishDescription %]</textarea></td>
 	</tr>
 	<tr>
 		<td>[% "PLUGIN_CUSTOMBROWSE_PUBLISH_ID" | string %]</td>
 		<td>&nbsp;&nbsp;&nbsp;</td>
-		<td><input type="text" name="menuuniqueid" size="40" value="[% pluginCustomBrowsePublishUniqueId %]"></td>
+		<td><input type="text" name="itemuniqueid" size="40" value="[% pluginWebAdminMethodsPublishUniqueId %]"></td>
 	</tr>
 	<tr>
 		<td>[% "PLUGIN_CUSTOMBROWSE_PUBLISH_OVERWRITE" | string %]</td>
 		<td>&nbsp;&nbsp;&nbsp;</td>
-		<td><input type="checkbox" name="overwrite" id="overwrite" value="1" [% IF pluginCustomBrowsePublishOverwrite %]checked[% END%]></td>
+		<td><input type="checkbox" name="overwrite" id="overwrite" value="1" [% IF pluginWebAdminMethodsPublishOverwrite %]checked[% END%]></td>
 	</tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
 	<tr><td colspan="3">[% "PLUGIN_CUSTOMBROWSE_PUBLISHMESSAGE_DESCRIPTION" | string %]</td></tr>
