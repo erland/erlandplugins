@@ -38,10 +38,13 @@
 				[% odd = 1 %]
 				[% FOREACH library IN pluginMultiLibraryLibraries %]
 					[% BLOCK controls %]
-						[%- IF !library.defaultlibrary %]
-						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_removelibrary.html?type=[% library.id |uri %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY_QUESTION" | string %]')">[% "PLUGIN_MULTILIBRARY_REMOVE_LIBRARY" | string %]</a>
+						[%- IF library.customitem and !library.downloadeditem %]
+						<a href="[% webroot %]plugins/MultiLibrary/webadminmethods_login.html?item=[% library.id |uri %]&player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_PUBLISH_ITEM" | string %]</a>
 						[%- END %]
-						<a href="[% webroot %]plugins/MultiLibrary/multilibrary_editlibrary.html?type=[% library.id |uri %]&player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_EDIT_LIBRARY" | string %]</a>
+						[%- IF !library.defaultitem %]
+						<a href="[% webroot %]plugins/MultiLibrary/webadminmethods_removeitem.html?item=[% library.id |uri %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_MULTILIBRARY_REMOVE_ITEM_QUESTION" | string %]')">[% "PLUGIN_MULTILIBRARY_REMOVE_ITEM" | string %]</a>
+						[%- END %]
+						<a href="[% webroot %]plugins/MultiLibrary/webadminmethods_edititem.html?item=[% library.id |uri %]&player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_EDIT_ITEM" | string %]</a>
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
 						[% IF library.enabled %]
@@ -59,7 +62,7 @@
 			</tr>
 
 			<tr>
-				<td colspan="4"><br><a href="[% webroot %]plugins/MultiLibrary/multilibrary_newlibrarytypes.html?player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_NEW_LIBRARY" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/MultiLibrary/multilibrary_refreshlibraries.html?player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_REFRESH_LIBRARIES" | string %]</a>&nbsp;&nbsp;&nbsp;<div style="float:right;">([% "PLUGIN_MULTILIBRARY" | string %] [% pluginMultiLibraryVersion %])</div></td>
+				<td colspan="4"><br><a href="[% webroot %]plugins/MultiLibrary/webadminmethods_newitemtypes.html?player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_NEW_ITEM" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/MultiLibrary/multilibrary_refreshlibraries.html?player=[% player | uri %]">[% "PLUGIN_MULTILIBRARY_REFRESH_LIBRARIES" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/MultiLibrary/webadminmethods_downloadnewitems.html?player=[% player | uri %]" [% IF pluginMultiLibraryDownloadMessage %]onClick="alert('[% pluginMultiLibraryDownloadMessage %]');return false;"[% ELSE %]onClick="return confirm('[% "PLUGIN_MULTILIBRARY_DOWNLOAD_QUESTION" |string %]');"[% END %]>[% "PLUGIN_MULTILIBRARY_REFRESH_DOWNLOADED_ITEMS" | string %]</a><div style="float:right;">([% "PLUGIN_MULTILIBRARY" | string %] [% pluginMultiLibraryVersion %])</div></td>
 			</tr>
 			[% IF pluginMultiLibraryError %]
 				<tr><td colspan="4"><br><br><strong>[% pluginMultiLibraryError %]</strong></td></tr>

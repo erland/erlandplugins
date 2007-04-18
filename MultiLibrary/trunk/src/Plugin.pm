@@ -31,6 +31,8 @@ use HTML::Entities;
 use FindBin qw($Bin);
 use DBI qw(:sql_types);
 
+use Plugins::MultiLibrary::ConfigManager::Main;
+
 if ($::VERSION ge '6.5') {
 	eval "use Slim::Schema";
 }
@@ -38,13 +40,14 @@ if ($::VERSION ge '6.5') {
 # Information on each clients multilibrary
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
 my $ds = getCurrentDS();
-my $template;
 my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.2';
+my $PLUGINVERSION = '1.3';
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
+
+my $configManager = undef;
 
 # Indicator if hooked or not
 # 0= No
@@ -240,29 +243,15 @@ sub selectLibrary {
 }
 sub initLibraries {
 	my $client = shift;
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
-	my %localLibraries = ();
-	my $templates = readTemplateConfiguration();
-	
-	my $libraryDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	debugMsg("Searching for library definitions in: $libraryDir\n");
-	
-	if (defined $libraryDir && -d $libraryDir) {
-		readLibrariesFromDir($client,0,$libraryDir,\%localLibraries);
-		readTemplateLibrariesFromDir($client,0,$libraryDir,\%localLibraries,$templates);
-	}else {
-		debugMsg("Skipping library folder scan - library dir is undefined.\n");
-	}
+
+	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,1);
+
+	my $localLibraries = $itemConfiguration->{'libraries'};
 
 	my $dbh = getCurrentDBH();
 
-	for my $libraryid (keys %localLibraries) {
-		my $library = $localLibraries{$libraryid};
+	for my $libraryid (keys %$localLibraries) {
+		my $library = $localLibraries->{$libraryid};
 		my $sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
 		$sth->bind_param(1,$libraryid,SQL_VARCHAR);
 		$sth->execute();
@@ -288,10 +277,10 @@ sub initLibraries {
 			$sth->bind_col(1, \$id);
 			$sth->fetch();
 		}
-		$localLibraries{$libraryid}->{'libraryno'} = $id;
+		$localLibraries->{$libraryid}->{'libraryno'} = $id;
 	}
 
-	$libraries = \%localLibraries;
+	$libraries = $localLibraries;
 
 }
 
@@ -634,141 +623,37 @@ sub getCustomBrowseMenuData {
 	return undef;
 }
 
-sub parseLibraryContent {
-	my $client = shift;
-	my $item = shift;
-	my $content = shift;
-	my $libraries = shift;
-	my $defaultLibrary = shift;
-
-	my $libraryId = $item;
-	$libraryId =~ s/\.ml\.xml//;
-	my $errorMsg = undef;
-        if ( $content ) {
-	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-            my $xml = eval { 	XMLin($content, forcearray => ["item"], keyattr => []) };
-            #debugMsg(Dumper($xml));
-            if ($@) {
-		    $errorMsg = "$@";
-                    errorMsg("MultiLibrary: Failed to parse library configuration because:\n$@\n");
-            }else {
-		my $include = isLibraryEnabled($client,$xml);
-
-		my $disabled = 0;
-		if(defined($xml->{'library'})) {
-			$xml->{'library'}->{'id'} = escape($libraryId);
-		}
-		if(defined($xml->{'library'}) && defined($xml->{'library'}->{'id'})) {
-			my $enabled = Slim::Utils::Prefs::get('plugin_multilibrary_library_'.escape($xml->{'library'}->{'id'}).'_enabled');
-			if(defined($enabled) && !$enabled) {
-				$disabled = 1;
-			}elsif(!defined($enabled)) {
-				if(defined($xml->{'defaultdisabled'}) && $xml->{'defaultdisabled'}) {
-					$disabled = 1;
-				}
-			}
-		}
-		
-		if($include && !$disabled) {
-			$xml->{'library'}->{'enabled'}=1;
-			if($defaultLibrary) {
-				$xml->{'library'}->{'defaultlibrary'} = 1;
-			}else {
-				$xml->{'library'}->{'customlibrary'} = 1;
-			}
-	                $libraries->{$libraryId} = $xml->{'library'};
-		}elsif($include && $disabled) {
-			$xml->{'library'}->{'enabled'}=0;
-			if($defaultLibrary) {
-				$xml->{'library'}->{'defaultlibrary'} = 1;
-			}else {
-				$xml->{'library'}->{'customlibrary'} = 1;
-			}
-	                $libraries->{$libraryId} = $xml->{'library'};
-		}
-            }
-    
-            # Release content
-            undef $content;
-        }else {
-            if ($@) {
-                    $errorMsg = "Incorrect information in library data: $@";
-                    errorMsg("MultiLibrary: Unable to read library configuration:\n$@\n");
-            }else {
-		$errorMsg = "Incorrect information in library data";
-                errorMsg("MultiLibrary: Unable to to read library configuration\n");
-            }
-        }
-	return $errorMsg;
-}
-
-
-sub isLibraryEnabled {
-	my $client = shift;
-	my $xml = shift;
-
-	my $include = 1;
-	if(defined($xml->{'minslimserverversion'})) {
-		if($::VERSION lt $xml->{'minslimserverversion'}) {
-			$include = 0;
-		}
-	}
-	if(defined($xml->{'maxslimserverversion'})) {
-		if($::VERSION gt $xml->{'maxslimserverversion'}) {
-			$include = 0;
-		}
-	}
-	if(defined($xml->{'requireplugins'}) && $include) {
-		$include = 0;
-		my $requiredPlugins = $xml->{'requireplugins'};
-		my $enabledPlugin = 1;
-		foreach my $plugin (split /,/, $requiredPlugins) {
-			if($enabledPlugin) {
-				if ($::VERSION ge '6.5') {
-					$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
-				}else {
-					$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
-				}
-			}
-		}
-		if($enabledPlugin) {
-			$include = 1;
-		}
-	}
-	if($include && defined($xml->{'minpluginversion'}) && $xml->{'minpluginversion'} =~ /(\d+)\.(\d+).*/) {
-		my $downloadMajor = $1;
-		my $downloadMinor = $2;
-		if($PLUGINVERSION =~ /(\d+)\.(\d+).*/) {
-			my $pluginMajor = $1;
-			my $pluginMinor = $2;
-			if($pluginMajor>=$downloadMajor && $pluginMinor>=$downloadMinor) {
-				$include = 1;
-			}else {
-				$include = 0;
-			}
-		}
-	}	
-	if(defined($xml->{'database'}) && $include) {
-		$include = 0;
-		my $driver = Slim::Utils::Prefs::get('dbsource');
-		$driver =~ s/dbi:(.*?):(.*)$/$1/;
-		if($driver eq $xml->{'database'}) {
-			$include = 1;
-		}
-	}
-	return $include;
-}
-
 sub initPlugin {
 	checkDefaults();
 	initDatabase();
-	initLibraries();
+	eval {
+		initLibraries();
+	};
+	if( $@ ) {
+	    	errorMsg("Startup error: $@\n");
+	}		
+
 	if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup")) {
 		refreshLibraries();
 	}
 	if ( !$MULTILIBRARY_HOOK ) {
 		installHook();
 	}
+}
+
+sub getConfigManager {
+	if(!defined($configManager)) {
+		my %parameters = (
+			'debugCallback' => \&debugMsg,
+			'errorCallback' => \&errorMsg,
+			'pluginId' => 'MultiLibrary',
+			'pluginVersion' => $PLUGINVERSION,
+			'supportDownloadError' => "Download not available at the moment",#$supportDownloadError,
+			'addSqlErrorCallback' => \&addSQLError
+		);
+		$configManager = Plugins::MultiLibrary::ConfigManager::Main->new(\%parameters);
+	}
+	return $configManager;
 }
 
 sub shutdownPlugin {
@@ -1170,15 +1055,22 @@ sub webPages {
 	my %pages = (
 		"multilibrary_list\.(?:htm|xml)"     => \&handleWebList,
 		"multilibrary_refreshlibraries\.(?:htm|xml)"     => \&handleWebRefreshLibraries,
-		"multilibrary_editlibrary\.(?:htm|xml)"      => \&handleWebEditLibrary,
-		"multilibrary_newlibrarytypes\.(?:htm|xml)"      => \&handleWebNewLibraryTypes,
-                "multilibrary_newlibraryparameters\.(?:htm|xml)"     => \&handleWebNewLibraryParameters,
-		"multilibrary_newlibrary\.(?:htm|xml)"      => \&handleWebNewLibrary,
-                "multilibrary_savenewsimplelibrary\.(?:htm|xml)"     => \&handleWebSaveNewSimpleLibrary,
-                "multilibrary_savesimplelibrary\.(?:htm|xml)"     => \&handleWebSaveSimpleLibrary,
-		"multilibrary_savelibrary\.(?:htm|xml)"      => \&handleWebSaveLibrary,
-		"multilibrary_savenewlibrary\.(?:htm|xml)"      => \&handleWebSaveNewLibrary,
-		"multilibrary_removelibrary\.(?:htm|xml)"      => \&handleWebRemoveLibrary,
+                "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditLibrary,
+                "webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveLibrary,
+                "webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleLibrary,
+                "webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewLibrary,
+                "webadminmethods_savenewsimpleitem\.(?:htm|xml)"     => \&handleWebSaveNewSimpleLibrary,
+                "webadminmethods_removeitem\.(?:htm|xml)"     => \&handleWebRemoveLibrary,
+                "webadminmethods_newitemtypes\.(?:htm|xml)"     => \&handleWebNewLibraryTypes,
+                "webadminmethods_newitemparameters\.(?:htm|xml)"     => \&handleWebNewLibraryParameters,
+                "webadminmethods_newitem\.(?:htm|xml)"     => \&handleWebNewLibrary,
+		"webadminmethods_login\.(?:htm|xml)"      => \&handleWebLogin,
+		"webadminmethods_downloadnewitems\.(?:htm|xml)"      => \&handleWebDownloadNewLibraries,
+		"webadminmethods_downloaditems\.(?:htm|xml)"      => \&handleWebDownloadLibraries,
+		"webadminmethods_downloaditem\.(?:htm|xml)"      => \&handleWebDownloadLibrary,
+		"webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishLibraryParameters,
+		"webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishLibrary,
+		"webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteLibraryType,
 		"multilibrary_selectlibrary\.(?:htm|xml)"      => \&handleWebSelectLibrary,
 	);
 
@@ -1258,6 +1150,10 @@ sub handleWebList {
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginMultiLibrarySlimserver65'} = 1;
 	}
+	my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
+	if(!defined($templateDir) || !-d $templateDir) {
+		$params->{'pluginMultiLibraryDownloadMessage'} = 'You have to specify a template directory before you can download libraries';
+	}
 	$params->{'pluginMultiLibraryVersion'} = $PLUGINVERSION;
 	if(defined($params->{'redirect'})) {
 		return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_redirect.html', $params);
@@ -1284,1681 +1180,84 @@ sub handleWebSelectLibrary {
 	return handleWebList($client,$params);
 }
 
-# Draws the plugin's edit library web page
 sub handleWebEditLibrary {
+        my ($client, $params) = @_;
+	return getConfigManager()->webEditItem($client,$params);	
+}
+
+sub handleWebDeleteLibraryType {
 	my ($client, $params) = @_;
-
-	$params->{'pluginMultiLibraryError'} = undef;
-	if ($::VERSION ge '6.5') {
-		$params->{'pluginMultiLibrarySlimserver65'} = 1;
-	}
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-
-	if ($params->{'type'}) {
-		my $libraryId = unescape($params->{'type'});
-		my $library = getLibrary($client,$libraryId);
-		if($library) {
-			if(defined($library->{'simple'})) {
-				my $templateData = loadTemplateValues($libraryId.".ml.values.xml");
-	
-				if(defined($templateData)) {
-					my $templates = readTemplateConfiguration($client);
-					my $template = $templates->{$templateData->{'id'}};
-					if(defined($template)) {
-						my %currentParameterValues = ();
-						my $templateDataParameters = $templateData->{'parameter'};
-						for my $p (@$templateDataParameters) {
-							my $values = $p->{'value'};
-							if(!defined($values)) {
-								push @$values,'';
-							}
-							my %valuesHash = ();
-							for my $v (@$values) {
-								if(ref($v) ne 'HASH') {
-									$valuesHash{$v} = $v;
-								}
-							}
-							if(%valuesHash) {
-								$currentParameterValues{$p->{'id'}} = \%valuesHash;
-							}
-						}
-						if(defined($template->{'parameter'})) {
-							my $parameters = $template->{'parameter'};
-							my @parametersToSelect = ();
-							for my $p (@$parameters) {
-								if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-									my $useParameter = 1;
-									if(defined($p->{'requireplugins'})) {
-										$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
-									}
-									if($useParameter) {
-										addValuesToTemplateParameter($p,$currentParameterValues{$p->{'id'}});
-										push @parametersToSelect,$p;
-									}
-								}
-							}
-							$params->{'pluginMultiLibraryEditLibraryParameters'} = \@parametersToSelect;
-						}
-						$params->{'pluginMultiLibraryEditLibraryFile'} = $libraryId.".ml.values.xml";
-						$params->{'pluginMultiLibraryEditLibraryTemplate'} = $templateData->{'id'};
-						$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($params->{'pluginMultiLibraryEditLibraryFile'});
-						return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editsimplelibrary.html', $params);
-					}
-				}
-			}else {
-				my $data = loadLibraryDataFromAnyDir($params->{'type'}.".ml.xml");
-
-				if($data) {
-					$data = encode_entities($data);
-				}
-
-				$params->{'pluginMultiLibraryEditLibraryFile'} = escape($params->{'type'}.".ml.xml");
-				$params->{'pluginMultiLibraryEditLibraryName'} = $library->{'name'};
-				$params->{'pluginMultiLibraryEditLibraryData'} = $data;
-				$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($params->{'pluginMultiLibraryEditLibraryFile'});
-				return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editlibrary.html', $params);
-			}
-		}else {
-			warn "Cannot find: ".$params->{'type'};
-		}
-	}
-	return handleWebList($client,$params);
-}
-
-sub isPluginsInstalled {
-	my $client = shift;
-	my $pluginList = shift;
-	my $enabledPlugin = 1;
-	foreach my $plugin (split /,/, $pluginList) {
-		if($enabledPlugin) {
-			if ($::VERSION ge '6.5') {
-				$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
-			}else {
-				$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
-			}
-		}
-	}
-	return $enabledPlugin;
-}
-
-sub loadLibraryDataFromAnyDir {
-	my $file = shift;
-	my $data = undef;
-
-	my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	if (!defined $browseDir || !-d $browseDir) {
-		debugMsg("Skipping library configuration - directory is undefined\n");
-	}else {
-		$data = loadLibraryData($browseDir,$file);
-	}
-	return $data;
-}
-
-sub loadLibraryData {
-    my $browseDir = shift;
-    my $file = shift;
-
-    debugMsg("Loading library data from: $browseDir/$file\n");
-
-    my $path = catfile($browseDir, $file);
-    
-    return unless -f $path;
-
-    my $content = eval { read_file($path) };
-    if ($@) {
-    	debugMsg("Failed to load library data because:\n$@\n");
-    }
-    if(defined($content)) {
-	debugMsg("Loading of library data succeeded\n");
-    }
-    return $content;
-}
-
-
-
-
-sub addParameterValues {
-	my $client = shift;
-	my $listRef = shift;
-	my $parameter = shift;
-	
-	debugMsg("Getting values for ".$parameter->{'name'}." of type ".$parameter->{'type'}."\n");
-	my $sql = undef;
-	if(lc($parameter->{'type'}) eq 'album') {
-		$sql = "select id,title from albums order by titlesort";
-	}elsif(lc($parameter->{'type'}) eq 'artist') {
-		$sql = "select id,name from contributors where namesort is not null order by namesort";
-	}elsif(lc($parameter->{'type'}) eq 'genre') {
-		$sql = "select id,name from genres order by namesort";
-	}elsif(lc($parameter->{'type'}) eq 'year') {
-		$sql = "select year,year from tracks where year is not null group by year order by year";
-	}elsif(lc($parameter->{'type'}) eq 'playlist') {
-		$sql = "select playlist_track.playlist,tracks.title from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
-	}elsif(lc($parameter->{'type'}) eq 'list') {
-		my $value = $parameter->{'definition'};
-		if(defined($value) && $value ne "" ) {
-			my @values = split(/,/,$value);
-			if(@values) {
-				for my $valueItem (@values) {
-					my @valueItemArray = split(/:/,$valueItem);
-					my $id = shift @valueItemArray;
-					my $name = shift @valueItemArray;
-					
-					if(defined($id)) {
-						my %listitem = (
-							'id' => $id
-						);
-						if(defined($name)) {
-							$listitem{'name'}=$name;
-						}else {
-							$listitem{'name'}=$id;
-						}
-					  	push @$listRef, \%listitem;
-					}
-				}
-			}else {
-				debugMsg("Error, invalid parameter value: $value\n");
-			}
-		}
-	}elsif(lc($parameter->{'type'}) eq 'custom') {
-		if(defined($parameter->{'definition'}) && lc($parameter->{'definition'}) =~ /^select/ ) {
-			$sql = $parameter->{'definition'};
-			for (my $i=1;$i<$parameter->{'id'};$i++) {
-				my $parameter = $client->param('multilibrary_parameter_'.$i);
-				my $value = $parameter->{'id'};
-				my $parameterid = "\'LibraryParameter".$i."\'";
-				debugMsg("Replacing ".$parameterid." with ".$value."\n");
-				$sql =~ s/$parameterid/$value/g;
-			}
-		}
-	}
-	
-	if(defined($sql)) {
-		my $dbh = getCurrentDBH();
-    	eval {
-			my $sth = $dbh->prepare( $sql );
-			debugMsg("Executing value list: $sql\n");
-			$sth->execute() or do {
-	            debugMsg("Error executing: $sql\n");
-	            $sql = undef;
-			};
-			if(defined($sql)) {
-				my $id;
-				my $name;
-				$sth->bind_columns( undef, \$id,\$name);
-				while( $sth->fetch() ) {
-					my %listitem = (
-						'id' => $id,
-						'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
-					);
-				  	push @$listRef, \%listitem;
-			  	}
-			  	debugMsg("Added ".scalar(@$listRef)." items to value list\n");
-			}
-			$sth->finish();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		}		
-	}
+	return getConfigManager()->webDeleteItemType($client,$params);	
 }
 
 sub handleWebNewLibraryTypes {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginMultiLibrarySlimserver65'} = 1;
-        }
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-	my $templatesHash = readTemplateConfiguration($client);
-
-	$params->{'pluginMultiLibraryTemplates'} = $templatesHash;
-	$params->{'pluginMultiLibraryPostUrl'} = "multilibrary_newlibraryparameters.html";
-	
-        return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newlibrarytypes.html', $params);
+	return getConfigManager()->webNewItemTypes($client,$params);	
 }
 
 sub handleWebNewLibraryParameters {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginMultiLibrarySlimserver65'} = 1;
-        }
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-	$params->{'pluginMultiLibraryNewLibraryTemplate'} = $params->{'librarytemplate'};
-	my $templates = readTemplateConfiguration($client);
-	my $template = $templates->{$params->{'librarytemplate'}};
-	my @parametersToSelect = ();
-	if(defined($template->{'parameter'})) {
-		my $parameters = $template->{'parameter'};
-		for my $p (@$parameters) {
-			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-				my $useParameter = 1;
-				if(defined($p->{'requireplugins'})) {
-					$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
-				}
-				if($useParameter) {
-					addValuesToTemplateParameter($p);
-					push @parametersToSelect,$p;
-				}
-			}
-		}
-	}
-	
-	$params->{'pluginMultiLibraryNewLibraryParameters'} = \@parametersToSelect;
-        return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newlibraryparameters.html', $params);
+	return getConfigManager()->webNewItemParameters($client,$params);	
+}
+
+sub handleWebLogin {
+	my ($client, $params) = @_;
+	return getConfigManager()->webLogin($client,$params);	
+}
+
+sub handleWebPublishLibraryParameters {
+	my ($client, $params) = @_;
+	return getConfigManager()->webPublishItemParameters($client,$params);	
+}
+
+sub handleWebPublishLibrary {
+	my ($client, $params) = @_;
+	return getConfigManager()->webPublishItem($client,$params);	
+}
+
+sub handleWebDownloadLibraries {
+	my ($client, $params) = @_;
+	return getConfigManager()->webDownloadItems($client,$params);	
+}
+
+sub handleWebDownloadNewLibraries {
+	my ($client, $params) = @_;
+	return getConfigManager()->webDownloadNewItems($client,$params);	
+}
+
+sub handleWebDownloadLibrary {
+	my ($client, $params) = @_;
+	return getConfigManager()->webDownloadItem($client,$params);	
 }
 
 sub handleWebNewLibrary {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginMultiLibrarySlimserver65'} = 1;
-        }
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-	my $templateFile = $params->{'librarytemplate'};
-	my $libraryFile = $templateFile;
-	$templateFile =~ s/\.xml$/.template/;
-	$libraryFile =~ s/\.xml$//;
-	my $templates = readTemplateConfiguration($client);
-	my $template = $templates->{$params->{'librarytemplate'}};
-	my $menytype = $params->{'librarytype'};
-	
-	my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	if (defined $browseDir && -d $browseDir) {
-		if(-e catfile($browseDir,unescape($libraryFile).".ml.xml") || -e catfile($browseDir,unescape($libraryFile).".ml.values.xml")) {
-			my $i=1;
-			while(-e catfile($browseDir,unescape($libraryFile).$i.".ml.xml") || -e catfile($browseDir,unescape($libraryFile).$i.".ml.values.xml")) {
-				$i = $i + 1;
-			}
-			$libraryFile .= $i;
-		}
-	}
-
-	if($menytype eq 'advanced') {
-		$libraryFile .= ".ml.xml";
-		my %templateParameters = ();
-		if(defined($template->{'parameter'})) {
-			my $parameters = $template->{'parameter'};
-			my @parametersToSelect = ();
-			for my $p (@$parameters) {
-				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					my $useParameter = 1;
-					if(defined($p->{'requireplugins'})) {
-						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
-					}
-					if($useParameter) {
-						addValuesToTemplateParameter($p);
-						my $value = getValueOfTemplateParameter($params,$p);
-						$templateParameters{$p->{'id'}} = $value;
-					}
-				}
-			}
-		}
-		my $templateFileData = undef;
-		my $doParsing = 1;
-		if(defined($template->{'multilibrary_plugin_template'})) {
-			my $pluginTemplate = $template->{'multilibrary_plugin_template'};
-			if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
-				$doParsing = 0;
-			}
-			$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
-		}else {
-			if(defined($template->{'templatefile'})) {
-				$templateFile = $template->{'templatefile'};
-			}
-			$templateFileData = $templateFile;
-		}
-		my $libraryData = undef;
-		if($doParsing) {
-			$libraryData = fillTemplate($templateFileData,\%templateParameters);
-		}else {
-			$libraryData = $$templateFileData;
-		}
-		$libraryData = Slim::Utils::Unicode::utf8on($libraryData);
-		$libraryData = Slim::Utils::Unicode::utf8encode_locale($libraryData);
-		$libraryData = encode_entities($libraryData,"&<>\'\"");
-		if(length($libraryData)>10000) {
-			debugMsg("Warning! Large library configuration, ".length($libraryData)." characters\n");
-		        $params->{'pluginMultiLibraryEditLibrarySizeWarning'} = "This library configuration is very large, due to size limitations it might fail when you try to save it<br>Temporary solution: If save fails, click back in web browser and copy the information in the Library configuration field to a text file and save it to the ".Slim::Utils::Prefs::get("plugin_multilibrary_library_directory")." directory with a filename with extension .ml.xml";
-		}
-        	$params->{'pluginMultiLibraryEditLibraryData'} = $libraryData;
-		$params->{'pluginMultiLibraryEditLibraryFile'} = $libraryFile;
-		$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($libraryFile);
-	        return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newlibrary.html', $params);
-	}else {
-		my $templateParameters = getParameterArray($params,"libraryparameter_");
-		$libraryFile .= ".ml.values.xml";
-		$params->{'pluginMultiLibraryEditLibraryParameters'} = $templateParameters;
-		$params->{'pluginMultiLibraryNewLibraryTemplate'} = $params->{'librarytemplate'};
-		$params->{'pluginMultiLibraryEditLibraryFile'} = $libraryFile;
-		$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($libraryFile);
-	        return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newsimplelibrary.html', $params);
-	}
-}
-
-sub handleWebSaveNewSimpleLibrary {
-	my ($client, $params) = @_;
-	$params->{'pluginMultiLibraryError'} = undef;
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-
-	if (!$params->{'file'} && !$params->{'librarytemplate'}) {
-		$params->{'pluginMultiLibraryError'} = 'All fields are mandatory';
-	}
-
-	my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	
-	if (!defined $browseDir || !-d $browseDir) {
-		$params->{'pluginMultiLibraryError'} = 'No library directory configured';
-	}
-
-	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
-		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
-	}
-
-	my $file = unescape($params->{'file'});
-	my $url = catfile($browseDir, $file);
-	
-	if(!defined($params->{'pluginMultiLibraryError'}) && -e $url && !$params->{'overwrite'}) {
-		$params->{'pluginMultiLibraryError'} = 'Invalid filename, file already exist';
-	}
-
-	if(!saveSimpleLibrary($client,$params,$url)) {
-		my $templateParameters = getParameterArray($params,"libraryparameter_");
-		$params->{'pluginMultiLibraryEditLibraryParameters'} = $templateParameters;
-		$params->{'pluginMultiLibraryNewLibraryTemplate'}=$params->{'librarytemplate'};
-		return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newsimplelibrary.html', $params);
-	}else {
-		$params->{'donotrefresh'} = 1;
-		initLibraries($client);
-		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
-			refreshLibraries();
-			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
-				no strict 'refs';
-				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
-				use strict 'refs';
-
-			}
-		}
-		return handleWebList($client,$params)
-	}
+	return getConfigManager()->webNewItem($client,$params);	
 }
 
 sub handleWebSaveSimpleLibrary {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginMultiLibrarySlimserver65'} = 1;
-        }
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-	my $templateFile = $params->{'librarytemplate'};
-	my $libraryFile = $templateFile;
-	$templateFile =~ s/\.xml$/.template/;
-	$libraryFile =~ s/\.xml$//;
-	my $templates = readTemplateConfiguration($client);
-	my $template = $templates->{$params->{'librarytemplate'}};
-	my $menytype = $params->{'librarytype'};
-
-	if($menytype eq 'advanced') {
-		$libraryFile .= ".ml.xml";
-		my %templateParameters = ();
-		if(defined($template->{'parameter'})) {
-			my $parameters = $template->{'parameter'};
-			my @parametersToSelect = ();
-			for my $p (@$parameters) {
-				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					my $useParameter = 1;
-					if(defined($p->{'requireplugins'})) {
-						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
-					}
-					if($useParameter) {
-						addValuesToTemplateParameter($p);
-						my $value = getValueOfTemplateParameter($params,$p);
-						$templateParameters{$p->{'id'}} = $value;
-					}
-				}
-			}
-		}
-		my $templateFileData = undef;
-		my $doParsing = 1;
-		if(defined($template->{'multilibrary_plugin_template'})) {
-			my $pluginTemplate = $template->{'multilibrary_plugin_template'};
-			if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
-				$doParsing = 0;
-			}
-			$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
-		}else {
-			if(defined($template->{'templatefile'})) {
-				$templateFile = $template->{'templatefile'};
-			}
-			$templateFileData = $templateFile;
-		}
-		my $libraryData = undef;
-		if($doParsing) {
-			$libraryData = fillTemplate($templateFileData,\%templateParameters);
-		}else {
-			$libraryData = $$templateFileData;
-		}
-		$libraryData = Slim::Utils::Unicode::utf8on($libraryData);
-		$libraryData = Slim::Utils::Unicode::utf8encode_locale($libraryData);
-		$libraryData = encode_entities($libraryData,"&<>\'\"");
-		if(length($libraryData)>10000) {
-			debugMsg("Warning! Large library configuration, ".length($libraryData)." characters\n");
-		        $params->{'pluginMultiLibraryEditLibrarySizeWarning'} = "This library configuration is very large, due to size limitations it might fail when you try to save it<br>Temporary solution: If save fails, click back in web browser and copy the information in the Library configuration field to a text file and save it to the ".Slim::Utils::Prefs::get("plugin_multilibrary_library_directory")." directory with a filename with extension .ml.xml";
-		}
-        	$params->{'pluginMultiLibraryEditLibraryData'} = $libraryData;
-		$params->{'pluginMultiLibraryEditLibraryDeleteSimple'} = $params->{'file'};
-		$params->{'pluginMultiLibraryEditLibraryFile'} = $libraryFile;
-		$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($libraryFile);
-	        return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editlibrary.html', $params);
-	}else {
-		$params->{'pluginMultiLibraryError'} = undef;
-	
-		if (!$params->{'file'}) {
-			$params->{'pluginMultiLibraryError'} = 'Filename is mandatory';
-		}
-	
-		my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-		
-		if (!defined $browseDir || !-d $browseDir) {
-			$params->{'pluginMultiLibraryError'} = 'No library directory configured';
-		}
-		if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
-			$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
-		}
-
-		my $file = unescape($params->{'file'});
-		my $url = catfile($browseDir, $file);
-		
-		if(!saveSimpleLibrary($client,$params,$url)) {
-			return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editsimplelibrary.html', $params);
-		}else {
-			$params->{'donotrefresh'} = 1;
-			initLibraries($client);
-			if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
-				refreshLibraries();
-				if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
-					no strict 'refs';
-					eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
-					use strict 'refs';
-				}
-			}
-			return handleWebList($client,$params)
-		}
-	}
-}
-
-sub getTemplate {
-	if(!defined($template)) {
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
-		}
-		my @include_path = ();
-
-		for my $plugindir (@pluginDirs) {
-			next unless -d catdir($plugindir,'MultiLibrary/Templates');
-			my $templateDir = catdir($plugindir,'MultiLibrary/Templates');
-			push @include_path,$templateDir;
-		}
-	
-	
-		$template = Template->new({
-	
-	                INCLUDE_PATH => \@include_path,
-	                COMPILE_DIR => catdir( Slim::Utils::Prefs::get('cachedir'), 'templates' ),
-	                FILTERS => {
-	                        'string'        => \&Slim::Utils::Strings::string,
-	                        'getstring'     => \&Slim::Utils::Strings::getString,
-	                        'resolvestring' => \&Slim::Utils::Strings::resolveString,
-	                        'nbsp'          => \&nonBreaking,
-	                        'uri'           => \&URI::Escape::uri_escape_utf8,
-	                        'unuri'         => \&URI::Escape::uri_unescape,
-	                        'utf8decode'    => \&Slim::Utils::Unicode::utf8decode,
-	                        'utf8encode'    => \&Slim::Utils::Unicode::utf8encode,
-	                        'utf8on'        => \&Slim::Utils::Unicode::utf8on,
-	                        'utf8off'       => \&Slim::Utils::Unicode::utf8off,
-	                        'fileurl'       => \&templateFileURLFromPath,
-	                },
-	
-	                EVAL_PERL => 1,
-	        });
-	}
-	return $template;
-}
-
-sub templateFileURLFromPath {
-	my $path = shift;
-	$path = Slim::Utils::Unicode::utf8off($path);
-	$path = Slim::Utils::Misc::fileURLFromPath(decode_entities($path));
-	$path =~ s/\\/\\\\/g;
-	$path =~ s/%/\\%/g;
-	$path = encode_entities($path,"&<>\'\"");
-	return $path;
-}
-
-sub fillTemplate {
-	my $filename = shift;
-	my $params = shift;
-
-	
-	my $output = '';
-	$params->{'LOCALE'} = 'utf-8';
-	my $template = getTemplate();
-	if(!$template->process($filename,$params,\$output)) {
-		msg("MultiLibrary: ERROR parsing template: ".$template->error()."\n");
-	}
-	return $output;
-}
-
-sub addValuesToTemplateParameter {
-	my $p = shift;
-	my $currentValues = shift;
-
-	if($p->{'type'} =~ '^sql.*') {
-		my $listValues = getSQLTemplateData($p->{'data'});
-		if($p->{'type'} =~ /.*optional.*/) {
-			my %empty = (
-				'id' => '',
-				'name' => '',
-				'value' => ''
-			);
-			unshift @$listValues,\%empty;
-		}
-		if(defined($currentValues)) {
-			for my $v (@$listValues) {
-				if($currentValues->{$v->{'value'}}) {
-					$v->{'selected'} = 1;
-				}
-			}
-		}
-		$p->{'values'} = $listValues;
-	}elsif($p->{'type'} =~ 'function.*') {
-		my $listValues = getFunctionTemplateData($p->{'data'});
-		if($p->{'type'} =~ /.*optional.*list$/) {
-			my %empty = (
-				'id' => '',
-				'name' => '',
-				'value' => ''
-			);
-			unshift @$listValues,\%empty;
-		}
-		if(defined($currentValues)) {
-			for my $v (@$listValues) {
-				if($currentValues->{$v->{'value'}}) {
-					$v->{'selected'} = 1;
-				}
-			}
-		}else {
-			for my $v (@$listValues) {
-				if($p->{'value'}) {
-					$v->{'selected'} = 1;
-				}
-			}
-		}
-		$p->{'values'} = $listValues;
-	}elsif($p->{'type'} =~ '.*list$' || $p->{'type'} =~ '.*checkboxes$') {
-		my @listValues = ();
-		my @values = split(/,/,$p->{'data'});
-		for my $value (@values){
-			my @idName = split(/=/,$value);
-			my %listValue = (
-				'id' => @idName->[0],
-				'name' => @idName->[1]
-			);
-			if(scalar(@idName)>2) {
-				$listValue{'value'} = @idName->[2];
-			}else {
-				$listValue{'value'} = @idName->[0];
-			}
-			push @listValues, \%listValue;
-		}
-		if($p->{'type'} =~ /.*optional.*list$/) {
-			my %empty = (
-				'id' => '',
-				'name' => '',
-				'value' => ''
-			);
-			unshift @listValues,\%empty;
-		}
-		if(defined($currentValues)) {
-			for my $v (@listValues) {
-				if($currentValues->{$v->{'value'}}) {
-					$v->{'selected'} = 1;
-				}
-			}
-		}
-		$p->{'values'} = \@listValues;
-	}elsif(defined($currentValues)) {
-		for my $v (keys %$currentValues) {
-			$p->{'value'} = $v;
-		}
-	}
-}
-
-sub getValueOfTemplateParameter {
-	my $params = shift;
-	my $parameter = shift;
-
-	my $dbh = getCurrentDBH();
-	my $result = undef;
-	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
-		my $selectedValues = undef;
-		if($parameter->{'type'} =~ /.*multiplelist$/) {
-			$selectedValues = getMultipleListQueryParameter($params,'libraryparameter_'.$parameter->{'id'});
-		}else {
-			$selectedValues = getCheckBoxesQueryParameter($params,'libraryparameter_'.$parameter->{'id'});
-		}
-		my $values = $parameter->{'values'};
-		for my $item (@$values) {
-			if(defined($selectedValues->{$item->{'id'}})) {
-				if(defined($result)) {
-					$result = $result.',';
-				}
-				if($parameter->{'quotevalue'}) {
-					$result = $result.$dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
-				}else {
-					$result = $result.encode_entities($item->{'value'},"&<>\'\"");
-				}
-			}
-		}
-		if(!defined($result)) {
-			$result = '';
-		}
-	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
-		my $values = $parameter->{'values'};
-		my $selectedValue = $params->{'libraryparameter_'.$parameter->{'id'}};
-		for my $item (@$values) {
-			if($selectedValue eq $item->{'id'}) {
-				if($parameter->{'quotevalue'}) {
-					$result = $dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
-				}else {
-					$result = encode_entities($item->{'value'},"&<>\'\"");
-				}
-				last;
-			}
-		}
-		if(!defined($result)) {
-			$result = '';
-		}
-	}else{
-		if($params->{'libraryparameter_'.$parameter->{'id'}}) {
-			if($parameter->{'quotevalue'}) {
-				$result = $dbh->quote(encode_entities($params->{'libraryparameter_'.$parameter->{'id'}},"&<>\'\""));
-			}else {
-				$result = encode_entities($params->{'libraryparameter_'.$parameter->{'id'}},"&<>\'\"");
-			}
-		}else {
-			$result = '';
-		}
-	}
-	if(defined($result)) {
-		$result = Slim::Utils::Unicode::utf8on($result);
-		$result = Slim::Utils::Unicode::utf8encode_locale($result);
-	}
-	return $result;
-}
-
-sub getDefaultValueOfTemplateParameter {
-	my $parameter = shift;
-
-	my $result = undef;
-	my $dbh = getCurrentDBH();
-	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
-		my $values = $parameter->{'values'};
-		$result = '';
-		for my $item (@$values) {
-			if(defined($item->{'selected'})) {
-				if($result) {
-					$result = $result.',';
-				}
-				if($parameter->{'quotevalue'}) {
-					$result = $result.$dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
-				}else {
-					$result = $result.encode_entities($item->{'value'},"&<>\'\"");
-				}
-			}
-		}
-	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
-		my $values = $parameter->{'values'};
-		$result = '';
-		for my $item (@$values) {
-			if(defined($item->{'selected'})) {
-				if($parameter->{'quotevalue'}) {
-					$result = $dbh->quote(encode_entities($item->{'value'},"&<>\'\""));
-				}else {
-					$result = encode_entities($item->{'value'},"&<>\'\"");
-				}
-				last;
-			}
-		}
-	}else{
-		my $value = $parameter->{'value'};
-		if(!defined($value) || ref($value) eq 'HASH') {
-			$value='';
-		}
-		if($parameter->{'quotevalue'}) {
-			$result = $dbh->quote(encode_entities($value,"&<>\'\""));
-		}else {
-			$result = encode_entities($value,"&<>\'\"");
-		}
-	}
-	if(defined($result)) {
-		$result = Slim::Utils::Unicode::utf8on($result);
-		$result = Slim::Utils::Unicode::utf8encode_locale($result);
-	}
-	return $result;
-}
-
-sub getXMLValueOfTemplateParameter {
-	my $params = shift;
-	my $parameter = shift;
-
-	my $dbh = getCurrentDBH();
-	my $result = undef;
-	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
-		my $selectedValues = undef;
-		if($parameter->{'type'} =~ /.*multiplelist$/) {
-			$selectedValues = getMultipleListQueryParameter($params,'libraryparameter_'.$parameter->{'id'});
-		}else {
-			$selectedValues = getCheckBoxesQueryParameter($params,'libraryparameter_'.$parameter->{'id'});
-		}
-		my $values = $parameter->{'values'};
-		for my $item (@$values) {
-			if(defined($selectedValues->{$item->{'id'}})) {
-				$result = $result.'<value>';
-				if($parameter->{'quotevalue'}) {
-					$result = $result.encode_entities($item->{'value'},"&<>\'\"");
-				}else {
-					$result = $result.encode_entities($item->{'value'},"&<>\'\"");
-				}
-				$result = $result.'</value>';
-			}
-		}
-		if(!defined($result)) {
-			$result = '';
-		}
-	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
-		my $values = $parameter->{'values'};
-		my $selectedValue = $params->{'libraryparameter_'.$parameter->{'id'}};
-		for my $item (@$values) {
-			if($selectedValue eq $item->{'id'}) {
-				$result = '<value>';
-				if($parameter->{'quotevalue'}) {
-					$result .= encode_entities($item->{'value'},"&<>\'\"");
-				}else {
-					$result .= encode_entities($item->{'value'},"&<>\'\"");
-				}
-				$result .= '</value>';
-				last;
-			}
-		}
-		if(!defined($result)) {
-			$result = '';
-		}
-	}else{
-		if(defined($params->{'libraryparameter_'.$parameter->{'id'}}) && $params->{'libraryparameter_'.$parameter->{'id'}} ne '') {
-			if($parameter->{'quotevalue'}) {
-				$result = '<value>'.encode_entities($params->{'libraryparameter_'.$parameter->{'id'}},"&<>\'\"").'</value>';
-			}else {
-				$result = '<value>'.encode_entities($params->{'libraryparameter_'.$parameter->{'id'}},"&<>\'\"").'</value>';
-			}
-		}else {
-			$result = '';
-		}
-	}
-	if(defined($result)) {
-		$result = Slim::Utils::Unicode::utf8on($result);
-		$result = Slim::Utils::Unicode::utf8encode_locale($result);
-	}
-	return $result;
-}
-
-
-sub getMultipleListQueryParameter {
-	my $params = shift;
-	my $parameter = shift;
-
-	my $query = $params->{url_query};
-	my %result = ();
-	if($query) {
-		foreach my $param (split /\&/, $query) {
-			if ($param =~ /([^=]+)=(.*)/) {
-				my $name  = unescape($1,1);
-				my $value = unescape($2,1);
-				if($name eq $parameter) {
-					# We need to turn perl's internal
-					# representation of the unescaped
-					# UTF-8 string into a "real" UTF-8
-					# string with the appropriate magic set.
-					if ($value ne '*' && $value ne '') {
-						$value = Slim::Utils::Unicode::utf8on($value);
-						$value = Slim::Utils::Unicode::utf8encode_locale($value);
-					}
-					$result{$value} = 1;
-				}
-			}
-		}
-	}
-	return \%result;
-}
-
-sub getParameterArray {
-	my $params = shift;
-	my $prefix = shift;
-
-	my $query = $params->{url_query};
-	my @result = ();
-	if($query) {
-		foreach my $param (split /\&/, $query) {
-			if ($param =~ /([^=]+)=(.*)/) {
-				my $name  = unescape($1,1);
-				my $value = unescape($2,1);
-				if($name =~ /^$prefix/) {
-					# We need to turn perl's internal
-					# representation of the unescaped
-					# UTF-8 string into a "real" UTF-8
-					# string with the appropriate magic set.
-					if ($value ne '*' && $value ne '') {
-						$value = Slim::Utils::Unicode::utf8on($value);
-						$value = Slim::Utils::Unicode::utf8encode_locale($value);
-					}
-					my %parameter = (
-						'id' => $name,
-						'value' => $value
-					);
-					push @result,\%parameter;
-				}
-			}
-		}
-	}
-	return \@result;
-}
-
-sub getCheckBoxesQueryParameter {
-	my $params = shift;
-	my $parameter = shift;
-
-	my %result = ();
-	foreach my $key (keys %$params) {
-		my $pattern = '^'.$parameter.'_(.*)';
-		if ($key =~ /$pattern/) {
-			my $id  = unescape($1);
-			$result{$id} = 1;
-		}
-	}
-	return \%result;
-}
-
-sub getSQLTemplateData {
-	my $sqlstatements = shift;
-	my @result =();
-	my $ds = getCurrentDS();
-	my $dbh = getCurrentDBH();
-	my $trackno = 0;
-	my $sqlerrors = "";
-    	for my $sql (split(/[;]/,$sqlstatements)) {
-    	eval {
-			$sql =~ s/^\s+//g;
-			$sql =~ s/\s+$//g;
-			my $sth = $dbh->prepare( $sql );
-			debugMsg("Executing: $sql\n");
-			$sth->execute() or do {
-	            debugMsg("Error executing: $sql\n");
-	            $sql = undef;
-			};
-
-	        if ($sql =~ /^SELECT+/oi) {
-				debugMsg("Executing and collecting: $sql\n");
-				my $id;
-                                my $name;
-                                my $value;
-				$sth->bind_col( 1, \$id);
-                                $sth->bind_col( 2, \$name);
-                                $sth->bind_col( 3, \$value);
-				while( $sth->fetch() ) {
-                                    my %item = (
-                                        'id' => $id,
-                                        'name' => Slim::Utils::Unicode::utf8decode($name,'utf8'),
-					'value' => Slim::Utils::Unicode::utf8decode($value,'utf8')
-                                    );
-                                    push @result, \%item;
-				}
-			}
-			$sth->finish();
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		}		
-	}
-	return \@result;
-}
-
-sub getFunctionTemplateData {
-	my $data = shift;
-    	my @params = split(/\,/,$data);
-	my @result =();
-	if(scalar(@params)==2) {
-		my $object = @params->[0];
-		my $function = @params->[1];
-		if(UNIVERSAL::can($object,$function)) {
-			debugMsg("Getting values for: $function\n");
-			no strict 'refs';
-			my $items = eval { &{$object.'::'.$function}() };
-			if( $@ ) {
-			    warn "Function call error: $@\n";
-			}		
-			use strict 'refs';
-			if(defined($items)) {
-				@result = @$items;
-			}
-		}
-	}else {
-		debugMsg("Error getting values for: $data, incorrect number of parameters ".scalar(@params)."\n");
-	}
-	return \@result;
-}
-
-sub readLibrariesFromDir {
-    my $client = shift;
-    my $defaultLibrary = shift;
-    my $browseDir = shift;
-    my $localBrowseLibraries = shift;
-    debugMsg("Loading library configuration from: $browseDir\n");
-
-    my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"ml.xml");
-    for my $item (@dircontents) {
-
-	next if -d catdir($browseDir, $item);
-
-        my $path = catfile($browseDir, $item);
-
-        # read_file from File::Slurp
-        my $content = eval { read_file($path) };
-        if ( $content ) {
-		my $errorMsg = parseLibraryContent($client,$item,$content,$localBrowseLibraries,$defaultLibrary);
-		if($errorMsg) {
-	                errorMsg("MultiLibrary: Unable to open library configuration file: $path\n$errorMsg\n");
-		}
-        }else {
-            if ($@) {
-                    errorMsg("MultiLibrary: Unable to open library configuration file: $path\nBecause of:\n$@\n");
-            }else {
-                errorMsg("MultiLibrary: Unable to open library configuration file: $path\n");
-            }
-        }
-    }
-}
-
-sub readTemplateLibrariesFromDir {
-    my $client = shift;
-    my $defaultLibrary = shift;
-    my $libraryDir = shift;
-    my $localLibraries = shift;
-    my $templates = shift;
-    debugMsg("Loading template libraries from: $libraryDir\n");
-
-    my @dircontents = Slim::Utils::Misc::readDirectory($libraryDir,"ml.values.xml");
-    for my $item (@dircontents) {
-
-	next if -d catdir($libraryDir, $item);
-
-        my $path = catfile($libraryDir, $item);
-
-        # read_file from File::Slurp
-        my $content = eval { read_file($path) };
-        if ( $content ) {
-		my $errorMsg = parseTemplateLibraryContent($client,$item,$content,$localLibraries,$defaultLibrary, $templates);
-		if($errorMsg) {
-	                errorMsg("MultiLibrary: Unable to open template library: $path\n$errorMsg\n");
-		}
-        }else {
-            if ($@) {
-                    errorMsg("MultiLibrary: Unable to open template library: $path\nBecause of:\n$@\n");
-            }else {
-                errorMsg("MultiLibrary: Unable to open template library: $path\n");
-            }
-        }
-    }
-}
-
-sub readTemplateConfiguration {
-	my $client = shift;
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
-	my %templates = ();
-	for my $plugindir (@pluginDirs) {
-		next unless -d catdir($plugindir,"MultiLibrary","Templates");
-		readTemplateConfigurationFromDir($client,0,catdir($plugindir,"MultiLibrary","Templates"),\%templates);
-	}
-
-	no strict 'refs';
-	my @enabledplugins;
-	if ($::VERSION ge '6.5') {
-		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
-	}else {
-		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
-	}
-
-	for my $plugin (@enabledplugins) {
-		if(UNIVERSAL::can("Plugins::$plugin","getMultiLibraryTemplates") && UNIVERSAL::can("Plugins::$plugin","getMultiLibraryTemplateData")) {
-			debugMsg("Getting library templates for: $plugin\n");
-			no strict 'refs';
-			my $items = eval { &{"Plugins::${plugin}::getMultiLibraryTemplates"}($client) };
-			if ($@) {
-				debugMsg("Error getting library templates from $plugin: $@\n");
-			}
-			use strict 'refs';
-			for my $item (@$items) {
-				my $template = $item->{'template'};
-				$template->{'multilibrary_plugin_template'}=$item;
-				$template->{'multilibrary_plugin'} = "Plugins::${plugin}";
-				my $templateId = $item->{'id'};
-				if($plugin =~ /^([^:]+)::.*$/) {
-					$templateId = lc($1)."_".$item->{'id'};
-				}
-				$template->{'id'} = $templateId;
-				debugMsg("Adding template: $templateId\n");
-				#debugMsg(Dumper($template));
-				$templates{$templateId} = $template;
-			}
-		}
-	}
-	use strict 'refs';
-
-	return \%templates;
-}
-
-sub readTemplateConfigurationFromDir {
-    my $client = shift;
-    my $customlibrary = shift;
-    my $templateDir = shift;
-    my $templates = shift;
-    debugMsg("Loading template configuration from: $templateDir\n");
-
-    my @dircontents = Slim::Utils::Misc::readDirectory($templateDir,"xml");
-    for my $item (@dircontents) {
-
-	next if -d catdir($templateDir, $item);
-
-        my $path = catfile($templateDir, $item);
-
-        # read_file from File::Slurp
-        my $content = eval { read_file($path) };
-	my $error = parseTemplateContent($client,$customlibrary, $item,$content,$templates);
-	if($error) {
-		errorMsg("Unable to read: $path\n");
-	}
-    }
-}
-
-sub parseTemplateContent {
-	my $client = shift;
-	my $customlibrary = shift;
-	my $key = shift;
-	my $content = shift;
-	my $templates = shift;
-
-	my $errorMsg = undef;
-        if ( $content ) {
-	    $content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-            my $xml = eval { 	XMLin($content, forcearray => ["parameter"], keyattr => []) };
-            #debugMsg(Dumper($xml));
-            if ($@) {
-		    $errorMsg = "$@";
-                    errorMsg("MultiLibrary: Failed to parse library template configuration because:\n$@\n");
-            }else {
-		my $include = isTemplateEnabled($client,$xml);
-		if(defined($xml->{'template'})) {
-			$xml->{'template'}->{'id'} = $key;
-			if($customlibrary) {
-				$xml->{'template'}->{'customlibrary'} = 1;
-			}
-		}
-		if($include && defined($xml->{'template'})) {
-	                $templates->{$key} = $xml->{'template'};
-		}
-            }
-    
-            # Release content
-            undef $content;
-        }else {
-            if ($@) {
-                    $errorMsg = "Incorrect information in template data: $@";
-                    errorMsg("MultiLibrary: Unable to read template configuration:\n$@\n");
-            }else {
-		$errorMsg = "Incorrect information in template data";
-                errorMsg("MultiLibrary: Unable to to read template configuration\n");
-            }
-        }
-	return $errorMsg;
-}
-
-sub parseTemplateLibraryContent {
-	my $client = shift;
-	my $item = shift;
-	my $content = shift;
-	my $libraries = shift;
-	my $defaultLibrary = shift;
-	my $templates = shift;
-	my $dbh = getCurrentDBH();
-
-	my $libraryId = $item;
-	$libraryId =~ s/\.ml\.values\.xml$//;
-	my $errorMsg = undef;
-        if ( $content ) {
-		$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-		my $valuesXml = eval { XMLin($content, forcearray => ["parameter","value"], keyattr => []) };
-		#debugMsg(Dumper($valuesXml));
-		if ($@) {
-			$errorMsg = "$@";
-			errorMsg("MultiLibrary: Failed to parse library template because:\n$@\n");
-		}else {
-			my $templateId = $valuesXml->{'template'}->{'id'};
-			my $template = $templates->{$templateId};
-			$templateId =~s/\.xml$//;
-			my $include = undef;
-			if($template) {
-				$include = 1;
-				my %templateParameters = ();
-				my $parameters = $valuesXml->{'template'}->{'parameter'};
-				for my $p (@$parameters) {
-					my $values = $p->{'value'};
-					my $value = '';
-					for my $v (@$values) {
-						if(defined($v) && ref($v) ne 'HASH') {
-							if($value ne '') {
-								$value .= ',';
-							}
-							if($p->{'quotevalue'}) {
-								$value .= $dbh->quote(encode_entities($v,"&<>\'\""));
-							}else {
-								$value .= encode_entities($v,"&<>\'\"");
-							}
-						}
-					}
-					$templateParameters{$p->{'id'}}=$value;
-				}
-
-				if(defined($template->{'parameter'})) {
-					my $parameters = $template->{'parameter'};
-					for my $p (@$parameters) {
-						if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-							if(!defined($templateParameters{$p->{'id'}})) {
-								my $value = '';
-								if(defined($p->{'value'}) && $p->{'value'} && ref($p->{'value'}) ne 'HASH') {
-									addValuesToTemplateParameter($p);
-									$value = getDefaultValueOfTemplateParameter($p);
-								}
-								debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
-								$templateParameters{$p->{'id'}} = $value;
-							}
-							if(defined($p->{'requireplugins'})) {
-								if(!isPluginsInstalled($client,$p->{'requireplugins'})) {
-									$templateParameters{$p->{'id'}} = undef;
-								}
-							}
-						}
-					}
-				}
-				my $templateFileData = undef;
-				my $doParsing = 1;
-				if(defined($template->{'multilibrary_plugin_template'})) {
-					my $pluginTemplate = $template->{'multilibrary_plugin_template'};
-					if(defined($pluginTemplate->{'type'}) && $pluginTemplate->{'type'} eq 'final') {
-						$doParsing = 0;
-					}
-					$templateFileData = getPluginTemplateData($client,$template,\%templateParameters);
-				}else {
-					if(defined($template->{'templatefile'})) {
-						$templateFileData = $template->{'templatefile'};
-					}else {
-						$templateFileData = $templateId.".template";
-					}
-				}
-				my $libraryData = undef;
-				if($doParsing) {
-					$libraryData = fillTemplate($templateFileData,\%templateParameters);
-				}else {
-					$libraryData = $$templateFileData;
-				}
-				$libraryData = Slim::Utils::Unicode::utf8on($libraryData);
-				$libraryData = Slim::Utils::Unicode::utf8encode_locale($libraryData);
-				my $xml = eval { XMLin($libraryData, forcearray => ["item"], keyattr => []) };
-				#debugMsg(Dumper($xml));
-				if ($@) {
-					$errorMsg = "$@";
-					errorMsg("MultiLibrary: Failed to parse library configuration because:\n$@\n");
-				}else {
-					my $disabled = 0;
-					if(defined($xml->{'library'})) {
-						$xml->{'library'}->{'id'} = escape($libraryId);
-					}
-	
-					if(defined($xml->{'library'}) && defined($xml->{'library'}->{'id'})) {
-						my $enabled = Slim::Utils::Prefs::get('plugin_multilibrary_library_'.escape($xml->{'library'}->{'id'}).'_enabled');
-						if(defined($enabled) && !$enabled) {
-							$disabled = 1;
-						}elsif(!defined($enabled)) {
-							if(defined($xml->{'defaultdisabled'}) && $xml->{'defaultdisabled'}) {
-								$disabled = 1;
-							}
-						}
-					}
-			
-					$xml->{'library'}->{'simple'} = 1;
-					if($include && !$disabled) {
-						$xml->{'library'}->{'enabled'}=1;
-						if($defaultLibrary) {
-							$xml->{'library'}->{'defaultlibrary'} = 1;
-						}elsif(defined($template->{'customtemplate'})) {
-							$xml->{'library'}->{'customlibrary'} = 1;
-						}
-				                $libraries->{$libraryId} = $xml->{'library'};
-					}elsif($include && $disabled) {
-						$xml->{'library'}->{'enabled'}=0;
-						if($defaultLibrary) {
-							$xml->{'library'}->{'defaultlibrary'} = 1;
-						}elsif(defined($template->{'customtemplate'})) {
-							$xml->{'library'}->{'customlibrary'} = 1;
-						}
-				                $libraries->{$libraryId} = $xml->{'library'};
-					}
-				}
-			}
-		}
-		    
-		# Release content
-		undef $content;
-	}else {
-		$errorMsg = "Incorrect information in library data";
-		errorMsg("MultiLibrary: Unable to to read library data\n");
-	}
-	return $errorMsg;
-}
-
-sub getPluginTemplateData {
-	my $client = shift;
-	my $template = shift;
-	my $parameters = shift;
-	debugMsg("Get template data from plugin\n");
-	my $plugin = $template->{'multilibrary_plugin'};
-	my $pluginTemplate = $template->{'multilibrary_plugin_template'};
-	my $templateFileData = undef;
-	no strict 'refs';
-	if(UNIVERSAL::can("$plugin","getMultiLibraryTemplateData")) {
-		debugMsg("Calling: $plugin :: getMultiLibraryTemplateData\n");
-		$templateFileData =  eval { &{"${plugin}::getMultiLibraryTemplateData"}($client,$pluginTemplate,$parameters) };
-		if ($@) {
-			debugMsg("Error retreiving library template data from $plugin: $@\n");
-		}
-	}
-	use strict 'refs';
-	return \$templateFileData;
-}
-
-sub loadTemplateValues {
-	my $file = shift;
-	my $templateData = undef;
-	my $browseDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	if (!defined $browseDir || !-d $browseDir) {
-		debugMsg("Skipping library configuration - directory is undefined\n");
-	}else {
-		$templateData = loadTemplateData($browseDir,$file);
-	}
-	return $templateData;
-}
-
-sub loadTemplateData {
-	my $browseDir = shift;
-	my $file = shift;
-	
-	my $path = catfile($browseDir, $file);
-	if( -f $path ) {
-		my $content = eval { read_file($path) };
-	        if ( $content ) {
-			$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
-			my $xml = eval { XMLin($content, forcearray => ["parameter","value"], keyattr => []) };
-			#debugMsg(Dumper($valuesXml));
-			if ($@) {
-				errorMsg("MultiLibrary: Failed to parse template data because:\n$@\n");
-			}else {
-				return $xml->{'template'}
-			}
-		}else {
-			debugMsg("Failed to load template data because:\n$@\n");
-		}
-		if ($@) {
-			debugMsg("Failed to load template data because:\n$@\n");
-		}
-	}
-	return undef;
-}
-
-
-sub isTemplateEnabled {
-	my $client = shift;
-	my $xml = shift;
-
-	my $include = 1;
-	if(defined($xml->{'minslimserverversion'})) {
-		if($::VERSION lt $xml->{'minslimserverversion'}) {
-			$include = 0;
-		}
-	}
-	if(defined($xml->{'maxslimserverversion'})) {
-		if($::VERSION gt $xml->{'maxslimserverversion'}) {
-			$include = 0;
-		}
-	}
-	if(defined($xml->{'requireplugins'}) && $include) {
-		$include = 0;
-		my $requiredPlugins = $xml->{'requireplugins'};
-		my $enabledPlugin = 1;
-		foreach my $plugin (split /,/, $requiredPlugins) {
-			if($enabledPlugin) {
-				if ($::VERSION ge '6.5') {
-					$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
-				}else {
-					$enabledPlugin = grep(/$plugin/,Slim::Buttons::Plugins::enabledPlugins($client));
-				}
-			}
-		}
-		if($enabledPlugin) {
-			$include = 1;
-		}
-	}
-	if(defined($xml->{'database'}) && $include) {
-		$include = 0;
-		my $driver = Slim::Utils::Prefs::get('dbsource');
-		$driver =~ s/dbi:(.*?):(.*)$/$1/;
-		if($driver eq $xml->{'database'}) {
-			$include = 1;
-		}
-	}
-	return $include;
-}
-
-
-# Draws the plugin's edit library web page
-sub handleWebSaveLibrary {
-	my ($client, $params) = @_;
-
-	$params->{'pluginMultiLibraryError'} = undef;
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-
-	if (!$params->{'text'} || !$params->{'file'}) {
-		$params->{'pluginMultiLibraryError'} = 'All fields are mandatory';
-	}
-
-	my $libraryDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	
-	if (!defined $libraryDir || !-d $libraryDir) {
-		$params->{'pluginMultiLibraryError'} = 'No library dir defined';
-	}
-	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
-		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
-	}
-
-	my $url = catfile($libraryDir, unescape($params->{'file'}));
-	if (!-e $url && !defined($params->{'deletesimple'})) {
-		$params->{'pluginMultiLibraryError'} = 'File doesnt exist';
-	}
-	
-	my $library = getLibrary($client,escape($params->{'name'},"^A-Za-z0-9\-_"));
-	if($library && $library->{'file'} ne unescape($params->{'file'}) && !defined($library->{'defaultlibrary'}) && !defined($library->{'simple'})) {
-		$params->{'pluginMultiLibraryError'} = 'Library with that name already exists';
-	}
-	if(!saveLibrary($client,$params,$url)) {
-		if(defined($params->{'deletesimple'})) {
-			$params->{'pluginMultiLibraryEditLibraryDeleteSimple'} = $params->{'deletesimple'};
-		}
-		return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_editlibrary.html', $params);
-	}else {
-		if(defined($params->{'deletesimple'})) {
-			my $file = unescape($params->{'deletesimple'});
-			my $url = catfile($libraryDir, $file);
-			if(-e $url) {
-				unlink($url) or do {
-					warn "Unable to delete file: ".$url.": $! \n";
-				}
-			}
-		}
-		$params->{'donotrefresh'} = 1;
-		initLibraries($client);
-		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
-			refreshLibraries();
-			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
-				no strict 'refs';
-				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
-				use strict 'refs';
-			}
-		}
-		return handleWebList($client,$params)
-	}
-
-}
-
-# Draws the plugin's edit library web page
-sub handleWebSaveNewLibrary {
-	my ($client, $params) = @_;
-
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-
-	$params->{'pluginMultiLibraryError'} = undef;
-	
-	if (!$params->{'text'} || !$params->{'file'}) {
-		$params->{'pluginMultiLibraryError'} = 'All fields are mandatory';
-	}
-
-	my $libraryDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-	
-	if (!defined $libraryDir || !-d $libraryDir) {
-		$params->{'pluginMultiLibraryError'} = 'No library dir defined';
-	}
-	debugMsg("Got file: ".$params->{'file'}."\n");
-	if($params->{'file'} !~ /.*\.ml\.xml$/) {
-		$params->{'pluginMultiLibraryError'} = 'File name must end with .ml.xml';
-	}
-	
-	if(unescape($params->{'file'}) !~ /^[0-9A-Za-z\._\- ]*$/) {
-		$params->{'pluginMultiLibraryError'} = 'File name is only allowed to contain characters a-z , A-Z , 0-9 , - , _ , . , and space';
-	}
-
-	my $url = catfile($libraryDir, unescape($params->{'file'}));
-	if (-e $url) {
-		$params->{'pluginMultiLibraryError'} = 'File already exist';
-	}
-
-	if(!saveLibrary($client,$params,$url)) {
-		return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_newlibrary.html', $params);
-	}else {
-		$params->{'donotrefresh'} = 1;
-		initLibraries($client);
-		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
-			refreshLibraries();
-			if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
-				no strict 'refs';
-				eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
-				use strict 'refs';
-			}
-		}
-		return handleWebList($client,$params)
-	}
-
+	return getConfigManager()->webSaveSimpleItem($client,$params);	
 }
 
 sub handleWebRemoveLibrary {
 	my ($client, $params) = @_;
-
-	if(defined($params->{'redirect'})) {
-		$params->{'pluginMultiLibraryRedirect'} = 1;
-	}
-
-	if ($params->{'type'}) {
-		my $libraryId = unescape($params->{'type'});
-		my $library = getLibrary($client,$libraryId);
-		if($library) {
-			my $libraryDir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-			
-			if (!defined $libraryDir || !-d $libraryDir) {
-				warn "No library dir defined\n"
-			}else {
-				my $file = $libraryId;
-				if(defined($library->{'simple'})) {
-					$file .= ".ml.values.xml";
-				}else {
-					$file .= ".ml.xml";
-				}
-				debugMsg("Deleteing library: ".$file."\n");
-				my $url = catfile($libraryDir, $file);
-				unlink($url) or do {
-					warn "Unable to delete file: ".$url.": $! \n";
-				};
-				if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
-					refreshLibraries();
-					if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
-						no strict 'refs';
-						eval { &{"Plugins::CustomBrowse::Plugin::readBrowseConfiguration"}($client) };
-						use strict 'refs';
-					}
-				}
-			}
-		}else {
-			warn "Cannot find: ".$libraryId."\n";
-		}
-	}
-
-	return handleWebList($client,$params)
+	return getConfigManager()->webRemoveItem($client,$params);	
 }
 
-sub saveSimpleLibrary {
-	my ($client, $params, $url) = @_;
-	my $fh;
-
-	if(!($url =~ /.*\.ml\.values\.xml$/)) {
-		$params->{'pluginMultiLibraryError'} = 'Filename must end with .ml.values.xml';
-	}
-
-	if(!($params->{'pluginMultiLibraryError'})) {
-		debugMsg("Opening library file: $url\n");
-		open($fh,"> $url") or do {
-	            $params->{'pluginMultiLibraryError'} = 'Error saving library';
-		};
-	}
-	if(!($params->{'pluginMultiLibraryError'})) {
-		my $templates = readTemplateConfiguration($client);
-		my $template = $templates->{$params->{'librarytemplate'}};
-		my %templateParameters = ();
-		my $data = "";
-		$data .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<multilibrary>\n\t<template>\n\t\t<id>".$params->{'librarytemplate'}."</id>";
-		if(defined($template->{'parameter'})) {
-			my $parameters = $template->{'parameter'};
-			my @parametersToSelect = ();
-			for my $p (@$parameters) {
-				if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
-					my $useParameter = 1;
-					if(defined($p->{'requireplugins'})) {
-						$useParameter = isPluginsInstalled($client,$p->{'requireplugins'});
-					}
-					if($useParameter) {
-						addValuesToTemplateParameter($p);
-						my $value = getXMLValueOfTemplateParameter($params,$p);
-						if($p->{'quotevalue'}) {
-							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\" quotevalue=\"1\">";
-						}else {
-							$data .= "\n\t\t<parameter type=\"text\" id=\"".$p->{'id'}."\">";
-						}
-						$data .= $value.'</parameter>';
-					}
-				}
-			}
-		}
-		$data .= "\n\t</template>\n</multilibrary>\n";
-		debugMsg("Writing to file: $url\n");
-		print $fh $data;
-		debugMsg("Writing to file succeeded\n");
-		close $fh;
-	}
-	
-	if($params->{'pluginMultiLibraryError'}) {
-		my %parameters;
-		for my $p (keys %$params) {
-			if($p =~ /^libraryparameter_/) {
-				$parameters{$p}=$params->{$p};
-			}
-		}		
-		$params->{'pluginMultiLibraryEditLibraryParameters'} = \%parameters;
-		$params->{'pluginMultiLibraryEditLibraryFile'} = $params->{'file'};
-		$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($params->{'pluginMultiLibraryEditLibraryFile'});
-		if ($::VERSION ge '6.5') {
-			$params->{'pluginMultiLibrarySlimserver65'} = 1;
-		}
-		return undef;
-	}else {
-		return 1;
-	}
+sub handleWebSaveNewSimpleLibrary {
+	my ($client, $params) = @_;
+	return getConfigManager()->webSaveNewSimpleItem($client,$params);	
 }
 
-sub saveLibrary
-{
-	my ($client, $params, $url) = @_;
-	my $fh;
+sub handleWebSaveNewLibrary {
+	my ($client, $params) = @_;
+	return getConfigManager()->webSaveNewItem($client,$params);	
+}
 
-	if(!($url =~ /.*\.ml\.xml$/)) {
-		$params->{'pluginMultiLibraryError'} = 'Filename must end with .ml.xml';
-	}
-	if(!($params->{'pluginMultiLibraryError'})) {
-		my %templates = ();
-		my $error = parseLibraryContent($client,'test',$params->{'text'},\%templates);
-		if($error) {
-			$params->{'pluginMultiLibraryError'} = "Reading library configuration: <br>".$error;
-		}
-	}
-
-	if(!($params->{'pluginMultiLibraryError'})) {
-		debugMsg("Opening library configuration file: $url\n");
-		open($fh,"> $url") or do {
-	            $params->{'pluginMultiLibraryError'} = 'Error saving library';
-		};
-	}
-	if(!($params->{'pluginMultiLibraryError'})) {
-
-		debugMsg("Writing to file: $url\n");
-		print $fh $params->{'text'};
-		debugMsg("Writing to file succeeded\n");
-		close $fh;
-	}
-	
-	if($params->{'pluginMultiLibraryError'}) {
-		$params->{'pluginMultiLibraryEditLibraryFile'} = $params->{'file'};
-		$params->{'pluginMultiLibraryEditLibraryData'} = $params->{'text'};
-		$params->{'pluginMultiLibraryEditLibraryFileUnescaped'} = unescape($params->{'pluginMultiLibraryEditLibraryFile'});
-		if ($::VERSION ge '6.5') {
-			$params->{'pluginMultiLibrarySlimserver65'} = 1;
-		}
-		return undef;
-	}else {
-		return 1;
-	}
+sub handleWebSaveLibrary {
+	my ($client, $params) = @_;
+	return getConfigManager()->webSaveItem($client,$params);	
 }
 
 
@@ -2992,7 +1291,6 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_multilibrary_library_directory to:$dir\n");
 		Slim::Utils::Prefs::set('plugin_multilibrary_library_directory', $dir);
 	}
-
 	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_showmessages');
 	if (! defined $prefVal) {
 		# Default to not show debug messages
@@ -3019,13 +1317,17 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_custombrowse_menus', 1);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_download_url');
+	if (! defined $prefVal) {
+		Slim::Utils::Prefs::set('plugin_multilibrary_download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
+	}
 }
 
 sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_showmessages'],
+	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_template_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_showmessages'],
 	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -3102,228 +1404,15 @@ sub setupGroup
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"); }
 		},
+	plugin_multilibrary_template_directory => {
+			'validate' => \&validateIsDirWrapper
+			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"); }
+		},
 	);
 	return (\%setupGroup,\%setupPrefs);
-}
-sub replaceParametersInSQL {
-	my $sql = shift;
-	my $parameters = shift;
-	my $parameterType = shift;
-	if(!defined($parameterType)) {
-		$parameterType='LibraryParameter';
-	}
-	
-	if(defined($parameters)) {
-		foreach my $key (keys %$parameters) {
-			my $parameter = $parameters->{$key};
-			my $value = $parameter->{'value'};
-			if(!defined($value)) {
-				$value='';
-			}
-			my $parameterid = "\'$parameterType".$parameter->{'id'}."\'";
-			debugMsg("Replacing ".$parameterid." with ".$value."\n");
-			$sql =~ s/$parameterid/$value/g;
-		}
-	}
-	return $sql;
-}
-
-sub fisher_yates_shuffle {
-    my $myarray = shift;  
-    my $i = @$myarray;
-    if(scalar(@$myarray)>1) {
-	    while (--$i) {
-	        my $j = int rand ($i+1);
-	        @$myarray[$i,$j] = @$myarray[$j,$i];
-	    }
-    }
-}
-
-sub getLibraryOption {
-	my $library = shift;
-	my $option = shift;
-
-	if(defined($library->{'options'})){
-		if(defined($library->{'options'}->{$option})) {
-			return $library->{'options'}->{$option}->{'value'};
-		}
-	}
-	return undef;
-}
-sub parseParameter {
-	my $line = shift;
-	
-	if($line =~ /^\s*--\s*LibraryParameter\s*\d\s*[:=]\s*/) {
-		$line =~ m/^\s*--\s*LibraryParameter\s*(\d)\s*[:=]\s*([^:]+):\s*([^:]*):\s*(.*)$/;
-		my $parameterId = $1;
-		my $parameterType = $2;
-		my $parameterName = $3;
-		my $parameterDefinition = $4;
-
-		$parameterType =~ s/^\s+//;
-		$parameterType =~ s/\s+$//;
-
-		$parameterName =~ s/^\s+//;
-		$parameterName =~ s/\s+$//;
-
-		$parameterDefinition =~ s/^\s+//;
-		$parameterDefinition =~ s/\s+$//;
-
-		if($parameterId && $parameterName && $parameterType) {
-			my %parameter = (
-				'id' => $parameterId,
-				'type' => $parameterType,
-				'name' => $parameterName,
-				'definition' => $parameterDefinition
-			);
-			return \%parameter;
-		}else {
-			debugMsg("Error in parameter: $line\n");
-			debugMsg("Parameter values: Id=$parameterId, Type=$parameterType, Name=$parameterName, Definition=$parameterDefinition\n");
-			return undef;
-		}
-	}
-	return undef;
-}	
-
-sub parseOption {
-	my $line = shift;
-	if($line =~ /^\s*--\s*LibraryOption\s*[^:=]+\s*[:=]\s*/) {
-		$line =~ m/^\s*--\s*LibraryOption\s*([^:=]+)\s*[:=]\s*(.+)\s*$/;
-		my $optionId = $1;
-		my $optionValue = $2;
-
-		$optionId =~ s/\s+$//;
-
-		$optionValue =~ s/^\s+//;
-		$optionValue =~ s/\s+$//;
-
-		if($optionId && $optionValue) {
-			my %option = (
-				'id' => $optionId,
-				'value' => $optionValue
-			);
-			return \%option;
-		}else {
-			debugMsg("Error in option: $line\n");
-			debugMsg("Option values: Id=$optionId, Value=$optionValue\n");
-			return undef;
-		}
-	}
-	return undef;
-}	
-
-sub createMultiLibrary {
-	my $sqlstatements = shift;
-	my $sql = '';
-	my %parameters = ();
-	my %options = ();
-	for my $line (split(/[\n\r]/,$sqlstatements)) {
-		chomp $line;
-
-		my $parameter = parseParameter($line);
-		if(defined($parameter)) {
-			$parameters{$parameter->{'id'}} = $parameter;
-		}
-		my $option = parseOption($line);
-		if(defined($option)) {
-			$options{$option->{'id'}} = $option;
-		}
-		
-		# skip and strip comments & empty lines
-		$line =~ s/\s*--.*?$//o;
-		$line =~ s/^\s*//o;
-
-		next if $line =~ /^--/;
-		next if $line =~ /^\s*$/;
-
-		$line =~ s/\s+$//;
-		if($sql) {
-			if( $sql =~ /;$/ ) {
-				$sql .= "\n";
-			}else {
-				$sql .= " ";
-			}
-		}
-		$sql .= $line;
-	}
-	if($sql) {
-		my %library = (
-			'sql' => $sql
-		);
-		if(defined(%parameters)) {
-			$library{'parameters'} = \%parameters;
-		}
-		if(defined(%options)) {
-			$library{'options'} = \%options;
-		}
-	    	
-		return \%library;
-	}else {
-		return undef;
-	}
-}
-sub executeSQLForLibrary {
-	my $sqlstatements = shift;
-	my $limit = shift;
-	my $library = shift;
-	my @result;
-	my $ds = getCurrentDS();
-	my $dbh = getCurrentDBH();
-	my $trackno = 0;
-	$sqlerrors = "";
-	my $contentType = getLibraryOption($library,'ContentType');
-	my $limit = getLibraryOption($library,'NoOfTracks');
-	my $noRepeat = getLibraryOption($library,'DontRepeatTracks');
-	if(defined($contentType)) {
-		debugMsg("Executing SQL for content type: $contentType\n");
-	}
-	for my $sql (split(/[\n\r]/,$sqlstatements)) {
-    		eval {
-			my $sth = $dbh->prepare( $sql );
-			debugMsg("Executing: $sql\n");
-			$sth->execute() or do {
-				debugMsg("Error executing: $sql\n");
-				$sql = undef;
-			};
-
-		        if ($sql =~ /^\(*SELECT+/oi) {
-				debugMsg("Executing and collecting: $sql\n");
-				my $url;
-				$sth->bind_col( 1, \$url);
-				while( $sth->fetch() ) {
-					my $tracks = getTracksForResult($url,$contentType,$limit,$noRepeat);
-				 	for my $track (@$tracks) {
-						$trackno++;
-						if(!$limit || $trackno<=$limit) {
-							debugMsg("Adding: ".($track->url)."\n");
-							push @result, $track;
-						}
-					}
-				}
-			}
-			$sth->finish();
-		};
-		if( $@ ) {
-			$sqlerrors .= $DBI::errstr."<br>$@<br>";
-			warn "Database error: $DBI::errstr\n$@\n";
-		}		
-	}
-	return \@result;
-}
-
-sub getTracksForResult {
-	my $item = shift;
-	my $contentType = shift;
-	my $limit = shift;
-	my $noRepeat = shift;
-	my @result  = ();
-	if(!defined($contentType) || $contentType eq 'track' || $contentType eq '') {
-		my @resultTracks = ();
-		my $track = objectForUrl($item);
-		push @result,$track;
-	}
-	return \@result;
 }
 
 sub validateIsDirWrapper {
@@ -3409,32 +1498,6 @@ sub rollback {
 	}
 }
 
-sub displayAsHTML {
-	my $type = shift;
-	my $form = shift;
-	my $item = shift;
-	
-	if ($::VERSION ge '6.5') {
-		$item->displayAsHTML($form);
-	}else {
-		my $ds = getCurrentDS();
-		my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-        my $levelInfo = $fieldInfo->{$type};
-        &{$levelInfo->{'listItem'}}($ds, $form, $item);
-	}
-}
-
-sub getLinkAttribute {
-	my $attr = shift;
-	if ($::VERSION ge '6.5') {
-		if($attr eq 'artist') {
-			$attr = 'contributor';
-		}
-		return $attr.'.id';
-	}
-	return $attr;
-}
-
 # other people call us externally.
 *escape   = \&URI::Escape::uri_escape_utf8;
 
@@ -3475,37 +1538,49 @@ PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY
 PLUGIN_MULTILIBRARY_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY
+	EN	Library templates directory
+
 SETUP_PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY
 	EN	Library directory
 
 SETUP_PLUGIN_MULTILIBRARY_SHOWMESSAGES
 	EN	Debugging
 
+SETUP_PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY
+	EN	Library templates directory
+
 PLUGIN_MULTILIBRARY_CHOOSE_BELOW
 	EN	Choose a sub library of music to activate:
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY
+PLUGIN_MULTILIBRARY_EDIT_ITEM
 	EN	Edit
 
-PLUGIN_MULTILIBRARY_NEW_LIBRARY
+PLUGIN_MULTILIBRARY_NEW_ITEM
 	EN	Create new library
 
-PLUGIN_MULTILIBRARY_NEW_LIBRARY_TYPES_TITLE
+PLUGIN_MULTILIBRARY_NEW_ITEM_TYPES_TITLE
 	EN	Select type of library
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY_DATA
+PLUGIN_MULTILIBRARY_EDIT_ITEM_DATA
 	EN	Library Configuration
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY_NAME
+PLUGIN_MULTILIBRARY_EDIT_ITEM_NAME
 	EN	Library Name
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY_FILENAME
+PLUGIN_MULTILIBRARY_EDIT_ITEM_FILENAME
 	EN	Filename
 
-PLUGIN_MULTILIBRARY_REMOVE_LIBRARY
+PLUGIN_MULTILIBRARY_REMOVE_ITEM_QUESTION
+	EN	Are you sure you want to delete this library ?
+
+PLUGIN_MULTILIBRARY_REMOVE_ITEM_TYPE_QUESTION
+	EN	Removing a library type might cause problems later if it is used in existing libraries, are you really sure you want to delete this library type ?
+
+PLUGIN_MULTILIBRARY_REMOVE_ITEM
 	EN	Delete
 
-PLUGIN_MULTILIBRARY_REMOVE_LIBRARY_QUESTION
+PLUGIN_MULTILIBRARY_REMOVE_ITEM_QUESTION
 	EN	Are you sure you want to delete this library ?
 
 PLUGIN_MULTILIBRARY_TEMPLATE_GENRES_TITLE
@@ -3535,26 +1610,110 @@ PLUGIN_MULTILIBRARY_NEXT
 PLUGIN_MULTILIBRARY_TEMPLATE_PARAMETER_LIBRARIES
 	EN	Libraries with user selectable parameters
 
-PLUGIN_MULTILIBRARY_LIBRARYTYPE
+PLUGIN_MULTILIBRARY_ITEMTYPE
 	EN	Customize SQL
 	
-PLUGIN_MULTILIBRARY_LIBRARYTYPE_SIMPLE
+PLUGIN_MULTILIBRARY_ITEMTYPE_SIMPLE
 	EN	Use predefined
 
-PLUGIN_MULTILIBRARY_LIBRARYTYPE_ADVANCED
+PLUGIN_MULTILIBRARY_ITEMTYPE_ADVANCED
 	EN	Customize SQL
 
-PLUGIN_MULTILIBRARY_NEW_LIBRARY_PARAMETERS_TITLE
+PLUGIN_MULTILIBRARY_NEW_ITEM_PARAMETERS_TITLE
 	EN	Please enter library parameters
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY_PARAMETERS_TITLE
+PLUGIN_MULTILIBRARY_EDIT_ITEM_PARAMETERS_TITLE
 	EN	Please enter library parameters
+
+PLUGIN_MULTILIBRARY_LOGIN_USER
+	EN	Username
+
+PLUGIN_MULTILIBRARY_LOGIN_PASSWORD
+	EN	Password
+
+PLUGIN_MULTILIBRARY_LOGIN_FIRSTNAME
+	EN	First name
+
+PLUGIN_MULTILIBRARY_LOGIN_LASTNAME
+	EN	Last name
+
+PLUGIN_MULTILIBRARY_LOGIN_EMAIL
+	EN	e-mail
+
+PLUGIN_MULTILIBRARY_ANONYMOUSLOGIN
+	EN	Anonymous
+
+PLUGIN_MULTILIBRARY_LOGIN
+	EN	Login
+
+PLUGIN_MULTILIBRARY_REGISTERLOGIN
+	EN	Register &amp; Login
+
+PLUGIN_MULTILIBRARY_REGISTER_TITLE
+	EN	Register a new user
+
+PLUGIN_MULTILIBRARY_LOGIN_TITLE
+	EN	Login
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_ITEMS
+	EN	Download more libraries
+
+PLUGIN_MULTILIBRARY_PUBLISH_ITEM
+	EN	Publish
+
+PLUGIN_MULTILIBRARY_PUBLISH
+	EN	Publish
+
+PLUGIN_MULTILIBRARY_PUBLISHPARAMETERS_TITLE
+	EN	Please specify information about the library
+
+PLUGIN_MULTILIBRARY_PUBLISH_NAME
+	EN	Name
+
+PLUGIN_MULTILIBRARY_PUBLISH_DESCRIPTION
+	EN	Description
+
+PLUGIN_MULTILIBRARY_PUBLISH_ID
+	EN	Unique identifier
 
 PLUGIN_MULTILIBRARY_LASTCHANGED
 	EN	Last changed
 
-PLUGIN_MULTILIBRARY_EDIT_LIBRARY_OVERWRITE
+PLUGIN_MULTILIBRARY_PUBLISHMESSAGE
+	EN	Thanks for choosing to publish your library. The advantage of publishing a library is that other users can use it and it will also be used for ideas of new functionallity in the Multi Library plugin. Publishing a library is also a great way of improving the functionality in the Multi Library plugin by showing the developer what types of libraries you use, besides those already included with the plugin.
+
+PLUGIN_MULTILIBRARY_REGISTERMESSAGE
+	EN	You can choose to publish your library either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the library, you will get credit for it and you will also be sure that no one else can update or change your published library. The e-mail adress will only be used to contact you if I have some questions to you regarding one of your libraries, it will not show up on any web pages. If you already have registered a user, just hit the Login button.
+
+PLUGIN_MULTILIBRARY_LOGINMESSAGE
+	EN	You can choose to publish your library either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the library, you will get credit for it and you will also be sure that no one else can update or change your published library. Hit the &quot;Register &amp; Login&quot; button if you have not previously registered.
+
+PLUGIN_MULTILIBRARY_PUBLISHMESSAGE_DESCRIPTION
+	EN	It is important that you enter a good description of your library, describe what your library do and if it is based on one of the existing libraries it is a good idea to mention this and describe which extensions you have made. <br><br>It is also a good idea to try to make the &quot;Unique identifier&quot; as uniqe as possible as this will be used for filename when downloading the library. This is especially important if you have choosen to publish your library anonymously as it can easily be overwritten if the identifier is not unique. Please try to not use spaces and language specific characters in the unique identifier since these could cause problems on some operating systems.
+
+PLUGIN_MULTILIBRARY_REFRESH_DOWNLOADED_ITEMS
+	EN	Download last version of existing libraries
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_OVERWRITE_WARNING
+	EN	A library type with that name already exists, please change the name or select to overwrite the existing library type
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_OVERWRITE
 	EN	Overwrite existing
+
+PLUGIN_MULTILIBRARY_PUBLISH_OVERWRITE
+	EN	Overwrite existing
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_NAME
+	EN	Unique identifier
+
+PLUGIN_MULTILIBRARY_EDIT_ITEM_OVERWRITE
+	EN	Overwrite existing
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_ITEMS
+	EN	Download more libraries
+
+PLUGIN_MULTILIBRARY_DOWNLOAD_QUESTION
+	EN	This operation will download latest version of all libraries, this might take some time. Please note that this will overwrite any local changes you have made in built-in or previously downloaded library types. Are you sure you want to continue ?
 
 PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY
 	EN	Active library
