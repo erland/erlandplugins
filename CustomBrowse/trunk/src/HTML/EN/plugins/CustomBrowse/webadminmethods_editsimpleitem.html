@@ -88,6 +88,11 @@
 	</tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
 	<input type="hidden" name="itemtemplate" value="[% pluginWebAdminMethodsEditItemTemplate %]">
+	[% IF pluginWebAdminMethodsError %]
+	<tr><td colspan="2">
+	<br><div style="color:red;">Error:<br>[% pluginWebAdminMethodsError %]</div><br>
+	</td></tr>
+	[% END %]
 	<tr><td><input type="submit" value="[% "NEXT" | string %]"></td></tr>
 </form>
 </table>
