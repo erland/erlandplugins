@@ -324,6 +324,16 @@ sub readItemConfiguration {
 	return \%result;
 }
 
+sub changedItemConfiguration {
+        my ($self, $client, $params) = @_;
+#	Plugins::CustomBrowse::Plugin::readBrowseConfiguration($client);
+}
+
+sub changedTemplateConfiguration {
+        my ($self, $client, $params) = @_;
+#	$self->readTemplateConfiguration($client);
+}
+
 sub webEditItems {
         my ($self, $client, $params) = @_;
 	
@@ -455,6 +465,7 @@ sub webSaveSimpleItem {
 	if(!defined($self->templates)) {
 		$self->templates($self->readTemplateConfiguration($client));
 	}
+	$params->{'items'} = $self->items;
 	
 	return $self->webAdminMethods->webSaveSimpleItem($client,$params,$params->{'itemtemplate'},$self->templates);	
 }
@@ -475,17 +486,20 @@ sub webSaveNewSimpleItem {
 	if(!defined($self->templates)) {
 		$self->templates($self->readTemplateConfiguration($client));
 	}
+	$params->{'items'} = $self->items;
 	
 	return $self->webAdminMethods->webSaveNewSimpleItem($client,$params,$params->{'itemtemplate'},$self->templates);	
 }
 
 sub webSaveNewItem {
         my ($self, $client, $params) = @_;
+	$params->{'items'} = $self->items;
 	return $self->webAdminMethods->webSaveNewItem($client,$params);	
 }
 
 sub webSaveItem {
         my ($self, $client, $params) = @_;
+	$params->{'items'} = $self->items;
 	return $self->webAdminMethods->webSaveItem($client,$params);	
 }
 

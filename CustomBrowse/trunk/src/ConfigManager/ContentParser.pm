@@ -97,6 +97,9 @@ sub checkContent {
 	if(defined($localcontext) && defined($localcontext->{'simple'})) {
 		$xml->{'menu'}->{'simple'} = 1;
 	}
+	if($localcontext->{'librarysupported'}) {
+		$xml->{'menu'}->{'librarysupported'} = 1;
+	}
 	if(!$disabled) {
 		$xml->{'menu'}->{'enabled'}=1;	
 		if(!defined($forceEnabledBrowse)) {

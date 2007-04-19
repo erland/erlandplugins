@@ -25,6 +25,7 @@ our @ISA = qw(Plugins::CustomBrowse::ConfigManager::WebAdminMethods);
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+use Data::Dumper;
 
 sub new {
 	my $class = shift;
@@ -69,6 +70,61 @@ sub getTemplateParametersForPublish {
 	my $params = shift;
 
 	return '		<parameter type="text" id="menuname" name="Menu name" value="'.$params->{'itemname'}.'"/>'."\n";
+}
+
+sub checkSaveItem {
+	my $self = shift;
+	my $client = shift;
+	my $params = shift;
+	my $item = shift;
+#	my $items = $params->{'items'};
+#	if(defined($items)) {
+#		my $id = unescape($params->{'file'});
+#		my $regexp = ".".$self->extension."\$";
+#		$regexp =~ s/\./\\./;
+#		$id =~ s/$regexp//;
+#		for my $key (keys %$items) {
+#			my $currentItem = $items->{$key};
+#			if($currentItem && $currentItem->{'menuname'} eq $item->{'menuname'} && $currentItem->{'id'} ne $id && !defined($currentItem->{'defaultitem'})) {
+#				return 'Menu with that name already exists';
+#			}
+#		}
+#	}
+	return undef;
+}
+
+sub checkSaveSimpleItem {
+	my $self = shift;
+	my $client = shift;
+	my $params = shift;
+
+	my $items = $params->{'items'};
+#	if(defined($items)) {
+#		my $id = unescape($params->{'file'});
+#		my $regexp = ".".$self->simpleExtension."\$";
+#		$regexp =~ s/\./\\./;
+#		$id =~ s/$regexp//;
+#		for my $key (keys %$items) {
+#			my $currentItem = $items->{$key};
+#			if($currentItem && $currentItem->{'menuname'} eq $params->{'itemparameter_menuname'} && $currentItem->{'id'} ne $id && !defined($currentItem->{'defaultitem'})) {
+#				return 'Menu with that name already exists';
+#			}
+#		}
+#	}
+	return undef;
+}
+
+# don't use the external one because it doesn't know about the difference
+# between a param and not...
+#*unescape = \&URI::Escape::unescape;
+sub unescape {
+        my $in      = shift;
+        my $isParam = shift;
+
+        $in =~ s/\+/ /g if $isParam;
+        $in =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
+
+        return $in;
 }
 
 1;
