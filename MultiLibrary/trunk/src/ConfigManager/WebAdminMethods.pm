@@ -1136,7 +1136,7 @@ sub saveItem
 	
 	if($params->{'pluginWebAdminMethodsError'}) {
 		$params->{'pluginWebAdminMethodsEditItemFile'} = $params->{'file'};
-		$params->{'pluginWebAdminMethodsEditItemData'} = $params->{'text'};
+		$params->{'pluginWebAdminMethodsEditItemData'} = encode_entities($params->{'text'});
 		$params->{'pluginWebAdminMethodsEditItemFileUnescaped'} = unescape($params->{'pluginWebAdminMethodsEditItemFile'});
 		if ($::VERSION ge '6.5') {
 			$params->{'pluginWebAdminMethodsSlimserver65'} = 1;
