@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% IF !pluginCustomBrowseSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
-	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
-	[% PROCESS plugins/CustomBrowse/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
@@ -13,9 +8,6 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginCustomBrowseSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
-[% END %]
 
 <form action="[% webroot %]plugins/CustomBrowse/custombrowse_saveselectmenus.html" name="editForm">
 	<table border="0">
@@ -168,8 +160,5 @@
 	</table>
 	<br><br>
 	<input type="submit" value="[% "SAVE" | string %]">
-	[% IF !pluginCustomBrowseSlimserver65 %]
-		<br><b>Note!</b> The "Show in browse menu" setting does not affect web interface in slimserver 6.3.* and earlier
-	[% END %]
 </form>
 [% PROCESS pagefooter.html %]

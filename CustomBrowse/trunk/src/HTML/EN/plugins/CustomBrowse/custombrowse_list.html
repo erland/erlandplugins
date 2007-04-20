@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% IF !pluginCustomBrowseSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
-	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
-	[% PROCESS plugins/CustomBrowse/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
@@ -22,22 +17,14 @@
 &nbsp;
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginCustomBrowseSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
-[% END %]
-[% IF pluginCustomBrowseSlimserver65 %]
-	[%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
-	        contentwrapper = 'galleryitem';
-		container = 'gallerycontainer';
-	ELSE;
-	        contentwrapper = 'contentitem';
-		container = 'contentcontainer';
-	END;
-	%]
-[% ELSE %]
-        [% contentwrapper = 'contentitem' %]
-	[% container = 'contentcontainer' %]
-[% END %]
+[%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
+        contentwrapper = 'galleryitem';
+	container = 'gallerycontainer';
+ELSE;
+        contentwrapper = 'contentitem';
+	container = 'contentcontainer';
+END;
+%]
 
 [% BLOCK galleryitem %]
 	<li>
@@ -112,11 +99,9 @@
 							[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 						        [% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 							<!--
-							[% IF pluginCustomBrowseSlimserver65 %]
-								[% FOREACH mixer = item.mixerlinks.values.sort %]
-						                	[% PROCESS $mixer %]
-							        [% END %]
-							[% END %]
+							[% FOREACH mixer = item.mixerlinks.values.sort %]
+					                	[% PROCESS $mixer %]
+						        [% END %]
 							-->
 						[% ELSIF item.url %]
 							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %]"[% END %]

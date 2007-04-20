@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% IF !pluginWebAdminMethodsSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/hreftemplate65 %]
-	[% PROCESS plugins/CustomBrowse/cmdwrappers65 %]
-	[% PROCESS plugins/CustomBrowse/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
@@ -13,9 +8,6 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginWebAdminMethodsSlimserver65 %]
-	[% PROCESS plugins/CustomBrowse/pageheaderinfo65 %]
-[% END %]
 [% PROCESS plugins/CustomBrowse/catchtab.js %]
 
 <form action="[% webroot %]plugins/CustomBrowse/webadminmethods_savenewitem.html" name="editForm" accept-charset="iso8859-1">

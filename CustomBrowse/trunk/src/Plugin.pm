@@ -781,11 +781,7 @@ sub checkMix {
 				}elsif($item->{'itemtype'} eq "artist") {
 					$itemObj = objectForId('artist',$item->{'itemid'});
 				}elsif($item->{'itemtype'} eq "year") {
-					if ($::VERSION ge '6.5') {
-						$itemObj = objectForId('year',$item->{'itemid'});
-					}else {
-						$itemObj = $item->{'itemid'};
-					}
+					$itemObj = objectForId('year',$item->{'itemid'});
 				}elsif($item->{'itemtype'} eq "genre") {
 					$itemObj = objectForId('genre',$item->{'itemid'});
 				}elsif($item->{'itemtype'} eq "playlist") {
@@ -999,11 +995,7 @@ sub executeMix {
 			}elsif($item->{'itemtype'} eq "artist") {
 				$itemObj = objectForId('artist',$item->{'itemid'});
 			}elsif($item->{'itemtype'} eq "year") {
-				if ($::VERSION ge '6.5') {
-					$itemObj = objectForId('year',$item->{'itemid'});
-				}else {
-					$itemObj = $item->{'itemid'};
-				}
+				$itemObj = objectForId('year',$item->{'itemid'});
 			}elsif($item->{'itemtype'} eq "genre") {
 				$itemObj = objectForId('genre',$item->{'itemid'});
 			}elsif($item->{'itemtype'} eq "playlist") {
@@ -1099,18 +1091,10 @@ sub musicMagicMix {
 	}else {
 		if(!$web) {
 			my $line2 = $client->doubleString('PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS');
-			if ($::VERSION ge '6.5') {
-				$client->showBriefly({
-					'line'    => [ undef, $line2 ],
-					'overlay' => [ undef, $client->symbols('notesymbol') ],
-				});
-			}else {
-				$client->showBriefly({
-					'line1' => undef,
-					'line2' => $line2,
-					'overlay2' => $client->symbols('notesymbol')
-				});
-			}
+			$client->showBriefly({
+				'line'    => [ undef, $line2 ],
+				'overlay' => [ undef, $client->symbols('notesymbol') ],
+			});
 		}
 	}
 }
@@ -1153,10 +1137,8 @@ sub playAddItem {
 		$wasShuffled = Slim::Player::Playlist::shuffle($client);
 		Slim::Player::Playlist::shuffle($client, 0);
 		$request = $client->execute(['playlist', 'clear']);
-		if ($::VERSION ge '6.5' && defined($request)) {
-			# indicate request source
-			$request->source('PLUGIN_CUSTOMBROWSE');
-		}
+		# indicate request source
+		$request->source('PLUGIN_CUSTOMBROWSE');
 		$pos = 0;
 		$selectedPos = 0;
 		$postPlay = 1;
@@ -1197,7 +1179,7 @@ sub playAddItem {
 					}
 				}
 			}
-			if ($::VERSION ge '6.5' && defined($request)) {
+			if (defined($request)) {
 				# indicate request source
 				$request->source('PLUGIN_CUSTOMBROWSE');
 			}
@@ -1222,7 +1204,7 @@ sub playAddItem {
 	}
 	if(defined($selectedPos)) {
 		$request = $client->execute(['playlist', 'jump', $selectedPos]);
-		if ($::VERSION ge '6.5' && defined($request)) {
+		if (defined($request)) {
 			# indicate request source
 			$request->source('PLUGIN_CUSTOMBROWSE');
 		}
@@ -1243,18 +1225,10 @@ sub playAddItem {
 				$line2 = $item->{'menuname'};
 			}
 		}
-		if ($::VERSION ge '6.5') {
-			$client->showBriefly({
-				'line'    => [ $line1, $line2 ],
-				'overlay' => [ undef, $client->symbols('notesymbol') ],
-			});
-		}else {
-			$client->showBriefly({
-				'line1' => $line1,
-				'line2' => $line2,
-				'overlay2' => $client->symbols('notesymbol')
-			});
-		}
+		$client->showBriefly({
+			'line'    => [ $line1, $line2 ],
+			'overlay' => [ undef, $client->symbols('notesymbol') ],
+		});
 	}
 }
 sub prepareMenuSQL {
@@ -1323,7 +1297,6 @@ sub replaceParameters {
 sub getSQLMenuData {
 	my $sqlstatements = shift;
 	my @result =();
-	my $ds = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
     	for my $sql (split(/[;]/,$sqlstatements)) {
@@ -1416,12 +1389,7 @@ sub initPlugin {
 	my $soapLiteError = 0;
 	eval "use SOAP::Lite";
 	if ($@) {
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
-		}
+		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 		for my $plugindir (@pluginDirs) {
 			next unless -d catdir($plugindir,"CustomBrowse","libs");
 			push @INC,catdir($plugindir,"CustomBrowse","libs");
@@ -1445,11 +1413,7 @@ sub initPlugin {
 		my $listRef = Slim::Buttons::Common::param($client,'listRef');
 		my $item  = $listRef->[$listIndex];
 		my $trackStat;
-		if ($::VERSION ge '6.5') {
-			$trackStat = Slim::Utils::PluginManager::enabledPlugin('TrackStat',$client);
-		}else {
-			$trackStat = grep(/TrackStat/,Slim::Buttons::Plugins::enabledPlugins($client));
-		}
+		$trackStat = Slim::Utils::PluginManager::enabledPlugin('TrackStat',$client);
 
 		if($trackStat && defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'track' && (Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale") || $digit<=5)) {
 			my $rating = $digit*20;
@@ -1516,9 +1480,7 @@ sub initPlugin {
 		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
 	}
 	addPlayerMenus();
-        if ($::VERSION ge '6.5') {
-		delSlimserverPlayerMenus();
-	}
+	delSlimserverPlayerMenus();
 }
 
 sub getConfigManager {
@@ -1840,14 +1802,7 @@ sub displayAsHTML {
         my $form = shift;
         my $item = shift;
 
-        if ($::VERSION ge '6.5') {
-                $item->displayAsHTML($form);
-        }else {
-                my $ds = getCurrentDS();
-                my $fieldInfo = Slim::DataStores::Base->fieldInfo;
-	        my $levelInfo = $fieldInfo->{$type};
-        	&{$levelInfo->{'listItem'}}($ds, $form, $item);
-        }
+	$item->displayAsHTML($form);
 }
 
 
@@ -2058,7 +2013,7 @@ sub setupGroup
 	my %setupPrefs =
 	(
 	plugin_custombrowse_showmessages => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES')
 			,'options' => {
@@ -2068,7 +2023,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_showmessages"); }
 		},
 	plugin_custombrowse_menuinsidebrowse => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE')
 			,'options' => {
@@ -2089,21 +2044,21 @@ sub setupGroup
 			,'PrefSize' => 'large'
 		},
 	plugin_custombrowse_directory => {
-			'validate' => \&validateIsDirWrapper
+			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_directory"); }
 		},
 	plugin_custombrowse_template_directory => {
-			'validate' => \&validateIsDirWrapper
+			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_template_directory"); }
 		},
 	plugin_custombrowse_menuname => {
-			'validate' => \&validateAcceptAllWrapper
+			'validate' => \&Slim::Utils::Validate::acceptAll
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_MENUNAME')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_MENUNAME')
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_menuname"); }
@@ -2149,20 +2104,16 @@ sub webPages {
                 $value = undef;
         }
 	if(defined($value)) {
-		if ($::VERSION ge '6.5') {
-			#readBrowseConfiguration();
-			addWebMenus(undef,$value);
-			my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
-			if($menuName) {
-				Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
-			}
-			if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
-			        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
-			}
-			delSlimserverWebMenus();
-		}else {
-	        	Slim::Web::Pages::addLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		#readBrowseConfiguration();
+		addWebMenus(undef,$value);
+		my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
+		if($menuName) {
+			Slim::Utils::Strings::addStringPointer( uc 'PLUGIN_CUSTOMBROWSE_CUSTOM_MENUNAME', $menuName );
 		}
+		if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
+		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		}
+		delSlimserverWebMenus();
 	}
 
 	if(Slim::Utils::Prefs::get('plugin_custombrowse_menuinsidebrowse')) {
@@ -2276,9 +2227,6 @@ sub handleWebList {
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
 	}
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginCustomBrowseSlimserver65'} = 1;
-        }
 	if($sqlerrors && $sqlerrors ne '') {
 		$params->{'pluginCustomBrowseError'} = $sqlerrors;
 	}
@@ -2440,9 +2388,6 @@ sub handleWebAddAll {
 
 sub handleWebMix {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginCustomBrowseSlimserver65'} = 1;
-        }
 	return unless $client;
 	if(!defined($params->{'hierarchy'})) {
 		readBrowseConfiguration($client);
@@ -2533,9 +2478,6 @@ sub handleWebMix {
 
 sub handleWebExecuteMix {
 	my ($client, $params) = @_;
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginCustomBrowseSlimserver65'} = 1;
-        }
 	return unless $client;
 	if(!defined($params->{'hierarchy'})) {
 		readBrowseConfiguration($client);
@@ -2619,13 +2561,7 @@ sub handleWebSelectMenus {
         $params->{'pluginCustomBrowseMenus'} = \@menus;
         $params->{'pluginCustomBrowseMixes'} = $browseMixes;
 
-	if ($::VERSION ge '6.5') {
-		$params->{'pluginCustomBrowseSlimserverMenus'} = getSlimserverMenus();
-	}
-
-        if ($::VERSION ge '6.5') {
-                $params->{'pluginCustomBrowseSlimserver65'} = 1;
-        }
+	$params->{'pluginCustomBrowseSlimserverMenus'} = getSlimserverMenus();
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_selectmenus.html', $params);
 }
@@ -2743,11 +2679,9 @@ sub readBrowseConfiguration {
 	if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
 		$value = undef;
 	}
-	if ($::VERSION ge '6.5') {
-		addWebMenus($client,$value);
-		delSlimserverWebMenus();
-		delSlimserverPlayerMenus();
-	}
+	addWebMenus($client,$value);
+	delSlimserverWebMenus();
+	delSlimserverPlayerMenus();
 	addPlayerMenus();
 }
 
@@ -3050,47 +2984,12 @@ sub sortMenu {
 }
 
 
-sub validateIntWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isInt($arg);
-	}else {
-		return Slim::Web::Setup::validateInt($arg);
-	}
-}
-
-sub validateTrueFalseWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::trueFalse($arg);
-	}else {
-		return Slim::Web::Setup::validateTrueFalse($arg);
-	}
-}
-
 sub validateProperty {
 	my $arg = shift;
 	if($arg eq '' || $arg =~ /^[a-zA-Z0-9_]+\s*=\s*.+$/) {
 		return $arg;
 	}else {
 		return undef;
-	}
-}
-sub validateIsDirWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isDir($arg);
-	}else {
-		return Slim::Web::Setup::validateIsDir($arg);
-	}
-}
-
-sub validateAcceptAllWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::acceptAll($arg);
-	}else {
-		return Slim::Web::Setup::validateAcceptAll($arg);
 	}
 }
 
@@ -3103,56 +3002,34 @@ sub validateIntOrEmpty {
 }
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5') {
-		return Slim::Schema->storage->dbh();
-	}else {
-		return Slim::Music::Info::getCurrentDataStore()->dbh();
-	}
-}
-
-sub getCurrentDS {
-	if ($::VERSION ge '6.5') {
-		return 'Slim::Schema';
-	}else {
-		return Slim::Music::Info::getCurrentDataStore();
-	}
+	return Slim::Schema->storage->dbh();
 }
 
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5') {
-		if($type eq 'artist') {
-			$type = 'Contributor';
-		}elsif($type eq 'album') {
-			$type = 'Album';
-		}elsif($type eq 'genre') {
-			$type = 'Genre';
-		}elsif($type eq 'track') {
-			$type = 'Track';
-		}elsif($type eq 'playlist') {
-			$type = 'Playlist';
-		}elsif($type eq 'year') {
-			$type = 'Year';
-		}
-		return Slim::Schema->resultset($type)->find($id);
-	}else {
-		if($type eq 'playlist') {
-			$type = 'track';
-		}
-		return getCurrentDS()->objectForId($type,$id);
+	if($type eq 'artist') {
+		$type = 'Contributor';
+	}elsif($type eq 'album') {
+		$type = 'Album';
+	}elsif($type eq 'genre') {
+		$type = 'Genre';
+	}elsif($type eq 'track') {
+		$type = 'Track';
+	}elsif($type eq 'playlist') {
+		$type = 'Playlist';
+	}elsif($type eq 'year') {
+		$type = 'Year';
 	}
+	return Slim::Schema->resultset($type)->find($id);
 }
 
 sub getLinkAttribute {
 	my $attr = shift;
-	if ($::VERSION ge '6.5') {
-		if($attr eq 'artist') {
-			$attr = 'contributor';
-		}
-		return $attr.'.id';
+	if($attr eq 'artist') {
+		$attr = 'contributor';
 	}
-	return $attr;
+	return $attr.'.id';
 }
 
 sub commit {

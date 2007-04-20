@@ -66,12 +66,7 @@ sub loadTemplate {
 		if (defined $templateDir && -d $templateDir && -e catfile($templateDir,$templateFile)) {
 			$path = catfile($templateDir,$templateFile);
 		}else {
-			my @pluginDirs = ();
-			if ($::VERSION ge '6.5') {
-				@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-			}else {
-				@pluginDirs = catdir($Bin, "Plugins");
-			}
+			my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 			for my $plugindir (@pluginDirs) {
 				if( -d catdir($plugindir,"CustomBrowse","Templates") && -e catfile($plugindir,"CustomBrowse","Templates",$templateFile)) {
 					$path = catfile($plugindir,"CustomBrowse","Templates",$templateFile);

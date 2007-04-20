@@ -177,12 +177,7 @@ sub init {
 		if (defined $dir && -d $dir) {
 			push @templateDirectories,$dir
 		}
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
-		}
+		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 		for my $plugindir (@pluginDirs) {
 			if( -d catdir($plugindir,"CustomBrowse","Menus")) {
 				push @itemDirectories, catdir($plugindir,"CustomBrowse","Menus")
@@ -226,12 +221,7 @@ sub readTemplateConfiguration {
 	
 	my %templates = ();
 	my %globalcontext = ();
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
 		next unless -d catdir($plugindir,"CustomBrowse","Templates");
 		$globalcontext{'source'} = 'builtin';
@@ -262,12 +252,7 @@ sub readItemConfiguration {
 	my %localItems = ();
 	my %localMixes = ();
 
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 
 	my %globalcontext = ();
 	if(!defined($self->templates) || !$onlyWithLibrarySupport) {
