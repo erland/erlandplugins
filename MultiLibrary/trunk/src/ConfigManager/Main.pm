@@ -160,12 +160,7 @@ sub init {
 		if (defined $dir && -d $dir) {
 			push @templateDirectories,$dir
 		}
-		my @pluginDirs = ();
-		if ($::VERSION ge '6.5') {
-			@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		}else {
-			@pluginDirs = catdir($Bin, "Plugins");
-		}
+		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 		for my $plugindir (@pluginDirs) {
 			if( -d catdir($plugindir,"MultiLibrary","Libraries")) {
 				push @itemDirectories, catdir($plugindir,"MultiLibrary","Libraries")
@@ -209,12 +204,7 @@ sub readTemplateConfiguration {
 	
 	my %templates = ();
 	my %globalcontext = ();
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
 		next unless -d catdir($plugindir,"MultiLibrary","Templates");
 		$globalcontext{'source'} = 'builtin';
@@ -242,12 +232,7 @@ sub readItemConfiguration {
     
 	my %localItems = ();
 
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 
 	my %globalcontext = ();
 	$self->templates($self->readTemplateConfiguration());

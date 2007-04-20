@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_MULTILIBRARY' | string; pageicon = 'PLUGIN_MULTILIBRARY' -%]
-[% IF !pluginWebAdminMethodsSlimserver65 %]
-	[% PROCESS plugins/MultiLibrary/hreftemplate65 %]
-	[% PROCESS plugins/MultiLibrary/cmdwrappers65 %]
-	[% PROCESS plugins/MultiLibrary/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/MultiLibrary/multilibrary_list.html?player=[% player | uri %]">
@@ -13,9 +8,6 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginWebAdminMethodsSlimserver65 %]
-	[% PROCESS plugins/MultiLibrary/pageheaderinfo65 %]
-[% END %]
 
 <table border="0">
 <form action="[% webroot %]plugins/MultiLibrary/webadminmethods_savesimpleitem.html" name="editForm" accept-charset="iso8859-1">

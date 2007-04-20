@@ -33,13 +33,10 @@ use DBI qw(:sql_types);
 
 use Plugins::MultiLibrary::ConfigManager::Main;
 
-if ($::VERSION ge '6.5') {
-	eval "use Slim::Schema";
-}
+use Slim::Schema;
 
 # Information on each clients multilibrary
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
-my $ds = getCurrentDS();
 my $libraries = undef;
 my $sqlerrors = '';
 my %currentLibrary = ();
@@ -426,12 +423,7 @@ sub getAvailableCustomBrowseMenus {
 
 sub getInternalMenuTemplates {
 	my $client = shift;
-	my @pluginDirs = ();
-	if ($::VERSION ge '6.5') {
-		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-	}else {
-		@pluginDirs = catdir($Bin, "Plugins");
-	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	my @result = ();
 	for my $plugindir (@pluginDirs) {
 		my $templateDir = catdir($plugindir,'MultiLibrary','Menus');
@@ -1147,9 +1139,6 @@ sub handleWebList {
 
 	$params->{'pluginMultiLibraryLibraries'} = \@weblibraries;
 	$params->{'pluginMultiLibraryActiveLibrary'} = $library;
-	if ($::VERSION ge '6.5') {
-		$params->{'pluginMultiLibrarySlimserver65'} = 1;
-	}
 	my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
 	if(!defined($templateDir) || !-d $templateDir) {
 		$params->{'pluginMultiLibraryDownloadMessage'} = 'You have to specify a template directory before you can download libraries';
@@ -1338,7 +1327,7 @@ sub setupGroup
 	my %setupPrefs =
 	(
 	plugin_multilibrary_showmessages => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_SHOW_MESSAGES')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_SHOW_MESSAGES')
 			,'options' => {
@@ -1348,7 +1337,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_showmessages"); }
 		},		
 	plugin_multilibrary_refresh_rescan => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
 			,'options' => {
@@ -1358,7 +1347,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_rescan"); }
 		},		
 	plugin_multilibrary_refresh_startup => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
 			,'options' => {
@@ -1368,7 +1357,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup"); }
 		},		
 	plugin_multilibrary_question_startup => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
 			,'options' => {
@@ -1378,7 +1367,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_question_startup"); }
 		},		
 	plugin_multilibrary_refresh_save => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
 			,'options' => {
@@ -1388,7 +1377,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save"); }
 		},		
 	plugin_multilibrary_custombrowse_menus => {
-			'validate'     => \&validateTrueFalseWrapper
+			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
 			,'options' => {
@@ -1398,14 +1387,14 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_custombrowse_menus"); }
 		},		
 	plugin_multilibrary_library_directory => {
-			'validate' => \&validateIsDirWrapper
+			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"); }
 		},
 	plugin_multilibrary_template_directory => {
-			'validate' => \&validateIsDirWrapper
+			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
 			,'changeIntro' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
 			,'PrefSize' => 'large'
@@ -1415,73 +1404,33 @@ sub setupGroup
 	return (\%setupGroup,\%setupPrefs);
 }
 
-sub validateIsDirWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isDir($arg);
-	}else {
-		return Slim::Web::Setup::validateIsDir($arg);
-	}
-}
-
-sub validateTrueFalseWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::trueFalse($arg);
-	}else {
-		return Slim::Web::Setup::validateTrueFalse($arg);
-	}
-}
 
 sub objectForId {
 	my $type = shift;
 	my $id = shift;
-	if ($::VERSION ge '6.5') {
-		if($type eq 'artist') {
-			$type = 'Contributor';
-		}elsif($type eq 'album') {
-			$type = 'Album';
-		}elsif($type eq 'genre') {
-			$type = 'Genre';
-		}elsif($type eq 'track') {
-			$type = 'Track';
-		}elsif($type eq 'playlist') {
-			$type = 'Playlist';
-		}
-		return Slim::Schema->resultset($type)->find($id);
-	}else {
-		if($type eq 'playlist') {
-			$type = 'track';
-		}
-		return getCurrentDS()->objectForId($type,$id);
+	if($type eq 'artist') {
+		$type = 'Contributor';
+	}elsif($type eq 'album') {
+		$type = 'Album';
+	}elsif($type eq 'genre') {
+		$type = 'Genre';
+	}elsif($type eq 'track') {
+		$type = 'Track';
+	}elsif($type eq 'playlist') {
+		$type = 'Playlist';
 	}
+	return Slim::Schema->resultset($type)->find($id);
 }
 
 sub objectForUrl {
 	my $url = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Schema->objectForUrl({
-			'url' => $url
-		});
-	}else {
-		return getCurrentDS()->objectForUrl($url,undef,undef,1);
-	}
+	return Slim::Schema->objectForUrl({
+		'url' => $url
+	});
 }
 
 sub getCurrentDBH {
-	if ($::VERSION ge '6.5') {
-		return Slim::Schema->storage->dbh();
-	}else {
-		return Slim::Music::Info::getCurrentDataStore()->dbh();
-	}
-}
-
-sub getCurrentDS {
-	if ($::VERSION ge '6.5') {
-		return 'Slim::Schema';
-	}else {
-		return Slim::Music::Info::getCurrentDataStore();
-	}
+	return Slim::Schema->storage->dbh();
 }
 
 sub commit {

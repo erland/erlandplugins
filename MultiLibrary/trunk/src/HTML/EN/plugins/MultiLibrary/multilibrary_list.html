@@ -1,10 +1,4 @@
 [%- pagetitle = 'PLUGIN_MULTILIBRARY' | string; pageicon = 'PLUGIN_MULTILIBRARY' -%]
-[% IF !pluginMultiLibrarySlimserver65 %]
-	[% PROCESS plugins/MultiLibrary/hreftemplate65 %]
-	[% PROCESS plugins/MultiLibrary/cmdwrappers65 %]
-	[% PROCESS plugins/MultiLibrary/css65 %]
-[% END %]
-[% PROCESS plugins/MultiLibrary/css %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/MultiLibrary/multilibrary_list.html?player=[% player | uri %]">
@@ -18,9 +12,6 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginMultiLibrarySlimserver65 %]
-	[% PROCESS plugins/MultiLibrary/pageheaderinfo65 %]
-[% END %]
 
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
      users to make setting changes then click on a new mix without having to press the submit button. %]
