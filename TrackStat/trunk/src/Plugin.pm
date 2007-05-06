@@ -1919,6 +1919,31 @@ sub getCustomBrowseTemplates {
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','MenuTemplates','xml');
 }
 
+sub getCustomBrowseContextTemplates {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenuTemplates','xml');
+}
+
+sub getCustomBrowseContextMenus {
+	my $client = shift;
+	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenus','xml','template','menu','simple',1);
+	if($result) {
+		for my $item (@$result) {
+			my $content = $item->{'menu'};
+			$item->{'menu'} = replaceMenuParameters($content);
+		}
+	}
+	return $result;
+}
+
+sub replaceMenuParameters {
+	my $content = shift;
+	if(defined($content)) {
+		my $ratingScale = Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale");
+		$content =~ s/\{rating_10scale\}/$ratingScale/g;
+	}
+	return $content;
+}
 sub getCustomBrowseMixes {
 	my $client = shift;
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','Mixes','xml','mix');
@@ -1940,6 +1965,23 @@ sub getCustomBrowseTemplateData {
 	
 	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','MenuTemplates',$templateItem->{'id'});
 	return $data;
+}
+
+sub getCustomBrowseContextTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','ContextMenuTemplates',$templateItem->{'id'});
+	return $data;
+}
+
+sub getCustomBrowseContextMenuData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','ContextMenus',$templateItem->{'id'},"xml");
+	return replaceMenuParameters($data);
 }
 
 sub getCustomSkipFilterTypes {
