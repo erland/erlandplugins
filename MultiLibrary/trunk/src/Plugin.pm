@@ -32,6 +32,7 @@ use FindBin qw($Bin);
 use DBI qw(:sql_types);
 
 use Plugins::MultiLibrary::ConfigManager::Main;
+use Plugins::MultiLibrary::Template::Reader;
 
 use Slim::Schema;
 
@@ -538,6 +539,33 @@ sub getCustomBrowseMenus {
 		}
 	}
 	return \@result;
+}
+
+sub getCustomBrowseContextTemplates {
+	my $client = shift;
+	return Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary','ContextMenuTemplates','xml');
+}
+
+sub getCustomBrowseContextMenus {
+	my $client = shift;
+	my $result = Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary','ContextMenus','xml','template','menu','simple',1);
+	return $result;
+}
+
+sub getCustomBrowseContextTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::MultiLibrary::Template::Reader::readTemplateData('MultiLibrary','ContextMenuTemplates',$templateItem->{'id'});
+	return $data;
+}
+sub getCustomBrowseContextMenuData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::MultiLibrary::Template::Reader::readTemplateData('MultiLibrary','ContextMenus',$templateItem->{'id'},"xml");
+	return $data;
 }
 
 sub getMenuContent {
