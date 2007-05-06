@@ -127,7 +127,7 @@
 									[%- END %]
 									tracks.id=contributor_track.track and
 									contributor_track.contributor=contributors.id and
-									contributor_track.role in (1,5)
+									contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 									and tracks.id=genre_track.track and
 									genre_track.genre={genre} and 
 									exists(select * from genre_track 
@@ -171,7 +171,7 @@
 										multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 										[%- END %]
 										tracks.id=contributor_track.track and
-										contributor_track.role in (1,5) and
+										contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 										contributor_track.contributor={artist}
 										and tracks.id=genre_track.track and
 										genre_track.genre={genre} and 
@@ -207,7 +207,7 @@
 											multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 											[%- END %]
 											tracks.id=contributor_track.track and
-											contributor_track.role in (1,5) and
+											contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 											contributor_track.contributor={artist}
 											and tracks.id=genre_track.track and
 											genre_track.genre={genre} and 
@@ -251,7 +251,7 @@
 								[%- END %]
 								tracks.id=contributor_track.track and
 								contributor_track.contributor=contributors.id and
-								contributor_track.role in (1,5)
+								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 								and tracks.id=genre_track.track and
 								genre_track.genre={genre} and 
 								exists(select * from genre_track 
@@ -291,7 +291,7 @@
 									multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 									[%- END %]
 									tracks.id=contributor_track.track and
-									contributor_track.role in (1,5) and
+									contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 									contributor_track.contributor={artist}
 									and tracks.id=genre_track.track and
 									genre_track.genre={genre} and 
@@ -323,7 +323,7 @@
 										multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 										[%- END %]
 										tracks.id=contributor_track.track and
-										contributor_track.role in (1,5) and
+										contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 										contributor_track.contributor={artist}
 										and tracks.id=genre_track.track and
 										genre_track.genre={genre} and 
@@ -363,7 +363,7 @@
 							[%- END %]
 							tracks.id=contributor_track.track and
 							contributor_track.contributor=contributors.id and
-							contributor_track.role in (1,5)
+							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 							and tracks.id=genre_track.track and
 							genre_track.genre={genre} and 
 							exists(select * from genre_track 
@@ -399,7 +399,7 @@
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.id=contributor_track.track and
-								contributor_track.role in (1,5) and
+								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 								contributor_track.contributor={artist}
 								and tracks.id=genre_track.track and
 								genre_track.genre={genre} and 
@@ -427,7 +427,7 @@
 									multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 									[%- END %]
 									tracks.id=contributor_track.track and
-									contributor_track.role in (1,5) and
+									contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 									contributor_track.contributor={artist}
 									and tracks.id=genre_track.track and
 									genre_track.genre={genre} and 
@@ -463,7 +463,7 @@
 						[%- END %]
 						tracks.id=contributor_track.track and
 						contributor_track.contributor=contributors.id and
-						contributor_track.role in (1,5)
+						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 						and tracks.id=genre_track.track and
 						genre_track.genre={genre}
 					group by contributors.id
@@ -495,7 +495,7 @@
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.id=contributor_track.track and
-							contributor_track.role in (1,5) and
+							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							contributor_track.contributor={artist}
 							and tracks.id=genre_track.track and
 							genre_track.genre={genre} and 
@@ -519,7 +519,7 @@
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.id=contributor_track.track and
-								contributor_track.role in (1,5) and
+								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 								contributor_track.contributor={artist}
 								and tracks.id=genre_track.track and
 								genre_track.genre={genre} and 

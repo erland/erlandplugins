@@ -78,7 +78,7 @@
 					[%- END %]
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
-					contributor_album.role in (1,5) and 
+					contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and 
 					(
 						albums.compilation is null or
 						albums.compilation=0 or
@@ -102,7 +102,7 @@
 						[%- END %]
 						contributor_album.contributor=contributors.id and
 						contributor_album.album=albums.id and
-						contributor_album.role in (1,5) and 
+						contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and 
 						(
 							albums.compilation is null or 
 							albums.compilation=0 or 
@@ -127,7 +127,7 @@
 							multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							albums.id=contributor_album.album and 
-							contributor_album.role in (1,5) and 
+							contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and 
 							contributor_album.contributor={artist} 
 						group by albums.id 
 						order by albums.titlesort asc
@@ -150,7 +150,7 @@
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 
-								contributor_track.role in (1,5) and 
+								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and 
 								contributor_track.contributor={artist} 
 							group by tracks.id 
 							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc

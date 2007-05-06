@@ -93,7 +93,7 @@
 					[%- END %]
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
-					contributor_album.role in (1,5) 
+					contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) 
 					[%- IF variousartists %]
 					and 
 					(
