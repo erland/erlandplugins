@@ -46,7 +46,7 @@ my $scanningAborted = 0;
 
 my $modules = ();
 my @pluginDirs = ();
-my $PLUGINVERSION = '1.15';
+my $PLUGINVERSION = '1.16';
 
 # Indicator if hooked or not
 # 0= No
