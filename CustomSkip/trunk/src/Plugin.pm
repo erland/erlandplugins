@@ -1372,7 +1372,7 @@ sub mixerFunction {
 			$mixerType='album';
 		}
 		if($mixerType eq 'track') {
-			customBrowseTrackMix($client,$currentItem);
+			trackMix($client,$currentItem);
 			return;
 		}elsif($mixTypes->{$mixerType}) { 
 			if($mixerType eq 'album') {
