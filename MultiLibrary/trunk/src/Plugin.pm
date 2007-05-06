@@ -39,6 +39,8 @@ use Slim::Schema;
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
 my $libraries = undef;
 my $sqlerrors = '';
+my $soapLiteError = 0;
+my $supportDownloadError = undef;
 my %currentLibrary = ();
 my $PLUGINVERSION = '1.3';
 my $internalMenus = undef;
@@ -616,6 +618,25 @@ sub getCustomBrowseMenuData {
 }
 
 sub initPlugin {
+	$soapLiteError = 0;
+	eval "use SOAP::Lite";
+	if ($@) {
+		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+		for my $plugindir (@pluginDirs) {
+			next unless -d catdir($plugindir,"MultiLibrary","libs");
+			push @INC,catdir($plugindir,"MultiLibrary","libs");
+			last;
+		}
+		debugMsg("Using internal implementation of SOAP::Lite\n");
+		eval "use SOAP::Lite";
+		if ($@) {
+			$soapLiteError = 1;
+			msg("MultiLibrary: ERROR! Cant load internal implementation of SOAP::Lite, download/publish functionallity will not be available\n");
+		}
+	}
+	if(!defined($supportDownloadError) && $soapLiteError) {
+		$supportDownloadError = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
+	}
 	checkDefaults();
 	initDatabase();
 	eval {
@@ -635,12 +656,17 @@ sub initPlugin {
 
 sub getConfigManager {
 	if(!defined($configManager)) {
+		my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
+		if(!defined($templateDir) || !-d $templateDir) {
+			$supportDownloadError = 'You have to specify a template directory before you can download libraries';
+		}
 		my %parameters = (
 			'debugCallback' => \&debugMsg,
 			'errorCallback' => \&errorMsg,
 			'pluginId' => 'MultiLibrary',
 			'pluginVersion' => $PLUGINVERSION,
-			'supportDownloadError' => "Download not available at the moment",#$supportDownloadError,
+			'downloadApplicationId' => 'MultiLibrary',
+			'supportDownloadError' => $supportDownloadError,
 			'addSqlErrorCallback' => \&addSQLError
 		);
 		$configManager = Plugins::MultiLibrary::ConfigManager::Main->new(\%parameters);
@@ -1139,9 +1165,8 @@ sub handleWebList {
 
 	$params->{'pluginMultiLibraryLibraries'} = \@weblibraries;
 	$params->{'pluginMultiLibraryActiveLibrary'} = $library;
-	my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
-	if(!defined($templateDir) || !-d $templateDir) {
-		$params->{'pluginMultiLibraryDownloadMessage'} = 'You have to specify a template directory before you can download libraries';
+	if(defined($supportDownloadError)) {
+		$params->{'pluginMultiLibraryDownloadMessage'} = $supportDownloadError;
 	}
 	$params->{'pluginMultiLibraryVersion'} = $PLUGINVERSION;
 	if(defined($params->{'redirect'})) {

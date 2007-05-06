@@ -32,7 +32,7 @@ use Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
 
 sub new {
 	my $class = shift;
@@ -43,6 +43,7 @@ sub new {
 		'errorCallback' => $parameters->{'errorCallback'},
 		'pluginId' => $parameters->{'pluginId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
+		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
 		'supportDownloadError' => $parameters->{'supportDownloadError'},
 		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
 	};
@@ -98,11 +99,13 @@ sub init {
 		$self->contentDirectoryHandler(Plugins::MultiLibrary::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		$directoryHandlerParameters{'extension'} = "xml";
+		$directoryHandlerParameters{'identifierExtension'} = "xml";
 		$directoryHandlerParameters{'parser'} = $self->templateParser;
 		$directoryHandlerParameters{'includeExtensionInIdentifier'} = 1;
 		$self->templateDirectoryHandler(Plugins::MultiLibrary::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		$directoryHandlerParameters{'extension'} = "template";
+		$directoryHandlerParameters{'identifierExtension'} = "xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
 		$directoryHandlerParameters{'includeExtensionInIdentifier'} = 1;
 		$self->templateDataDirectoryHandler(Plugins::MultiLibrary::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
@@ -172,6 +175,7 @@ sub init {
 		my %webAdminMethodsParameters = (
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
+			'downloadApplicationId' => $self->downloadApplicationId,
 			'extension' => 'ml.xml',
 			'simpleExtension' => 'ml.values.xml',
 			'debugCallback' => $self->debugCallback,
