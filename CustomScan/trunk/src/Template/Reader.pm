@@ -37,10 +37,19 @@ sub getTemplates {
 	my $directory = shift;
 	my $extension = shift;
 	my $templateType = shift;
+	my $contentType = shift;
+	my $resultType = shift;
+	my $raw = shift;
 	my @result = ();
 	my @pluginDirs = ();
 	if(!defined($templateType)) {
 		$templateType = 'template';
+	}
+	if(!defined($contentType)) {
+		$contentType = $templateType;
+	}
+	if(!defined($resultType)) {
+		$resultType = $templateType;
 	}
 	if ($::VERSION ge '6.5') {
 		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
@@ -55,12 +64,12 @@ sub getTemplates {
 			next if -d catdir($templateDir,$item);
 			my $templateId = $item;
 			$templateId =~ s/\.$extension$//;
-			my $template = readTemplateConfiguration($templateId,catdir($templateDir,$item),$templateType);
+			my $template = readTemplateConfiguration($templateId,catdir($templateDir,$item),$templateType,$raw);
 			if(defined($template)) {
 				my %templateItem = (
 					'id' => $templateId,
-					'type' => $templateType,
-					$templateType => $template
+					'type' => $resultType,
+					$contentType => $template
 				);
 				push @result,\%templateItem;
 			}
@@ -73,8 +82,12 @@ sub readTemplateData {
 	my $mainPlugin = shift;
 	my $dir = shift;
 	my $template = shift;
+	my $extension = shift;
 	#debugMsg("Loading template data for $template\n");
 
+	if(!defined($extension)) {
+		$extension = "template";
+	}
 	my @pluginDirs = ();
 	if ($::VERSION ge '6.5') {
 		@pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
@@ -87,7 +100,7 @@ sub readTemplateData {
 		$templateDir = catdir($plugindir,$mainPlugin,$dir);
 	}
 
-	my $path = catfile($templateDir, $template.".template");
+	my $path = catfile($templateDir, $template.".".$extension);
 
 	# read_file from File::Slurp
 	my $content = eval { read_file($path) };
@@ -98,11 +111,20 @@ sub readTemplateConfiguration {
 	my $templateId = shift;
 	my $path = shift;
 	my $templateType = shift;
+	my $raw = shift;
 	#debugMsg("Loading template configuration for $templateId\n");
 
 	# read_file from File::Slurp
 	my $content = eval { read_file($path) };
-	my $template = parseTemplateContent($templateId,$templateType,$content);
+	my $template = undef;
+	if($raw) {
+		my $parsedTemplate = parseTemplateContent($templateId,$templateType,$content);
+		if($parsedTemplate) {
+			$template = $content;
+		}
+	}else {
+		$template = parseTemplateContent($templateId,$templateType,$content);
+	}
 	if(!$template) {
 		msg("Unable to read template: $path\n");
 	}

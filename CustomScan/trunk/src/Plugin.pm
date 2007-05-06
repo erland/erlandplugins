@@ -282,6 +282,16 @@ sub getCustomBrowseTemplates {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','MenuTemplates','xml');
 }
+sub getCustomBrowseContextTemplates {
+	my $client = shift;
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','ContextMenuTemplates','xml');
+}
+
+sub getCustomBrowseContextMenus {
+	my $client = shift;
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','ContextMenus','xml','template','menu','simple',1);
+	return $result;
+}
 sub getCustomBrowseMixes {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Mixes','xml','mix');
@@ -302,6 +312,21 @@ sub getCustomBrowseTemplateData {
 	my $parameterValues = shift;
 	
 	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','MenuTemplates',$templateItem->{'id'});
+	return $data;
+}
+sub getCustomBrowseContextTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','ContextMenuTemplates',$templateItem->{'id'});
+	return $data;
+}
+sub getCustomBrowseContextMenuData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','ContextMenus',$templateItem->{'id'},"xml");
 	return $data;
 }
 
