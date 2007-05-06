@@ -61,7 +61,7 @@ use Plugins::TrackStat::Storage;
 use vars qw($VERSION);
 $VERSION = substr(q$Revision$,10);
 
-my $PLUGINVERSION = '1.36.1';
+my $PLUGINVERSION = '1.37';
 
 #################################################
 ### Global constants - do not change casually ###
