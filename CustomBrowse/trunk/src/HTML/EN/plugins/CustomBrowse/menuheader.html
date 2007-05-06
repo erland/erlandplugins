@@ -1,0 +1,77 @@
+[%- BLOCK contextInfo -%]
+	[% IF it.cover %]
+		<img src="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]"></img>
+	[% ELSIF it.image %]
+		<img src="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]"></img>
+	[% ELSIF it.externalurl %]
+		<a href="[% webroot %][% it.externalurl %]">[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
+	[% ELSIF it.url %]
+		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% it.url %]">[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
+	[% ELSE %]
+		[% IF it.itemvalue %][% it.itemvalue %][% END %]
+	[% END %]
+[% END -%]
+
+[% BLOCK itemColumn %]
+<div class="songInfo">
+	<ul>
+		[% FOREACH item = pluginCustomBrowseHeaderItems %]
+			[% IF (column=='left' and item.itemplacement=='left') or (column=='right' and item.itemplacement!='left') %]
+			<li>
+				[% IF (!item.cover and !item.image) %]
+				<div class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</div>
+				[% END %]
+				<div class="songInfoText">
+					[% IF item.multipleitems %]
+						[% itemCount=0 %]
+						[% FOREACH it IN item.multipleitems %]
+							[% IF itemCount<11 %]
+								[%IF itemCount %], [% END %][% PROCESS contextInfo it=it %]
+								[% itemCount = itemCount + 1 %]
+							[% ELSE %]
+								...
+								[% LAST %]
+							[% END %]
+						[% END %]
+					[% ELSE %]
+						[% PROCESS contextInfo it=item %]
+					[% END %]
+				</div>
+			</li>
+			[% END %]
+		[% END %]
+	</ul>
+</div>
+[% END %]
+
+[% IF pluginCustomBrowseHeaderItems %]
+    	<tr valign="top"><td></td><td colspan="4">
+[% FOREACH item = pluginCustomBrowseHeaderItems %]
+	[% IF item.itemplacement == 'left' %]
+		[% hasleft =1 %]
+	[% END %]
+[% END %]
+[% IF hasleft %]
+<table width="100%">
+<tr>
+[% END %]
+[% FOR column = ['left','right'] %]
+[% IF hasleft %]
+<td valign="top" width="[% IF column=='left' %]30%[% ELSE %]100%[% END %]">
+[% END %]
+[% IF hasleft or column=='right' %]
+[% PROCESS itemColumn column=column %]
+[% END %]
+[% IF hasleft %]
+</td>
+[% END %]
+[% END %]
+[% IF hasleft %]
+</tr>
+</table>
+[% END %]
+<br>
+
+    	</td></tr>
+[% END %]
+

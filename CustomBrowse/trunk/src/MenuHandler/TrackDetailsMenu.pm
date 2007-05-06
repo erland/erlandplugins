@@ -24,11 +24,14 @@ our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenu);
 
 use File::Spec::Functions qw(:ALL);
 
+__PACKAGE__->mk_classaccessors( qw(itemParameterHandler) );
+
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
+	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
 	bless $self,$class;
 	return $self;
 }
@@ -40,8 +43,13 @@ sub prepareMenu {
 	my $item = shift;
 	my $option = shift;
 	my $result = shift;
+	my $context = shift;
 
-	my $track = Slim::Schema->resultset('Track')->find($item->{'parameters'}->{$menu->{'menudata'}});
+	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
+	my @parameters = split(/\|/,$menu->{'menudata'});
+	my $trackid = $keywords->{@parameters->[0]};
+	$trackid = $self->itemParameterHandler->replaceParameters($client,$trackid,$keywords,$context);
+	my $track = Slim::Schema->resultset('Track')->find($trackid);
 	if(defined($track)) {
 		my %params = (
 			'useMode' => 'trackinfo',
@@ -50,6 +58,11 @@ sub prepareMenu {
 				'track' => $track
 			}			
 		);
+		if(scalar(@parameters)>1) {
+			if(@parameters->[1]) {
+				$params{'useMode'} ='PLUGIN.CustomBrowse.trackinfo';
+			}
+		}
 		return \%params;		
 	}
 	return undef;
@@ -64,17 +77,25 @@ sub getCustomUrl {
 	my $item = shift;
 	my $params = shift;
 	my $parent = shift;
+	my $context = shift;
 
-	my $id;
-	if($item->{'menu'}->{'menudata'} eq $item->{'id'}) {
-		$id = $item->{'itemid'};
-	}else {
-		$id = $parent->{'parameters'}->{$item->{'menu'}->{'menudata'}};
-	}
+	my $keywords = $self->combineKeywords($item->{'menu'}->{'keywordparameters'},undef,$item->{'parameters'});
+	my @parameters = split(/\|/,$item->{'menu'}->{'menudata'});
+	my $trackid = $keywords->{@parameters->[0]};
+	$trackid = $self->itemParameterHandler->replaceParameters($client,$trackid,$keywords,$context);
+
+	my $id=$trackid;
 	return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
 }
 
 sub getOverlay {
+	my $self = shift;
+	my $item = shift;
+
+	my @parameters = split(/\|/,$item->{'menudata'});
+	if(scalar(@parameters)>2 && @parameters->[2]) {
+		return Slim::Display::Display::symbol('rightarrow');
+	}
 	return undef;
 }
 

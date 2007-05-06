@@ -45,6 +45,7 @@ sub prepareMenu {
 	my $item = shift;
 	my $option = shift;
 	my $result = shift;
+	my $context = shift;
 
 	my $menudata = undef;
 	my $optionKeywords = undef;			
@@ -85,7 +86,7 @@ sub prepareMenu {
 		$menudata = $menu->{'menudata'};
 	}
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
-	my $menuData = $self->sqlHandler->getData($client,$menudata,$keywords);
+	my $menuData = $self->sqlHandler->getData($client,$menudata,$keywords,$context);
 	for my $dataItem (@$menuData) {
 		my %menuItem = (
 			'itemid' => $dataItem->{'id'},
@@ -110,7 +111,9 @@ sub prepareMenu {
 				$menuItem{'parameters'}->{$param} = $item->{'parameters'}->{$param};
 			}
 		}
-		if(defined($menu->{'id'})) {
+		if(defined($menu->{'contextid'})) {
+			$menuItem{'parameters'}->{$menu->{'contextid'}} = $dataItem->{'id'};
+		}elsif(defined($menu->{'id'})) {
 			$menuItem{'parameters'}->{$menu->{'id'}} = $dataItem->{'id'};
 		}
 		push @$result, \%menuItem;

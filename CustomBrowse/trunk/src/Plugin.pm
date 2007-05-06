@@ -33,11 +33,14 @@ use HTML::Entities;
 use Scalar::Util qw(blessed);
 
 use Plugins::CustomBrowse::ConfigManager::Main;
+use Plugins::CustomBrowse::ConfigManager::ContextMain;
 
 use Plugins::CustomBrowse::MenuHandler::Main;
 
 my $driver;
 my $browseMenusFlat;
+my $globalMixes;
+my $contextBrowseMenusFlat;
 my $templates;
 my $mixer;
 my $PLUGINVERSION = '1.20';
@@ -45,10 +48,13 @@ my $sqlerrors = '';
 my %uPNPCache = ();
 
 my $configManager = undef;
+my $contextConfigManager = undef;
 
 my $menuHandler = undef;
+my $contextMenuHandler = undef;
 
 my $supportDownloadError = undef;
+my $supportContextDownloadError = undef;
 
 sub getDisplayName {
 	my $menuName = Slim::Utils::Prefs::get('plugin_custombrowse_menuname');
@@ -135,6 +141,48 @@ sub setMode {
 	}
         #readBrowseConfiguration($client);
         my $params = getMenuHandler()->getMenu($client,undef);
+	if(defined($params)) {
+		if(defined($params->{'useMode'})) {
+			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+		}else {
+			Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
+		}
+	}else {
+	        $client->bumpRight();
+	}
+}
+
+sub setModeContext {
+	my $client = shift;
+	my $method = shift;
+	
+	if ($method eq 'pop') {
+		Slim::Buttons::Common::popMode($client);
+		return;
+	}
+	my $track = $client->param('track');
+	my %contextHash = ();
+	if(!defined($track)) {
+		$contextHash{'itemtype'} = $client->param('itemtype');
+		$contextHash{'itemname'} = $client->param('itemname');
+		$contextHash{'itemid'} = $client->param('itemid');
+	}else {
+		$contextHash{'itemtype'} = 'track';
+		$contextHash{'itemname'} = Slim::Music::Info::standardTitle(undef, $track);
+		$contextHash{'itemid'} = $track->id;
+	}
+	
+	my $menus = getContextMenuHandler()->getMenuItems($client,undef,\%contextHash);
+	my $currentMenu = undef;
+	for my $menu (@$menus) {
+		if($menu->{'id'} eq 'group_'.$contextHash{'itemtype'}) {
+			$currentMenu = $menu;
+		}
+	}
+        my $params = undef;
+	if(defined($currentMenu)) {
+		$params = getContextMenuHandler()->getMenu($client,$currentMenu,\%contextHash);
+	}
 	if(defined($params)) {
 		if(defined($params->{'useMode'})) {
 			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
@@ -259,6 +307,253 @@ sub isuPNPDeviceAvailable {
 	return 0;
 }
 
+sub browseByMixable {
+	my $class = shift;
+	my $item  = shift;
+	return mixable($class,$item);
+}
+
+sub browseByMix {
+	my $client = shift;
+	my $item = shift;
+	my $addOnly = shift;
+	my $web = shift;
+
+	my %p = ();
+	if(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::Schema::Age') {
+		$p{'itemid'} = $item->id;
+		$p{'itemname'} = $item->title; 
+		$p{'itemtype'} = 'album';
+	}elsif(ref($item) eq 'Slim::Schema::Track') {
+		$p{'itemid'} = $item->id;
+		$p{'itemname'} = Slim::Music::Info::standardTitle(undef, $item),; 
+		$p{'itemtype'} = 'track';
+	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
+		$p{'itemid'} = $item->id;
+		$p{'itemname'} = $item->name; 
+		$p{'itemtype'} = 'artist';
+	}elsif(ref($item) eq 'Slim::Schema::Genre') {
+		$p{'itemid'} = $item->id;
+		$p{'itemname'} = $item->name; 
+		$p{'itemtype'} = 'genre';
+	}elsif(ref($item) eq 'Slim::Schema::Year') {
+		$p{'itemid'} = $item->id;
+		if($item->id) {
+			$p{'itemname'} = $item->id; 
+		}else {
+			$p{'itemname'} = string('UNK'); 
+		}
+		$p{'itemtype'} = 'year';
+	}elsif(ref($item) eq 'Slim::Schema::Playlist') {
+		$p{'itemid'} = $item->id;
+		$p{'itemname'} = $item->title; 
+		$p{'itemtype'} = 'playlist';
+	}
+	if($web || !defined($p{'itemid'})) {
+		return;
+	}
+	Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+	$client->update();
+}
+sub mixerlink {
+	my $item = shift;
+	my $form = shift;
+	my $descend = shift;
+	
+	if(!$contextBrowseMenusFlat) {
+		readContextBrowseConfiguration();
+	}
+
+	my $contextId = undef;
+	my $contextName = undef;
+	my $contextType = undef;
+	if(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::Schema::Age') {
+		$contextId = $item->id;
+		$contextName = $item->title; 
+		$contextType = 'album';
+	}elsif(ref($item) eq 'Slim::Schema::Track') {
+		$contextId = $item->id;
+		$contextName = Slim::Music::Info::standardTitle(undef, $item),; 
+		$contextType = 'track';
+		$form->{'noitems'} = 1;
+	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
+		$contextId = $item->id;
+		$contextName = $item->name; 
+		$contextType = 'artist';
+	}elsif(ref($item) eq 'Slim::Schema::Genre') {
+		$contextId = $item->id;
+		$contextName = $item->name; 
+		$contextType = 'genre';
+	}elsif(ref($item) eq 'Slim::Schema::Year') {
+		$contextId = $item->id;
+		if($item->id) {
+			$contextName = $item->id; 
+		}else {
+			$contextName = string('UNK'); 
+		}
+		$contextType = 'year';
+	}elsif(ref($item) eq 'Slim::Schema::Playlist') {
+		$contextId = $item->id;
+		$contextName = $item->title; 
+		$contextType = 'playlist';
+	}
+
+	if(defined($contextType) && defined($contextId)) {
+		my $menus = getContextMenuHandler()->getMenuItems();
+		my $currentMenu = undef;
+		for my $menu (@$menus) {
+			if($menu->{'id'} eq 'group_'.$contextType) {
+				$currentMenu=$menu;
+			}
+		}
+		if(defined($currentMenu)) {
+			$form->{'contexttype'} = $contextType;
+			$form->{'contextid'} = $contextId;
+			$form->{'contextname'} = $contextName;
+			$form->{'mixerlinks'}{'CUSTOMBROWSE'} = "plugins/CustomBrowse/mixerlink.html";
+		}
+	}
+	return $form;
+}
+
+sub mixerFunction {
+	my ($client, $noSettings) = @_;
+	# look for parentParams (needed when multiple mixers have been used)
+	my $paramref = defined $client->param('parentParams') ? $client->param('parentParams') : $client->modeParameterStack(-1);
+	if(defined($paramref)) {
+		if(!$contextBrowseMenusFlat) {
+			readContextBrowseConfiguration($client);
+		}
+
+		my $listIndex = $paramref->{'listIndex'};
+		my $items     = $paramref->{'listRef'};
+		my $currentItem = $items->[$listIndex];
+		my $hierarchy = $paramref->{'hierarchy'};
+		my @levels    = split(",", $hierarchy);
+		my $level     = $paramref->{'level'} || 0;
+		my $mixerType = $levels[$level];
+		if($mixerType eq 'contributor') {
+			$mixerType='artist';
+		}
+		if($mixerType eq 'age') {
+			$mixerType='album';
+		}
+		my $menus = getContextMenuHandler()->getMenuItems();
+		my $currentMenu = undef;
+		for my $menu (@$menus) {
+			if($menu->{'id'} eq 'group_'.$mixerType) {
+				$currentMenu=$menu;
+			}
+		}
+		if(defined($currentMenu)) { 
+			if($mixerType eq 'track') {
+				my $itemobj = Slim::Schema->resultset('Track')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'track',
+					'itemname' => Slim::Music::Info::standardTitle(undef, $itemobj),
+					'itemid' => $currentItem->id
+				);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}elsif($mixerType eq 'album') {
+				my $itemobj = Slim::Schema->resultset('Album')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'album',
+					'itemname' => $itemobj->title,
+					'itemid' => $currentItem->id
+				);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}elsif($mixerType eq 'artist') {
+				my $itemobj = Slim::Schema->resultset('Contributor')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'artist',
+					'itemname' => $itemobj->name,
+					'itemid' => $currentItem->id
+				);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}elsif($mixerType eq 'genre') {
+				my $itemobj = Slim::Schema->resultset('Genre')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'genre',
+					'itemname' => $itemobj->name,
+					'itemid' => $currentItem->id
+				);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}elsif($mixerType eq 'playlist') {
+				my $itemobj = Slim::Schema->resultset('Playlist')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'playlist',
+					'itemname' => $itemobj->title,
+					'itemid' => $currentItem->id
+				);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}elsif($mixerType eq 'year') {
+				my $itemobj = Slim::Schema->resultset('Year')->find($currentItem->id);
+				my %p = (
+					'itemtype' => 'year',
+					'itemname' => $itemobj->id,
+					'itemid' => $currentItem->id
+				);
+				if(!$itemobj->id) {
+					$p{'itemname'} = string('UNK'); 
+				}
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+				$client->update();
+			}else {
+				debugMsg("Unknown mixertype = ".$mixerType."\n");
+			}
+		}else {
+			debugMsg("No context menu found for ".$mixerType."\n");
+		}
+	}else {
+		debugMsg("No parent parameter found\n");
+	}
+
+}
+
+
+sub mixable {
+        my $class = shift;
+        my $item  = shift;
+	my $blessed = blessed($item);
+
+	if(!$contextBrowseMenusFlat) {
+		readContextBrowseConfiguration();
+	}
+	
+	my $itemType = undef;
+	if(!$blessed) {
+		return undef;
+	}elsif($blessed eq 'Slim::Schema::Track') {
+		$itemType = 'track';
+	}elsif($blessed eq 'Slim::Schema::Year') {
+		$itemType = 'year';
+	}elsif($blessed eq 'Slim::Schema::Album') {
+		$itemType = 'album';
+	}elsif($blessed eq 'Slim::Schema::Age') {
+		$itemType = 'album';
+	}elsif($blessed eq 'Slim::Schema::Contributor') {
+		$itemType = 'artist';
+	}elsif($blessed eq 'Slim::Schema::Genre') {
+		$itemType = 'genre';
+	}elsif($blessed eq 'Slim::Schema::Playlist') {
+		$itemType = 'playlist';
+	}else {
+		return undef;
+	}
+	my $menus = getContextMenuHandler()->getMenuItems();
+	for my $menu (@$menus) {
+		if($menu->{'id'} eq 'group_'.$itemType) {
+			return 1;
+		}
+	}
+        return undef;
+}
+
 sub initPlugin {
 	my $class = shift;
 	
@@ -330,13 +625,17 @@ sub initPlugin {
         Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.CustomBrowse.Choice',\%choiceMapping);
 
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse', getFunctions(), \&setMode);
-
-	my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
-	if(!defined($templateDir) || !-d $templateDir) {
-		$supportDownloadError = 'You have to specify a template directory before you can download menus';
+	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Context', getFunctions(), \&setModeContext);
+	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+	if(Slim::Utils::Prefs::get('plugin_custombrowse_override_trackinfo')) {
+		Slim::Buttons::Common::addMode('trackinfo',getFunctions(),\&setModeContext);
 	}
+
 	if(!defined($supportDownloadError) && $soapLiteError) {
 		$supportDownloadError = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
+	}
+	if(!defined($supportContextDownloadError) && $soapLiteError) {
+		$supportContextDownloadError = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
 	}
 
 
@@ -344,6 +643,7 @@ sub initPlugin {
 		getConfigManager();
 		getMenuHandler();
 		readBrowseConfiguration();
+		readContextBrowseConfiguration();
 	};
 	if ($@) {
 		errorMsg("Failed to load Custom Browse:\n$@\n");
@@ -360,6 +660,24 @@ sub initPlugin {
 	}
 	addPlayerMenus();
 	delSlimserverPlayerMenus();
+
+	my %mixerMap = ();
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_enable_web_mixerfunction")) {
+		$mixerMap{'mixerlink'} = \&mixerlink;
+	}
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_enable_mixerfunction")) {
+		$mixerMap{'mixer'} = \&mixerFunction;
+	}
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_enable_web_mixerfunction") ||
+		Slim::Utils::Prefs::get("plugin_custombrowse_enable_mixerfunction")) {
+
+		Slim::Music::Import->addImporter($class, \%mixerMap);
+	    	Slim::Music::Import->useImporter('Plugins::CustomBrowse::Plugin', 1);
+	}
+}
+
+sub title {
+	return 'PLUGIN_CUSTOMBROWSE_CONTEXTMIXER';
 }
 
 sub getMenuHandler {
@@ -373,19 +691,45 @@ sub getMenuHandler {
 			'menuMode' => 'PLUGIN.CustomBrowse.Choice',
 			'displayTextCallback' => \&getDisplayText,
 			'overlayCallback' => \&getOverlay,
-			'requestSource' => 'PLUGIN_CUSTOMBROWSE'
+			'requestSource' => 'PLUGIN_CUSTOMBROWSE',
+			'addSqlErrorCallback' => \&addSQLError
 		);
+
 		$menuHandler = Plugins::CustomBrowse::MenuHandler::Main->new(\%parameters);
 	}
 	return $menuHandler;
 }
 
-sub getConfigManager {
-	if(!defined($configManager)) {
+sub getContextMenuHandler {
+	if(!defined($contextMenuHandler)) {
 		my %parameters = (
 			'debugCallback' => \&debugMsg,
 			'errorCallback' => \&errorMsg,
 			'pluginId' => 'CustomBrowse',
+			'pluginVersion' => $PLUGINVERSION,
+			'menuTitle' => string('PLUGIN_CUSTOMBROWSE_CONTEXTMENU'),
+			'menuMode' => 'PLUGIN.CustomBrowse.Choice',
+			'displayTextCallback' => \&getDisplayText,
+			'overlayCallback' => \&getOverlay,
+			'requestSource' => 'PLUGIN_CUSTOMBROWSE',
+			'addSqlErrorCallback' => \&addSQLError
+		);
+		$contextMenuHandler = Plugins::CustomBrowse::MenuHandler::Main->new(\%parameters);
+	}
+	return $contextMenuHandler;
+}
+
+sub getConfigManager {
+	if(!defined($configManager)) {
+		my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_template_directory');
+		if(!defined($templateDir) || !-d $templateDir) {
+			$supportDownloadError = 'You have to specify a template directory before you can download menus';
+		}
+		my %parameters = (
+			'debugCallback' => \&debugMsg,
+			'errorCallback' => \&errorMsg,
+			'pluginId' => 'CustomBrowse',
+			'downloadApplicationId' => 'CustomBrowse',
 			'pluginVersion' => $PLUGINVERSION,
 			'supportDownloadError' => $supportDownloadError,
 			'addSqlErrorCallback' => \&addSQLError
@@ -394,6 +738,27 @@ sub getConfigManager {
 	}
 	return $configManager;
 }
+
+sub getContextConfigManager {
+	if(!defined($contextConfigManager)) {
+		my $templateDir = Slim::Utils::Prefs::get('plugin_custombrowse_context_template_directory');
+		if(!defined($templateDir) || !-d $templateDir) {
+			$supportContextDownloadError = 'You have to specify a context template directory before you can download context menus';
+		}
+		my %parameters = (
+			'debugCallback' => \&debugMsg,
+			'errorCallback' => \&errorMsg,
+			'pluginId' => 'CustomBrowse',
+			'downloadApplicationId' => 'CustomBrowseContext',
+			'pluginVersion' => $PLUGINVERSION,
+			'supportDownloadError' => $supportContextDownloadError,
+			'addSqlErrorCallback' => \&addSQLError
+		);
+		$contextConfigManager = Plugins::CustomBrowse::ConfigManager::ContextMain->new(\%parameters);
+	}
+	return $contextConfigManager;
+}
+
 sub addPlayerMenus {
 	my $client = shift;
 	my $menus = getMenuHandler()->getMenuItems($client);
@@ -471,6 +836,23 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_download_url\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_override_trackinfo');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_override_trackinfo to 0\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_override_trackinfo', 0);
+	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_enable_web_mixerfunction');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_enable_web_mixerfunction to 1\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_enable_web_mixerfunction', 1);
+	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_enable_mixerfunction');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_enable_mixerfunction to 1\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_enable_mixerfunction', 1);
+	}
+
+
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
 		debugMsg("Defaulting plugin_custombrowse_properties\n");
@@ -504,7 +886,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -534,6 +916,36 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_menuinsidebrowse"); }
 		},		
+	plugin_custombrowse_override_trackinfo => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_override_trackinfo"); }
+		},		
+	plugin_custombrowse_enable_mixerfunction => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_enable_mixerfunction"); }
+		},		
+	plugin_custombrowse_enable_web_mixerfunction => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_enable_web_mixerfunction"); }
+		},		
 	plugin_custombrowse_properties => {
 			'validate' => \&validateProperty
 			,'isArray' => 1
@@ -559,6 +971,13 @@ sub setupGroup
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_template_directory"); }
 		},
+	plugin_custombrowse_context_template_directory => {
+			'validate' => \&Slim::Utils::Validate::isDir
+			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_context_template_directory"); }
+		},
 	plugin_custombrowse_menuname => {
 			'validate' => \&Slim::Utils::Validate::acceptAll
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_MENUNAME')
@@ -566,12 +985,19 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_menuname"); }
 		},
 	);
+	if(Slim::Utils::Prefs::get('plugin_custombrowse_override_trackinfo')) {
+		Slim::Buttons::Common::addMode('trackinfo',getFunctions(),\&setModeContext);
+	}else {
+		Slim::Buttons::Common::addMode('trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+	}
 	return (\%setupGroup,\%setupPrefs);
 }
 
 sub webPages {
 	my %pages = (
                 "custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
+                "custombrowse_contextlist\.(?:htm|xml)"     => \&handleWebContextList,
+                "custombrowse_settings\.(?:htm|xml)"     => \&handleWebSettings,
                 "webadminmethods_edititems\.(?:htm|xml)"     => \&handleWebEditMenus,
                 "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditMenu,
                 "webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveMenu,
@@ -595,6 +1021,10 @@ sub webPages {
                 "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
                 "custombrowse_playall\.(?:htm|xml)"     => \&handleWebPlayAll,
+                "custombrowse_contextadd\.(?:htm|xml)"     => \&handleWebContextAdd,
+                "custombrowse_contextplay\.(?:htm|xml)"     => \&handleWebContextPlay,
+                "custombrowse_contextaddall\.(?:htm|xml)"     => \&handleWebContextAddAll,
+                "custombrowse_contextplayall\.(?:htm|xml)"     => \&handleWebContextPlayAll,
 		"custombrowse_selectmenus\.(?:htm|xml)" => \&handleWebSelectMenus,
 		"custombrowse_saveselectmenus\.(?:htm|xml)" => \&handleWebSaveSelectMenus,
         );
@@ -700,6 +1130,7 @@ sub handleWebList {
 	$sqlerrors = '';
 	if(defined($params->{'refresh'})) {
 		readBrowseConfiguration($client);
+		readContextBrowseConfiguration($client);
 	}
 	my $items = getMenuHandler()->getPageItemsForContext($client,$params);
 	my $context = getMenuHandler()->getContext($client,$params);
@@ -719,6 +1150,9 @@ sub handleWebList {
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
 	}
+	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
+		$params->{'pluginCustomBrowseHeaderItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'});
+	}
 	if($sqlerrors && $sqlerrors ne '') {
 		$params->{'pluginCustomBrowseError'} = $sqlerrors;
 	}
@@ -727,106 +1161,378 @@ sub handleWebList {
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
 }
 
+sub getHeaderItems {
+	my $client = shift;
+	my $params = shift;
+	my $currentContext = shift;
+	my $context = shift;
 
+	my $result = undef;
+	if(defined($currentContext)) {
+		my $header = undef;
+		my $useContext = 0;
+		if(defined($currentContext->{'item'}->{'menuwebheader'})) {
+			$header = $currentContext->{'item'}->{'menuwebheader'};
+		} 
+		if(!defined($header) && defined($currentContext->{'item'}->{'itemtype'})) {
+			$header = $currentContext->{'item'}->{'itemtype'}."header";
+		}
+		if(!defined($header) && defined($context) && defined($context->{'itemtype'})) {
+			$header = $context->{'itemtype'}."header";
+			$useContext = 1;
+		}
+		if(defined($header)) {
+			my %c = (
+				'itemid' => $currentContext->{'value'},
+				'itemtype' => $header,
+				'itemname' => $currentContext->{'name'}
+			);
+			if($useContext) {
+				$c{'itemid'}=$context->{'itemid'};
+				$c{'itemname'}=$context->{'itemname'};
+			}
+			my $contextString = '';
+			$c{'itemurl'} = $contextString;
+			$c{'hierarchy'} = '&hierarchy=';
+			$params->{'hierarchy'} = 'group_'.$c{'itemtype'};
+			my $headerResult = getContextMenuHandler()->getPageItemsForContext($client,$params,\%c,1);
+			my $headerItems = $headerResult->{'items'};
+			if(defined($headerItems) && scalar(@$headerItems)>0) {
+				$result = structureContextItems($headerItems);
+			}
+		}
+	}
+	return $result;
+}
+sub handleWebContextList {
+        my ($client, $params) = @_;
+	$sqlerrors = '';
+	if(defined($params->{'refresh'})) {
+		readBrowseConfiguration($client);
+		readContextBrowseConfiguration($client);
+	}
+	if(defined($params->{'contexttype'})) {
+		if(defined($params->{'hierarchy'})) {
+			my $regExp = "^group_".$params->{'contexttype'}.".*";
+			if($params->{'hierarchy'} !~ /$regExp/) {
+				$params->{'hierarchy'} = 'group_'.$params->{'contexttype'}.','.$params->{'hierarchy'};
+			}
+		}else {
+			$params->{'hierarchy'} = 'group_'.$params->{'contexttype'};
+		}
+	}
+	my $contextParams = undef;
+	if(defined($params->{'contextid'})) {
+		my %c = (
+			'itemid' => $params->{'contextid'},
+			'itemtype' => $params->{'contexttype'},
+			'itemname' => $params->{'contextname'}
+		);
+		my $contextString = '';
+		if(defined($c{'itemid'})) {
+			$contextString .= "&contextid=".$c{'itemid'};
+		}
+		if(defined($c{'itemtype'})) {
+			$contextString .= "&contexttype=".$c{'itemtype'};
+		}
+		if(defined($c{'itemname'})) {
+			$contextString .= "&contextname=".escape($c{'itemname'});
+		}
+		$c{'itemurl'} = $contextString;
+		$contextParams = \%c;
+	}
+	my $items = getContextMenuHandler()->getPageItemsForContext($client,$params,$contextParams);
+	my $context = getContextMenuHandler()->getContext($client,$params);
+	if(scalar(@$context)>0) {
+		if(defined($contextParams->{'itemname'})) {
+			$context->[0]->{'name'} = $contextParams->{'itemname'};
+		}else {
+			$context->[0]->{'name'} = "Context";
+		}
+	}
+	for my $ctx (@$context) {
+		$ctx->{'valueUrl'} .= $contextParams->{'itemurl'};
+	}
+	if($items->{'artwork'}) {
+		$params->{'pluginCustomBrowseArtworkSupported'} = 1;
+	}
+	$params->{'pluginCustomBrowsePageInfo'} = $items->{'pageinfo'};
+	$params->{'pluginCustomBrowseOptions'} = $items->{'options'};
+	if($params->{'path'} =~ /contextlist/) {
+		if(defined($params->{'noitems'})) {
+			$params->{'pluginCustomBrowseNoItems'}=1;
+		}else {
+			$params->{'pluginCustomBrowseItems'} = $items->{'items'};
+		}
+	}else {
+		$params->{'pluginCustomBrowseItems'} = structureContextItems($items->{'items'});
+	}
+	$params->{'pluginCustomBrowseContext'} = $context;
+	$params->{'pluginCustomBrowseSelectedOption'} = $params->{'option'};
+	if($params->{'mainBrowseMenu'}) {
+		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
+	}
+
+	if(defined($context) && scalar(@$context)>0) {
+		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+		if(scalar(@$context)>1) {
+			$params->{'pluginCustomBrowsePlayAddAll'} = 1;
+		}
+	}
+	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
+		$params->{'pluginCustomBrowseHeaderItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'},$contextParams);
+	}
+	if($sqlerrors && $sqlerrors ne '') {
+		$params->{'pluginCustomBrowseError'} = $sqlerrors;
+	}
+	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
+
+        return Slim::Web::HTTP::filltemplatefile($params->{'path'}, $params);
+}
+
+sub handleWebSettings {
+        my ($client, $params) = @_;
+	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
+
+	if(defined($params->{'refresh'})) {
+		readBrowseConfiguration($client);
+		readContextBrowseConfiguration($client);
+	}
+
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_settings.html', $params);
+}
+
+sub structureContextItems {
+	my $items = shift;
+
+	my @result = ();
+
+	my $previous = undef;
+	for my $item (@$items) {
+		if($previous && $previous eq $item->{'itemname'}) {
+			my $previousItem = @result[scalar(@result)-1];
+			if(!defined($previousItem->{'multipleitems'})) {
+				my @newArray = ();
+				push @newArray,$previousItem;
+				$previousItem->{'multipleitems'} = \@newArray;
+			}
+			my $previousItems = $previousItem->{'multipleitems'};
+			push @$previousItems,$item;
+			$previousItem->{'multipleitems'} = $previousItems;
+			@result[scalar(@result)-1] = $previousItem;
+		}else {
+			push @result,$item;		
+		}
+		$previous = $item->{'itemname'}
+	}
+	return \@result;
+}
 sub handleWebEditMenus {
         my ($client, $params) = @_;
-	return getConfigManager()->webEditItems($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webEditItems($client,$params);	
+	}else {
+		return getConfigManager()->webEditItems($client,$params);	
+	}
 }
 
 sub handleWebEditMenu {
         my ($client, $params) = @_;
-	return getConfigManager()->webEditItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webEditItem($client,$params);	
+	}else {
+		return getConfigManager()->webEditItem($client,$params);	
+	}
 }
 
 sub handleWebDeleteMenuType {
 	my ($client, $params) = @_;
-	return getConfigManager()->webDeleteItemType($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webDeleteItemType($client,$params);	
+	}else {
+		return getConfigManager()->webDeleteItemType($client,$params);	
+	}
 }
 
 sub handleWebNewMenuTypes {
 	my ($client, $params) = @_;
-	return getConfigManager()->webNewItemTypes($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webNewItemTypes($client,$params);	
+	}else {
+		return getConfigManager()->webNewItemTypes($client,$params);	
+	}
 }
 
 sub handleWebNewMenuParameters {
 	my ($client, $params) = @_;
-	return getConfigManager()->webNewItemParameters($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webNewItemParameters($client,$params);	
+	}else {
+		return getConfigManager()->webNewItemParameters($client,$params);	
+	}
 }
 
 sub handleWebLogin {
 	my ($client, $params) = @_;
-	return getConfigManager()->webLogin($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webLogin($client,$params);	
+	}else {
+		return getConfigManager()->webLogin($client,$params);	
+	}
 }
 
 sub handleWebPublishMenuParameters {
 	my ($client, $params) = @_;
-	return getConfigManager()->webPublishItemParameters($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webPublishItemParameters($client,$params);	
+	}else {
+		return getConfigManager()->webPublishItemParameters($client,$params);	
+	}
 }
 
 sub handleWebPublishMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webPublishItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webPublishItem($client,$params);	
+	}else {
+		return getConfigManager()->webPublishItem($client,$params);	
+	}
 }
 
 sub handleWebDownloadMenus {
 	my ($client, $params) = @_;
-	return getConfigManager()->webDownloadItems($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webDownloadItems($client,$params);
+	}else {
+		return getConfigManager()->webDownloadItems($client,$params);
+	}
 }
 
 sub handleWebDownloadNewMenus {
 	my ($client, $params) = @_;
-	return getConfigManager()->webDownloadNewItems($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webDownloadNewItems($client,$params);	
+	}else {
+		return getConfigManager()->webDownloadNewItems($client,$params);	
+	}
 }
 
 sub handleWebDownloadMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webDownloadItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webDownloadItem($client,$params);	
+	}else {
+		return getConfigManager()->webDownloadItem($client,$params);	
+	}
 }
 
 sub handleWebNewMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webNewItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webNewItem($client,$params);	
+	}else {
+		return getConfigManager()->webNewItem($client,$params);	
+	}
 }
 
 sub handleWebSaveSimpleMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webSaveSimpleItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webSaveSimpleItem($client,$params);	
+	}else {
+		return getConfigManager()->webSaveSimpleItem($client,$params);	
+	}
 }
 
 sub handleWebRemoveMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webRemoveItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webRemoveItem($client,$params);	
+	}else {
+		return getConfigManager()->webRemoveItem($client,$params);	
+	}
 }
 
 sub handleWebSaveNewSimpleMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webSaveNewSimpleItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webSaveNewSimpleItem($client,$params);	
+	}else {
+		return getConfigManager()->webSaveNewSimpleItem($client,$params);	
+	}
 }
 
 sub handleWebSaveNewMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webSaveNewItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webSaveNewItem($client,$params);	
+	}else {
+		return getConfigManager()->webSaveNewItem($client,$params);	
+	}
 }
 
 sub handleWebSaveMenu {
 	my ($client, $params) = @_;
-	return getConfigManager()->webSaveItem($client,$params);	
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		return getContextConfigManager()->webSaveItem($client,$params);	
+	}else {
+		return getConfigManager()->webSaveItem($client,$params);	
+	}
 }
 
 
 
 sub handleWebPlayAdd {
-	my ($client, $params,$addOnly,$gotoparent) = @_;
+	my ($client, $params,$addOnly,$gotoparent,$usecontext) = @_;
 	return unless $client;
 	if(!defined($params->{'hierarchy'})) {
 		readBrowseConfiguration($client);
 	}
-	my $items = getMenuHandler()->getPageItemsForContext($client,$params);
+	my $items = undef;
+	if($usecontext) {
+		if(defined($params->{'contexttype'})) {
+			if(defined($params->{'hierarchy'})) {
+				my $regExp = "^group_".$params->{'contexttype'}.".*";
+				if($params->{'hierarchy'} !~ /$regExp/) {
+					$params->{'hierarchy'} = 'group_'.$params->{'contexttype'}.','.$params->{'hierarchy'};
+				}
+			}else {
+				$params->{'hierarchy'} = 'group_'.$params->{'contexttype'};
+			}
+		}
+		my $contextParams = undef;
+		if(defined($params->{'contextid'})) {
+			my %c = (
+				'itemid' => $params->{'contextid'},
+				'itemtype' => $params->{'contexttype'},
+				'itemname' => $params->{'contextname'}
+			);
+			my $contextString = '';
+			if(defined($c{'itemid'})) {
+				$contextString .= "&contextid=".$c{'itemid'};
+			}
+			if(defined($c{'itemtype'})) {
+				$contextString .= "&contexttype=".$c{'itemtype'};
+			}
+			if(defined($c{'itemname'})) {
+				$contextString .= "&contextname=".escape($c{'itemname'});
+			}
+			$c{'itemurl'} = $contextString;
+			$contextParams = \%c;
+		}
+		$items = getContextMenuHandler()->getPageItemsForContext($client,$params,$contextParams);
+	}else {
+		$items = getMenuHandler()->getPageItemsForContext($client,$params);
+	}
 	if(defined($items->{'items'})) {
 		my $playItems = $items->{'items'};
 		foreach my $playItem (@$playItems) {
 			debugMsg(($addOnly?"Adding ":"Playing ").$playItem->{'itemname'}."\n");
-			getMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
+			if($usecontext) {
+				getContextMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
+			}else {
+				getMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
+			}
 			$addOnly = 1;
 		}
 	}
@@ -850,7 +1556,12 @@ sub handleWebPlayAdd {
 	if(!$gotoparent) {
 		$params->{'hierarchy'} = $hierarchy;
 	}
-	return handleWebList($client,$params);
+	if($usecontext) {
+		$params->{'path'} = 'plugins/CustomBrowse/custombrowse_contextlist.html';
+		return handleWebContextList($client,$params);
+	}else {
+		return handleWebList($client,$params);
+	}
 }
 sub handleWebPlay {
 	my ($client, $params) = @_;
@@ -870,6 +1581,26 @@ sub handleWebPlayAll {
 sub handleWebAddAll {
 	my ($client, $params) = @_;
 	return handleWebPlayAdd($client,$params,1,0);
+}
+
+sub handleWebContextPlay {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,1,1);
+}
+
+sub handleWebContextAdd {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,1,1);
+}
+
+sub handleWebContextPlayAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,0,1);
+}
+
+sub handleWebContextAddAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,0,1);
 }
 
 sub handleWebMix {
@@ -974,7 +1705,7 @@ sub handleWebExecuteMix {
 		my $mixes = getMenuHandler()->getMixes($client,$selecteditem,1);
 		for my $mix (@$mixes) {
 			if($mix->{'id'} eq $params->{'mix'}) {
-				getMenuHandler->executeMix($client,$mix,0,$selecteditem,1);
+				getMenuHandler()->executeMix($client,$mix,0,$selecteditem,1);
 				last;
 			}
 		}
@@ -1008,6 +1739,9 @@ sub handleWebSelectMenus {
 	if(!defined($browseMenusFlat)) {
 		readBrowseConfiguration($client);
 	}
+	if(!defined($contextBrowseMenusFlat)) {
+		readContextBrowseConfiguration($client);
+	}
         # Pass on the current pref values and now playing info
 	my @menus = ();
 	for my $key (keys %$browseMenusFlat) {
@@ -1024,6 +1758,25 @@ sub handleWebSelectMenus {
 	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
 
         $params->{'pluginCustomBrowseMenus'} = \@menus;
+
+
+	my @contextMenus = ();
+	for my $key (keys %$contextBrowseMenusFlat) {
+		my %webmenu = ();
+		my $menu = $contextBrowseMenusFlat->{$key};
+		for my $key (keys %$menu) {
+			$webmenu{$key} = $menu->{$key};
+		} 
+		if(defined($webmenu{'menuname'}) && defined($webmenu{'menugroup'})) {
+			$webmenu{'menuname'} = $webmenu{'menugroup'}.'/'.$webmenu{'menuname'};
+		}
+		push @contextMenus,\%webmenu;
+	}
+	@contextMenus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @contextMenus;
+
+        $params->{'pluginCustomBrowseContextMenus'} = \@contextMenus;
+
+
         $params->{'pluginCustomBrowseMixes'} = getMenuHandler()->getGlobalMixes();
 
 	$params->{'pluginCustomBrowseSlimserverMenus'} = getSlimserverMenus();
@@ -1079,6 +1832,9 @@ sub handleWebSaveSelectMenus {
 	if(!defined($browseMenusFlat)) {
 		readBrowseConfiguration($client);
 	}
+	if(!defined($contextBrowseMenusFlat)) {
+		readContextBrowseConfiguration($client);
+	}
         foreach my $menu (keys %$browseMenusFlat) {
                 my $menuid = "menu_".escape($browseMenusFlat->{$menu}->{'id'});
                 my $menubrowseid = "menubrowse_".escape($browseMenusFlat->{$menu}->{'id'});
@@ -1102,6 +1858,19 @@ sub handleWebSaveSelectMenus {
 			}
                 }
         }
+
+        foreach my $menu (keys %$contextBrowseMenusFlat) {
+                my $menuid = "context_menu_".escape($contextBrowseMenusFlat->{$menu}->{'id'});
+                if($params->{$menuid}) {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',1);
+			$contextBrowseMenusFlat->{$menu}->{'enabled'}=1;
+                }else {
+                        Slim::Utils::Prefs::set('plugin_custombrowse_'.$menuid.'_enabled',0);
+			$contextBrowseMenusFlat->{$menu}->{'enabled'}=0;
+                }
+        }
+
+
 	my $browseMixes = getMenuHandler()->getGlobalMixes();
         foreach my $mix (keys %$browseMixes) {
                 my $mixid = "mix_".escape($browseMixes->{$mix}->{'id'});
@@ -1136,7 +1905,8 @@ sub readBrowseConfiguration {
 	my @menus = ();
 	getMenuHandler()->setMenuItems($localBrowseMenus);
 	$browseMenusFlat = $localBrowseMenus;
-	getMenuHandler()->setGlobalMixes($itemConfiguration->{'mixes'});
+	$globalMixes = $itemConfiguration->{'mixes'};
+	getMenuHandler()->setGlobalMixes($globalMixes);
 	
 	my $value = 'plugins/CustomBrowse/custombrowse_list.html';
 	if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
@@ -1146,6 +1916,26 @@ sub readBrowseConfiguration {
 	delSlimserverWebMenus();
 	delSlimserverPlayerMenus();
 	addPlayerMenus($client);
+}
+
+sub readContextBrowseConfiguration {
+	my $client = shift;
+
+	my $itemConfiguration = getContextConfigManager()->readItemConfiguration($client,undef,1);
+	my $localBrowseMenus = $itemConfiguration->{'menus'};
+	$templates = $itemConfiguration->{'templates'};
+
+	my @menus = ();
+	getContextMenuHandler()->setMenuItems($localBrowseMenus);
+	$contextBrowseMenusFlat = $localBrowseMenus;
+	if(!defined($globalMixes)) {
+		readBrowseConfiguration($client);
+	}
+	getContextMenuHandler()->setGlobalMixes($globalMixes);
+	my $value = 'plugins/CustomBrowse/custombrowse_list.html';
+	if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
+		$value = undef;
+	}
 }
 
 sub getMultiLibraryMenus {
@@ -1312,6 +2102,18 @@ sub strings {
 PLUGIN_CUSTOMBROWSE
 	EN	Custom Browse
 
+PLUGIN_CUSTOMBROWSE_CONTEXTMIXER
+	EN	Browse by selected
+
+PLUGIN_CUSTOMBROWSE_CONTEXTMENU
+	EN	Context Menus
+
+PLUGIN_CUSTOMBROWSE_SETTINGS
+	EN	Settings
+
+PLUGIN_CUSTOMBROWSE_WEB_CONTEXTNAME
+	EN	Object
+
 PLUGIN_CUSTOMBROWSE_SETUP_GROUP
 	EN	Custom Browse
 
@@ -1321,6 +2123,15 @@ PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC
 PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 	EN	Show debug messages
 
+PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO
+	EN	Override standard track details
+
+PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION
+	EN	Enable Custom Browse play+hold browse by action. May require slimserver restart.
+
+PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION
+	EN	Enable Custom Browse mixer browse by selected in web interface. May require slimserver restart.
+
 PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 	EN	Show Custom Browse menu inside Browse menu (requires slimserver restart)
 
@@ -1329,6 +2140,15 @@ PLUGIN_CUSTOMBROWSE_PROPERTIES
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
+
+SETUP_PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO
+	EN	Override standard track details
+
+SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION
+	EN	Play+Hold browse by action
+
+SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION
+	EN	Mixer browse by icons
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 	EN	Menu position
@@ -1342,11 +2162,17 @@ PLUGIN_CUSTOMBROWSE_DIRECTORY
 PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
 	EN	Browse templates directory
 
+PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY
+	EN	Context templates directory
+
 SETUP_PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
 
 SETUP_PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
 	EN	Browse templates directory
+
+SETUP_PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY
+	EN	Context templates directory
 
 PLUGIN_CUSTOMBROWSE_MENUNAME
 	EN	Menu name
@@ -1359,6 +2185,9 @@ PLUGIN_CUSTOMBROWSE_SELECT_MENUS
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE
 	EN	Select enabled menus
+
+PLUGIN_CUSTOMBROWSE_SELECT_CONTEXTMENUS_TITLE
+	EN	Select enabled context menus/headers
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS_BROWSE_TITLE
 	EN	Show in<br>browse and home menu
@@ -1386,6 +2215,9 @@ PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND
 
 PLUGIN_CUSTOMBROWSE_EDIT_MENUS
 	EN	Edit menus
+
+PLUGIN_CUSTOMBROWSE_EDIT_CONTEXTMENUS
+	EN	Edit context menus/headers
 
 PLUGIN_CUSTOMBROWSE_EDIT_ITEM_FILENAME
 	EN	Filename

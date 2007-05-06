@@ -1,5 +1,7 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
 
+[% PROCESS plugins/CustomBrowse/iteminfo %]
+
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
@@ -60,6 +62,8 @@ END;
 			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
 		[% END %]
 	</td></tr>
+
+[% PROCESS plugins/CustomBrowse/menuheader.html %]
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
 		[% IF pluginCustomBrowseItems.size>0 %]
@@ -129,8 +133,7 @@ END;
     	</td></tr>
 <tr><td></td><td colspan="4">
 <br>
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_selectmenus.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS" | string %]</a>&nbsp;&nbsp;&nbsp;
-<a href="[% webroot %]plugins/CustomBrowse/webadminmethods_edititems.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_EDIT_MENUS" | string %]</a>&nbsp;&nbsp;&nbsp;
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
 </td></tr>

@@ -33,7 +33,7 @@ use Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
 
 sub new {
 	my $class = shift;
@@ -43,6 +43,7 @@ sub new {
 		'debugCallback' => $parameters->{'debugCallback'},
 		'errorCallback' => $parameters->{'errorCallback'},
 		'pluginId' => $parameters->{'pluginId'},
+		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'supportDownloadError' => $parameters->{'supportDownloadError'},
 		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
@@ -108,11 +109,13 @@ sub init {
 		$self->mixDirectoryHandler(Plugins::CustomBrowse::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		$directoryHandlerParameters{'extension'} = "xml";
+		$directoryHandlerParameters{'identifierExtension'} = "xml";
 		$directoryHandlerParameters{'parser'} = $self->templateParser;
 		$directoryHandlerParameters{'includeExtensionInIdentifier'} = 1;
 		$self->templateDirectoryHandler(Plugins::CustomBrowse::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		$directoryHandlerParameters{'extension'} = "template";
+		$directoryHandlerParameters{'identifierExtension'} = "xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
 		$directoryHandlerParameters{'includeExtensionInIdentifier'} = 1;
 		$self->templateDataDirectoryHandler(Plugins::CustomBrowse::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
@@ -189,6 +192,7 @@ sub init {
 		my %webAdminMethodsParameters = (
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
+			'downloadApplicationId' => $self->downloadApplicationId,
 			'extension' => 'cb.xml',
 			'simpleExtension' => 'cb.values.xml',
 			'debugCallback' => $self->debugCallback,

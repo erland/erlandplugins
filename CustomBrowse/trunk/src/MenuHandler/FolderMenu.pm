@@ -42,10 +42,11 @@ sub prepareMenu {
 	my $item = shift;
 	my $option = shift;
 	my $result = shift;
+	my $context = shift;
 
 	my $dir = $menu->{'menudata'};
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
-	$dir = $self->itemParameterHandler->replaceParameters($client,$dir,$keywords);
+	$dir = $self->itemParameterHandler->replaceParameters($client,$dir,$keywords,$context);
 	$dir = Slim::Utils::Unicode::utf8off($dir);
 	for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 		my $subdirname = $subdir;
@@ -80,7 +81,9 @@ sub prepareMenu {
 					$menuItem{'parameters'}->{$param} = $item->{'parameters'}->{$param};
 				}
 			}
-			if(defined($menu->{'id'})) {
+			if(defined($menu->{'contextid'})) {
+				$menuItem{'parameters'}->{$menu->{'contextid'}} = $self->_escapeSubDir($subdir);
+			}elsif(defined($menu->{'contextid'})) {
 				$menuItem{'parameters'}->{$menu->{'id'}} = $self->_escapeSubDir($subdir);
 			}
 			push @$result, \%menuItem;

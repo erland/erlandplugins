@@ -46,6 +46,7 @@ sub prepareMenu {
 	my $item = shift;
 	my $option = shift;
 	my $result = shift;
+	my $context = shift;
 
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
 	my @params = split(/\|/,$menu->{'menudata'});
@@ -60,9 +61,9 @@ sub prepareMenu {
 					my %hash = ();
 					$modeParameters{$1}=\%hash;
 				}
-				$modeParameters{$1}->{$2}=$self->itemParameterHandler->replaceParameters($client,$value,$keywords);
+				$modeParameters{$1}->{$2}=$self->itemParameterHandler->replaceParameters($client,$value,$keywords,$context);
 			}else {
-				$modeParameters{$name} = $self->itemParameterHandler->replaceParameters($client,$value, $keywords);
+				$modeParameters{$name} = $self->itemParameterHandler->replaceParameters($client,$value, $keywords,$context);
 			}
 		}
 	}
@@ -83,11 +84,12 @@ sub getCustomUrl {
 	my $item = shift;
 	my $params = shift;
 	my $parent = shift;
+	my $context = shift;
 	
 	if(defined($item->{'menu'}->{'menuurl'})) {
 		my $url = $item->{'menu'}->{'menuurl'};
 		my $keywords = $self->combineKeywords($item->{'menu'}->{'keywordparameters'},undef,$params);
-		$url = $self->itemParameterHandler->replaceParameters($client,$url,$keywords);
+		$url = $self->itemParameterHandler->replaceParameters($client,$url,$keywords,$context);
 		return $url;
 	}
 	return undef;

@@ -24,7 +24,7 @@ use base 'Class::Data::Accessor';
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion itemParameterHandler) );
+__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion itemParameterHandler addSqlErrorCallback) );
 
 sub new {
 	my $class = shift;
@@ -35,7 +35,8 @@ sub new {
 		'errorCallback' => $parameters->{'errorCallback'},
 		'pluginId' => $parameters->{'pluginId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
-		'itemParameterHandler' => $parameters->{'itemParameterHandler'}
+		'itemParameterHandler' => $parameters->{'itemParameterHandler'},
+		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
 	};
 
 	bless $self,$class;
@@ -47,9 +48,10 @@ sub getData {
     my $client = shift;
     my $sql = shift;
     my $parameters = shift;
+    my $context = shift;
     
     $self->debugCallback->("Preparing SQL: $sql\n");
-    $sql = $self->itemParameterHandler->replaceParameters($client,$sql,$parameters);
+    $sql = $self->itemParameterHandler->replaceParameters($client,$sql,$parameters,$context,1);
 
     return $self->_execute($sql);
 }
@@ -97,7 +99,7 @@ sub _execute {
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n$@\n";
-		    addSQLError("Running: $sql got error: <br>".$DBI::errstr);
+		    $self->addSqlErrorCallback->("Running: $sql got error: <br>".$DBI::errstr);
 		}		
 	}
 	return \@result;

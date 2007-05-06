@@ -46,6 +46,9 @@ sub hasCustomUrl {
 	return undef;
 }
 
+sub getCustomUrl {
+	return undef;
+}
 sub getOverlay {
 	return Slim::Display::Display::symbol('rightarrow');
 }

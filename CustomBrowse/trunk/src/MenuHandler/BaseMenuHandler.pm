@@ -70,8 +70,9 @@ sub getMenuItems {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $context = shift;
 	
-	return $self->_getMenuItems($client,$item);
+	return $self->_getMenuItems($client,$item,undef,undef,$context,0);
 }
 
 sub _getMenuItems {
@@ -80,6 +81,8 @@ sub _getMenuItems {
 	my $item = shift;
 	my $option = shift;
 	my $mainBrowseMenu = shift;
+	my $context = shift;
+	my $showImages = shift;
 
 	my @listRef = ();
 
@@ -132,6 +135,9 @@ sub _getMenuItems {
 					next;
 				}
 			}
+			if(!$showImages && defined($menu->{'itemformat'}) && ($menu->{'itemformat'} eq 'cover' || $menu->{'itemformat'} eq 'image')) {
+				next;
+			}
 			if(!defined($menu->{'menutype'})) {
 				my %menuItem = (
 					'itemid' => $menu->{'id'},
@@ -153,14 +159,18 @@ sub _getMenuItems {
 					}
 				}
 				if(defined($menu->{'id'})) {
-					$menuItem{'parameters'}->{$menu->{'id'}} = $menu->{'id'};
+					if(defined($menu->{'contextid'})) {
+						$menuItem{'parameters'}->{$menu->{'contextid'}} = $menu->{'contextid'};
+					}elsif(defined($menu->{'id'})) {
+						$menuItem{'parameters'}->{$menu->{'id'}} = $menu->{'id'};
+					}
 				}
 				push @listRef, \%menuItem;
 	
 			}else {
 				my $menuHandler = $self->menuHandlers->{$menu->{'menutype'}};
 				if(defined($menuHandler)) {
-					my $params = $menuHandler->prepareMenu($client,$menu,$item,$option,\@listRef);
+					my $params = $menuHandler->prepareMenu($client,$menu,$item,$option,\@listRef,$context);
 					if(defined($params)) {
 						return $params;
 					}
@@ -316,6 +326,7 @@ sub getMenu {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $context = shift;
 	my $selectedMenu = $client->param('selectedMenu');
 
 	if(!defined($item) && defined($selectedMenu)) {
@@ -331,7 +342,7 @@ sub getMenu {
 	}
 
 	my @listRef = undef;
-	my $items = $self->getMenuItems($client,$item);
+	my $items = $self->getMenuItems($client,$item,$context);
 	if(ref($items) eq 'ARRAY') {
 		@listRef = @$items;
 	}else {
@@ -346,7 +357,7 @@ sub getMenu {
     	my $menuTitle = $self->menuTitle;
 	if(defined($item)) {
 		$modeNamePostFix = $item->{'value'};
-		$menuTitle = $self->getItemText($client,$item);
+		$menuTitle = $self->getItemText($client,$item,$context);
 	}
 
 	my $sorted = '0';
@@ -371,8 +382,14 @@ sub getMenu {
 	}
 
 	my %params = (
-		header     => $menuTitle.' {count}',
+		header     => 
+			sub {
+				my $client = shift;
+				my $item = shift;
+				return $self->getHeaderText($client,$item,$client->param($self->pluginId.".context"));
+			},
 		listRef    => \@listRef,
+		menuTitle  => $menuTitle,
 		mainBrowseMenu => $client->param('mainBrowseMenu'),
 		lookupRef  => 
 			sub {
@@ -434,13 +451,35 @@ sub getMenu {
 							$params->{'parameters'});
 					}else {
 						Slim::Buttons::Common::pushModeLeft($client, $self->menuMode, $params);
+
 					}
 				}else {
 					$client->bumpRight();
 				}
 			},
 	);
+
+	if(defined($context)) {
+		$params{$self->pluginId.".context"} = $context;
+	}
 	return \%params;
+}
+
+sub getHeaderText {
+	my ($self,$client, $item, $context) = @_;
+	if(defined($item->{'menuheader'})) {
+		my $menuTitle = $item->{'menuheader'};
+		my $listIndex = $client->param('listIndex');
+		my $listRef = $client->param('listRef');
+		my %standardParameters = (
+			'count' => ' ('.($listIndex+1).' '.$client->string('OF').' '.scalar(@$listRef).')'
+		);
+		my $keywords = _combineKeywords($item->{'parameters'},\%standardParameters);
+		$menuTitle = $self->itemParameterHandler->replaceParameters($client,$menuTitle,$keywords,$context);
+		return $menuTitle;
+	}else {
+		return $client->param('menuTitle').' {count}';
+	}
 }
 
 sub _getMenuLinks {
@@ -484,6 +523,8 @@ sub getPageItemsForContext {
 	my $self = shift;
 	my $client = shift;
 	my $params = shift;
+	my $contextParams = shift;
+	my $checkContextType = shift;
 
 	my $currentItems =  $self->items;
 
@@ -507,8 +548,11 @@ sub getPageItemsForContext {
 	}
 
 	my %result = ();
-	my $items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'});
-	if(ref($items) eq 'ARRAY') {
+	my $items = undef;
+	if(defined($currentMenu) || !defined($params->{'hierarchy'})) {
+		$items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'},$contextParams,1);
+	}
+	if(defined($items) && ref($items) eq 'ARRAY') {
 		my @resultItems = ();
 		my %pagebar = ();
 		$result{'pageinfo'}=\%pagebar;
@@ -583,8 +627,13 @@ sub getPageItemsForContext {
 			if(!defined($it->{'itemid'})) {
 				$it->{'itemid'} = $it->{'id'}
 			}
-			if(!defined($it->{'itemname'})) {
-				$it->{'itemname'} = $self->getItemText($client,$it);
+			$it->{'itemname'} = $self->getItemText($client,$it);
+			if(defined($it->{'itemseparator'})) {
+				my $separator = $it->{'itemseparator'};
+				if($it->{'itemname'} =~ /^(.*?)$separator(.*)$/) {
+					$it->{'itemname'} = $1;
+					$it->{'itemvalue'} = $2;
+				}
 			}
 			if(defined($it->{'menu'})) {
 				my $hasExternalUrl = undef;
@@ -592,7 +641,7 @@ sub getPageItemsForContext {
 					my $menuHandler = $self->menuHandlers->{$it->{'menu'}->{'menutype'}};
 					if(defined($menuHandler) && $menuHandler->hasCustomUrl($it->{'menu'})) {
 						$hasExternalUrl = 1;
-						my $customUrl = $menuHandler->getCustomUrl($client,$it,$params,$item);
+						my $customUrl = $menuHandler->getCustomUrl($client,$it,$params,$item,$contextParams);
 						if(defined($customUrl)) {
 							$it->{'externalurl'} = $customUrl;
 						}
@@ -602,12 +651,64 @@ sub getPageItemsForContext {
 					my $id = $it->{'itemid'};
 					$id = Slim::Utils::Unicode::utf8on($id);
 					$id = Slim::Utils::Unicode::utf8encode_locale($id);
-					if(defined($context)) {
-						$it->{'url'}=$context->{'url'}.','.$it->{'id'}.$context->{'valueUrl'}.'&'.$it->{'id'}.'='.=escape($id);
-					}else {
-						$it->{'url'}='&hierarchy='.$it->{'id'}.'&'.$it->{'id'}.'='.escape($id);
+					my $attributeName = undef;
+					if(defined($it->{'contextid'})) {
+						$attributeName = $it->{'contextid'};
 					}
-					if((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'}) {
+					if(!defined($attributeName)) {
+						 $attributeName = $it->{'id'};
+					}
+
+					if(defined($context)) {
+						if(defined($contextParams) && defined($contextParams->{'hierarchy'})) {
+							$it->{'url'}=$contextParams->{'hierarchy'};
+						}else {
+							$it->{'url'} = $context->{'url'}.',';
+						}
+						$it->{'url'} .= $attributeName.$context->{'valueUrl'}.'&'.$attributeName.'='.=escape($id);
+					}else {
+						$it->{'url'}='&hierarchy='.$attributeName.'&'.$attributeName.'='.escape($id);
+					}
+					if(defined($contextParams)) {
+						$it->{'url'} .= $contextParams->{'itemurl'};
+						my $regExp = "&"."contexttype=";
+						my $type = undef;
+						if($contextParams->{'itemurl'} !~ /$regExp/) {
+							if(defined($it->{'menuwebheader'})) {
+								$type = escape($it->{'menuwebheader'});
+							}elsif(defined($it->{'itemtype'})) {
+								$type = escape($it->{'itemtype'});
+							}
+							if(defined($type)) {
+								$it->{'url'} .= "&contexttype=$type";
+							}
+						}
+						if($checkContextType) {
+							my $contextitems = $self->items;
+							if(!defined($type) || !defined($contextitems->{'group_'.$type})) {
+								$it->{'url'} = undef;
+							}
+						}
+						$regExp = "&"."contextname=";
+						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
+							my $name = undef;
+							if(defined($it->{'itemvalue'})) {
+								$name = escape($it->{'itemvalue'});
+							}else {
+								$name = escape($it->{'itemname'});
+							}
+							$it->{'url'} .= "&contextname=$name";
+						}
+						$regExp = "&"."contextid=";
+						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
+							my $id = undef;
+							if(defined($it->{'itemid'})) {
+								$id = escape($it->{'itemid'});
+							}
+							$it->{'url'} .= "&contextid=$id";
+						}
+					}
+					if(defined($it->{'url'}) && ((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'})) {
 						$it->{'url'} .= "&mainBrowseMenu=1";
 					}
 				}
@@ -617,12 +718,21 @@ sub getPageItemsForContext {
 				if($format eq 'track') {
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
+					$result{'artwork'} = 0;
 				}elsif($format eq 'album') {
 					$result{'artwork'} = 1;
 					my $track = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
+				}elsif($format eq 'cover') {
+					$it->{'cover'} = 1;
+				}elsif($format eq 'image') {
+					$it->{'image'} = 1;
+				}else {
+					$result{'artwork'} = 0;
 				}
 
+			}else {
+				$result{'artwork'} = 0;
 			}
 			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
@@ -756,12 +866,18 @@ sub _getSubContext {
 		my $item = undef;
 		if(ref($currentItems) eq 'ARRAY') {
 			for my $menu (@$currentItems) {
-				if($menu->{'id'} eq escape($group)) {
+				if(defined($menu->{'contextid'}) && $menu->{'contextid'} eq escape($group)) {
 					$item = $menu;
+					last;
+				}elsif($menu->{'id'} eq escape($group)) {
+					$item = $menu;
+					last;
 				}
 			}
 		}else {
-			if($currentItems->{'id'} eq escape($group)) {
+			if(defined($currentItems->{'contextid'}) && $currentItems->{'contextid'} eq escape($group)) {
+				$item = $currentItems;
+			}elsif($currentItems->{'id'} eq escape($group)) {
 				$item = $currentItems;
 			}
 		}
@@ -774,14 +890,19 @@ sub _getSubContext {
 			if(defined($item->{'menuname'})) {
 				$name = $item->{'menuname'};
 			}else {
-				$name = $item->{'id'};
+				if(defined($item->{'contextid'})) {
+					$name = $item->{'id'};
+				}else {
+					$name = $item->{'contextid'};
+				}
 			}
 			my %resultItem = (
 				'url' => $currentUrl,
 				'valueUrl' => '&'.$currentUrl.'='.$currentValue,
 				'parameters' => \%parameters,
 				'name' => $name,
-				'item' => $item
+				'item' => $item,
+				'value' => $currentValue
 			);
 			if(!$level) {
 				$resultItem{'url'} = '&hierarchy='.$resultItem{'url'};
@@ -1102,6 +1223,7 @@ sub getCustomUrl {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $context = shift;
 
 	if(defined($item->{'menutype'})) {
 		my $menuHandler = $self->menuHandlers->{$item->{'menutype'}};
@@ -1109,7 +1231,7 @@ sub getCustomUrl {
 			my %tmp = (
 				'menu' => $item
 			);
-			return $menuHandler->getCustomUrl($client,\%tmp);
+			return $menuHandler->getCustomUrl($client,\%tmp,$context);
 		}
 	}
 	return undef;
@@ -1118,6 +1240,7 @@ sub getItemText {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $context = shift;
 
 	if(!defined($item)) {
 		return '';
@@ -1136,8 +1259,15 @@ sub getItemText {
 	if(!defined($name) || $name eq '') {
 		$name = $item->{'menuname'};
 	}
+	if(defined($item->{'menuprefix'})) {
+		if(defined($name)) {
+			$name = $item->{'menuprefix'}.$name;
+		}else {
+			$name = $item->{'menuprefix'};
+		}
+	}
 	if(defined($name) && $name =~ /{.*}/) {
-		$name = $self->itemParameterHandler->replaceParameters($client,$name,$item->{'parameters'});
+		$name = $self->itemParameterHandler->replaceParameters($client,$name,$item->{'parameters'},$context);
 	}
 	return $name;
 }
