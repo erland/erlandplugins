@@ -43,7 +43,7 @@ my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
 my %currentSecondaryFilter = ();
-my $PLUGINVERSION = '1.3';
+my $PLUGINVERSION = '1.3.1';
 
 my %filterPlugins = ();
 	
@@ -446,12 +446,16 @@ sub executeDynamicPlayListFilter {
 			if(defined($filter)) {
 				removeExpiredFilterItems($filter);
 				my $primaryfilteritems = $filter->{'filter'};
-				push @filteritems,@$primaryfilteritems;
+				if(defined($primaryfilteritems) && ref($primaryfilteritems) eq 'ARRAY') {
+					push @filteritems,@$primaryfilteritems;
+				}
 			}
 			if(defined($secondaryFilter)) {
 				removeExpiredFilterItems($secondaryFilter);
 				my $secondaryfilteritems = $secondaryFilter->{'filter'};
-				push @filteritems,@$secondaryfilteritems;
+				if(defined($secondaryfilteritems) && ref($secondaryfilteritems) eq 'ARRAY') {
+					push @filteritems,@$secondaryfilteritems;
+				}
 			}
 			
 			for my $filteritem (@filteritems) {
