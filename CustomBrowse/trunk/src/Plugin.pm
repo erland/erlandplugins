@@ -557,6 +557,50 @@ sub mixable {
         return undef;
 }
 
+sub playLink {
+	my $self = shift;
+	my $client = shift;
+	my $keywords = shift;
+	my $context = shift;
+
+	my @result = ();
+	
+	my $objectId = undef;
+	if(defined($keywords->{'trackid'})) {
+		$objectId='track.id='.$keywords->{'trackid'};
+	}elsif(defined($keywords->{'albumid'})) {
+		$objectId='album.id='.$keywords->{'albumid'};
+	}elsif(defined($keywords->{'contributorid'})) {
+		$objectId='contributor.id='.$keywords->{'contributorid'};
+	}elsif(defined($keywords->{'genreid'})) {
+		$objectId='genre.id='.$keywords->{'genreid'};
+	}elsif(defined($keywords->{'playlistid'})) {
+		$objectId='playlist.id='.$keywords->{'playlistid'};
+	}elsif(defined($keywords->{'yearid'})) {
+		$objectId='year.id='.$keywords->{'yearid'};
+	}
+	if(defined($objectId)) {
+		$objectId = getParameterHandler()->replaceParameters($client,$objectId,$keywords,$context);
+
+		my %item1 = (
+			'id' => 1,
+			'name' => string('PLAY').":status_header.html?command=playlist&subcommand=loadtracks&$objectId"
+		);
+		push @result,\%item1;
+		my %item2 = (
+			'id' => 2,
+			'name' => string('ADD').":status_header.html?command=playlist&subcommand=addtracks&$objectId"
+		);
+		push @result,\%item2;
+		my %item3 = (
+			'id' => 3,
+			'name' => string('NEXT').":status_header.html?command=playlist&subcommand=inserttracks&$objectId"
+		);
+		push @result,\%item3;
+	}
+	return \@result;
+}
+
 sub albumImages {
 	my $self = shift;
 	my $client = shift;
@@ -1399,6 +1443,22 @@ sub handleWebContextList {
 	}
 	$params->{'pluginCustomBrowsePageInfo'} = $items->{'pageinfo'};
 	$params->{'pluginCustomBrowseOptions'} = $items->{'options'};
+
+	# Make sure we only show play/add all if the items are of same type 
+	my $playAllItems = $items->{'items'};
+	my $prevItem = undef;
+	for my $it (@$playAllItems) {
+		if(defined($prevItem) && $prevItem->{'itemtype'} ne $it->{'itemtype'}) {
+			$prevItem=undef;
+			last;
+		}else {
+			$prevItem=$it;
+		}
+	}
+	if(defined($prevItem)) {
+		$params->{'pluginCustomBrowsePlayAddAll'} = 1;
+	}
+
 	if($params->{'path'} =~ /contextlist/) {
 		if(defined($params->{'noitems'})) {
 			$params->{'pluginCustomBrowseNoItems'}=1;
@@ -1416,10 +1476,8 @@ sub handleWebContextList {
 
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
-		if(scalar(@$context)>1) {
-			$params->{'pluginCustomBrowsePlayAddAll'} = 1;
-		}
 	}
+	
 	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
 		$params->{'pluginCustomBrowseHeaderItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'},$contextParams,"header");
 		$params->{'pluginCustomBrowseFooterItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'},$contextParams,"footer");

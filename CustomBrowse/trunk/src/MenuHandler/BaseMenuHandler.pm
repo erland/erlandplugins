@@ -744,7 +744,7 @@ sub getPageItemsForContext {
 					$it->{'slimserverimage'} = 1;
 				}elsif($format eq 'internetimage') {
 					$it->{'internetimage'} = 1;
-				}elsif($format eq 'slimserverurl' || $format eq 'interneturl') {
+				}elsif($format =~ /url$/) {
 					my $urlId = $format;
 					if(defined($it->{'itemseparator'})) {
 						my $separator = $it->{'itemseparator'};
