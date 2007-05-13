@@ -12,7 +12,8 @@
 		<menuprefix>[% menuname %]: </menuprefix>
 		<itemseparator>: </itemseparator>
 		<menuheader>{context.itemname} {count}</menuheader>
-		<itemformat>image</itemformat>
+		<itemformat>internetimage</itemformat>
+		<itemformatimagewidth>200</itemformatimagewidth>
 		<itemplacement>left</itemplacement>
                 <menutype>sql</menutype>
 		<menudata>
