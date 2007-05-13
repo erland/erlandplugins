@@ -740,10 +740,25 @@ sub getPageItemsForContext {
 					$result{'artwork'} = 1;
 					my $track = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
-				}elsif($format eq 'slimserverimage') {
-					$it->{'slimserverimage'} = 1;
-				}elsif($format eq 'internetimage') {
-					$it->{'internetimage'} = 1;
+				}elsif($format =~ /image$/) {
+					my $urlId = $format;
+					if(defined($it->{'itemseparator'})) {
+						my $separator = $it->{'itemseparator'};
+						if($it->{'itemvalue'} =~ /^(.*?)$separator(.*)$/) {
+							$it->{'itemvalue'} = $1;
+							$it->{$urlId} = $2;
+						}
+						if(!defined($it->{$urlId})) {
+							if(defined($it->{'itemvalue'})) {
+								$it->{$urlId} = $it->{'itemvalue'};
+							}else {
+								$it->{$urlId} = $it->{'itemname'};
+							}
+						}
+						if(defined($it->{'itemformatascii'}) && defined($it->{$urlId})) {
+							$it->{$urlId} = unidecode($it->{$urlId});
+						}
+					}
 				}elsif($format =~ /url$/) {
 					my $urlId = $format;
 					if(defined($it->{'itemseparator'})) {
