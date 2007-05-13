@@ -2,7 +2,7 @@
 	[% IF it.slimserverimage %]
 		<a href="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" target="_blank"><img src="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
 	[% ELSIF it.internetimage %]
-		<a href="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %] target="_blank"><img src="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
+		<a href="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" target="_blank"><img src="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
 	[% ELSIF it.slimserverurl %]
 		<a href="[% webroot %][% it.slimserverurl %]"[% IF it.itemformaturlnewwindow %] target="_blank"[% END %]>[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
 	[% ELSIF it.interneturl %]
