@@ -998,8 +998,8 @@ sub checkDefaults {
 	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_override_trackinfo');
 	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_custombrowse_override_trackinfo to 0\n");
-		Slim::Utils::Prefs::set('plugin_custombrowse_override_trackinfo', 0);
+		debugMsg("Defaulting plugin_custombrowse_override_trackinfo to 1\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_override_trackinfo', 1);
 	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_enable_web_mixerfunction');
 	if (! defined $prefVal) {
