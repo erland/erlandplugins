@@ -25,11 +25,14 @@ our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenu);
 
 use File::Spec::Functions qw(:ALL);
 
+__PACKAGE__->mk_classaccessors( qw(itemParameterHandler) );
+
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
+	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
 	bless $self,$class;
 	return $self;
 }
