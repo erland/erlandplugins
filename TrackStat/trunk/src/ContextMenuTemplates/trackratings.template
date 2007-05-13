@@ -34,9 +34,9 @@
 		<menutype>sql</menutype>
 		<menudata>
 			[%- IF tenscale %]
-			select ifnull(floor((track_statistics.rating+5)/10)*10,0),case when track_statistics.rating is null then 'Unrated' else concat(floor((track_statistics.rating+5)/10),' stars') end from track_statistics,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+			select ifnull(floor((track_statistics.rating+5)/10)*10,0),case when track_statistics.rating is null then 'Unrated' else repeat('*',floor((track_statistics.rating+5)/10)) end from track_statistics,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 			[%- ELSE %]
-			select ifnull(floor((track_statistics.rating+10)/20)*20,0),case when track_statistics.rating is null then 'Unrated' else concat(floor((track_statistics.rating+10)/20),' stars') end from track_statistics,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+			select ifnull(floor((track_statistics.rating+10)/20)*20,0),case when track_statistics.rating is null then 'Unrated' else repeat('* ',floor((track_statistics.rating+10)/20)) end from track_statistics,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 			[%- END %]
 			where
 				tracks.id={trackid}
