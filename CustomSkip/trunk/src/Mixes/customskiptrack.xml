@@ -5,6 +5,7 @@
 		<mixname>Custom Skip</mixname>
 		<mixcategory>track</mixcategory>
 		<mixtype>function</mixtype>
+		<mixsupport>player</mixsupport>
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::CustomSkip::Plugin::mixable</mixcheckdata>
 		<mixdata>Plugins::CustomSkip::Plugin::trackMix</mixdata>
