@@ -120,8 +120,8 @@ END;
 					[% IF item.itemobj %]
 						[% PROCESS trackinfo %]
 					[% ELSE %]
-						[% IF item.externalurl %]
-				        		<a href="[% webroot %][% item.externalurl %]">[% item.itemname %]</a><br>
+						[% IF item.slimserverurl %]
+				        		<a href="[% webroot %][% item.slimserverurl %]">[% item.itemname %]</a><br>
 						[% ELSIF item.url %]
 				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% item.itemname %]</a><br>
 						[% ELSE %]
