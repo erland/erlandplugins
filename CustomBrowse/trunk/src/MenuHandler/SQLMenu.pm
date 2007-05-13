@@ -86,7 +86,7 @@ sub prepareMenu {
 		$menudata = $menu->{'menudata'};
 	}
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
-	my $menuData = $self->sqlHandler->getData($client,$menudata,$keywords,$context);
+	my $menuData = $self->getData($client,$menudata,$keywords,$context);
 	for my $dataItem (@$menuData) {
 		my %menuItem = (
 			'itemid' => $dataItem->{'id'},
@@ -121,6 +121,15 @@ sub prepareMenu {
 	return undef;
 }
 
+sub getData {
+	my $self = shift;
+	my $client = shift;
+	my $menudata = shift;
+	my $keywords = shift;
+	my $context = shift;
+
+	return $self->sqlHandler->getData($client,$menudata,$keywords,$context);
+}
 
 1;
 

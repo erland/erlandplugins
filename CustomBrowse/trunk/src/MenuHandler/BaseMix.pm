@@ -38,9 +38,14 @@ sub new {
 	return $self;
 }
 
-sub isWebSupported {
+sub isInterfaceSupported {
+	my $self = shift;
+	my $client = shift;
+	my $mix = shift;
+	my $interfaceType = shift;
+
 	#Override in your own implementation
-	return 0;
+	return 1;
 }
 
 sub executeMix {

@@ -47,7 +47,7 @@ sub executeMix {
 	my $mix = shift;
 	my $keywords = shift;
 	my $addOnly = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 
 	my %playItem = (
 		'playtype' => 'sql',
@@ -56,7 +56,7 @@ sub executeMix {
 		'parameters' => $keywords
 	);
 	$self->playHandler->playAddItem($client,undef,\%playItem,$addOnly);
-	if(!$web) {
+	if($interfaceType eq 'player') {
 		Slim::Buttons::Common::popModeRight($client);
 	}
 }
@@ -80,10 +80,24 @@ sub checkMix {
 	}
 	return 0;
 }
-sub isWebSupported {
+sub isInterfaceSupported {
 	my $self = shift;
 	my $client = shift;
 	my $mix = shift;
+	my $interfaceType = shift;
+
+	if(defined($mix->{'mixsupport'})) {
+		my @supportItems = split(/,/,$mix->{'mixsupport'});
+		my $found = 0;
+		for my $item (@supportItems) {
+			if($item eq $interfaceType) {
+				$found = 1;
+			}
+		}
+		if(!$found) {
+			return 0;
+		}
+	}
 
 	return 1;	
 }

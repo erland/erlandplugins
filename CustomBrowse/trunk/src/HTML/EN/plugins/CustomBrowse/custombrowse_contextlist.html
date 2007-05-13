@@ -64,10 +64,10 @@ END;
 			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
 		[% END %]
 	</td></tr>
-[% PROCESS plugins/CustomBrowse/menuheader.html %]
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseHeaderItems %]
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
-		[% IF pluginCustomBrowseItems.size>0 %]
+		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
 			[% WRAPPER contentcontainer %]
 				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
 					[% BLOCK allsongscontrols %]
@@ -87,14 +87,16 @@ END;
 		[% WRAPPER $container %]
 			[% FOREACH item = pluginCustomBrowseItems %]
 				[% BLOCK controls %]
-					[% IF item.mixable %]
-						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+					[% IF pluginCustomBrowseSingleMixButton %]
+						[% IF item.mixes and item.mixes.size>0 and item.url %]
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+						[% END %]
 					[% ELSE %]
 					[% FOREACH mix = item.mixes %]
 						[% IF mix.url %]
 							<a href="[% webroot %][% mix.url %]&player=[% player | uri %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
 						[% ELSE %]
-							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemixcontext.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
 						[% END %]
 					[% END %]
 					[% END %]
@@ -120,11 +122,11 @@ END;
 						[% PROCESS trackinfo %]
 					[% ELSE %]
 						[% IF item.externalurl %]
-				        		[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% END %]<a href="[% webroot %][% item.externalurl %]">[% IF item.itemvalue %][% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
+				        		<a href="[% webroot %][% item.externalurl %]">[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
 						[% ELSIF item.url %]
-				        		[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% END %]<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]">[% IF item.itemvalue %][% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
+				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]">[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
 						[% ELSE %]
-				        		[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% END %][% IF item.itemvalue %][% item.itemvalue %][% ELSE %][% item.itemname %][% END %]<br>
+				        		[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]<br>
 						[% END %]
 					[% END %]
 			        [% END %]
@@ -132,6 +134,8 @@ END;
 		        [% END %]
 		[% END %]
     	</td></tr>
+<tr><td></td><td colspan="4">&nbsp;</td></tr>
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 <tr><td></td><td colspan="4">
 <br>
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;

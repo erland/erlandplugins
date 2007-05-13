@@ -42,7 +42,7 @@ sub executeMix {
 	my $mix = shift;
 	my $keywords = shift;
 	my $addOnly = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 
 	if($mix->{'mixdata'} =~ /^(.+)::([^:].*)$/) {
 		my $class = $1;
@@ -66,7 +66,7 @@ sub executeMix {
 			if(UNIVERSAL::can("$class","$function")) {
 				$self->debugCallback->("Calling ${class}::${function}\n");
 				no strict 'refs';
-				eval { &{"${class}::${function}"}($client,$itemObj,$addOnly,$web) };
+				eval { &{"${class}::${function}"}($client,$itemObj,$addOnly,$interfaceType) };
 				if ($@) {
 					$self->debugCallback->("Error calling ${class}::${function}: $@\n");
 				}
@@ -125,10 +125,24 @@ sub checkMix {
 	return 0;
 }
 
-sub isWebSupported {
+sub isInterfaceSupported {
 	my $self = shift;
 	my $client = shift;
 	my $mix = shift;
+	my $interfaceType = shift;
+
+	if(defined($mix->{'mixsupport'})) {
+		my @supportItems = split(/,/,$mix->{'mixsupport'});
+		my $found = 0;
+		for my $item (@supportItems) {
+			if($item eq $interfaceType) {
+				$found = 1;
+			}
+		}
+		if(!$found) {
+			return 0;
+		}
+	}
 
 	return 1;	
 }

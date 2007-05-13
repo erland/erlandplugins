@@ -1,10 +1,12 @@
 [%- BLOCK contextInfo -%]
-	[% IF it.cover %]
-		<img src="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]"></img>
-	[% ELSIF it.image %]
-		<img src="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]"></img>
-	[% ELSIF it.externalurl %]
-		<a href="[% webroot %][% it.externalurl %]">[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
+	[% IF it.slimserverimage %]
+		<a href="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" target="_blank"><img src="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
+	[% ELSIF it.internetimage %]
+		<a href="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %] target="_blank"><img src="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
+	[% ELSIF it.slimserverurl %]
+		<a href="[% webroot %][% it.slimserverurl %]"[% IF it.itemformaturlnewwindow %] target="_blank"[% END %]>[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
+	[% ELSIF it.interneturl %]
+		<a href="[% it.interneturl %]"[% IF it.itemformaturlnewwindow %] target="_blank"[% END %]>[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
 	[% ELSIF it.url %]
 		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% it.url %]">[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
 	[% ELSE %]
@@ -15,23 +17,25 @@
 [% BLOCK itemColumn %]
 <div class="songInfo">
 	<ul>
-		[% FOREACH item = pluginCustomBrowseHeaderItems %]
+		[% FOREACH item = items %]
 			[% IF (column=='left' and item.itemplacement=='left') or (column=='right' and item.itemplacement!='left') %]
 			<li>
-				[% IF (!item.cover and !item.image) %]
+				[% IF (!item.slimserverimage and !item.internetimage) %]
 				<div class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</div>
 				[% END %]
-				<div class="songInfoText">
+				<div[% IF (!item.slimserverimage and !item.internetimage) %] class="songInfoText"[% END %]>
 					[% IF item.multipleitems %]
 						[% itemCount=0 %]
+						[% prevImage=0 %]
 						[% FOREACH it IN item.multipleitems %]
 							[% IF itemCount<11 %]
-								[%IF itemCount %], [% END %][% PROCESS contextInfo it=it %]
+								[%IF itemCount and !prevImage%], [% END %][% PROCESS contextInfo it=it %]
 								[% itemCount = itemCount + 1 %]
 							[% ELSE %]
 								...
 								[% LAST %]
 							[% END %]
+							[% IF it.slimserverimage or it.internetimage %][% prevImage=1 %][% ELSE %][% prevImage=0 %][% END %]
 						[% END %]
 					[% ELSE %]
 						[% PROCESS contextInfo it=item %]
@@ -43,10 +47,10 @@
 	</ul>
 </div>
 [% END %]
-
-[% IF pluginCustomBrowseHeaderItems %]
-    	<tr valign="top"><td></td><td colspan="4">
-[% FOREACH item = pluginCustomBrowseHeaderItems %]
+[% hasleft =0 %]
+[% IF items %]
+    	<tr valign="top"><td></td><td colspan="4" width="100%">
+[% FOREACH item = items %]
 	[% IF item.itemplacement == 'left' %]
 		[% hasleft =1 %]
 	[% END %]
@@ -54,6 +58,8 @@
 [% IF hasleft %]
 <table width="100%">
 <tr>
+[% ELSE %]
+<table width="100%"><tr><td>
 [% END %]
 [% FOR column = ['left','right'] %]
 [% IF hasleft %]
@@ -69,6 +75,8 @@
 [% IF hasleft %]
 </tr>
 </table>
+[% ELSE %]
+</td></tr></table>
 [% END %]
 <br>
 

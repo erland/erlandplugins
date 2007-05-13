@@ -11,7 +11,8 @@
 		<menuheader>{context.itemname} {count}</menuheader>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<itemseparator>: </itemseparator>
-		<itemformat>cover</itemformat>
+		<itemformat>slimserverimage</itemformat>
+		[% IF imagewidth %]<itemformatimagewidth>[% imagewidth %]</itemformatimagewidth>[% END %]
 		<itemplacement>left</itemplacement>
                 <menutype>sql</menutype>
 		<menudata>

@@ -5,6 +5,7 @@
 		<mixname>Browse by selected</mixname>
 		<mixcategory>album</mixcategory>
 		<mixtype>function</mixtype>
+		<mixsupport>web,player</mixsupport>
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::CustomBrowse::Plugin::browseByMixable</mixcheckdata>
 		<mixdata>Plugins::CustomBrowse::Plugin::browseByMix</mixdata>

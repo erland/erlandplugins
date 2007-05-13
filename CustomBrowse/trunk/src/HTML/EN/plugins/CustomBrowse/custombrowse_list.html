@@ -63,10 +63,10 @@ END;
 		[% END %]
 	</td></tr>
 
-[% PROCESS plugins/CustomBrowse/menuheader.html %]
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseHeaderItems %]
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
-		[% IF pluginCustomBrowseItems.size>0 %]
+		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
 			[% WRAPPER contentcontainer %]
 				[% IF pluginCustomBrowseCurrentContext %]
 					[% BLOCK allsongscontrols %]
@@ -86,8 +86,10 @@ END;
 		[% WRAPPER $container %]
 			[% FOREACH item = pluginCustomBrowseItems %]
 				[% BLOCK controls %]
-					[% IF item.mixable %]
-						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+					[% IF pluginCustomBrowseSingleMixButton %]
+						[% IF item.mixes and item.mixes.size>0 and item.url %]
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+						[% END %]
 					[% ELSE %]
 					[% FOREACH mix = item.mixes %]
 						[% IF mix.url %]
@@ -131,6 +133,8 @@ END;
 		        [% END %]
 		[% END %]
     	</td></tr>
+<tr><td></td><td colspan="4">&nbsp;</td></tr>
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 <tr><td></td><td colspan="4">
 <br>
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;

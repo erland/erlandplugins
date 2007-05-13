@@ -45,9 +45,9 @@ sub executeMix {
 	my $mix = shift;
 	my $keywords = shift;
 	my $addOnly = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 
-	if($web) {
+	if($interfaceType ne 'player') {
 		return;
 	}
 	my @params = split(/\|/,$mix->{'mixdata'});
@@ -71,12 +71,15 @@ sub executeMix {
 	Slim::Buttons::Common::pushModeLeft($client, $mode, \%modeParameters);
 }
 
-sub isWebSupported {
+sub isInterfaceSupported {
 	my $self = shift;
 	my $client = shift;
 	my $mix = shift;
+	my $interfaceType = shift;
 
-	if(defined($mix->{'mixurl'})) {
+	if($interfaceType eq 'player') {
+		return 1;
+	}elsif($interfaceType eq 'web' && defined($mix->{'mixurl'})) {
 		return 1;	
 	}else {
 		return 0;

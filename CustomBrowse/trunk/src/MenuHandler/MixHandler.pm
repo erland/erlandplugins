@@ -58,27 +58,29 @@ sub getGlobalMixes {
 	return $self->mixes;
 }
 
-sub isWebSupported {
+sub isInterfaceSupported {
 	my $self = shift;
 	my $client = shift;
 	my $mix = shift;
+	my $interfaceType = shift;
 
 	my $mixHandler = $self->mixHandlers->{$mix->{'mixtype'}};
-	if($mixHandler && $mixHandler->isWebSupported($client,$mix)) {
+	if($mixHandler && $mixHandler->isInterfaceSupported($client,$mix,$interfaceType)) {
 		return 1;
 	}
 	return 0;
 }
-sub getWebMixes {
+sub getPreparedMixes {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $interfaceType = shift;
 
-	my $mixes = $self->getMixes($client,$item,1);
+	my $mixes = $self->getMixes($client,$item,$interfaceType);
 	my @webMixes = ();
 	if(scalar(@$mixes)>0) {
 		for my $mix (@$mixes) {
-			if(!$self->isWebSupported($client,$mix)) {
+			if(!$self->isInterfaceSupported($client,$mix,$interfaceType)) {
 				next;
 			}
 			my %webMix = (
@@ -109,7 +111,7 @@ sub getMixes {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 
 	my @mixes = ();
 	if(defined($item->{'mix'})) {
@@ -122,13 +124,13 @@ sub getMixes {
 						foreach my $key (keys %$browseMixes) {
 							my $globalMix = $browseMixes->{$key};
 							if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
-								if($self->checkMix($client, $globalMix, $item, $web)) {
+								if($self->checkMix($client, $globalMix, $item, $interfaceType)) {
 									push @mixes,$globalMix;
 								}
 							}
 						}
 					}elsif(defined($mix->{'mixname'}))  {
-						if($self->checkMix($client, $mix, $item,$web)) {
+						if($self->checkMix($client, $mix, $item,$interfaceType)) {
 							push @mixes,$mix;
 						}
 					}
@@ -142,13 +144,13 @@ sub getMixes {
 					foreach my $key (keys %$browseMixes) {
 						my $globalMix = $browseMixes->{$key};
 						if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
-							if($self->checkMix($client, $globalMix, $item,$web)) {
+							if($self->checkMix($client, $globalMix, $item,$interfaceType)) {
 								push @mixes,$globalMix;
 							}
 						}
 					}
 				}elsif(defined($mix->{'mixname'}))  {
-					if($self->checkMix($client, $mix, $item,$web)) {
+					if($self->checkMix($client, $mix, $item,$interfaceType)) {
 						push @mixes,$mix;
 					}
 				}
@@ -159,7 +161,7 @@ sub getMixes {
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
 			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $item->{'itemtype'}) {
-				if($self->checkMix($client, $mix, $item,$web)) {
+				if($self->checkMix($client, $mix, $item,$interfaceType)) {
 					push @mixes,$mix;
 				}
 			}
@@ -170,10 +172,10 @@ sub getMixes {
 }
 
 sub checkMix {
-	my ($self, $client, $mix, $item, $web) = @_;
+	my ($self, $client, $mix, $item, $interfaceType) = @_;
 
-	if(defined($web) && $web) {
-		if(!$self->isWebSupported($client,$mix)) {
+	if(defined($interfaceType)) {
+		if(!$self->isInterfaceSupported($client,$mix,$interfaceType)) {
 			return 0;
 		}
 	}
@@ -201,13 +203,13 @@ sub executeMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 	my $addOnly = shift;
 
 	if(defined($mix->{'mixtype'})) {
 		my $mixHandler = $self->mixHandlers->{$mix->{'mixtype'}};
 		if(defined($mixHandler)) {
-			$mixHandler->executeMix($client,$mix,$keywords,$addOnly,$web);
+			$mixHandler->executeMix($client,$mix,$keywords,$addOnly,$interfaceType);
 		}
 	}
 }

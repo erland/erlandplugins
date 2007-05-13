@@ -21,7 +21,7 @@
 					[% IF mix.url %]
 						<a href="[% webroot %][% mix.url %]&player=[% player | uri %]">[% mix.name %]</a>
 					[% ELSE %]
-						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix.html?player=[% player | uri %][% pluginCustomBrowseItemUrl %]&mix=[% mix.id %]">[% mix.name %]</a>
+						<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix[% IF pluginCustomBrowseContextMixUrl %]context[% END %].html?player=[% player | uri %][% pluginCustomBrowseItemUrl %]&mix=[% mix.id %]">[% mix.name %]</a>
 					[% END %]
 			        [% END %]
 				[% odd = (not odd) %]

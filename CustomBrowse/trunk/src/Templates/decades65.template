@@ -14,6 +14,7 @@
 			<id>year</id>
 			<menuname>Albums</menuname>
 			<mix>
+				<id>decades_random</id>
 				<mixname>Random</mixname>
 				<mixtype>sql</mixtype>
 				<mixdata>

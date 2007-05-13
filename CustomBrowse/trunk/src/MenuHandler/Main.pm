@@ -27,6 +27,7 @@ our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenuHandler);
 use Plugins::CustomBrowse::MenuHandler::SQLHandler;
 use Plugins::CustomBrowse::MenuHandler::ParameterHandler;
 use Plugins::CustomBrowse::MenuHandler::PropertyHandler;
+use Plugins::CustomBrowse::MenuHandler::FunctionMenu;
 use Plugins::CustomBrowse::MenuHandler::SQLMenu;
 use Plugins::CustomBrowse::MenuHandler::TrackDetailsMenu;
 use Plugins::CustomBrowse::MenuHandler::ModeMenu;
@@ -51,6 +52,7 @@ sub new {
 	my $sqlHandler = Plugins::CustomBrowse::MenuHandler::SQLHandler->new($parameters);
 	$parameters->{'sqlHandler'} = $sqlHandler;
 	my %menuHandlers = (
+		'function' => Plugins::CustomBrowse::MenuHandler::FunctionMenu->new($parameters),
 		'sql' => Plugins::CustomBrowse::MenuHandler::SQLMenu->new($parameters),
 		'trackdetails' => Plugins::CustomBrowse::MenuHandler::TrackDetailsMenu->new($parameters),
 		'mode' => Plugins::CustomBrowse::MenuHandler::ModeMenu->new($parameters),

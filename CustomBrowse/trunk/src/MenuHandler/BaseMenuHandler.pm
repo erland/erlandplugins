@@ -25,6 +25,7 @@ use base 'Class::Data::Accessor';
 use Plugins::CustomBrowse::MenuHandler::MixHandler;
 use File::Spec::Functions qw(:ALL);
 use POSIX qw(ceil);
+use Text::Unidecode;
 
 __PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers) );
 
@@ -71,8 +72,12 @@ sub getMenuItems {
 	my $client = shift;
 	my $item = shift;
 	my $context = shift;
-	
-	return $self->_getMenuItems($client,$item,undef,undef,$context,0);
+	my $interfaceType = shift;
+
+	if(!defined($interfaceType)) {
+		$interfaceType = 'player';
+	}	
+	return $self->_getMenuItems($client,$item,undef,undef,$context,$interfaceType);
 }
 
 sub _getMenuItems {
@@ -82,7 +87,7 @@ sub _getMenuItems {
 	my $option = shift;
 	my $mainBrowseMenu = shift;
 	my $context = shift;
-	my $showImages = shift;
+	my $interfaceType = shift;
 
 	my @listRef = ();
 
@@ -135,7 +140,7 @@ sub _getMenuItems {
 					next;
 				}
 			}
-			if(!$showImages && defined($menu->{'itemformat'}) && ($menu->{'itemformat'} eq 'cover' || $menu->{'itemformat'} eq 'image')) {
+			if(defined($interfaceType) && ($interfaceType eq 'cli' || $interfaceType eq 'player') && defined($menu->{'itemformat'}) && ($menu->{'itemformat'} =~ /image$/ || $menu->{'itemformat'} =~ /url$/)) {
 				next;
 			}
 			if(!defined($menu->{'menutype'})) {
@@ -327,6 +332,11 @@ sub getMenu {
 	my $client = shift;
 	my $item = shift;
 	my $context = shift;
+	my $interfaceType = shift;
+
+	if(!defined($interfaceType)) {
+		$interfaceType = 'player';
+	}
 	my $selectedMenu = $client->param('selectedMenu');
 
 	if(!defined($item) && defined($selectedMenu)) {
@@ -342,7 +352,7 @@ sub getMenu {
 	}
 
 	my @listRef = undef;
-	my $items = $self->getMenuItems($client,$item,$context);
+	my $items = $self->getMenuItems($client,$item,$context,$interfaceType);
 	if(ref($items) eq 'ARRAY') {
 		@listRef = @$items;
 	}else {
@@ -525,7 +535,11 @@ sub getPageItemsForContext {
 	my $params = shift;
 	my $contextParams = shift;
 	my $checkContextType = shift;
+	my $interfaceType = shift;
 
+	if(!defined($interfaceType)) {
+		$interfaceType eq 'web';
+	}
 	my $currentItems =  $self->items;
 
 	my $item = undef;
@@ -550,7 +564,7 @@ sub getPageItemsForContext {
 	my %result = ();
 	my $items = undef;
 	if(defined($currentMenu) || !defined($params->{'hierarchy'})) {
-		$items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'},$contextParams,1);
+		$items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'},$contextParams,$interfaceType);
 	}
 	if(defined($items) && ref($items) eq 'ARRAY') {
 		my @resultItems = ();
@@ -558,6 +572,9 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}=\%pagebar;
 		$result{'pageinfo'}->{'totalitems'} = scalar(@$items);
 		my $itemsPerPage = Slim::Utils::Prefs::get('itemsPerPage');
+		if(defined($params->{'itemsperpage'})) {
+			$itemsPerPage = $params->{'itemsperpage'};
+		}
 		$result{'pageinfo'}->{'itemsperpage'} = $itemsPerPage;
 		my $menulinks = $self->_getMenuLinks($currentMenu,$params->{'option'});
 		if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
@@ -643,7 +660,7 @@ sub getPageItemsForContext {
 						$hasExternalUrl = 1;
 						my $customUrl = $menuHandler->getCustomUrl($client,$it,$params,$item,$contextParams);
 						if(defined($customUrl)) {
-							$it->{'externalurl'} = $customUrl;
+							$it->{'slimserverurl'} = $customUrl;
 						}
 					}
 				}
@@ -674,8 +691,8 @@ sub getPageItemsForContext {
 						my $regExp = "&"."contexttype=";
 						my $type = undef;
 						if($contextParams->{'itemurl'} !~ /$regExp/) {
-							if(defined($it->{'menuwebheader'})) {
-								$type = escape($it->{'menuwebheader'});
+							if(defined($it->{'menuwebcontext'})) {
+								$type = escape($it->{'menuwebcontext'});
 							}elsif(defined($it->{'itemtype'})) {
 								$type = escape($it->{'itemtype'});
 							}
@@ -723,10 +740,29 @@ sub getPageItemsForContext {
 					$result{'artwork'} = 1;
 					my $track = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
-				}elsif($format eq 'cover') {
-					$it->{'cover'} = 1;
-				}elsif($format eq 'image') {
-					$it->{'image'} = 1;
+				}elsif($format eq 'slimserverimage') {
+					$it->{'slimserverimage'} = 1;
+				}elsif($format eq 'internetimage') {
+					$it->{'internetimage'} = 1;
+				}elsif($format eq 'slimserverurl' || $format eq 'interneturl') {
+					my $urlId = $format;
+					if(defined($it->{'itemseparator'})) {
+						my $separator = $it->{'itemseparator'};
+						if($it->{'itemvalue'} =~ /^(.*?)$separator(.*)$/) {
+							$it->{'itemvalue'} = $1;
+							$it->{$urlId} = $2;
+						}
+					}
+					if(!defined($it->{$urlId})) {
+						if(defined($it->{'itemvalue'})) {
+							$it->{$urlId} = $it->{'itemvalue'};
+						}else {
+							$it->{$urlId} = $it->{'itemname'};
+						}
+					}
+					if(defined($it->{'itemformatascii'}) && defined($it->{$urlId})) {
+						$it->{$urlId} = unidecode($it->{$urlId});
+					}
 				}else {
 					$result{'artwork'} = 0;
 				}
@@ -749,10 +785,9 @@ sub getPageItemsForContext {
 					$it->{'attributes'} = sprintf('&%s=%d', 'playlist.id',$it->{'itemid'});
 				}
 			}
-			my $mixes = $self->mixHandler->getWebMixes($client,$it);
+			my $mixes = $self->getPreparedMixes($client,$it,$interfaceType);
 			if(scalar(@$mixes)>0) {
 				$it->{'mixes'} = $mixes;
-				#$it->{'mixable'} = 1;
 			}
 			push @resultItems, $it;
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
@@ -780,21 +815,22 @@ sub getPageItemsForContext {
 	return \%result;
 }
 
-sub getWebMixes {
+sub getPreparedMixes {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
+	my $interfaceType = shift;
 
-	return $self->mixHandler->getWebMixes($client,$item);
+	return $self->mixHandler->getPreparedMixes($client,$item,$interfaceType);
 }
 
 sub getMixes {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
-	my $web = shift;
+	my $interfaceType = shift;
 
-	return $self->mixHandler->getMixes($client,$item,$web);
+	return $self->mixHandler->getMixes($client,$item,$interfaceType);
 }
 
 sub getGlobalMixes {
@@ -1130,13 +1166,13 @@ sub _sortMenu {
 sub _createMix {
 	my ($self,$client,$item) = @_;
 
-	my $mixes = $self->mixHandler->getMixes($client,$item);
+	my $mixes = $self->mixHandler->getMixes($client,$item,'player');
 	for my $mix (@$mixes) {
 		$self->debugCallback->("Got mix: ".$mix->{'mixname'}."\n");
 	}
 
 	if(scalar(@$mixes)==1) {
-		$self->_executeMix($client,$mixes->[0],undef,$item);
+		$self->executeMix($client,$mixes->[0],undef,$item);
 	}elsif(scalar(@$mixes)>0) {
 		my $params = {
 			'header'     => '{CREATE_MIX} {count}',
@@ -1146,15 +1182,15 @@ sub _createMix {
 			'item'       => $item,
 			'onPlay'     => sub { 
 						my ($client,$item) = @_;
-						$self->_executeMix($client,$item);
+						$self->executeMix($client,$item);
 					},
 			'onAdd'      => sub { 
 						my ($client,$item) = @_;
-						$self->_executeMix($client,$item,1);
+						$self->executeMix($client,$item,1);
 					},
 			'onRight'    => sub { 
 						my ($client,$item) = @_;
-						$self->_executeMix($client,$item,0);
+						$self->executeMix($client,$item,0);
 					}
 		};
 	
@@ -1164,8 +1200,8 @@ sub _createMix {
 	}
 }
 
-sub _executeMix {
-        my ($self, $client, $mixer, $addOnly,$item, $web) = @_;
+sub executeMix {
+        my ($self, $client, $mixer, $addOnly,$item, $interfaceType) = @_;
 
 	if(!defined($item)) {
 		$item = $client->param('item');
@@ -1178,7 +1214,7 @@ sub _executeMix {
 	$parameters->{'itemtype'} = $item->{'itemtype'};
 	my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 
-	$self->mixHandler->executeMix($client,$mixer,$keywords,$web,$addOnly);
+	$self->mixHandler->executeMix($client,$mixer,$keywords,$interfaceType,$addOnly);
 }
 
 sub getItemOverlay {
@@ -1192,7 +1228,7 @@ sub getItemOverlay {
 			$playable = Slim::Display::Display::symbol('notesymbol');
 		}
 	}
-	my $mixes = $self->mixHandler->getMixes($client,$item);
+	my $mixes = $self->mixHandler->getMixes($client,$item,'player');
 	if(scalar(@$mixes)>0) {
 		$playable = Slim::Display::Display::symbol('mixable');
 	}

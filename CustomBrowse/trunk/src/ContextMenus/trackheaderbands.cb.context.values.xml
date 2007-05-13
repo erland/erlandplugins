@@ -4,8 +4,8 @@
 		<id>trackartists.xml</id>
 		<parameter type="text" id="menuname"><value>Band</value></parameter>
 		<parameter type="text" id="menugroup"></parameter>
-		<parameter type="text" id="menuorder"><value>50</value></parameter>
-		<parameter type="text" id="menuprefix"><value>Artist</value></parameter>
+		<parameter type="text" id="menuorder"><value>47</value></parameter>
+		<parameter type="text" id="menuprefix"><value>Band</value></parameter>
 		<parameter type="text" id="roles"><value>4</value></parameter>
 		<parameter type="text" id="playalltracks"><value>1</value></parameter>
 		<parameter type="text" id="library"><value></value></parameter>

@@ -4,7 +4,7 @@
 		<id>trackalbums.xml</id>
 		<parameter type="text" id="menuname"><value>Album</value></parameter>
 		<parameter type="text" id="menugroup"></parameter>
-		<parameter type="text" id="menuorder"><value>50</value></parameter>
+		<parameter type="text" id="menuorder"><value>45</value></parameter>
 		<parameter type="text" id="menuprefix"><value>Album</value></parameter>
 		<parameter type="text" id="showartistwithalbum"><value>0</value></parameter>
 		<parameter type="text" id="roles"></parameter>

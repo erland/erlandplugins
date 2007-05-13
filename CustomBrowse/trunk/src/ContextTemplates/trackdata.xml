@@ -8,6 +8,7 @@
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="includetitle" name="Track title" value="1"/>
+		<parameter type="checkbox" id="includerating" name="Rating" value="0"/>
 		<parameter type="checkbox" id="includetrackno" name="Track number" value="1"/>
 		<parameter type="checkbox" id="includebitrate" name="Bitrate" value="1"/>
 		<parameter type="checkbox" id="includeduration" name="Duration" value="1"/>
