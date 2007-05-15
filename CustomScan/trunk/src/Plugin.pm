@@ -58,18 +58,6 @@ sub getDisplayName {
 	return 'PLUGIN_CUSTOMSCAN';
 }
 
-sub setMode {
-	my $client = shift;
-	my $method = shift;
-	
-	if ($method eq 'pop') {
-		Slim::Buttons::Common::popMode($client);
-		return;
-	}
-}
-
-
-
 sub initPlugin {
 	my $class = shift;
 	initDatabase();
