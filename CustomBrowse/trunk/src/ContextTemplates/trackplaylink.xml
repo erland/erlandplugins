@@ -2,6 +2,7 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>133</downloadidentifier>
 		<name>Song play link</name>
 		<description>Show link to play the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Play this song"/>

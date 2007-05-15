@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>132</downloadidentifier>
 		<name>Genres for song</name>
-		<description>Show genres for a selected song</description>
+		<description>Genres for a selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genre"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

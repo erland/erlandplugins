@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>117</downloadidentifier>
 		<name>Artists for genre</name>
-		<description>Show artists, composers, conductors or bands for a selected genre</description>
+		<description>Artists, composers, conductors or bands for a selected genre</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Artist"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

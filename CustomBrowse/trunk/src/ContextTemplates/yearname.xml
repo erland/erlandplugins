@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>141</downloadidentifier>
 		<name>Year name</name>
-		<description>Shows year name</description>
+		<description>Name of the selected year</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Year"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

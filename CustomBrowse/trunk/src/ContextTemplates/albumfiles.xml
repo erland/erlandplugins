@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>99</downloadidentifier>
 		<name>Album information files</name>
-		<description>Show information files for a selected album</description>
+		<description>Links to information files for a selected album</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Information"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

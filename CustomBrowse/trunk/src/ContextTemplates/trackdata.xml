@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>131</downloadidentifier>
 		<name>Song details</name>
-		<description>Shows various song information, similar to the basic information available in the standard SlimServer song information menu</description>
+		<description>Various information about the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Track info"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

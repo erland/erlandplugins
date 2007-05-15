@@ -2,7 +2,8 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>SlimServer Song Information</name>
+		<downloadidentifier>135</downloadidentifier>
+		<name>SlimServer song information</name>
 		<description>The standard SlimServer song information menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Standard song info"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>

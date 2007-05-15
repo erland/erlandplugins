@@ -2,6 +2,7 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>129</downloadidentifier>
 		<name>Song comment links</name>
 		<description>Show links from comment tags for the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Links"/>

@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>130</downloadidentifier>
 		<name>Song album cover</name>
-		<description>Shows album cover for the selected song</description>
+		<description>Album cover for the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Album cover"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="1"/>

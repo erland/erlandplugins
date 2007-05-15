@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Artist internet search</name>
-		<description>Search for the selected artist on internet</description>
+		<downloadidentifier>114</downloadidentifier>
+		<name>Search for artist</name>
+		<description>Links to search for selected artist on various internet sites</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Search on"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="60"/>

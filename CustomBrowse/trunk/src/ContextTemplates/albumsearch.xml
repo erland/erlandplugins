@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Album internet search</name>
-		<description>Search for the selected album on internet</description>
+		<downloadidentifier>104</downloadidentifier>
+		<name>Search for album</name>
+		<description>Links to search for selected album on various internet sites</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Search on"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="60"/>

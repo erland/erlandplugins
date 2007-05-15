@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Song comment</name>
-		<description>Show comment tags for the selected song</description>
+		<downloadidentifier>128</downloadidentifier>
+		<name>Song comments</name>
+		<description>Comment tags for the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Comment"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

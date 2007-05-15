@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Playlist name</name>
-		<description>Shows playlist name</description>
+		<downloadidentifier>125</downloadidentifier>
+		<name>Playlist title</name>
+		<description>Title of selected playlist</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Name"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

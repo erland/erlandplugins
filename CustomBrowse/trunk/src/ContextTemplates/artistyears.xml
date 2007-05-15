@@ -3,8 +3,9 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>115</downloadidentifier>
 		<name>Years for artist</name>
-		<description>Show years for a selected artist</description>
+		<description>Years for songs by the selected artist</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Year"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

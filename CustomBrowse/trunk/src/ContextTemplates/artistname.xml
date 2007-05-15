@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>112</downloadidentifier>
 		<name>Artist name</name>
-		<description>Shows artist name</description>
+		<description>Name of the selected artist</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Name"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

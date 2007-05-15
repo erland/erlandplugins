@@ -2,7 +2,8 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Song internet search</name>
+		<downloadidentifier>134</downloadidentifier>
+		<name>Search for song</name>
 		<description>Search for the selected song on internet</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Search on"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>

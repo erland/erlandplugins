@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>96</downloadidentifier>
 		<name>Album comment links</name>
-		<description>Show links from comment tags for the selected album</description>
+		<description>Links from comment tags for the selected album</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Links"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="60"/>

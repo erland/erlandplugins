@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<name>Album play link</name>
-		<description>Show link to play the selected album</description>
+		<downloadidentifier>103</downloadidentifier>
+		<name>Album play links</name>
+		<description>Play, add, insert links to play the selected album</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Play this album"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="2"/>

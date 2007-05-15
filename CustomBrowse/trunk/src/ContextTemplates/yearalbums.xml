@@ -2,8 +2,9 @@
 <custombrowse>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
+		<downloadidentifier>137</downloadidentifier>
 		<name>Albums for year</name>
-		<description>Show albums for a selected year</description>
+		<description>Albums for a selected year</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Album"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
