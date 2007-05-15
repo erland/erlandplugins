@@ -40,7 +40,7 @@
 					<name>Sort by artist</name>
 					<menulinks>number</menulinks>
 					<menudata>
-						select albums.id,concat(albums.title, ' (', contributors.name ,')') from albums,contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+						select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and

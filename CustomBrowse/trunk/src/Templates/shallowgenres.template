@@ -46,7 +46,7 @@
 					<name>Sort by artist</name>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(contributors.namesort,1,1) from tracks,albums,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
+						select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')')),substr(contributors.namesort,1,1) from tracks,albums,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 	                                        where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and

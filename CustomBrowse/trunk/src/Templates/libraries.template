@@ -183,7 +183,7 @@
 		                                <name>Sort by artist</name>
 		                                <menulinks>number</menulinks>
 		                                <menudata>
-		                                        select albums.id,concat(albums.title, ' (', contributors.name ,')') from tracks,albums,contributor_track,contributors
+		                                        select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors
 		                                        where
 		                                                tracks.id=contributor_track.track and
 								tracks.album=albums.id and
