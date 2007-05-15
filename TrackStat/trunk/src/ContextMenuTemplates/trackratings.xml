@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<database>mysql</database>
 	<requireplugins>TrackStat</requireplugins>
 	<minpluginversion>1.20</minpluginversion>
 	<template>
-		<downloadidentifier>44</downloadidentifier>
-		<name>Rating for song</name>
-		<description>Menu that make it possible to browse music by the rating of currently selected song</description>
+		<downloadidentifier>142</downloadidentifier>
+		<name>TrackStat rating for song</name>
+		<description>Rating for the selected song from TrackStat</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Rating"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
