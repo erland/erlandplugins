@@ -43,7 +43,7 @@
 						tracks.audio=1 and 
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
-						contributor_track.role in (1,5) and
+						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 						tracks.album=customscan_album_attributes.album and
 						customscan_album_attributes.module='csamazon' and
 						customscan_album_attributes.attr='subject' and
@@ -79,7 +79,7 @@
 							tracks.audio=1 and 
 							albums.id=tracks.album and 
 							tracks.id=contributor_track.track and 
-							contributor_track.role in (1,5) and
+							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							contributor_track.contributor={artist} and
 							tracks.album=customscan_album_attributes.album and
 							customscan_album_attributes.module='csamazon' and
