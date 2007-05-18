@@ -13,6 +13,7 @@
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>
+		<parameter type="checkbox" id="contextlibrary" requireplugins="MultiLibrary::Plugin" name="Limit to context library" value=""/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 		<parameter type="sqloptionalmultiplelist" id="includedlibraries" requireplugins="MultiLibrary::Plugin" name="Only include when these libraries are active (empty = all)" value="" data="select id,name,id from multilibrary_libraries"/>

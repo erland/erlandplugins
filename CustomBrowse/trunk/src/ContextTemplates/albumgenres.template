@@ -9,6 +9,9 @@
 		<menuname>[% menuname %]</menuname>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<keyword name="albumid" value="{context.itemid}"/>
+		[% IF contextlibrary %]
+		<keyword name="libraryid" value="{context.library}"/>
+		[% END %]
 		[% IF menuprefix %]
 		<menuprefix>[% menuprefix %]: </menuprefix>
 		<itemseparator>: </itemseparator>
@@ -19,14 +22,14 @@
 		<contextid>genre</contextid>
 		<menulinks>alpha</menulinks>
 		<menudata>
-			select genres.id,genres.name,substr(genres.namesort,1,1) from genres,genre_track,tracks[% IF library or activelibrary %],multilibrary_genre[% END %] 
+			select genres.id,genres.name,substr(genres.namesort,1,1) from genres,genre_track,tracks[% IF library or activelibrary or contextlibrary %],multilibrary_genre[% END %] 
 			where
 				genres.id=genre_track.genre and
 				tracks.id=genre_track.track and
 				tracks.album={albumid}
-			[%- IF library or activelibrary %]
+			[%- IF library or activelibrary or contextlibrary %]
 				and genres.id=multilibrary_genre.genre and
-				multilibrary_genre.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+				multilibrary_genre.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %]
 			[%- END %]
 			group by genres.id
 			order by genres.namesort asc
@@ -38,11 +41,11 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,genre_track[% IF variousartists %],albums[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,tracks,contributor_track,genre_track[% IF variousartists %],albums[% END %][% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %]
 				where 
-					[%- IF library or activelibrary %]
+					[%- IF library or activelibrary or contextlibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
@@ -61,11 +64,11 @@
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track[% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %] 
 					where 
-						[%- IF library or activelibrary %]
+						[%- IF library or activelibrary or contextlibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						albums.id=tracks.album and 
@@ -87,11 +90,11 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+						select tracks.id,tracks.title from tracks,contributor_track,albums,genre_track[% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %] 
 						where 
-							[%- IF library or activelibrary %]
+							[%- IF library or activelibrary or contextlibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 
@@ -106,7 +109,7 @@
 					<menu>
 						<id>trackdetails</id>
 						<menutype>trackdetails</menutype>
-						<menudata>track</menudata>
+						<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]|library={libraryid}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 					</menu>
 				</menu>
 			</menu>
