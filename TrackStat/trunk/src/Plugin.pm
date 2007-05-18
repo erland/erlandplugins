@@ -1924,6 +1924,11 @@ sub getCustomBrowseContextTemplates {
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenuTemplates','xml');
 }
 
+sub getCustomBrowseMenus {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','Menus','xml','template','menu','simple',1);
+}
+
 sub getCustomBrowseContextMenus {
 	my $client = shift;
 	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenus','xml','template','menu','simple',1);
@@ -1981,6 +1986,14 @@ sub getCustomBrowseContextMenuData {
 	my $templateItem = shift;
 	my $parameterValues = shift;
 	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','ContextMenus',$templateItem->{'id'},"xml");
+	return replaceMenuParameters($data);
+}
+
+sub getCustomBrowseMenuData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','Menus',$templateItem->{'id'},"xml");
 	return replaceMenuParameters($data);
 }
 
