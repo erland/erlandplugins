@@ -155,70 +155,75 @@ sub init {
 		$pluginHandlerParameters{'templateContentParser'} = $self->templateContentParser;
 		$self->contentPluginHandler(Plugins::CustomBrowse::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
-		my %webTemplates = (
-			'webEditItems' => 'plugins/CustomBrowse/webadminmethods_edititems.html',
-			'webEditItem' => 'plugins/CustomBrowse/webadminmethods_edititem.html',
-			'webEditSimpleItem' => 'plugins/CustomBrowse/webadminmethods_editsimpleitem.html',
-			'webNewItem' => 'plugins/CustomBrowse/webadminmethods_newitem.html',
-			'webNewSimpleItem' => 'plugins/CustomBrowse/webadminmethods_newsimpleitem.html',
-			'webNewItemParameters' => 'plugins/CustomBrowse/webadminmethods_newitemparameters.html',
-			'webNewItemTypes' => 'plugins/CustomBrowse/webadminmethods_newitemtypes.html',
-			'webDownloadItem' => 'plugins/CustomBrowse/webadminmethods_downloaditem.html',
-			'webSaveDownloadedItem' => 'plugins/CustomBrowse/webadminmethods_savedownloadeditem.html',
-			'webPublishLogin' => 'plugins/CustomBrowse/webadminmethods_login.html',
-			'webPublishRegister' => 'plugins/CustomBrowse/webadminmethods_register.html',
-			'webPublishItemParameters' => 'plugins/CustomBrowse/webadminmethods_publishitemparameters.html',
-		);
-
-		my @itemDirectories = ();
-		my @templateDirectories = ();
-		my $dir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
-		if (defined $dir && -d $dir) {
-			push @itemDirectories,$dir
-		}
-		$dir = Slim::Utils::Prefs::get("plugin_custombrowse_template_directory");
-		if (defined $dir && -d $dir) {
-			push @templateDirectories,$dir
-		}
-		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		for my $plugindir (@pluginDirs) {
-			if( -d catdir($plugindir,"CustomBrowse","Menus")) {
-				push @itemDirectories, catdir($plugindir,"CustomBrowse","Menus")
-			}
-			if( -d catdir($plugindir,"CustomBrowse","Templates")) {
-				push @templateDirectories, catdir($plugindir,"CustomBrowse","Templates")
-			}
-		}
-		my %webAdminMethodsParameters = (
-			'pluginId' => $self->pluginId,
-			'pluginVersion' => $self->pluginVersion,
-			'downloadApplicationId' => $self->downloadApplicationId,
-			'extension' => 'cb.xml',
-			'simpleExtension' => 'cb.values.xml',
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
-			'contentPluginHandler' => $self->contentPluginHandler,
-			'templatePluginHandler' => $self->templatePluginHandler,
-			'contentDirectoryHandler' => $self->contentDirectoryHandler,
-			'contentTemplateDirectoryHandler' => $self->templateContentDirectoryHandler,
-			'templateDirectoryHandler' => $self->templateDirectoryHandler,
-			'templateDataDirectoryHandler' => $self->templateDataDirectoryHandler,
-			'parameterHandler' => $self->parameterHandler,
-			'contentParser' => $self->contentParser,
-			'templateDirectories' => \@templateDirectories,
-			'itemDirectories' => \@itemDirectories,
-			'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_custombrowse_template_directory"),
-			'customItemDirectory' => Slim::Utils::Prefs::get("plugin_custombrowse_directory"),
-			'supportDownload' => 1,
-			'supportDownloadError' => $self->supportDownloadError,
-			'webCallbacks' => $self,
-			'webTemplates' => \%webTemplates,
-			'downloadUrl' => Slim::Utils::Prefs::get("plugin_custombrowse_download_url")
-		);
-		$self->webAdminMethods(Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods->new(\%webAdminMethodsParameters));
-
+		$self->initWebAdminMethods();
 }
 
+sub initWebAdminMethods {
+	my $self = shift;
+
+	my %webTemplates = (
+		'webEditItems' => 'plugins/CustomBrowse/webadminmethods_edititems.html',
+		'webEditItem' => 'plugins/CustomBrowse/webadminmethods_edititem.html',
+		'webEditSimpleItem' => 'plugins/CustomBrowse/webadminmethods_editsimpleitem.html',
+		'webNewItem' => 'plugins/CustomBrowse/webadminmethods_newitem.html',
+		'webNewSimpleItem' => 'plugins/CustomBrowse/webadminmethods_newsimpleitem.html',
+		'webNewItemParameters' => 'plugins/CustomBrowse/webadminmethods_newitemparameters.html',
+		'webNewItemTypes' => 'plugins/CustomBrowse/webadminmethods_newitemtypes.html',
+		'webDownloadItem' => 'plugins/CustomBrowse/webadminmethods_downloaditem.html',
+		'webSaveDownloadedItem' => 'plugins/CustomBrowse/webadminmethods_savedownloadeditem.html',
+		'webPublishLogin' => 'plugins/CustomBrowse/webadminmethods_login.html',
+		'webPublishRegister' => 'plugins/CustomBrowse/webadminmethods_register.html',
+		'webPublishItemParameters' => 'plugins/CustomBrowse/webadminmethods_publishitemparameters.html',
+	);
+
+	my @itemDirectories = ();
+	my @templateDirectories = ();
+	my $dir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
+	if (defined $dir && -d $dir) {
+		push @itemDirectories,$dir
+	}
+	$dir = Slim::Utils::Prefs::get("plugin_custombrowse_template_directory");
+	if (defined $dir && -d $dir) {
+		push @templateDirectories,$dir
+	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	for my $plugindir (@pluginDirs) {
+		if( -d catdir($plugindir,"CustomBrowse","Menus")) {
+			push @itemDirectories, catdir($plugindir,"CustomBrowse","Menus")
+		}
+		if( -d catdir($plugindir,"CustomBrowse","Templates")) {
+			push @templateDirectories, catdir($plugindir,"CustomBrowse","Templates")
+		}
+	}
+	my %webAdminMethodsParameters = (
+		'pluginId' => $self->pluginId,
+		'pluginVersion' => $self->pluginVersion,
+		'downloadApplicationId' => $self->downloadApplicationId,
+		'extension' => 'cb.xml',
+		'simpleExtension' => 'cb.values.xml',
+		'debugCallback' => $self->debugCallback,
+		'errorCallback' => $self->errorCallback,
+		'contentPluginHandler' => $self->contentPluginHandler,
+		'templatePluginHandler' => $self->templatePluginHandler,
+		'contentDirectoryHandler' => $self->contentDirectoryHandler,
+		'contentTemplateDirectoryHandler' => $self->templateContentDirectoryHandler,
+		'templateDirectoryHandler' => $self->templateDirectoryHandler,
+		'templateDataDirectoryHandler' => $self->templateDataDirectoryHandler,
+		'parameterHandler' => $self->parameterHandler,
+		'contentParser' => $self->contentParser,
+		'templateDirectories' => \@templateDirectories,
+		'itemDirectories' => \@itemDirectories,
+		'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_custombrowse_template_directory"),
+		'customItemDirectory' => Slim::Utils::Prefs::get("plugin_custombrowse_directory"),
+		'supportDownload' => 1,
+		'supportDownloadError' => $self->supportDownloadError,
+		'webCallbacks' => $self,
+		'webTemplates' => \%webTemplates,
+		'downloadUrl' => Slim::Utils::Prefs::get("plugin_custombrowse_download_url")
+	);
+	$self->webAdminMethods(Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods->new(\%webAdminMethodsParameters));
+
+}
 sub readTemplateConfiguration {
 	my $self = shift;
 	my $client = shift;

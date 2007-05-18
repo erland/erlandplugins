@@ -1015,10 +1015,10 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_enable_mixerfunction to 1\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_enable_mixerfunction', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_singe_web_mixerbutton');
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_single_web_mixerbutton');
 	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_custombrowse_singe_web_mixerbutton to 0\n");
-		Slim::Utils::Prefs::set('plugin_custombrowse_singe_web_mixerbutton', 0);
+		debugMsg("Defaulting plugin_custombrowse_single_web_mixerbutton to 0\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_single_web_mixerbutton', 0);
 	}
 
 
@@ -1055,7 +1055,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_singe_web_mixerbutton','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1115,7 +1115,7 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_enable_web_mixerfunction"); }
 		},		
-	plugin_custombrowse_singe_web_mixerbutton => {
+	plugin_custombrowse_single_web_mixerbutton => {
 			'validate'     => \&Slim::Utils::Validate::trueFalse
 			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON')
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON')
@@ -1123,7 +1123,7 @@ sub setupGroup
 					 '1' => string('ON')
 					,'0' => string('OFF')
 				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_singe_web_mixerbutton"); }
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton"); }
 		},		
 	plugin_custombrowse_properties => {
 			'validate' => \&validateProperty
@@ -1169,6 +1169,8 @@ sub setupGroup
 	}else {
 		Slim::Buttons::Common::addMode('trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
 	}
+	getConfigManager()->initWebAdminMethods();
+	getContextConfigManager()->initWebAdminMethods();
 	return (\%setupGroup,\%setupPrefs);
 }
 
@@ -1341,7 +1343,7 @@ sub handleWebList {
 		$params->{'pluginCustomBrowseError'} = $sqlerrors;
 	}
 	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
-	if(Slim::Utils::Prefs::get("plugin_custombrowse_singe_web_mixerbutton")) {
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton")) {
 		$params->{'pluginCustomBrowseSingleMixButton'}=1;
 	}
 
@@ -1491,7 +1493,7 @@ sub handleWebContextList {
 		$params->{'pluginCustomBrowseError'} = $sqlerrors;
 	}
 	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
-	if(Slim::Utils::Prefs::get("plugin_custombrowse_singe_web_mixerbutton")) {
+	if(Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton")) {
 		$params->{'pluginCustomBrowseSingleMixButton'}=1;
 	}
 
@@ -2855,7 +2857,7 @@ PLUGIN_CUSTOMBROWSE_SHOW_MESSAGES
 	EN	Show debug messages
 
 PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO
-	EN	Override standard track details
+	EN	Override standard track details. May require slimserver restart.
 
 PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION
 	EN	Enable Custom Browse play+hold browse by action. May require slimserver restart.
