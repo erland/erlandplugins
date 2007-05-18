@@ -138,67 +138,72 @@ sub init {
 		$pluginHandlerParameters{'templateContentParser'} = $self->templateContentParser;
 		$self->contentPluginHandler(Plugins::MultiLibrary::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
-		my %webTemplates = (
-			'webEditItems' => 'plugins/MultiLibrary/multilibrary_list.html',
-			'webEditItem' => 'plugins/MultiLibrary/webadminmethods_edititem.html',
-			'webEditSimpleItem' => 'plugins/MultiLibrary/webadminmethods_editsimpleitem.html',
-			'webNewItem' => 'plugins/MultiLibrary/webadminmethods_newitem.html',
-			'webNewSimpleItem' => 'plugins/MultiLibrary/webadminmethods_newsimpleitem.html',
-			'webNewItemParameters' => 'plugins/MultiLibrary/webadminmethods_newitemparameters.html',
-			'webNewItemTypes' => 'plugins/MultiLibrary/webadminmethods_newitemtypes.html',
-			'webDownloadItem' => 'plugins/MultiLibrary/webadminmethods_downloaditem.html',
-			'webSaveDownloadedItem' => 'plugins/MultiLibrary/webadminmethods_savedownloadeditem.html',
-			'webPublishLogin' => 'plugins/MultiLibrary/webadminmethods_login.html',
-			'webPublishRegister' => 'plugins/MultiLibrary/webadminmethods_register.html',
-			'webPublishItemParameters' => 'plugins/MultiLibrary/webadminmethods_publishitemparameters.html',
-		);
+		$self->initWebAdminMethods();
+}
+sub initWebAdminMethods {
+	my $self = shift;
 
-		my @itemDirectories = ();
-		my @templateDirectories = ();
-		my $dir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-		if (defined $dir && -d $dir) {
-			push @itemDirectories,$dir
+	my %webTemplates = (
+		'webEditItems' => 'plugins/MultiLibrary/multilibrary_list.html',
+		'webEditItem' => 'plugins/MultiLibrary/webadminmethods_edititem.html',
+		'webEditSimpleItem' => 'plugins/MultiLibrary/webadminmethods_editsimpleitem.html',
+		'webNewItem' => 'plugins/MultiLibrary/webadminmethods_newitem.html',
+		'webNewSimpleItem' => 'plugins/MultiLibrary/webadminmethods_newsimpleitem.html',
+		'webNewItemParameters' => 'plugins/MultiLibrary/webadminmethods_newitemparameters.html',
+		'webNewItemTypes' => 'plugins/MultiLibrary/webadminmethods_newitemtypes.html',
+		'webDownloadItem' => 'plugins/MultiLibrary/webadminmethods_downloaditem.html',
+		'webSaveDownloadedItem' => 'plugins/MultiLibrary/webadminmethods_savedownloadeditem.html',
+		'webPublishLogin' => 'plugins/MultiLibrary/webadminmethods_login.html',
+		'webPublishRegister' => 'plugins/MultiLibrary/webadminmethods_register.html',
+		'webPublishItemParameters' => 'plugins/MultiLibrary/webadminmethods_publishitemparameters.html',
+	);
+
+	my @itemDirectories = ();
+	my @templateDirectories = ();
+	my $dir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
+	if (defined $dir && -d $dir) {
+		push @itemDirectories,$dir
+	}
+	$dir = Slim::Utils::Prefs::get("plugin_multilibrary_template_directory");
+	if (defined $dir && -d $dir) {
+		push @templateDirectories,$dir
+	}
+	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
+	for my $plugindir (@pluginDirs) {
+		if( -d catdir($plugindir,"MultiLibrary","Libraries")) {
+			push @itemDirectories, catdir($plugindir,"MultiLibrary","Libraries")
 		}
-		$dir = Slim::Utils::Prefs::get("plugin_multilibrary_template_directory");
-		if (defined $dir && -d $dir) {
-			push @templateDirectories,$dir
+		if( -d catdir($plugindir,"MultiLibrary","Templates")) {
+			push @templateDirectories, catdir($plugindir,"MultiLibrary","Templates")
 		}
-		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		for my $plugindir (@pluginDirs) {
-			if( -d catdir($plugindir,"MultiLibrary","Libraries")) {
-				push @itemDirectories, catdir($plugindir,"MultiLibrary","Libraries")
-			}
-			if( -d catdir($plugindir,"MultiLibrary","Templates")) {
-				push @templateDirectories, catdir($plugindir,"MultiLibrary","Templates")
-			}
-		}
-		my %webAdminMethodsParameters = (
-			'pluginId' => $self->pluginId,
-			'pluginVersion' => $self->pluginVersion,
-			'downloadApplicationId' => $self->downloadApplicationId,
-			'extension' => 'ml.xml',
-			'simpleExtension' => 'ml.values.xml',
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
-			'contentPluginHandler' => $self->contentPluginHandler,
-			'templatePluginHandler' => $self->templatePluginHandler,
-			'contentDirectoryHandler' => $self->contentDirectoryHandler,
-			'contentTemplateDirectoryHandler' => $self->templateContentDirectoryHandler,
-			'templateDirectoryHandler' => $self->templateDirectoryHandler,
-			'templateDataDirectoryHandler' => $self->templateDataDirectoryHandler,
-			'parameterHandler' => $self->parameterHandler,
-			'contentParser' => $self->contentParser,
-			'templateDirectories' => \@templateDirectories,
-			'itemDirectories' => \@itemDirectories,
-			'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"),
-			'customItemDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"),
-			'supportDownload' => 1,
-			'supportDownloadError' => $self->supportDownloadError,
-			'webCallbacks' => $self,
-			'webTemplates' => \%webTemplates,
-			'downloadUrl' => Slim::Utils::Prefs::get("plugin_multilibrary_download_url")
-		);
-		$self->webAdminMethods(Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
+	}
+	my %webAdminMethodsParameters = (
+		'pluginId' => $self->pluginId,
+		'pluginVersion' => $self->pluginVersion,
+		'downloadApplicationId' => $self->downloadApplicationId,
+		'extension' => 'ml.xml',
+		'simpleExtension' => 'ml.values.xml',
+		'debugCallback' => $self->debugCallback,
+		'errorCallback' => $self->errorCallback,
+		'contentPluginHandler' => $self->contentPluginHandler,
+		'templatePluginHandler' => $self->templatePluginHandler,
+		'contentDirectoryHandler' => $self->contentDirectoryHandler,
+		'contentTemplateDirectoryHandler' => $self->templateContentDirectoryHandler,
+		'templateDirectoryHandler' => $self->templateDirectoryHandler,
+		'templateDataDirectoryHandler' => $self->templateDataDirectoryHandler,
+		'parameterHandler' => $self->parameterHandler,
+		'contentParser' => $self->contentParser,
+		'templateDirectories' => \@templateDirectories,
+		'itemDirectories' => \@itemDirectories,
+		'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"),
+		'customItemDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"),
+		'supportDownload' => 1,
+		'supportDownloadError' => $self->supportDownloadError,
+		'webCallbacks' => $self,
+		'webTemplates' => \%webTemplates,
+		'downloadUrl' => Slim::Utils::Prefs::get("plugin_multilibrary_download_url")
+	);
+	$self->webAdminMethods(Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
 
 }
 

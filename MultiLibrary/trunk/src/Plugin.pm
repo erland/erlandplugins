@@ -1562,6 +1562,7 @@ sub setupGroup
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"); }
 		},
 	);
+	getConfigManager()->initWebAdminMethods();
 	return (\%setupGroup,\%setupPrefs);
 }
 
