@@ -454,7 +454,8 @@ sub getMenu {
 		onRight => 
 			sub {
 				my ($client, $item) = @_;
-				my $params = $self->getMenu($client,$item);
+				my $context = $client->param($self->pluginId.".context");
+				my $params = $self->getMenu($client,$item,$context);
 				if(defined($params)) {
 					if(defined($params->{'useMode'})) {
 						Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, 
