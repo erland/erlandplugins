@@ -100,7 +100,7 @@ sub checkSaveSimpleItem {
 
 	my $libraries = $params->{'items'};
 	if(defined($libraries)) {
-		my $id = unescape($params->{'file'});
+		my $id = escape($params->{'file'});
 		my $regexp = ".".$self->simpleExtension."\$";
 		$regexp =~ s/\./\\./;
 		$id =~ s/$regexp//;
@@ -113,6 +113,9 @@ sub checkSaveSimpleItem {
 	}
 	return undef;
 }
+
+# other people call us externally.
+*escape   = \&URI::Escape::uri_escape_utf8;
 
 # don't use the external one because it doesn't know about the difference
 # between a param and not...
