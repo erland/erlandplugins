@@ -62,6 +62,13 @@ sub prepareMenu {
 			if(@parameters->[1]) {
 				$params{'useMode'} ='PLUGIN.CustomBrowse.trackinfo';
 			}
+			shift @parameters;
+			shift @parameters;
+			for my $p (@parameters) {
+				if($p =~ /^(.*?)=(.*)$/) {
+					$params{'parameters'}{$1}=$self->itemParameterHandler->replaceParameters($client,$2,$keywords,$context);
+				}
+			}
 		}
 		return \%params;		
 	}
