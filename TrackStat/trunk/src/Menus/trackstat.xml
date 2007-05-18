@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<template>
-		<id>trackstat.xml</id>
+		<id>trackstat_trackstat</id>
 		<parameter type="text" id="menuname"><value>Statistics</value></parameter>
 		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="statisticgroup"></parameter>
