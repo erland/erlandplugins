@@ -1431,6 +1431,9 @@ sub handleWebContextList {
 			$contextString .= "&contextname=".escape($c{'itemname'});
 		}
 		$c{'itemurl'} = $contextString;
+		if($params->{'noitems'}) {
+			$c{'noitems'} = '&noitems=1';
+		}
 		$contextParams = \%c;
 	}
 	my $items = getContextMenuHandler()->getPageItemsForContext($client,$params,$contextParams,0,'web');

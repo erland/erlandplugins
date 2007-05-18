@@ -624,6 +624,12 @@ sub getPageItemsForContext {
 			}else {
 				$result{'pageinfo'}->{'otherparams'} = $context->{'url'}.$context->{'valueUrl'};
 			}
+			if(defined($contextParams) && defined($contextParams->{'itemurl'})) {
+				$result{'pageinfo'}->{'otherparams'} .= $contextParams->{'itemurl'};
+			}
+			if(defined($contextParams) && defined($contextParams->{'noitems'})) {
+				$result{'pageinfo'}->{'otherparams'} .= $contextParams->{'noitems'};
+			}
 		}
 		my $count = 0;
 		my $prevLetter = '';
