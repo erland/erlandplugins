@@ -426,10 +426,21 @@ sub getAvailableCustomBrowseMenus {
 
 sub getInternalMenuTemplates {
 	my $client = shift;
+	return getInternalTemplates($client,'Menus');
+}
+
+sub getInternalContextMenuTemplates {
+	my $client = shift;
+	return getInternalTemplates($client,'ContextMenus');
+}
+
+sub getInternalTemplates {
+	my $client = shift;
+	my $dir = shift;
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	my @result = ();
 	for my $plugindir (@pluginDirs) {
-		my $templateDir = catdir($plugindir,'MultiLibrary','Menus');
+		my $templateDir = catdir($plugindir,'MultiLibrary',$dir);
 		next unless -d $templateDir;
 		my @dircontents = Slim::Utils::Misc::readDirectory($templateDir,'xml');
 		for my $item (@dircontents) {
@@ -467,7 +478,6 @@ sub getInternalMenuTemplates {
 	}
 	return \@result;
 }
-
 sub getCustomBrowseMenuTemplates {
 	my $client = shift;
 	my @result = ();
@@ -495,6 +505,35 @@ sub getCustomBrowseMenuTemplates {
 	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
 	return \@result;
 }
+
+sub getCustomBrowseContextMenuTemplates {
+	my $client = shift;
+	my @result = ();
+	if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","getMultiLibraryContextMenus")) {
+		debugMsg("Getting library templates from Custom Browse\n");
+		no strict 'refs';
+		my $items = eval { &{"Plugins::CustomBrowse::Plugin::getMultiLibraryContextMenus"}($client) };
+		if ($@) {
+			debugMsg("Error getting templates: $@\n");
+		}
+		use strict 'refs';
+		for my $item (@$items) {
+			my %menu = (
+				'id' => $item->{'id'},
+				'name' => $item->{'name'},
+				'group' => $item->{'group'},
+				'content' => $item->{'content'}
+			);
+			if(defined($item->{'group'}) && $item->{'group'} ne '') {
+				$menu{'name'} = $item->{'group'}.'/'.$item->{'name'};
+			}
+			push @result,\%menu;
+		}
+	}
+	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
+	return \@result;
+}
+
 sub getCustomBrowseMenus {
 	my $client = shift;
 	my @result = ();
@@ -541,15 +580,36 @@ sub getCustomBrowseMenus {
 	return \@result;
 }
 
+sub getCustomBrowseContextMenus {
+	my $client = shift;
+	my @result = ();
+	$internalMenus = getInternalContextMenuTemplates($client);
+	$customBrowseMenus = getCustomBrowseContextMenuTemplates($client);
+
+	my %availableMenus = ();
+	for my $menu (@$internalMenus) {
+		$availableMenus{$menu->{'id'}} = $menu;
+	}
+	for my $menu (@$customBrowseMenus) {
+		$availableMenus{$menu->{'id'}} = $menu;
+	}
+
+	for my $menuKey (keys %availableMenus) {
+		my $menu = $availableMenus{$menuKey};
+		my $content = getContextMenuContent($menu);
+		my %templateItem = (
+			'id' => $menuKey,
+			'type' => 'simple',
+			'menu' => $content
+		);
+		push @result,\%templateItem;
+	}
+	return \@result;
+}
+
 sub getCustomBrowseContextTemplates {
 	my $client = shift;
 	return Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary','ContextMenuTemplates','xml');
-}
-
-sub getCustomBrowseContextMenus {
-	my $client = shift;
-	my $result = Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary','ContextMenus','xml','template','menu','simple',1);
-	return $result;
 }
 
 sub getCustomBrowseContextTemplateData {
@@ -560,13 +620,6 @@ sub getCustomBrowseContextTemplateData {
 	my $data = Plugins::MultiLibrary::Template::Reader::readTemplateData('MultiLibrary','ContextMenuTemplates',$templateItem->{'id'});
 	return $data;
 }
-sub getCustomBrowseContextMenuData {
-	my $client = shift;
-	my $templateItem = shift;
-	my $parameterValues = shift;
-	my $data = Plugins::MultiLibrary::Template::Reader::readTemplateData('MultiLibrary','ContextMenus',$templateItem->{'id'},"xml");
-	return $data;
-}
 
 sub getMenuContent {
 	my $library = shift;
@@ -574,7 +627,9 @@ sub getMenuContent {
 	my %parameters = (
 		'libraryid' => $library->{'id'},
 		'libraryno' => $library->{'libraryno'},
-		'libraryname' => $library->{'name'}
+		'libraryname' => $library->{'name'},
+		'contextlibrary' => 1,
+		'activelibrary' => ''
 	);
 	if(defined($library->{'menugroup'}) && $library->{'menugroup'} ne '') {
 		$parameters{'libraryname'} = $library->{'menugroup'}.'/'.$library->{'name'};
@@ -610,6 +665,25 @@ sub getMenuContent {
 					
 	return $content;
 }
+
+sub getContextMenuContent {
+	my $menu = shift;
+
+	my %parameters = (
+		'libraryid' => '',
+		'libraryno' => '',
+		'contextlibrary' => 1,
+		'activelibrary' => '',
+		'libraryname' => '',
+		'includedclients' => '',
+		'excludedclients' => '',
+		'enabledbrowse' => ''
+	);
+	my $content = replaceParameters($menu->{'content'},\%parameters);
+					
+	return $content;
+}
+
 sub getCustomBrowseMenuData {
 	my $client = shift;
 	my $menu = shift;
@@ -639,6 +713,40 @@ sub getCustomBrowseMenuData {
 		if(defined($selectedMenu)) {
 			my $library = $libraries->{$menu->{'libraryid'}};
 			my $content = getMenuContent($library,$selectedMenu);
+			return $content;
+		}
+	}
+	return undef;
+}
+
+sub getCustomBrowseContextMenuData {
+	my $client = shift;
+	my $menu = shift;
+
+	if(defined($menu->{'id'})) {
+		if(!defined($customBrowseMenus)) {
+			$customBrowseMenus = getCustomBrowseContextMenuTemplates($client);
+		}
+		my $selectedMenu = undef;
+		for my $m (@$customBrowseMenus) {
+			if($m->{'id'} eq $menu->{'id'}) {
+				$selectedMenu = $m;
+				last;
+			}
+		}
+		if(!defined($selectedMenu)) {
+			if(!defined($internalMenus)) {
+				$internalMenus = getInternalContextMenuTemplates($client);
+			}
+			for my $m (@$internalMenus) {
+				if($m->{'id'} eq $menu->{'id'}) {
+					$selectedMenu = $m;
+					last;
+				}
+			}
+		}
+		if(defined($selectedMenu)) {
+			my $content = getContextMenuContent($selectedMenu);
 			return $content;
 		}
 	}
