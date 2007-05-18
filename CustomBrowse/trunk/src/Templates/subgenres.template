@@ -230,7 +230,7 @@
 									<menu>
 										<id>trackdetails</id>
 										<menutype>trackdetails</menutype>
-										<menudata>track</menudata>
+										<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 									</menu>
 								</menu>
 							</menu>
@@ -342,7 +342,7 @@
 								<menu>
 									<id>trackdetails</id>
 									<menutype>trackdetails</menutype>
-									<menudata>track</menudata>
+									<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 								</menu>
 							</menu>
 						</menu>
@@ -442,7 +442,7 @@
 							<menu>
 								<id>trackdetails</id>
 								<menutype>trackdetails</menutype>
-								<menudata>track</menudata>
+								<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 							</menu>
 						</menu>
 					</menu>
@@ -530,7 +530,7 @@
 						<menu>
 							<id>trackdetails</id>
 							<menutype>trackdetails</menutype>
-							<menudata>track</menudata>
+							<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 						</menu>
 					</menu>
 				</menu>
