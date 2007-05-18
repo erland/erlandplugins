@@ -59,7 +59,7 @@ END;
 [%- END %]
 
 	<tr valign="top"><td></td><td colspan="4">
-		[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
+		[% IF !pluginCustomBrowseNoItems && pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
 			[% "ITEMS" | string %] [% pluginCustomBrowsePageInfo.startitem + 1 %] [% "TO" | string %] [% pluginCustomBrowsePageInfo.enditem + 1 %] [% "OF" | string %] [% pluginCustomBrowsePageInfo.totalitems %]
 			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
 		[% END %]
