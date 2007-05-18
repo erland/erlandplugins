@@ -174,6 +174,10 @@ sub setModeContext {
 		$contextHash{'itemname'} = Slim::Music::Info::standardTitle(undef, $track);
 		$contextHash{'itemid'} = $track->id;
 	}
+	if($client->param('library')) {
+		$contextHash{'library'} = $client->param('library');
+		$contextHash{'itemtype'} = 'library'.$contextHash{'itemtype'};
+	}
 	
 	my $menus = getContextMenuHandler()->getMenuItems($client,undef,\%contextHash,'player');
 	my $currentMenu = undef;
@@ -1380,6 +1384,7 @@ sub getHeaderItems {
 			$c{'hierarchy'} = '&hierarchy=';
 			$params->{'hierarchy'} = 'group_'.$c{'itemtype'};
 			$params->{'itemsperpage'}=100;
+			delete $params->{'mainBrowseMenu'};
 			my $headerResult = getContextMenuHandler()->getPageItemsForContext($client,$params,\%c,1,'web');
 			my $headerItems = $headerResult->{'items'};
 			if(defined($headerItems) && scalar(@$headerItems)>0) {
@@ -2616,7 +2621,7 @@ sub readBrowseConfiguration {
 sub readContextBrowseConfiguration {
 	my $client = shift;
 
-	my $itemConfiguration = getContextConfigManager()->readItemConfiguration($client,undef,1);
+	my $itemConfiguration = getContextConfigManager()->readItemConfiguration($client,undef,undef,1);
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	$templates = $itemConfiguration->{'templates'};
 
@@ -2635,12 +2640,24 @@ sub readContextBrowseConfiguration {
 
 sub getMultiLibraryMenus {
 	my $client = shift;
+	return getMultiLibraryInformation($client,getConfigManager(),getMenuHandler());
+}
 
-	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,1,'MultiLibrary::Plugin');
+sub getMultiLibraryContextMenus {
+	my $client = shift;
+	return getMultiLibraryInformation($client,getContextConfigManager(),getContextMenuHandler());
+}
+
+sub getMultiLibraryInformation {
+	my $client = shift;
+	my $configManager = shift;
+	my $menuHandler = shift;
+
+	my $itemConfiguration = $configManager->readItemConfiguration($client,1,'MultiLibrary::Plugin');
     	$templates = $itemConfiguration->{'templates'};
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	foreach my $menu (keys %$localBrowseMenus) {
-		getMenuHandler()->copyKeywords(undef,$localBrowseMenus->{$menu});
+		$menuHandler->copyKeywords(undef,$localBrowseMenus->{$menu});
 	}
     
 	my @result = ();
@@ -2648,7 +2665,7 @@ sub getMultiLibraryMenus {
 		my $menu = $localBrowseMenus->{$menuKey};
 		if(defined($menu->{'simple'})) {
 			if($menu->{'librarysupported'}) {
-				my $xml = getConfigManager()->webAdminMethods->loadTemplateValues($client,$menuKey,$localBrowseMenus->{$menuKey});
+				my $xml = $configManager->webAdminMethods->loadTemplateValues($client,$menuKey,$localBrowseMenus->{$menuKey});
 				my $templateId = $xml->{'id'};
 				my $template = $templates->{$templateId};
 				my $templateParameters = $template->{'parameter'};
@@ -2661,7 +2678,7 @@ sub getMultiLibraryMenus {
 							last;
 						}
 					}
-					if(!$found && ($tp->{'id'} eq 'library' || $tp->{'id'} eq 'menuname' || $tp->{'id'} eq 'menugroup' || $tp->{'id'} eq 'includedclients' || $tp->{'id'} eq 'excludedclients')) {
+					if(!$found && ($tp->{'id'} eq 'library' || $tp->{'id'} eq 'menuname' || $tp->{'id'} eq 'menugroup' || $tp->{'id'} eq 'includedclients' || $tp->{'id'} eq 'excludedclients' || $tp->{'id'} eq 'activelibrary' || $tp->{'id'} eq 'contextlibrary')) {
 						my %newParameter = (
 							'id' => $tp->{'id'},
 							'quotevalue' => $tp->{'quotevalue'}
@@ -2698,6 +2715,25 @@ sub getMultiLibraryMenus {
 					}elsif($p->{'id'} eq 'excludedclients') {
 						my @values = ();
 						push @values,'{excludedclients}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'contextlibrary') {
+						my @values = ();
+						push @values,'{contextlibrary}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'activelibrary') {
+						my @values = ();
+						push @values,'{activelibrary}';
+						$p->{'value'} = \@values;
+					}elsif($p->{'id'} eq 'objecttype') {
+						my $currentValues = $p->{'value'};
+						my $objecttype = undef;
+						if(defined($currentValues) && scalar(@$currentValues)>0) {
+							$objecttype = 'library'.$currentValues->[0];
+						}else {
+							$objecttype = 'library'
+						}
+						my @values = ();
+						push @values,$objecttype;
 						$p->{'value'} = \@values;
 					}
 					my $values = $p->{'value'};

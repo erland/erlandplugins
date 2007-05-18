@@ -117,6 +117,20 @@ sub checkTemplateParameters {
 			$librarySupported = 1;
 			$localcontext->{'librarysupported'} = 1;
 		}
+		if($key eq 'objecttype') {
+			$librarySupported = 1;
+			$localcontext->{'librarysupported'} = 1;
+			my $currentValue = $parameters->{$key};
+			if(defined($currentValue)) {
+				if($currentValue =~ /^library/ || $currentValue =~ /header$/ || $currentValue =~ /footer$/) {
+					$librarySupported = 0;
+					delete $localcontext->{'librarysupported'};
+				}
+			}
+		}
+	}
+	if(defined($globalcontext->{'onlylibrarysupported'}) && !$librarySupported) {
+		return 0;
 	}
 	return 1;
 }

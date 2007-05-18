@@ -46,7 +46,11 @@ sub parse {
 	my $globalcontext = shift;
 
 	my %localcontext = ();
-	return $self->parseContent($client,$item,$content,$items,$globalcontext,\%localcontext);
+	if(!$globalcontext->{'onlylibrarysupported'}) {
+		return $self->parseContent($client,$item,$content,$items,$globalcontext,\%localcontext);
+	}else {
+		undef;
+	}
 }
 
 sub checkContent {

@@ -229,6 +229,7 @@ sub readTemplateConfiguration {
 sub readItemConfiguration {
 	my $self = shift;
 	my $client = shift;
+	my $onlyWithLibrarySupport = shift;
 	my $excludedPlugins = shift;
 	my $storeInCache = shift;
 	
@@ -245,12 +246,17 @@ sub readItemConfiguration {
 	}
 	$globalcontext{'source'} = 'plugin';
 	$globalcontext{'templates'} = $self->templates;
+	if($onlyWithLibrarySupport) {
+		$globalcontext{'onlylibrarysupported'} = 1;
+	}
 
 	$self->contentPluginHandler->readFromPlugins($client,\%localItems,$excludedPlugins,\%globalcontext);
 	for my $plugindir (@pluginDirs) {
 		$globalcontext{'source'} = 'builtin';
 		if( -d catdir($plugindir,"CustomBrowse","ContextMenus")) {
-			$self->contentDirectoryHandler()->readFromDir($client,catdir($plugindir,"CustomBrowse","ContextMenus"),\%localItems,\%globalcontext);
+			if(!$onlyWithLibrarySupport) {
+				$self->contentDirectoryHandler()->readFromDir($client,catdir($plugindir,"CustomBrowse","ContextMenus"),\%localItems,\%globalcontext);
+			}
 			$self->templateContentDirectoryHandler()->readFromDir($client,catdir($plugindir,"CustomBrowse","ContextMenus"),\%localItems, \%globalcontext);
 		}
 	}
@@ -258,7 +264,9 @@ sub readItemConfiguration {
 		$self->debugCallback->("Skipping custom browse configuration scan - directory is undefined\n");
 	}else {
 		$globalcontext{'source'} = 'custom';
-		$self->contentDirectoryHandler()->readFromDir($client,$dir,\%localItems,\%globalcontext);
+		if(!$onlyWithLibrarySupport) {
+			$self->contentDirectoryHandler()->readFromDir($client,$dir,\%localItems,\%globalcontext);
+		}
 		$self->templateContentDirectoryHandler()->readFromDir($client,$dir,\%localItems, \%globalcontext);
 	}
 
