@@ -11,6 +11,7 @@
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="sqlcheckboxes" id="toplevelgenres" name="Genres to show at top level" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
+		<parameter type="singlelist" id="defaultalbumsort" name="Default album sorting" value="byyear" data="bytitle=By title,byyear=By year"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>

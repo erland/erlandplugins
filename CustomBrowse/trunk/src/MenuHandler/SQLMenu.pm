@@ -46,12 +46,19 @@ sub prepareMenu {
 	my $option = shift;
 	my $result = shift;
 	my $context = shift;
+	my $params = shift;
 
 	my $menudata = undef;
 	my $optionKeywords = undef;			
 	if(defined($menu->{'option'})) {
 		if(ref($menu->{'option'}) eq 'ARRAY') {
 			my $foundOption = 0;
+			if(!defined($option) && defined($menu->{'defaultoption'})) {
+				$option = $menu->{'defaultoption'};
+				if(defined($params)) {
+					$params->{'option'} = $option;
+				}
+			}
 			if(defined($option)) {
 				my $options = $menu->{'option'};
 				foreach my $op (@$options) {

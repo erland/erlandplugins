@@ -88,6 +88,7 @@ sub _getMenuItems {
 	my $mainBrowseMenu = shift;
 	my $context = shift;
 	my $interfaceType = shift;
+	my $params = shift;
 
 	my @listRef = ();
 
@@ -175,7 +176,7 @@ sub _getMenuItems {
 			}else {
 				my $menuHandler = $self->menuHandlers->{$menu->{'menutype'}};
 				if(defined($menuHandler)) {
-					my $params = $menuHandler->prepareMenu($client,$menu,$item,$option,\@listRef,$context);
+					my $params = $menuHandler->prepareMenu($client,$menu,$item,$option,\@listRef,$context,$params);
 					if(defined($params)) {
 						return $params;
 					}
@@ -565,7 +566,7 @@ sub getPageItemsForContext {
 	my %result = ();
 	my $items = undef;
 	if(defined($currentMenu) || !defined($params->{'hierarchy'})) {
-		$items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'},$contextParams,$interfaceType);
+		$items = $self->_getMenuItems($client,$item,$params->{'option'},$params->{'mainBrowseMenu'},$contextParams,$interfaceType,$params);
 	}
 	if(defined($items) && ref($items) eq 'ARRAY') {
 		my @resultItems = ();

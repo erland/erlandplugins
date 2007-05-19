@@ -14,6 +14,7 @@
 			<itemtype>album</itemtype>
 			<itemformat>album</itemformat>
 	                <menutype>sql</menutype>
+			[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
 			<option>
 				<id>bytitle</id>
 				<name>Sort by title</name>

@@ -77,6 +77,7 @@
 					<itemtype>album</itemtype>
 					<itemformat>album</itemformat>
 					<menutype>sql</menutype>
+					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
 					<option>
 						<id>byyear</id>
 						<name>Sort by year</name>
@@ -273,6 +274,7 @@
 					<itemtype>album</itemtype>
 					<itemformat>album</itemformat>
 					<menutype>sql</menutype>
+					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
 					<option>
 						<id>byyear</id>
 	                                        <name>Sort by year</name>

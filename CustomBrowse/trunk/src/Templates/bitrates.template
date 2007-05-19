@@ -134,6 +134,7 @@
 						order by rand()
 					</playdata>
 					<menutype>sql</menutype>
+					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
 					<option>
 						<id>byyear</id>
 						<name>Sort by year</name>
