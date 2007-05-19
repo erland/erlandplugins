@@ -236,6 +236,7 @@ sub readItemConfiguration {
 	my $onlyWithLibrarySupport = shift;
 	my $excludedPlugins = shift;
 	my $storeInCache = shift;
+	my $forceRefreshTemplates = shift;
 	
 	my $dir = Slim::Utils::Prefs::get("plugin_custombrowse_directory");
     	$self->debugCallback->("Searching for item configuration in: $dir\n");
@@ -245,7 +246,7 @@ sub readItemConfiguration {
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 
 	my %globalcontext = ();
-	if(!defined($self->templates)) {
+	if(!defined($self->templates) || $forceRefreshTemplates) {
 		$self->templates($self->readTemplateConfiguration());
 	}
 	$globalcontext{'source'} = 'plugin';

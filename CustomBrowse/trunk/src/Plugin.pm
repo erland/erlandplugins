@@ -2645,7 +2645,7 @@ sub prepareCLIBrowseResponse {
 sub readBrowseConfiguration {
 	my $client = shift;
 
-	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,undef,undef,1);
+	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,undef,undef,1,1);
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	$templates = $itemConfiguration->{'templates'};
 
@@ -2668,7 +2668,7 @@ sub readBrowseConfiguration {
 sub readContextBrowseConfiguration {
 	my $client = shift;
 
-	my $itemConfiguration = getContextConfigManager()->readItemConfiguration($client,undef,undef,1);
+	my $itemConfiguration = getContextConfigManager()->readItemConfiguration($client,undef,undef,1,1);
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	$templates = $itemConfiguration->{'templates'};
 
