@@ -1183,6 +1183,8 @@ sub webPages {
                 "custombrowse_albumfile\.(?:txt|pdf|htm)"     => \&handleWebAlbumFile,
                 "webadminmethods_edititems\.(?:htm|xml)"     => \&handleWebEditMenus,
                 "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditMenu,
+                "webadminmethods_hideitem\.(?:htm|xml)"     => \&handleWebHideMenu,
+                "webadminmethods_showitem\.(?:htm|xml)"     => \&handleWebShowMenu,
                 "webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveMenu,
                 "webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleMenu,
                 "webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewMenu,
@@ -1608,6 +1610,26 @@ sub handleWebEditMenu {
 	}else {
 		return getConfigManager()->webEditItem($client,$params);	
 	}
+}
+
+sub handleWebHideMenu {
+        my ($client, $params) = @_;
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		hideMenu($client,$params,getContextConfigManager(),1,'context_menu_');	
+	}else {
+		hideMenu($client,$params,getConfigManager(),1,'menu_');	
+	}
+	return handleWebEditMenus($client,$params);
+}
+
+sub handleWebShowMenu {
+        my ($client, $params) = @_;
+	if($params->{'webadminmethodshandler'} eq 'context') {
+		hideMenu($client,$params,getContextConfigManager(),0,'context_menu_');	
+	}else {
+		hideMenu($client,$params,getConfigManager(),0,'menu_');	
+	}
+	return handleWebEditMenus($client,$params);
 }
 
 sub handleWebDeleteMenuType {
@@ -2191,6 +2213,26 @@ sub executeMix {
 		}
 	}
 }
+
+sub hideMenu {
+	my $client = shift;
+	my $params = shift;
+	my $cfgMgr = shift;
+	my $hide = shift;
+	my $prefix = shift;
+
+	my $items = $cfgMgr->items();
+	my $itemId = escape($params->{'item'});
+	if(defined($items->{$itemId})) {
+		if($hide) {
+			Slim::Utils::Prefs::set('plugin_custombrowse_'.$prefix.$itemId.'_enabled',0);
+			$items->{$itemId}->{'enabled'}=0;
+		}else {
+			Slim::Utils::Prefs::set('plugin_custombrowse_'.$prefix.$itemId.'_enabled',1);
+			$items->{$itemId}->{'enabled'}=1;
+		}
+	}
+}
 # Draws the plugin's select menus web page
 sub handleWebSelectMenus {
         my ($client, $params) = @_;
@@ -2655,10 +2697,10 @@ sub getMultiLibraryContextMenus {
 
 sub getMultiLibraryInformation {
 	my $client = shift;
-	my $configManager = shift;
+	my $cfgMgr = shift;
 	my $menuHandler = shift;
 
-	my $itemConfiguration = $configManager->readItemConfiguration($client,1,'MultiLibrary::Plugin');
+	my $itemConfiguration = $cfgMgr->readItemConfiguration($client,1,'MultiLibrary::Plugin');
     	$templates = $itemConfiguration->{'templates'};
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	foreach my $menu (keys %$localBrowseMenus) {
@@ -2670,7 +2712,7 @@ sub getMultiLibraryInformation {
 		my $menu = $localBrowseMenus->{$menuKey};
 		if(defined($menu->{'simple'})) {
 			if($menu->{'librarysupported'}) {
-				my $xml = $configManager->webAdminMethods->loadTemplateValues($client,$menuKey,$localBrowseMenus->{$menuKey});
+				my $xml = $cfgMgr->webAdminMethods->loadTemplateValues($client,$menuKey,$localBrowseMenus->{$menuKey});
 				my $templateId = $xml->{'id'};
 				my $template = $templates->{$templateId};
 				my $templateParameters = $template->{'parameter'};
@@ -2987,6 +3029,12 @@ PLUGIN_CUSTOMBROWSE_REMOVE_ITEM_TYPE_QUESTION
 
 PLUGIN_CUSTOMBROWSE_REMOVE_ITEM
 	EN	Delete
+
+PLUGIN_CUSTOMBROWSE_HIDE_ITEM
+	EN	Hide
+
+PLUGIN_CUSTOMBROWSE_SHOW_ITEM
+	EN	Show
 
 PLUGIN_CUSTOMBROWSE_MIX_NOTRACKS
 	EN	Unable to create mix
