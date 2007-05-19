@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>154</downloadidentifier>
 		<name>Amazon rating for song</name>
 		<description>Amazon customer rating for album which song belongs to, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Amazon Ratings"/>

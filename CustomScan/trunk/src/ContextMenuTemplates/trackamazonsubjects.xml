@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>155</downloadidentifier>
 		<name>Amazon genres for song</name>
 		<description>Amazon genres for album which song belongs to, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Amazon Genres"/>

@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>157</downloadidentifier>
 		<name>Custom Tags Songs for song</name>
 		<description>Custom tag songs for song, for example CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tags Songs"/>

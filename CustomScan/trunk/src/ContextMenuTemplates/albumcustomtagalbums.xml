@@ -3,8 +3,9 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>152</downloadidentifier>
 		<name>Custom Tags Albums for album</name>
-		<description>Custom tags albums for song that belongs to album, for example CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
+		<description>Custom tags for songs that belongs to album, for example CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tags Albums"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
