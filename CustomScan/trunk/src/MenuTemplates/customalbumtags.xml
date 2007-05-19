@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>148</downloadidentifier>
 		<name>Custom Album Tags</name>
 		<description>Menu that makes it possible to browse your albums by a custom tag, the album is selected first and then the custom tag, for example DATE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Album Tags"/>
