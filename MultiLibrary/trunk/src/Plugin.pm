@@ -978,7 +978,7 @@ sub refreshLibraries {
 					if(defined($library->{'track'})) {
 						my $sql = $library->{'track'}->{'data'};
 						if(defined($sql)) {
-							debugMsg("Adding new data for library $key\n");
+							debugMsg("Adding new data for library $key, running $sql\n");
 							my %keywords = (
 								'library' => $id
 							);

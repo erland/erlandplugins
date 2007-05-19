@@ -40,6 +40,13 @@
 							genre_track.genre=genres.id and
 							genres.name in ([% includedgenres %]))
 					[%- END %]
+					[%- IF includedartists %]
+					and exists(select * from contributor_track,contributors 
+						where 
+							contributor_track.track=tracks.id and
+							contributor_track.contributor=contributors.id and
+							contributors.name in ([% includedartists %]))
+					[%- END %]
 					[%- IF includedcomment %]
 					and tracks.id=comments.track and
 					[%- IF containsincludedcomment %]
@@ -54,6 +61,13 @@
 							genre_track.track=tracks.id and
 							genre_track.genre=genres.id and
 							genres.name in ([% excludedgenres %]))
+					[%- END %]
+					[%- IF excludedartists %]
+					and not exists(select * from contributor_track,contributors 
+						where 
+							contributor_track.track=tracks.id and
+							contributor_track.genre=contributors.id and
+							contributors.name in ([% excludedartists %]))
 					[%- END %]
 					[%- IF excludedcomment %]
 					and not exists(select * from comments 
