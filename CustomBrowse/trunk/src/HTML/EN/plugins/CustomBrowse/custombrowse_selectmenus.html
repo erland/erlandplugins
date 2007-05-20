@@ -9,7 +9,7 @@
 [% END -%]
 [% PROCESS pageheader.html %]
 
-<form action="[% webroot %]plugins/CustomBrowse/custombrowse_saveselectmenus.html" name="editForm">
+<form action="[% webroot %]plugins/CustomBrowse/custombrowse_saveselectmenus.html" method="post" name="editForm">
 	<table border="0">
 		<tr><td><b>[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS_BROWSE_TITLE" | string %]</b></td><td colspan="2"><b>[% "PLUGIN_CUSTOMBROWSE_SELECT_MENUS_TITLE" | string %]</b></td></tr>
 		[%- FOREACH menu IN pluginCustomBrowseMenus %]
