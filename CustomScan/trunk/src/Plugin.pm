@@ -991,6 +991,8 @@ sub refreshTitleFormats() {
 								if($result) {
 									$result .= ', ';
 								}
+								$value = Slim::Utils::Unicode::utf8on($value);
+								$value = Slim::Utils::Unicode::utf8encode_locale($value);
 								$result .= $value;
 							}
 							$sth->finish();
