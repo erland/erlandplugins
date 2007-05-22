@@ -25,7 +25,7 @@
 					contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 					tracks.album=albums.id and
 					(albums.compilation is null or albums.compilation=0) and
-					albums.title='No Album' and
+					albums.title='[% IF noalbumtext %][% noalbumtext %][% ELSE %]No Album[% END %]' and
 					tracks.audio=1
 				group by substr(contributors.namesort,1,1)
 				order by contributors.namesort asc
@@ -48,7 +48,7 @@
 	                                        contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 	                                        tracks.album=albums.id and
 						(albums.compilation is null or albums.compilation=0) and
-						albums.title='No Album' and 
+						albums.title='[% IF noalbumtext %][% noalbumtext %][% ELSE %]No Album[% END %]' and 
 						substr(contributors.namesort,1,1)='{artistletter}' and
 	                                        tracks.audio=1
 	                                group by contributors.id
@@ -71,7 +71,7 @@
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							contributor_track.contributor={artist} and
 							tracks.album=albums.id and
-							albums.title='No Album' and
+							albums.title='[% IF noalbumtext %][% noalbumtext %][% ELSE %]No Album[% END %]' and
 							tracks.audio=1
 						group by tracks.id 
 						order by tracks.disc,tracks.tracknum,tracks.titlesort asc
