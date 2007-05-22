@@ -86,7 +86,7 @@ sub prepareMenu {
 			}
 			if(defined($menu->{'contextid'})) {
 				$menuItem{'parameters'}->{$menu->{'contextid'}} = $self->_escapeSubDir($subdir);
-			}elsif(defined($menu->{'contextid'})) {
+			}elsif(defined($menu->{'id'})) {
 				$menuItem{'parameters'}->{$menu->{'id'}} = $self->_escapeSubDir($subdir);
 			}
 			push @$result, \%menuItem;

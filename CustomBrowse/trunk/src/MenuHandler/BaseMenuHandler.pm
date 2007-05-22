@@ -950,9 +950,9 @@ sub _getSubContext {
 				$name = $item->{'menuname'};
 			}else {
 				if(defined($item->{'contextid'})) {
-					$name = $item->{'id'};
-				}else {
 					$name = $item->{'contextid'};
+				}else {
+					$name = $item->{'id'};
 				}
 			}
 			my %resultItem = (
