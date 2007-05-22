@@ -1,9 +1,17 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
 -- PlaylistParameter1:artist:Select artist:
-(select distinct tracks.url from tracks
+[%- IF nooftracks %]
+-- PlaylistOption Unlimited:1
+[%- END %]
+[% IF toprated %]select url from ([% END -%]
+(select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
+	[%- IF toprated or notrated %]
+	left join track_statistics on
+		tracks.url=track_statistics.url
+	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
 		tracks.id=dynamicplaylist_history.id
@@ -18,15 +26,25 @@
 	where
 		audio=1
 	[%- IF notrepeat %]
-		and dynamicplaylist_history.id is null and
+		and dynamicplaylist_history.id is null
 	[%- END %]
-		(attr1.id is not null and exists(select id from contributors 
+		and (attr1.id is not null and exists(select id from contributors 
 							where attr1.value=contributors.name and 
 							contributors.id='PlaylistParameter1'))
+	[%- IF notrated %]
+		and track_statistics.rating is null 
+	[%- END %]
+[%- IF toprated %]
+order by track_statistics.rating desc
+[%- END %]
 ) union 
-(select distinct tracks.url from tracks
+(select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
+	[%- IF toprated or notrated %]
+	left join track_statistics on
+		tracks.url=track_statistics.url
+	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
 		tracks.id=dynamicplaylist_history.id
@@ -41,13 +59,23 @@
 	where
 		audio=1
 	[%- IF notrepeat %]
-		and dynamicplaylist_history.id is null and
+		and dynamicplaylist_history.id is null
 	[%- END %]
-		(attr2.id is not null and attr2.contributor='PlaylistParameter1')
+		and (attr2.id is not null and attr2.contributor='PlaylistParameter1')
+	[%- IF notrated %]
+		and track_statistics.rating is null 
+	[%- END %]
+[%- IF toprated %]
+order by track_statistics.rating desc
+[%- END %]
 ) union 
-(select distinct tracks.url from tracks
+(select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
+	[%- IF toprated or notrated %]
+	left join track_statistics on
+		tracks.url=track_statistics.url
+	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
 		tracks.id=dynamicplaylist_history.id
@@ -55,8 +83,14 @@
 	where
 		audio=1
 	[%- IF notrepeat %]
-		and dynamicplaylist_history.id is null and
+		and dynamicplaylist_history.id is null
 	[%- END %]
-		contributors.id='PlaylistParameter1'
-) order by rand()
-  limit 10;
+		and contributors.id='PlaylistParameter1'
+	[%- IF notrated %]
+		and track_statistics.rating is null 
+	[%- END %]
+[%- IF toprated %]
+order by track_statistics.rating desc
+[%- END %]
+) order by [%- IF toprated %]rating desc,[% END %]rand()
+  limit [% IF nooftracks %][% nooftracks %][% ELSE %]10[% END %][% IF toprated %]) as similartracks[% END -%];
