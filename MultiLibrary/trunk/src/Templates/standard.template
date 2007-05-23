@@ -5,6 +5,9 @@
 		[%- IF menugroup %]
 		<menugroup>[% menugroup %]</menugroup>
 		[%- END %]
+		[%- IF libraryorder %]
+		<libraryorder>[% libraryorder %]</libraryorder>
+		[%- END %]
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		<enabledbrowse>[% enabledbrowse %]</enabledbrowse>
@@ -26,8 +29,25 @@
 					or tracks.url like '[% directory4 | fileurl %]%'
 					[%- END %]
 					[% IF directory1 or directory2 or directory3 or directory4 %]) and [% END %]
+					[% IF excludedirectory1 or excludedirectory2 or excludedirectory3 or excludedirectory4 %]([% END %]
+					[%- IF excludedirectory1 %]
+					tracks.url not like '[% excludedirectory1 | fileurl %]%'
+					[%- END %]
+					[%- IF excludedirectory2 %]
+					and tracks.url not like '[% excludedirectory2 | fileurl %]%'
+					[%- END %]
+					[%- IF excludedirectory3 %]
+					and tracks.url not like '[% excludedirectory3 | fileurl %]%'
+					[%- END %]
+					[%- IF excludedirectory4 %]
+					and tracks.url not like '[% excludedirectory4 | fileurl %]%'
+					[%- END %]
+					[% IF excludedirectory1 or excludedirectory2 or excludedirectory3 or excludedirectory4 %]) and [% END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
+					[%- END %]
+					[%- IF lossy %]
+					tracks.lossless=0 and
 					[%- END %]
 					tracks.audio=1
 					[%- IF includedcontenttypes %]
