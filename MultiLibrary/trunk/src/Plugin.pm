@@ -248,42 +248,45 @@ sub initLibraries {
 
 	my $localLibraries = $itemConfiguration->{'libraries'};
 
-	my $dbh = getCurrentDBH();
-
 	for my $libraryid (keys %$localLibraries) {
-		my $library = $localLibraries->{$libraryid};
-		my $sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
-		$sth->bind_param(1,$libraryid,SQL_VARCHAR);
-		$sth->execute();
-			
-		my $id;
-		$sth->bind_col(1, \$id);
-		if($sth->fetch()) {
-			$sth->finish();
-			$sth = $dbh->prepare("UPDATE multilibrary_libraries set name=? where id=?");
-			$sth->bind_param(1,$library->{'name'},SQL_VARCHAR);
-			$sth->bind_param(2,$id,SQL_INTEGER);
-			$sth->execute();
-		}else {
-			$sth->finish();
-			$sth = $dbh->prepare("INSERT into multilibrary_libraries (libraryid,name) values (?,?)");
-			$sth->bind_param(1,$libraryid,SQL_VARCHAR);
-			$sth->bind_param(2,$library->{'name'},SQL_VARCHAR);
-			$sth->execute();
-			$sth->finish();
-			$sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
-			$sth->bind_param(1,$libraryid,SQL_VARCHAR);
-			$sth->execute();
-			$sth->bind_col(1, \$id);
-			$sth->fetch();
-		}
-		$localLibraries->{$libraryid}->{'libraryno'} = $id;
+		$localLibraries->{$libraryid}->{'libraryno'} = initDatabaseLibrary($localLibraries->{$libraryid});
 	}
 
 	$libraries = $localLibraries;
 
 }
 
+sub initDatabaseLibrary {
+	my $library = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
+	$sth->bind_param(1,$library->{'id'},SQL_VARCHAR);
+	$sth->execute();
+		
+	my $id;
+	$sth->bind_col(1, \$id);
+	if($sth->fetch()) {
+		$sth->finish();
+		$sth = $dbh->prepare("UPDATE multilibrary_libraries set name=? where id=?");
+		$sth->bind_param(1,$library->{'name'},SQL_VARCHAR);
+		$sth->bind_param(2,$id,SQL_INTEGER);
+		$sth->execute();
+	}else {
+		$sth->finish();
+		$sth = $dbh->prepare("INSERT into multilibrary_libraries (libraryid,name) values (?,?)");
+		$sth->bind_param(1,$library->{'id'},SQL_VARCHAR);
+		$sth->bind_param(2,$library->{'name'},SQL_VARCHAR);
+		$sth->execute();
+		$sth->finish();
+		$sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
+		$sth->bind_param(1,$library->{'id'},SQL_VARCHAR);
+		$sth->execute();
+		$sth->bind_col(1, \$id);
+		$sth->fetch();
+	}
+	return $id;
+}
 sub getCustomSkipFilterTypes {
 	my @result = ();
 	my %notactive = (
@@ -883,6 +886,7 @@ sub powerCallback($)
 sub refreshLibraries {
 	msg("MultiLibrary: Synchronizing libraries data, please wait...\n");
 	eval {
+		initLibraries();
 		my $dbh = getCurrentDBH();
 		my $libraryIds = '';
 		for my $key (keys %$libraries) {
@@ -924,37 +928,35 @@ sub refreshLibraries {
 		$sth->finish();
 
 		# Synchronize existing libraries
+		my @sortedLibraries = ();
 		for my $key (keys %$libraries) {
-			eval {
-				debugMsg("Checking library $key\n");
-				my $library = $libraries->{$key};
-				$sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
-				$sth->bind_param(1,$key,SQL_VARCHAR);
-				$sth->execute();
-					
-				my $id;
-				$sth->bind_col(1, \$id);
-				if($sth->fetch()) {
-					$sth->finish();
-					$sth = $dbh->prepare("UPDATE multilibrary_libraries set name=? where id=?");
-					$sth->bind_param(1,$library->{'name'},SQL_VARCHAR);
-					$sth->bind_param(2,$id,SQL_INTEGER);
-					$sth->execute();
-				}else {
-					$sth->finish();
-					$sth = $dbh->prepare("INSERT into multilibrary_libraries (libraryid,name) values (?,?)");
-					$sth->bind_param(1,$key,SQL_VARCHAR);
-					$sth->bind_param(2,$library->{'name'},SQL_VARCHAR);
-					$sth->execute();
-					$sth->finish();
-					$sth = $dbh->prepare("select id from multilibrary_libraries where libraryid=?");
-					$sth->bind_param(1,$key,SQL_VARCHAR);
-					$sth->execute();
-					$sth->bind_col(1, \$id);
-					$sth->fetch();
+			push @sortedLibraries,$libraries->{$key};
+		}
+		@sortedLibraries = sort { 
+			if(defined($a->{'libraryorder'}) && defined($b->{'libraryorder'})) {
+				if($a->{'libraryorder'}!=$b->{'libraryorder'}) {
+					return $a->{'libraryorder'} <=> $b->{'libraryorder'};
 				}
+			}
+			if(defined($a->{'libraryorder'}) && !defined($b->{'libraryorder'})) {
+				if($a->{'libraryorder'}!=50) {
+					return $a->{'libraryorder'} <=> 50;
+				}
+			}
+			if(!defined($a->{'libraryorder'}) && defined($b->{'libraryorder'})) {
+				if($b->{'libraryorder'}!=50) {
+					return 50 <=> $b->{'libraryorder'};
+				}
+			}
+			return $a->{'libraryorder'} cmp $b->{'libraryorder'} 
+		} @sortedLibraries;
+		
+		for my $library (@sortedLibraries) {
+			eval {
+				debugMsg("Checking library ".$library->{'id'}."\n");
+				my $id = initDatabaseLibrary($library);
 				if(defined($id)) {
-					debugMsg("Deleting data for library $key\n");
+					debugMsg("Deleting data for library $id\n");
 					$sth = $dbh->prepare("DELETE from multilibrary_track where library=?");
 					$sth->bind_param(1,$id,SQL_INTEGER);
 					$sth->execute();
@@ -978,7 +980,7 @@ sub refreshLibraries {
 					if(defined($library->{'track'})) {
 						my $sql = $library->{'track'}->{'data'};
 						if(defined($sql)) {
-							debugMsg("Adding new data for library $key, running $sql\n");
+							debugMsg("Adding new data for library ".$library->{'id'}.", running $sql\n");
 							my %keywords = (
 								'library' => $id
 							);
