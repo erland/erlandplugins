@@ -134,6 +134,11 @@ END;
 		        [% END %]
 		[% END %]
     	</td></tr>
+	<tr valign="top"><td></td><td colspan="4">
+		[% IF !pluginCustomBrowseNoItems && pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
+			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
+		[% END %]
+	</td></tr>
 <tr><td></td><td colspan="4">&nbsp;</td></tr>
 [% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 <tr><td></td><td colspan="4">
