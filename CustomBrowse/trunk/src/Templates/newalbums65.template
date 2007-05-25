@@ -52,7 +52,7 @@
 						[%- END %]
 						tracks.audio=1 and 
 						tracks.album={album} 
-					order by tracks.timestamp desc
+					order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 				</menudata>
 				<menu>
 					<id>trackdetails</id>
