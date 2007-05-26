@@ -334,7 +334,10 @@ sub fullRescan {
 	$scanningInProgress = 1;
 	$modules = getPluginModules();
 
-	for my $key (keys %$modules) {
+	my @moduleKeys = ();
+	my $array = getSortedModuleKeys();
+	push @moduleKeys,@$array;
+	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		if($module->{'enabled'} && defined($module->{'scanInit'})) {
 			no strict 'refs';
@@ -473,11 +476,8 @@ sub exitScan {
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
 	}else {
-		for my $key (keys %$modules) {
-			if($modules->{$key}->{'enabled'}) {
-				push @moduleKeys,$key;
-			}
-		}
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
 	}
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
@@ -513,17 +513,14 @@ sub initArtistScan {
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
 	}else {
-		for my $key (keys %$modules) {
-			if($modules->{$key}->{'enabled'}) {
-				push @moduleKeys,$key;
-			}
-		}
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
 	}
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $key;
 		my $moduleId = $module->{'id'};
-		if(defined($module->{'scanArtist'}) && defined($module->{'alwaysRescanArtist'}) && $module->{'alwaysRescanArtist'}) {
+		if((defined($module->{'scanArtist'}) || defined($module->{'initScanArtist'})) && defined($module->{'alwaysRescanArtist'}) && $module->{'alwaysRescanArtist'}) {
 			debugMsg("Clearing artist data for ".$moduleId."\n");
 			eval {
 				my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId));
@@ -538,8 +535,57 @@ sub initArtistScan {
 			    };
 		   	}
 		}
+		if(defined($module->{'initScanArtist'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::initScanArtist\n");
+			eval { &{$module->{'initScanArtist'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call initScanArtist on module $key: $@\n");
+			}
+			use strict 'refs';
+		}
 	}
 	Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey);
+}
+
+sub getSortedModuleKeys {
+	my @moduleArray = ();
+	for my $key (keys %$modules) {
+		if($modules->{$key}->{'enabled'}) {
+			my %tmp = (
+				'key' => $key,
+				'module' => $modules
+			);
+			push @moduleArray,\%tmp;
+		}
+	}
+	@moduleArray = sort { 
+		if(defined($a->{'module'}->{'order'}) && defined($b->{'module'}->{'order'})) {
+			if($a->{'module'}->{'order'}!=$b->{'module'}->{'order'}) {
+				return $a->{'module'}->{'order'} <=> $b->{'module'}->{'order'};
+			}
+		}
+		if(defined($a->{'module'}->{'order'}) && !defined($b->{'module'}->{'order'})) {
+			if($a->{'module'}->{'order'}!=50) {
+				return $a->{'order'} <=> 50;
+			}
+		}
+		if(!defined($a->{'module'}->{'order'}) && defined($b->{'module'}->{'order'})) {
+			if($b->{'module'}->{'order'}!=50) {
+				return 50 <=> $b->{'module'}->{'order'};
+			}
+		}
+		if(!defined($a->{'module'}->{'order'}) && !defined($b->{'module'}->{'order'})) {
+			return 0;
+		}
+		return $a->{'module'}->{'order'} cmp $b->{'module'}->{'order'} 
+	} @moduleArray;
+	
+	my @moduleKeys = ();		
+	for my $module (@moduleArray) {
+		push @moduleKeys,$module->{'key'};
+	}
+	return \@moduleKeys;
 }
 
 sub initAlbumScan {
@@ -551,16 +597,13 @@ sub initAlbumScan {
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
 	}else {
-		for my $key (keys %$modules) {
-			if($modules->{$key}->{'enabled'}) {
-				push @moduleKeys,$key;
-			}
-		}
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
 	}
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
-		if(defined($module->{'scanAlbum'}) && defined($module->{'alwaysRescanAlbum'}) && $module->{'alwaysRescanAlbum'}) {
+		if((defined($module->{'scanAlbum'}) || defined($module->{'initScanAlbum'})) && defined($module->{'alwaysRescanAlbum'}) && $module->{'alwaysRescanAlbum'}) {
 			debugMsg("Clearing album data for ".$moduleId."\n");
 			eval {
 				my $sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId));
@@ -575,6 +618,15 @@ sub initAlbumScan {
 			    };
 		   	}
 		}
+		if(defined($module->{'initScanAlbum'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::initScanAlbum\n");
+			eval { &{$module->{'initScanAlbum'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
+			}
+			use strict 'refs';
+		}
 	}
 	Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey);
 }
@@ -588,16 +640,13 @@ sub initTrackScan {
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
 	}else {
-		for my $key (keys %$modules) {
-			if($modules->{$key}->{'enabled'}) {
-				push @moduleKeys,$key;
-			}
-		}
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
 	}
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
-		if(defined($module->{'scanTrack'}) && defined($module->{'alwaysRescanTrack'}) && $module->{'alwaysRescanTrack'}) {
+		if((defined($module->{'scanTrack'}) || defined($module->{'initScanTrack'})) && defined($module->{'alwaysRescanTrack'}) && $module->{'alwaysRescanTrack'}) {
 			debugMsg("Clearing track data for ".$moduleId."\n");
 			eval {
 				my $sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId));
@@ -611,6 +660,15 @@ sub initTrackScan {
 			    	rollback($dbh); #just die if rollback is failing
 			    };
 		   	}
+		}
+		if(defined($module->{'initScanTrack'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::initScanTrack\n");
+			eval { &{$module->{'initScanTrack'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call initScanTrack on module $key: $@\n");
+			}
+			use strict 'refs';
 		}
 	}
 	Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey);
@@ -626,19 +684,16 @@ sub scanArtist {
 			$artist = $artists->next;
 		}
 	}
+	my @moduleKeys = ();
+	if(defined($moduleKey)) {
+		push @moduleKeys,$moduleKey;
+	}else {
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
+	}
 	if(defined($artist)) {
 		my $dbh = getCurrentDBH();
 		#debugMsg("Scanning artist: ".$artist->name."\n");
-		my @moduleKeys = ();
-		if(defined($moduleKey)) {
-			push @moduleKeys,$moduleKey;
-		}else {
-			for my $key (keys %$modules) {
-				if($modules->{$key}->{'enabled'}) {
-					push @moduleKeys,$key;
-				}
-			}
-		}
 		for my $key (@moduleKeys) {
 			my $module = $modules->{$key};
 			my $moduleId = $module->{'id'};
@@ -665,7 +720,7 @@ sub scanArtist {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value,valuesort,extravalue) values (?,?,?,?,?,?,?,?)";
+							$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $artist->id , SQL_INTEGER);
@@ -680,6 +735,7 @@ sub scanArtist {
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -688,7 +744,7 @@ sub scanArtist {
 							    eval {
 							    	rollback($dbh); #just die if rollback is failing
 							    };
-							    debugMsg("Error values: ".$artist->id.", ".$artist->name.", ".$artist->musicbrainz_id.", ".$moduleId.", ".$attribute->{'name'}.", ".$attribute->{'value'}.", ".$attribute->{'valuesort'}.", ".$attribute->{'extravalue'}."\n");
+							    debugMsg("Error values: ".$artist->id.", ".$artist->name.", ".$artist->musicbrainz_id.", ".$moduleId.", ".$attribute->{'name'}.", ".$attribute->{'value'}.", ".$attribute->{'valuesort'}.", ".$attribute->{'extravalue'}.", ".$attribute->{'valuetype'}."\n");
 						   	}
 							$sth->finish();
 						}
@@ -698,6 +754,18 @@ sub scanArtist {
 		}
 		if(!$scanningAborted) {
 			return 1;
+		}
+	}
+	for my $key (@moduleKeys) {
+		my $module = $modules->{$key};
+		if(defined($module->{'exitScanArtist'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::exitScanArtist\n");
+			eval { &{$module->{'exitScanArtist'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
+			}
+			use strict 'refs';
 		}
 	}
 	initAlbumScan($moduleKey);
@@ -718,19 +786,16 @@ sub scanAlbum {
 			$album = $albums->next;
 		}
 	}
+	my @moduleKeys = ();
+	if(defined($moduleKey)) {
+		push @moduleKeys,$moduleKey;
+	}else {
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
+	}
 	if(defined($album)) {
 		my $dbh = getCurrentDBH();
 		#debugMsg("Scanning album: ".$album->title."\n");
-		my @moduleKeys = ();
-		if(defined($moduleKey)) {
-			push @moduleKeys,$moduleKey;
-		}else {
-			for my $key (keys %$modules) {
-				if($modules->{$key}->{'enabled'}) {
-					push @moduleKeys,$key;
-				}
-			}
-		}
 		for my $key (@moduleKeys) {
 			my $module = $modules->{$key};
 			my $moduleId = $module->{'id'};
@@ -757,7 +822,7 @@ sub scanAlbum {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value,valuesort,extravalue) values (?,?,?,?,?,?,?,?)";
+							$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $album->id , SQL_INTEGER);
@@ -772,6 +837,7 @@ sub scanAlbum {
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -791,6 +857,18 @@ sub scanAlbum {
 			return 1;
 		}
 	}
+	for my $key (@moduleKeys) {
+		my $module = $modules->{$key};
+		if(defined($module->{'exitScanAlbum'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::exitScanAlbum\n");
+			eval { &{$module->{'exitScanAlbum'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
+			}
+			use strict 'refs';
+		}
+	}
 	initTrackScan($moduleKey);
 	return 0;
 }
@@ -805,19 +883,16 @@ sub scanTrack {
 			$track = $tracks->next;
 		}
 	}
+	my @moduleKeys = ();
+	if(defined($moduleKey)) {
+		push @moduleKeys,$moduleKey;
+	}else {
+		my $array = getSortedModuleKeys();
+		push @moduleKeys,@$array;
+	}
 	if(defined($track)) {
 		my $dbh = getCurrentDBH();
 		#debugMsg("Scanning track: ".$track->title."\n");
-		my @moduleKeys = ();
-		if(defined($moduleKey)) {
-			push @moduleKeys,$moduleKey;
-		}else {
-			for my $key (keys %$modules) {
-				if($modules->{$key}->{'enabled'}) {
-					push @moduleKeys,$key;
-				}
-			}
-		}
 		for my $key (@moduleKeys) {
 			my $module = $modules->{$key};
 			my $moduleId = $module->{'id'};
@@ -844,7 +919,7 @@ sub scanTrack {
 					if($attributes && scalar(@$attributes)>0) {
 						for my $attribute (@$attributes) {
 							my $sql = undef;
-							$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) values (?,?,?,?,?,?,?,?)";
+							$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
 							my $sth = $dbh->prepare( $sql );
 							eval {
 								$sth->bind_param(1, $track->id , SQL_INTEGER);
@@ -859,6 +934,7 @@ sub scanTrack {
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
 								$sth->execute();
 								commit($dbh);
 							};
@@ -876,6 +952,18 @@ sub scanTrack {
 		}
 		if(!$scanningAborted) {
 			return 1;
+		}
+	}
+	for my $key (@moduleKeys) {
+		my $module = $modules->{$key};
+		if(defined($module->{'exitScanTrack'})) {
+			no strict 'refs';
+			#debugMsg("Calling: ".$plugin."::exitScanTrack\n");
+			eval { &{$module->{'exitScanTrack'}}(); };
+			if ($@) {
+				msg("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
+			}
+			use strict 'refs';
 		}
 	}
 	exitScan($moduleKey);
@@ -1179,6 +1267,12 @@ sub initDatabase {
 	if ($@) {
 		msg("CustomScan: Upgrading database adding table column extravalue, please wait...\n");
 		executeSQLFile("dbupgrade_extravalue.sql");
+	}
+
+	eval { $dbh->do("select valuetype from customscan_track_attributes limit 1;") };
+	if ($@) {
+		msg("CustomScan: Upgrading database adding table column valuetype, please wait...\n");
+		executeSQLFile("dbupgrade_valuetype.sql");
 	}
 
 	my $sth = $dbh->prepare("show create table customscan_track_attributes");
@@ -1964,6 +2058,12 @@ PLUGIN_CUSTOMSCAN_REFRESH
 
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED
 	EN	Enable in automatic and full scans
+
+PLUGIN_CUSTOMSCAN_MATCHING_ALBUMS
+	EN	Matching Albums
+
+PLUGIN_CUSTOMSCAN_MATCHING_SONGS
+	EN	Matching Songs
 EOF
 
 }
