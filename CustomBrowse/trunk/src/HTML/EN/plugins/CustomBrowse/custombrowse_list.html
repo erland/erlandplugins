@@ -68,7 +68,7 @@ END;
 		[% odd = 1 %]
 		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
 			[% WRAPPER contentcontainer %]
-				[% IF pluginCustomBrowseCurrentContext %]
+				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
 					[% BLOCK allsongscontrols %]
 						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
 					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
