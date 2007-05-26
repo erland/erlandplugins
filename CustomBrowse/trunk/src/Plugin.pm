@@ -1334,8 +1334,12 @@ sub handleWebList {
 		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
 	}
 
+	$params->{'pluginCustomBrowsePlayAddAll'} = 1;
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+	}
+	if(defined($items->{'playable'}) && !$items->{'playable'}) {
+		$params->{'pluginCustomBrowsePlayAddAll'} = 0;
 	}
 	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
 		$params->{'pluginCustomBrowseHeaderItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'},undef,"header");
@@ -1488,6 +1492,9 @@ sub handleWebContextList {
 
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+	}
+	if(defined($items->{'playable'}) && !$items->{'playable'}) {
+		$params->{'pluginCustomBrowsePlayAddAll'} = 0;
 	}
 	
 	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
@@ -1807,22 +1814,13 @@ sub handleWebPlayAdd {
 			$c{'itemurl'} = $contextString;
 			$contextParams = \%c;
 		}
-		$items = getContextMenuHandler()->getPageItemsForContext($client,$params,$contextParams,0,'web');
+		my $it = getContextMenuHandler()->getPageItem($client,$params,$contextParams,0,'web');
+		getContextMenuHandler()->playAddItem($client,undef,$it,$addOnly,undef);
 	}else {
-		$items = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'web');
+		my $it = getMenuHandler()->getPageItem($client,$params,undef,0,'web');
+		getMenuHandler()->playAddItem($client,undef,$it,$addOnly,undef);
 	}
-	if(defined($items->{'items'})) {
-		my $playItems = $items->{'items'};
-		foreach my $playItem (@$playItems) {
-			debugMsg(($addOnly?"Adding ":"Playing ").$playItem->{'itemname'}."\n");
-			if($usecontext) {
-				getContextMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
-			}else {
-				getMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
-			}
-			$addOnly = 1;
-		}
-	}
+
 	my $hierarchy = $params->{'hierarchy'};
 	if(defined($hierarchy)) {
 		my @hierarchyItems = (split /,/, $hierarchy);
@@ -1834,7 +1832,7 @@ sub handleWebPlayAdd {
 				$newHierarchy = $newHierarchy.',';
 			}
 			if($i<$noOfHierarchiesToUse) {
-				$newHierarchy = $hierarchyItem;
+				$newHierarchy .= $hierarchyItem;
 			}
 			$i=$i+1;
 		}
