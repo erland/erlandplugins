@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.18</minpluginversion>
+	<minpluginversion>1.22</minpluginversion>
 	<template>
 		<downloadidentifier>170</downloadidentifier>
 		<name>Mixed Tags</name>
