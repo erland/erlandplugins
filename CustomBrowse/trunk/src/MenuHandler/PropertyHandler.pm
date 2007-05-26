@@ -56,7 +56,6 @@ sub getProperties {
 		if($item =~ m/^([a-zA-Z0-9]+?)\s*=\s*(.+)\s*$/) {
 			my $name = $1;
 			my $value = $2;
-			$self->debugCallback->("Got property: $name=$value\n");
 			$result{$name}=$value;
 		}
 	}
