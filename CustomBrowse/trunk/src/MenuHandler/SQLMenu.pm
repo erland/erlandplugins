@@ -111,6 +111,9 @@ sub prepareMenu {
 		for my $menuKey (keys %{$menu}) {
 			$menuItem{$menuKey} = $menu->{$menuKey};
 		}
+		if(defined($dataItem->{'type'}) && $menu->{'itemtype'} eq 'sql') {
+			$menuItem{'itemtype'} = $dataItem->{'type'};
+		}
 		my %parameters = ();
 		$menuItem{'parameters'} = \%parameters;
 		if(defined($item->{'parameters'})) {

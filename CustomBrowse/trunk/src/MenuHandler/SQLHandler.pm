@@ -78,11 +78,16 @@ sub _execute {
 				my $id;
                                 my $name;
                                 my $link;
+                                my $valuetype;
 				$sth->bind_col( 1, \$id);
                                 $sth->bind_col( 2, \$name);
 				# bind optional column
 				eval {
 	                                $sth->bind_col( 3, \$link);
+				};
+				# bind optional column
+				eval {
+	                                $sth->bind_col( 4, \$valuetype);
 				};
 				while( $sth->fetch() ) {
                                     my %item = (
@@ -91,6 +96,9 @@ sub _execute {
                                     );
 				    if(defined($link)) {
 					$item{'link'} = Slim::Utils::Unicode::utf8decode($link,'utf8');
+                                    }
+				    if(defined($valuetype)) {
+					$item{'type'} = Slim::Utils::Unicode::utf8decode($valuetype,'utf8');
                                     }
                                     push @result, \%item;
 				}

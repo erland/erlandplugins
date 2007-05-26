@@ -80,6 +80,76 @@ sub getMenuItems {
 	return $self->_getMenuItems($client,$item,undef,undef,$context,$interfaceType);
 }
 
+sub _getFunctionMenu {
+	my $self = shift;
+	my $client = shift;
+	my $item = shift;
+	my $context = shift;
+	my $parameters = shift;
+
+	my $result = undef;
+	my @functions = split(/\|/,$item->{'menufunction'});
+	if(scalar(@functions)>0) {
+		my $dataFunction = @functions->[0];
+		if($dataFunction =~ /^(.+)::([^:].*)$/) {
+			my $class = $1;
+			my $function = $2;
+
+			shift @functions;
+			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
+			my %empty = ();
+			for my $item (@functions) {
+				if($item =~ /^(.+)=(.*)$/) {
+					$keywords->{$1}=$self->itemParameterHandler->replaceParameters($client,$2,$keywords,$context);;
+				}
+			}
+			if(UNIVERSAL::can("$class","$function")) {
+				$self->debugCallback->("Calling ${class}->${function}\n");
+				no strict 'refs';
+				$result = eval { $class->$function($client,$keywords) };
+				if ($@) {
+					$self->debugCallback->("Error calling ${class}->${function}: $@\n");
+				}
+			}
+		}
+	}
+	return $result;
+}
+
+sub _getFunctionItemFormat {
+	my $self = shift;
+	my $client = shift;
+	my $item = shift;
+
+	my $result = undef;
+	my @functions = split(/\|/,$item->{'itemformatdata'});
+	if(scalar(@functions)>0) {
+		my $dataFunction = @functions->[0];
+		if($dataFunction =~ /^(.+)::([^:].*)$/) {
+			my $class = $1;
+			my $function = $2;
+
+			shift @functions;
+			my %keywords = ();
+			for my $it (@functions) {
+				if($it =~ /^(.+)=(.*)$/) {
+					$keywords{$1}=$2;
+				}
+			}
+			no strict 'refs';
+			if(UNIVERSAL::can("$class","$function")) {
+				$self->debugCallback->("Calling ${class}->${function}\n");
+				$result = eval { $class->$function($client,$item, \%keywords) };
+				if ($@) {
+					$self->debugCallback->("Error calling ${class}->${function}: $@\n");
+				}
+			}
+			use strict 'refs';
+		}
+	}
+	return $result;
+}
+
 sub _getMenuItems {
 	my $self = shift;
 	my $client = shift;
@@ -110,9 +180,16 @@ sub _getMenuItems {
 			}
 		}
 		$self->_sortMenu(\@listRef);
-
+		return \@listRef;
 	# Else, if sub menu
-	}elsif(defined($item->{'menu'})) {
+	}
+	if(defined($item->{'menufunction'})) {
+		my $functionData = $self->_getFunctionMenu($client,$item,$context,$item->{'parameters'});
+		if(defined($functionData)) {
+			$item->{'menu'} = $functionData;
+		}
+	}
+	if(defined($item->{'menu'})) {
 		my @menus = ();
 
 		# Check if menu is enabled
@@ -531,6 +608,33 @@ sub _getMenuLinks {
 	return $menulinks;
 }
 
+sub getPageItem {
+	my $self = shift;
+	my $client = shift;
+	my $params = shift;
+	my $contextParams = shift;
+	my $checkContextType = shift;
+	my $interfaceType = shift;
+
+	if(!defined($interfaceType)) {
+		$interfaceType eq 'web';
+	}
+	my $currentItems =  $self->items;
+
+	my $item = undef;
+	my $contextItems = $self->getContext($client,$params);
+	my @contexts = @$contextItems;
+
+	my $context = undef;
+	my $currentMenu = undef;
+	if(scalar(@contexts)>0) {
+		$context = @contexts[scalar(@contexts)-1];
+		$item = $context->{'item'};
+		$item->{'parameters'} = $context->{'parameters'};
+	}
+	return $item;
+}
+
 sub getPageItemsForContext {
 	my $self = shift;
 	my $client = shift;
@@ -634,6 +738,7 @@ sub getPageItemsForContext {
 		}
 		my $count = 0;
 		my $prevLetter = '';
+		$result{'playable'} = 1;
 		for my $it (@$items) {
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
 				$count = $count + 1;
@@ -660,9 +765,9 @@ sub getPageItemsForContext {
 					$it->{'itemvalue'} = $2;
 				}
 			}
-			if(defined($it->{'menu'})) {
+			if(defined($it->{'menu'}) || defined($it->{'menufunction'})) {
 				my $hasExternalUrl = undef;
-				if(ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'})) {
+				if(defined($it->{'menu'}) && ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'})) {
 					my $menuHandler = $self->menuHandlers->{$it->{'menu'}->{'menutype'}};
 					if(defined($menuHandler) && $menuHandler->hasCustomUrl($it->{'menu'})) {
 						$hasExternalUrl = 1;
@@ -748,6 +853,17 @@ sub getPageItemsForContext {
 					$result{'artwork'} = 1;
 					my $track = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
+				}elsif($format eq 'titleformat' && defined($it->{'itemformatdata'})) {
+					$result{'artwork'} = 0;
+					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
+					$it->{'itemname'} = Slim::Music::Info::displayText($client,$track,$it->{'itemformatdata'});
+				}elsif($format eq 'function' && defined($it->{'itemformatdata'})) {
+					$result{'artwork'} = 0;
+					my $parameters = undef;
+					if(defined($it->{'parameters'})) {
+						$parameters = $it->{'parameters'};
+					}
+					$it->{'itemname'} = $self->_getFunctionItemFormat($client,$it);
 				}elsif($format =~ /image$/) {
 					my $urlId = $format;
 					if(defined($it->{'itemseparator'})) {
@@ -812,6 +928,10 @@ sub getPageItemsForContext {
 			if(scalar(@$mixes)>0) {
 				$it->{'mixes'} = $mixes;
 			}
+			if($result{'playable'} && ((defined($it->{'playtype'}) && $it->{'playtype'} eq 'none') || (defined($it->{'playtypeall'}) && $it->{'playtypeall'} eq 'none'))) {
+				$result{'playable'} = 0;
+			}
+
 			push @resultItems, $it;
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$prevLetter = $it->{'itemlink'};
@@ -906,7 +1026,8 @@ sub getContext {
 		for my $key (keys %$currentItems) {
 			push @itemsArray,$currentItems->{$key};
 		}
-		my $contextItems = $self->_getSubContext($client,$params,\@groups,\@itemsArray,0);
+		my %parameterContainer = ();
+		my $contextItems = $self->_getSubContext($client,$params,\@groups,\@itemsArray,0,\%parameterContainer);
 		@result = @$contextItems;
 	}
 	return \@result;
@@ -919,7 +1040,9 @@ sub _getSubContext {
 	my $groups = shift;
 	my $currentItems = shift;
 	my $level = shift;
+	my $parameterContainer = shift;
 	my @result = ();
+
 	if($groups && scalar(@$groups)>$level) {
 		my $group = unescape(@$groups[$level]);
 		my $item = undef;
@@ -945,6 +1068,7 @@ sub _getSubContext {
 			my $currentValue = escape($params->{$group});
 			my %parameters = ();
 			$parameters{$currentUrl} = $params->{$group};
+			$parameterContainer->{$currentUrl}=$params->{$group};
 			my $name;
 			if(defined($item->{'menuname'})) {
 				$name = $item->{'menuname'};
@@ -968,8 +1092,23 @@ sub _getSubContext {
 			}
 			push @result, \%resultItem;
 
+			if(defined($item->{'menufunction'})) {
+				my $functionData = $self->_getFunctionMenu($client,$item,undef,$parameterContainer);
+				if(defined($functionData)) {
+					$item->{'menu'} = $functionData;
+					if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
+						if(defined($item->{'menu'}->[0]->{'menuname'})) {
+							$resultItem{'name'} = $item->{'menu'}->[0]->{'menuname'};
+						}
+					}elsif(defined($item->{'menu'})) {
+						if(defined($item->{'menu'}->{'menuname'})) {
+							$resultItem{'name'} = $item->{'menu'}->{'menuname'};
+						}
+					}
+				}
+			}
 			if(defined($item->{'menu'})) {
-				my $childResult = $self->_getSubContext($client,$params,$groups,$item->{'menu'},$level+1);
+				my $childResult = $self->_getSubContext($client,$params,$groups,$item->{'menu'},$level+1,$parameterContainer);
 				for my $child (@$childResult) {
 					if(!$level) {
 						$child->{'url'} = '&hierarchy='.$currentUrl.','.$child->{'url'};;
@@ -1255,7 +1394,7 @@ sub getItemOverlay {
 	if(scalar(@$mixes)>0) {
 		$playable = Slim::Display::Display::symbol('mixable');
 	}
-	if(defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') {
+	if((defined($item->{'menu'}) && ref($item->{'menu'}) eq 'ARRAY') || defined($item->{'menufunction'})) {
 		return [$playable, Slim::Display::Display::symbol('rightarrow')];
 	}elsif(defined($item->{'menu'}) && defined($item->{'menu'}->{'menutype'})) {
 		my $menuHandler = $self->menuHandlers->{$item->{'menu'}->{'menutype'}};
@@ -1310,7 +1449,12 @@ sub getItemText {
 		if($format eq 'track') {
 			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
 			$name = Slim::Music::Info::standardTitle(undef, $track);
-                }
+                }elsif($format eq 'titleformat' && defined($item->{'itemformatdata'})) {
+			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
+			$name = Slim::Music::Info::displayText($client,$track,$item->{'itemformatdata'});
+		}elsif($format eq 'function' && defined($item->{'itemformatdata'})) {
+			$name = $self->_getFunctionItemFormat($client,$item);
+		}
 	}
 	if(!defined($name) || $name eq '') {
 		$name = $item->{'itemname'};
