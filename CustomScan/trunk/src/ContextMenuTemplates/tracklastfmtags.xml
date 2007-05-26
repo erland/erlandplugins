@@ -3,8 +3,9 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>167</downloadidentifier>
 		<name>LastFM Tags for song</name>
-		<description>Genres menu that makes it possible to show LastFM tags for artists on the selected song, requires the Custom Scan plugin</description>
+		<description>Show LastFM tags for artists on the selected song, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="LastFM Tags"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

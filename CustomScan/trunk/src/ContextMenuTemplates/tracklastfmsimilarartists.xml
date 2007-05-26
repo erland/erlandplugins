@@ -3,8 +3,9 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>166</downloadidentifier>
 		<name>LastFM Similar Artists for song</name>
-		<description>Artists menu that lets you show artists similar to artists on the selected song based on LastFM data and then browse as usual, it requires the Custom Scan plugin</description>
+		<description>Show artists similar to artists on the selected song based on LastFM data and then browse as usual, it requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="LastFM Similar Artists"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
