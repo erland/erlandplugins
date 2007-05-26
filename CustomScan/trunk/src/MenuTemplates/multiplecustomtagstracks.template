@@ -23,7 +23,7 @@
 				[%- IF customsorttag1 %]
 				left join customscan_track_attributes as sortattr on
 					customscan_track_attributes.track=sortattr.track and
-					sortattr.module='customtag' and
+					sortattr.module='[% datasource %]' and
 					sortattr.attr='[% customsorttag1 %]'
 				[%- END %]
 				[%- IF customtag1artistsort %]
@@ -31,7 +31,7 @@
 					customscan_track_attributes.value=contributors.name
 				[%- END %]
 				where
-					customscan_track_attributes.module='customtag' and
+					customscan_track_attributes.module='[% datasource %]' and
 					customscan_track_attributes.attr='[% customtag1 %]'
 				group by customscan_track_attributes.value
 				[%- IF customsorttag1 %]
@@ -61,13 +61,13 @@
 					[%- END %]
 					join customscan_track_attributes as attr1 on
 						customscan_track_attributes.track=attr1.track and
-						attr1.module='customtag' and
+						attr1.module='[% datasource %]' and
 						attr1.attr='[% customtag1 %]' and
 						attr1.value='{customtag1}'
 					[%- IF customsorttag2 %]
 					left join customscan_track_attributes as sortattr on
 						customscan_track_attributes.track=sortattr.track and
-						sortattr.module='customtag' and
+						sortattr.module='[% datasource %]' and
 						sortattr.attr='[% customsorttag2 %]'
 					[%- END %]
 					[%- IF customtag2artistsort %]
@@ -75,7 +75,7 @@
 						customscan_track_attributes.value=contributors.name
 					[%- END %]
 					where
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag2 %]'
 					group by customscan_track_attributes.value
 					[%- IF customsorttag2 %]
@@ -106,18 +106,18 @@
 						[%- END %]
 						join customscan_track_attributes as attr1 on
 							customscan_track_attributes.track=attr1.track and
-							attr1.module='customtag' and
+							attr1.module='[% datasource %]' and
 							attr1.attr='[% customtag1 %]' and
 							attr1.value='{customtag1}'
 						join customscan_track_attributes as attr2 on
 							customscan_track_attributes.track=attr2.track and
-							attr2.module='customtag' and
+							attr2.module='[% datasource %]' and
 							attr2.attr='[% customtag2 %]' and
 							attr2.value='{customtag2}'
 						[%- IF customsorttag3 %]
 						left join customscan_track_attributes as sortattr on
 							customscan_track_attributes.track=sortattr.track and
-							sortattr.module='customtag' and
+							sortattr.module='[% datasource %]' and
 							sortattr.attr='[% customsorttag3 %]'
 						[%- END %]
 						[%- IF customtag3artistsort %]
@@ -125,7 +125,7 @@
 							customscan_track_attributes.value=contributors.name
 						[%- END %]
 						where
-							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.module='[% datasource %]' and
 							customscan_track_attributes.attr='[% customtag3 %]'
 						group by customscan_track_attributes.value
 						[%- IF customsorttag3 %]
@@ -156,23 +156,23 @@
 							[%- END %]
 							join customscan_track_attributes as attr1 on
 								customscan_track_attributes.track=attr1.track and
-								attr1.module='customtag' and
+								attr1.module='[% datasource %]' and
 								attr1.attr='[% customtag1 %]' and
 								attr1.value='{customtag1}'
 							join customscan_track_attributes as attr2 on
 								customscan_track_attributes.track=attr2.track and
-								attr2.module='customtag' and
+								attr2.module='[% datasource %]' and
 								attr2.attr='[% customtag2 %]' and
 								attr2.value='{customtag2}'
 							join customscan_track_attributes as attr3 on
 								customscan_track_attributes.track=attr3.track and
-								attr3.module='customtag' and
+								attr3.module='[% datasource %]' and
 								attr3.attr='[% customtag3 %]' and
 								attr3.value='{customtag3}'
 							[%- IF customsorttag4 %]
 							left join customscan_track_attributes as sortattr on
 								customscan_track_attributes.track=sortattr.track and
-								sortattr.module='customtag' and
+								sortattr.module='[% datasource %]' and
 								sortattr.attr='[% customsorttag4 %]'
 							[%- END %]
 							[%- IF customtag4artistsort %]
@@ -180,7 +180,7 @@
 								customscan_track_attributes.value=contributors.name
 							[%- END %]
 							where
-								customscan_track_attributes.module='customtag' and
+								customscan_track_attributes.module='[% datasource %]' and
 								customscan_track_attributes.attr='[% customtag4 %]'
 							group by customscan_track_attributes.value
 							[%- IF customsorttag4 %]
@@ -211,28 +211,28 @@
 								[%- END %]
 								join customscan_track_attributes as attr1 on
 									customscan_track_attributes.track=attr1.track and
-									attr1.module='customtag' and
+									attr1.module='[% datasource %]' and
 									attr1.attr='[% customtag1 %]' and
 									attr1.value='{customtag1}'
 								join customscan_track_attributes as attr2 on
 									customscan_track_attributes.track=attr2.track and
-									attr2.module='customtag' and
+									attr2.module='[% datasource %]' and
 									attr2.attr='[% customtag2 %]' and
 									attr2.value='{customtag2}'
 								join customscan_track_attributes as attr3 on
 									customscan_track_attributes.track=attr3.track and
-									attr3.module='customtag' and
+									attr3.module='[% datasource %]' and
 									attr3.attr='[% customtag3 %]' and
 									attr3.value='{customtag3}'
 								join customscan_track_attributes as attr4 on
 									customscan_track_attributes.track=attr4.track and
-									attr4.module='customtag' and
+									attr4.module='[% datasource %]' and
 									attr4.attr='[% customtag4 %]' and
 									attr4.value='{customtag4}'
 								[%- IF customsorttag5 %]
 								left join customscan_track_attributes as sortattr on
 									customscan_track_attributes.track=sortattr.track and
-									sortattr.module='customtag' and
+									sortattr.module='[% datasource %]' and
 									sortattr.attr='[% customsorttag5 %]'
 								[%- END %]
 								[%- IF customtag5artistsort %]
@@ -240,7 +240,7 @@
 									customscan_track_attributes.value=contributors.name
 								[%- END %]
 								where
-									customscan_track_attributes.module='customtag' and
+									customscan_track_attributes.module='[% datasource %]' and
 									customscan_track_attributes.attr='[% customtag5 %]'
 								group by customscan_track_attributes.value
 								[%- IF customsorttag5 %]
@@ -259,7 +259,9 @@
 							<menu>
 								<id>track</id>
 								<itemtype>track</itemtype>
+								[% IF !customtracktag %]
 								<itemformat>track</itemformat>
+								[% END %]
 								[%- IF playalltracks %]
 								<playtype>all</playtype>
 								[%- END %]
@@ -268,50 +270,62 @@
 									<id>byalbum</id>
 									<name>Sort by album</name>
 									<menulinks>number</menulinks>
-									<keyword name="orderby" value="tracks.album,tracks.disc asc,tracks.tracknum asc,tracks.titlesort asc"/>
+									<keyword name="orderby" value="tracks.album,tracks.disc asc,tracks.tracknum asc,[% IF customtracktag %]ifnull(tracktag.value,tracks.titlesort)[% ELSE %]tracks.titlesort[% END %] asc"/>
 								</option>
 								<option>
 									<id>bytitle</id>
 									<name>Sort by title</name>
 									<menulinks>alpha</menulinks>
-									<keyword name="orderby" value="tracks.titlesort asc"/>
+									<keyword name="orderby" value="[% IF customtracktag %]ifnull(tracktag.value,tracks.titlesort)[% ELSE %]tracks.titlesort[% END %] asc"/>
 								</option>
 								<menudata>
-									select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][%- IF customtag5 %],customscan_track_attributes attr5[% END %][% IF library or activelibrary %],multilibrary_track[% END %] 
-									where 
-										[%- IF library or activelibrary %]
-										tracks.id=multilibrary_track.track and
-										multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
-										[%- END %]
-										tracks.audio=1 and 
+									select tracks.id,[% IF customtracktag %]ifnull(tracktag.value,tracks.title)[% ELSE %]tracks.title[% END %],substr([% IF customtracktag %]ifnull(tracktag.value,tracks.titlesort)[% ELSE %]tracks.titlesort[% END %],1,1) from tracks
+									join customscan_track_attributes attr1 on
 										tracks.id=attr1.track and
-										attr1.module='customtag' and
+										attr1.module='[% datasource %]' and
 										attr1.attr='[% customtag1 %]' and
 										attr1.value='{customtag1}' 
-										[%- IF customtag2 %]
-										and tracks.id=attr2.track and
-										attr2.module='customtag' and
+									[%- IF customtag2 %]
+									join customscan_track_attributes attr2 on
+										tracks.id=attr2.track and
+										attr2.module='[% datasource %]' and
 										attr2.attr='[% customtag2 %]' and
 										attr2.value='{customtag2}' 
-										[%- END %]
-										[%- IF customtag3 %]
-										and tracks.id=attr3.track and
-										attr3.module='customtag' and
+									[%- END %]
+									[%- IF customtag3 %]
+									join customscan_track_attributes attr3 on
+										tracks.id=attr3.track and
+										attr3.module='[% datasource %]' and
 										attr3.attr='[% customtag3 %]' and
 										attr3.value='{customtag3}' 
-										[%- END %]
-										[%- IF customtag4 %]
-										and tracks.id=attr4.track and
-										attr4.module='customtag' and
+									[%- END %]
+									[%- IF customtag4 %]
+									join customscan_track_attributes attr4 on
+										tracks.id=attr4.track and
+										attr4.module='[% datasource %]' and
 										attr4.attr='[% customtag4 %]' and
 										attr4.value='{customtag4}' 
-										[%- END %]
-										[%- IF customtag5 %]
-										and tracks.id=attr5.track and
-										attr5.module='customtag' and
+									[%- END %]
+									[%- IF customtag5 %]
+									join customscan_track_attributes attr5 on
+										tracks.id=attr5.track and
+										attr5.module='[% datasource %]' and
 										attr5.attr='[% customtag5 %]' and
 										attr5.value='{customtag5}' 
-										[%- END %]
+									[%- END %]
+									[%- IF library or activelibrary %]
+									join multilibrary_track on
+										tracks.id=multilibrary_track.track and
+										multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+									[%- END %] 
+									[%- IF customtracktag %]
+									left join customscan_track_attributes tracktag on
+										tracks.id=tracktag.track and
+										tracktag.module='[% datasource %]' and
+										tracktag.attr='[% customtracktag %]'
+									[%- END %]
+									where 
+										tracks.audio=1 
 									group by tracks.id 
 									order by {orderby}
 								</menudata>

@@ -9,6 +9,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Multiple Tags Songs"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
+		<parameter type="singlelist" id="datasource" name="Scanning module" value="customtag" data="customtag=Custom Tag,mixedtag=Mixed Tag"/>
 		<parameter type="text" id="customtag1" name="Level 1 tag name" value="OWNER"/>
 		<parameter type="text" id="customsorttag1" name="Level 1 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag1artistsort" name="Level 1 sort by ARTISTSORT" value=""/>
@@ -28,6 +29,7 @@
 		<parameter type="text" id="level5name" name="Level 5 name" value=""/>
 		<parameter type="text" id="customsorttag5" name="Level 5 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag5artistsort" name="Level 5 sort by ARTISTSORT" value=""/>
+		<parameter type="text" id="customtracktag" name="Tag to use instead of song title" value=""/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected custom tag" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>

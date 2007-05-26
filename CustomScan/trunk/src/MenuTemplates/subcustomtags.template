@@ -22,7 +22,7 @@
 				[%- IF customsorttag %]
 				left join customscan_track_attributes as attr2 on
 					customscan_track_attributes.track=attr2.track and
-					attr2.module='customtag' and
+					attr2.module='[% datasource %]' and
 					attr2.attr='[% customsorttag %]'
 				[%- END %]
 				[%- IF customtagartistsort %]
@@ -30,7 +30,7 @@
 					customscan_track_attributes.value=contributors.name
 				[%- END %]
 				where
-					customscan_track_attributes.module='customtag' and
+					customscan_track_attributes.module='[% datasource %]' and
 					customscan_track_attributes.attr='[% customtag %]'
 				group by customscan_track_attributes.value
 				[%- IF customsorttag %]
@@ -59,7 +59,7 @@
 					[%- IF customsorttag %]
 					left join customscan_track_attributes as attr2 on
 						customscan_track_attributes.track=attr2.track and
-						attr2.module='customtag' and
+						attr2.module='[% datasource %]' and
 						attr2.attr='[% customsorttag %]'
 					[%- END %]
 					[%- IF customtagartistsort %]
@@ -67,12 +67,12 @@
 						customscan_track_attributes.value=contributors.name
 					[%- END %]
 					where
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag %]' and
 						customscan_track_attributes.value != '{customtag}' and
 						exists(select * from customscan_track_attributes as attr3
 							where
-								attr3.module='customtag' and
+								attr3.module='[% datasource %]' and
 								attr3.attr='[% customtag %]' and
 								attr3.track=customscan_track_attributes.track and
 								attr3.value='{customtag}')
@@ -131,13 +131,13 @@
 								exists(select * from customscan_track_attributes
 									where
 										tracks.id=customscan_track_attributes.track and
-										customscan_track_attributes.module='customtag' and
+										customscan_track_attributes.module='[% datasource %]' and
 										customscan_track_attributes.attr='[% customtag %]' and
 										customscan_track_attributes.value='{customtag}') and
 								exists(select * from customscan_track_attributes
 									where
 										tracks.id=customscan_track_attributes.track and
-										customscan_track_attributes.module='customtag' and
+										customscan_track_attributes.module='[% datasource %]' and
 										customscan_track_attributes.attr='[% customtag %]' and
 										customscan_track_attributes.value='{subcustomtag}')
 							group by albums.id
@@ -163,13 +163,13 @@
 									exists(select * from customscan_track_attributes
 										where
 											tracks.id=customscan_track_attributes.track and
-											customscan_track_attributes.module='customtag' and
+											customscan_track_attributes.module='[% datasource %]' and
 											customscan_track_attributes.attr='[% customtag %]' and
 											customscan_track_attributes.value='{customtag}') and
 									exists(select * from customscan_track_attributes
 										where
 											tracks.id=customscan_track_attributes.track and
-											customscan_track_attributes.module='customtag' and
+											customscan_track_attributes.module='[% datasource %]' and
 											customscan_track_attributes.attr='[% customtag %]' and
 											customscan_track_attributes.value='{subcustomtag}')
 								group by tracks.id
@@ -212,13 +212,13 @@
 							exists(select * from customscan_track_attributes
 								where
 									tracks.id=customscan_track_attributes.track and
-									customscan_track_attributes.module='customtag' and
+									customscan_track_attributes.module='[% datasource %]' and
 									customscan_track_attributes.attr='[% customtag %]' and
 									customscan_track_attributes.value='{customtag}') and
 							exists(select * from customscan_track_attributes
 								where
 									tracks.id=customscan_track_attributes.track and
-									customscan_track_attributes.module='customtag' and
+									customscan_track_attributes.module='[% datasource %]' and
 									customscan_track_attributes.attr='[% customtag %]' and
 									customscan_track_attributes.value='{subcustomtag}')
 						group by contributors.id 
@@ -257,13 +257,13 @@
 								exists(select * from customscan_track_attributes
 									where
 										tracks.id=customscan_track_attributes.track and
-										customscan_track_attributes.module='customtag' and
+										customscan_track_attributes.module='[% datasource %]' and
 										customscan_track_attributes.attr='[% customtag %]' and
 										customscan_track_attributes.value='{customtag}') and
 								exists(select * from customscan_track_attributes
 									where
 										tracks.id=customscan_track_attributes.track and
-										customscan_track_attributes.module='customtag' and
+										customscan_track_attributes.module='[% datasource %]' and
 										customscan_track_attributes.attr='[% customtag %]' and
 										customscan_track_attributes.value='{subcustomtag}')
 							group by albums.id 
@@ -292,13 +292,13 @@
 									exists(select * from customscan_track_attributes
 										where
 											tracks.id=customscan_track_attributes.track and
-											customscan_track_attributes.module='customtag' and
+											customscan_track_attributes.module='[% datasource %]' and
 											customscan_track_attributes.attr='[% customtag %]' and
 											customscan_track_attributes.value='{customtag}') and
 									exists(select * from customscan_track_attributes
 										where
 											tracks.id=customscan_track_attributes.track and
-											customscan_track_attributes.module='customtag' and
+											customscan_track_attributes.module='[% datasource %]' and
 											customscan_track_attributes.attr='[% customtag %]' and
 											customscan_track_attributes.value='{subcustomtag}')
 								group by tracks.id 
@@ -341,7 +341,7 @@
 						exists(select * from customscan_track_attributes
 							where
 								tracks.id=customscan_track_attributes.track and
-								customscan_track_attributes.module='customtag' and
+								customscan_track_attributes.module='[% datasource %]' and
 								customscan_track_attributes.attr='[% customtag %]' and
 								customscan_track_attributes.value='{customtag}')
 					group by contributors.id 
@@ -380,7 +380,7 @@
 							exists(select * from customscan_track_attributes
 								where
 									tracks.id=customscan_track_attributes.track and
-									customscan_track_attributes.module='customtag' and
+									customscan_track_attributes.module='[% datasource %]' and
 									customscan_track_attributes.attr='[% customtag %]' and
 									customscan_track_attributes.value='{customtag}')
 						group by albums.id 
@@ -409,7 +409,7 @@
 								exists(select * from customscan_track_attributes
 									where
 										tracks.id=customscan_track_attributes.track and
-										customscan_track_attributes.module='customtag' and
+										customscan_track_attributes.module='[% datasource %]' and
 										customscan_track_attributes.attr='[% customtag %]' and
 										customscan_track_attributes.value='{customtag}')
 							group by tracks.id 
