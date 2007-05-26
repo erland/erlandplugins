@@ -3,8 +3,9 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.18</minpluginversion>
 	<template>
-		<name>Dynamic Mixed Tags</name>
-		<description>Menu that makes it possible to browse your tags scaned with Mixed Tag scanning module</description>
+		<downloadidentifier>169</downloadidentifier>
+		<name>Dynamic Tags</name>
+		<description>Menu that makes it possible to browse your tags scaned with Mixed Tag scanning module, this is a dynamic menu without static menu levels</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Dynamic Mixed Tags"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

@@ -3,8 +3,9 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.18</minpluginversion>
 	<template>
-		<name>Dynamic Mixed Tags for Song</name>
-		<description>Menu that makes it possible to browse your tags scanned with Mixed Tag scanning module for selected song</description>
+		<downloadidentifier>168</downloadidentifier>
+		<name>Dynamic Tags for Song</name>
+		<description>Menu that makes it possible to browse your tags scanned with Mixed Tag scanning module for selected song, this is a dynamic menu without static menu levels</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Dynamic Mixed Tags"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
