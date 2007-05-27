@@ -50,8 +50,12 @@ sub getItems {
 		my $keywords = $self->combineKeywords($item->{'keywordparameters'},undef,$item->{'parameters'});
 		my $sqlItems = $self->sqlHandler->getData($client,$item->{'playdata'},$keywords);
 		foreach my $sqlItem (@$sqlItems) {
+			my $type = 'track';
+			if(defined($sqlItem->{'type'})) {
+				$type = $sqlItem->{'type'};
+			}
 			my %addItem = (
-				'itemtype' => 'track',
+				'itemtype' => $type,
 				'itemid' => $sqlItem->{'id'},
 				'itemname' => $sqlItem->{'name'}
 			);

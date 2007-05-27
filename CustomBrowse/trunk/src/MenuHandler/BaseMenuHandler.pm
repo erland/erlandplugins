@@ -629,8 +629,24 @@ sub getPageItem {
 	my $currentMenu = undef;
 	if(scalar(@contexts)>0) {
 		$context = @contexts[scalar(@contexts)-1];
-		$item = $context->{'item'};
-		$item->{'parameters'} = $context->{'parameters'};
+		my $contextItem = $context->{'item'};
+		my %resultItem = ();
+		for my $key (keys %$contextItem) {
+			$resultItem{$key} = $contextItem->{$key};
+		}
+		$resultItem{'parameters'} = $context->{'parameters'};
+		if(!defined($resultItem{'itemid'})) {
+			my $id = undef;
+			if(defined($resultItem{'contextid'})) {
+				$id = $resultItem{'contextid'};
+			}elsif(defined($resultItem{'id'})) {
+				$id = $resultItem{'id'};
+			}
+			if(defined($id)) {
+				$resultItem{'itemid'} = $context->{'parameters'}->{$id};
+			}
+		}
+		$item = \%resultItem;
 	}
 	return $item;
 }
@@ -1479,18 +1495,18 @@ sub getItemText {
 }
 
 sub playAddItem {
-	my ($self,$client,$listRef, $item, $addOnly) = @_;
+	my ($self,$client,$listRef, $item, $addOnly,$context) = @_;
 
 	if($addOnly) {
-		$self->_playAddItem($client,$listRef,$item,"addtracks");
+		$self->_playAddItem($client,$listRef,$item,"addtracks",undef,undef,$context);
 	}else {
-		$self->_playAddItem($client,$listRef,$item,"loadtracks");
+		$self->_playAddItem($client,$listRef,$item,"loadtracks",undef,undef,$context);
 	}
 }
 sub _playAddItem {
-	my ($self,$client,$listRef, $item, $command, $displayString, $subCall) = @_;
+	my ($self,$client,$listRef, $item, $command, $displayString, $subCall,$context,$playSingle) = @_;
 	my @items = ();
-	if(!defined($item->{'playtype'})) {
+	if(!defined($item->{'playtype'}) || ($item->{'playtype'} eq 'all' && $playSingle)) {
 		push @items,$item;
 	}else {
 		my $playHandler = $self->playHandlers->{$item->{'playtype'}};
@@ -1548,10 +1564,10 @@ sub _playAddItem {
 				$request = $client->execute(['playlist', $command, 
 						sprintf('%s=%d', 'playlist.id',$it->{'itemid'})]);
 			}else {
-				my $subItems = $self->getMenuItems($client,$it);
+				my $subItems = $self->getMenuItems($client,$it,$context);
 				if(ref($subItems) eq 'ARRAY') {
 					for my $subitem (@$subItems) {
-						$self->_playAddItem($client,$subItems,$subitem,$command,undef,1);
+						$self->_playAddItem($client,$subItems,$subitem,$command,undef,1,$context,1);
 						if($command eq 'loadtracks') {
 							$command = 'addtracks';
 						}
@@ -1564,10 +1580,10 @@ sub _playAddItem {
 				$request->source($self->requestSource);
 			}
 		}else {
-			my $subItems = $self->getMenuItems($client,$it);
+			my $subItems = $self->getMenuItems($client,$it,$context);
 			if(ref($subItems) eq 'ARRAY') {
 				for my $subitem (@$subItems) {
-					$self->_playAddItem($client,$subItems,$subitem,$command,undef,1);
+					$self->_playAddItem($client,$subItems,$subitem,$command,undef,1,$context,1);
 					if($command eq 'loadtracks') {
 						$command = 'addtracks';
 					}

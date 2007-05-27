@@ -1816,7 +1816,7 @@ sub handleWebPlayAdd {
 			$contextParams = \%c;
 		}
 		my $it = getContextMenuHandler()->getPageItem($client,$params,$contextParams,0,'web');
-		getContextMenuHandler()->playAddItem($client,undef,$it,$addOnly,undef);
+		getContextMenuHandler()->playAddItem($client,undef,$it,$addOnly,$contextParams);
 	}else {
 		my $it = getMenuHandler()->getPageItem($client,$params,undef,0,'web');
 		getMenuHandler()->playAddItem($client,undef,$it,$addOnly,undef);
