@@ -447,7 +447,7 @@ sub getMixedTagMenuItems {
 
 		if(!defined($parameters->{'findalbums'}) || $parameters->{'findalbums'} ne '0') {
 			# Create All albums SQL
-			$albumssql = "select albums.id,albums.title,substr(albums.titlesort,1,1) from albums join tracks on tracks.album=albums.id ";
+			$albumssql = "select albums.id,albums.title,substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
 					my $attr = "attr".$it->{'id'};
