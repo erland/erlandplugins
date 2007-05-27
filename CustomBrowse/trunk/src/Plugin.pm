@@ -357,6 +357,7 @@ sub browseByMix {
 		$p{'itemtype'} = 'playlist';
 	}
 	if($interfaceType ne 'player' || !defined($p{'itemid'})) {
+		$client->bumpRight();
 		return;
 	}
 	Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);

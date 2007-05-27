@@ -1368,6 +1368,9 @@ sub executeMix {
 	if(!defined($item)) {
 		$item = $client->param('item');
 	}
+	if(!defined($interfaceType)) {
+		$interfaceType='player';
+	}
 	$self->debugCallback->("Creating mixer ".$mixer->{'mixname'}." for ".$item->{'itemname'}."\n");
 
 	my $parameters = $self->propertyHandler->getProperties();
