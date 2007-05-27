@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.22</minpluginversion>
 	<template>
+		<downloadidentifier>171</downloadidentifier>
 		<name>Mixed Tags for song</name>
 		<description>Menu that makes it possible to browse the tags scanned by Mixed Tag scanning module based on selected song, for example ARTIST,YEAR,CONDUCTOR, WORK, ENSEMBLE, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Mixed Tags"/>
