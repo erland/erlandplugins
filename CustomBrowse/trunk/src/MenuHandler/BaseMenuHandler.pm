@@ -928,16 +928,20 @@ sub getPageItemsForContext {
 			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
 					$it->{'attributes'} = sprintf('&%s=%d', 'track.id',$it->{'itemid'});
-				}elsif($it->{'itemtype'} eq "album") {
-					$it->{'attributes'} = sprintf('&%s=%d', 'album.id',$it->{'itemid'});
-				}elsif($it->{'itemtype'} eq "artist") {
-					$it->{'attributes'} = sprintf('&%s=%d', 'contributor.id',$it->{'itemid'});
-				}elsif($it->{'itemtype'} eq "year") {
-					$it->{'attributes'} = sprintf('&%s=%d', 'year.id',$it->{'itemid'});
-				}elsif($it->{'itemtype'} eq "genre") {
-					$it->{'attributes'} = sprintf('&%s=%d', 'genre.id',$it->{'itemid'});
-				}elsif($it->{'itemtype'} eq "playlist") {
-					$it->{'attributes'} = sprintf('&%s=%d', 'playlist.id',$it->{'itemid'});
+				}else {
+					if(!defined($it->{'menu'}) && !defined($it->{'menufunction'})) {
+						if($it->{'itemtype'} eq "album") {
+							$it->{'attributes'} = sprintf('&%s=%d', 'album.id',$it->{'itemid'});
+						}elsif($it->{'itemtype'} eq "artist") {
+							$it->{'attributes'} = sprintf('&%s=%d', 'contributor.id',$it->{'itemid'});
+						}elsif($it->{'itemtype'} eq "year") {
+							$it->{'attributes'} = sprintf('&%s=%d', 'year.id',$it->{'itemid'});
+						}elsif($it->{'itemtype'} eq "genre") {
+							$it->{'attributes'} = sprintf('&%s=%d', 'genre.id',$it->{'itemid'});
+						}elsif($it->{'itemtype'} eq "playlist") {
+							$it->{'attributes'} = sprintf('&%s=%d', 'playlist.id',$it->{'itemid'});
+						}
+					}
 				}
 			}
 			my $mixes = $self->getPreparedMixes($client,$it,$interfaceType);
@@ -1504,9 +1508,11 @@ sub playAddItem {
 	}
 }
 sub _playAddItem {
-	my ($self,$client,$listRef, $item, $command, $displayString, $subCall,$context,$playSingle) = @_;
+	my ($self,$client,$listRef, $item, $command, $displayString, $subCall,$context,$playAll) = @_;
 	my @items = ();
-	if(!defined($item->{'playtype'}) || ($item->{'playtype'} eq 'all' && $playSingle)) {
+	if($playAll) {
+		@items = @$listRef;
+	}elsif(!defined($item->{'playtype'})) {
 		push @items,$item;
 	}else {
 		my $playHandler = $self->playHandlers->{$item->{'playtype'}};
@@ -1533,46 +1539,60 @@ sub _playAddItem {
 		$postPlay = 1;
 		$command = 'addtracks';
 	}
+	my @tracks = ();
 	foreach my $it (@items) {
-		if(defined($it->{'itemtype'})) {
+		if(defined($it->{'itemtype'}) && ($it->{'itemtype'} eq 'track') || ($it->{'itemtype'} ne 'track' && !defined($it->{'menu'}) && !defined($it->{'menufunction'}))) {
 			$request = undef;
+			my $played = 0;
 			if($it->{'itemtype'} eq "track") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'track.id',$it->{'itemid'})]);
+				$self->debugCallback->("Adding track ".$it->{'itemname'}."\n");
+				push @tracks,$it->{'itemid'};
 				if(defined($item->{'itemid'}) && $it->{'itemid'} eq $item->{'itemid'}) {
 					$selectedPos = $pos;
 				}
-			}elsif($it->{'itemtype'} eq "album") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'album.id',$it->{'itemid'})]);
-			}elsif($it->{'itemtype'} eq "artist") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'contributor.id',$it->{'itemid'})]);
-			}elsif($it->{'itemtype'} eq "year") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'year.id',$it->{'itemid'})]);
-			}elsif($it->{'itemtype'} eq "genre") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'genre.id',$it->{'itemid'})]);
-			}elsif($it->{'itemtype'} eq "playlist") {
-				$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
-				$request = $client->execute(['playlist', $command, 
-						sprintf('%s=%d', 'playlist.id',$it->{'itemid'})]);
+				$played = 1;
 			}else {
+				if(scalar(@tracks)>0) {
+					$self->_playTracks($client,$command,\@tracks,$item->{'itemid'});
+					if($command eq 'loadtracks') {
+						$command = 'addtracks';
+					}
+				}
+				if($it->{'itemtype'} eq "album") {
+					$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
+					$request = $client->execute(['playlist', $command, 
+						sprintf('%s=%d', 'album.id',$it->{'itemid'})]);
+					$played = 1;
+				}elsif($it->{'itemtype'} eq "artist") {
+					$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
+					$request = $client->execute(['playlist', $command, 
+						sprintf('%s=%d', 'contributor.id',$it->{'itemid'})]);
+					$played = 1;
+				}elsif($it->{'itemtype'} eq "year") {
+					$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
+					$request = $client->execute(['playlist', $command, 
+						sprintf('%s=%d', 'year.id',$it->{'itemid'})]);
+					$played = 1;
+				}elsif($it->{'itemtype'} eq "genre") {
+					$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
+					$request = $client->execute(['playlist', $command, 
+						sprintf('%s=%d', 'genre.id',$it->{'itemid'})]);
+					$played = 1;
+				}elsif($it->{'itemtype'} eq "playlist") {
+					$self->debugCallback->("Execute $command on ".$it->{'itemname'}."\n");
+					$request = $client->execute(['playlist', $command, 
+						sprintf('%s=%d', 'playlist.id',$it->{'itemid'})]);
+					$played = 1;
+				}
+			}
+			if(!$played) {
 				my $subItems = $self->getMenuItems($client,$it,$context);
 				if(ref($subItems) eq 'ARRAY') {
-					for my $subitem (@$subItems) {
-						$self->_playAddItem($client,$subItems,$subitem,$command,undef,1,$context,1);
-						if($command eq 'loadtracks') {
-							$command = 'addtracks';
-						}
-						$playedMultiple = 1;
+					$self->_playAddItem($client,$subItems,undef,$command,undef,1,$context,1);
+					if($command eq 'loadtracks') {
+						$command = 'addtracks';
 					}
+					$playedMultiple = 1;
 				}
 			}
 			if (defined($request)) {
@@ -1580,23 +1600,31 @@ sub _playAddItem {
 				$request->source($self->requestSource);
 			}
 		}else {
-			my $subItems = $self->getMenuItems($client,$it,$context);
-			if(ref($subItems) eq 'ARRAY') {
-				for my $subitem (@$subItems) {
-					$self->_playAddItem($client,$subItems,$subitem,$command,undef,1,$context,1);
-					if($command eq 'loadtracks') {
-						$command = 'addtracks';
-					}
-					$playedMultiple = 1;
+			if(scalar(@tracks)>0) {
+				$self->_playTracks($client,$command,\@tracks,$item->{'itemid'});
+				if($command eq 'loadtracks') {
+					$command = 'addtracks';
 				}
 			}
+
+			my $subItems = $self->getMenuItems($client,$it,$context);
+			if(ref($subItems) eq 'ARRAY') {
+				$self->_playAddItem($client,$subItems,undef,$command,undef,1,$context,1);
+				if($command eq 'loadtracks') {
+					$command = 'addtracks';
+				}
+				$playedMultiple = 1;
+			}
 		}			
-		if($command eq 'loadtracks') {
+		if($command eq 'loadtracks' && scalar(@tracks)==0) {
 			$command = 'addtracks';
 		}
 		if(defined($pos)) {
 			$pos = $pos + 1;
 		}
+	}
+	if(scalar(@tracks)>0) {
+		$self->_playTracks($client,$command,\@tracks,$item->{'itemid'});
 	}
 	if(defined($selectedPos)) {
 		$request = $client->execute(['playlist', 'jump', $selectedPos]);
@@ -1625,6 +1653,26 @@ sub _playAddItem {
 	}
 }
 
+sub _playTracks {
+	my $self = shift;
+	my $client = shift;
+	my $command = shift;
+	my $trackIds = shift;
+
+	my %orderHash = ();
+	my $i = 0;
+	for my $t (@$trackIds) {
+		$orderHash{$t}=$i;
+		$i++;
+	}
+	my @rawtracks = Slim::Schema->search('Track', { 'id' => { 'in' => $trackIds } })->all;
+	@rawtracks = sort { $orderHash{$a->id()} <=> $orderHash{$b->id()} } @rawtracks;
+	$self->debugCallback->("Execute $command on ".scalar(@rawtracks)." items of ".scalar(@$trackIds)."\n");
+	my $request = $client->execute(['playlist', $command, 'listRef',\@rawtracks]);
+	@$trackIds = ();
+	# indicate request source
+	$request->source($self->requestSource);
+}
 sub copyKeywords {
 	my $self = shift;
 	my $parent = shift;

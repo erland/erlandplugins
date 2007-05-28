@@ -1837,7 +1837,11 @@ sub handleWebPlayAdd {
 			}
 			$i=$i+1;
 		}
-		$params->{'hierarchy'} = $newHierarchy;
+		if($newHierarchy ne '') {
+			$params->{'hierarchy'} = $newHierarchy;
+		}else {
+			delete $params->{'hierarchy'};
+		}
 	}
 	if(!$gotoparent) {
 		$params->{'hierarchy'} = $hierarchy;
@@ -2523,33 +2527,21 @@ sub cliHandler {
 		prepareCLIBrowseResponse($request,$menuResult->{'items'});
 	}elsif($cmd =~ /^play/ || $cmd =~ /^add/) {
 		debugMsg("Starting to prepare CLI play/add/playcontext/addcontext command\n");
-		$params{'hierarchy'} =~ s/^(.*)(,.+?)$/$1/;
-		my $attr = $2;
-		$attr =~ s/^,(.*)$/$1/;
-		my $itemid = $params{$attr};
 		my $menuResult = undef;
 		if($cmd =~ /context$/) {
-			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,\%params,$context,0,'cli');	
+			$menuResult = getContextMenuHandler()->getPageItem($client,\%params,$context,0,'cli');
 		}else {
-			$menuResult = getMenuHandler()->getPageItemsForContext($client,\%params,undef,0,'cli');	
+			$menuResult = getMenuHandler()->getPageItem($client,\%params,undef,0,'cli');	
 		}
 		my $addOnly = 0;
 		if($cmd =~ /^add/) {
 			$addOnly = 1;
 		}
-		if(defined($menuResult) && defined($menuResult->{'items'})) {
-			my $playItems = $menuResult->{'items'};
-			foreach my $playItem (@$playItems) {
-				if($playItem->{'itemid'} eq $itemid) {
-					if($cmd =~ /context$/) {
-						debugMsg("Executing CLI playcontext/addcontext command\n");
-						getContextMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
-					}else {
-						debugMsg("Executing CLI play/add command\n");
-						getMenuHandler()->playAddItem($client,undef,$playItem,$addOnly,undef);
-					}
-					$addOnly = 1;
-				}
+		if(defined($menuResult)) {
+			if($cmd =~ /context$/) {
+				getContextMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$context);
+			}else {
+				getMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,undef);
 			}
 		}
 	}elsif($cmd =~ /^mixes/) {
@@ -2559,6 +2551,8 @@ sub cliHandler {
 		$attr =~ s/^,(.*)$/$1/;
 		my $itemid = $params{$attr};
 		my $menuResult = undef;
+		$params{'start'}=0;
+		$params{'itemsperpage'}=100000;
 		if($cmd =~ /context$/) {
 			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,\%params,$context,0,'cli');	
 		}else {
