@@ -1469,6 +1469,14 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_custombrowse_menus', 1);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames');
+	if (! defined $prefVal) {
+		if(Slim::Utils::OSDetect::OS() eq 'win') {
+			Slim::Utils::Prefs::set('plugin_multilibrary_utf8filenames', 0);
+		}else {
+			Slim::Utils::Prefs::set('plugin_multilibrary_utf8filenames', 1);
+		}
+	}
 	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_download_url');
 	if (! defined $prefVal) {
 		Slim::Utils::Prefs::set('plugin_multilibrary_download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
@@ -1479,7 +1487,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_template_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_showmessages'],
+	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_template_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_utf8filenames','plugin_multilibrary_showmessages'],
 	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1549,6 +1557,16 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_custombrowse_menus"); }
 		},		
+	plugin_multilibrary_utf8filenames => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_UTF8FILENAMES')
+			,'changeIntro' => string('PLUGIN_MULTILIBRARY_UTF8FILENAMES')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_utf8filenames"); }
+		},
 	plugin_multilibrary_library_directory => {
 			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY')
@@ -1854,6 +1872,12 @@ PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
 
 SETUP_PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
 	EN	Custom Browse menus
+
+PLUGIN_MULTILIBRARY_UTF8FILENAMES
+	EN	UTF-8 encoded filenames (requires slimserver restart)
+
+SETUP_PLUGIN_MULTILIBRARY_UTF8FILENAMES
+	EN	Filename encoding
 
 PLUGIN_MULTILIBRARY_QUESTION_STARTUP
 	EN	Ask for library at startup

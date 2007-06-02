@@ -76,7 +76,8 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback
+			'errorCallback' => $self->errorCallback,
+			'utf8filenames' => Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames')
 		);
 		$self->templateParser(Plugins::MultiLibrary::ConfigManager::TemplateParser->new(\%parserParameters));
 		$self->contentParser(Plugins::MultiLibrary::ConfigManager::ContentParser->new(\%parserParameters));
@@ -201,7 +202,8 @@ sub initWebAdminMethods {
 		'supportDownloadError' => $self->supportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
-		'downloadUrl' => Slim::Utils::Prefs::get("plugin_multilibrary_download_url")
+		'downloadUrl' => Slim::Utils::Prefs::get("plugin_multilibrary_download_url"),
+		'utf8filenames' => Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames')
 	);
 	$self->webAdminMethods(Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
 
