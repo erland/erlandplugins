@@ -1303,7 +1303,7 @@ sub addWebMenus {
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
 		}else {
 			debugMsg("Adding menu: $name\n");
-		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".escape($menu->{'id'} )."&mainBrowseMenu=1"});
+		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 		}
             }else {
 		debugMsg("Removing menu: $name\n");
