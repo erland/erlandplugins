@@ -314,7 +314,7 @@
 							[%- IF containsincludedcomment %]
 							comments.value like '%[% includedcomment %]%'
 							[% ELSE %]
-							comments.vlue='[% includedcomment %]'
+							comments.value='[% includedcomment %]'
 							[%- END %]
 							[%- END %]
 							and albums.id=tracks.album
