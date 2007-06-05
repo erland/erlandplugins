@@ -179,7 +179,6 @@
 							<id>track</id>
 							<menuname>Values</menuname>
 							<itemtype>track</itemtype>
-						        <playtype>none</playtype>
 						        <menutype>sql</menutype>
 			        			<menudata>
 								select tracks.id,concat(tracks.tracknum,'. ',tracks.title) from albums,customscan_track_attributes,tracks,contributor_track
@@ -196,6 +195,7 @@
 							</menudata>
 							<menu>
 								<id>value</id>
+							        <playtype>none</playtype>
 								<menutype>sql</menutype>
 								<menudata>
 									select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
