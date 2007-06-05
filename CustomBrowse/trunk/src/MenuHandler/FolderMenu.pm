@@ -51,7 +51,7 @@ sub prepareMenu {
 	my $dir = $menu->{'menudata'};
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
 	$dir = $self->itemParameterHandler->replaceParameters($client,$dir,$keywords,$context);
-	$dir = Slim::Utils::Unicode::utf8off($dir);
+	$dir = Slim::Utils::Unicode::utf8toLatin1($dir);
 	for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 		my $subdirname = $subdir;
 		$subdirname = Slim::Utils::Unicode::utf8on($subdirname);
