@@ -92,7 +92,12 @@ sub getCustomUrl {
 	$trackid = $self->itemParameterHandler->replaceParameters($client,$trackid,$keywords,$context);
 
 	my $id=$trackid;
-	return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
+	if(@parameters->[1]) {
+		return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
+	}else {
+		my $track = Slim::Schema->resultset('Track')->find($id);
+		return 'plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&contextid='.escape($id).'&contexttype=track&contextname='.escape($track->title).'&player='.$params->{'player'};
+	}
 }
 
 sub getOverlay {
