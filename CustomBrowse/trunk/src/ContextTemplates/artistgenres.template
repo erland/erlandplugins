@@ -26,7 +26,7 @@
 			where
 				genres.id=genre_track.genre and
 				genre_track.track=contributor_track.track and
-				contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
+				[% IF roles %]contributor_track.role in ([% roles %]) and[% END %]
 				contributor_track.contributor={artistid}
 			[%- IF library or activelibrary or contextlibrary %]
 				and genres.id=multilibrary_genre.genre and
@@ -52,7 +52,7 @@
 					albums.id=tracks.album and 
 					tracks.id=contributor_track.track and 
 					contributor_track.contributor={artistid} and 
-					contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
+					[% IF roles %]contributor_track.role in ([% roles %]) and[% END %]
 					tracks.id=genre_track.track and 
 					genre_track.genre={genre} 
 				group by albums.id 
@@ -77,7 +77,7 @@
 						contributor_track.track=tracks.id and 
 						tracks.album={album} and 
 						contributor_track.contributor={artistid} and 
-						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
+						[% IF roles %]contributor_track.role in ([% roles %]) and[% END %]
 						tracks.id=genre_track.track and 
 						genre_track.genre={genre} 
 					group by tracks.id 
