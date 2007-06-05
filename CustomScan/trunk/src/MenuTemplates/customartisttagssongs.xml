@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>172</downloadidentifier>
 		<name>Custom Artist Tags Songs</name>
 		<description>Menu that makes it possible to browse your artists by a custom tag, the artist is selected first and then songs which have the custom tag is shown, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Artist Tags Songs"/>
