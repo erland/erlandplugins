@@ -26,6 +26,7 @@ use Plugins::CustomBrowse::MenuHandler::MixHandler;
 use File::Spec::Functions qw(:ALL);
 use POSIX qw(ceil);
 use Text::Unidecode;
+use HTML::Entities;
 
 __PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers) );
 
@@ -796,7 +797,6 @@ sub getPageItemsForContext {
 				if(!$hasExternalUrl) {
 					my $id = $it->{'itemid'};
 					$id = Slim::Utils::Unicode::utf8on($id);
-					$id = Slim::Utils::Unicode::utf8encode_locale($id);
 					my $attributeName = undef;
 					if(defined($it->{'contextid'})) {
 						$attributeName = $it->{'contextid'};
@@ -811,9 +811,9 @@ sub getPageItemsForContext {
 						}else {
 							$it->{'url'} = $context->{'url'}.',';
 						}
-						$it->{'url'} .= $attributeName.$context->{'valueUrl'}.'&'.$attributeName.'='.=escape($id);
+						$it->{'url'} .= $attributeName.$context->{'valueUrl'}.'&'.$attributeName.'='.=escape(escape($id));
 					}else {
-						$it->{'url'}='&hierarchy='.$attributeName.'&'.$attributeName.'='.escape($id);
+						$it->{'url'}='&hierarchy='.$attributeName.'&'.$attributeName.'='.escape(escape($id));
 					}
 					if(defined($contextParams)) {
 						$it->{'url'} .= $contextParams->{'itemurl'};
@@ -839,9 +839,9 @@ sub getPageItemsForContext {
 						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
 							my $name = undef;
 							if(defined($it->{'itemvalue'})) {
-								$name = escape($it->{'itemvalue'});
+								$name = escape(encode_entities($it->{'itemvalue'}));
 							}else {
-								$name = escape($it->{'itemname'});
+								$name = escape(encode_entities($it->{'itemname'}));
 							}
 							$it->{'url'} .= "&contextname=$name";
 						}
@@ -1087,8 +1087,8 @@ sub _getSubContext {
 			my $currentUrl = escape($group);
 			my $currentValue = escape($params->{$group});
 			my %parameters = ();
-			$parameters{$currentUrl} = $params->{$group};
-			$parameterContainer->{$currentUrl}=$params->{$group};
+			$parameters{$currentUrl} = unescape($params->{$group});
+			$parameterContainer->{$currentUrl}=unescape($params->{$group});
 			my $name;
 			if(defined($item->{'menuname'})) {
 				$name = $item->{'menuname'};
@@ -1136,7 +1136,7 @@ sub _getSubContext {
 						$child->{'url'} = $currentUrl.','.$child->{'url'};
 					}
 					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
-					$child->{'parameters'}->{$currentUrl} = $params->{$group};
+					$child->{'parameters'}->{$currentUrl} = unescape($params->{$group});
 					push @result,$child;
 				}
 			}

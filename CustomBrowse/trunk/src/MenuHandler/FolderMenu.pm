@@ -25,7 +25,7 @@ our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenu);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(itemParameterHandler) );
+__PACKAGE__->mk_classaccessors( qw(itemParameterHandler propertyHandler) );
 
 sub new {
 	my $class = shift;
@@ -33,6 +33,7 @@ sub new {
 
 	my $self = $class->SUPER::new($parameters);
 	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
+	$self->{'propertyHandler'} = $parameters->{'propertyHandler'};
 	bless $self,$class;
 	return $self;
 }
@@ -53,6 +54,8 @@ sub prepareMenu {
 	$dir = Slim::Utils::Unicode::utf8off($dir);
 	for my $subdir (Slim::Utils::Misc::readDirectory($dir)) {
 		my $subdirname = $subdir;
+		$subdirname = Slim::Utils::Unicode::utf8on($subdirname);
+		
 		my $fullpath = catdir($dir, $subdir);
 		if(Slim::Music::Info::isWinShortcut($fullpath)) {
 			$subdirname = substr($subdir,0,-4);

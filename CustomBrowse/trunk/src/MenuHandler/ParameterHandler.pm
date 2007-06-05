@@ -60,7 +60,6 @@ sub replaceParameters {
 				$value = substr($value, 1, -1);
 			}
 			$value = Slim::Utils::Unicode::utf8on($value);
-			$value = Slim::Utils::Unicode::utf8encode_locale($value);
 			$originalValue =~ s/\{$param\}/$value/g;
 		}
 	}
