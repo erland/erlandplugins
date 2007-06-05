@@ -1285,6 +1285,9 @@ sub initDatabase {
 			if(defined($line) && (lc($line) =~ /url.*(text|mediumtext)/m)) {
 				msg("CustomScan: Upgrading database changing type of url column, please wait...\n");
 				executeSQLFile("dbupgrade_url_type.sql");
+			}elsif(defined($line) && (lc($line) =~ /url.*(varchar\(255\))/m)) {
+				msg("CustomScan: Upgrading database changing type of url column to varchar(512), please wait...\n");
+				executeSQLFile("dbupgrade_url_type.sql");
 			}
 		}
 	};
@@ -1400,6 +1403,11 @@ sub initDatabase {
 		my $foundMB = 0;
 		my $foundUrl = 0;
 		my $foundValue = 0;
+		my $foundAttrModule = 0;
+		my $foundModuleAttrExtraValue = 0;
+		my $foundExtraValueAttrModuleTrack = 0;
+		my $foundTrackModuleAttrExtraValue = 0;
+		my $foundModuleAttrExtraValue = 0;
 		while( $sth->fetch() ) {
 			if($keyname eq "musicbrainzIndex") {
 				$foundMB = 1;
@@ -1407,6 +1415,14 @@ sub initDatabase {
 				$foundUrl = 1;
 			}elsif($keyname eq "module_attr_value_idx") {
 				$foundValue = 1;
+			}elsif($keyname eq "attr_module_idx") {
+				$foundAttrModule = 1;
+			}elsif($keyname eq "extravalue_attr_module_track_idx") {
+				$foundExtraValueAttrModuleTrack = 1;
+			}elsif($keyname eq "track_module_attr_extravalue_idx") {
+				$foundTrackModuleAttrExtraValue = 1;
+			}elsif($keyname eq "module_attr_extravalue_idx") {
+				$foundModuleAttrExtraValue = 1;
 			}
 		}
 		if(!$foundMB) {
@@ -1426,6 +1442,34 @@ sub initDatabase {
 		if(!$foundValue) {
 			msg("CustomScan: No module_attr_value_idx index found in customscan_track_attributes, creating index...\n");
 			eval { $dbh->do("create index module_attr_value_idx on customscan_track_attributes (module,attr,value);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundAttrModule) {
+			msg("CustomScan: No attr_module_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index attr_module_idx on customscan_track_attributes (attr,module);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundExtraValueAttrModuleTrack) {
+			msg("CustomScan: No extravalue_attr_module_track_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index extravalue_attr_module_track_idx on customscan_track_attributes (extravalue,attr,module,track);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundTrackModuleAttrExtraValue) {
+			msg("CustomScan: No track_module_attr_extravalue_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index track_module_attr_extravalue_idx on customscan_track_attributes (track,module,attr,extravalue);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundModuleAttrExtraValue) {
+			msg("CustomScan: No module_attr_extravalue_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_extravalue_idx on customscan_track_attributes (module,attr,extravalue);") };
 			if ($@) {
 				debugMsg("Couldn't add index: $@\n");
 			}
@@ -1664,7 +1708,7 @@ sub refreshData
 	$timeMeasure->start();
 	debugMsg("Starting to update custom scan track data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
-	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<256";
+	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<512";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {

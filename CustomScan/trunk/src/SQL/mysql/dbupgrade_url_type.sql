@@ -1,3 +1,3 @@
-DELETE FROM customscan_track_attributes where length(url)>255;
+DELETE FROM customscan_track_attributes where length(url)>511;
 
-ALTER TABLE customscan_track_attributes modify url varchar(255) not null;
+ALTER TABLE customscan_track_attributes modify url varchar(511) not null;

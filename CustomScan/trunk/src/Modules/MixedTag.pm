@@ -388,20 +388,25 @@ sub getMixedTagMenuItems {
 	my $albumssql = undef;
 	if(!defined($currentTag)) {
 		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1) from customscan_track_attributes ";
+		if(scalar(@items)==0 && !defined($currentItem)) {
+			$taggroupssql .= "use index (attr_module_idx) "; 
+		}
 		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
 				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
 		}elsif(defined($parameters->{'library'})) {
 				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 		}
-		$taggroupssql .= " where ";
+		my $i = 1;
 		for my $it (@items) {
 			if(defined($it->{'value'})) {
-				$taggroupssql .= "exists(select * from customscan_track_attributes attr where attr.module='mixedtag' and customscan_track_attributes.track=attr.track and attr.attr='".quoteValue($it->{'tag'})."' and attr.extravalue='".quoteValue($it->{'value'})."') and ";
+				$taggroupssql .= "join customscan_track_attributes attr$i on attr$i.module='mixedtag' and customscan_track_attributes.track=attr$i.track and attr$i.attr='".quoteValue($it->{'tag'})."' and attr$i.extravalue='".quoteValue($it->{'value'})."' ";
+				$i++;
 			}
 		}
 		if(defined($currentItem)) {
-			$taggroupssql .= "exists(select * from customscan_track_attributes attr where attr.module='mixedtag' and customscan_track_attributes.track=attr.track and attr.attr='".quoteValue($currentItem->{'tag'})."' and attr.extravalue='".quoteValue($currentItem->{'value'})."') and ";
+			$taggroupssql .= "join customscan_track_attributes currentattr on currentattr.module='mixedtag' and customscan_track_attributes.track=currentattr.track and currentattr.attr='".quoteValue($currentItem->{'tag'})."' and currentattr.extravalue='".quoteValue($currentItem->{'value'})."' ";
 		}
+		$taggroupssql .= " where ";
 		if(scalar(keys %selectedValues)>0) {
 			my $subquery = undef;
 			for my $key (keys %selectedValues) {
