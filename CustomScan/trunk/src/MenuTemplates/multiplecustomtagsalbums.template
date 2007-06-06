@@ -10,7 +10,7 @@
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>customtag1</id>
-			<menuname>[% IF level2name %][% level2name %][% ELSE %][% IF customtag2 %][% customtag2 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+			<menuname>[% IF level2name %][% level2name %][% ELSE %][% IF customtag2 %][% customtag2 %]s[% ELSE %]Albums[% END %][% END %]</menuname>
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			<menudata>
@@ -19,6 +19,32 @@
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+				[%- END %]
+				[%- IF limituppertags %]
+				[%- IF customtag2 %]
+				join customscan_track_attributes as attr2 on
+					customscan_track_attributes.track=attr2.track and
+					attr2.module='[% datasource %]' and
+					attr2.attr='[% customtag2 %]'
+				[%- END %]
+				[%- IF customtag3 %]
+				join customscan_track_attributes as attr3 on
+					customscan_track_attributes.track=attr3.track and
+					attr3.module='[% datasource %]' and
+					attr3.attr='[% customtag3 %]'
+				[%- END %]
+				[%- IF customtag4 %]
+				join customscan_track_attributes as attr4 on
+					customscan_track_attributes.track=attr4.track and
+					attr4.module='[% datasource %]' and
+					attr4.attr='[% customtag4 %]'
+				[%- END %]
+				[%- IF customtag5 %]
+				join customscan_track_attributes as attr5 on
+					customscan_track_attributes.track=attr5.track and
+					attr5.module='[% datasource %]' and
+					attr5.attr='[% customtag5 %]'
+				[%- END %]
 				[%- END %]
 				[%- IF customsorttag1 %]
 				left join customscan_track_attributes as sortattr on
@@ -49,7 +75,7 @@
 			[%- IF customtag2 %]
 			<menu>
 				<id>customtag2</id>
-				<menuname>[% IF level3name %][% level3name %][% ELSE %][% IF customtag3 %][% customtag3 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+				<menuname>[% IF level3name %][% level3name %][% ELSE %][% IF customtag3 %][% customtag3 %]s[% ELSE %]Albums[% END %][% END %]</menuname>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
@@ -64,6 +90,26 @@
 						attr1.module='[% datasource %]' and
 						attr1.attr='[% customtag1 %]' and
 						attr1.value='{customtag1}'
+					[%- IF limituppertags %]
+					[%- IF customtag3 %]
+					join customscan_track_attributes as attr3 on
+						customscan_track_attributes.track=attr3.track and
+						attr3.module='[% datasource %]' and
+						attr3.attr='[% customtag3 %]'
+					[%- END %]
+					[%- IF customtag4 %]
+					join customscan_track_attributes as attr4 on
+						customscan_track_attributes.track=attr4.track and
+						attr4.module='[% datasource %]' and
+						attr4.attr='[% customtag4 %]'
+					[%- END %]
+					[%- IF customtag5 %]
+					join customscan_track_attributes as attr5 on
+						customscan_track_attributes.track=attr5.track and
+						attr5.module='[% datasource %]' and
+						attr5.attr='[% customtag5 %]'
+					[%- END %]
+					[%- END %]
 					[%- IF customsorttag2 %]
 					left join customscan_track_attributes as sortattr on
 						customscan_track_attributes.track=sortattr.track and
@@ -94,7 +140,7 @@
 				[%- IF customtag3 %]
 				<menu>
 					<id>customtag3</id>
-					<menuname>[% IF level4name %][% level4name %][% ELSE %][% IF customtag4 %][% customtag4 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+					<menuname>[% IF level4name %][% level4name %][% ELSE %][% IF customtag4 %][% customtag4 %]s[% ELSE %]Albums[% END %][% END %]</menuname>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
@@ -114,6 +160,22 @@
 							attr2.module='[% datasource %]' and
 							attr2.attr='[% customtag2 %]' and
 							attr2.value='{customtag2}'
+						[%- IF limituppertags %]
+						[%- IF customtag4 %]
+						join customscan_track_attributes as attr4 on
+							customscan_track_attributes.track=attr4.track and
+							attr4.module='[% datasource %]' and
+							attr4.attr='[% customtag4 %]'
+						}
+						[%- END %]
+						[%- IF customtag5 %]
+						join customscan_track_attributes as attr5 on
+							customscan_track_attributes.track=attr5.track and
+							attr5.module='[% datasource %]' and
+							attr5.attr='[% customtag5 %]'
+						}
+						[%- END %]
+						[%- END %]
 						[%- IF customsorttag3 %]
 						left join customscan_track_attributes as sortattr on
 							customscan_track_attributes.track=sortattr.track and
@@ -144,7 +206,7 @@
 					[%- IF customtag4 %]
 					<menu>
 						<id>customtag4</id>
-						<menuname>[% IF level5name %][% level5name %][% ELSE %][% IF customtag5 %][% customtag5 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+						<menuname>[% IF level5name %][% level5name %][% ELSE %][% IF customtag5 %][% customtag5 %]s[% ELSE %]Albums[% END %][% END %]</menuname>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
@@ -169,6 +231,15 @@
 								attr3.module='[% datasource %]' and
 								attr3.attr='[% customtag3 %]' and
 								attr3.value='{customtag3}'
+							[%- IF limituppertags %]
+							[%- IF customtag5 %]
+							join customscan_track_attributes as attr5 on
+								customscan_track_attributes.track=attr5.track and
+								attr5.module='[% datasource %]' and
+								attr5.attr='[% customtag5 %]'
+							}
+							[%- END %]
+							[%- END %]
 							[%- IF customsorttag4 %]
 							left join customscan_track_attributes as sortattr on
 								customscan_track_attributes.track=sortattr.track and

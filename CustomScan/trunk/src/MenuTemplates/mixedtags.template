@@ -23,6 +23,32 @@
 					customscan_track_attributes.track=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
+				[%- IF limituppertags %]
+				[%- IF customtag2 %]
+				join customscan_track_attributes as attr2 on
+					customscan_track_attributes.track=attr2.track and
+					attr2.module='mixedtag' and
+					attr2.attr='[% customtag2 %]'
+				[%- END %]
+				[%- IF customtag3 %]
+				join customscan_track_attributes as attr3 on
+					customscan_track_attributes.track=attr3.track and
+					attr3.module='mixedtag' and
+					attr3.attr='[% customtag3 %]'
+				[%- END %]
+				[%- IF customtag4 %]
+				join customscan_track_attributes as attr4 on
+					customscan_track_attributes.track=attr4.track and
+					attr4.module='mixedtag' and
+					attr4.attr='[% customtag4 %]'
+				[%- END %]
+				[%- IF customtag5 %]
+				join customscan_track_attributes as attr5 on
+					customscan_track_attributes.track=attr5.track and
+					attr5.module='mixedtag' and
+					attr5.attr='[% customtag5 %]'
+				[%- END %]
+				[%- END %]
 				[%- IF customsorttag1 %]
 				left join customscan_track_attributes as sortattr on
 					customscan_track_attributes.track=sortattr.track and
@@ -70,6 +96,26 @@
 						attr1.module='mixedtag' and
 						attr1.attr='[% customtag1 %]' and
 						attr1.extravalue='{customtag1}'
+					[%- IF limituppertags %]
+					[%- IF customtag3 %]
+					join customscan_track_attributes as attr3 on
+						customscan_track_attributes.track=attr3.track and
+						attr3.module='mixedtag' and
+						attr3.attr='[% customtag3 %]'
+					[%- END %]
+					[%- IF customtag4 %]
+					join customscan_track_attributes as attr4 on
+						customscan_track_attributes.track=attr4.track and
+						attr4.module='mixedtag' and
+						attr4.attr='[% customtag4 %]'
+					[%- END %]
+					[%- IF customtag5 %]
+					join customscan_track_attributes as attr5 on
+						customscan_track_attributes.track=attr5.track and
+						attr5.module='mixedtag' and
+						attr5.attr='[% customtag5 %]'
+					[%- END %]
+					[%- END %]
 					[%- IF customsorttag2 %]
 					left join customscan_track_attributes as sortattr on
 						customscan_track_attributes.track=sortattr.track and
@@ -123,6 +169,20 @@
 							attr2.module='mixedtag' and
 							attr2.attr='[% customtag2 %]' and
 							attr2.extravalue='{customtag2}'
+						[%- IF limituppertags %]
+						[%- IF customtag4 %]
+						join customscan_track_attributes as attr4 on
+							customscan_track_attributes.track=attr4.track and
+							attr4.module='mixedtag' and
+							attr4.attr='[% customtag4 %]'
+						[%- END %]
+						[%- IF customtag5 %]
+						join customscan_track_attributes as attr5 on
+							customscan_track_attributes.track=attr5.track and
+							attr5.module='mixedtag' and
+							attr5.attr='[% customtag5 %]'
+						[%- END %]
+						[%- END %]
 						[%- IF customsorttag3 %]
 						left join customscan_track_attributes as sortattr on
 							customscan_track_attributes.track=sortattr.track and
@@ -181,6 +241,14 @@
 								attr3.module='mixedtag' and
 								attr3.attr='[% customtag3 %]' and
 								attr3.extravalue='{customtag3}'
+							[%- IF limituppertags %]
+							[%- IF customtag5 %]
+							join customscan_track_attributes as attr5 on
+								customscan_track_attributes.track=attr5.track and
+								attr5.module='mixedtag' and
+								attr5.attr='[% customtag5 %]'
+							[%- END %]
+							[%- END %]
 							[%- IF customsorttag4 %]
 							left join customscan_track_attributes as sortattr on
 								customscan_track_attributes.track=sortattr.track and
