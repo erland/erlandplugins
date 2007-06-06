@@ -45,6 +45,9 @@ sub startExport
 	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_replace_extension');
 	my $replacePath = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_library_music_path');
 	my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+	if(!defined($nativeRoot) || $nativeRoot eq '') {
+		$nativeRoot = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_music_path');
+	}
 	$nativeRoot =~ s/\\/\//isg;
 	if(defined($replacePath) && $replacePath ne '') {
 		$replacePath =~ s/\\/\//isg;
