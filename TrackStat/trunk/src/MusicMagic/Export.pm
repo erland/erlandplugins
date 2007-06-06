@@ -168,6 +168,10 @@ sub handleTrack {
 		$replacePath =~ s/\\/\//isg;
 		$replacePath = escape($replacePath);
 		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+		if(!defined($nativeRoot) || $nativeRoot eq '') {
+			# Use iTunes import path as backup
+			$nativeRoot = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_music_path');
+		}
 		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
 		if($url =~ /$nativeUrl/) {
 			$url =~ s/\\/\//isg;
