@@ -113,6 +113,14 @@ sub doneScanning {
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	debugMsg("Calling: $musicmagicurl\n");
 	my $http = Slim::Player::Protocols::HTTP->new({
+        	'url'    => "http://$hostname:$port/api/flush",
+        	'create' => 0,
+    	});
+    	if(defined($http)) {
+    		my $result = $http->content;
+	    	$http->close();
+	}
+	$http = Slim::Player::Protocols::HTTP->new({
         'url'    => "$musicmagicurl",
         'create' => 0,
     });

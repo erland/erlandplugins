@@ -61,7 +61,7 @@ use Plugins::TrackStat::Storage;
 use vars qw($VERSION);
 $VERSION = substr(q$Revision$,10);
 
-my $PLUGINVERSION = '1.38.1';
+my $PLUGINVERSION = '1.38.2';
 
 #################################################
 ### Global constants - do not change casually ###
@@ -3722,6 +3722,14 @@ sub setTrackStatRating {
 				debugMsg("Error setting Music Magic rating, error code = $result\n");
 			}
 	    	$http->close();
+		$http = Slim::Player::Protocols::HTTP->new({
+	        	'url'    => "http://$hostname:$port/api/flush",
+	        	'create' => 0,
+	    	});
+	    	if(defined($http)) {
+	    		$result = $http->content;
+		    	$http->close();
+		}
 	    }else {
 			debugMsg("Failure setting Music Magic rating\n");
 	    }
@@ -3915,6 +3923,8 @@ sub setTrackStatStatistic {
 		debugMsg("Calling: $musicmagicurl\n");
 		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 		$http->get($musicmagicurl);
+		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP);
+		$http->get("http://$hostname:$port/api/flush");
 	}
 	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
 		my $itunesurl = getiTunesURL($url);
