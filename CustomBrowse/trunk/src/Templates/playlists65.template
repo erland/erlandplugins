@@ -16,12 +16,15 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select tracks.id,[% IF playlistnameprefix and hideplaylistnameprefix %]substr(tracks.title,[% playlistnameprefix.length %])[% ELSE %]tracks.title[% END %],substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					[%- IF library or activelibrary %]
 					playlist_track.track=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
+					[% IF playlistnameprefix %]
+					tracks.title like '[% playlistnameprefix %]%' and
+					[% END %]
 					tracks.content_type!='cpl' and 
 					tracks.id=playlist_track.playlist 
 				group by tracks.id 
