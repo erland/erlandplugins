@@ -241,7 +241,7 @@ sub filterTracks {
 
 # Find tracks matching parameters and add them to the playlist
 sub findAndAdd {
-	my ($client, $type, $offset, $limit, $addOnly) = @_;
+	my ($client, $type, $offset, $limit, $addOnly,$continue) = @_;
 
 	debugMsg("Starting random selection of $limit items for type: $type\n");
 	
@@ -276,10 +276,10 @@ sub findAndAdd {
 
 	if ($item && ref($item)) {
 		my $string = $item->title;
-		debugMsg("".($addOnly ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n");
+		debugMsg("".(($addOnly || $continue) ? 'Adding ' : 'Playing ')."$type: $string, ".($item->id)."\n");
 
 		# Replace the current playlist with the first item / track or add it to end
-		my $request = $client->execute(['playlist', $addOnly ? 'addtracks' : 'loadtracks',
+		my $request = $client->execute(['playlist', ($addOnly || $continue) ? 'addtracks' : 'loadtracks',
 		                  sprintf('%s=%d', getLinkAttribute('track'),$item->id)]);
 		
 		if ($::VERSION ge '6.5') {
@@ -305,7 +305,7 @@ sub findAndAdd {
 # Add random tracks to playlist if necessary
 sub playRandom {
 	# If addOnly, then track(s) are appended to end.  Otherwise, a new playlist is created.
-	my ($client, $type, $addOnly, $showFeedback, $forcedAdd) = @_;
+	my ($client, $type, $addOnly, $showFeedback, $forcedAdd,$continue) = @_;
 
 	# disable this during the course of this function, since we don't want
 	# to retrigger on commands we send from here.
@@ -320,7 +320,8 @@ sub playRandom {
 	my $continuousMode = Slim::Utils::Prefs::get('plugin_dynamicplaylist_keep_adding_tracks');;
 	
 	# If this is a new mix, clear playlist history
-	if ($continuousMode && !$addOnly || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
+	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
+		$continue = undef;
 		clearPlayListHistory($client);
 		# Executing actions related to new mix
 		
@@ -361,7 +362,7 @@ sub playRandom {
 		}
 	}
 	my $offset = $mixInfo{$client}->{'offset'};
-	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type || !$addOnly) {
+	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type || (!$addOnly && !$continue)) {
 		$offset = 0;
 	}
 
@@ -375,7 +376,7 @@ sub playRandom {
 	if($type ne 'disable') {
 		# Add new tracks if there aren't enough after the current track
 		my $numRandomTracks = Slim::Utils::Prefs::get('plugin_dynamicplaylist_number_of_tracks');
-		if (! $addOnly) {
+		if (! $addOnly && !$continue) {
 			$numItems = $numRandomTracks;
 		} elsif ($songsRemaining < $numRandomTracks - 1) {
 			$numItems = $numRandomTracks - 1 - $songsRemaining;
@@ -412,7 +413,8 @@ sub playRandom {
             			$offset,
                         $numItems,
 			            # 2nd time round just add tracks to end
-					    $addOnly);
+					    $addOnly,
+				$continue);
 
 		$offset += $count;
 		if($count>0) {
@@ -434,7 +436,14 @@ sub playRandom {
 		# Never show random as modified, since its a living playlist
 		$client->currentPlaylistModified(0);		
 	}
-	
+
+	if($continue) {
+		my $request = $client->execute(['pause', '0']);
+		if ($::VERSION ge '6.5') {
+			$request->source('PLUGIN_DYNAMICPLAYLIST');
+		}
+	}
+
 	if ($::VERSION ge '6.5') {
 	}else {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
@@ -1733,6 +1742,7 @@ sub initPlugin {
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
+		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue', '_playlistid'], [1, 0, 0, \&cliContinuePlaylist]);
 		Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
 	}else {
 		Slim::Control::Command::setExecuteCallback(\&commandCallback62);
@@ -2711,6 +2721,32 @@ sub cliPlayPlaylist {
 	
 	$request->setStatusDone();
 	debugMsg("Exiting cliPlayPlaylist\n");
+}
+
+sub cliContinuePlaylist {
+	debugMsg("Entering cliContinuePlaylist\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['dynamicplaylist'],['playlist'],['continue']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliContinuePlaylist\n");
+		return;
+	}
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting cliContinuePlaylist\n");
+		return;
+	}
+	
+  	my $playlistId    = $request->getParam('_playlistid');
+
+	playRandom($client, $playlistId, 0, 1,undef,1);
+	
+	$request->setStatusDone();
+	debugMsg("Exiting cliContinuePlaylist\n");
 }
 
 sub cliPlayPlaylist62 {
