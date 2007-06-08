@@ -2300,6 +2300,20 @@ sub getFunctions {
 		'right' => sub  {
 			my $client = shift;
 			$client->bumpRight();
+		},
+		'play' => sub  {
+			my $client = shift;
+			my $button = shift;
+			my $playlistId = shift;
+
+			playRandom($client, $playlistId, 0, 1);
+		},
+		'continue' => sub  {
+			my $client = shift;
+			my $button = shift;
+			my $playlistId = shift;
+
+			playRandom($client, $playlistId, 0, 1, undef, 1);
 		}
 	}
 }
