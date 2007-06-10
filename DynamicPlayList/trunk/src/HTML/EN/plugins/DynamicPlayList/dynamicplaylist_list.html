@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
-[% IF !pluginDynamicPlayListSlimserver65 %]
-	[% PROCESS plugins/DynamicPlayList/hreftemplate65 %]
-	[% PROCESS plugins/DynamicPlayList/cmdwrappers65 %]
-	[% PROCESS plugins/DynamicPlayList/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
@@ -22,9 +17,6 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginDynamicPlayListSlimserver65 %]
-	[% PROCESS plugins/DynamicPlayList/pageheaderinfo65 %]
-[% END %]
 
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
      users to make setting changes then click on a new mix without having to press the submit button. %]

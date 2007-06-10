@@ -23,7 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 2. PREREQUISITES
 ================
-- A slimserver 6.2.* or 6.5 installed and configured
+- A slimserver 6.5 installed and configured
+- For usage with slimserver 6.2 or earlier you will have to use version 1.12.* or earlier
 
 3. FILES
 ========

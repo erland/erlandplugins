@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
-[% IF !pluginDynamicPlayListSlimserver65 %]
-	[% PROCESS plugins/DynamicPlayList/hreftemplate65 %]
-	[% PROCESS plugins/DynamicPlayList/cmdwrappers65 %]
-	[% PROCESS plugins/DynamicPlayList/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
@@ -17,11 +12,8 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginDynamicPlayListSlimserver65 %]
-	[% PROCESS plugins/DynamicPlayList/pageheaderinfo65 %]
-[% END %]
 
-<form action="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_saveselectfilters.html" name="editForm">
+<form action="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_saveselectfilters.html" name="editForm" method="post">
 	<table border="0">
 		<tr><td colspan="3"><b>[% "PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_TITLE" | string %]</b></td></tr>
 		[%- FOREACH filter IN pluginDynamicPlayListFilters.keys.sort %]
