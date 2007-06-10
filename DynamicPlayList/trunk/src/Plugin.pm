@@ -35,7 +35,7 @@ use FindBin qw($Bin);
 use Scalar::Util qw(blessed);
 use Plugins::DynamicPlayList::Template::Reader;
 
-my $PLUGINVERSION = '1.12.1';
+my $PLUGINVERSION = '1.13';
 
 my $driver;
 my %stopcommands = ();
@@ -438,6 +438,8 @@ sub playRandom {
 			$client->showBriefly(string('PLUGIN_DYNAMICPLAYLIST'), string('PLUGIN_DYNAMICPLAYLIST_DISABLED'));
 		}
 		$mixInfo{$client} = undef;
+		$client->prefDelete('plugin_dynamicplaylist_playlist');
+		$client->prefDelete('plugin_dynamicplaylist_offset');
 	} else {
 		if(!$numItems || $numItems==0 || $count>0) {
 			debugMsg(($addOnly?"Adding ":"Playing ").($continuousMode ? 'continuous' : 'static')." $type with ".Slim::Player::Playlist::count($client)." items\n");
@@ -446,12 +448,16 @@ sub playRandom {
 				# Record current mix type and the time it was started.
 				# Do this last to prevent menu items changing too soon
 				$mixInfo{$client}->{'type'} = $type;
+				$client->prefSet('plugin_dynamicplaylist_playlist',$type);
 			}
 			if($mixInfo{$client}->{'type'} eq $type) {
 				$mixInfo{$client}->{'offset'} = $offset;
+				$client->prefSet('plugin_dynamicplaylist_offset',$offset);
 			}
 		}else {
 			$mixInfo{$client}->{'type'} = undef;
+			$client->prefDelete('plugin_dynamicplaylist_playlist');
+			$client->prefDelete('plugin_dynamicplaylist_offset');
 		}
 	}
 }
@@ -1310,6 +1316,26 @@ sub requestFirstParameter {
 	}
 }
 
+sub powerCallback {
+	my $request = shift;
+	my $client = $request->client();
+
+	return if !defined $client;
+
+	if($request->getParam('_newvalue')) {
+		if(Slim::Utils::Prefs::get('plugin_dynamicplaylist_rememberactiveplaylist')) {
+			my $type = $client->prefGet('plugin_dynamicplaylist_playlist');
+			if(defined($type)) {
+				debugMsg("Continuing playing playlist: $type\n");
+				$mixInfo{$client}->{'type'} = $type;
+				my $offset = $client->prefGet('plugin_dynamicplaylist_offset');
+				if(defined($offset)) {
+					$mixInfo{$client}->{'offset'} = $offset;
+				}
+			}
+		}
+	}
+}
 sub commandCallback65 {
 	my $request = shift;
 	
@@ -1337,7 +1363,7 @@ sub commandCallback65 {
 	if ($request->isCommand([['playlist'], ['newsong']])
 		|| $request->isCommand([['playlist'], ['delete']]) && $request->getParam('_index') > $songIndex) {
 
-        if ($::d_plugins) {
+		if ($::d_plugins) {
 			if ($request->isCommand([['playlist'], ['newsong']])) {
 				debugMsg("new song detected ($songIndex)\n");
 			} else {
@@ -1597,6 +1623,7 @@ sub initPlugin {
 	# set up our subscription
 	Slim::Control::Request::subscribe(\&commandCallback65, 
 		[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
+	Slim::Control::Request::subscribe(\&powerCallback,[['power']]); 
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
@@ -1634,6 +1661,7 @@ sub initDatabase {
 
 sub shutdownPlugin {
 	Slim::Control::Request::unsubscribe(\&commandCallback65);
+	Slim::Control::Request::unsubscribe(\&powerCallback);
 
 	if(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks") ||
 		Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction")) {
@@ -2225,7 +2253,12 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_dynamicplaylist_structured_savedplaylists to true\n");
 		Slim::Utils::Prefs::set('plugin_dynamicplaylist_structured_savedplaylists', 1);
 	}
-	
+	$prefVal = Slim::Utils::Prefs::get('plugin_dynamicplaylist_rememberactiveplaylist');
+	if (! defined $prefVal) {
+		# Default to remember active playlist
+		debugMsg("Defaulting plugin_dynamicplaylist_rememberactiveplaylist to true\n");
+		Slim::Utils::Prefs::set('plugin_dynamicplaylist_rememberactiveplaylist', 1);
+	}
 	# enable mixer links by default
 	if(!defined(Slim::Utils::Prefs::get("plugin_dynamicplaylist_web_show_mixerlinks"))) {
 		# Default to show mixer links
@@ -2251,7 +2284,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_skipped_tracks_retries','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_showmessages'],
+	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_skipped_tracks_retries','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_rememberactiveplaylist','plugin_dynamicplaylist_showmessages'],
 	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -2365,6 +2398,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_enable_mixerfunction"); }
+		},
+	plugin_dynamicplaylist_rememberactiveplaylist => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST')
+			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_dynamicplaylist_rememberactiveplaylist"); }
 		},
 	plugin_dynamicplaylist_favouritesname => {
 			'validate' => \&Slim::Utils::Validate::acceptAll
@@ -2731,14 +2774,7 @@ sub clearPlayListHistory {
 	my $dbh = getCurrentDBH();
 
 	my $sth = undef;
-	if(!defined($client)) {
-		my $sql = "DELETE FROM dynamicplaylist_history";
-		$sth = $dbh->prepare($sql);
-		eval {
-			$sth->execute();
-			commit($dbh);
-		};
-	}else {
+	if(defined($client)) {
 		my $sql = "DELETE FROM dynamicplaylist_history where client=?";
 		$sth = $dbh->prepare($sql);
 		eval {
@@ -2746,14 +2782,14 @@ sub clearPlayListHistory {
 			$sth->execute();
 			commit($dbh);
 		};
+		if( $@ ) {
+			warn "Database error: $DBI::errstr\n";
+			eval {
+				rollback($dbh); #just die if rollback is failing
+			};
+		}
+		$sth->finish();
 	}
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
-	    eval {
-	    	rollback($dbh); #just die if rollback is failing
-	    };
-	}
-	$sth->finish();
 	if($driver eq 'mysql') {
 		eval { 
 			$dbh->do("ALTER TABLE dynamicplaylist_history AUTO_INCREMENT=1");
@@ -2941,6 +2977,9 @@ PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP
 PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC
 	EN	DynamicPlayList is a plugin which makes it easy to write your own dynamic playlist plugin and it below the same menu as the other playlists
 
+PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST
+	EN	Remeber active playlist after slimserver restart
+
 PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES
 	EN	Show debug messages
 
@@ -2982,6 +3021,9 @@ PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
 
 PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
 	EN	Use saved playlist sub directories as groups
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST
+	EN	Remeber active playlist
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 	EN	Debugging
