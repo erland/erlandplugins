@@ -1084,7 +1084,7 @@
 						where 
 							audio=1 and
 							rating&gt;=90 and 
-							rating&lt;100
+							rating&lt;=100
 					</menudata>
 				</menu>
 			</menu>
@@ -1173,7 +1173,7 @@
 						where 
 							tracks.url=track_statistics.url and
 							track_statistics.rating&gt;=90 and 
-							track_statistics.rating&lt;100
+							track_statistics.rating&lt;=100
 					</menudata>
 				</menu>
 			</menu>
