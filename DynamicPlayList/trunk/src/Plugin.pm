@@ -1444,7 +1444,7 @@ sub mixable {
 	}elsif($blessed eq 'Slim::Schema::Age') {
 		return 1 if($playListTypes->{'album'});
 	}elsif($blessed eq 'Slim::Schema::Contributor') {
-		return 1 if($playListTypes->{'artist'});
+		return 1 if($playListTypes->{'artist'} &&  Slim::Schema->variousArtistsObject->id ne $item->id);
 	}elsif($blessed eq 'Slim::Schema::Genre') {
 		return 1 if($playListTypes->{'genre'});
 	}elsif($blessed eq 'Slim::Schema::Playlist') {
@@ -1476,7 +1476,7 @@ sub mixerFunction {
 		if($mixerType eq 'age') {
 			$mixerType='album';
 		}
-		if($playListTypes->{$mixerType}) { 
+		if($playListTypes->{$mixerType} && ($mixerType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $currentItem->id)) { 
 			if($mixerType eq 'album') {
 				my %p = (
 					'id' => $currentItem->id,
@@ -1580,7 +1580,7 @@ sub mixerlink {
 		if($levelName eq 'contributor') {
 			$levelName = 'artist';
 		}
-		if($playListTypes->{$levelName}) {
+		if($playListTypes->{$levelName} && ($levelName ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
 			$form->{'dynamicplaylist_playlisttype'} = $levelName;
 	        	$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 		}
