@@ -1369,7 +1369,7 @@ sub mixerFunction {
 		my @levels    = split(",", $hierarchy);
 		my $level     = $paramref->{'level'} || 0;
 		my $mixerType = $levels[$level];
-		if($mixerType eq 'contributor') {
+		if($mixerType eq 'contributor' &&  Slim::Schema->variousArtistsObject->id ne $currentItem->id) {
 			$mixerType='artist';
 		}
 		if($mixerType eq 'age') {
@@ -1459,7 +1459,7 @@ sub mixerlink {
 		if($levelName eq 'contributor') {
 			$levelName = 'artist';
 		}
-		if($mixTypes->{$levelName}) {
+		if($mixTypes->{$levelName} && ($levelName ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
 			$form->{'filtertype'} = $levelName;
 			$form->{'mixerlinks'}{'CUSTOMSKIP'} = "plugins/CustomSkip/mixerlink65.html";
 		}
@@ -1518,7 +1518,7 @@ sub mixable {
 		return 1 if($mixTypes->{'album'});
 	}elsif($blessed eq 'Slim::Schema::Age') {
 		return 1 if($mixTypes->{'album'});
-	}elsif($blessed eq 'Slim::Schema::Contributor') {
+	}elsif($blessed eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
 		return 1 if($mixTypes->{'artist'});
 	}elsif($blessed eq 'Slim::Schema::Genre') {
 		return 1 if($mixTypes->{'genre'});
