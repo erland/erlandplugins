@@ -2794,7 +2794,7 @@ sub mixable {
 		return 1 if($statisticTypes{'album'});
 	}elsif($blessed eq 'Slim::Schema::Age') {
 		return 1 if($statisticTypes{'album'});
-	}elsif($blessed eq 'Slim::Schema::Contributor') {
+	}elsif($blessed eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
 		return 1 if($statisticTypes{'artist'});
 	}elsif($blessed eq 'Slim::Schema::Genre') {
 		return 1 if($statisticTypes{'genre'});
@@ -2816,7 +2816,7 @@ sub mixerFunction {
 		my @levels    = split(",", $hierarchy);
 		my $level     = $paramref->{'level'} || 0;
 		my $mixerType = $levels[$level];
-		if($mixerType eq 'contributor') {
+		if($mixerType eq 'contributor' &&  Slim::Schema->variousArtistsObject->id ne $currentItem->id) {
 			$mixerType='artist';
 		}
 		if($mixerType eq 'age') {
@@ -2898,7 +2898,10 @@ sub mixerlink {
 	my $levelName = $form->{'levelName'};
 	if($form->{'noTrackStatButton'}) {
 	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
-        	$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+		if(($levelName eq 'artist' || $levelName eq 'contributor') &&  Slim::Schema->variousArtistsObject->id eq $item->id) {
+        	}else {
+			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+		}
         }elsif(defined($levelName) && $levelName eq 'year') {
         	$form->{'yearid'} = $item->id;
         	if(defined($form->{'yearid'})) {
