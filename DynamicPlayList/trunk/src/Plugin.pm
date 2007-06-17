@@ -979,14 +979,25 @@ sub setMode {
 		}
 		my $playlistgroup = $client->param('selectedgroup');
 		if($playlistgroup) {
-			for my $item (@listRef) {
-				if(!defined($item->{'playlist'}) && defined($item->{'childs'}) && $item->{'name'} eq $playlistgroup) {
-					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
-					return;
-				}
+			my @playlistGroups = split(/\//,$playlistgroup);
+			if(enterSelectedGroup($client,\@listRef,\@playlistGroups)) {
+				return;
 			}
 		}
 	}
+
+	@listRef = sort { 
+		if(defined($a->{'name'}) && defined($b->{'name'})) {
+			return $a->{'name'} cmp $b->{'name'};
+		}
+		if(defined($a->{'name'}) && !defined($b->{'name'})) {
+			return $a->{'name'} cmp $b->{'playlist'}->{'name'};
+		}
+		if(!defined($a->{'name'}) && defined($b->{'name'})) {
+			return $a->{'playlist'}->{'name'} cmp $b->{'name'};
+		}
+		return $a->{'playlist'}->{'name'} cmp $b->{'playlist'}->{'name'} 
+	} @listRef;
 
 	# use INPUT.Choice to display the list of feeds
 	my %params = (
@@ -1072,6 +1083,29 @@ sub setMode {
 	}
 
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+}
+
+sub enterSelectedGroup {
+	my $client = shift;
+	my $listRef = shift;
+	my $selectedGroups = shift;
+
+	my $currentGroup = shift @$selectedGroups;
+	for my $item (@$listRef) {
+		if(!defined($item->{'playlist'}) && defined($item->{'childs'}) && $item->{'name'} eq $currentGroup) {
+			if(scalar(@$selectedGroups)>0) {
+				my @itemArray = ();
+				for my $key (%{$item->{'childs'}}) {
+					push @itemArray,$item->{'childs'}->{$key};
+				}
+				return enterSelectedGroup($client,\@itemArray,$selectedGroups);
+			}else {
+				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+				return 1;
+			}
+		}
+	}
+	return undef;
 }
 
 sub setModeChooseParameters {
@@ -1710,6 +1744,18 @@ sub handleWebList {
 	if($playlist) {
 		$name = $playlist->{'name'};
 	}
+	if(defined($params->{'group1'})) {
+		my $group = unescape($params->{'group1'});
+		if($group =~/\//) {
+			my @groups = split(/\//,$group);
+			my $i=1;
+			for my $grp (@groups) {
+				$params->{'group'.$i} = escape($grp);
+				$i++;
+			}
+		}
+	}
+
 	$params->{'pluginDynamicPlayListContext'} = getPlayListContext($client,$params,$playListItems,1);
 	$params->{'pluginDynamicPlayListGroups'} = getPlayListGroupsForContext($client,$params,$playListItems,1);
 	$params->{'pluginDynamicPlayListPlayLists'} = getPlayListsForContext($client,$params,$playListItems,1,$params->{'playlisttype'});
