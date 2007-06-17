@@ -384,7 +384,7 @@ sub mixerlink {
 		$contextName = Slim::Music::Info::standardTitle(undef, $item),; 
 		$contextType = 'track';
 		$form->{'noitems'} = 1;
-	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
+	}elsif(ref($item) eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
 		$contextId = $item->id;
 		$contextName = $item->name; 
 		$contextType = 'artist';
@@ -440,7 +440,7 @@ sub mixerFunction {
 		my @levels    = split(",", $hierarchy);
 		my $level     = $paramref->{'level'} || 0;
 		my $mixerType = $levels[$level];
-		if($mixerType eq 'contributor') {
+		if($mixerType eq 'contributor'  &&  Slim::Schema->variousArtistsObject->id ne $currentItem->id) {
 			$mixerType='artist';
 		}
 		if($mixerType eq 'age') {
@@ -544,7 +544,7 @@ sub mixable {
 		$itemType = 'album';
 	}elsif($blessed eq 'Slim::Schema::Age') {
 		$itemType = 'album';
-	}elsif($blessed eq 'Slim::Schema::Contributor') {
+	}elsif($blessed eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
 		$itemType = 'artist';
 	}elsif($blessed eq 'Slim::Schema::Genre') {
 		$itemType = 'genre';
