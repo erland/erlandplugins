@@ -2,6 +2,7 @@
 <custombrowse>
 	<minpluginversion>1.23</minpluginversion>
 	<template>
+		<downloadidentifier>173</downloadidentifier>
 		<name>Song path</name>
 		<description>Path for the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="File"/>
