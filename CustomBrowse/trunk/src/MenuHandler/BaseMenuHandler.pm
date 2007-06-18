@@ -1085,10 +1085,13 @@ sub _getSubContext {
 		}
 		if(defined($item)) {
 			my $currentUrl = escape($group);
-			my $currentValue = escape($params->{$group});
+			my $currentValue = '';
+			if(defined($params->{$group})) {
+				$currentValue = escape($params->{$group});
+			}
 			my %parameters = ();
-			$parameters{$currentUrl} = unescape($params->{$group});
-			$parameterContainer->{$currentUrl}=unescape($params->{$group});
+			$parameters{$currentUrl} = unescape($params->{$group}) if defined($params->{$group});
+			$parameterContainer->{$currentUrl}=unescape($params->{$group}) if defined($params->{$group});
 			my $name;
 			if(defined($item->{'menuname'})) {
 				$name = $item->{'menuname'};
@@ -1136,7 +1139,7 @@ sub _getSubContext {
 						$child->{'url'} = $currentUrl.','.$child->{'url'};
 					}
 					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
-					$child->{'parameters'}->{$currentUrl} = unescape($params->{$group});
+					$child->{'parameters'}->{$currentUrl} = unescape($params->{$group}) if defined($params->{$group});
 					push @result,$child;
 				}
 			}
