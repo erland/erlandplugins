@@ -44,7 +44,7 @@ my $globalMixes;
 my $contextBrowseMenusFlat;
 my $templates;
 my $mixer;
-my $PLUGINVERSION = '1.22.6';
+my $PLUGINVERSION = '1.23';
 my $sqlerrors = '';
 my %uPNPCache = ();
 
@@ -1465,7 +1465,7 @@ sub handleWebContextList {
 	my $playAllItems = $items->{'items'};
 	my $prevItem = undef;
 	for my $it (@$playAllItems) {
-		if(defined($prevItem) && $prevItem->{'itemtype'} ne $it->{'itemtype'}) {
+		if(defined($prevItem) && (!defined($prevItem->{'itemtype'}) || !defined($it->{'itemtype'}) || $prevItem->{'itemtype'} ne $it->{'itemtype'})) {
 			$prevItem=undef;
 			last;
 		}else {
@@ -2675,6 +2675,17 @@ sub readContextBrowseConfiguration {
 	my $value = 'plugins/CustomBrowse/custombrowse_list.html';
 	if (grep { /^CustomBrowse::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
 		$value = undef;
+	}
+}
+
+sub itemFormatPath {
+        my $self = shift;
+        my $client = shift;
+        my $item = shift;
+	if($item->{'itemname'} =~ /^file:\/\//i) {
+		return Slim::Utils::Misc::pathFromFileURL($item->{'itemname'});
+	}else {
+		return $item->{'itemname'};
 	}
 }
 
