@@ -42,7 +42,6 @@
                                         contributor_track.track=tracks.id and
                                         contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
                                         tracks.album=albums.id and
-					(albums.compilation is null or albums.compilation=0) and
 					albums.title='[% IF noalbumtext %][% noalbumtext %][% ELSE %]No Album[% END %]' and 
                                         tracks.audio=1
                                 group by contributors.id
