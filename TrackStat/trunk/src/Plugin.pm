@@ -2042,7 +2042,7 @@ sub getCustomSkipFilterTypes {
 				'id' => 'time',
 				'type' => 'singlelist',
 				'name' => 'Time between',
-				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours,259200=3 days,604800=1 week',
 				'value' => 3600 
 			}
 		]
@@ -2057,7 +2057,7 @@ sub getCustomSkipFilterTypes {
 				'id' => 'time',
 				'type' => 'singlelist',
 				'name' => 'Time between',
-				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours,259200=3 days,604800=1 week',
 				'value' => 600 
 			}
 		]
@@ -2072,7 +2072,7 @@ sub getCustomSkipFilterTypes {
 				'id' => 'time',
 				'type' => 'singlelist',
 				'name' => 'Time between',
-				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours',
+				'data' => '300=5 minutes,600=10 minutes,900=15 minutes,1800=30 minutes,3600=1 hour,7200=2 hours,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours,259200=3 days,604800=1 week',
 				'value' => 600 
 			}
 		]
