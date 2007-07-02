@@ -308,6 +308,15 @@ sub playRandom {
 	# Whether to keep adding tracks after generating the initial playlist
 	my $continuousMode = Slim::Utils::Prefs::get('plugin_dynamicplaylist_keep_adding_tracks');;
 	
+	my $stopactions = undef;
+	if(defined($mixInfo{$client}->{'type'})) {
+		my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+		if(defined($playlist)) {
+			if(defined($playlist->{'stopactions'})) {
+				$stopactions = $playlist->{'stopactions'};
+			}
+		}
+	}
 	# If this is a new mix, clear playlist history
 	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
 		$continue = undef;
@@ -315,16 +324,7 @@ sub playRandom {
 		# Executing actions related to new mix
 		
 		if(!$addOnly) {
-			my $stopactions = undef;
 			my $startactions = undef;
-			if(defined($mixInfo{$client}->{'type'})) {
-				my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
-				if(defined($playlist)) {
-					if(defined($playlist->{'stopactions'})) {
-						$stopactions = $playlist->{'stopactions'};
-					}
-				}
-			}
 			if($type ne 'disable') {
 				my $playlist = getPlayList($client,$type);
 				if(defined($playlist)) {
@@ -455,6 +455,16 @@ sub playRandom {
 				$client->prefSet('plugin_dynamicplaylist_offset',$offset);
 			}
 		}else {
+			if(defined($stopactions)) {
+				for my $action (@$stopactions) {
+					if(defined($action->{'type'}) && lc($action->{'type'}) eq 'cli' && defined($action->{'data'})) {
+						debugMsg("Executing action: ".$action->{'type'}.", ".$action->{'data'}."\n");
+						my @parts = split(/ /,$action->{'data'});
+						my $request = $client->execute(\@parts);
+						$request->source('PLUGIN_DYNAMICPLAYLIST');
+					}
+				}
+			}
 			$mixInfo{$client}->{'type'} = undef;
 			$client->prefDelete('plugin_dynamicplaylist_playlist');
 			$client->prefDelete('plugin_dynamicplaylist_offset');
