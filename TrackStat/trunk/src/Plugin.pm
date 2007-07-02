@@ -2103,7 +2103,7 @@ sub checkCustomSkipFilterType {
 		}
 	}elsif($filter->{'id'} eq 'trackstat_notrated') {
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
-		if(defined($trackHandle) && defined($trackHandle->rating)) {
+		if(!defined($trackHandle) || !defined($trackHandle->rating) || !$trackHandle->rating) {
 			return 1;
 		}
 	}elsif($filter->{'id'} eq 'trackstat_recentlyplayedtrack') {
