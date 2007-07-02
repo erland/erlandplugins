@@ -3926,7 +3926,7 @@ sub setTrackStatStatistic {
 		debugMsg("Calling: $musicmagicurl\n");
 		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 		$http->get($musicmagicurl);
-		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP);
+		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'flush' });
 		$http->get("http://$hostname:$port/api/flush");
 	}
 	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
