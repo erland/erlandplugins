@@ -1852,23 +1852,25 @@ sub newSongCallback
 		my $track  = Slim::Player::Playlist::song($client);
 		if (defined $track) {
 			debugMsg("Received newsong for ".$track->url."\n");
-			my $dbh = getCurrentDBH();
-			my $sth = $dbh->prepare('select dynamicplaylist_history.id from dynamicplaylist_history where client=? and id=?');
-
 			my $result = 0;
-			eval {
-				$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
-				$sth->bind_param(2, $track->id , SQL_INTEGER);
-				$sth->execute();
-				if( $sth->fetch() ) {
+			if(Slim::Utils::PluginManager::enabledPlugin("DynamicPlayList::Plugin",$client)) {
+				my $dbh = getCurrentDBH();
+				my $sth = $dbh->prepare('select dynamicplaylist_history.id from dynamicplaylist_history where client=? and id=?');
+
+				eval {
+					$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
+					$sth->bind_param(2, $track->id , SQL_INTEGER);
+					$sth->execute();
+					if( $sth->fetch() ) {
+						$result = 1;
+					}
+				};
+				if ($@) {
 					$result = 1;
+					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
 				}
-			};
-			if ($@) {
-				$result = 1;
-				debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+				$sth->finish();
 			}
-			$sth->finish();
 			my $keep = 1;
 			if(!$result) {
 				$keep = executeDynamicPlayListFilter($client,undef,$track);
