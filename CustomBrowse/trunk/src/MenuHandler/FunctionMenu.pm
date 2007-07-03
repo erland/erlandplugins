@@ -54,7 +54,7 @@ sub getData {
 
 			shift @functions;
 			for my $item (@functions) {
-				if($item =~ /^(.+)=(.*)$/) {
+				if($item =~ /^(.+?)=(.*)$/) {
 					$keywords->{$1}=$2;
 				}
 			}

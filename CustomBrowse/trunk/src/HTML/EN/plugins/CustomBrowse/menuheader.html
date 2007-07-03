@@ -1,6 +1,8 @@
 [%- BLOCK contextInfo -%]
 	[% IF it.slimserverimage %]
 		<a href="[% webroot %][% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" target="_blank"><img src="[% webroot %][% it.slimserverimage %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
+	[% ELSIF it.internetslimserverimage %]
+		<a href="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% webroot %][% it.itemname %][% END %]" target="_blank"><img src="[% webroot %][% it.internetslimserverimage %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
 	[% ELSIF it.internetimage %]
 		<a href="[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]" target="_blank"><img src="[% it.internetimage %]" onLoad="resize(this[% IF it.itemformatimagewidth %],[% it.itemformatimagewidth %][% ELSE %],200[% END %]);"></img></a>
 	[% ELSIF it.slimserverurl %]
@@ -22,10 +24,10 @@
 		[% FOREACH item = items %]
 			[% IF (column=='left' and item.itemplacement=='left') or (column=='right' and item.itemplacement!='left') %]
 			<li>
-				[% IF (!item.slimserverimage and !item.internetimage) %]
+				[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %]
 				<div class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</div>
 				[% END %]
-				<div[% IF (!item.slimserverimage and !item.internetimage) %] class="songInfoText"[% END %]>
+				<div[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %] class="songInfoText"[% END %]>
 					[% IF item.multipleitems %]
 						[% itemCount=0 %]
 						[% prevImage=0 %]
@@ -37,7 +39,7 @@
 								...
 								[% LAST %]
 							[% END %]
-							[% IF it.slimserverimage or it.internetimage %][% prevImage=1 %][% ELSE %][% prevImage=0 %][% END %]
+							[% IF it.slimserverimage or it.internetimage or it.internetslimserverimage %][% prevImage=1 %][% ELSE %][% prevImage=0 %][% END %]
 						[% END %]
 					[% ELSE %]
 						[% PROCESS contextInfo it=item %]

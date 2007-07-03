@@ -31,6 +31,7 @@ use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use HTML::Entities;
 use Scalar::Util qw(blessed);
+use Text::Unidecode;
 
 use Plugins::CustomBrowse::ConfigManager::Main;
 use Plugins::CustomBrowse::ConfigManager::ContextMain;
@@ -696,6 +697,123 @@ sub albumFiles {
 	
 	return \@result;
 }
+sub imageCacheFiles {
+	my $self = shift;
+	my $client = shift;
+	my $keywords = shift;
+	my $context = shift;
+
+	my @result = ();
+
+	my $type = $keywords->{'type'};
+	if(defined($type) && $type ne '') {
+		$type = getParameterHandler()->replaceParameters($client,$type,$keywords,$context);
+	}
+	my $section = $keywords->{'section'};
+	if(defined($section) && $section ne '') {
+		$section = getParameterHandler()->replaceParameters($client,$section,$keywords,$context);
+		# We don't want to allow .. for security reason
+		if($section =~ /\.\./) {
+			$section = undef;
+		}
+	}
+	my $name = undef;
+
+	my $contextParameter = '';
+	if($type eq 'artist') {
+		my $artistId = $keywords->{'artist'};
+		$artistId = getParameterHandler()->replaceParameters($client,$artistId,$keywords,$context);
+		$contextParameter = "&artist=$artistId";
+		my $artist = Slim::Schema->resultset('Contributor')->find($artistId);
+		if(defined($artist)) {
+			$name = $artist->name;
+			$context->{'itemname'} = $name;
+		}
+	}elsif($type eq 'album') {
+		my $albumId = $keywords->{'album'};
+		$albumId = getParameterHandler()->replaceParameters($client,$albumId,$keywords,$context);
+		$contextParameter = "&album=$albumId";
+		my $album = Slim::Schema->resultset('Album')->find($albumId);
+		if(defined($album)) {
+			$name = $album->title;
+			$context->{'itemname'} = $name;
+		}
+	}elsif($type eq 'year') {
+		my $yearId = $keywords->{'year'};
+		$yearId = getParameterHandler()->replaceParameters($client,$yearId,$keywords,$context);
+		$contextParameter = "&year=$yearId";
+		if(defined($yearId)) {
+			if(!$yearId) {
+				$yearId=string('UNK'); 
+			}
+			$name = $yearId;
+			$context->{'itemname'} = $name;
+		}
+	}elsif($type eq 'playlist') {
+		my $playlistId = $keywords->{'playlist'};
+		$playlistId = getParameterHandler()->replaceParameters($client,$playlistId,$keywords,$context);
+		$contextParameter = "&playlist=$playlistId";
+		my $playlist = Slim::Schema->resultset('Playlist')->find($playlistId);
+		if(defined($playlist)) {
+			$name = $playlist->title;
+			$context->{'itemname'} = $name;
+		}
+	}elsif($type eq 'genre') {
+		my $genreId = $keywords->{'genre'};
+		$genreId = getParameterHandler()->replaceParameters($client,$genreId,$keywords,$context);
+		$contextParameter = "&genre=$genreId";
+		my $genre = Slim::Schema->resultset('Genre')->find($genreId);
+		if(defined($genre)) {
+			$name = $genre->name;
+			$context->{'itemname'} = $name;
+		}
+	}elsif($type eq 'custom') {
+		my $name = $keywords->{'custom'};
+		$name = getParameterHandler()->replaceParameters($client,$name,$keywords,$context);
+		$contextParameter = "&custom=$name";
+		# We don't want to allow .. for security reason
+		if($name =~ /\.\./) {
+			$name = undef;
+		}else {
+			$context->{'itemname'} = $name;
+		}
+	}
+
+	my $linkurl = $keywords->{'linkurl'};
+	if(defined($linkurl) && $linkurl ne '') {
+		$linkurl = getParameterHandler()->replaceParameters($client,$linkurl,$keywords,$context);
+	}
+	my $linkurlascii = $keywords->{'linkurlascii'};
+	if($linkurlascii && defined($linkurl) && $linkurl ne '') {
+		$linkurl = unidecode($linkurl);
+	}
+
+	my $dir = Slim::Utils::Prefs::get('plugin_custombrowse_image_cache');
+
+	if(defined($dir) && defined($name)) {
+		my $extension = undef;
+		my $file = $name;
+		if(defined($section) && $section ne '') {
+			$file = catfile($section,$name);
+		}
+		if(-f catfile($dir,$file.".png")) {
+			$extension = ".png";
+		}elsif(-f catfile($dir,$file.".jpg")) {
+			$extension = ".jpg";
+		}elsif(-f catfile($dir,$file.".gif")) {
+			$extension = ".gif";
+		}
+		if(defined($extension)) {
+			my %item = (
+				'id' => $name,
+				'name' => ($linkurl?$linkurl.": ":"")."plugins/CustomBrowse/custombrowse_imagecachefile$extension?type=$type".(defined($section)?"&section=$section":"")."$contextParameter"
+			);
+			push @result,\%item;
+		}
+	}
+	return \@result;
+}
+
 
 sub initPlugin {
 	my $class = shift;
@@ -1056,7 +1174,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_image_cache','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1144,6 +1262,13 @@ sub setupGroup
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_directory"); }
 		},
+	plugin_custombrowse_image_cache => {
+			'validate' => \&Slim::Utils::Validate::isDir
+			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_IMAGE_CACHE')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_IMAGE_CACHE')
+			,'PrefSize' => 'large'
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_image_cache"); }
+		},		
 	plugin_custombrowse_template_directory => {
 			'validate' => \&Slim::Utils::Validate::isDir
 			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY')
@@ -1182,6 +1307,7 @@ sub webPages {
                 "custombrowse_settings\.(?:htm|xml)"     => \&handleWebSettings,
                 "custombrowse_albumimage\.(?:jpg|gif|png)"     => \&handleWebAlbumImage,
                 "custombrowse_albumfile\.(?:txt|pdf|htm)"     => \&handleWebAlbumFile,
+                "custombrowse_imagecachefile\.(?:jpg|gif|png)"     => \&handleWebImageCacheFile,
                 "webadminmethods_edititems\.(?:htm|xml)"     => \&handleWebEditMenus,
                 "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditMenu,
                 "webadminmethods_hideitem\.(?:htm|xml)"     => \&handleWebHideMenu,
@@ -1561,6 +1687,81 @@ sub handleWebAlbumFile {
 		debugMsg("Reading: ".catfile($dir,$params->{'file'})."\n");
 		my $content = read_file(catfile($dir,$params->{'file'}));
 		return \$content;
+	}
+	return undef;
+}
+
+sub handleWebImageCacheFile {
+	my ($client, $params, $callback, $httpClient,$response) = @_;
+	my $type = $params->{'type'};
+	my $name = undef;
+	my $section = $params->{'section'};
+	# We don't want to allow .. for security reason
+	if(defined($section) && $section ne '') {
+		if($section =~ /\.\./) {
+			$section = undef;
+		}
+	}
+	if(defined($type) && $type eq 'artist') {
+		my $artistId = $params->{'artist'};
+		my $artist = Slim::Schema->resultset('Contributor')->find($artistId);
+		if(defined($artist)) {
+			$name = $artist->name;
+		}
+	}elsif(defined($type) && $type eq 'album') {
+		my $albumId = $params->{'album'};
+		my $album = Slim::Schema->resultset('Album')->find($albumId);
+		if(defined($album)) {
+			$name = $album->title;
+		}
+	}elsif(defined($type) && $type eq 'genre') {
+		my $genreId = $params->{'genre'};
+		my $genre = Slim::Schema->resultset('Genre')->find($genreId);
+		if(defined($genre)) {
+			$name = $genre->name;
+		}
+	}elsif(defined($type) && $type eq 'playlist') {
+		my $playlistId = $params->{'playlist'};
+		my $playlist = Slim::Schema->resultset('Playlist')->find($playlistId);
+		if(defined($playlist)) {
+			$name = $playlist->title;
+		}
+	}elsif(defined($type) && $type eq 'year') {
+		my $yearId = $params->{'year'};
+		if(defined($yearId)) {
+			if(!$yearId) {
+				$yearId = string('UNK');
+			}
+			$name = $yearId;
+		}
+	}elsif(defined($type) && $type eq 'custom') {
+		$name = $params->{'custom'};
+		# We don't want to allow .. for security reason
+		if($name =~ /\.\./) {
+			$name = undef;
+		}
+	}
+
+	my $dir = Slim::Utils::Prefs::get('plugin_custombrowse_image_cache');
+
+	if(defined($dir) && defined($name)) {
+		my $extension = undef;
+		my $file = $name;
+		if(defined($section) && $section ne '') {
+			$file = catfile($section,$name);
+		}
+		if(-f catfile($dir,$file.".png")) {
+			$extension = ".png";
+		}elsif(-f catfile($dir,$file.".jpg")) {
+			$extension = ".jpg";
+		}elsif(-f catfile($dir,$file.".gif")) {
+			$extension = ".gif";
+		}
+		if(defined($extension)) {
+			debugMsg("Reading: ".catfile($dir,$file.$extension)."\n");
+			my $content = read_file(catfile($dir,$file.$extension));
+			return \$content;
+		}
 	}
 	return undef;
 }
@@ -2683,7 +2884,8 @@ sub itemFormatPath {
         my $client = shift;
         my $item = shift;
 	if($item->{'itemname'} =~ /^file:\/\//i) {
-		return Slim::Utils::Misc::pathFromFileURL($item->{'itemname'});
+		my $path = Slim::Utils::Misc::pathFromFileURL($item->{'itemname'});
+		return Slim::Utils::Unicode::utf8decode($path,'utf8')
 	}else {
 		return $item->{'itemname'};
 	}
@@ -2947,6 +3149,9 @@ SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
 
+PLUGIN_CUSTOMBROWSE_IMAGE_CACHE
+	EN	Cache directory for images
+
 PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
 	EN	Browse templates directory
 
@@ -2955,6 +3160,9 @@ PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY
 
 SETUP_PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory
+
+SETUP_PLUGIN_CUSTOMBROWSE_IMAGE_CACHE
+	EN	Cache directory for images
 
 SETUP_PLUGIN_CUSTOMBROWSE_TEMPLATE_DIRECTORY
 	EN	Browse templates directory
