@@ -1238,6 +1238,102 @@ sub handleWebScan {
 	return handleWebList($client, $params);
 }
 
+sub getCustomSkipFilterTypes {
+	my @result = ();
+
+	my %customtag = (
+		'id' => 'customscan_customtag_customtag',
+		'name' => 'Custom tag',
+		'description' => 'Skip songs which have a custom tag',
+		'parameters' => [
+			{
+				'id' => 'customtag',
+				'type' => 'sqlsinglelist',
+				'name' => 'Custom tag',
+				'data' => 'select distinct attr,attr,attr from customscan_track_attributes order by attr'
+			}
+		]
+	);
+	push @result, \%customtag;
+	my %notcustomtag = (
+		'id' => 'customscan_customtag_notcustomtag',
+		'name' => 'Not Custom tag',
+		'description' => 'Skip songs which dont have a custom tag',
+		'parameters' => [
+			{
+				'id' => 'customtag',
+				'type' => 'sqlsinglelist',
+				'name' => 'Custom tag',
+				'data' => 'select distinct attr,attr,attr from customscan_track_attributes order by attr'
+			}
+		]
+	);
+	push @result, \%notcustomtag;
+	return \@result;
+}
+
+sub checkCustomSkipFilterType {
+	my $client = shift;
+	my $filter = shift;
+	my $track = shift;
+
+	my $currentTime = time();
+	my $parameters = $filter->{'parameter'};
+	my $result = 0;
+	my $dbh = getCurrentDBH();
+	if($filter->{'id'} eq 'customscan_customtag_customtag') {
+		my $matching = 0;
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'customtag') {
+				my $values = $parameter->{'value'};
+				my $customtag = $values->[0] if(defined($values) && scalar(@$values)>0);
+
+				my $sth = $dbh->prepare("select track from customscan_track_attributes where track=? and module='customtag' and attr=?");
+				eval {
+					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					$sth->bind_param(2, $customtag , SQL_VARCHAR);
+					$sth->execute();
+					if( $sth->fetch() ) {
+						$result = 1;
+					}
+				};
+				if ($@) {
+					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+				}
+				$sth->finish();
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'customscan_customtag_notcustomtag') {
+		my $matching = 0;
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'customtag') {
+				my $values = $parameter->{'value'};
+				my $customtag = $values->[0] if(defined($values) && scalar(@$values)>0);
+
+				my $sth = $dbh->prepare("select track from customscan_track_attributes where track=? and module='customtag' and attr=?");
+				$result = 1;
+				eval {
+					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					$sth->bind_param(2, $customtag , SQL_VARCHAR);
+					$sth->execute();
+					if( $sth->fetch() ) {
+						$result = 0;
+					}
+				};
+				if ($@) {
+					$result = 0;
+					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+				}
+				$sth->finish();
+				last;
+			}
+		}
+	}
+
+	return $result;
+}
+
 sub initDatabase {
 	my $driver = Slim::Utils::Prefs::get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
