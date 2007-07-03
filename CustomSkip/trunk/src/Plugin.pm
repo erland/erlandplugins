@@ -43,7 +43,7 @@ my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
 my %currentSecondaryFilter = ();
-my $PLUGINVERSION = '1.3.1';
+my $PLUGINVERSION = '1.3.2';
 
 my %filterPlugins = ();
 	
@@ -294,6 +294,7 @@ sub checkCustomSkipFilterType {
 				if(defined($artist) && $artist->name eq $name) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'notartist') {
@@ -305,6 +306,7 @@ sub checkCustomSkipFilterType {
 				if(!defined($artist) || $artist->name ne $name) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'album') {
@@ -316,6 +318,7 @@ sub checkCustomSkipFilterType {
 				if(defined($album) && $album->title eq $title) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'notalbum') {
@@ -327,6 +330,7 @@ sub checkCustomSkipFilterType {
 				if(!defined($album) || $album->title ne $title) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'genre') {
@@ -342,6 +346,7 @@ sub checkCustomSkipFilterType {
 						}
 					}
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'notgenre') {
@@ -361,6 +366,59 @@ sub checkCustomSkipFilterType {
 						return 1;
 					}
 				}
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'playlist') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'name') {
+				my $names = $parameter->{'value'};
+				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
+				my $dbh = getCurrentDBH();
+				my $sth = $dbh->prepare('select playlist_track.track from tracks,playlist_track where playlist_track.playlist=tracks.id and playlist_track.track=? and tracks.title=?');
+				my $result = 0;
+				eval {
+					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					$sth->bind_param(2, $name , SQL_VARCHAR);
+					$sth->execute();
+					if( $sth->fetch() ) {
+						$result = 1;
+					}
+				};
+				if ($@) {
+					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+				}
+				$sth->finish();
+				if($result) {
+					return 1;
+				}
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'notplaylist') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'name') {
+				my $names = $parameter->{'value'};
+				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
+				my $dbh = getCurrentDBH();
+				my $sth = $dbh->prepare('select playlist_track.track from tracks,playlist_track where playlist_track.playlist=tracks.id and playlist_track.track=? and tracks.title=?');
+				my $result = 0;
+				eval {
+					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					$sth->bind_param(2, $name , SQL_VARCHAR);
+					$sth->execute();
+					if( $sth->fetch() ) {
+						$result = 1;
+					}
+				};
+				if ($@) {
+					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+				}
+				$sth->finish();
+				if(!$result) {
+					return 1;
+				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'shortsongs') {
@@ -372,6 +430,7 @@ sub checkCustomSkipFilterType {
 				if($track->durationSeconds<=$length) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'longsongs') {
@@ -383,6 +442,7 @@ sub checkCustomSkipFilterType {
 				if($track->durationSeconds>=$length) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'maxyear') {
@@ -394,6 +454,7 @@ sub checkCustomSkipFilterType {
 				if(defined($track->year) && $track->year!=0 && $track->year<=$year) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}elsif($filter->{'id'} eq 'minyear') {
@@ -405,6 +466,7 @@ sub checkCustomSkipFilterType {
 				if(defined($track->year) && $track->year!=0 && $track->year>=$year) {
 					return 1;
 				}
+				last;
 			}
 		}
 	}
@@ -442,6 +504,8 @@ sub executeDynamicPlayListFilter {
 		my $skippercentage = 0;
 		my $retrylater = undef;
 		if(defined($filter) || defined($secondaryFilter)) {
+			debugMsg("Using primary filter: ".$filter->{'name'}."\n") if defined($filter);
+			debugMsg("Using secondary filter: ".$secondaryFilter->{'name'}."\n") if defined($secondaryFilter);
 			my @filteritems = ();
 			if(defined($filter)) {
 				removeExpiredFilterItems($filter);
@@ -463,7 +527,7 @@ sub executeDynamicPlayListFilter {
 			
 				my $id = $filteritem->{'id'};
 				my $plugin = $filterPlugins{$id};
-				debugMsg("Calling: $plugin with: $track\n");
+				debugMsg("Calling: $plugin for ".$filteritem->{'id'}." with: ".$track->url."\n");
 				no strict 'refs';
 				debugMsg("Calling: $plugin :: checkCustomSkipFilterType\n");
 				my $match =  eval { &{"${plugin}::checkCustomSkipFilterType"}($client,$filteritem,$track) };
@@ -472,6 +536,7 @@ sub executeDynamicPlayListFilter {
 				}
 				use strict 'refs';
 				if($match) {
+					debugMsg("Filter ".$filteritem->{'id'}." matched\n");
 					my $parameters = $filteritem->{'parameter'};
 					for my $p (@$parameters) {
 						if($p->{'id'} eq 'customskippercentage') {
@@ -479,6 +544,7 @@ sub executeDynamicPlayListFilter {
 							if(defined($values) && scalar(@$values)>0) {
 								if($values->[0] >= $skippercentage) {
 									$skippercentage = $values->[0];
+									debugMsg("Use skip percentage ".$skippercentage."%\n");
 								}
 							}
 						}
@@ -503,8 +569,10 @@ sub executeDynamicPlayListFilter {
 				return 1;
 			}else {
 				if($retrylater) {
+					debugMsg("Skip track \"".$track->title."\"now, retry later\n");
 					return -1;
 				}else {
+					debugMsg("Skip track: ".$track->title."\n");
 					return 0;
 				}
 			}
