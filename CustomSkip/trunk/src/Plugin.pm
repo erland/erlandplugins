@@ -254,6 +254,27 @@ sub getCustomSkipFilterTypes {
 		]
 	);
 	push @result, \%longsongs;
+	my %lossy = (
+		'id' => 'lossy',
+		'name' => 'Lossy',
+		'description' => 'Skip songs with lossy formats',
+		'parameters' => [
+			{
+				'id' => 'bitrate',
+				'type' => 'singlelist',
+				'name' => 'Maximum bitrate to skip',
+				'data' => '64000=64kbps,96000=96kbps,128000=128kbps,160000=160kbps,192000=192kbps,256000=256kbps,320000=320kbps,-1=All lossy',
+				'value' => 64000
+			}
+		]
+	);
+	push @result, \%lossy;
+	my %lossless = (
+		'id' => 'lossless',
+		'name' => 'Lossless',
+		'description' => 'Skip songs with lossless formats'
+	);
+	push @result, \%lossless;
 	return \@result;
 }
 
@@ -468,6 +489,22 @@ sub checkCustomSkipFilterType {
 				}
 				last;
 			}
+		}
+	}elsif($filter->{'id'} eq 'lossy') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'bitrate') {
+				my $bitrates = $parameter->{'value'};
+				my $bitrate = $bitrates->[0] if(defined($bitrates) && scalar(@$bitrates)>0);
+				
+				if(($bitrate eq -1 && !$track->lossless) || ($bitrate && $track->bitrate<=$bitrate)) {
+					return 1;
+				}
+				last;
+			}
+		}
+	}elsif($filter->{'id'} eq 'lossless') {
+		if($track->lossless) {
+			return 1;
 		}
 	}
 
