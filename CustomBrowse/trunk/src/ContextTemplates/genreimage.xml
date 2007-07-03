@@ -2,6 +2,7 @@
 <custombrowse>
 	<minpluginversion>1.23</minpluginversion>
 	<template>
+		<downloadidentifier>177</downloadidentifier>
 		<name>Genre image</name>
 		<description>Genre image for selected genre, images are collected from the specified sub directory within "Cache directory for images" specified in Custom Browse settings</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genre image"/>
