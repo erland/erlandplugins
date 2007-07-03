@@ -27,6 +27,7 @@ package Plugins::CustomScan::Modules::LastFM;
 
 use Slim::Utils::Misc;
 use XML::Simple;
+use File::Spec::Functions qw(:ALL);
 #use Data::Dumper;
 
 my $lastCalled = undef;
@@ -53,6 +54,13 @@ sub getCustomScanFunctions {
 				'description' => 'The percentage a tag must have to be included',
 				'type' => 'text',
 				'value' => 10
+			},
+			{
+				'id' => 'lastfmpicturedir',
+				'name' => 'Picture directory',
+				'description' => 'The directory where LastFM pictures should be cached, if not specified they will not be cached',
+				'type' => 'text',
+				'value' => ''
 			}
 		]
 	);
@@ -110,13 +118,37 @@ sub scanArtist {
 				'value' => $xml->{'picture'}
 			);
 			push @result,\%item;
+
+			# **** Cache images if a picture directory has been specified **** 
+			my $pictureDir=Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmpicturedir");
+			if(defined($pictureDir) && $pictureDir ne '' && -d $pictureDir) {
+				my $url = $item{'value'};
+				if($url =~ /.*\.([^.]+$)/) {
+					my $extension = $1;
+					$http = Slim::Player::Protocols::HTTP->new({
+        					'url'    => $item{'value'},
+				        	'create' => 0,
+				    	});
+				    	if(defined($http)) {
+						my $file = catfile($pictureDir,$artist->name.".".$extension);
+						my $fh;
+						open($fh,"> $file") or do {
+					            msg ("CustomScan:LastFM: Error saving image for ".$artist->name."\n");
+						};
+						if(defined($fh)) {
+							print $fh $http->content();
+							close $fh;
+						}
+					    	$http->close();
+					}else {
+						msg ("CustomScan:LastFM: Failed to download ".$artist->name." image: ".$item{'value'}."\n");
+					}
+				}
+			}
 		}
 		$http->close();
 	}
 	$http = undef;
-
-
-
 
 	# **** Scan for top tags for artist **** 
 	my $topTagsLimit = Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtagspercent");
@@ -165,7 +197,6 @@ sub scanArtist {
 
 	return \@result;
 }
-
 
 sub debugMsg
 {
