@@ -315,7 +315,7 @@ sub handleTrack {
 
 		$file  = Slim::Utils::Misc::pathFromFileURL($url);
 
-		if ($] > 5.007 && $file && getCurrentLocale() ne 'utf8') {
+		if ($] > 5.007 && $file && !-e $file && getCurrentLocale() ne 'utf8') {
 
 			eval { Encode::from_to($file, 'utf8', getCurrentLocale()) };
 
@@ -584,7 +584,10 @@ sub normalize_location {
 		$url = $stripped;
 		$url =~ s/$iBase/$base/isg;
 		if($replaceExtension) {
-			$url =~ s/\.[^.]*$/$replaceExtension/isg;
+			my $path = Slim::Utils::Misc::pathFromFileURL($url);
+			if(! -e $path) {
+				$url =~ s/\.[^.]*$/$replaceExtension/isg;
+			}
 		}
 		$url =~ s/(\w)\/\/(\w)/$1\/$2/isg;
 

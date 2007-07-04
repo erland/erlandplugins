@@ -252,7 +252,10 @@ sub handleTrack {
 		
 		my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_musicmagic_slimserver_replace_extension');;
 		if($replaceExtension) {
-			$url =~ s/\.[^.]*$/$replaceExtension/isg;
+			my $path = Slim::Utils::Misc::pathFromFileURL($url);
+			if(! -e $path) {
+				$url =~ s/\.[^.]*$/$replaceExtension/isg;
+			}
 		}
 		$url =~ s/\\/\//isg;
 		debugMsg("Store Track: $url\n");
