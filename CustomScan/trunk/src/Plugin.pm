@@ -266,6 +266,42 @@ sub getSQLPlayListTemplates {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','PlaylistTemplates','xml');
 }
+sub getSQLPlayListPlaylists {
+	my $client = shift;
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Playlists','xml','template','playlist','simple',1);
+	my @filteredResult = ();
+	my $dbh = getCurrentDBH();
+	for my $playlist (@$result) {
+		my $sql = undef;
+		my $include = 1;
+		if($playlist->{'id'} =~ /^cslastfm_/) {
+			$sql = "SELECT id from customscan_contributor_attributes where module='cslastfm' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^customtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='customtag' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^mixedtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='mixedtag' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^csamazon_/) {
+			$sql = "SELECT id from customscan_album_attributes where module='csamazon' limit 1";
+			$include = 0;
+		}
+		if(defined($sql)) {
+			my $sth = $dbh->prepare($sql);
+			eval {
+				$sth->execute();
+				if($sth->fetch()) {
+					$include = 1;
+				}
+			};
+		}
+		if($include) {
+			push @filteredResult,$playlist;
+		}
+	}
+	return \@filteredResult;
+}
 sub getCustomBrowseTemplates {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','MenuTemplates','xml');
@@ -293,6 +329,13 @@ sub getSQLPlayListTemplateData {
 	return $data;
 }
 
+sub getSQLPlayListPlaylistData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','Playlists',$templateItem->{'id'},"xml");
+	return $data;
+}
 
 sub getCustomBrowseTemplateData {
 	my $client = shift;
