@@ -975,7 +975,8 @@ sub getMenuHandler {
 			'displayTextCallback' => \&getDisplayText,
 			'overlayCallback' => \&getOverlay,
 			'requestSource' => 'PLUGIN_CUSTOMBROWSE',
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'showMixBeforeExecuting' => Slim::Utils::Prefs::get('plugin_custombrowse_showmixbeforeexecuting')
 		);
 
 		$menuHandler = Plugins::CustomBrowse::MenuHandler::Main->new(\%parameters);
@@ -995,7 +996,8 @@ sub getContextMenuHandler {
 			'displayTextCallback' => \&getDisplayText,
 			'overlayCallback' => \&getOverlay,
 			'requestSource' => 'PLUGIN_CUSTOMBROWSE',
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'showMixBeforeExecuting' => Slim::Utils::Prefs::get('plugin_custombrowse_showmixbeforeexecuting')
 		);
 		$contextMenuHandler = Plugins::CustomBrowse::MenuHandler::Main->new(\%parameters);
 	}
@@ -1139,7 +1141,11 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_single_web_mixerbutton to 0\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_single_web_mixerbutton', 0);
 	}
-
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_showmixbeforeexecuting');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_showmixbeforeexecuting to 1\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_showmixbeforeexecuting', 1);
+	}
 
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
@@ -1174,7 +1180,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_image_cache','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_image_cache','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_showmixbeforeexecuting','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1243,6 +1249,16 @@ sub setupGroup
 					,'0' => string('OFF')
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton"); }
+		},		
+	plugin_custombrowse_showmixbeforeexecuting => {
+			'validate'     => \&Slim::Utils::Validate::trueFalse
+			,'PrefChoose'  => string('PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_showmixbeforeexecuting"); }
 		},		
 	plugin_custombrowse_properties => {
 			'validate' => \&validateProperty
@@ -3125,6 +3141,9 @@ PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
 
+PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING
+	EN	Show mix before executing in player interface
+
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
 
@@ -3145,6 +3164,9 @@ SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 
 SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
+
+SETUP_PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING
+	EN	Show mix before executing
 
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory

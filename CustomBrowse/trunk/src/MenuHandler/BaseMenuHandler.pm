@@ -28,7 +28,7 @@ use POSIX qw(ceil);
 use Text::Unidecode;
 use HTML::Entities;
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers) );
+__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting) );
 
 use Data::Dumper;
 
@@ -49,7 +49,8 @@ sub new {
 		'overlayCallback' => $parameters->{'overlayCallback'},
 		'displayTextCallback' => $parameters->{'displayTextCallback'},
 		'playHandlers' => $parameters->{'playHandlers'},
-		'requestSource' => $parameters->{'requestSource'}
+		'requestSource' => $parameters->{'requestSource'},
+		'showMixBeforeExecuting' => $parameters->{'showMixBeforeExecuting'}
 	};
 
 	my %parameters = (
@@ -1356,7 +1357,7 @@ sub _createMix {
 		$self->debugCallback->("Got mix: ".$mix->{'mixname'}."\n");
 	}
 
-	if(scalar(@$mixes)==1) {
+	if(!$self->showMixBeforeExecuting && scalar(@$mixes)==1) {
 		$self->executeMix($client,$mixes->[0],undef,$item);
 	}elsif(scalar(@$mixes)>0) {
 		my $params = {
