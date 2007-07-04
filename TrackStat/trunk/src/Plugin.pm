@@ -908,7 +908,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_auto_nonrated_value','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1359,12 +1359,12 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated"); }
 		},		
-	plugin_trackstat_rating_decrease_percent => {
+	plugin_trackstat_rating_auto_nonrated_value => {
 			'validate'     => \&validateIntWrapper
-			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent"); }
-		},
+			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated_value"); }
+		},		
 	plugin_trackstat_rating_increase_percent => {
 			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_INCREASE_PERCENT')
@@ -2668,6 +2668,11 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_auto_nonrated",1);
 		}
 
+		# Default automatic rating on non rated tracks is 60
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated_value"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_auto_nonrated_value",60);
+		}
+
 		# Default value for automatic increasing ratings
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_increase_percent"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_increase_percent",80);
@@ -3469,7 +3474,7 @@ sub stopTimingSong($$)
 				if(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated")) {
 					if(!$rating) {
 						debugMsg("Setting default rating 3 on unrated track\n");
-						$rating = 60;
+						$rating = Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated_value");
 					}
 				}
 	
@@ -4624,7 +4629,16 @@ SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED
 	EN	Automatic rating of non rated tracks
 
 SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_DESC
-	EN	Automatic adjust ratings also on non rated tracks if automatic ratings has been enabled. Rating will start at 3.
+	EN	Automatic adjust ratings also on non rated tracks if automatic ratings has been enabled. 
+
+PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE
+	EN	Default rating for automatic rating on non rated tracks
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE
+	EN	Default rating for automatic rating on non rated tracks
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE_DESC
+	EN	Default rating for automatic rating on non rated tracks (1-100), 20=1 star, 40=2 stars, 60=3 stars, 80=4 stars, 100=5 stars
 
 PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT
 	EN	Automatic rating decrease percentage
