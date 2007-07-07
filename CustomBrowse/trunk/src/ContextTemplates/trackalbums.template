@@ -44,6 +44,9 @@
 				and multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %]
 			[%- END %]
 			[%- END %]
+			[%- IF hidenoalbum %]
+				and albums.title!='[% noalbumtitle %]'
+			[%- END %]
 			group by albums.id
 			order by albums.titlesort asc
 		</menudata>
