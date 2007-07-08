@@ -66,7 +66,7 @@ sub executeMix {
 		$mixdata->{'parameters'}->{$keyword->{'name'}} = $self->itemParameterHandler->replaceParameters($client,$keyword->{'value'},$keywords);
 	}
 	$mixdata->{'value'} = $mix->{'id'};
-	if(!defined($mixdata->{'menu'}->{'id'})) {
+	if(defined($mixdata->{'menu'}) && ref($mixdata->{'menu'}) ne 'ARRAY' && !defined($mixdata->{'menu'}->{'id'})) {
 		$mixdata->{'menu'}->{'id'} = $mix->{'id'};
 	}
 	my $modeParameters = $self->menuHandler->getMenu($client,$mixdata,undef,'player');
