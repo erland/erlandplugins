@@ -1,4 +1,4 @@
-CREATE TABLE customscan_contributor_attributes (
+CREATE TABLE IF NOT EXISTS customscan_contributor_attributes (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   contributor int(10),
   name blob not null,
@@ -13,7 +13,7 @@ CREATE TABLE customscan_contributor_attributes (
   primary key (id)
 ) TYPE=InnoDB;
 
-CREATE TABLE customscan_album_attributes (
+CREATE TABLE IF NOT EXISTS customscan_album_attributes (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   album int(10),
   title blob not null,
@@ -28,7 +28,7 @@ CREATE TABLE customscan_album_attributes (
   primary key (id)
 ) TYPE=InnoDB;
 
-CREATE TABLE customscan_track_attributes (
+CREATE TABLE IF NOT EXISTS customscan_track_attributes (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   track int(10),
   url varchar (511) NOT NULL,
