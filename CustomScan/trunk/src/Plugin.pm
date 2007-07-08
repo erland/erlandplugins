@@ -1092,8 +1092,8 @@ sub scanTrack {
 	my $track = undef;
 	if($tracks) {
 		$track = $tracks->next;
-		# Skip non audio tracks and tracks with url longer than 255 characters
-		while(defined($track) && !$track->audio && length($track->url)<=255) {
+		# Skip non audio tracks and tracks with url longer than 511 characters
+		while(defined($track) && !$track->audio && length($track->url)<=511) {
 			$track = $tracks->next;
 		}
 	}
