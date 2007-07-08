@@ -651,7 +651,8 @@ sub getMixedTagMenuItems {
 	if(scalar(@menus)>1) {
 		return \@menus;
 	}else {
-		return @menus->[0];
+		my $result = \@menus;
+		return $result->[0];
 	}
 }
 
