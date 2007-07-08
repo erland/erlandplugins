@@ -438,23 +438,98 @@ sub moduleClear {
 	if(defined($module) && defined($module->{'id'})) {
 		eval {
 			my $dbh = getCurrentDBH();
-			my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=?");
+			my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=? limit 1000");
 			$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
-			$sth->execute();
+			my $count = 1;
+			while (defined($count)) {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = undef;
+				}
+				main::idleStreams();
+				debugMsg("Clearing contributor data...\n");
+			}
 			commit($dbh);
 			$sth->finish();
 	
-			$sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=?");
+			$sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=? limit 1000");
 			$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
-			$sth->execute();
+			my $count = 1;
+			while (defined($count)) {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = undef;
+				}
+				main::idleStreams();
+				debugMsg("Clearing album data...\n");
+			}
 			commit($dbh);
 			$sth->finish();
 	
-			$sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=?");
-			$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
-			$sth->execute();
-			commit($dbh);
-			$sth->finish();
+			my $clearWithDelete=1;
+			eval {
+				my $sth = $dbh->prepare("SELECT COUNT(id) FROM customscan_track_attributes where module=?");
+				$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
+				my $count = undef;
+				$sth->execute();
+				$sth->bind_col(1, \$count);
+				if($sth->fetch()) {
+					if($count>20000) {
+						$clearWithDelete = 0;
+					}
+				}
+				$sth->finish();
+			};
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr, $@\n";
+		   	}
+			if($clearWithDelete) {
+				eval {
+					my $sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=? limit 1000");
+					$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
+					my $count = 1;
+					while (defined($count)) {
+						$count = $sth->execute();
+						if($count eq '0E0') {
+							$count = undef;
+						}
+						main::idleStreams();
+						debugMsg("Clearing track data...\n");
+					}
+					commit($dbh);
+					$sth->finish();
+				};
+			}else {
+				eval {
+					debugMsg("Clearing track data, dropping temporary tables...\n");
+					my $sth = $dbh->prepare("DROP TABLE IF EXISTS customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, renaming current table...\n");
+					$sth = $dbh->prepare("RENAME TABLE customscan_track_attributes to customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, recreating empty table...\n");
+					initDatabase();
+					main::idleStreams();
+					debugMsg("Clearing track data, inserting data in new table...\n");
+					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old where module!=?");
+					$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, dropping temporary table...\n");
+					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					main::idleStreams();
+				};
+			}
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr\n";
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+		   	}
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n$@\n";
@@ -478,32 +553,17 @@ sub fullClear {
 	debugMsg("Performing full clear\n");
 	eval {
 		my $dbh = getCurrentDBH();
-		my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes");
+		my $sth = $dbh->prepare("DROP customscan_contributor_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
 
-		$sth = $dbh->prepare("ALTER TABLE customscan_contributor_attributes AUTO_INCREMENT=0");
+		$sth = $dbh->prepare("DROP customscan_album_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
 
-		$sth = $dbh->prepare("DELETE FROM customscan_album_attributes");
-		$sth->execute();
-		commit($dbh);
-		$sth->finish();
-
-		$sth = $dbh->prepare("ALTER TABLE customscan_album_attributes AUTO_INCREMENT=0");
-		$sth->execute();
-		commit($dbh);
-		$sth->finish();
-
-		$sth = $dbh->prepare("DELETE FROM customscan_track_attributes");
-		$sth->execute();
-		commit($dbh);
-		$sth->finish();
-
-		$sth = $dbh->prepare("ALTER TABLE customscan_track_attributes AUTO_INCREMENT=0");
+		$sth = $dbh->prepare("DROP customscan_track_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
@@ -511,6 +571,7 @@ sub fullClear {
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n$@\n";
 	}
+	initDatabase();
 }
 
 sub exitScan {
@@ -563,11 +624,19 @@ sub initArtistScan {
 		my $module = $modules->{$key};
 		my $moduleId = $key;
 		my $moduleId = $module->{'id'};
-		if((defined($module->{'scanArtist'}) || defined($module->{'initScanArtist'})) && defined($module->{'alwaysRescanArtist'}) && $module->{'alwaysRescanArtist'}) {
+		if((defined($module->{'scanArtist'}) || defined($module->{'initScanArtist'}) || defined($module->{'exitScanArtist'})) && defined($module->{'alwaysRescanArtist'}) && $module->{'alwaysRescanArtist'}) {
 			debugMsg("Clearing artist data for ".$moduleId."\n");
 			eval {
-				my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId));
-				$sth->execute();
+				my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId)." limit 1000");
+				my $count = 1;
+				while (defined($count)) {
+					$count = $sth->execute();
+					if($count eq '0E0') {
+						$count = undef;
+					}
+					debugMsg("Clearing track data...\n");
+					main::idleStreams();
+				}
 				commit($dbh);
 				$sth->finish();
 			};
@@ -646,11 +715,19 @@ sub initAlbumScan {
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
-		if((defined($module->{'scanAlbum'}) || defined($module->{'initScanAlbum'})) && defined($module->{'alwaysRescanAlbum'}) && $module->{'alwaysRescanAlbum'}) {
+		if((defined($module->{'scanAlbum'}) || defined($module->{'initScanAlbum'}) || defined($module->{'exitScanAlbum'})) && defined($module->{'alwaysRescanAlbum'}) && $module->{'alwaysRescanAlbum'}) {
 			debugMsg("Clearing album data for ".$moduleId."\n");
 			eval {
-				my $sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId));
-				$sth->execute();
+				my $sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId)." limit 1000");
+				my $count = 1;
+				while (defined($count)) {
+					$count = $sth->execute();
+					if($count eq '0E0') {
+						$count = undef;
+					}
+					main::idleStreams();
+					debugMsg("Clearing track data...\n");
+				}
 				commit($dbh);
 				$sth->finish();
 			};
@@ -689,14 +766,63 @@ sub initTrackScan {
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
-		if((defined($module->{'scanTrack'}) || defined($module->{'initScanTrack'})) && defined($module->{'alwaysRescanTrack'}) && $module->{'alwaysRescanTrack'}) {
+		if((defined($module->{'scanTrack'}) || defined($module->{'initScanTrack'}) || defined($module->{'exitScanTrack'})) && defined($module->{'alwaysRescanTrack'}) && $module->{'alwaysRescanTrack'}) {
 			debugMsg("Clearing track data for ".$moduleId."\n");
+			my $clearWithDelete=1;
 			eval {
-				my $sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId));
+				my $sth = $dbh->prepare("SELECT COUNT(id) FROM customscan_track_attributes where module=".$dbh->quote($moduleId));
+				my $count = undef;
 				$sth->execute();
-				commit($dbh);
+				$sth->bind_col(1, \$count);
+				if($sth->fetch()) {
+					if($count>20000) {
+						$clearWithDelete = 0;
+					}
+				}
 				$sth->finish();
 			};
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr, $@\n";
+		   	}
+			if($clearWithDelete) {
+				eval {
+					my $sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId)." limit 1000");
+					my $count = 1;
+					while (defined($count)) {
+						$count = $sth->execute();
+						if($count eq '0E0') {
+							$count = undef;
+						}
+						main::idleStreams();
+						debugMsg("Clearing track data...\n");
+					}
+					commit($dbh);
+					$sth->finish();
+				};
+			}else {
+				eval {
+					debugMsg("Clearing track data, dropping temporary tables...\n");
+					my $sth = $dbh->prepare("DROP TABLE IF EXISTS customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, renaming current table...\n");
+					$sth = $dbh->prepare("RENAME TABLE customscan_track_attributes to customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, recreating empty table...\n");
+					initDatabase();
+					main::idleStreams();
+					debugMsg("Clearing track data, inserting data in new table...\n");
+					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old where module!=".$dbh->quote($moduleId));
+					$sth->execute();
+					$sth->finish();
+					debugMsg("Clearing track data, dropping temporary table...\n");
+					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes_old");
+					$sth->execute();
+					$sth->finish();
+					main::idleStreams();
+				};
+			}
 			if( $@ ) {
 			    warn "Database error: $DBI::errstr\n";
 			    eval {
@@ -1693,6 +1819,7 @@ sub refreshData
 
 	$sth->finish();
 	debugMsg("Finished updating musicbrainz id's in custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1717,6 +1844,7 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan artist data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1742,6 +1870,7 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1768,6 +1897,7 @@ sub refreshData
 
 	$sth->finish();
 	debugMsg("Finished updating musicbrainz id's in custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1792,6 +1922,7 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan album data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1816,6 +1947,7 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1841,6 +1973,7 @@ sub refreshData
 
 	$sth->finish();
 	debugMsg("Finished updating musicbrainz id's in custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
@@ -1865,13 +1998,14 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan track data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 
 	$timeMeasure->start();
 	debugMsg("Starting to update custom scan track data based on urls\n");
 	# First lets refresh all urls with musicbrainz id's
-	$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.track=tracks.id where customscan_track_attributes.musicbrainz_id is null and tracks.url=customscan_track_attributes.url and customscan_track_attributes.track!=tracks.id";
+	$sql = "UPDATE customscan_track_attributes JOIN tracks on tracks.url=customscan_track_attributes.url and customscan_track_attributes.musicbrainz_id is null set customscan_track_attributes.track=tracks.id where customscan_track_attributes.track!=tracks.id";
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1889,6 +2023,7 @@ sub refreshData
 	}
 	$sth->finish();
 	debugMsg("Finished updating custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 }
