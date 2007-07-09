@@ -43,7 +43,7 @@ my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
 my %currentSecondaryFilter = ();
-my $PLUGINVERSION = '1.3.2';
+my $PLUGINVERSION = '1.4';
 
 my %filterPlugins = ();
 	
