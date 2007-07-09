@@ -247,6 +247,9 @@
 				[% END %]
 				[% odd = (not odd) %]
 			[% END %]
+		[% IF !browse_items %]
+		<br>[% "PLUGIN_TRACKSTAT_NOMATCHINGITEMS" | string %]
+		[% END %]
 		[% END %]
 	[% END %]
 	<tr><td><div style="float:right;">([% "PLUGIN_TRACKSTAT" | string %] [% pluginTrackStatVersion %])</div></td></tr>
