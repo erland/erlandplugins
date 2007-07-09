@@ -3,9 +3,10 @@
 	<minslimserverversion>6.5</minslimserverversion>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>180</downloadidentifier>
 		<name>Genres/Sub Genres with custom tags</name>
 		<description>Menu that shows genres and sub genres in two levels together with one or several custom tag levels, it only show tracks that matches both selected genres and selected custom tags</description>
-		<parameter type="text" id="menuname" name="Menu name" value="Genres/Sub Genres with custom tag"/>
+		<parameter type="text" id="menuname" name="Menu name" value="Genres/Sub Genres with custom tags"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="sqlcheckboxes" id="toplevelgenres" name="Genres to show at top level" value="0" data="select id,name,name from genres order by namesort asc" quotevalue="1"/>
