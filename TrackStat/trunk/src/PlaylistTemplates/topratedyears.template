@@ -31,7 +31,13 @@ select year from
 			and dynamicplaylist_history.id is null 
 		[%- END %]
 		group by tracks.year
-		[% IF minyeartracks %]having count(tracks.id)>=[% minyeartracks %][% END %]
+		[%- IF recentlyplayed and minyeartracks %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %]) and count(tracks.id)>=[% minyeartracks %]
+		[%- ELSIF recentlyplayed %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %])
+		[%- ELSIF minyeartracks %]
+		having count(tracks.id)>=[% minyeartracks %]
+		[%- END %]
 		order by avgrating desc,rand() 
 		[% IF noofyears %]limit [% noofyears %][% ELSE %]limit 1[%END %]) as toprated
 	order by rand()

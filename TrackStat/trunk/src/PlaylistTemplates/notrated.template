@@ -24,6 +24,9 @@ select tracks.url from tracks
 		[%- IF notrepeat %]
 		and dynamicplaylist_history.id is null
 		[%- END %]
+	[%- IF recentlyplayed %]
+		and ifnull(t1.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
+	[%- END %]
 	[%- IF notrepeat %]
 	group by tracks.id
 	[%- END %]

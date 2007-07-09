@@ -26,6 +26,9 @@ select url from
 			and dynamicplaylist_history.id is null 
 		[%- END %]
 			and track_statistics.added[% IF addedafter %]>[% ELSE %]<[% END %][% IF noofdays %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -[% noofdays %] DAY))[% ELSE %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -30 DAY))[% END %]
+		[%- IF recentlyplayed %]
+			and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
+		[%- END %]
 		group by tracks.id 
 		order by avgcount [% IF leastplayed %]asc[% ELSE %]desc[% END %],rand()
 		[% IF nooftracks %]limit [% nooftracks %][% END %]) as recentlyadded

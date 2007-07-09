@@ -34,6 +34,7 @@ select album from
 		having 
 			max(track_statistics.added)[% IF addedafter %]>[% ELSE %]<[% END %][% IF noofdays %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -[% noofdays %] DAY))[% ELSE %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -30 DAY))[% END %] 
 			[% IF minalbumtracks %]and count(tracks.id)>=[% minalbumtracks %][% END %]
+			[% IF recentlyplayed %]and max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %])[% END %]
 		order by avgcount [% IF leastplayed %]asc[% ELSE %]desc[% END %],rand()
 		[% IF noofalbums %]limit [% noofalbums %][% ELSE %]limit 1[%END %]) as recentlyadded
 	order by rand()

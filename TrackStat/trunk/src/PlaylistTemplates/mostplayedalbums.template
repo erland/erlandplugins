@@ -33,7 +33,13 @@ select id from
 			and dynamicplaylist_history.id is null 
 		[%- END %]
 		group by tracks.album 
-		[% IF minalbumtracks %]having count(tracks.id)>=[% minalbumtracks %][% END %]
+		[%- IF recentlyplayed and minalbumtracks %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %]) and count(tracks.id)>=[% minalbumtracks %]
+		[%- ELSIF recentlyplayed %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %])
+		[%- ELSIF minalbumtracks %]
+		having count(tracks.id)>=[% minalbumtracks %]
+		[%- END %]
 		order by avgcount desc,rand() 
 		[% IF noofalbums %]limit [% noofalbums %][% ELSE %]limit 1[%END %]) as toprated
 	order by rand()

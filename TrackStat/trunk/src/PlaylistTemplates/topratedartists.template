@@ -33,7 +33,13 @@ select contributor from
 			and dynamicplaylist_history.id is null 
 		[%- END %]
 		group by contributor_track.contributor
-		[% IF minartisttracks %]having count(tracks.id)>=[% minartisttracks %][% END %]
+		[%- IF recentlyplayed and minartisttracks %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %]) and count(tracks.id)>=[% minartisttracks %]
+		[%- ELSIF recentlyplayed %]
+		having max(ifnull(track_statistics.lastplayed,0))<(unix_timestamp()-[% recentlyplayed %])
+		[%- ELSIF minartisttracks %]
+		having count(tracks.id)>=[% minartisttracks %]
+		[%- END %]
 		order by avgrating desc,rand() 
 		[% IF noofartists %]limit [% noofartists %][% ELSE %]limit 1[%END %]) as toprated
 	order by rand()
