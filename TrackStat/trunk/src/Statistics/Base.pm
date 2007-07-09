@@ -121,7 +121,8 @@ sub getTracksWeb {
 		}
 	}
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $playCount, $added, $lastPlayed, $rating );
 		$sth->bind_columns( undef, \$id, \$playCount, \$added, \$lastPlayed, \$rating );
@@ -183,6 +184,7 @@ sub getTracksWeb {
 			$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
@@ -244,7 +246,8 @@ sub getAlbumsWeb {
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $rating, $playCount, $lastPlayed, $added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount, \$lastPlayed, \$added );
@@ -304,6 +307,7 @@ sub getAlbumsWeb {
 		  	$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
@@ -370,7 +374,8 @@ sub getArtistsWeb {
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
@@ -430,6 +435,7 @@ sub getArtistsWeb {
 		  	$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
@@ -511,7 +517,8 @@ sub getGenresWeb {
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
@@ -571,6 +578,7 @@ sub getGenresWeb {
 		  	$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
@@ -651,7 +659,8 @@ sub getYearsWeb {
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
@@ -707,6 +716,7 @@ sub getYearsWeb {
 		  	$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
@@ -787,7 +797,8 @@ sub getPlaylistsWeb {
 	debugMsg("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
-		$sth->execute();
+		my $count = $sth->execute();
+		debugMsg("Got $count items\n");
 
 		my( $id, $rating, $playCount,$lastPlayed,$added );
 		$sth->bind_columns( undef, \$id, \$rating, \$playCount,\$lastPlayed,\$added );
@@ -847,6 +858,7 @@ sub getPlaylistsWeb {
 		  	$itemNumber++;
 		  
 		}
+		debugMsg("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
 		if(defined($DBI::errstr)) {
