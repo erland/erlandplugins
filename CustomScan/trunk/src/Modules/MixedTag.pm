@@ -287,6 +287,9 @@ sub getMixedTagMenuItems {
 	my $client = shift;
 	my $parameters = shift;
 
+	%friendlyNames = ();
+	%friendlyNamesList = ();
+
 	my $tags = $parameters->{'usedtags'};
 	my $supportedTags = undef;
 	if(defined($tags)) {
