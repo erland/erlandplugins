@@ -12,6 +12,7 @@
 			<id>library</id>
 			<menuname>Library</menuname>
 			<menutype>folder</menutype>
+			<menulinks>alpha</menulinks>
 			<menudata>{custombrowse.libraryDir}</menudata>
 			<menu>
 				<id>artists</id>
