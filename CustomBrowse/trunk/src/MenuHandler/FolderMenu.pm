@@ -73,7 +73,7 @@ sub prepareMenu {
 			my %menuItem = (
 				'itemid' => $self->_escapeSubDir($subdir),
 				'itemname' => $subdirname,
-				'itemlink' => substr($subdirname,0,1)
+				'itemlink' => uc(substr($subdirname,0,1))
 			);
 			$menuItem{'value'} = $item->{'value'}."_".$subdir;
 	
