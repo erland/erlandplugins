@@ -235,6 +235,7 @@ sub exitScanTrack {
 		}	
 	}
 	parseTag(Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagfriendlynames"));
+	return undef;
 }
 
 sub parseAndSetFriendlyNames {
