@@ -27,26 +27,8 @@ This archive should contain the following files:
 - license.txt (the license)
 - *.pm (The application itself)
 
-4. INSTALLATION
-===============
-Unzip to the Plugins directory in the Slimserver installation.
-
-5. USAGE
-========
-This plugin makes it possible to divide your music library into different sub libraries.
-As an example this is useful if each family member just like to browse his/her own music and
-not the music of the rest of the family.
-
-Slimserver will still scan and contain the full main library, this plugin just makes it possible
-to define sub libraries within the main library. 
-Sub libraries can be defined using:
-- Directory paths
-- Genres
-- Comment tags
-
-To use the sub libraries you will need the Custom Browse plugin, the standard slimserver menus
-will still browse the complete library but using the Custom Browse plugin you can define menus
-that are limited to a specific sub libraries.
-
-The easiest way to create a library is from the Multi Libary plugin web userinterface.
+4. INSTALLATION AND USAGE
+=========================
+See the official Wiki for more information at:
+http://wiki.erland.homeip.net/index.php/Category:SlimServer
 
