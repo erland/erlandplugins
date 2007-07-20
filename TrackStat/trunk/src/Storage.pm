@@ -629,7 +629,7 @@ debugMsg("Execute $sql\n");
 
 sub savePlayCountAndLastPlayed
 {
-	my ($url,$mbId,$playCount,$lastPlayed) = @_;
+	my ($url,$mbId,$playCount,$lastPlayed,$track) = @_;
 
 	if(length($url)>511) {
 		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
@@ -637,7 +637,9 @@ sub savePlayCountAndLastPlayed
 	}
 
 	my $ds        = getCurrentDS();
-	my $track     = objectForUrl($url);
+	if(!defined($track)) {
+		$track     = objectForUrl($url);
+	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $sql;
 	$url = $track->url;
@@ -901,7 +903,7 @@ sub saveTrack
 	}
 }
 
-sub mergeTrack()
+sub mergeTrack
 {
 	my ($url,$mbId,$playCount,$lastPlayed,$rating) = @_;
 

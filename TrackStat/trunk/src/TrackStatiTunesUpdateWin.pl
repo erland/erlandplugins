@@ -50,18 +50,24 @@ do {
 			chomp;
 			my ($title,$artist,$album,$location,$played,$playedDate,$rating) = /^(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*)$/;
 			my $playCount = "";
+			my $added = "";
 			if($rating =~ /^(.*?)\|(.*)$/) {
 				$rating = $1;
 				$playCount = $2;
 			}
-			if ($played eq 'played' or $rating ne '') {
+			if($playCount =~ /^(.*?)\|(.*)$/) {
+				$rating = $1;
+				$added = $2;
+			}
+			if ($played eq 'played' or $rating ne '' or $added ne '') {
 				_logTrackToiTunesWin($played,title => $title, 
 						artist => $artist, 
 						album => $album, 
 						location => $location, 
 						playedDate => $playedDate, 
 						playCount => $playCount,
-						rating => $rating);
+						rating => $rating,
+						added => $added);
 			} else  {
 				print "no update required\n";
 			}
@@ -140,6 +146,9 @@ sub _logTrackToiTunesWin($%)
 		if ($data{rating} ne "") {
 			iTunesUpdateMsg("Updating rating in iTunes\n");
 			$status = $trackHandle->{rating} = $data{rating};
+		}
+		if($data{added} ne "") {
+			$status = $trackHandle->{dateAdded} = $data{added};
 		}
 	} else {
 		iTunesUpdateMsg("Track not found in iTunes\n");

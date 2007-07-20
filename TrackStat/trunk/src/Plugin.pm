@@ -55,6 +55,8 @@ use Plugins::TrackStat::iTunes::Import;
 use Plugins::TrackStat::iTunes::Export;
 use Plugins::TrackStat::MusicMagic::Import;
 use Plugins::TrackStat::MusicMagic::Export;
+use Plugins::TrackStat::Amarok::Export;
+use Plugins::TrackStat::Amarok::Import;
 use Plugins::TrackStat::Backup::File;
 use Plugins::TrackStat::Storage;
 
@@ -228,6 +230,9 @@ sub setMode()
 						my %contextParams = ();
 						$contextParams{$statistictype} = $client->param($statistictype);
 						my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+						if( $@ ) {
+							warn "TrackStat: Error calling contextfunction: $@";
+						}
 						if($valid) {
 							push @listRef, \%flatStatisticItem;
 						}
@@ -247,6 +252,9 @@ sub setMode()
 							my %contextParams = ();
 							$contextParams{$statistictype} = $client->param($statistictype);
 							my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+							if( $@ ) {
+								warn "TrackStat: Error calling contextfunction: $@";
+							}
 							if($valid) {
 								push @listRef, $statisticItems{$menuItemKey};
 							}
@@ -293,6 +301,9 @@ sub setMode()
 				eval {
 					&{$function}(\%paramsData,$listLength);
 				};
+				if( $@ ) {
+					warn "TrackStat: Error calling webfunction: $@";
+				}
 				handlePlayAdd($client,\%paramsData);
 			}
 		},
@@ -312,6 +323,9 @@ sub setMode()
 				eval {
 					&{$function}(\%paramsData,$listLength);
 				};
+				if( $@ ) {
+					warn "TrackStat: Error calling webfunction: $@";
+				}
 				handlePlayAdd($client,\%paramsData);
 			}
 		},
@@ -354,6 +368,9 @@ sub getDisplayText {
 		if(defined($item->{'item'})) {
 			if(defined($item->{'item'}->{'namefunction'})) {
 				$name = eval { &{$item->{'item'}->{'namefunction'}}() };
+				if( $@ ) {
+					warn "TrackStat: Error calling namefunction: $@";
+				}
 			}else {
 				$name = $item->{'item'}->{'name'};
 			}
@@ -502,6 +519,9 @@ sub getSetModeDataForSubItems {
 						my %contextParams = ();
 						$contextParams{$statistictype} = $client->param($statistictype);
 						my $valid = eval {&{$item->{'contextfunction'}}(\%contextParams)};
+						if( $@ ) {
+							warn "TrackStat: Error calling contextfunction: $@";
+						}
 						if($valid) {
 							push @listRef, $statisticItems{$menuItemKey};
 						}
@@ -537,6 +557,9 @@ sub getSetModeDataForSubItems {
 				eval {
 					&{$function}(\%paramsData,$listLength);
 				};
+				if( $@ ) {
+					warn "TrackStat: Error calling webfunction: $@";
+				}
 				handlePlayAdd($client,\%paramsData);
 			}
 		},
@@ -556,6 +579,9 @@ sub getSetModeDataForSubItems {
 				eval {
 					&{$function}(\%paramsData,$listLength);
 				};
+				if( $@ ) {
+					warn "TrackStat: Error calling webfunction: $@";
+				}
 				handlePlayAdd($client,\%paramsData);
 			}
 		},
@@ -634,6 +660,9 @@ sub getSetModeDataForStatistics {
 	eval {
 		&{$function}($paramsData,$listLength);
 	};
+	if( $@ ) {
+		warn "TrackStat: Error calling webfunction: $@";
+	}
 	my @listRef = ();
 	foreach my $it (@{$paramsData->{'browse_items'}}) {
 		if(defined($paramsData->{'currentstatisticitems'}) && defined($paramsData->{'currentstatisticitems'}->{$it->{'listtype'}})) {
@@ -646,6 +675,9 @@ sub getSetModeDataForStatistics {
 	my $name;
 	if(defined($item->{'namefunction'})) {
 		$name = eval { &{$item->{'namefunction'}}($paramsData) };
+		if( $@ ) {
+			warn "TrackStat: Error calling namefunction: $@";
+		}
 	}else {
 		$name = $item->{'name'};
 	}
@@ -908,7 +940,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_itunes_import','plugin_trackstat_itunes_export','plugin_trackstat_itunes_enabled','plugin_trackstat_itunes_library_file','plugin_trackstat_itunes_export_dir','plugin_trackstat_itunes_export_library_music_path','plugin_trackstat_itunes_library_music_path','plugin_trackstat_itunes_replace_extension','plugin_trackstat_itunes_export_replace_extension','plugin_trackstat_musicmagic_enabled','plugin_trackstat_musicmagic_host','plugin_trackstat_musicmagic_port','plugin_trackstat_musicmagic_library_music_path','plugin_trackstat_musicmagic_replace_extension','plugin_trackstat_musicmagic_slimserver_replace_extension','plugin_trackstat_musicmagic_import','plugin_trackstat_musicmagic_export','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_auto_nonrated_value','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_auto_nonrated_value','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1189,136 +1221,6 @@ sub setupGroup
 			,'inputTemplate' => 'setup_input_submit.html'
 			,'changeIntro' => string('PLUGIN_TRACKSTAT_CLEARING')
 			,'ChangeButton' => string('PLUGIN_TRACKSTAT_CLEAR')
-			,'dontSet' => 1
-			,'changeMsg' => ''
-		},
-	plugin_trackstat_itunes_library_file => {
-			'validate' => \&validateIsFileOrEmpty
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE')
-			,'rejectMsg' => string('SETUP_BAD_FILE')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_file"); }
-		},
-	plugin_trackstat_itunes_export_dir => {
-			'validate' => \&validateIsDirOrEmpty
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR')
-			,'rejectMsg' => string('SETUP_BAD_FILE')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"); }
-		},
-	plugin_trackstat_itunes_export_library_music_path => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_library_music_path"); }
-		},
-	plugin_trackstat_itunes_library_music_path => {
-			'validate' => \&validateIsDirOrEmpty
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_music_path"); }
-		},
-	plugin_trackstat_itunes_replace_extension => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_replace_extension"); }
-		},
-	plugin_trackstat_itunes_export_replace_extension => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_replace_extension"); }
-		},
-	plugin_trackstat_itunes_enabled => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_ITUNES_ENABLED')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_ENABLED')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled"); }
-		},		
-	plugin_trackstat_musicmagic_enabled => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"); }
-		},		
-	plugin_trackstat_musicmagic_host => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_HOST')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"); }
-		},
-	plugin_trackstat_musicmagic_port => {
-			'validate' => \&validateIntWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_PORT')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"); }
-		},
-	plugin_trackstat_musicmagic_library_music_path => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path"); }
-		},
-	plugin_trackstat_musicmagic_replace_extension => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_replace_extension"); }
-		},
-	plugin_trackstat_musicmagic_slimserver_replace_extension => {
-			'validate' => \&validateAcceptAllWrapper
-			,'PrefChoose' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION')
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_slimserver_replace_extension"); }
-		},
-	plugin_trackstat_itunes_import => {
-			'validate' => \&validateAcceptAllWrapper
-			,'onChange' => sub { importFromiTunes(); }
-			,'inputTemplate' => 'setup_input_submit.html'
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORTING')
-			,'ChangeButton' => string('PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON')
-			,'dontSet' => 1
-			,'changeMsg' => ''
-		},
-	plugin_trackstat_itunes_export => {
-			'validate' => \&validateAcceptAllWrapper
-			,'onChange' => sub { exportToiTunes(); }
-			,'inputTemplate' => 'setup_input_submit.html'
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORTING')
-			,'ChangeButton' => string('PLUGIN_TRACKSTAT_ITUNES_EXPORT_BUTTON')
-			,'dontSet' => 1
-			,'changeMsg' => ''
-		},
-	plugin_trackstat_musicmagic_import => {
-			'validate' => \&validateAcceptAllWrapper
-			,'onChange' => sub { importFromMusicMagic(); }
-			,'inputTemplate' => 'setup_input_submit.html'
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING')
-			,'ChangeButton' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_BUTTON')
-			,'dontSet' => 1
-			,'changeMsg' => ''
-		},
-	plugin_trackstat_musicmagic_export => {
-			'validate' => \&validateAcceptAllWrapper
-			,'onChange' => sub { exportToMusicMagic(); }
-			,'inputTemplate' => 'setup_input_submit.html'
-			,'changeIntro' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING')
-			,'ChangeButton' => string('PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON')
 			,'dontSet' => 1
 			,'changeMsg' => ''
 		},
@@ -1621,6 +1523,9 @@ sub getStatisticItemsForContext {
 				my $name;
 				if(defined($item->{'namefunction'})) {
 					$name = eval { &{$item->{'namefunction'}}() };
+					if( $@ ) {
+						warn "TrackStat: Error calling namefunction: $@";
+					}
 				}else {
 					$name = $item->{'name'};
 				}
@@ -1630,6 +1535,9 @@ sub getStatisticItemsForContext {
 				);
 				push @result, \%listItem;
 				my $valid = eval {&{$item->{'contextfunction'}}($params)};
+				if( $@ ) {
+					warn "TrackStat: Error calling contextfunction: $@";
+				}
 				if($valid) {
 					push @contextResult, \%listItem;
 				}
@@ -1655,6 +1563,9 @@ sub getStatisticItemsForContext {
 						my $name;
 						if(defined($item->{'namefunction'})) {
 							$name = eval { &{$item->{'namefunction'}}() };
+							if( $@ ) {
+								warn "TrackStat: Error calling namefunction: $@";
+							}
 						}else {
 							$name = $item->{'name'};
 						}
@@ -1664,6 +1575,9 @@ sub getStatisticItemsForContext {
 						);
 						push @result, \%listItem;
 						my $valid = eval {&{$item->{'contextfunction'}}($params)};
+						if( $@ ) {
+							warn "TrackStat: Error calling contextfunction: $@";
+						}
 						if($valid) {
 							push @contextResult, \%listItem;
 						}
@@ -1787,6 +1701,9 @@ sub handleWebSelectStatistics {
 		$itemData{'id'} = $statistics->{$item}->{'id'};
 		if(defined($statistics->{$item}->{'namefunction'})) {
 			$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
+			if( $@ ) {
+				warn "TrackStat: Error calling namefunction: $@";
+			}
 		}else {
 			$itemData{'name'} = $statistics->{$item}->{'name'};
 		}
@@ -1811,6 +1728,9 @@ sub handleWebSelectFavourites {
 		$itemData{'id'} = $statistics->{$item}->{'id'};
 		if(defined($statistics->{$item}->{'namefunction'})) {
 			$itemData{'name'} = eval {&{$statistics->{$item}->{'namefunction'}}()};
+			if( $@ ) {
+				warn "TrackStat: Error calling namefunction: $@";
+			}
 		}else {
 			$itemData{'name'} = $statistics->{$item}->{'name'};
 		}
@@ -1885,22 +1805,22 @@ sub getStatisticPluginsStrings {
 				eval {
 					eval "use $fullname";
 					if ($@) {
-	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
-	                }
+	                			msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+	                		}
 					if(UNIVERSAL::can("${fullname}","strings")) {
 						#debugMsg("Calling: ".$fullname."::strings\n");
 						my $str = eval { &{$fullname . "::strings"}(); };
 						if ($@) {
-		                	msg("TrackStat: Failed call strings on statistic plugin $plugin: $@\n");
-		                }
+		                			msg("TrackStat: Failed call strings on statistic plugin $plugin: $@\n");
+		                		}
 						if(defined $str) {
 							$statisticPluginsStrings = "$statisticPluginsStrings$str";
 						}
 					}
 				};
 				if ($@) {
-                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
-                }
+		                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+                		}
 				use strict 'refs';
 			}
 		}
@@ -2163,6 +2083,17 @@ sub checkCustomSkipFilterType {
 	return 0;
 }
 
+sub getCustomScanFunctions {
+	my @result = ();
+	push @result,Plugins::TrackStat::Amarok::Export::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::Amarok::Import::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::MusicMagic::Export::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::MusicMagic::Import::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::iTunes::Export::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::iTunes::Import::getCustomScanFunctions();
+	return \@result;
+}
+
 sub initStatisticPlugins {
 	%statisticPlugins = ();
 	%statisticItems = ();
@@ -2179,20 +2110,20 @@ sub initStatisticPlugins {
 				eval {
 					eval "use $fullname";
 					if ($@) {
-	                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
-	                }
+	                			msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+			                }
 					if(UNIVERSAL::can("${fullname}","init")) {
 						#debugMsg("Calling: ".$fullname."::init\n");
 						eval { &{$fullname . "::init"}(); };
 						if ($@) {
-		                	msg("TrackStat: Failed to call init on statistic plugin $plugin: $@\n");
-		                }
+				                	msg("TrackStat: Failed to call init on statistic plugin $plugin: $@\n");
+				                }
 					}
 					if(UNIVERSAL::can("${fullname}","getStatisticItems")) {
 						my $pluginStatistics = eval { &{$fullname . "::getStatisticItems"}() };
 						if ($@) {
-		                	msg("TrackStat: Failed to call getStatisticItems on statistic plugin $plugin: $@\n");
-		                }
+				                	msg("TrackStat: Failed to call getStatisticItems on statistic plugin $plugin: $@\n");
+				                }
 						#debugMsg("Calling: ".$fullname."::getStatisticItems\n");
 						for my $item (keys %$pluginStatistics) {
 							my $enabled = Slim::Utils::Prefs::get('plugin_trackstat_statistics_'.$item.'_enabled');
@@ -2307,8 +2238,8 @@ sub initStatisticPlugins {
 					}
 				};
 				if ($@) {
-                	msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
-                }
+                			msg("TrackStat: Failed to load statistic plugin $plugin: $@\n");
+                		}
 				use strict 'refs';
 			}
 		}
@@ -2323,6 +2254,9 @@ sub initStatisticPlugins {
 					my %params = ();
 					$params{$type} = 1;
 					my $valid = eval {&{$item->{'contextfunction'}}(\%params)};
+					if( $@ ) {
+						warn "TrackStat: Error calling contextfunction: $@";
+					}
 					if($valid) {
 						$statisticTypes{$type} = 1;
 					}
@@ -2402,6 +2336,9 @@ sub handleWebStatistics {
 		}
 		setDynamicPlaylistParams($client,$params);
 	};
+	if( $@ ) {
+		warn "TrackStat: Error in handleWebStatistics: $@";
+	}
 	
 	handlePlayAdd($client,$params);
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
@@ -2510,25 +2447,6 @@ sub initPlugin
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_playlist_per_artist_length"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_playlist_per_artist_length",10);
 		}
-		# disable music magic integration by default
-		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_enabled",0);
-		}
-
-		# disable iTunes integration by default
-		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_itunes_enabled",0);
-		}
-
-		# set default music magic port
-		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_port",Slim::Utils::Prefs::get('MMSport'));
-		}
-
-		# set default music magic host
-		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_musicmagic_host",Slim::Utils::Prefs::get('MMSHost'));
-		}
 
 		# enable history by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_history_enabled"))) {
@@ -2570,11 +2488,6 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_min_song_percent",50);
 		}
 		
-		#setup default iTunes history file
-		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"))) {
-			Slim::Utils::Prefs::set("plugin_trackstat_itunes_export_dir",Slim::Utils::Prefs::get('playlistdir'));
-		}
-
 		# enable web auto refresh by default
 		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_web_refresh"))) {
 			Slim::Utils::Prefs::set("plugin_trackstat_web_refresh",1);
@@ -3120,6 +3033,7 @@ sub installHook()
 	Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
 	Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
 	Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setstatistic', '_trackid','_playcount','_lastplayed'], [1, 0, 0, \&setCLIStatistic]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedrating', '_url', '_trackid', '_rating', '_ratingpercent'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedstatistic', '_url', '_trackid', '_playcount','_lastplayed'],[0, 0, 0, undef]);
 	$TRACKSTAT_HOOK=1;
@@ -3560,6 +3474,9 @@ sub markedAsPlayed {
 	for my $item (keys %playCountPlugins) {
 		debugMsg("Calling $item\n");
 		eval { &{$playCountPlugins{$item}}($client,$url,\%statistic) };
+		if( $@ ) {
+			warn "TrackStat: Error calling changedstatistic plugin: $@";
+		}
 	}
 	use strict 'refs';
 	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedstatistic', $url, $track->id, $playCount, $lastPlayed]);
@@ -3680,6 +3597,9 @@ sub rateSong($$$) {
 	for my $item (keys %ratingPlugins) {
 		debugMsg("Calling $item\n");
 		eval { &{$ratingPlugins{$item}}($client,$url,$rating) };
+		if( $@ ) {
+			warn "TrackStat: Error calling changedrating plugin: $@";
+		}
 	}
 	my $digit = floor(($rating+10)/20);
 	use strict 'refs';
@@ -3693,7 +3613,6 @@ sub rateSong($$$) {
 sub setTrackStatRating {
 	debugMsg("Entering setTrackStatRating\n");
 	my ($client,$url,$rating)=@_;
-	my $lowrating = floor(($rating+10) / 20);
 	my $track = undef;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	eval {
@@ -3710,53 +3629,9 @@ sub setTrackStatRating {
 			$ds->forceCommit();
 		};
 	}
-	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
-		my $mmurl = getMusicMagicURL($url);
-		
-		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
-		debugMsg("Calling: $musicmagicurl\n");
-		my $http = Slim::Player::Protocols::HTTP->new({
-	        'url'    => "$musicmagicurl",
-	        'create' => 0,
-	    });
-	    if(defined($http)) {
-	    	my $result = $http->content;
-	    	chomp $result;
-	    	if($result eq "1") {
-				debugMsg("Success setting Music Magic rating\n");
-			}else {
-				debugMsg("Error setting Music Magic rating, error code = $result\n");
-			}
-	    	$http->close();
-		$http = Slim::Player::Protocols::HTTP->new({
-	        	'url'    => "http://$hostname:$port/api/flush",
-	        	'create' => 0,
-	    	});
-	    	if(defined($http)) {
-	    		$result = $http->content;
-		    	$http->close();
-		}
-	    }else {
-			debugMsg("Failure setting Music Magic rating\n");
-	    }
-	}
-	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
-		my $itunesurl = getiTunesURL($url);
-		my $dir = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_dir');
-		my $filename = catfile($dir,"TrackStat_iTunes_Hist.txt");
-		my $output = FileHandle->new($filename, ">>") or do {
-			warn "Could not open $filename for writing.";
-			return;
-		};
-		if(!defined($track)) {
-			$track = Plugins::TrackStat::Storage::objectForUrl($url);
-		}
-		
-		print $output "".$track->title."|||$itunesurl|rated||$rating\n";
-		close $output;
-	}
+	Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track);
+	Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track);
+	Plugins::TrackStat::Amarok::Export::exportRating($url,$rating,$track);
 	debugMsg("Exiting setTrackStatRating\n");
 }
 
@@ -3892,24 +3767,81 @@ sub setCLIRating {
 	debugMsg("Exiting setCLIRating\n");
 }
 
-sub gotViaHTTP {
-	my $http  = shift;
-	my $params = $http->params;
-	my $result = $http->content;
-	chomp $result;
-	if($result eq "1") {
-		debugMsg("Success setting Music Magic ".$params->{'command'}."\n");
-	}else {
-		debugMsg("Error setting Music Magic ".$params->{'command'}.", error code = $result\n");
+sub setCLIStatistic {
+	debugMsg("Entering setCLIStatistic\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['trackstat'],['setstatistic']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting setCLIStatistic\n");
+		return;
 	}
-	$http->close();
+	if(!defined $client) {
+		debugMsg("Client required\n");
+		$request->setStatusNeedsClient();
+		debugMsg("Exiting setCLIStatistic\n");
+		return;
+	}
+
+	# get our parameters
+  	my $trackId    = $request->getParam('_trackid');
+  	my $lastplayed    = $request->getParam('_lastplayed');
+  	my $playcount    = $request->getParam('_playcount');
+  	if(!defined $trackId || $trackId eq '' || !defined $lastplayed || $lastplayed eq '') {
+		debugMsg("_trackid and _lastplayed not defined\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIStatistic\n");
+		return;
+  	}
+  	
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	my $track;
+	if($trackId !~ /^-?\d+$/) {
+		if($trackId =~ /^\/.+$/) {
+			$trackId = Slim::Utils::Misc::fileURLFromPath($trackId);
+		}
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = Plugins::TrackStat::Storage::objectForUrl($trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}else {
+		# The encapsulation with eval is just to make it more crash safe
+		eval {
+			$track = Plugins::TrackStat::Storage::objectForId('track',$trackId);
+		};
+		if ($@) {
+			debugMsg("Error retrieving track: $trackId\n");
+		}
+	}
+	
+	if(!defined $track || !defined $track->audio) {
+		debugMsg("Track $trackId not found\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting setCLIStatistic\n");
+		return;
+	}
+
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+
+	if($trackHandle && $trackHandle->playCount && (!defined($playcount) || $trackHandle->playCount>$playcount)) {
+		$playcount = $trackHandle->playCount;
+	}
+
+	if($trackHandle && $trackHandle->lastPlayed && (!defined($lastplayed) || $trackHandle->lastPlayed>$lastplayed)) {
+		$lastplayed = $trackHandle->lastPlayed;
+	}
+
+	Plugins::TrackStat::Storage::savePlayCountAndLastPlayed($track->url,undef,$playcount,$lastplayed,$track);
+
+	$request->setStatusDone();
+	debugMsg("Exiting setCLIStatistic\n");
 }
 
-sub gotErrorViaHTTP {
-	my $http  = shift;
-	my $params = $http->params;
-	debugMsg("Failure setting Music Magic ".$params->{'command'}."\n");
-}
 
 sub setTrackStatStatistic {
 	debugMsg("Entering setTrackStatStatistic\n");
@@ -3918,100 +3850,11 @@ sub setTrackStatStatistic {
 	my $playCount = $statistic->{'playCount'};
 	my $lastPlayed = $statistic->{'lastPlayed'};	
 	my $rating = $statistic->{'rating'};
-	if(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_enabled")) {
-		my $mmurl = getMusicMagicURL($url);
-		
-		my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-		my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
-		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$mmurl&count=$playCount";
-		debugMsg("Calling: $musicmagicurl\n");
-		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
-		$http->get($musicmagicurl);
-		$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$mmurl&time=$lastPlayed";
-		debugMsg("Calling: $musicmagicurl\n");
-		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
-		$http->get($musicmagicurl);
-		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'flush' });
-		$http->get("http://$hostname:$port/api/flush");
-	}
-	if(Slim::Utils::Prefs::get("plugin_trackstat_itunes_enabled")) {
-		my $itunesurl = getiTunesURL($url);
-		my $dir = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_dir');
-		my $filename = catfile($dir,"TrackStat_iTunes_Hist.txt");
-		my $output = FileHandle->new($filename, ">>") or do {
-			warn "Could not open $filename for writing.";
-			return;
-		};
-		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
-		my $track = Plugins::TrackStat::Storage::objectForUrl($url);
-		if(!defined $rating) {
-			$rating = '';
-		}
-		if(defined $lastPlayed) {
-			my $timestr = strftime ("%Y%m%d%H%M%S", localtime $lastPlayed);
-			print $output "".$track->title."|||$itunesurl|played|$timestr|$rating\n";
-		}
-		close $output;
-	}
+	Plugins::TrackStat::MusicMagic::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+	Plugins::TrackStat::iTunes::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+	Plugins::TrackStat::Amarok::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
 	debugMsg("Exiting setTrackStatStatistic\n");
 }
-	
-sub getMusicMagicURL {
-	my $url = shift;
-	my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
-	if(defined $replacePath && $replacePath ne '') {
-		$replacePath = escape($replacePath);
-		my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
-		if(!defined($nativeRoot) || $nativeRoot eq '') {
-			# Use iTunes import path as backup
-			$nativeRoot = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_music_path');
-		}
-		my $nativeUrl = Slim::Utils::Misc::fileURLFromPath($nativeRoot);
-		if($url =~ /$nativeUrl/) {
-			$url =~ s/$nativeUrl/$replacePath/isg;
-		}else {
-			$url = Slim::Utils::Misc::pathFromFileURL($url);
-		}
-	}else {
-		$url = Slim::Utils::Misc::pathFromFileURL($url);
-	}
-
-	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_musicmagic_replace_extension');;
-	if($replaceExtension) {
-		$url =~ s/\.[^.]*$/$replaceExtension/isg;
-	}
-	$url =~ s/\\/\//isg;
-	$url = unescape($url);
-	$url = URI::Escape::uri_escape($url);
-	return $url;
-}	
-
-sub getiTunesURL {
-	my $url = shift;
-	my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_replace_extension');
-	my $replacePath = Slim::Utils::Prefs::get('plugin_trackstat_itunes_export_library_music_path');
-	my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
-	if(!defined($nativeRoot) || $nativeRoot eq '') {
-		# Use iTunes import path as backup
-		$nativeRoot = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_music_path');
-	}
-	$nativeRoot =~ s/\\/\//isg;
-	if(defined($replacePath) && $replacePath ne '') {
-		$replacePath =~ s/\\/\//isg;
-	}
-
-	my $path = Slim::Utils::Misc::pathFromFileURL($url);
-	if($replaceExtension) {
-		$path =~ s/\.[^.]*$/$replaceExtension/isg;
-	}
-
-	if(defined($replacePath) && $replacePath ne '') {
-		$path =~ s/\\/\//isg;
-		$path =~ s/$nativeRoot/$replacePath/isg;
-	}
-
-	return $path;
-}	
 
 my %musicInfoSCRItems = (
 	'TRACKSTAT_RATING_DYNAMIC' => 'TRACKSTAT_RATING_DYNAMIC',
@@ -4136,26 +3979,6 @@ sub getRatingNumberCustomItem
 	return $string;
 }
 
-sub importFromiTunes()
-{
-	Plugins::TrackStat::iTunes::Import::startImport();
-}
-
-sub exportToiTunes()
-{
-	Plugins::TrackStat::iTunes::Export::startExport();
-}
-
-sub importFromMusicMagic()
-{
-	Plugins::TrackStat::MusicMagic::Import::startImport();
-}
-
-sub exportToMusicMagic()
-{
-	Plugins::TrackStat::MusicMagic::Export::startExport();
-}
-
 sub backupToFile() 
 {
 	my $backupfile = shift;
@@ -4190,6 +4013,9 @@ sub getDynamicPlayLists {
 		);
 		if(defined($statistics->{$item}->{'namefunction'})) {
 			$playlistItem{'name'} = eval { &{$statistics->{$item}->{'namefunction'}}() };
+			if( $@ ) {
+				warn "TrackStat: Error calling namefunction: $@";
+			}
 		}else {
 			$playlistItem{'name'} = $statistics->{$item}->{'name'};
 		}
@@ -4223,8 +4049,8 @@ sub getNextDynamicPlayListTracks {
 				$result = &{$statistics->{$item}->{'playlistfunction'}}($listLength,$limit);
 			};
 			if ($@) {
-		    	debugMsg("Failure calling playlistfunction for ".$dynamicplaylist->{'id'}.": $@\n");
-		    }
+			    	debugMsg("Failure calling playlistfunction for ".$dynamicplaylist->{'id'}.": $@\n");
+			}
 		}
 	}
 	my @resultArray = ();
@@ -4338,7 +4164,7 @@ PLUGIN_TRACKSTAT_SETUP_GROUP
 	EN	TrackStat settings
 
 PLUGIN_TRACKSTAT_SETUP_GROUP_DESC
-	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes.
+	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes, MusicIP and Amarok.
 
 PLUGIN_TRACKSTAT_SHOW_MESSAGES
 	EN	Write messages to log
@@ -4429,171 +4255,6 @@ SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT
 
 SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT_DESC
 	EN	If enabled, this will make sure tracks are not repeated when playing one of the TrackStat playlists with Dynamic Playlists plugin
-
-PLUGIN_TRACKSTAT_ITUNES_IMPORTING
-	EN	Importing from iTunes...
-
-PLUGIN_TRACKSTAT_ITUNES_EXPORTING
-	EN	Exporting to iTunes...
-
-PLUGIN_TRACKSTAT_ITUNES_IMPORT_BUTTON
-	EN	Import from iTunes
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT
-	EN	Import from iTunes
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_IMPORT_DESC
-	EN	Import information from the specified iTunes Music Library.xml file. This means that any existing rating, play counts or last played information in iTunes will overwrite any existing information.
-
-PLUGIN_TRACKSTAT_ITUNES_EXPORT_BUTTON
-	EN	Export to iTunes
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT
-	EN	Export to iTunes
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DESC
-	EN	Export information from TrackStat to the iTunes history file(TrackStat_iTunes_Complete.txt). Note that the generated iTunes history file must be run with the TrackStatiTunesUpdateWin.pl script to actually export the data to iTunes.
-
-PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
-	EN	Path to iTunes Music Library.xml
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE
-	EN	iTunes Music Library file
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_FILE_DESC
-	EN	This parameter shall be the full path to the iTunes Music Library.xml file that should be used when importing information from iTunes.
-
-PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR
-	EN	iTunes history file directory
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR
-	EN	iTunes history file directory
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_DIR_DESC
-	EN	This parameter shall be the full path to the directory where the iTunes history file should be written when exporting to iTunes. Note that the generated iTunes history file must be run with the TrackStatiTunesUpdate.pl script to actually export the data to iTunes.<br>A complete export will generate a TrackStat_iTunes_Complete.txt file, continously export when playing will generate a TrackStat_iTunes_Hist.txt file<br>Note! the TrackStatiTunesUpdateWin.pl script is only supported for iTunes on Windows.
-
-PLUGIN_TRACKSTAT_ITUNES_MUSIC_DIRECTORY
-	EN	Path to iTunes Music (import)
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH
-	EN	Music directory (iTunes import)
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_LIBRARY_MUSIC_PATH_DESC
-	EN	The begining of the paths of the music imported from iTunes will be replaced with this path. This makes it possible to have the music in a different directory in iTunes compared to the directory where the music is accessible on the slimserver computer.
-
-PLUGIN_TRACKSTAT_ITUNES_EXPORT_MUSIC_DIRECTORY
-	EN	Path to iTunes Music (export)
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_LIBRARY_MUSIC_PATH
-	EN	Music directory (iTunes export)
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_LIBRARY_MUSIC_PATH_DESC
-	EN	The begining of the paths of the music exported to iTunes will be replaced with this path. This makes it possible to have the music in a different directory in iTunes compared to the directory where the music is accessible on the slimserver computer.
-
-PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
-	EN	File extension to use in files imported from iTunes
-	
-SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION
-	EN	iTunes import extension
-	
-SETUP_PLUGIN_TRACKSTAT_ITUNES_REPLACE_EXTENSION_DESC
-	EN	The file extensions of the music files imported from iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
-	
-PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION
-	EN	File extension to use in files exported to iTunes
-	
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION
-	EN	iTunes export extension
-	
-SETUP_PLUGIN_TRACKSTAT_ITUNES_EXPORT_REPLACE_EXTENSION_DESC
-	EN	The file extensions of the music files exported to iTunes can be replaced with this extension. This makes it possible to have .mp3 files in iTunes and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with iTunes.
-	
-PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
-	EN	Enable dynamic MusicIP Mixer integration
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED
-	EN	MusicIP Mixer Dynamic Integration
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_ENABLED_DESC
-	EN	Enable ratings, play counts and last played time to be sent continously to MusicIP Mixer as songs are played and rated
-
-PLUGIN_TRACKSTAT_ITUNES_ENABLED
-	EN	Enable dynamic iTunes integration
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_ENABLED
-	EN	iTunes Dynamic Integration
-
-SETUP_PLUGIN_TRACKSTAT_ITUNES_ENABLED_DESC
-	EN	Enable ratings, play counts and last played time to be sent to a iTunes history file as songs are played and rated. The iTunes history file will be called TrackStat_iTunes_Hist.txt and has to be run with the TrackStatiTunesUpdateWin.pl script to actually write the information to iTunes.
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
-	EN	Hostname
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST
-	EN	MusicIP Mixer server hostname
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_HOST_DESC
-	EN	Hostname of MusicIP Mixer server, default is localhost
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
-	EN	Port
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT
-	EN	MusicIP Mixer server port
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_PORT_DESC
-	EN	Port on MusicIP Mixer server, default is 10002
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_MUSIC_DIRECTORY
-	EN	Music directory
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH
-	EN	MusicIP Mixer music path
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_LIBRARY_MUSIC_PATH_DESC
-	EN	The begining of the paths of the music will be replaced with this path when calling MusicIP Mixer for setting ratings and play counts. This makes it possible to have the music in a different directory in MusicIP Mixer compared to the directory where the music is accessible on the slimserver computer. During import/export this path will also be used to convert slimserver paths to MusicIP Mixer paths.
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
-	EN	File extension to use when calling MusicIP Mixer
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION
-	EN	MusicIP Mixer export extension
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_REPLACE_EXTENSION_DESC
-	EN	The file extensions of to use when sending ratings and play counts to MusicIP Mixer, this is the extension used for files in MusicIP Mixer. This makes it possible to have .mp3 files in MusicIP Mixer and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with MusicIP Mixer.
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
-	EN	File extension to use when importing from MusicIP Mixer
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION
-	EN	MusicIP Mixer import extension
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_SLIMSERVER_REPLACE_EXTENSION_DESC
-	EN	The file extensions of to use when importing tracks from MusicIP Mixer, this is the extension used for files in slimserver. This makes it possible to have .mp3 files in MusicIP Mixer and have .flac files in slimserver with the same name besides the extension. This is usefull if flac2mp3 is used to convert flac files to mp3 for usage with MusicIP Mixer.
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORTING
-	EN	Importing from MusicIP Mixer...
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_BUTTON
-	EN	Import from MusicIP Mixer
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT
-	EN	MusicIP Mixer import
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_IMPORT_DESC
-	EN	Import information from the specified MusicIP Mixer server. This means that any existing rating, play counts or last played information in MusicIP Mixer will overwrite any existing information. 
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORTING
-	EN	Exporting to MusicIP Mixer...
-
-PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_BUTTON
-	EN	Export to MusicIP Mixer
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT
-	EN	MusicIP Mixer export
-
-SETUP_PLUGIN_TRACKSTAT_MUSICMAGIC_EXPORT_DESC
-	EN	Export information from TrackStat to the specified MusicIP Mixer server. This means that any existing rating, play counts or last played information in TrackStat will overwrite any existing information in MusicIP Mixer. Note that an export to MusicIP Mixer might take some time.
 
 PLUGIN_TRACKSTAT_RATINGCHAR
 	EN	Character

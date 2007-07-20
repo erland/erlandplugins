@@ -34,17 +34,71 @@ my $isScanning = 0;
 
 my @songs = ();
 
-sub canUseMusicMagic {
-
-	checkDefaults();
-
-	return 1;
+sub getCustomScanFunctions {
+	my %functions = (
+		'id' => 'musicmagicimport',
+		'order' => '70',
+		'defaultenabled' => 0,
+		'name' => 'MusicIP Statistic Import',
+		'description' => "This module imports statistic information in SlimServer from MusicIP Mixer. The information imported are ratings, playcounts, last played time<br>Information is imported from the MusicIP service running at the specified host and port, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in MusicIP and SlimServer, for example the MusicIP library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running MusicIP and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'alwaysRescanTrack' => 1,
+		'initScanTrack' => \&initScanTrack,
+		'exitScanTrack' => \&scanFunction,
+		'scanText' => 'Import',
+		'properties' => [
+			{
+				'id' => 'musicmagichost',
+				'name' => 'MusicIP hostname',
+				'description' => 'Hostname of computer where MusicIP is running',
+				'type' => 'text',
+				'value' => defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"))?Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host"):Slim::Utils::Prefs::get('MMSHost')
+			},
+			{
+				'id' => 'musicmagicport',
+				'name' => 'MusicIP port',
+				'description' => 'Port which is used for MusicIP',
+				'type' => 'text',
+				'value' => defined(Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"))?Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port"):Slim::Utils::Prefs::get('MMSport')
+			},
+			{
+				'id' => 'musicmagicslimserverextension',
+				'name' => 'File extension in SlimServer',
+				'description' => 'File extension in SlimServer (for example .flac), empty means same file extension as in MusicIP',
+				'type' => 'text',
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_slimserver_replace_extension")
+			},
+			{
+				'id' => 'musicmagicmusicpath',
+				'name' => 'Music path in MusicIP',
+				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SlimServer',
+				'type' => 'text',
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_export_library_music_path")
+			},
+			{
+				'id' => 'musicmagicslimservermusicpath',
+				'name' => 'Music path in SlimServer',
+				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'type' => 'text',
+				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path")
+			},
+			{
+				'id' => 'musicmagicslimserverutf8',
+				'name' => 'SlimServer uses UTF-8 encoded filesystem',
+				'description' => 'SlimServer uses UTF-8 encoded filesystem',
+				'type' => 'checkbox',
+				'value' => (Slim::Utils::OSDetect::OS() eq 'win')?0:1
+			}
+		]
+	);
+	return \%functions;
+		
 }
 
 sub isMusicLibraryFileChanged {
 
-	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
+	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	my $http = Slim::Player::Protocols::HTTP->new({
         'url'    => "$musicmagicurl",
@@ -71,83 +125,65 @@ sub isMusicLibraryFileChanged {
 		}
 	}else {
 		msg("Failed to call MusicMagic at: $musicmagicurl\n");
+		return -1;
 	}
 	return 0;
 }
 
-sub startImport {
-	if (!canUseMusicMagic()) {
-		return;
+sub initScanTrack {
+	my $context = shift;
+
+	checkDefaults();
+	@songs = ();
+
+	$MusicMagicScanStartTime = time();
+
+	my $musicMagicStatus = isMusicLibraryFileChanged();
+	if($musicMagicStatus==-1) {
+		$isScanning = -1;
+		return undef;
+	}elsif(!$musicMagicStatus) {
+		$isScanning = 0;
+		return undef;
 	}
-	
-	if(!isMusicLibraryFileChanged()) {
-		return;
-	}
+	$isScanning = 1;
 		
-	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
+	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/songs?extended";
 	debugMsg("Calling: $musicmagicurl\n");
-	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'songs' });
-	stopScan();
-	$MusicMagicScanStartTime = time();
-	$http->get($musicmagicurl);
-
-}
-
-sub gotErrorViaHTTP {
-	my $http  = shift;
-	my $params = $http->params;
-	msg("Failure answer from Music Magic ".$params->{'command'}."\n");
-}
-
-sub gotViaHTTP {
-	my $http  = shift;
-	my $params = $http->params;
-
-	debugMsg("Got answer from Music Magic:".$params->{'command'}." in ".(time() - $MusicMagicScanStartTime)." seconds\n");
-
-	@songs = split(/\n\n/, $http->content);
-	debugMsg("Got ".scalar(@songs)." number of songs\n");
-	$http->close();
-
-	$isScanning = 1;
-
-	Slim::Utils::Scheduler::add_task(\&scanFunction);
-}
-
-sub stopScan {
-
-	if (stillScanning()) {
-
-		debugMsg("Was stillScanning - stopping old scan.\n");
-
-		Slim::Utils::Scheduler::remove_task(\&scanFunction);
-		$isScanning = 0;
+	my $http = Slim::Player::Protocols::HTTP->new({
+		'url'    => "$musicmagicurl",
+		'create' => 0,   
+        });
+	if(defined($http)) {
+		debugMsg("Got answer from Music Magic after ".(time() - $MusicMagicScanStartTime)." seconds\n");
 		
-		resetScanState();
-	}
-}
+		@songs = split(/\n\n/, $http->content);
+		debugMsg("Got ".scalar(@songs)." number of songs\n");
+		$http->close();
 
-sub stillScanning {
-	return $isScanning;
+	}else {
+		msg("Failure answer from Music Magic\n");
+		$isScanning = -1;
+	}
+	return undef;
 }
 
 sub doneScanning {
 	debugMsg("done Scanning: unlocking and closing\n");
 
 	$lastMusicMagicFinishTime = time();
-	$isScanning = 0;
 
-	my $hostname = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_host");
-	my $port = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_port");
+	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
+	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	debugMsg("Calling: $musicmagicurl\n");
 	my $http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
-    if(defined($http)) {
+		'url'    => "$musicmagicurl",
+		'create' => 0,
+	});
+	if(defined($http)) {
 		my $modificationTime = $http->content();
 		$http->close();
 		chomp $modificationTime;
@@ -157,12 +193,15 @@ sub doneScanning {
 		msg("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 
-	msg("TrackStat:MusicMagic: Import completed in ".(time() - $MusicMagicScanStartTime)." seconds.\n");
-
-	Slim::Utils::Prefs::set('plugin_trackstat_lastMusicMagicDate', $lastMusicMagicDate);
-
-	# Take the scanner off the scheduler.
-	Slim::Utils::Scheduler::remove_task(\&scanFunction);
+	if($isScanning==1) {
+		$isScanning = 0;
+		Slim::Utils::Prefs::set('plugin_trackstat_lastMusicMagicDate', $lastMusicMagicDate);
+		msg("TrackStat::MusicMagic::Import: Import completed in ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+	}elsif($isScanning==-1) {
+		msg("TrackStat::MusicMagic::Import: Import failed after ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+	}else {
+		msg("TrackStat::MusicMagic::Import: Import skipped after ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+	}
 }
 
 sub scanFunction {
@@ -180,7 +219,7 @@ sub scanFunction {
 		return 1;
 	}else {
 		doneScanning();
-		return 0;
+		return undef;
 	}
 }
 
@@ -216,11 +255,11 @@ sub handleTrack {
 		}
 	}
 	
-	debugMsg("Handling track: $url\n");
+	#debugMsg("Handling track: $url\n");
 	my $debugString = undef;
 	if($rating) {
 		$debugString.="Got: ";
-		$debugString.=", Rating: $rating";
+		$debugString.="Rating: $rating";
 	}
 	if($playCount) {
 		if(!$debugString) {
@@ -239,18 +278,27 @@ sub handleTrack {
 	}
 
 	if($url && ($playCount || $rating)) {
-		my $replacePath = Slim::Utils::Prefs::get("plugin_trackstat_musicmagic_library_music_path");
+		my $replacePath = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicmusicpath");
 		if(defined(!$replacePath) && $replacePath ne '') {
 			$url =~ s/\\/\//isg;
 			$replacePath =~ s/\\/\//isg;
-			my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+			my $nativeRoot = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicslimservermusicpath");;
+			if(!defined($nativeRoot) || $nativeRoot eq '') {
+				my $nativeRoot = Slim::Utils::Prefs::get('audiodir');
+			}
 			$url =~ s/$replacePath/$nativeRoot/isg;
 			$url = Slim::Utils::Misc::fileURLFromPath($url);
 		}else {
 			$url = Slim::Utils::Misc::fileURLFromPath($url);
 		}
+
+		if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicslimserverutf8")) {
+			my $path = Slim::Utils::Misc::pathFromFileURL($url);
+			$path = Slim::Utils::Unicode::utf8off($path);
+			$url = Slim::Utils::Misc::fileURLFromPath($path);
+		}
 		
-		my $replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_musicmagic_slimserver_replace_extension');;
+		my $replaceExtension = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicslimserverextension");
 		if($replaceExtension) {
 			my $path = Slim::Utils::Misc::pathFromFileURL($url);
 			if(! -e $path) {
@@ -263,13 +311,6 @@ sub handleTrack {
 	}
 }
 
-
-sub resetScanState {
-
-	debugMsg("Resetting scan state.\n");
-
-	@songs = ();
-}
 
 sub checkDefaults {
 	if (!Slim::Utils::Prefs::isDefined('lastMusicMagicDate')) {
@@ -295,7 +336,7 @@ sub sendTrackToStorage()
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg
 {
-	my $message = join '','TrackStat::MusicMagic: ',@_;
+	my $message = join '','TrackStat::MusicMagic::Import: ',@_;
 	msg ($message) if (Slim::Utils::Prefs::get("plugin_trackstat_showmessages"));
 }
 

@@ -77,6 +77,54 @@ our %filetypes = (
 );
 my $replaceExtension = undef;
 
+sub getCustomScanFunctions {
+	my %functions = (
+		'id' => 'itunesimport',
+		'order' => '70',
+		'defaultenabled' => 0,
+		'name' => 'iTunes Statistic Import',
+		'description' => "This module imports statistic information in SlimServer from iTunes. The information imported are ratings, playcounts, last played time<br>Information is imported from the specified iTunes Music Library.xml file, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in iTunes and SlimServer, for example the iTunes library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running iTunes and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'alwaysRescanTrack' => 1,
+		'initScanTrack' => \&initScanTrack,
+		'exitScanTrack' => \&scanFunction,
+		'scanText' => 'Import',
+		'properties' => [
+			{
+				'id' => 'ituneslibraryfile',
+				'name' => 'iTunes Library XML file',
+				'description' => 'Full path to iTunes Music Library.xml file to read',
+				'type' => 'text',
+				'validate' => \&Slim::Utils::Validate::isFile,
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_file")
+			},
+			{
+				'id' => 'itunesslimserverextension',
+				'name' => 'File extension in SlimServer',
+				'description' => 'File extension in SlimServer (for example .flac), empty means same file extension as in iTunes',
+				'type' => 'text',
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_itunes_replace_extension")
+			},
+			{
+				'id' => 'itunesslimservermusicpath',
+				'name' => 'Music path in SlimServer',
+				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'type' => 'text',
+				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'value' => Slim::Utils::Prefs::get("plugin_trackstat_itunes_library_music_path")
+			},
+			{
+				'id' => 'itunesignoredisabledtracks',
+				'name' => 'Ignore disabled songs',
+				'description' => 'Indicates that disabled songs in iTunes shouldn\'t be imported',
+				'type' => 'checkbox',
+				'value' => 1
+			}
+		]
+	);
+	return \%functions;
+		
+}
+
 sub canUseiTunesLibrary {
 
 	checkDefaults();
@@ -112,27 +160,32 @@ sub isMusicLibraryFileChanged {
 	return 0;
 }
 
-sub startImport {
-	$iTunesLibraryFile = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_file');;
-	$replaceExtension = Slim::Utils::Prefs::get('plugin_trackstat_itunes_replace_extension');;
+sub initScanTrack {
+	$iTunesLibraryFile = Plugins::CustomScan::Plugin::getCustomScanProperty("ituneslibraryfile");
+	$replaceExtension = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesslimserverextension");
+	$iTunesScanStartTime = time();
 
 	if (!canUseiTunesLibrary()) {
-		return;
+		$isScanning = 0;
+		return undef;
 	}
 		
 	my $file = findMusicLibraryFile();
 
 	debugMsg("startScan on file: $file\n");
 
-	if (!defined($file)) {
+	if (!defined($file) || ! -e $file) {
+		$isScanning = -1;
 		warn "Trying to scan an iTunes file that doesn't exist.";
-		return;
+		return undef;
 	}
 
-	stopScan();
+	$locked = 0;
+	$opened = 0;
+	$iTunesParser = undef;
+	resetScanState();
 
 	$isScanning = 1;
-	$iTunesScanStartTime = time();
 
 	$iTunesParser = XML::Parser->new(
 		'ErrorContext'     => 2,
@@ -146,29 +199,7 @@ sub startImport {
 			'End'   => \&handleEndElement,
 		},
 	);
-
-	Slim::Utils::Scheduler::add_task(\&scanFunction);
-}
-
-sub stopScan {
-
-	if (stillScanning()) {
-
-		debugMsg("Was stillScanning - stopping old scan.\n");
-
-		Slim::Utils::Scheduler::remove_task(\&scanFunction);
-		$isScanning = 0;
-		$locked = 0;
-		$opened = 0;
-		
-		close(ITUNESLIBRARY);
-		$iTunesParser = undef;
-		resetScanState();
-	}
-}
-
-sub stillScanning {
-	return $isScanning;
+	return undef;
 }
 
 sub doneScanning {
@@ -183,38 +214,48 @@ sub doneScanning {
 	$iTunesParserNB = undef;
 	$iTunesParser   = undef;
 
+	if($opened) {
+		# Don't leak filehandles.
+		close(ITUNESLIBRARY);
+	}
+
 	$locked = 0;
 	$opened = 0;
 
-	$lastMusicLibraryFinishTime = time();
-	$isScanning = 0;
+	if($isScanning == 2) {
+		$lastMusicLibraryFinishTime = time();
+		$isScanning = 0;
 
-	# Don't leak filehandles.
-	close(ITUNESLIBRARY);
+		# Set the last change time for the next go-round.
+		my $file  = findMusicLibraryFile();
+		my $mtime = (stat($file))[9];
 
-	# Set the last change time for the next go-round.
-	my $file  = findMusicLibraryFile();
-	my $mtime = (stat($file))[9];
+		$lastITunesMusicLibraryDate = $mtime;
 
-	$lastITunesMusicLibraryDate = $mtime;
+		msg("TrackStat::iTunes::Import: Import completed in ".(time() - $iTunesScanStartTime)." seconds.\n");
 
-	msg("TrackStat:iTunes: Import completed in ".(time() - $iTunesScanStartTime)." seconds.\n");
-
-	Slim::Utils::Prefs::set('plugin_trackstat_lastITunesMusicLibraryDate', $lastITunesMusicLibraryDate);
-
-	# Take the scanner off the scheduler.
-	Slim::Utils::Scheduler::remove_task(\&scanFunction);
+		Slim::Utils::Prefs::set('plugin_trackstat_lastITunesMusicLibraryDate', $lastITunesMusicLibraryDate);
+	}elsif($isScanning==-1) {
+		msg("TrackStat::iTunes::Import: Import failed after ".(time() - $iTunesScanStartTime)." seconds.\n");
+	}else {
+		msg("TrackStat::iTunes::Import: Import skipped after ".(time() - $iTunesScanStartTime)." seconds.\n");
+	}
 }
 
 sub scanFunction {
+	if($isScanning==-1  || $isScanning==0) {
+		doneScanning();
+		return undef;
+	}		
 	# this assumes that iTunes uses file locking when writing the xml file out.
 	if (!$opened) {
 
 		debugMsg("opening iTunes Library XML file.\n");
 
 		open(ITUNESLIBRARY, $iTunesLibraryFile) || do {
-			warn "TrackStat::iTunes: Couldn't open iTunes Library: $iTunesLibraryFile";
-			return 0;
+			warn "TrackStat::iTunes::Import: Couldn't open iTunes Library: $iTunesLibraryFile";
+			$isScanning=-1;
+			return undef;
 		};
 
 		$opened = 1;
@@ -250,7 +291,7 @@ sub scanFunction {
 
 		} else {
 
-			warn "TrackStat::iTunes: Waiting on lock for iTunes Library";
+			warn "TrackStat::iTunes::Import: Waiting on lock for iTunes Library";
 			return 1;
 		}
 	}
@@ -271,15 +312,17 @@ sub scanFunction {
 
 		$iTunesParserNB->parse_more($line);
 
-		if(!$isScanning) {
+		if($isScanning==2) {
 			doneScanning();
+			return undef;
 		}
-		return $isScanning;
+		return 1;
 	}
 
-	debugMsg("No iTunesParserNB defined!\n");
-
-	return 0;
+	msg("TrackStat:iTunes::Import: No iTunesParserNB defined!\n");
+	$isScanning = -1;
+	doneScanning();
+	return undef;
 }
 
 sub getCurrentLocale {
@@ -316,7 +359,6 @@ sub handleTrack {
 		$file  = Slim::Utils::Misc::pathFromFileURL($url);
 
 		if ($] > 5.007 && $file && !-e $file && getCurrentLocale() ne 'utf8') {
-
 			eval { Encode::from_to($file, 'utf8', getCurrentLocale()) };
 
 			# If the user is using both iTunes & a music folder,
@@ -354,7 +396,7 @@ sub handleTrack {
 	}
 
 	# skip track if Disabled in iTunes
-	if ($curTrack->{'Disabled'} && !Slim::Utils::Prefs::get('plugin_trackstat_ignoredisableditunestracks')) {
+	if ($curTrack->{'Disabled'} && !Plugins::CustomScan::Plugin::getCustomScanProperty("itunesignoredisabledtracks")) {
 
 		debugMsg("deleting disabled track $url\n");
 
@@ -486,7 +528,7 @@ sub handleCharElement {
 sub handleEndElement {
 	my ($p, $element) = @_;
 
-	if(!$isScanning) {
+	if($isScanning!=1) {
 		return;
 	}
 
@@ -542,7 +584,7 @@ sub handleEndElement {
 	if ($element eq 'plist' || $inPlaylists==1) {
 		debugMsg("Finished scanning iTunes XML\n");
 
-		$isScanning = 0;
+		$isScanning = 2;
 
 		return 0;
 	}
@@ -574,7 +616,7 @@ sub normalize_location {
 	my $stripped = strip_automounter($location);
 
 	# on non-mac or windows, we need to substitute the itunes library path for the one in the iTunes xml file
-	my $explicit_path = Slim::Utils::Prefs::get('plugin_trackstat_itunes_library_music_path');
+	my $explicit_path = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesslimservermusicpath");
 	
 	if ($explicit_path) {
 
@@ -652,7 +694,7 @@ sub sendTrackToStorage()
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg
 {
-	my $message = join '','TrackStat::iTunes: ',@_;
+	my $message = join '','TrackStat::iTunes::Import: ',@_;
 	msg ($message) if (Slim::Utils::Prefs::get("plugin_trackstat_showmessages"));
 }
 
