@@ -33,12 +33,8 @@ This archive should contain the following files:
 - license.txt (the license)
 - *.pm (The application itself)
 
-4. INSTALLATION
-===============
-Unzip to the Plugins directory in the Slimserver installation.
-
-5. USAGE
-========
-This plugin makes it play random playlists, it requires the DynamicPlayList plugin. 
-Compared to the standard RandomMix plugin included with the slimserver, this plugin also offers ability to exclude certain genres from a playlist.
+4. INSTALLATION AND USAGE
+=========================
+See the official Wiki for more information at:
+http://wiki.erland.homeip.net/index.php/Category:SlimServer
 
