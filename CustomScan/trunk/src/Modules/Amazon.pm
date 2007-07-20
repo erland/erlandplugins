@@ -51,6 +51,7 @@ sub getCustomScanFunctions {
 				'id' => 'amazonmaxsubjectlength',
 				'name' => 'Ignore genres longer than',
 				'type' => 'text',
+				'validate' => \&Slim::Utils::Validate::isInt,
 				'value' => 40
 			},
 			{

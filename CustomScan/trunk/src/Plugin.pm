@@ -66,9 +66,11 @@ sub initPlugin {
 		installHook();
 	}
 	checkDefaults();
-	if(!$modules) {
-		$modules = getPluginModules();
-	}
+	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
+}
+
+sub lateInitPlugin {
+	$modules = getPluginModules();
 	for my $key (keys %$modules) {
 		my $module = $modules->{$key};
 		my $initFunction = $module->{'initModule'};
@@ -247,13 +249,23 @@ sub getPluginModules {
 			my $data = eval { &{$fullname . "::getCustomScanFunctions"}(); };
 			if ($@) {
 				msg("CustomScan: Failed to load module $fullname: $@\n");
-			}elsif(defined($data) && defined($data->{'id'}) && defined($data->{'name'})) {
-				$plugins{$fullname} = $data;
-				my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_enabled');
-				if(!defined($enabled) || $enabled) {
-					$plugins{$fullname}->{'enabled'} = $enabled;
+			}elsif(defined($data)) {
+				my @functions = ();
+				if(ref($data) eq 'ARRAY') {
+					push @functions,@$data;
 				}else {
-					$plugins{$fullname}->{'enabled'} = 0;
+					push @functions,$data;
+				}
+				for my $function (@functions) {
+					if(defined($function->{'id'}) && defined($function->{'name'})) {
+						$plugins{$fullname."->".$function->{'id'}} = $function;
+						my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$function->{'id'}.'_enabled');
+						if((!defined($enabled) && $function->{'defaultenabled'})|| $enabled) {
+							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = $enabled;
+						}else {
+							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 0;
+						}
+					}
 				}
 			}
 		}
@@ -679,7 +691,7 @@ sub initArtistScan {
 					if($count eq '0E0') {
 						$count = undef;
 					}
-					debugMsg("Clearing track data...\n");
+					debugMsg("Clearing artist data...\n");
 					main::idleStreams();
 				}
 				commit($dbh);
@@ -692,19 +704,44 @@ sub initArtistScan {
 			    };
 		   	}
 		}
+	}
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context);
+}
+
+sub initScanArtist {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+
+	my $result = undef;
+	if(defined($key)) {
+		my $module = $modules->{$key};
 		if(defined($module->{'initScanArtist'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::initScanArtist\n");
-			eval { &{$module->{'initScanArtist'}}(); };
+			debugMsg("Calling: ".$key."::initScanArtist\n");
+			eval { $result = &{$module->{'initScanArtist'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanArtist on module $key: $@\n");
 			}
 			use strict 'refs';
 		}
 	}
-	Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey);
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey);
+		return 0;
+	}
 }
-
 sub getSortedModuleKeys {
 	my @moduleArray = ();
 	for my $key (keys %$modules) {
@@ -771,7 +808,7 @@ sub initAlbumScan {
 						$count = undef;
 					}
 					main::idleStreams();
-					debugMsg("Clearing track data...\n");
+					debugMsg("Clearing album data...\n");
 				}
 				commit($dbh);
 				$sth->finish();
@@ -785,7 +822,7 @@ sub initAlbumScan {
 		}
 		if(defined($module->{'initScanAlbum'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::initScanAlbum\n");
+			debugMsg("Calling: ".$key."::initScanAlbum\n");
 			eval { &{$module->{'initScanAlbum'}}(); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
@@ -793,7 +830,42 @@ sub initAlbumScan {
 			use strict 'refs';
 		}
 	}
-	Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey);
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context);
+}
+
+sub initScanAlbum {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+
+	my $result = undef;
+	if(defined($key)) {
+		my $module = $modules->{$key};
+		if(defined($module->{'initScanAlbum'})) {
+			no strict 'refs';
+			debugMsg("Calling: ".$key."::initScanAlbum\n");
+			eval { $result = &{$module->{'initScanAlbum'}}($context); };
+			if ($@) {
+				msg("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
+			}
+			use strict 'refs';
+		}
+	}
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey);
+		return 0;
+	}
 }
 
 sub initTrackScan {
@@ -875,17 +947,43 @@ sub initTrackScan {
 			    };
 		   	}
 		}
+	}
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context);
+}
+
+sub initScanTrack {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+
+	my $result = undef;
+	if(defined($key)) {
+		my $module = $modules->{$key};
 		if(defined($module->{'initScanTrack'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::initScanTrack\n");
-			eval { &{$module->{'initScanTrack'}}(); };
+			debugMsg("Calling: ".$key."::initScanTrack\n");
+			eval { $result = &{$module->{'initScanTrack'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanTrack on module $key: $@\n");
 			}
 			use strict 'refs';
 		}
 	}
-	Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey);
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey);
+		return 0;
+	}
 }
 
 sub scanArtist {
@@ -925,7 +1023,7 @@ sub scanArtist {
 				}
 				if($scan) {
 					no strict 'refs';
-					#debugMsg("Calling: ".$plugin."::scanArtist\n");
+					debugMsg("Calling: ".$key."::scanArtist\n");
 					my $attributes = eval { &{$module->{'scanArtist'}}($artist); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanArtist on module $key: $@\n");
@@ -970,20 +1068,42 @@ sub scanArtist {
 			return 1;
 		}
 	}
-	for my $key (@moduleKeys) {
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&exitScanArtist,$moduleKey,\@moduleKeys,\%context);
+	return 0;
+}
+
+sub exitScanArtist {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+	my $result = undef;
+	if(defined($key)) {
 		my $module = $modules->{$key};
 		if(defined($module->{'exitScanArtist'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::exitScanArtist\n");
-			eval { &{$module->{'exitScanArtist'}}(); };
+			debugMsg("Calling: ".$key."::exitScanArtist\n");
+			eval { $result = &{$module->{'exitScanArtist'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
 			}
 			use strict 'refs';
 		}
 	}
-	initAlbumScan($moduleKey);
-	return 0;
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		initAlbumScan($moduleKey);
+		return 0;
+	}
 }
 
 sub scanAlbum {
@@ -1027,7 +1147,7 @@ sub scanAlbum {
 				}
 				if($scan) {
 					no strict 'refs';
-					#debugMsg("Calling: ".$plugin."::scanAlbum\n");
+					debugMsg("Calling: ".$key."::scanAlbum\n");
 					my $attributes = eval { &{$module->{'scanAlbum'}}($album); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanAlbum on module $key: $@\n");
@@ -1071,20 +1191,42 @@ sub scanAlbum {
 			return 1;
 		}
 	}
-	for my $key (@moduleKeys) {
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&exitScanAlbum,$moduleKey,\@moduleKeys,\%context);
+	return 0;
+}
+
+sub exitScanAlbum {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+	my $result = undef;
+	if(defined($key)) {
 		my $module = $modules->{$key};
 		if(defined($module->{'exitScanAlbum'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::exitScanAlbum\n");
-			eval { &{$module->{'exitScanAlbum'}}(); };
+			debugMsg("Calling: ".$key."::exitScanAlbum\n");
+			eval { $result = &{$module->{'exitScanAlbum'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
 			}
 			use strict 'refs';
 		}
 	}
-	initTrackScan($moduleKey);
-	return 0;
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		initTrackScan($moduleKey);
+		return 0;
+	}
 }
 
 sub scanTrack {
@@ -1124,7 +1266,7 @@ sub scanTrack {
 				}
 				if($scan) {
 					no strict 'refs';
-					#debugMsg("Calling: ".$plugin."::scanTrack\n");
+					debugMsg("Calling: ".$key."::scanTrack\n");
 					my $attributes = eval { &{$module->{'scanTrack'}}($track); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanTrack on module $key: $@\n");
@@ -1168,21 +1310,44 @@ sub scanTrack {
 			return 1;
 		}
 	}
-	for my $key (@moduleKeys) {
+	my %context = ();
+	Slim::Utils::Scheduler::add_task(\&exitScanTrack,$moduleKey,\@moduleKeys,\%context);
+	return 0;
+}
+
+sub exitScanTrack {
+	my $moduleKey = shift;
+	my $moduleKeys = shift;
+	my $context = shift;
+
+	my $key = undef;
+	if(ref($moduleKeys) eq 'ARRAY') {
+		$key = shift @$moduleKeys;
+	}
+	my $result = undef;
+	if(defined($key)) {
 		my $module = $modules->{$key};
 		if(defined($module->{'exitScanTrack'})) {
 			no strict 'refs';
-			#debugMsg("Calling: ".$plugin."::exitScanTrack\n");
-			eval { &{$module->{'exitScanTrack'}}(); };
+			debugMsg("Calling: ".$key."::exitScanTrack\n");
+			eval { $result = &{$module->{'exitScanTrack'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
 			}
 			use strict 'refs';
 		}
 	}
-	exitScan($moduleKey);
-	return 0;
+	if(defined($result)) {
+		unshift @$moduleKeys,$key;
+		return 1;
+	}elsif(scalar(@$moduleKeys)>0) {
+		return 1;
+	}else {
+		exitScan($moduleKey);
+		return 0;
+	}
 }
+
 sub addTitleFormat
 {
 	my $titleformat = shift;
@@ -1333,7 +1498,8 @@ sub webPages {
 sub handleWebList {
 	my ($client, $params) = @_;
 
-	$params->{'pluginCustomScanModules'} = getPluginModules();
+	$modules = getPluginModules();
+	$params->{'pluginCustomScanModules'} = $modules;
 	$params->{'pluginCustomScanScanning'} = $scanningInProgress;
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginCustomScanSlimserver70'} = 1;
@@ -1346,11 +1512,10 @@ sub handleWebList {
 sub handleWebSettings {
 	my ($client, $params) = @_;
 
-	if(!$modules) {
+	if(!$modules || !defined($modules->{$params->{'module'}})) {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$params->{'module'}};
-
 
 	$params->{'pluginCustomScanModuleId'} = $params->{'module'};
 	$params->{'pluginCustomScanModuleEnabled'} = $module->{'enabled'};
@@ -1391,10 +1556,22 @@ sub handleWebSaveSettings {
 	
 	my $moduleProperties = $module->{'properties'};
 
+	my %errorItems = ();
 	foreach my $property (@$moduleProperties) {
 		my $propertyid = "property_".$property->{'id'};
 		if($params->{$propertyid}) {
-			setCustomScanProperty($property->{'id'},$params->{$propertyid});
+			my $value = $params->{$propertyid};
+			if(defined($property->{'validate'})) {
+				eval { $value = &{$property->{'validate'}}($value)};
+				if ($@) {
+					msg("CustomScan: Failed to call validate metod on ".$property->{'id'}.": $@\n");
+				}
+			}
+			if(defined($value)) {
+				setCustomScanProperty($property->{'id'},$value);
+			}else {
+				$errorItems{$property->{'id'}} = 1;
+			}
 		}else {
 			if($property->{'type'} eq 'checkbox') {
 				setCustomScanProperty($property->{'id'},0);
@@ -1410,7 +1587,12 @@ sub handleWebSaveSettings {
 		$module->{'enabled'} = 0;
 		Slim::Utils::Prefs::set('plugin_customscan_module_'.$module->{'id'}.'_enabled',0);
 	}
-	handleWebList($client, $params);
+	if(scalar(keys %errorItems)>0) {
+		$params->{'pluginCustomScanErrorItems'} = \%errorItems;
+		handleWebSettings($client,$params);
+	}else {
+		handleWebList($client, $params);
+	}
 }
 
 sub setCustomScanProperty {
@@ -2427,6 +2609,9 @@ PLUGIN_CUSTOMSCAN_MATCHING_ALBUMS
 
 PLUGIN_CUSTOMSCAN_MATCHING_SONGS
 	EN	Matching Songs
+
+PLUGIN_CUSTOMSCAN_INVALIDVALUE
+	EN	Invalid value
 EOF
 
 }

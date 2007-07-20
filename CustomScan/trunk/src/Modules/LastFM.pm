@@ -46,6 +46,7 @@ sub getCustomScanFunctions {
 				'name' => 'Similarity percentage',
 				'description' => 'The percentage of similarity that an artist must have to be included as a similar artist',
 				'type' => 'text',
+				'validate' => \&Slim::Utils::Validate::isInt,
 				'value' => 80
 			},
 			{
@@ -53,6 +54,7 @@ sub getCustomScanFunctions {
 				'name' => 'Tag percentage',
 				'description' => 'The percentage a tag must have to be included',
 				'type' => 'text',
+				'validate' => \&Slim::Utils::Validate::isInt,
 				'value' => 10
 			},
 			{
@@ -60,12 +62,22 @@ sub getCustomScanFunctions {
 				'name' => 'Picture directory',
 				'description' => 'The directory where LastFM pictures should be cached, if not specified they will not be cached',
 				'type' => 'text',
+				'validate' => \&validateIsDirOrEmpty,
 				'value' => ''
 			}
 		]
 	);
 	return \%functions;
 		
+}
+
+sub validateIsDirOrEmpty {
+	my $arg = shift;
+	if(!$arg || $arg eq '') {
+		return $arg;
+	}else {
+		return Slim::Utils::Validate::isDir($arg);
+	}
 }
 
 sub scanArtist {

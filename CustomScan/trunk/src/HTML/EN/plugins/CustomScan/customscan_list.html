@@ -60,12 +60,12 @@
 											return false;
 										} else {
 											return false;
-										};'>[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR" | string %]</a>
+										};' title="[% pluginCustomScanModules.$module.name %]">[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR" | string %]</a>
 					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/customscan_scan.html?module=[% module %]&type=[% type %]&player=[% player | uri %]"
 								 onclick='document.scanForm.module.value = "[% module %]";
 									document.scanForm.type.value = "scan";
 									document.scanForm.submit();
-									return false;'>[% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %]</a>
+									return false;' title="[% pluginCustomScanModules.$module.name %]">[% IF pluginCustomScanModules.$module.scanText %][% pluginCustomScanModules.$module.scanText %][% ELSE %][% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %][% END %]</a>
 				</td><td>[% IF pluginCustomScanModules.$module.dataprovidername %]<a href="[% pluginCustomScanModules.$module.dataproviderlink %]" target="_blank">[% pluginCustomScanModules.$module.dataprovidername %]</a>[% END %]</td></tr>
 				[% odd = (not odd) %]
 		[% END %]

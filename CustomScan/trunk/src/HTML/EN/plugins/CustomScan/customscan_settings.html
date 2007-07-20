@@ -24,8 +24,14 @@
 				<td nowrap><label for="[% propertyid %]">[% property.name | html %]</label></td><td>
 				[% IF property.type == 'checkbox' %]
 					<input type="checkbox" name="[% propertyid %]" id="[% propertyid %]" value="1" [% property.value ? "checked" : "" %]>
+				[% ELSIF property.type == 'password' %]
+					<input type="password" name="[% propertyid %]" id="[% propertyid %]" value="[% property.value %]">
 				[% ELSE %]
 					<input type="text" name="[% propertyid %]" id="[% propertyid %]" value="[% property.value %]">
+				[% END %]
+				[% errorid = property.id %]
+				[% IF pluginCustomScanErrorItems.$errorid %]
+				<div style="color:red;">[% "PLUGIN_CUSTOMSCAN_INVALIDVALUE" | string %]</div>
 				[% END %]
 				</td>
 				<td>&nbsp;</td>[% IF property.description %]<td>([% property.description | html %])</td>[% END %]
