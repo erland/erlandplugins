@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
+	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
 		<downloadidentifier>180</downloadidentifier>
