@@ -4,7 +4,7 @@
 	<template>
 		<downloadidentifier>61</downloadidentifier>
 		<name>Custom Scan Info</name>
-		<description>Menu that makes it possible to test which data has been scanned with Custom Scan, basically this is a testing menu and will probably not be usefull for anything else than verifying that the scanned data is correct</description>
+		<description>Menu that makes it possible to test which data has been scanned with Custom Scan, basically this is a testing menu and will probably not be useful for anything else than verifying that the scanned data is correct</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Scan Info"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
