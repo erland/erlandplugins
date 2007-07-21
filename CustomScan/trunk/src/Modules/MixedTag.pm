@@ -113,7 +113,7 @@ sub getCustomScanFunctions {
 				'name' => 'Names to show for user',
 				'description' => 'The mapping between real tag names and names shown to user, syntax: tag(single item name:multiple items name)',
 				'type' => 'text',
-				'value' => 'ALBUM(Album:Albums),ARTIST(Artist:Artists),GENRE(Genre:Genres),YEAR(Year:Years),CONDUCTOR(Conductor:Contuctors),COMPOSER(Composer:Composers),BAND(Band:Bands),TRACKARTIST(Track Artist:Track Artists),ALBUMARTIST(Album Artist:Album Artists)'
+				'value' => 'ALBUM(Album:Albums),ARTIST(Artist:Artists),GENRE(Genre:Genres),YEAR(Year:Years),CONDUCTOR(Conductor:Conductors),COMPOSER(Composer:Composers),BAND(Band:Bands),TRACKARTIST(Track Artist:Track Artists),ALBUMARTIST(Album Artist:Album Artists)'
 			}
 		]
 	);
