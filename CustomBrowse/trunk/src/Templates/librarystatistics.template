@@ -1100,6 +1100,7 @@
 						(rating=0 or rating is null)
 				</menudata>
 			</menu>
+			[%- IF showtrackstatinfo %]
 		        <menu>
 				<id>numberoftrackstatratedtracks</id>
 				<menuname>Rated Songs (TrackStat)</menuname>
@@ -1191,6 +1192,7 @@
 						(track_statistics.rating=0 or track_statistics.rating is null)
 				</menudata>
 			</menu>
+			[%- END %]
 		</menu>
 	</menu>
 </custombrowse>
