@@ -12,6 +12,11 @@
 			<id>album</id>
 			<menuname>[% IF customtagtext %][% customtagtext %][% ELSE %]Tags[% END %]</menuname>
 			<itemtype>album</itemtype>
+			[%- IF showartistwithalbum %]
+			<itemformat>albumconcat</itemformat>
+			[% ELSE %]
+			<itemformat>album</itemformat>
+			[%- END %]
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			<option>
@@ -31,7 +36,7 @@
 				<name>Sort by artist</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select albums.id,if(albums.compilation,albums.title,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')'))),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
@@ -50,7 +55,7 @@
 			</option>
 	        	<menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,if(albums.compilation,albums.title,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')'))),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
+				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
 				where
 					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and

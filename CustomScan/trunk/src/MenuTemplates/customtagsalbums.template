@@ -49,7 +49,11 @@
 				<id>album</id>
 				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
+				[%- IF showartistwithalbum %]
+				<itemformat>albumconcat</itemformat>
+				[% ELSE %]
 				<itemformat>album</itemformat>
+				[%- END %]
 				<menutype>sql</menutype>
 				<option>
 					<id>bytitle</id>
@@ -65,7 +69,7 @@
 				</option>
 				<menudata>
 					[%- IF showartistwithalbum %]
-					select albums.id,concat(albums.title, ' (', contributors.name ,')'),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes[% IF library or activelibrary %],multilibrary_track[% END %] 
+					select albums.id,concat('(', group_concat(distinct contributors.name separator ',') ,')'),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
