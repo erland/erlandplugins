@@ -20,7 +20,7 @@
 		<menulinks>alpha</menulinks>
 		<menudata>
 			[% IF includeyear %]
-			select albums.id,concat(albums.title,case when albums.year is not null then concat(' (',albums.year,')') else '' end),substr(albums.titlesort,1,1) 
+			select albums.id,concat(albums.title,case when (ifnull(albums.year,0)!=0) then concat(' (',albums.year,')') else '' end),substr(albums.titlesort,1,1) 
 			[% ELSE %]
 			select albums.id,albums.title,substr(albums.titlesort,1,1) 
 			[% END %]
