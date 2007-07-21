@@ -2,6 +2,7 @@
 <trackstat>
 	<database>mysql</database>
 	<minpluginversion>1.17</minpluginversion>
+	<requireplugins>TrackStat</requireplugins>
 	<template>
 		<downloadidentifier>77</downloadidentifier>
 		<name>TrackStat Top rated genres</name>
