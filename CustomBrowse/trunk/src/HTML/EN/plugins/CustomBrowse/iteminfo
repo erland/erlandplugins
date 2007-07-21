@@ -1,5 +1,8 @@
+[%- BLOCK CustomBrowseItemText %]
+[% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break %][% ELSE %][% item.itemname |html %][% END %]
+[%- END %]
 [%- BLOCK CustomBrowseContextItemText %]
-[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]
+[% IF item.itemvalue %][% item.itemname |html %][% "COLON" |string %] [% IF item.itemformat == 'multiline' %][% item.itemvalue |html_line_break %][% ELSE %][% item.itemvalue |html %][% END %][% ELSE %][% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break%][% ELSE %][% item.itemname |html %][% END %][% END %]
 [%- END %]
 [% BLOCK songinfoItemHRef -%]
 href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&amp;contextid=[% item.itemobj.id %]&amp;contexttype=track&amp;contextname=[% item.itemobj.title | uri %]&amp;player=[% playerURI %]"

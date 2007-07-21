@@ -121,11 +121,11 @@ END;
 						[% PROCESS trackinfo %]
 					[% ELSE %]
 						[% IF item.slimserverurl %]
-				        		<a href="[% webroot %][% item.slimserverurl %]">[% item.itemname %]</a><br>
+				        		<a href="[% webroot %][% item.slimserverurl %]">[% PROCESS CustomBrowseItemText %]</a><br>
 						[% ELSIF item.url %]
-				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% item.itemname %]</a><br>
+				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]">[% PROCESS CustomBrowseItemText %]</a><br>
 						[% ELSE %]
-				        		[% item.itemname %]<br>
+				        		[% PROCESS CustomBrowseItemText %]<br>
 						[% END %]
 					[% END %]
 			        [% END %]

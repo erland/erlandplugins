@@ -778,7 +778,7 @@ sub getPageItemsForContext {
 			$it->{'itemname'} = $self->getItemText($client,$it);
 			if(defined($it->{'itemseparator'})) {
 				my $separator = $it->{'itemseparator'};
-				if($it->{'itemname'} =~ /^(.*?)$separator(.*)$/) {
+				if($it->{'itemname'} =~ /^(.*?)$separator(.*)$/ms) {
 					$it->{'itemname'} = $1;
 					$it->{'itemvalue'} = $2;
 				}
@@ -1503,7 +1503,7 @@ sub getItemText {
 			$name = $item->{'menuprefix'};
 		}
 	}
-	if(defined($name) && $name =~ /{.*}/) {
+	if(defined($name) && $name =~ /{.*}/ms) {
 		$name = $self->itemParameterHandler->replaceParameters($client,$name,$item->{'parameters'},$context);
 	}
 	return $name;
