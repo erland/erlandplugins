@@ -2,7 +2,8 @@
 <custombrowse>
 	<minpluginversion>1.24</minpluginversion>
 	<template>
-		<name>Lyrics</name>
+		<downloadidentifier>181</downloadidentifier>
+		<name>Song lyrics</name>
 		<description>Lyrics for the selected song</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Lyrics"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
