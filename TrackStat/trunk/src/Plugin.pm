@@ -635,7 +635,7 @@ sub getDetailItems {
 			if(defined($track)) {
 				Slim::Buttons::Common::pushModeLeft($client,'trackinfo',{'track' => $track});
 			}else {
-				Slim::Display::Animation::bumpRight($client);
+				$client->bumpRight();
 			}
 		}
 	);
@@ -771,7 +771,7 @@ sub getSetModeDataForStatistics {
 
 					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getDetailItems($client,$item,$headerStr));
 				}else {
-					Slim::Display::Animation::bumpRight($client);
+					$client->bumpRight();
 				}
 			}
 		}
