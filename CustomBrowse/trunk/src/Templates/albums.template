@@ -12,7 +12,11 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
+			[%- IF showartistwithalbum %]
+			<itemformat>albumconcat</itemformat>
+			[%- ELSE %]
 			<itemformat>album</itemformat>
+			[%- END %]
 	                <menutype>sql</menutype>
 			[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
 			<option>
@@ -30,9 +34,10 @@
 			<option>
 				<id>byartist</id>
 				<name>Sort by artist</name>
+				<itemformat>albumconcat</itemformat>
 				<menulinks>number</menulinks>
 				<menudata>
-					select albums.id,if(albums.compilation,albums.title,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')'))) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 					where 
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
@@ -47,7 +52,7 @@
 			</option>
 			<menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,if(albums.compilation,albums.title,if(albums.compilation,albums.title,concat(albums.title, ' (', group_concat(distinct contributors.name separator ',') ,')'))),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
+				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 				where
 					[%- IF library or activelibrary %]
 					albums.id=multilibrary_album.album and

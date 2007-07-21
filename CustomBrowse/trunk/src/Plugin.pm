@@ -45,7 +45,7 @@ my $globalMixes;
 my $contextBrowseMenusFlat;
 my $templates;
 my $mixer;
-my $PLUGINVERSION = '1.23';
+my $PLUGINVERSION = '1.24';
 my $sqlerrors = '';
 my %uPNPCache = ();
 

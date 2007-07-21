@@ -866,10 +866,10 @@ sub getPageItemsForContext {
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
 					$result{'artwork'} = 0;
-				}elsif($format eq 'album') {
+				}elsif($format eq 'albumconcat' || $format eq 'album') {
+					my $album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
+					$album->displayAsHTML($it);
 					$result{'artwork'} = 1;
-					my $track = Slim::Schema->resultset('Album')->find($it->{'itemid'});
-					$track->displayAsHTML($it);
 				}elsif($format eq 'titleformat' && defined($it->{'itemformatdata'})) {
 					$result{'artwork'} = 0;
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
@@ -1472,6 +1472,7 @@ sub getItemText {
 	}
 	my $name = '';
 	my $format = $item->{'itemformat'};
+	my $prefix = '';
 	if(defined($format)) {
 		if($format eq 'track') {
 			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
@@ -1481,13 +1482,19 @@ sub getItemText {
 			$name = Slim::Music::Info::displayText($client,$track,$item->{'itemformatdata'});
 		}elsif($format eq 'function' && defined($item->{'itemformatdata'})) {
 			$name = $self->_getFunctionItemFormat($client,$item);
-		}
+		}elsif($format eq 'album') {
+			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+			$name = $album->title;
+                }elsif($format eq 'albumconcat') {
+			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+			$prefix = $album->title." ";
+                }
 	}
-	if(!defined($name) || $name eq '') {
-		$name = $item->{'itemname'};
+	if((!defined($name) || $name eq '') && defined($item->{'itemname'})) {
+		$name = $prefix.$item->{'itemname'};
 	}
-	if(!defined($name) || $name eq '') {
-		$name = $item->{'menuname'};
+	if((!defined($name) || $name eq '') && defined($item->{'menuname'})){
+		$name = $prefix.$item->{'menuname'};
 	}
 	if(defined($item->{'menuprefix'})) {
 		if(defined($name)) {

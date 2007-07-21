@@ -49,6 +49,8 @@ sub prepareMenu {
 	my $params = shift;
 
 	my $menudata = undef;
+	my $itemformat = undef;
+	my $itemformatdata = undef;
 	my $optionKeywords = undef;			
 	if(defined($menu->{'option'})) {
 		if(ref($menu->{'option'}) eq 'ARRAY') {
@@ -64,6 +66,8 @@ sub prepareMenu {
 				foreach my $op (@$options) {
 					if(defined($op->{'id'}) && $op->{'id'} eq $option) {
 						$menudata = $op->{'menudata'};
+						$itemformat = $op->{'itemformat'} if(defined($op->{'itemformat'}));
+						$itemformatdata = $op->{'itemformatdata'} if(defined($op->{'itemformatdata'}));
 						$optionKeywords = $self->getKeywords($op);
 						$foundOption = 1;
 						last;
@@ -74,8 +78,12 @@ sub prepareMenu {
 				my $options = $menu->{'option'};
 				if(!$foundOption && defined($options->[0]->{'menudata'})) {
 					$menudata = $options->[0]->{'menudata'};
+					$itemformat = $options->[0]->{'itemformat'} if(defined($options->[0]->{'itemformat'}));
+					$itemformatdata = $options->[0]->{'itemformatdata'} if(defined($options->[0]->{'itemformatdata'}));
 				}else {
 					$menudata = $menu->{'menudata'};
+					$itemformat = $menu->{'itemformat'} if(defined($menu->{'itemformat'}));
+					$itemformatdata = $menu->{'itemformatdata'} if(defined($menu->{'itemformatdata'}));
 				}
 				if(!$foundOption && defined($options->[0]->{'keyword'})) {
 					$optionKeywords = $self->getKeywords($options->[0]);
@@ -84,13 +92,19 @@ sub prepareMenu {
 		}else {
 			if(defined($menu->{'option'}->{'menudata'})) {
 				$menudata = $menu->{'option'}->{'menudata'};
+				$itemformat = $menu->{'option'}->{'itemformat'} if(defined($menu->{'option'}->{'itemformat'}));
+				$itemformatdata = $menu->{'option'}->{'itemformatdata'} if(defined($menu->{'option'}->{'itemformatdata'}));
 				$optionKeywords = $self->getKeywords($menu->{'option'});
 			}else {
 				$menudata = $menu->{'menudata'};
+				$itemformat = $menu->{'itemformat'} if(defined($menu->{'itemformat'}));
+				$itemformatdata = $menu->{'itemformatdata'} if(defined($menu->{'itemformatdata'}));
 			}
 		}
 	}else {
 		$menudata = $menu->{'menudata'};
+		$itemformat = $menu->{'itemformat'} if(defined($menu->{'itemformat'}));
+		$itemformatdata = $menu->{'itemformatdata'} if(defined($menu->{'itemformatdata'}));
 	}
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
 	my $menuData = $self->getData($client,$menudata,$keywords,$context);
@@ -125,6 +139,12 @@ sub prepareMenu {
 			$menuItem{'parameters'}->{$menu->{'contextid'}} = $dataItem->{'id'};
 		}elsif(defined($menu->{'id'})) {
 			$menuItem{'parameters'}->{$menu->{'id'}} = $dataItem->{'id'};
+		}
+		if(defined($itemformat)) {
+			$menuItem{'itemformat'} = $itemformat;
+		}
+		if(defined($itemformatdata)) {
+			$menuItem{'itemformatdata'} = $itemformatdata;
 		}
 		push @$result, \%menuItem;
 	}

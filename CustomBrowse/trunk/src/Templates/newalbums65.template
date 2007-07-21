@@ -13,11 +13,15 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
+			[%- IF showartistwithalbum %]
+			<itemformat>albumconcat</itemformat>
+			[%- ELSE %]
 			<itemformat>album</itemformat>
+			[%- END %]
 	                <menutype>sql</menutype>
 	                <menudata>
 				[%- IF showartistwithalbum %]
-				select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', contributors.name ,')')) from tracks,albums,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					tracks.id=contributor_track.track and
 					contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and

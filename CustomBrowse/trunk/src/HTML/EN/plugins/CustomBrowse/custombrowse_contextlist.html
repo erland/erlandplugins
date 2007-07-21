@@ -122,11 +122,11 @@ END;
 						[% PROCESS trackinfo %]
 					[% ELSE %]
 						[% IF item.slimserverurl %]
-				        		<a href="[% webroot %][% item.slimserverurl %]">[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
+				        		<a href="[% webroot %][% item.slimserverurl %]">[% PROCESS CustomBrowseContextItemText %]</a><br>
 						[% ELSIF item.url %]
-				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]">[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]</a><br>
+				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]">[% PROCESS CustomBrowseContextItemText %]</a><br>
 						[% ELSE %]
-				        		[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]<br>
+				        		[% PROCESS CustomBrowseContextItemText %]<br>
 						[% END %]
 					[% END %]
 			        [% END %]

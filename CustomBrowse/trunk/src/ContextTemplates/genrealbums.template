@@ -18,12 +18,16 @@
 		[% END %]
 		<menuheader>{context.itemname} {count}</menuheader>
 		<itemtype>album</itemtype>
+		[% IF showartistwithalbum %]
+		<itemformat>albumconcat</itemformat>
+		[% ELSE %]
 		<itemformat>album</itemformat>
+		[% END %]
                 <menutype>sql</menutype>
 		<contextid>album</contextid>
 		<menudata>
 			[%- IF showartistwithalbum %]
-			select albums.id,if(albums.compilation,albums.title,concat(albums.title, ' (', contributors.name ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks,genre_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
+			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks,genre_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
 				tracks.id=genre_track.track and
 				genre_track.genre={genreid} and

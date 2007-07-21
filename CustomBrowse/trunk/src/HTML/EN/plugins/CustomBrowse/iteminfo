@@ -1,3 +1,6 @@
+[%- BLOCK CustomBrowseContextItemText %]
+[% IF item.itemvalue %][% item.itemname %][% "COLON" |string %] [% item.itemvalue %][% ELSE %][% item.itemname %][% END %]
+[%- END %]
 [% BLOCK songinfoItemHRef -%]
 href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&amp;contextid=[% item.itemobj.id %]&amp;contexttype=track&amp;contextname=[% item.itemobj.title | uri %]&amp;player=[% playerURI %]"
 [%- END %]

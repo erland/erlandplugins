@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minpluginversion>1.20</minpluginversion>
+	<minpluginversion>1.24</minpluginversion>
 	<template>
 		<downloadidentifier>137</downloadidentifier>
 		<name>Albums for year</name>
