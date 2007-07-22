@@ -34,6 +34,9 @@
 				tracks.url = track_statistics.url 
  			where 
 				contributor_track.contributor={artistid}
+				[%- IF ignoreunrated %]
+				and track_statistics.rating is not null
+				[%- END %]
 			group by contributor_track.contributor
 		</menudata>
 		<menu></menu>

@@ -33,6 +33,9 @@
 				tracks.album=albums.id 
 			where 
 				albums.id={albumid}
+				[%- IF ignoreunrated %]
+				and track_statistics.rating is not null
+				[%- END %]
 			group by tracks.album
 		</menudata>
 		<menu></menu>
