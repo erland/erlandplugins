@@ -876,11 +876,6 @@ sub getPageItemsForContext {
 					$it->{'itemname'} = Slim::Music::Info::displayText($client,$track,$it->{'itemformatdata'});
 				}elsif($format eq 'function' && defined($it->{'itemformatdata'})) {
 					$result{'artwork'} = 0;
-					my $parameters = undef;
-					if(defined($it->{'parameters'})) {
-						$parameters = $it->{'parameters'};
-					}
-					$it->{'itemname'} = $self->_getFunctionItemFormat($client,$it);
 				}elsif($format =~ /image$/) {
 					my $urlId = $format;
 					if(defined($it->{'itemseparator'})) {
