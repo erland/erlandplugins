@@ -62,7 +62,8 @@ sub _execute {
 	my @result =();
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
-    	for my $sql (split(/[;]/,$sqlstatements)) {
+	$sqlstatements =~ s/\r\n/\n/g;
+    	for my $sql (split(/;\s*\n/,$sqlstatements)) {
     	eval {
 			$sql =~ s/^\s+//g;
 			$sql =~ s/\s+$//g;
