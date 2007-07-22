@@ -3898,7 +3898,29 @@ sub getMusicInfoSCRCustomItem()
 	return $formattedString;
 }
 
-
+sub ratingStringFormat {
+        my $self = shift;
+        my $client = shift;
+        my $item = shift;
+	my $parameters = shift;
+	my $rating = $item->{'itemname'};
+	if(defined($rating)) {
+		my $lowrating = undef;
+		if(Slim::Utils::Prefs::get("plugin_trackstat_rating_10scale")) {
+			$lowrating = floor(($rating+5) / 10);
+		}else {
+			$lowrating = floor(($rating+10) / 20);
+			$rating = floor($rating/2);
+		}
+		my $result = ($lowrating?$RATING_CHARACTER x $lowrating:'');
+		if($parameters->{'shownumerical'} && $result ne '') {
+			$result .= sprintf(" (%.2f)", $rating/10);
+		}
+		return $result;
+	}else {
+		return $rating;
+	}
+}
 sub getRatingDynamicCustomItem
 {
 	my $track = shift;
