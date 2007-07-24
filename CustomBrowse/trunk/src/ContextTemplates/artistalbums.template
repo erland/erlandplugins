@@ -27,7 +27,7 @@
 		<contextid>album</contextid>
 		<menudata>
 			[%- IF showartistwithalbum %]
-			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
+			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,contributors[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
 				[%- IF library or activelibrary or contextlibrary %]
 				albums.id=multilibrary_album.album and
@@ -36,7 +36,8 @@
 				albums.id=tracks.album and
 				contributor_track.contributor={artistid} and
 				[% IF roles %]contributor_track.role in ([% roles %]) and[% END %]
-				contributor_track.track=tracks.id				
+				contributor_track.track=tracks.id and				
+				contributor_track.contributor=contributors.id
 			[% ELSE %]
 			select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks,contributor_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
