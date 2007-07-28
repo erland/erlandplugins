@@ -289,6 +289,18 @@ sub uPNPCallback {
 		$uPNPCache{$device->getudn} = undef;
 	}
 }
+sub getAvailableTitleFormats {
+	my @result = ();
+	foreach my $format ( Slim::Utils::Prefs::getArray('titleFormat') ) {
+		my %item = (
+			'id' => $format,
+			'name' => $format,
+			'value' => $format
+		);
+		push @result,\%item;
+	}
+	return \@result;
+}
 
 sub getAvailableuPNPDevices {
 	my @result = ();
