@@ -51,7 +51,12 @@
 				<id>track</id>
 				<menuname>Songs</menuname>
 				<itemtype>track</itemtype>
+				[%- IF usetitleformat %]
+				<itemformat>titleformat</itemformat>
+				<itemformatdata>[% usetitleformat %]</itemformatdata>
+				[%- ELSE %]
 				<itemformat>track</itemformat>
+				[%- END %]
 				<menutype>sql</menutype>
 				<menudata>
 					select tracks.id,tracks.title from contributor_track,albums,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 

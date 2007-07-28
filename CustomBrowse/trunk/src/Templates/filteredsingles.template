@@ -85,7 +85,12 @@
 				<id>track</id>
 				<menuname>Songs</menuname>
 				<itemtype>track</itemtype>
+				[%- IF usetitleformat %]
+				<itemformat>titleformat</itemformat>
+				<itemformatdata>[% usetitleformat %]</itemformatdata>
+				[%- ELSE %]
 				<itemformat>track</itemformat>
+				[%- END %]
 				<menutype>sql</menutype>
 				<menudata>
 					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
