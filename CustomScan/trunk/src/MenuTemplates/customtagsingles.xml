@@ -2,7 +2,7 @@
 <custombrowse>
 	<database>mysql</database>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.17</minpluginversion>
+	<minpluginversion>1.24</minpluginversion>
 	<template>
 		<downloadidentifier>62</downloadidentifier>
 		<name>Custom Tag Singles</name>
@@ -10,6 +10,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tag Singles"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
+		<parameter type="functionoptionalsinglelist" id="usetitleformat" name="Use custom title" value="" data="Plugins::CustomBrowse::Plugin,getAvailableTitleFormats"/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="checkbox" id="containssinglecomment" name="Check comment tag for sub strings" value=""/>
 		<parameter type="text" id="singlecomment" name="Comment tag" value=""/>
