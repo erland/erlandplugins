@@ -23,6 +23,73 @@
 				[%- END %]
 				order by genres.namesort asc
 			</menudata>
+			<menu>
+				<id>allalbums</id>
+				<menuname>All Albums</menuname>
+				<playtype>none</playtype>
+				<menu>
+					<id>album</id>
+					<menuname>Songs</menuname>
+					<itemtype>album</itemtype>
+					<itemformat>album</itemformat>
+					<menutype>sql</menutype>
+					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
+					<option>
+						<id>byyear</id>
+						<name>Sort by year</name>
+						<menulinks>number</menulinks>
+						<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					</option>
+					<option>
+						<id>bytitle</id>
+						<name>Sort by title</name>
+						<menulinks>alpha</menulinks>
+						<keyword name="orderby" value="albums.titlesort asc"/>
+					</option>
+					<menudata>
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+						where 
+							[%- IF library or activelibrary %]
+							tracks.id=multilibrary_track.track and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							[%- END %]
+							tracks.audio=1 and 
+							albums.id=tracks.album and 
+							tracks.id=genre_track.track and 
+							genre_track.genre={genre} 
+						group by albums.id 
+						order by {orderby}
+					</menudata>
+					<menu>
+						<id>track</id>
+						<itemtype>track</itemtype>
+						<itemformat>track</itemformat>
+						[%- IF playalltracks %]
+						<playtype>all</playtype>
+						[%- END %]
+						<menutype>sql</menutype>
+						<menudata>
+							select tracks.id,tracks.title from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+							where 
+								[%- IF library or activelibrary %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+								[%- END %]
+								tracks.audio=1 and 
+								tracks.album={album} and 
+								tracks.id=genre_track.track and 
+								genre_track.genre={genre} 
+							group by tracks.id 
+							order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
+						</menudata>
+						<menu>
+							<id>trackdetails</id>
+							<menutype>trackdetails</menutype>
+							<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+						</menu>
+					</menu>
+				</menu>
+			</menu>
 			[%- IF variousartists %]
 			<menu>
 				<id>variousartist</id>
