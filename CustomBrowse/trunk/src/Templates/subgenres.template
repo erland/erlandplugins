@@ -323,7 +323,7 @@
 								exists(select * from genre_track
 									where
 										genre_track.track=tracks.id and
-										genre_track.genre={subgenre})
+										genre_track.genre={subgenre}) and
 								exists(select * from genre_track
 									where
 										genre_track.track=tracks.id and
