@@ -797,7 +797,7 @@ sub getPageItemsForContext {
 				}
 				if(!$hasExternalUrl) {
 					my $id = $it->{'itemid'};
-					$id = Slim::Utils::Unicode::utf8on($id);
+					$id = Slim::Utils::Unicode::decode('utf8', $id);
 					my $attributeName = undef;
 					if(defined($it->{'contextid'})) {
 						$attributeName = $it->{'contextid'};
@@ -848,11 +848,11 @@ sub getPageItemsForContext {
 						}
 						$regExp = "&"."contextid=";
 						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
-							my $id = undef;
+							my $contextid = undef;
 							if(defined($it->{'itemid'})) {
-								$id = escape($it->{'itemid'});
+								$contextid = escape($id);
 							}
-							$it->{'url'} .= "&contextid=$id";
+							$it->{'url'} .= "&contextid=$contextid";
 						}
 					}
 					if(defined($it->{'url'}) && ((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'})) {

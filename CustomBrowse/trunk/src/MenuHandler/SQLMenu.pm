@@ -107,6 +107,7 @@ sub prepareMenu {
 		$itemformatdata = $menu->{'itemformatdata'} if(defined($menu->{'itemformatdata'}));
 	}
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},$optionKeywords,$item->{'parameters'});
+	$menudata = Slim::Utils::Unicode::utf8off($menudata);
 	my $menuData = $self->getData($client,$menudata,$keywords,$context);
 	for my $dataItem (@$menuData) {
 		my %menuItem = (
