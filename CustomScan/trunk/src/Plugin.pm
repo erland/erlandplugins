@@ -1045,6 +1045,11 @@ sub scanArtist {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								if(defined($attribute->{'valuesort'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+								}elsif(defined($attribute->{'value'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+								}
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
 								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
@@ -1169,6 +1174,11 @@ sub scanAlbum {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								if(defined($attribute->{'valuesort'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+								}elsif(defined($attribute->{'value'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+								}
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
 								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
@@ -1288,6 +1298,11 @@ sub scanTrack {
 								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
 								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
 								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+								if(defined($attribute->{'valuesort'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+								}elsif(defined($attribute->{'value'})) {
+									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+								}
 								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
 								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
 								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
