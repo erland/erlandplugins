@@ -96,7 +96,7 @@ sub getPreparedMixes {
 				my $parameters = $self->propertyHandler->getProperties();
 				$parameters->{'itemtype'} = $item->{'itemtype'};
 				$parameters->{'itemid'} = $item->{'itemid'};
-				$parameters->{'itemname'} = $item->{'itemname'};
+				$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
 				my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 				$url = $self->itemParameterHandler->replaceParameters($client,$url,$keywords);
 				$webMix{'url'} = $url;
