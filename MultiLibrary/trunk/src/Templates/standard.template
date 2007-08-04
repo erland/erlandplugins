@@ -86,7 +86,7 @@
 					and not exists(select * from contributor_track,contributors 
 						where 
 							contributor_track.track=tracks.id and
-							contributor_track.genre=contributors.id and
+							contributor_track.contributor=contributors.id and
 							contributors.name in ([% excludedartists %]))
 					[%- END %]
 					[%- IF excludedcomment %]
