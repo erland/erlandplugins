@@ -1601,11 +1601,12 @@ sub handleWebContextList {
 	my $context = getContextMenuHandler()->getContext($client,$params);
 	if(scalar(@$context)>0) {
 		if(defined($contextParams->{'itemname'})) {
-			$context->[0]->{'name'} = $contextParams->{'itemname'};
+			$context->[0]->{'name'} = Slim::Utils::Unicode::utf8decode($contextParams->{'itemname'},'utf8');
 		}else {
 			$context->[0]->{'name'} = "Context";
 		}
 	}
+
 	for my $ctx (@$context) {
 		$ctx->{'valueUrl'} .= $contextParams->{'itemurl'};
 	}

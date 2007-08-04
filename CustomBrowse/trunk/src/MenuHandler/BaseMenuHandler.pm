@@ -797,7 +797,6 @@ sub getPageItemsForContext {
 				}
 				if(!$hasExternalUrl) {
 					my $id = $it->{'itemid'};
-					$id = Slim::Utils::Unicode::decode('utf8', $id);
 					my $attributeName = undef;
 					if(defined($it->{'contextid'})) {
 						$attributeName = $it->{'contextid'};
@@ -840,9 +839,9 @@ sub getPageItemsForContext {
 						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
 							my $name = undef;
 							if(defined($it->{'itemvalue'})) {
-								$name = escape(encode_entities($it->{'itemvalue'}));
+								$name = escape($it->{'itemvalue'});
 							}else {
-								$name = escape(encode_entities($it->{'itemname'}));
+								$name = escape($it->{'itemname'});
 							}
 							$it->{'url'} .= "&contextname=$name";
 						}

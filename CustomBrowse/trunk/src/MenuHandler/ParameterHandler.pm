@@ -56,8 +56,11 @@ sub replaceParameters {
 		for my $param (keys %$parameters) {
 			my $value = $parameters->{$param};
 			if($quote) {
-				$value = $dbh->quote($value);
-				$value = substr($value, 1, -1);
+				$value =~ s/\'/\\\'/g;
+				$value =~ s/\"/\\\"/g;
+				$value =~ s/\\/\\\\/g;
+				#$value = $dbh->quote($value);
+				#$value = substr($value, 1, -1);
 			}
 			$value = Slim::Utils::Unicode::utf8on($value);
 			$originalValue =~ s/\{$param\}/$value/g;
@@ -67,8 +70,11 @@ sub replaceParameters {
 		my $propertyValue = $self->propertyHandler->getProperty($1);
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue = $dbh->quote($propertyValue);
-			    	$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue =~ s/\'/\\\'/g;
+				$propertyValue =~ s/\"/\\\"/g;
+				$propertyValue =~ s/\\/\\\\/g;
+				#$propertyValue = $dbh->quote($propertyValue);
+			    	#$propertyValue = substr($propertyValue, 1, -1);
 			}
 			$originalValue =~ s/\{custombrowse\.$1\}/$propertyValue/g;
 		}else {
@@ -79,8 +85,11 @@ sub replaceParameters {
 		my $propertyValue = Slim::Utils::Prefs::get($1);
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue = $dbh->quote($propertyValue);
-			    	$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue =~ s/\'/\\\'/g;
+				$propertyValue =~ s/\"/\\\"/g;
+				$propertyValue =~ s/\\/\\\\/g;
+				#$propertyValue = $dbh->quote($propertyValue);
+			    	#$propertyValue = substr($propertyValue, 1, -1);
 			}
 			$originalValue =~ s/\{property\.$1\}/$propertyValue/g;
 		}else {
@@ -94,8 +103,11 @@ sub replaceParameters {
 		}
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue = $dbh->quote($propertyValue);
-			    	$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue =~ s/\'/\\\'/g;
+				$propertyValue =~ s/\"/\\\"/g;
+				$propertyValue =~ s/\\/\\\\/g;
+				#$propertyValue = $dbh->quote($propertyValue);
+			    	#$propertyValue = substr($propertyValue, 1, -1);
 			}
 			$originalValue =~ s/\{clientproperty\.$1\}/$propertyValue/g;
 		}else {
@@ -110,13 +122,16 @@ sub replaceParameters {
 		}
 		if(defined($contextHash)) {
 			$propertyValue = $contextHash->{$1};
-			$propertyValue = Slim::Utils::Unicode::utf8on($propertyValue);
-			$propertyValue = Slim::Utils::Unicode::utf8encode_locale($propertyValue);
+			#$propertyValue = Slim::Utils::Unicode::utf8on($propertyValue);
+			#$propertyValue = Slim::Utils::Unicode::utf8encode_locale($propertyValue);
 		}
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue = $dbh->quote($propertyValue);
-			    	$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue =~ s/\'/\\\'/g;
+				$propertyValue =~ s/\"/\\\"/g;
+				$propertyValue =~ s/\\/\\\\/g;
+				#$propertyValue = $dbh->quote($propertyValue);
+			    	#$propertyValue = substr($propertyValue, 1, -1);
 			}
 			$originalValue =~ s/\{context\.$1\}/$propertyValue/g;
 		}else {

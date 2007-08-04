@@ -12,7 +12,7 @@
 	[% END %]
 	[% contextNo = 0 %]
 	[% FOREACH group IN pluginCustomBrowseContext %]
-                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %][% IF contextNo %]plugins/CustomBrowse/custombrowse_contextlist.html[% ELSE %][% path %][% END %]?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name %]</a>
+                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %][% IF contextNo %]plugins/CustomBrowse/custombrowse_contextlist.html[% ELSE %][% path %][% END %]?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name | html%]</a>
 		[% skipPrefix = 0 %]
 		[% contextNo = contextNo + 1 %]
         [% END %]

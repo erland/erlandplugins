@@ -92,7 +92,7 @@ sub _execute {
 				};
 				while( $sth->fetch() ) {
                                     my %item = (
-                                        'id' => $id,
+                                        'id' => Slim::Utils::Unicode::utf8decode($id,'utf8'),
                                         'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
                                     );
 				    if(defined($link)) {
