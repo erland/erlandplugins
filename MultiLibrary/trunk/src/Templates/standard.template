@@ -102,9 +102,7 @@
 					group by tracks.id
 			</data>
 		</track>
-		[%- IF internalmenus %]
 		<menus>[% internalmenus %][% IF custombrowsemenus %],[% custombrowsemenus %][% END %]</menus>
-		[%- END %]
 		[%- IF customskipfilter %]
 		<action>
 			<type>cli</type>
