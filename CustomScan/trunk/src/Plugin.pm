@@ -269,7 +269,7 @@ sub getPluginModules {
 						$plugins{$fullname."->".$function->{'id'}} = $function;
 						my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$function->{'id'}.'_enabled');
 						if((!defined($enabled) && $function->{'defaultenabled'})|| $enabled) {
-							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = $enabled;
+							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 1;
 						}else {
 							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 0;
 						}
@@ -2849,10 +2849,10 @@ PLUGIN_CUSTOMSCAN_REFRESH
 	EN	Refresh scanning status
 
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED
-	EN	Enable in automatic and full scans
+	EN	Include in automatic scans and \"Scan All\"
 
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ORDER
-	EN	Scanning order in automatic and full scans (1-100)
+	EN	Scanning order in automatic and \"Scan All\" (1-100)
 
 PLUGIN_CUSTOMSCAN_MATCHING_ALBUMS
 	EN	Matching Albums

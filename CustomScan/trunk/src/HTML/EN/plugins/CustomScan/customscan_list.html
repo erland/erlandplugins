@@ -55,7 +55,7 @@
 		[% odd = 1 %]
 		[% FOREACH module IN pluginCustomScanModules %]
 				[% WRAPPER CustomScanModuleRow %]<td style="padding:3px;">
-					<a href="[% webroot %]plugins/CustomScan/customscan_settings.html?module=[% module.id %]&player=[% player | uri %]">[% module.name %]</a>[% IF !module.enabled %]&nbsp;&nbsp;&nbsp;(disabled)[% END %]</td><td style="padding:3px;">[% IF module.status  %][% module.status | string%][% END %]</td><td style="padding:3px;">
+					<a href="[% webroot %]plugins/CustomScan/customscan_settings.html?module=[% module.id %]&player=[% player | uri %]">[% module.name %]</a>[% IF !module.enabled %]&nbsp;&nbsp;&nbsp;(manual)[% END %]</td><td style="padding:3px;">[% IF module.status  %][% module.status | string%][% END %]</td><td style="padding:3px;">
 					[% IF module.clearEnabled %]
 					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/customscan_scan.html?module=[% module.id %]&type=[% type %]&player=[% player | uri %]"
 								 onclick='if (confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR_QUESTION" | string %]")) 
