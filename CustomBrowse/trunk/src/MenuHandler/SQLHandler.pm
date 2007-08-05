@@ -92,14 +92,14 @@ sub _execute {
 				};
 				while( $sth->fetch() ) {
                                     my %item = (
-                                        'id' => Slim::Utils::Unicode::utf8decode($id,'utf8'),
-                                        'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
+                                        'id' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')),
+                                        'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
                                     );
 				    if(defined($link)) {
-					$item{'link'} = Slim::Utils::Unicode::utf8decode($link,'utf8');
+					$item{'link'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($link,'utf8'));
                                     }
 				    if(defined($valuetype)) {
-					$item{'type'} = Slim::Utils::Unicode::utf8decode($valuetype,'utf8');
+					$item{'type'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valuetype,'utf8'));
                                     }
                                     push @result, \%item;
 				}

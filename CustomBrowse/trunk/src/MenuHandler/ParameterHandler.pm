@@ -42,6 +42,14 @@ sub new {
 	return $self;
 }
 
+sub quoteValue {
+	my $value = shift;
+	$value =~ s/\'/\\\'/g;
+	$value =~ s/\"/\\\"/g;
+	$value =~ s/\\/\\\\/g;
+	return $value;
+}
+
 sub replaceParameters {
 	my $self = shift;
 	my $client = shift;
@@ -50,31 +58,20 @@ sub replaceParameters {
 	my $context = shift;
 	my $quote = shift;
 
-	my $dbh = getCurrentDBH();
-
 	if(defined($parameters)) {
 		for my $param (keys %$parameters) {
-			my $value = $parameters->{$param};
+			my $propertyValue = $parameters->{$param};
 			if($quote) {
-				$value =~ s/\'/\\\'/g;
-				$value =~ s/\"/\\\"/g;
-				$value =~ s/\\/\\\\/g;
-				#$value = $dbh->quote($value);
-				#$value = substr($value, 1, -1);
+				$propertyValue=quoteValue($propertyValue);
 			}
-			$value = Slim::Utils::Unicode::utf8on($value);
-			$originalValue =~ s/\{$param\}/$value/g;
+			$originalValue =~ s/\{$param\}/$propertyValue/g;
 		}
 	}
 	while($originalValue =~ m/\{custombrowse\.(.*?)\}/) {
 		my $propertyValue = $self->propertyHandler->getProperty($1);
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue =~ s/\'/\\\'/g;
-				$propertyValue =~ s/\"/\\\"/g;
-				$propertyValue =~ s/\\/\\\\/g;
-				#$propertyValue = $dbh->quote($propertyValue);
-			    	#$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue=quoteValue($propertyValue);
 			}
 			$originalValue =~ s/\{custombrowse\.$1\}/$propertyValue/g;
 		}else {
@@ -85,11 +82,7 @@ sub replaceParameters {
 		my $propertyValue = Slim::Utils::Prefs::get($1);
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue =~ s/\'/\\\'/g;
-				$propertyValue =~ s/\"/\\\"/g;
-				$propertyValue =~ s/\\/\\\\/g;
-				#$propertyValue = $dbh->quote($propertyValue);
-			    	#$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue=quoteValue($propertyValue);
 			}
 			$originalValue =~ s/\{property\.$1\}/$propertyValue/g;
 		}else {
@@ -103,11 +96,7 @@ sub replaceParameters {
 		}
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue =~ s/\'/\\\'/g;
-				$propertyValue =~ s/\"/\\\"/g;
-				$propertyValue =~ s/\\/\\\\/g;
-				#$propertyValue = $dbh->quote($propertyValue);
-			    	#$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue=quoteValue($propertyValue);
 			}
 			$originalValue =~ s/\{clientproperty\.$1\}/$propertyValue/g;
 		}else {
@@ -127,11 +116,7 @@ sub replaceParameters {
 		}
 		if(defined($propertyValue)) {
 			if($quote) {
-				$propertyValue =~ s/\'/\\\'/g;
-				$propertyValue =~ s/\"/\\\"/g;
-				$propertyValue =~ s/\\/\\\\/g;
-				#$propertyValue = $dbh->quote($propertyValue);
-			    	#$propertyValue = substr($propertyValue, 1, -1);
+				$propertyValue=quoteValue($propertyValue);
 			}
 			$originalValue =~ s/\{context\.$1\}/$propertyValue/g;
 		}else {
@@ -140,10 +125,6 @@ sub replaceParameters {
 	}
 
 	return $originalValue;
-}
-
-sub getCurrentDBH {
-	return Slim::Schema->storage->dbh();
 }
 
 1;
