@@ -111,6 +111,11 @@ sub installHook()
 {  
 	debugMsg("Hook activated.\n");
 	Slim::Control::Request::subscribe(\&Plugins::CustomScan::Plugin::commandCallback,[['rescan']]);
+	Slim::Control::Request::addDispatch(['customscan','status','_module'], [0, 1, 0, \&cliGetStatus]);
+	Slim::Control::Request::addDispatch(['customscan','abort'], [0, 0, 0, \&cliAbort]);
+	Slim::Control::Request::addDispatch(['customscan','scan','_module'], [0, 0, 0, \&cliScan]);
+	Slim::Control::Request::addDispatch(['customscan','clear','_module'], [0, 0, 0, \&cliClear]);
+	Slim::Control::Request::addDispatch(['customscan', 'changedstatus', '_module','_status'],[0, 0, 0, undef]);
 	$CUSTOMSCAN_HOOK=1;
 }
 
@@ -429,6 +434,7 @@ sub fullRescan {
 		my $module = $modules->{$key};
 		if($module->{'enabled'}) {
 			$scanningModulesInProgress{$key}=1;
+			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, 1]);
 		}
 	}
 
@@ -468,6 +474,7 @@ sub moduleRescan {
 	my $module = $modules->{$moduleKey};
 	if(defined($module) && defined($module->{'id'})) {
 		$scanningModulesInProgress{$moduleKey} = 1;
+		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
 	}
 
 	refreshData();
@@ -491,6 +498,7 @@ sub moduleRescan {
 
 sub moduleClear {
 	my $moduleKey = shift;
+	my $sqlErrors = '';
 	if($scanningModulesInProgress{$moduleKey} == 1 || $scanningModulesInProgress{$moduleKey} == -1) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
 		return "Scanning already in progress, wait until its finished";
@@ -547,6 +555,7 @@ sub moduleClear {
 			};
 			if( $@ ) {
 			    warn "Database error: $DBI::errstr, $@\n";
+			    $sqlErrors .= "Database error: $DBI::errstr, ";
 		   	}
 			if($clearWithDelete) {
 				eval {
@@ -591,6 +600,7 @@ sub moduleClear {
 			}
 			if( $@ ) {
 			    warn "Database error: $DBI::errstr\n";
+			    $sqlErrors .= "Database error: $DBI::errstr, ";
 			    eval {
 			    	rollback($dbh); #just die if rollback is failing
 			    };
@@ -598,7 +608,13 @@ sub moduleClear {
 		};
 		if( $@ ) {
 		    warn "Database error: $DBI::errstr\n$@\n";
+		    $sqlErrors .= "Database error: $DBI::errstr, ";
 		}
+	}
+	if($sqlErrors!='') {
+		return $sqlErrors;
+	}else {
+		return;
 	}
 }
 
@@ -618,25 +634,27 @@ sub fullClear {
 	debugMsg("Performing full clear\n");
 	eval {
 		my $dbh = getCurrentDBH();
-		my $sth = $dbh->prepare("DROP customscan_contributor_attributes");
+		my $sth = $dbh->prepare("DROP table customscan_contributor_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
 
-		$sth = $dbh->prepare("DROP customscan_album_attributes");
+		$sth = $dbh->prepare("DROP table customscan_album_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
 
-		$sth = $dbh->prepare("DROP customscan_track_attributes");
+		$sth = $dbh->prepare("DROP table customscan_track_attributes");
 		$sth->execute();
 		commit($dbh);
 		$sth->finish();
 	};
 	if( $@ ) {
 	    warn "Database error: $DBI::errstr\n$@\n";
+	    return "An error occured $DBI::errstr";
 	}
 	initDatabase();
+	return;
 }
 
 sub exitScan {
@@ -664,8 +682,10 @@ sub exitScan {
 		}
 		if($scanningModulesInProgress{$key} == 1) {
 			$scanningModulesInProgress{$key}=0;
+			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, 0]);
 		}elsif($scanningModulesInProgress{$key} == -1) {
 			$scanningModulesInProgress{$key}=-2;
+			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, -2]);
 		}
 	}
 	$scanningAborted = 0;
@@ -2509,6 +2529,123 @@ sub validateIntOrEmpty {
 		return $arg;
 	}
 	return undef;
+}
+
+sub cliGetStatus {
+	debugMsg("Entering cliGetStatus\n");
+	my $request = shift;
+	
+	if ($request->isNotQuery([['customscan'],['status']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliGetStatus\n");
+		return;
+	}
+	# get our parameters
+  	my $moduleKey    = $request->getParam('_module');
+	$modules = getPluginModules();
+	my @resultModules = ();
+  	if(!defined $moduleKey || $moduleKey eq '') {
+		push @resultModules,keys %$modules;
+  	}elsif(!defined($modules->{$moduleKey})) {
+		$request->setStatusBadParams();
+		debugMsg("Exiting cliGetStatus\n");
+		return;
+	}else {
+		push @resultModules,$moduleKey;
+	}
+
+  	$request->addResult('count',scalar(@resultModules));
+	my $moduleno = 0;
+	for my $key (@resultModules) {
+	  	$request->addResultLoop('@modules',$moduleno,'id',$key);
+	  	$request->addResultLoop('@modules',$moduleno,'name',$modules->{$key}->{'name'});
+		if(defined($scanningModulesInProgress{$key})) {
+		  	$request->addResultLoop('@modules',$moduleno,'status',$scanningModulesInProgress{$key});
+		}else {
+		  	$request->addResultLoop('@modules',$moduleno,'status',0);
+		}
+		$moduleno++;
+	}
+	
+	$request->setStatusDone();
+	debugMsg("Exiting cliGetStatus\n");
+}
+
+
+sub cliAbortAll {
+	debugMsg("Entering cliAbortAll\n");
+	my $request = shift;
+	
+	if ($request->isNotCommand([['customscan'],['abortall']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliAbortAll\n");
+		return;
+	}
+
+	fullAbort();
+	$request->setStatusDone();
+	debugMsg("Exiting cliAbortAll\n");
+}
+
+sub cliScan {
+	debugMsg("Entering cliScan\n");
+	my $request = shift;
+	
+	if ($request->isNotCommand([['customscan'],['scan']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliScan\n");
+		return;
+	}
+
+  	my $moduleKey = $request->getParam('_module');
+	$modules = getPluginModules();
+  	if(defined $moduleKey && $moduleKey ne '' && !defined($modules->{$moduleKey})) {
+		debugMsg("Incorrect _module specified\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting cliClear\n");
+		return;
+  	}
+
+	if(!defined($moduleKey)) {
+		fullRescan();
+	}else {
+		moduleRescan($moduleKey);
+	}
+	$request->setStatusDone();
+	debugMsg("Exiting cliScan\n");
+}
+
+sub cliClear {
+	debugMsg("Entering cliClear\n");
+	my $request = shift;
+	
+	if ($request->isNotCommand([['customscan'],['clear']])) {
+		debugMsg("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		debugMsg("Exiting cliClear\n");
+		return;
+	}
+
+  	my $moduleKey = $request->getParam('_module');
+	$modules = getPluginModules();
+  	if(defined $moduleKey && $moduleKey ne '' && !defined($modules->{$moduleKey})) {
+		debugMsg("Incorrect _module specified\n");
+		$request->setStatusBadParams();
+		debugMsg("Exiting cliClear\n");
+		return;
+  	}
+
+	if(!defined($moduleKey)) {
+		fullClear();
+	}else {
+		moduleClear($moduleKey);
+	}
+
+	$request->setStatusDone();
+	debugMsg("Exiting cliClear\n");
 }
 
 sub getCurrentDBH {
