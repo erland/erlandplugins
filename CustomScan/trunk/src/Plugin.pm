@@ -38,10 +38,7 @@ use FindBin qw($Bin);
 use Plugins::CustomScan::Time::Stopwatch;
 use Plugins::CustomScan::Template::Reader;
 
-my $albums = ();
-my $artists = ();
-my $tracks = ();
-my $scanningInProgress = 0;
+my %scanningModulesInProgress = ();
 my $scanningAborted = 0;
 
 my $modules = ();
@@ -420,23 +417,26 @@ sub getCustomBrowseContextMenuData {
 
 sub fullRescan {
 	debugMsg("Performing rescan\n");
-	$albums = undef;
-	$artists = undef;
-	$tracks = undef;
 	
-	if($scanningInProgress) {
+	if(scalar(grep (/1/,values %scanningModulesInProgress))>0) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
-		return 0;
+		return "Scanning already in progress, wait until its finished";
 	}
-	$scanningAborted = 0;
-	refreshData();
-
-	$scanningInProgress = 1;
-	$modules = getPluginModules();
-
 	my @moduleKeys = ();
 	my $array = getSortedModuleKeys();
 	push @moduleKeys,@$array;
+	for my $key (@moduleKeys) {
+		my $module = $modules->{$key};
+		if($module->{'enabled'}) {
+			$scanningModulesInProgress{$key}=1;
+		}
+	}
+
+	$scanningAborted = 0;
+	refreshData();
+
+	$modules = getPluginModules();
+
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		if($module->{'enabled'} && defined($module->{'scanInit'})) {
@@ -445,49 +445,57 @@ sub fullRescan {
 			eval { &{$module->{'scanInit'}}(); };
 			if ($@) {
 				msg("CustomScan: Failed to call scanInit on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
 	}
-	initArtistScan();
-	return 1;
+	my %scanningContext = ();
+	initArtistScan(undef,\%scanningContext);
+	return;
 }
 sub moduleRescan {
 	my $moduleKey = shift;
 	
-	if($scanningInProgress) {
+	if($scanningModulesInProgress{$moduleKey} == 1 || $scanningModulesInProgress{$moduleKey} == -1) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
-		return 0;
+		return "Scanning already in progress, wait until its finished";
 	}
-	refreshData();
 	debugMsg("Performing module rescan\n");
 	if(!$modules) {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$moduleKey};
 	if(defined($module) && defined($module->{'id'})) {
-		$scanningInProgress = 1;
+		$scanningModulesInProgress{$moduleKey} = 1;
+	}
+
+	refreshData();
+
+	if(defined($module) && defined($module->{'id'})) {
 		if(defined($module->{'scanInit'})) {
 			no strict 'refs';
 			debugMsg("Calling: scanInit on $moduleKey\n");
 			eval { &{$module->{'scanInit'}}(); };
 			if ($@) {
 				msg("CustomScan: Failed to call scanInit on module $moduleKey: $@\n");
+				$scanningModulesInProgress{$moduleKey}=-1;
 			}
 			use strict 'refs';
 		}
-		initArtistScan($moduleKey);
+		my %scanningContext = ();
+		initArtistScan($moduleKey,\%scanningContext);
 	}
-	return 1;
+	return;
 }
 
 sub moduleClear {
-	if($scanningInProgress) {
+	my $moduleKey = shift;
+	if($scanningModulesInProgress{$moduleKey} == 1 || $scanningModulesInProgress{$moduleKey} == -1) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
-		return 0;
+		return "Scanning already in progress, wait until its finished";
 	}
 	debugMsg("Performing module clear\n");
-	my $moduleKey = shift;
 	if(!$modules) {
 		$modules = getPluginModules();
 	}
@@ -595,17 +603,17 @@ sub moduleClear {
 }
 
 sub fullAbort {
-	if($scanningInProgress) {
+	if(scalar(grep (/1/,values %scanningModulesInProgress))>0) {
 		$scanningAborted = 1;
 		msg("CustomScan: Aborting scanning...\n");
-		return 0;
+		return;
 	}
 }
 
 sub fullClear {
-	if($scanningInProgress) {
+	if(scalar(grep (/1/,values %scanningModulesInProgress))>0) {
 		msg("CustomScan: Scanning already in progress, wait until its finished\n");
-		return 0;
+		return "Scanning already in progress, wait until its finished";
 	}
 	debugMsg("Performing full clear\n");
 	eval {
@@ -633,6 +641,8 @@ sub fullClear {
 
 sub exitScan {
 	my $moduleKey = shift;
+	my $scanningContext = shift;
+
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
@@ -648,26 +658,35 @@ sub exitScan {
 			eval { &{$module->{'scanExit'}}(); };
 			if ($@) {
 				msg("CustomScan: Failed to call scanExit on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
+		if($scanningModulesInProgress{$key} == 1) {
+			$scanningModulesInProgress{$key}=0;
+		}elsif($scanningModulesInProgress{$key} == -1) {
+			$scanningModulesInProgress{$key}=-2;
+		}
 	}
 	$scanningAborted = 0;
-	$scanningInProgress = 0;
-	debugMsg("Rescan finished\n");
+	debugMsg("Rescan finished".($moduleKey?" of $moduleKey":"")."\n");
 }
 
 sub initArtistScan {
 	my $moduleKey = shift;
+	my $scanningContext = shift;
+
 	my @joins = ();
 	push @joins, 'contributorTracks';
-	$artists = Slim::Schema->resultset('Contributor')->search(
+	my $artists = Slim::Schema->resultset('Contributor')->search(
 		{'contributorTracks.role' => {'in' => [1,5]}},
 		{
 			'group_by' => 'me.id',
 			'join' => \@joins
 		}
 	);
+	$scanningContext->{'artists'} = $artists;
+
 	debugMsg("Got ".$artists->count." artists\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
@@ -706,13 +725,14 @@ sub initArtistScan {
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 }
 
 sub initScanArtist {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -728,6 +748,7 @@ sub initScanArtist {
 			eval { $result = &{$module->{'initScanArtist'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanArtist on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -738,7 +759,7 @@ sub initScanArtist {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey);
+		Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey,$scanningContext);
 		return 0;
 	}
 }
@@ -784,7 +805,10 @@ sub getSortedModuleKeys {
 
 sub initAlbumScan {
 	my $moduleKey = shift;
-	$albums = Slim::Schema->resultset('Album');
+	my $scanningContext = shift;
+
+	my $albums = Slim::Schema->resultset('Album');
+	$scanningContext->{'albums'} = $albums;
 	debugMsg("Got ".$albums->count." albums\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
@@ -826,18 +850,20 @@ sub initAlbumScan {
 			eval { &{$module->{'initScanAlbum'}}(); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 }
 
 sub initScanAlbum {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -853,6 +879,7 @@ sub initScanAlbum {
 			eval { $result = &{$module->{'initScanAlbum'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -863,14 +890,17 @@ sub initScanAlbum {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey);
+		Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey,$scanningContext);
 		return 0;
 	}
 }
 
 sub initTrackScan {
 	my $moduleKey = shift;
-	$tracks = Slim::Schema->resultset('Track');
+	my $scanningContext = shift;
+
+	my $tracks = Slim::Schema->resultset('Track');
+	$scanningContext->{'tracks'} = $tracks;
 	debugMsg("Got ".$tracks->count." tracks\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
@@ -949,13 +979,14 @@ sub initTrackScan {
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 }
 
 sub initScanTrack {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -971,6 +1002,7 @@ sub initScanTrack {
 			eval { $result = &{$module->{'initScanTrack'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call initScanTrack on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -981,19 +1013,21 @@ sub initScanTrack {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey);
+		Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey,$scanningContext);
 		return 0;
 	}
 }
 
 sub scanArtist {
 	my $moduleKey = shift;
+	my $scanningContext = shift;
+
 	my $artist = undef;
-	if($artists) {
-		$artist = $artists->next;
+	if(defined($scanningContext->{'artists'})) {
+		$artist = $scanningContext->{'artists'}->next;
 		if(defined($artist) && $artist->id eq Slim::Schema->variousArtistsObject->id) {
 			msg("CustomScan: Skipping artist ".$artist->name."\n");
-			$artist = $artists->next;
+			$artist = $scanningContext->{'artists'}->next;
 		}
 	}
 	my @moduleKeys = ();
@@ -1027,6 +1061,7 @@ sub scanArtist {
 					my $attributes = eval { &{$module->{'scanArtist'}}($artist); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanArtist on module $key: $@\n");
+						$scanningModulesInProgress{$key}=-1;
 					}
 					use strict 'refs';
 					if($attributes && scalar(@$attributes)>0) {
@@ -1074,7 +1109,7 @@ sub scanArtist {
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanArtist,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&exitScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 	return 0;
 }
 
@@ -1082,6 +1117,7 @@ sub exitScanArtist {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -1096,6 +1132,7 @@ sub exitScanArtist {
 			eval { $result = &{$module->{'exitScanArtist'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -1106,23 +1143,25 @@ sub exitScanArtist {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		initAlbumScan($moduleKey);
+		initAlbumScan($moduleKey,$scanningContext);
 		return 0;
 	}
 }
 
 sub scanAlbum {
 	my $moduleKey = shift;
+	my $scanningContext = shift;
+
 	my $album = undef;
-	if($albums) {
-		$album = $albums->next;
+	if($scanningContext->{'albums'}) {
+		my $album = $scanningContext->{'albums'}->next;
 		while(defined($album) && (!$album->title || $album->title eq string('NO_ALBUM'))) {
 			if($album->title) {
-				msg("CustomScan: Skipping album ".$album->title."\n");
+				debugMsg("CustomScan: Skipping album ".$album->title."\n");
 			}else {
-				msg("CustomScan: Skipping album with no title\n");
+				debugMsg("CustomScan: Skipping album with no title\n");
 			}
-			$album = $albums->next;
+			$album = $scanningContext->{'albums'}->next;
 		}
 	}
 	my @moduleKeys = ();
@@ -1156,6 +1195,7 @@ sub scanAlbum {
 					my $attributes = eval { &{$module->{'scanAlbum'}}($album); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanAlbum on module $key: $@\n");
+						$scanningModulesInProgress{$key}=-1;
 					}
 					use strict 'refs';
 					if($attributes && scalar(@$attributes)>0) {
@@ -1202,7 +1242,7 @@ sub scanAlbum {
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanAlbum,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&exitScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 	return 0;
 }
 
@@ -1210,6 +1250,7 @@ sub exitScanAlbum {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -1224,6 +1265,7 @@ sub exitScanAlbum {
 			eval { $result = &{$module->{'exitScanAlbum'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -1234,19 +1276,21 @@ sub exitScanAlbum {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		initTrackScan($moduleKey);
+		initTrackScan($moduleKey,$scanningContext);
 		return 0;
 	}
 }
 
 sub scanTrack {
 	my $moduleKey = shift;
+	my $scanningContext = shift;
+
 	my $track = undef;
-	if($tracks) {
-		$track = $tracks->next;
+	if(defined($scanningContext->{'tracks'})) {
+		$track = $scanningContext->{'tracks'}->next;
 		# Skip non audio tracks and tracks with url longer than 511 characters
 		while(defined($track) && !$track->audio && length($track->url)<=511) {
-			$track = $tracks->next;
+			$track = $scanningContext->{'tracks'}->next;
 		}
 	}
 	my @moduleKeys = ();
@@ -1280,6 +1324,7 @@ sub scanTrack {
 					my $attributes = eval { &{$module->{'scanTrack'}}($track); };
 					if ($@) {
 						msg("CustomScan: Failed to call scanTrack on module $key: $@\n");
+						$scanningModulesInProgress{$key}=-1;
 					}
 					use strict 'refs';
 					if($attributes && scalar(@$attributes)>0) {
@@ -1326,7 +1371,7 @@ sub scanTrack {
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanTrack,$moduleKey,\@moduleKeys,\%context);
+	Slim::Utils::Scheduler::add_task(\&exitScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
 	return 0;
 }
 
@@ -1334,6 +1379,7 @@ sub exitScanTrack {
 	my $moduleKey = shift;
 	my $moduleKeys = shift;
 	my $context = shift;
+	my $scanningContext = shift;
 
 	my $key = undef;
 	if(ref($moduleKeys) eq 'ARRAY') {
@@ -1348,6 +1394,7 @@ sub exitScanTrack {
 			eval { $result = &{$module->{'exitScanTrack'}}($context); };
 			if ($@) {
 				msg("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
+				$scanningModulesInProgress{$key}=-1;
 			}
 			use strict 'refs';
 		}
@@ -1358,7 +1405,7 @@ sub exitScanTrack {
 	}elsif(scalar(@$moduleKeys)>0) {
 		return 1;
 	}else {
-		exitScan($moduleKey);
+		exitScan($moduleKey,$scanningContext);
 		return 0;
 	}
 }
@@ -1509,13 +1556,37 @@ sub webPages {
         return (\%pages,$value);
 }
 
-
+sub statusToString {
+	my $status = shift;
+	if($status == 1) {
+		return "PLUGIN_CUSTOMSCAN_STATUS_RUNNING";
+	}elsif($status == -1 || $status == -2) {
+		return "PLUGIN_CUSTOMSCAN_STATUS_FAILURE";
+	}
+	return undef;
+}
 sub handleWebList {
 	my ($client, $params) = @_;
 
 	$modules = getPluginModules();
-	$params->{'pluginCustomScanModules'} = $modules;
-	$params->{'pluginCustomScanScanning'} = $scanningInProgress;
+	my @webModules = ();
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		my %webModule = (
+			'id' => $key,
+			'name' => $module->{'name'},
+			'enabled' => $module->{'enabled'},
+			'status' => statusToString($scanningModulesInProgress{$key}),
+			'scanText' => $module->{'scanText'},
+			'clearEnabled' => (defined($module->{'clearEnabled'})?$module->{'clearEnabled'}:1),
+			'dataprovidername' => $module->{'dataprovidername'},
+			'dataproviderlink' => $module->{'dataproviderlink'},
+		);
+		push @webModules,\%webModule;
+	}
+	@webModules = sort { lc($a->{'id'}) cmp lc($b->{'id'}) } @webModules;
+	$params->{'pluginCustomScanModules'} = \@webModules;
+	$params->{'pluginCustomScanScanning'} = scalar(grep (/1/,values %scanningModulesInProgress));
 	if ($::VERSION ge '6.5') {
 		$params->{'pluginCustomScanSlimserver70'} = 1;
 	}
@@ -1633,17 +1704,17 @@ sub handleWebScan {
 	my ($client, $params) = @_;
 	if($params->{'module'} eq 'allmodules') {
 		if($params->{'type'} eq 'scan') {
-			fullRescan();
+			$params->{'pluginCustomScanErrorMessage'} = fullRescan();
 		}elsif($params->{'type'} eq 'clear') {
-			fullClear();
+			$params->{'pluginCustomScanErrorMessage'} = fullClear();
 		}elsif($params->{'type'} eq 'abort') {
-			fullAbort();
+			$params->{'pluginCustomScanErrorMessage'} = fullAbort();
 		}
 	}else {
 		if($params->{'type'} eq 'scan') {
-			moduleRescan($params->{'module'});
+			$params->{'pluginCustomScanErrorMessage'} = moduleRescan($params->{'module'});
 		}elsif($params->{'type'} eq 'clear') {
-			moduleClear($params->{'module'});
+			$params->{'pluginCustomScanErrorMessage'} = moduleClear($params->{'module'});
 		}
 	}
 	return handleWebList($client, $params);
@@ -2612,6 +2683,12 @@ SETUP_PLUGIN_CUSTOMSCAN_TITLEFORMATS
 
 PLUGIN_CUSTOMSCAN_SCANNING
 	EN	Scanning in progress...
+
+PLUGIN_CUSTOMSCAN_STATUS_RUNNING
+	EN	Running...
+
+PLUGIN_CUSTOMSCAN_STATUS_FAILURE
+	EN	Failure...
 
 PLUGIN_CUSTOMSCAN_REFRESH
 	EN	Refresh scanning status
