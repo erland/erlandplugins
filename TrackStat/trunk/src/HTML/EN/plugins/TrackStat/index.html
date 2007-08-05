@@ -144,7 +144,7 @@
 	<tr>
 		<td>&nbsp;</td>
 	</tr>
-	[% IF songlist != "" %]
+	[% IF songlist != '' %]
 		<div>
 			<strong>[% songlist %]</strong>&nbsp;&nbsp;&nbsp;<a href="[% webroot %][% path %]?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</a>&nbsp;&nbsp;&nbsp;
 			[% IF pluginTrackStatShowGroupRatingControls and player!='' %]
