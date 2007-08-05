@@ -82,12 +82,11 @@ sub getCustomScanFunctions {
 		'id' => 'itunesimport',
 		'order' => '70',
 		'defaultenabled' => 0,
-		'name' => 'iTunes Statistic Import',
+		'name' => 'iTunes Statistics',
 		'description' => "This module imports statistic information in SlimServer from iTunes. The information imported are ratings, playcounts, last played time<br>Information is imported from the specified iTunes Music Library.xml file, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in iTunes and SlimServer, for example the iTunes library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running iTunes and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&scanFunction,
-		'scanText' => 'Import',
 		'properties' => [
 			{
 				'id' => 'ituneslibraryfile',
