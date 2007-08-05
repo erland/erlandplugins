@@ -234,6 +234,12 @@ sub getPluginModules {
 						}else {
 							$plugins{$fullname}->{'enabled'} = 0;
 						}
+						my $order = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_order');
+						if((!defined($order) && $data->{'order'})) {
+							$plugins{$fullname}->{'order'} = $data->{'order'};
+						}else {
+							$plugins{$fullname}->{'order'} = $order;
+						}
 					}
 				}
 				use strict 'refs';
@@ -266,6 +272,12 @@ sub getPluginModules {
 							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = $enabled;
 						}else {
 							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 0;
+						}
+						my $order = Slim::Utils::Prefs::get('plugin_customscan_module_'.$function->{'id'}.'_order');
+						if((!defined($order) && $function->{'order'})) {
+							$plugins{$fullname."->".$function->{'id'}}->{'order'} = $function->{'order'};
+						}else {
+							$plugins{$fullname."->".$function->{'id'}}->{'order'} = $order;
 						}
 					}
 				}
@@ -1599,6 +1611,7 @@ sub handleWebList {
 			'status' => statusToString($scanningModulesInProgress{$key}),
 			'scanText' => $module->{'scanText'},
 			'clearEnabled' => (defined($module->{'clearEnabled'})?$module->{'clearEnabled'}:1),
+			'scanEnabled' => (defined($module->{'scanEnabled'})?$module->{'scanEnabled'}:1),
 			'dataprovidername' => $module->{'dataprovidername'},
 			'dataproviderlink' => $module->{'dataproviderlink'},
 		);
@@ -1625,6 +1638,7 @@ sub handleWebSettings {
 
 	$params->{'pluginCustomScanModuleId'} = $params->{'module'};
 	$params->{'pluginCustomScanModuleEnabled'} = $module->{'enabled'};
+	$params->{'pluginCustomScanModuleOrder'} = $module->{'order'};
 	$params->{'pluginCustomScanModuleName'} = $module->{'name'};
 	$params->{'pluginCustomScanModuleDescription'} = $module->{'description'};
 	my @properties = ();
@@ -1692,6 +1706,10 @@ sub handleWebSaveSettings {
 	}else {
 		$module->{'enabled'} = 0;
 		Slim::Utils::Prefs::set('plugin_customscan_module_'.$module->{'id'}.'_enabled',0);
+	}
+	if($params->{'moduleorder'}) {
+		$module->{'order'} = $params->{'moduleorder'};
+		Slim::Utils::Prefs::set('plugin_customscan_module_'.$module->{'id'}.'_order',$params->{'moduleorder'});
 	}
 	if(scalar(keys %errorItems)>0) {
 		$params->{'pluginCustomScanErrorItems'} = \%errorItems;
@@ -2832,6 +2850,9 @@ PLUGIN_CUSTOMSCAN_REFRESH
 
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED
 	EN	Enable in automatic and full scans
+
+PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ORDER
+	EN	Scanning order in automatic and full scans (1-100)
 
 PLUGIN_CUSTOMSCAN_MATCHING_ALBUMS
 	EN	Matching Albums
