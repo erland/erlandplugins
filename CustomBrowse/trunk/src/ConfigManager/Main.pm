@@ -305,6 +305,10 @@ sub readItemConfiguration {
 		}
 	}
 
+	for my $key (keys %localItems) {
+		postProcessItem($localItems{$key});
+	}
+
 	if($storeInCache) {
 		$self->items(\%localItems);
 	}
@@ -317,6 +321,21 @@ sub readItemConfiguration {
 		$result{'mixes'} = \%localMixes;
 	}
 	return \%result;
+}
+
+sub postProcessItem {
+	my $item = shift;
+	
+	if(defined($item->{'menuname'})) {
+		$item->{'menuname'} =~ s/\\\\/\\/g;
+		$item->{'menuname'} =~ s/\\\"/\"/g;
+		$item->{'menuname'} =~ s/\\\'/\'/g;
+	}
+	if(defined($item->{'menugroup'})) {
+		$item->{'menugroup'} =~ s/\\\\/\\/g;
+		$item->{'menugroup'} =~ s/\\\"/\"/g;
+		$item->{'menugroup'} =~ s/\\\'/\'/g;
+	}
 }
 
 sub changedItemConfiguration {
