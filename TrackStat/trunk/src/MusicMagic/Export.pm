@@ -26,6 +26,7 @@ package Plugins::TrackStat::MusicMagic::Export;
 
 use Slim::Utils::Misc;
 use Class::Struct;
+use POSIX qw(floor);
 
 my $lastMusicMagicFinishTime = undef;
 my $lastMusicMagicDate = 0;
