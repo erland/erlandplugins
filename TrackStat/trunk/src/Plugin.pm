@@ -940,7 +940,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_auto_nonrated_value','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
+	 PrefOrder => ['plugin_trackstat_backup_file','plugin_trackstat_backup_dir','plugin_trackstat_backup_time','plugin_trackstat_backup','plugin_trackstat_restore','plugin_trackstat_clear','plugin_trackstat_refresh_tracks','plugin_trackstat_purge_tracks','plugin_trackstat_dynamicplaylist','plugin_trackstat_dynamicplaylist_norepeat','plugin_trackstat_recent_number_of_days','plugin_trackstat_recentadded_number_of_days','plugin_trackstat_web_flatlist','plugin_trackstat_player_flatlist','plugin_trackstat_deep_hierarchy','plugin_trackstat_web_list_length','plugin_trackstat_player_list_length','plugin_trackstat_playlist_length','plugin_trackstat_playlist_per_artist_length','plugin_trackstat_web_refresh','plugin_trackstat_web_show_mixerlinks','plugin_trackstat_web_enable_mixerfunction','plugin_trackstat_enable_mixerfunction','plugin_trackstat_force_grouprating','plugin_trackstat_rating_10scale','plugin_trackstat_ratingchar','plugin_trackstat_rating_auto','plugin_trackstat_rating_auto_nonrated','plugin_trackstat_rating_auto_nonrated_value','plugin_trackstat_rating_auto_smart','plugin_trackstat_rating_decrease_percent','plugin_trackstat_rating_increase_percent','plugin_trackstat_min_artist_tracks','plugin_trackstat_min_album_tracks','plugin_trackstat_min_song_length','plugin_trackstat_song_threshold_length','plugin_trackstat_min_song_percent','plugin_trackstat_refresh_startup','plugin_trackstat_refresh_rescan','plugin_trackstat_history_enabled','plugin_trackstat_disablenumberscroll','plugin_trackstat_showmessages'],
 	 GroupHead => string('PLUGIN_TRACKSTAT_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_TRACKSTAT_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1261,6 +1261,16 @@ sub setupGroup
 				}
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_nonrated"); }
 		},		
+	plugin_trackstat_rating_auto_smart => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose' => string('PLUGIN_TRACKSTAT_RATING_AUTO_SMART')
+			,'changeIntro' => string('PLUGIN_TRACKSTAT_RATING_AUTO_SMART')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_smart"); }
+		},
 	plugin_trackstat_rating_auto_nonrated_value => {
 			'validate'     => \&validateIntWrapper
 			,'PrefChoose'  => string('PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE')
@@ -2596,6 +2606,11 @@ sub initPlugin
 			Slim::Utils::Prefs::set("plugin_trackstat_rating_decrease_percent",50);
 		}
 
+		# Default value for automatic smart ratings
+		if(!defined(Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_smart"))) {
+			Slim::Utils::Prefs::set("plugin_trackstat_rating_auto_smart",1);
+		}
+
 		# this will enable number scroll by default
 		if (!defined(Slim::Utils::Prefs::get("plugin_trackstat_disablenumberscroll"))) { 
 			Slim::Utils::Prefs::set("plugin_trackstat_disablenumberscroll", 0 ); 
@@ -3398,13 +3413,34 @@ sub stopTimingSong($$)
 					my $decrease = Slim::Utils::Prefs::get("plugin_trackstat_rating_decrease_percent");
 					$decrease = $decrease*$playStatus->currentTrackLength() / 100;
 	
+					# RT - 3.Aug.2007: accelerated algorithm inspired by quodlibet plugin
+					my $delta = $rating;
+					if ($rating > 50) { 
+						$delta = 100 - $rating; 
+					}
+
 					if($totalElapsedTimeDuringPlay>=$increase && $rating<100) {
-						debugMsg("Increasing rating, played $totalElapsedTimeDuringPlay of required $increase seconds\n");
-						$rating = $rating + 1;
+						$delta = floor( $delta / 8 );
+						if (!Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_smart") || $delta < 1) { 
+							$delta = 1; 
+						}
+
+						debugMsg("Increasing rating by $delta/100, played $totalElapsedTimeDuringPlay of required $increase seconds\n");
+						$rating = $rating + $delta;
+						if($rating>100) {
+							$rating = 100;
+						}
 						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
 					}elsif($totalElapsedTimeDuringPlay<$decrease && $rating>0) {
-						debugMsg("Decreasing rating, played $totalElapsedTimeDuringPlay of required $decrease seconds\n");
-						$rating = $rating - 1;
+						$delta = floor( $delta / 4 );
+						if (!Slim::Utils::Prefs::get("plugin_trackstat_rating_auto_smart") || $delta < 1) { 
+							$delta = 1; 
+						}
+						debugMsg("Decreasing rating by $delta/100, played $totalElapsedTimeDuringPlay of required $decrease seconds\n");
+						$rating = $rating - $delta;
+						if($rating<1) {
+							$rating = 1;
+						}
 						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
 					}else {
 						debugMsg("Do not adjust rating, only played $totalElapsedTimeDuringPlay of required $increase seconds\n");
@@ -4322,6 +4358,15 @@ SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE
 
 SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_VALUE_DESC
 	EN	Default rating for automatic rating on non rated tracks (1-100), 20=1 star, 40=2 stars, 60=3 stars, 80=4 stars, 100=5 stars
+
+PLUGIN_TRACKSTAT_RATING_AUTO_SMART
+	EN	Dynamic automatic ratings
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_SMART
+	EN	Dynamic automatic ratings
+
+SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_SMART_DESC
+	EN	If dynamic automatic rating is enabled, decrease/increase of the automatice ratings also depends on the rating of the track. Songs rated close to 50/100 get the largest increments/decrements; as the rating gets closer to 0 or 100 the increment/decrement gets smaller. The algorithm learns listening preferences faster at first, then slows down, so e.g. a high rated song remains high unless it's skipped many times. The decrement for a skip will also be twice as large as the increment for a play.
 
 PLUGIN_TRACKSTAT_RATING_DECREASE_PERCENT
 	EN	Automatic rating decrease percentage
