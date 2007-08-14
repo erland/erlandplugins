@@ -398,7 +398,7 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
 				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
 		}elsif(defined($parameters->{'library'})) {
-				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
+				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'}." ";		
 		}
 		my $i = 1;
 		for my $it (@items) {
