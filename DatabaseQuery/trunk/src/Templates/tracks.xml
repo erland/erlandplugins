@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databasequery>
 	<template>
+		<downloadidentifier>186</downloadidentifier>
 		<name>Song query</name>
 		<description>Standard song query that return songs</description>
 		<parameter type="text" id="queryname" name="Data query name" value="Songs"/>

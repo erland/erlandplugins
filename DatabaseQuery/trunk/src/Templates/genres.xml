@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databasequery>
 	<template>
+		<downloadidentifier>185</downloadidentifier>
 		<name>Genre query</name>
 		<description>Standard genre query that return genres</description>
 		<parameter type="text" id="queryname" name="Data query name" value="Genres"/>
