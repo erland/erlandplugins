@@ -182,15 +182,18 @@ sub parseTemplateContent {
 				}
 			}
 			if(!$self->checkTemplateValues($template,$valuesXml,$globalcontext,$localcontext)) {
+				$self->debugCallback->("Ignoring $item due to checkTemplateValues\n");
 				undef $content;
 				return undef;
 			}
 			if(!$self->checkTemplateParameters($template,\%templateParameters,$globalcontext,$localcontext)) {
+				$self->debugCallback->("Ignoring $item due to checkTemplateParameters\n");
 				undef $content;
 				return undef;
 			}
 			my $templateData = $self->loadTemplate($client,$template,\%templateParameters);
 			if(!defined($templateData)) {
+				$self->debugCallback->("Ignoring $item due to loadTemplate\n");
 				undef $content;
 				return undef;
 			}
@@ -258,7 +261,11 @@ sub templateFileURLFromPath {
 	}else {
 		$path = Slim::Utils::Unicode::utf8on($path);
 	}
-	$path = Slim::Utils::Misc::fileURLFromPath(decode_entities($path));
+	$path = decode_entities($path);
+	$path =~ s/\\\"/\"/g;
+	$path =~ s/\\\'/\'/g;
+	$path =~ s/\\\\/\\/g;
+	$path = Slim::Utils::Misc::fileURLFromPath($path);
 	$path = Slim::Utils::Unicode::utf8on($path);
 	$path =~ s/\\/\\\\/g;
 	$path =~ s/%/\\%/g;
