@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databasequery>
+	<dataquery>
+		<name>[% queryname %]</name>
+		<query>
+			select distinct 'Missing entries in TrackStat' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from tracks
+				left join track_statistics
+					on tracks.url=track_statistics.url
+			where
+				audio=1 and
+				track_statistics.url is null
+		</query>
+		<query>
+			select distinct 'Not refreshed entries in TrackStat' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_statistics
+				left join tracks
+					on tracks.url=track_statistics.url
+			where
+				tracks.id is null and
+				track_statistics.musicbrainz_id is not null and
+				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
+		</query>
+		<query>
+			select distinct 'Not refreshed entries in TrackStat history' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_history
+				join track_statistics
+					on track_statistics.url=track_history.url
+				left join tracks
+					on tracks.url=track_statistics.url
+			where
+				tracks.id is null and
+				track_statistics.musicbrainz_id is not null and
+				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
+		</query>
+		<query>
+			select distinct 'Unused entries in TrackStat data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_statistics
+				left join tracks
+					on tracks.url=track_statistics.url
+			where
+				tracks.id is null and
+				track_statistics.musicbrainz_id is null
+		</query>
+		<query>
+			select distinct 'Unused entries in TrackStat history' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_history
+				left join track_statistics
+					on track_history.url=track_statistics.url
+				left join tracks
+					on tracks.url=track_history.url
+			where
+				tracks.id is null and
+				(track_statistics.url is null or track_statistics.musicbrainz_id is null)
+		</query>
+	</dataquery>
+</databasequery>
+

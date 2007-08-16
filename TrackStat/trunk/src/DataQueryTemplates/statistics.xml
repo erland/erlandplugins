@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databasequery>
+	<template>
+		<name>TrackStat Statistics query</name>
+		<description>Query that returns different statistics from TrackStat</description>
+		<parameter type="text" id="queryname" name="Data query name" value="TrackStat Statistics"/>
+	</template>
+</databasequery>
+

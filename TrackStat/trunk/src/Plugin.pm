@@ -1844,6 +1844,16 @@ sub getSQLPlayListTemplates {
 	my $client = shift;
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','PlaylistTemplates','xml');
 }
+sub getDatabaseQueryTemplates {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','DataQueryTemplates','xml');
+}
+
+sub getDatabaseQueryDataQueries {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','DataQueries','xml','template','dataquery','simple',1);
+}
+
 sub getCustomBrowseTemplates {
 	my $client = shift;
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','MenuTemplates','xml');
@@ -1893,6 +1903,15 @@ sub getSQLPlayListTemplateData {
 }
 
 
+sub getDatabaseQueryTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','DataQueryTemplates',$templateItem->{'id'});
+	return $data;
+}
+
 sub getCustomBrowseTemplateData {
 	my $client = shift;
 	my $templateItem = shift;
@@ -1924,6 +1943,14 @@ sub getCustomBrowseMenuData {
 	my $templateItem = shift;
 	my $parameterValues = shift;
 	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','Menus',$templateItem->{'id'},"xml");
+	return replaceMenuParameters($data);
+}
+
+sub getDatabaseQueryDataQueryData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','DataQueries',$templateItem->{'id'},"xml");
 	return replaceMenuParameters($data);
 }
 
