@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databasequery>
+	<dataquery>
+		<name>[% queryname %]</name>
+		<query>
+			select distinct 'Not refreshed entries in Custom Scan song data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_track_attributes
+				left join tracks
+					on tracks.id=customscan_track_attributes.track
+			where
+				tracks.id is null or (tracks.url!=customscan_track_attributes.url)
+		</query>
+		<query>
+			select distinct 'Not refreshed entries in Custom Scan artist data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_contributor_attributes
+				left join contributors
+					on contributors.id=customscan_contributor_attributes.contributor
+			where
+				contributors.id is null or (contributors.name!=customscan_contributor_attributes.name)
+		</query>
+		<query>
+			select distinct 'Not refreshed entries in Custom Scan album data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_album_attributes
+				left join albums
+					on albums.id=customscan_album_attributes.album
+			where
+				albums.id is null or (albums.title!=customscan_album_attributes.title)
+		</query>
+		<query>
+			select distinct 'Unused entries in Custom Scan song data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_track_attributes
+				left join tracks
+					on tracks.url=customscan_track_attributes.url
+			where
+				tracks.id is null and
+				customscan_track_attributes.musicbrainz_id is null
+		</query>
+		<query>
+			select distinct 'Unused entries in Custom Scan artist data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_contributor_attributes
+				left join contributors
+					on contributors.id=customscan_contributor_attributes.contributor
+			where
+				contributors.id is null and
+				customscan_contributor_attributes.musicbrainz_id is null
+		</query>
+		<query>
+			select distinct 'Unused entries in Custom Scan album data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from customscan_album_attributes
+				left join albums
+					on albums.id=customscan_album_attributes.album
+			where
+				albums.id is null and
+				customscan_album_attributes.musicbrainz_id is null
+		</query>
+	</dataquery>
+</databasequery>
+
