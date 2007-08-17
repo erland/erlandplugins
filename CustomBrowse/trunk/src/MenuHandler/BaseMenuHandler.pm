@@ -865,24 +865,38 @@ sub getPageItemsForContext {
 				if($format eq 'track') {
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format eq 'trackconcat') {
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
 					delete $it->{'itemobj'};
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format eq 'albumconcat' || $format eq 'album') {
 					my $album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$album->displayAsHTML($it);
-					$result{'artwork'} = 1;
+					if(!defined($result{'artwork'})) {
+						 $result{'artwork'} = 1;
+					}
 				}elsif($format eq 'titleformat' && defined($it->{'itemformatdata'})) {
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format eq 'titleformatconcat' && defined($it->{'itemformatdata'})) {
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format eq 'function' && defined($it->{'itemformatdata'})) {
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format eq 'functionconcat' && defined($it->{'itemformatdata'})) {
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}elsif($format =~ /image$/) {
 					my $urlId = $format;
 					if(defined($it->{'itemseparator'})) {
@@ -922,11 +936,15 @@ sub getPageItemsForContext {
 						$it->{$urlId} = unidecode($it->{$urlId});
 					}
 				}else {
-					$result{'artwork'} = 0;
+					if(!defined($result{'artwork'}) || $result{'artwork'}) {
+						$result{'artwork'} = 0;
+					}
 				}
 
 			}else {
-				$result{'artwork'} = 0;
+				if(!defined($result{'artwork'}) || $result{'artwork'}) {
+					$result{'artwork'} = 0;
+				}
 			}
 			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
