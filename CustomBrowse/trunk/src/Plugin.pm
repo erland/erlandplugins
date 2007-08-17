@@ -1525,8 +1525,11 @@ sub getHeaderItems {
 		if(defined($currentContext->{'item'}->{'menuweb'.$headerType})) {
 			$header = $currentContext->{'item'}->{'menuweb'.$headerType};
 		} 
-		if(!defined($header) && defined($currentContext->{'item'}->{'itemtype'})) {
+		if(!defined($header) && defined($currentContext->{'item'}->{'itemtype'}) && $currentContext->{'item'}->{'itemtype'} ne 'sql') {
 			$header = $currentContext->{'item'}->{'itemtype'}.$headerType;
+		}
+		if(!defined($header) && defined($currentContext->{'type'})) {
+			$header = $currentContext->{'type'}.$headerType;
 		}
 		if(!defined($header) && defined($context) && defined($context->{'itemtype'})) {
 			$header = $context->{'itemtype'}.$headerType;

@@ -1146,6 +1146,9 @@ sub _getSubContext {
 						my $result = $self->sqlHandler->getData($client,$data,$parameterContainer,\%context);
 						if(scalar(@$result)>0) {
 							$resultItem{'name'} = $result->[0]->{'name'};
+							if(defined($result->[0]->{'type'})) {
+								$resultItem{'type'} = $result->[0]->{'type'};
+							}						
 						}
 					}elsif($item->{'pathtype'} eq 'none') {
 						$resultItem{'enabled'} = 0;
