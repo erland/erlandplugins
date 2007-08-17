@@ -388,10 +388,15 @@ sub getMixedTagMenuItems {
 		}
 		$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)";
 	}
+	my $customtagpathsql=undef;
+	if(defined($parameters->{'findcustomtag'})) {
+		$customtagpathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue=\{context.itemid\}";
+	}
 
 	my $taggroupssql = undef;
 	my $trackssql = undef;
 	my $albumssql = undef;
+	my $customtagsql = undef;
 	if(!defined($currentTag)) {
 		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1) from customscan_track_attributes ";
 		if(scalar(@items)==0 && !defined($currentItem)) {
@@ -452,7 +457,7 @@ sub getMixedTagMenuItems {
 		$trackssql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 	}
 	$trackssql .= " where tracks.audio=1";
-	$trackssql .=" group by tracks.id order by tracks.disc,tracks.tracknum";
+	$trackssql .=" group by tracks.id order by tracks.album,tracks.disc,tracks.tracknum";
 
 	if(defined($currentItem)) {
 
@@ -475,6 +480,28 @@ sub getMixedTagMenuItems {
 			}
 			$albumssql .= " where tracks.audio=1";
 			$albumssql .=" group by albums.id order by albums.titlesort";
+		}
+
+
+		if(!defined($parameters->{'findcustomtag'}) || $parameters->{'findcustomtag'} ne '') {
+			# Create All customtag SQL
+			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
+			for my $it (@items) {
+				if(defined($it->{'value'})) {
+					my $attr = "attr".$it->{'id'};
+					$customtagsql .= "join customscan_track_attributes $attr on tracks.id=$attr.track and $attr.module='mixedtag' and $attr.attr='".quoteValue($it->{'tag'})."' and $attr.extravalue='".quoteValue($it->{'value'})."' ";
+				}
+			}
+			if(defined($currentItem->{'value'})) {
+				$customtagsql .= "join customscan_track_attributes currentattr on tracks.id=currentattr.track and currentattr.module='mixedtag' and currentattr.attr='".quoteValue($currentItem->{'tag'})."' and currentattr.extravalue='".quoteValue($currentItem->{'value'})."' ";
+			}
+			if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
+				$customtagsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
+			}elsif(defined($parameters->{'library'})) {
+				$customtagsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
+			}
+			$customtagsql .= " where tracks.audio=1";
+			$customtagsql .=" group by customscan_track_attributes.extravalue order by customscan_track_attributes.valuesort";
 		}
 	}
 	
@@ -515,6 +542,21 @@ sub getMixedTagMenuItems {
 		}
 		if(defined($parameters->{'playalltracks'})) {
 			$menu{'menufunction'} .= "|playalltracks=".$parameters->{'playalltracks'};
+		}
+		if(defined($parameters->{'shortpath'})) {
+			$menu{'menufunction'} .= "|shortpath=".$parameters->{'shortpath'};
+		}
+		if(defined($parameters->{'showalbumsafterlevel'})) {
+			$menu{'menufunction'} .= "|showalbumsafterlevel=".$parameters->{'showalbumsafterlevel'};
+		}
+		if(defined($parameters->{'showtracksafterlevel'})) {
+			$menu{'menufunction'} .= "|showtracksafterlevel=".$parameters->{'showtracksafterlevel'};
+		}
+		if(defined($parameters->{'findcustomtag'})) {
+			$menu{'menufunction'} .= "|findcustomtag=".$parameters->{'findcustomtag'};
+		}
+		if(defined($parameters->{'findcustomtagname'})) {
+			$menu{'menufunction'} .= "|findcustomtagname=".$parameters->{'findcustomtagname'};
 		}
 		
 		if(defined($parameters->{'activelibrary'})) {
@@ -565,6 +607,21 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'playalltracks'})) {
 			$menu{'menufunction'} .= "|playalltracks=".$parameters->{'playalltracks'};
 		}
+		if(defined($parameters->{'shortpath'})) {
+			$menu{'menufunction'} .= "|shortpath=".$parameters->{'shortpath'};
+		}
+		if(defined($parameters->{'showalbumsafterlevel'})) {
+			$menu{'menufunction'} .= "|showalbumsafterlevel=".$parameters->{'showalbumsafterlevel'};
+		}
+		if(defined($parameters->{'showtracksafterlevel'})) {
+			$menu{'menufunction'} .= "|showtracksafterlevel=".$parameters->{'showtracksafterlevel'};
+		}
+		if(defined($parameters->{'findcustomtag'})) {
+			$menu{'menufunction'} .= "|findcustomtag=".$parameters->{'findcustomtag'};
+		}
+		if(defined($parameters->{'findcustomtagname'})) {
+			$menu{'menufunction'} .= "|findcustomtagname=".$parameters->{'findcustomtagname'};
+		}
 		
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
@@ -574,7 +631,8 @@ sub getMixedTagMenuItems {
 		push @menus,\%menu;
 	}
 
-	if(defined($albumssql) && scalar(keys %selectedValues)>0) {
+	my $directalbums = undef;
+	if(defined($albumssql) && scalar(keys %selectedValues)>0 && defined($taggroupssql)) {
 		my %trackDetails = (
 			'id' => 'trackdetails',
 			'menuname' => 'Song',
@@ -621,10 +679,70 @@ sub getMixedTagMenuItems {
 			'menuname' => string('PLUGIN_CUSTOMSCAN_MATCHING_ALBUMS'),
 			'menu' => \%menualbums
 		);
-		push @menus,\%allalbums;
+		if(defined($parameters->{'showalbumsafterlevel'}) && $parameters->{'showalbumsafterlevel'} ne '' && $parameters->{'showalbumsafterlevel'}<=$currentLevel) {
+			$directalbums = \%menualbums;
+		}else {
+			push @menus,\%allalbums;
+		}
+	}
+	my $directcustomtags = undef;
+	if(defined($customtagsql) && scalar(keys %selectedValues)>0 && defined($taggroupssql)) {
+		my %trackDetails = (
+			'id' => 'trackdetails',
+			'menuname' => 'Song',
+			'menutype' => 'trackdetails',
+			'menudata' => 'track|0'
+		);
+		my $sql = "select tracks.id,tracks.title from tracks join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue=\{customtag\}";
+		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
+			$trackDetails{'menudata'} .= "|library=\{clientproperty.plugin_multilibrary_activelibraryno\}";
+			$sql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
+		}elsif(defined($parameters->{'library'})) {
+			$trackDetails{'menudata'} .= "|library=".$parameters->{'library'};
+			$sql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
+		}
+		$sql .= " where tracks.audio=1 group by tracks.id order by tracks.disc,tracks.tracknum";
+		my %menutracks = (
+			'id' => 'track',
+			'menuname' => 'Songs',
+			'itemformat' => "track",
+			'itemtype' => "track",
+			'menutype' => 'sql',
+			'menudata' => $sql,
+			'menu' => \%trackDetails
+		);
+
+		if(!defined($parameters->{'playalltracks'}) || $parameters->{'playalltracks'} ne '0') {
+			$menutracks{'playtype'} = 'all';
+		}
+		my %menucustomtags = (
+			'id' => 'customtag',
+			'menuname' => (defined($parameters->{'findcustomtagname'})?$parameters->{'findcustomtagname'}:$parameters->{'findcustomtag'}),
+			'menulinks' => 'alpha',
+			'pathtype' => 'sql',
+			'pathtypedata' => $customtagpathsql,
+			'itemtype' => "sql",
+			'menutype' => 'sql',
+			'menudata' => $customtagsql,
+			'menu' => \%menutracks
+		);
+		my %allcustomtags = (
+			'id' => 'matchingcustomtags',
+			'playtypeall' => 'none',
+			'playtype' => 'sql',
+			'playdata' => $customtagsql,
+			'menuname' => string('PLUGIN_CUSTOMSCAN_MATCHING_CUSTOMTAG')." ".(defined($parameters->{'findcustomtagname'})?$parameters->{'findcustomtagname'}:$parameters->{'findcustomtag'}),
+			'menu' => \%menucustomtags
+		);
+		if(defined($parameters->{'showalbumsafterlevel'}) && $parameters->{'showalbumsafterlevel'} ne '' && $parameters->{'showalbumsafterlevel'}<=$currentLevel) {
+			$directcustomtags = \%menucustomtags;
+		}else {
+			push @menus,\%allcustomtags;
+		}
 	}
 
-	if(defined($trackssql) && (!defined($parameters->{'findtracks'}) || $parameters->{'findtracks'} ne '0') && scalar(keys %selectedValues)>0) {
+	my $directtracks = undef;
+	if(defined($trackssql) && (!defined($parameters->{'findtracks'}) || $parameters->{'findtracks'} ne '0') && scalar(keys %selectedValues)>0 && defined($taggroupssql)) {
 		my %trackDetails = (
 			'id' => 'trackdetails',
 			'menuname' => 'Song',
@@ -656,7 +774,20 @@ sub getMixedTagMenuItems {
 			'playdata' => $trackssql,
 			'menu' => \%menutracks
 		);
-		push @menus,\%alltracks;
+		if(defined($parameters->{'showtracksafterlevel'}) && $parameters->{'showtracksafterlevel'} ne '' && $parameters->{'showtracksafterlevel'}<=$currentLevel) {
+			$directtracks = \%menutracks;
+		}else {
+			push @menus,\%alltracks;
+		}
+	}
+	if(defined($directalbums)) {
+		push @menus,$directalbums;
+	}
+	if(defined($directcustomtags)) {
+		push @menus,$directcustomtags;
+	}
+	if(defined($directtracks)) {
+		push @menus,$directtracks
 	}
 
 	if(scalar(@menus)>1) {
