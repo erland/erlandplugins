@@ -31,18 +31,14 @@
 				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
 		</query>
 		<query>
-			select distinct 'Unused entries in TrackStat data' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_statistics
-				left join tracks
-					on tracks.url=track_statistics.url
-			where
-				tracks.id is null
+			select distinct 'Unused entries in TrackStat data' as problem,if(t1.cnt-t2.cnt>0,'Yes','No') as 'possible problem' from 
+				(select count(*) as cnt from track_statistics) t1,
+				(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and tracks.audio=1) t2;
 		</query>
 		<query>
-			select distinct 'Unused entries in TrackStat history' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_history
-				left join tracks
-					on tracks.url=track_history.url
-			where
-				tracks.id is null
+			select distinct 'Unused entries in TrackStat history' as problem,if(t1.cnt-t2.cnt>0,'Yes','No') as 'possible problem' from 
+				(select count(*) as cnt from track_history) t1,
+				(select count(*) as cnt from track_history,tracks where tracks.url=track_history.url and tracks.audio=1) t2;
 		</query>
 	</dataquery>
 </databasequery>
