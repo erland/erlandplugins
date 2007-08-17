@@ -12,11 +12,12 @@
 		<parameter type="text" id="usedtags" name="Limit to these tags (comma separated list)" value=""/>
 		<parameter type="checkbox" id="findalbums" name="Show matching albums" value="1"/>
 		<parameter type="checkbox" id="findtracks" name="Show matching songs" value="1"/>
-		<parameter type="text" id="findcustomtag" name="Show matching custom tag" value=""/>
+		<parameter type="text" id="findcustomtag" name="Show matching custom tag (Blank = not shown)" value=""/>
 		<parameter type="text" id="findcustomtagname" name="User friendly name of custom tag" value=""/>
 		<parameter type="checkbox" id="shortpath" name="Use short style breadcrumb" value="1"/>
-		<parameter type="text" id="showalbumsafterlevel" name="Show albums/custom tags after level (blank=Never, 2=after first sel., 4=after second sel.)" value="4"/>
+		<parameter type="text" id="showalbumsafterlevel" name="Show albums after level (blank=Never, 2=after first sel., 4=after second sel.)" value="4"/>
 		<parameter type="text" id="showtracksafterlevel" name="Show tracks after level (blank=Never, 2=after first sel., 4=after second sel.)" value=""/>
+		<parameter type="text" id="showcustomtagsafterlevel" name="Show custom tags after level (blank=Never, 2=after first sel., 4=after second sel.)" value="4"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in bottom level" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>

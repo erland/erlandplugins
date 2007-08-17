@@ -389,7 +389,7 @@ sub getMixedTagMenuItems {
 		$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)";
 	}
 	my $customtagpathsql=undef;
-	if(defined($parameters->{'findcustomtag'})) {
+	if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
 		$customtagpathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue=\{context.itemid\}";
 	}
 
@@ -485,6 +485,8 @@ sub getMixedTagMenuItems {
 
 		if(!defined($parameters->{'findcustomtag'}) || $parameters->{'findcustomtag'} ne '') {
 			# Create All customtag SQL
+use Data::Dumper;
+Slim::Utils::Misc::msg("*** GOT: ".Dumper($parameters)."\n");
 			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
@@ -552,6 +554,9 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'showtracksafterlevel'})) {
 			$menu{'menufunction'} .= "|showtracksafterlevel=".$parameters->{'showtracksafterlevel'};
 		}
+		if(defined($parameters->{'showcustomtagsafterlevel'})) {
+			$menu{'menufunction'} .= "|showcustomtagsafterlevel=".$parameters->{'showcustomtagsafterlevel'};
+		}
 		if(defined($parameters->{'findcustomtag'})) {
 			$menu{'menufunction'} .= "|findcustomtag=".$parameters->{'findcustomtag'};
 		}
@@ -615,6 +620,9 @@ sub getMixedTagMenuItems {
 		}
 		if(defined($parameters->{'showtracksafterlevel'})) {
 			$menu{'menufunction'} .= "|showtracksafterlevel=".$parameters->{'showtracksafterlevel'};
+		}
+		if(defined($parameters->{'showcustomtagsafterlevel'})) {
+			$menu{'menufunction'} .= "|showcustomtagsafterlevel=".$parameters->{'showcustomtagsafterlevel'};
 		}
 		if(defined($parameters->{'findcustomtag'})) {
 			$menu{'menufunction'} .= "|findcustomtag=".$parameters->{'findcustomtag'};
@@ -734,7 +742,7 @@ sub getMixedTagMenuItems {
 			'menuname' => string('PLUGIN_CUSTOMSCAN_MATCHING_CUSTOMTAG')." ".(defined($parameters->{'findcustomtagname'})?$parameters->{'findcustomtagname'}:$parameters->{'findcustomtag'}),
 			'menu' => \%menucustomtags
 		);
-		if(defined($parameters->{'showalbumsafterlevel'}) && $parameters->{'showalbumsafterlevel'} ne '' && $parameters->{'showalbumsafterlevel'}<=$currentLevel) {
+		if(defined($parameters->{'showcustomtagsafterlevel'}) && $parameters->{'showcustomtagsafterlevel'} ne '' && $parameters->{'showcustomtagsafterlevel'}<=$currentLevel) {
 			$directcustomtags = \%menucustomtags;
 		}else {
 			push @menus,\%allcustomtags;
