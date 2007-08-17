@@ -2905,7 +2905,7 @@ SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS
 	EN	Long paths support
 
 SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS_DESC
-	EN	 This will activate support for longer paths,  by default only paths up to about 200 characters is supported, with this option is supports paths with over 400 characters. You will have to restart SlimServer for this option to take effect.
+	EN	 This will activate support for longer paths, if not enabled only urls up to 255 characters is supported, with this option is supports urls with 511 characters. <br>Note! You will have to restart SlimServer for this option to take effect.
 
 PLUGIN_CUSTOMSCAN_REFRESH_RESCAN
 	EN	Refresh custom scan data after rescan
