@@ -35,18 +35,14 @@
 				left join tracks
 					on tracks.url=track_statistics.url
 			where
-				tracks.id is null and
-				track_statistics.musicbrainz_id is null
+				tracks.id is null
 		</query>
 		<query>
 			select distinct 'Unused entries in TrackStat history' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_history
-				left join track_statistics
-					on track_history.url=track_statistics.url
 				left join tracks
 					on tracks.url=track_history.url
 			where
-				tracks.id is null and
-				(track_statistics.url is null or track_statistics.musicbrainz_id is null)
+				tracks.id is null
 		</query>
 	</dataquery>
 </databasequery>
