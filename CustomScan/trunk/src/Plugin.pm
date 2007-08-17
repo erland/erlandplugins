@@ -40,10 +40,13 @@ use Plugins::CustomScan::Template::Reader;
 
 my %scanningModulesInProgress = ();
 my $scanningAborted = 0;
+my $useLongUrls = 1;
+my $majorMysqlVersion = undef;
+my $minorMysqlVersion = undef;
 
 my $modules = ();
 my @pluginDirs = ();
-my $PLUGINVERSION = '1.21';
+my $PLUGINVERSION = '1.22';
 
 # Indicator if hooked or not
 # 0= No
@@ -189,6 +192,9 @@ sub checkDefaults {
 	if(!defined(Slim::Utils::Prefs::get("plugin_customscan_auto_rescan"))) {
 		Slim::Utils::Prefs::set("plugin_customscan_auto_rescan",1);
 	}
+	if(!defined(Slim::Utils::Prefs::get("plugin_customscan_long_urls"))) {
+		Slim::Utils::Prefs::set("plugin_customscan_long_urls",1);
+	}
 
 	$modules = getPluginModules();
 	for my $key (keys %$modules) {
@@ -329,6 +335,47 @@ sub getSQLPlayListPlaylists {
 	return \@filteredResult;
 }
 
+sub getDatabaseQueryDataQueries {
+	my $client = shift;
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','DataQueries','xml','template','dataquery','simple',1);
+	my @filteredResult = ();
+	my $dbh = getCurrentDBH();
+	for my $query (@$result) {
+		my $sql = undef;
+		my $include = 1;
+		if($query->{'id'} =~ /^cslastfm_/) {
+			$sql = "SELECT id from customscan_contributor_attributes where module='cslastfm' limit 1";
+			$include = 0;
+		}elsif($query->{'id'} =~ /^customtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='customtag' limit 1";
+			$include = 0;
+		}elsif($query->{'id'} =~ /^mixedtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='mixedtag' limit 1";
+			$include = 0;
+		}elsif($query->{'id'} =~ /^csamazon_/) {
+			$sql = "SELECT id from customscan_album_attributes where module='csamazon' limit 1";
+			$include = 0;
+		}
+		if(defined($sql)) {
+			my $sth = $dbh->prepare($sql);
+			eval {
+				$sth->execute();
+				if($sth->fetch()) {
+					$include = 1;
+				}
+			};
+		}
+		if($include) {
+			push @filteredResult,$query;
+		}
+	}
+	return \@filteredResult;
+}
+sub getDatabaseQueryTemplates {
+	my $client = shift;
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','DataQueryTemplates','xml');
+}
+
 sub getCustomBrowseMenus {
 	my $client = shift;
 	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Menus','xml','template','menu','simple',1);
@@ -400,11 +447,28 @@ sub getSQLPlayListPlaylistData {
 	return $data;
 }
 
+sub getDatabaseQueryDataQueryData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','DataQueries',$templateItem->{'id'},"xml");
+	return $data;
+}
+
 sub getCustomBrowseMenuData {
 	my $client = shift;
 	my $templateItem = shift;
 	my $parameterValues = shift;
 	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','Menus',$templateItem->{'id'},"xml");
+	return $data;
+}
+
+sub getDatabaseQueryTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','DataQueryTemplates',$templateItem->{'id'});
 	return $data;
 }
 
@@ -1320,8 +1384,9 @@ sub scanTrack {
 	my $track = undef;
 	if(defined($scanningContext->{'tracks'})) {
 		$track = $scanningContext->{'tracks'}->next;
-		# Skip non audio tracks and tracks with url longer than 511 characters
-		while(defined($track) && !$track->audio && length($track->url)<=511) {
+		my $maxCharacters = ($useLongUrls?511:255);
+		# Skip non audio tracks and tracks with url longer than max number of characters
+		while(defined($track) && (!$track->audio || length($track->url)>$maxCharacters)) {
 			$track = $scanningContext->{'tracks'}->next;
 		}
 	}
@@ -1459,7 +1524,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_titleformats','plugin_customscan_showmessages'],
+	 PrefOrder => ['plugin_customscan_refresh_startup','plugin_customscan_refresh_rescan','plugin_customscan_auto_rescan','plugin_customscan_titleformats','plugin_customscan_long_urls','plugin_customscan_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMSCAN_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1510,6 +1575,16 @@ sub setupGroup
 			,'changeAddlText' => string('PLUGIN_CUSTOMSCAN_TITLEFORMATS')
 			,'PrefSize' => 'large'
 			,'options' => sub {return getAvailableTitleFormats();}
+		},
+	plugin_customscan_long_urls => {
+			'validate'     => \&validateTrueFalseWrapper
+			,'PrefChoose'  => string('PLUGIN_CUSTOMSCAN_LONG_URLS')
+			,'changeIntro' => string('PLUGIN_CUSTOMSCAN_LONG_URLS')
+			,'options' => {
+					 '1' => string('ON')
+					,'0' => string('OFF')
+				}
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customscan_long_urls"); }
 		},
 	plugin_customscan_showmessages => {
 			'validate'     => \&validateTrueFalseWrapper
@@ -1891,7 +1966,37 @@ sub initDatabase {
 		executeSQLFile("dbupgrade_valuetype.sql");
 	}
 
-	my $sth = $dbh->prepare("show create table customscan_track_attributes");
+	my $sth = $dbh->prepare("select version()");
+	$majorMysqlVersion = undef;
+	$minorMysqlVersion = undef;
+	eval {
+		debugMsg("Checking MySQL version\n");
+		$sth->execute();
+		my $version = undef;
+		$sth->bind_col( 1, \$version);
+		if( $sth->fetch() ) {
+			if(defined($version) && (lc($version) =~ /^(\d+)\.(\d+)\.(\d+)[^\d]*/)) {
+				$majorMysqlVersion = $1;
+				$minorMysqlVersion = $2;
+				debugMsg("Got MySQL $version\n");
+			}
+		}
+		$sth->finish();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	if(!defined($majorMysqlVersion)) {
+		$majorMysqlVersion = 5;
+		$minorMysqlVersion = 0;
+		debugMsg("Unable to retrieve MySQL version, using default\n");
+	}
+	$useLongUrls = 1;
+	if($majorMysqlVersion<5 || !Slim::Utils::Prefs::get("plugin_customscan_long_urls")) {
+		$useLongUrls = 0;
+		Slim::Utils::Prefs::set("plugin_customscan_long_urls",0);
+	}
+	$sth = $dbh->prepare("show create table customscan_track_attributes");
 	eval {
 		debugMsg("Checking datatype on customscan_track_attributes\n");
 		$sth->execute();
@@ -1900,10 +2005,21 @@ sub initDatabase {
 		if( $sth->fetch() ) {
 			if(defined($line) && (lc($line) =~ /url.*(text|mediumtext)/m)) {
 				msg("CustomScan: Upgrading database changing type of url column, please wait...\n");
+				if($useLongUrls) {
+					executeSQLFile("dbupgrade_url_type.sql");
+				}else {
+					executeSQLFile("dbupgrade_url_type255.sql");
+				}
+			}elsif(defined($line) && $useLongUrls && (lc($line) =~ /url.*(varchar\(255\))/m)) {
+				msg("CustomScan: Upgrading database changing type of url column to varchar(511), please wait...\n");
 				executeSQLFile("dbupgrade_url_type.sql");
-			}elsif(defined($line) && (lc($line) =~ /url.*(varchar\(255\))/m)) {
-				msg("CustomScan: Upgrading database changing type of url column to varchar(512), please wait...\n");
-				executeSQLFile("dbupgrade_url_type.sql");
+			}elsif(defined($line) && !$useLongUrls && (lc($line) =~ /url.*(varchar\(511\))/m)) {
+				msg("CustomScan: Upgrading database changing type of url column to varchar(255), please wait...\n");
+				executeSQLFile("dbupgrade_url_type255.sql");
+			}
+			if(defined($line) && (lc($line) =~ /attr.*(varchar\(255\))/m)) {
+				msg("CustomScan: Upgrading database changing type of attr column to varchar(40), please wait...\n");
+				executeSQLFile("dbupgrade_attr_type.sql");
 			}
 		}
 	};
@@ -2781,6 +2897,15 @@ SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP
 
 SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP_DESC
 	EN	This will activate/deactivate the refresh data operation at slimserver startup, the only reason to turn this if is if you get performance issues with refresh data
+
+PLUGIN_CUSTOMSCAN_LONG_URLS
+	EN	Long paths support
+
+SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS
+	EN	Long paths support
+
+SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS_DESC
+	EN	 This will activate support for longer paths,  by default only paths up to about 200 characters is supported, with this option is supports paths with over 400 characters. You will have to restart SlimServer for this option to take effect.
 
 PLUGIN_CUSTOMSCAN_REFRESH_RESCAN
 	EN	Refresh custom scan data after rescan
