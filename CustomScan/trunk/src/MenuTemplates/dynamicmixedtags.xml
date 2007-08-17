@@ -12,6 +12,7 @@
 		<parameter type="text" id="usedtags" name="Limit to these tags (comma separated list)" value=""/>
 		<parameter type="checkbox" id="findalbums" name="Show matching albums" value="1"/>
 		<parameter type="checkbox" id="findtracks" name="Show matching songs" value="1"/>
+		<parameter type="checkbox" id="shortpath" name="Use short style breadcrumb" value="1"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in bottom level" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>

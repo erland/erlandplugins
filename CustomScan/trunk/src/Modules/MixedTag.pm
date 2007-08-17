@@ -363,6 +363,7 @@ sub getMixedTagMenuItems {
 	}
 
 	my $tagssql = undef;
+	my $pathsql = undef;
 	if(defined($currentTag)) {
 		$tagssql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes ";
 		for my $it (@items) {
@@ -377,6 +378,7 @@ sub getMixedTagMenuItems {
 				$tagssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 		}
 		$tagssql .= " where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentTag)."'";
+		$pathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentTag)."' and customscan_track_attributes.extravalue=\{context.itemid\}";
 		if(defined($selectedValues{$currentTag})) {
 			my $values = $selectedValues{$currentTag};
 			$tagssql .=" and customscan_track_attributes.extravalue not in ($values)";
@@ -489,6 +491,9 @@ sub getMixedTagMenuItems {
 			'itemformatdata' => 'Plugins::CustomScan::Modules::MixedTag::getFriendlyNameForMixedTagList',
 			'menufunction' => 'Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems'
 		);
+		if(defined($parameters->{'shortpath'}) && $parameters->{'shortpath'}) {
+			$menu{'pathtype'} = 'none';
+		};
 		if(defined($levelTag)) {
 			my $menuName = Plugins::CustomScan::Modules::MixedTag::getFriendlyNameByTagName($levelTag);
 			if(!defined($menuName)) {
@@ -533,6 +538,8 @@ sub getMixedTagMenuItems {
 			'id' => 'level'.$currentLevel."_".$currentTag,
 			'menuname' => $menuName,
 			'menulinks' => 'alpha',
+			'pathtype' => 'sql',
+			'pathtypedata' => $pathsql,
 			'menutype' => 'sql',
 			'menudata' => $tagssql,
 			'itemtype' => 'sql',

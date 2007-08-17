@@ -9,6 +9,6 @@
 		<menuname>[% menuname %]</menuname>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<playtype>none</playtype>
-		<menufunction>Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems[% IF usedtags %]|usedtags=[% usedtags %][% END %]|findalbums=[% findalbums %]|findtracks=[% findtracks %]|playalltracks=[% playalltracks %][% IF activelibrary %]|activelibrary=1[% END %][% IF library %]|library=[% library %][% END %]</menufunction>
+		<menufunction>Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems[% IF usedtags %]|usedtags=[% usedtags %][% END %]|findalbums=[% findalbums %]|findtracks=[% findtracks %]|playalltracks=[% playalltracks %][% IF activelibrary %]|activelibrary=1[% END %][% IF library %]|library=[% library %][% END %][% IF shortpath %]|shortpath=[% shortpath %][% END %]</menufunction>
 	</menu>
 </custombrowse>
