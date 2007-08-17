@@ -50,6 +50,9 @@ struct TrackInfo => {
 };
 
 my $driver;
+my $useLongUrls = 1;
+my $majorMysqlVersion = undef;
+my $minorMysqlVersion = undef;
 
 sub getCurrentDBH {
 	return Slim::Schema->storage->dbh();
@@ -176,16 +179,57 @@ sub init {
 		Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_added.sql");
 	}
 	
-	my $sth = $dbh->prepare("show create table track_statistics");
+	my $sth = $dbh->prepare("select version()");
+	$majorMysqlVersion = undef;
+	$minorMysqlVersion = undef;
+	eval {
+		debugMsg("Checking MySQL version\n");
+		$sth->execute();
+		my $version = undef;
+		$sth->bind_col( 1, \$version);
+		if( $sth->fetch() ) {
+			if(defined($version) && (lc($version) =~ /^(\d+)\.(\d+)\.(\d+)[^\d]*/)) {
+				$majorMysqlVersion = $1;
+				$minorMysqlVersion = $2;
+				debugMsg("Got MySQL $version\n");
+			}
+		}
+		$sth->finish();
+	};
+	if( $@ ) {
+	    warn "Database error: $DBI::errstr\n$@\n";
+	}
+	if(!defined($majorMysqlVersion)) {
+		$majorMysqlVersion = 5;
+		$minorMysqlVersion = 0;
+		debugMsg("Unable to retrieve MySQL version, using default\n");
+	}
+	$useLongUrls = 1;
+	if($majorMysqlVersion<5 || !Slim::Utils::Prefs::get("plugin_trackstat_long_urls")) {
+		$useLongUrls = 0;
+		Slim::Utils::Prefs::set("plugin_trackstat_long_urls",0);
+	}
+
+	$sth = $dbh->prepare("show create table track_statistics");
 	eval {
 		debugMsg("Checking datatype on track_statistics\n");
 		$sth->execute();
 		my $line = undef;
 		$sth->bind_col( 2, \$line);
 		if( $sth->fetch() ) {
-			if(defined($line) && (lc($line) =~ /url.*(varchar\(255\))/m)) {
-				msg("TrackStat: Upgrading database changing type of url column to varchar(512), please wait...\n");
+			if(defined($line) && (lc($line) =~ /url.*(text|mediumtext)/m)) {
+				msg("TrackStat: Upgrading database changing type of url column, please wait...\n");
+				if($useLongUrls) {
+					executeSQLFile("dbupgrade_url_type.sql");
+				}else {
+					executeSQLFile("dbupgrade_url_type255.sql");
+				}
+			}elsif(defined($line) && $useLongUrls && (lc($line) =~ /url.*(varchar\(255\))/m)) {
+				msg("TrackStat: Upgrading database changing type of url column to varchar(511), please wait...\n");
 				executeSQLFile("dbupgrade_url_type.sql");
+			}elsif(defined($line) && !$useLongUrls && (lc($line) =~ /url.*(varchar\(511\))/m)) {
+				msg("TrackStat: Upgrading database changing type of url column to varchar(255), please wait...\n");
+				executeSQLFile("dbupgrade_url_type255.sql");
 			}
 		}
 	};
@@ -562,8 +606,9 @@ sub getTracksOnAlbum {
 sub saveRating {
 	my ($url,$mbId,$track,$rating) = @_;
 	
-	if(length($url)>511) {
-		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
+	my $maxCharacters = ($useLongUrls?511:255);
+	if(length($url)>$maxCharacters) {
+		debugMsg("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
 	
@@ -631,8 +676,9 @@ sub savePlayCountAndLastPlayed
 {
 	my ($url,$mbId,$playCount,$lastPlayed,$track) = @_;
 
-	if(length($url)>511) {
-		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
+	my $maxCharacters = ($useLongUrls?511:255);
+	if(length($url)>$maxCharacters) {
+		debugMsg("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
 
@@ -706,8 +752,9 @@ sub addToHistory
 
 	return unless Slim::Utils::Prefs::get("plugin_trackstat_history_enabled");
 	
-	if(length($url)>511) {
-		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
+	my $maxCharacters = ($useLongUrls?511:255);
+	if(length($url)>$maxCharacters) {
+		debugMsg("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
 
@@ -812,8 +859,9 @@ sub saveTrack
 {
 	my ($url,$mbId,$playCount,$added,$lastPlayed,$rating,$ignoreTrackInSlimserver) = @_;
 		
-	if(length($url)>511) {
-		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
+	my $maxCharacters = ($useLongUrls?511:255);
+	if(length($url)>$maxCharacters) {
+		debugMsg("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
 
@@ -907,8 +955,9 @@ sub mergeTrack
 {
 	my ($url,$mbId,$playCount,$lastPlayed,$rating) = @_;
 
-	if(length($url)>511) {
-		debugMsg("Ignore, url is ".length($url)." characters long which longer than the 511 characters which is supported\n");
+	my $maxCharacters = ($useLongUrls?511:255);
+	if(length($url)>$maxCharacters) {
+		debugMsg("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
 
