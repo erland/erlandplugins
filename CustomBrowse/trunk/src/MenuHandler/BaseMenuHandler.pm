@@ -28,7 +28,7 @@ use POSIX qw(ceil);
 use Text::Unidecode;
 use HTML::Entities;
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting) );
+__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
 
 use Data::Dumper;
 
@@ -50,7 +50,8 @@ sub new {
 		'displayTextCallback' => $parameters->{'displayTextCallback'},
 		'playHandlers' => $parameters->{'playHandlers'},
 		'requestSource' => $parameters->{'requestSource'},
-		'showMixBeforeExecuting' => $parameters->{'showMixBeforeExecuting'}
+		'showMixBeforeExecuting' => $parameters->{'showMixBeforeExecuting'},
+		'sqlHandler' => $parameters->{'sqlHandler'},
 	};
 
 	my %parameters = (
@@ -1035,7 +1036,7 @@ sub getContext {
 	my $self = shift;
 	my $client = shift;
 	my $params = shift;
-
+	my $realNames = shift;
 
 	my @result = ();
 
@@ -1049,7 +1050,7 @@ sub getContext {
 			push @itemsArray,$currentItems->{$key};
 		}
 		my %parameterContainer = ();
-		my $contextItems = $self->_getSubContext($client,$params,\@groups,\@itemsArray,0,\%parameterContainer);
+		my $contextItems = $self->_getSubContext($client,$params,\@groups,\@itemsArray,0,\%parameterContainer, $realNames);
 		@result = @$contextItems;
 	}
 	return \@result;
@@ -1063,6 +1064,8 @@ sub _getSubContext {
 	my $currentItems = shift;
 	my $level = shift;
 	my $parameterContainer = shift;
+	my $realNames = shift;
+
 	my @result = ();
 
 	if($groups && scalar(@$groups)>$level) {
@@ -1110,7 +1113,8 @@ sub _getSubContext {
 				'parameters' => \%parameters,
 				'name' => $name,
 				'item' => $item,
-				'value' => $currentValue
+				'value' => $currentValue,
+				'enabled' => 1
 			);
 			if(!$level) {
 				$resultItem{'url'} = '&hierarchy='.$resultItem{'url'};
@@ -1132,8 +1136,40 @@ sub _getSubContext {
 					}
 				}
 			}
+			if(defined($realNames) && $realNames) {
+				if(defined($item->{'pathtype'})) {
+					if($item->{'pathtype'} eq 'sql') {
+						my $data = $item->{'pathtypedata'};
+						my %context = (
+							'itemid' => $currentValue
+						);
+						my $result = $self->sqlHandler->getData($client,$data,$parameterContainer,\%context);
+						if(scalar(@$result)>0) {
+							$resultItem{'name'} = $result->[0]->{'name'};
+						}
+					}elsif($item->{'pathtype'} eq 'none') {
+						$resultItem{'enabled'} = 0;
+					}
+				}elsif(defined($item->{'itemtype'})) {
+					if($item->{'itemtype'} eq 'artist') {
+						my $artist = Slim::Schema->resultset('Contributor')->find($currentValue);
+						$resultItem{'name'} = $artist->name;
+					}elsif($item->{'itemtype'} eq 'album') {
+						my $album = Slim::Schema->resultset('Album')->find($currentValue);
+						$resultItem{'name'} = $album->title;
+					}elsif($item->{'itemtype'} eq 'genre') {
+						my $genre = Slim::Schema->resultset('Genre')->find($currentValue);
+						$resultItem{'name'} = $genre->name;
+					}elsif($item->{'itemtype'} eq 'year') {
+						$resultItem{'name'} = $currentValue;
+					}elsif($item->{'itemtype'} eq 'track') {
+						my $track = Slim::Schema->resultset('Track')->find($currentValue);
+						$resultItem{'name'} = Slim::Music::Info::standardTitle(undef, $track);
+					}
+				}
+			}
 			if(defined($item->{'menu'})) {
-				my $childResult = $self->_getSubContext($client,$params,$groups,$item->{'menu'},$level+1,$parameterContainer);
+				my $childResult = $self->_getSubContext($client,$params,$groups,$item->{'menu'},$level+1,$parameterContainer,$realNames);
 				for my $child (@$childResult) {
 					if(!$level) {
 						$child->{'url'} = '&hierarchy='.$currentUrl.','.$child->{'url'};;

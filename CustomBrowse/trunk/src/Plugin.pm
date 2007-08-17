@@ -1475,7 +1475,7 @@ sub handleWebList {
 		readContextBrowseConfiguration($client);
 	}
 	my $items = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'web');
-	my $context = getMenuHandler()->getContext($client,$params);
+	my $context = getMenuHandler()->getContext($client,$params,1);
 
 	if($items->{'artwork'}) {
 		$params->{'pluginCustomBrowseArtworkSupported'} = 1;
@@ -1598,7 +1598,7 @@ sub handleWebContextList {
 		$contextParams = \%c;
 	}
 	my $items = getContextMenuHandler()->getPageItemsForContext($client,$params,$contextParams,0,'web');
-	my $context = getContextMenuHandler()->getContext($client,$params);
+	my $context = getContextMenuHandler()->getContext($client,$params,1);
 	if(scalar(@$context)>0) {
 		if(defined($contextParams->{'itemname'})) {
 			$context->[0]->{'name'} = Slim::Utils::Unicode::utf8decode($contextParams->{'itemname'},'utf8');

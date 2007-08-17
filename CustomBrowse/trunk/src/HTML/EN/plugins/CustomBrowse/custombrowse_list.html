@@ -11,8 +11,10 @@
 		[% skipPrefix = 1 %]
 	[% END %]
 	[% FOREACH group IN pluginCustomBrowseContext %]
-                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name | html%]</a>
-		[% skipPrefix = 0 %]
+		[% IF group.enabled %]
+	                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name | html%]</a>
+			[% skipPrefix = 0 %]
+		[% END %]
         [% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
