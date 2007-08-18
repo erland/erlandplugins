@@ -29,6 +29,7 @@
 						attr='artisttag' and
 						value='{context.itemid}'
 		</pathtypedata>
+		<webcontext>lastfmtag</webcontext>
 		<menutype>sql</menutype>
 		<menulinks>alpha</menulinks>
 		<menudata>
