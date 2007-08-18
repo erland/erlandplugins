@@ -1116,9 +1116,11 @@ sub _getSubContext {
 			if(defined($params->{$group})) {
 				$currentValue = escape($params->{$group});
 			}
+			my $currentValueUnescaped = unescape($params->{$group}) if defined($params->{$group});
+			$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode_locale($currentValueUnescaped)) if defined($currentValueUnescaped);
 			my %parameters = ();
-			$parameters{$currentUrl} = unescape($params->{$group}) if defined($params->{$group});
-			$parameterContainer->{$currentUrl}=unescape($params->{$group}) if defined($params->{$group});
+			$parameters{$currentUrl} = $currentValueUnescaped if defined($currentValueUnescaped);
+			$parameterContainer->{$currentUrl}= $currentValueUnescaped if defined($currentValueUnescaped);
 			my $name;
 			if(defined($item->{'menuname'})) {
 				$name = $item->{'menuname'};
@@ -1163,7 +1165,7 @@ sub _getSubContext {
 					if($item->{'pathtype'} eq 'sql') {
 						my $data = $item->{'pathtypedata'};
 						my %context = (
-							'itemid' => $parameters{$currentUrl}
+							'itemid' => $currentValueUnescaped
 						);
 						my $result = $self->sqlHandler->getData($client,$data,$parameterContainer,\%context);
 						if(scalar(@$result)>0) {
@@ -1209,7 +1211,7 @@ sub _getSubContext {
 						$child->{'url'} = $currentUrl.','.$child->{'url'};
 					}
 					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
-					$child->{'parameters'}->{$currentUrl} = unescape($params->{$group}) if defined($params->{$group});
+					$child->{'parameters'}->{$currentUrl} = $currentValueUnescaped if defined($currentValueUnescaped);
 					push @result,$child;
 				}
 			}
