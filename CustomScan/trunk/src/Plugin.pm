@@ -1250,7 +1250,7 @@ sub scanAlbum {
 
 	my $album = undef;
 	if($scanningContext->{'albums'}) {
-		my $album = $scanningContext->{'albums'}->next;
+		$album = $scanningContext->{'albums'}->next;
 		while(defined($album) && (!$album->title || $album->title eq string('NO_ALBUM'))) {
 			if($album->title) {
 				debugMsg("CustomScan: Skipping album ".$album->title."\n");
