@@ -11,6 +11,8 @@
 		<menu>
 			<id>bitrate</id>
 			<menuname>Artists</menuname>
+			<pathtype>sql</pathtype>
+			<pathtypedata>select '{context.itemid}',case when '{context.itemid}'='Lossless' then 'Lossless' else concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps') end</pathtypedata>
 			<playtype>sql</playtype>
 			<playdata>
 				select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %]

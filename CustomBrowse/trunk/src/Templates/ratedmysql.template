@@ -14,6 +14,12 @@
 		<menu>
 			<id>rating</id>
 			<menuname>Artists</menuname>
+			<pathtype>sql</pathtype>
+			[%- IF tenscale %]
+			<pathtypedata>select {context.itemid},case when {context.itemid}=0 then 'Unrated' else concat(floor(({context.itemid}+5)/10),' stars') end</pathtypedata>
+			[%- ELSE %]
+			<pathtypedata>select {context.itemid},case when {context.itemid}=0 then 'Unrated' else concat(floor(({context.itemid}+10)/20),' stars') end</pathtypedata>
+			[%- END %]
 			<playtype>sql</playtype>
 			<playdata>
 				select tracks.id, tracks.title from tracks,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
