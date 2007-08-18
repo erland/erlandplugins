@@ -5,7 +5,7 @@
 		<parameter type="text" id="menuname"><value>Track info</value></parameter>
 		<parameter type="text" id="menugroup"></parameter>
 		<parameter type="text" id="menuorder"><value>50</value></parameter>
-		<parameter type="text" id="includetitle"><value>1</value></parameter>
+		<parameter type="text" id="includetitle"><value>0</value></parameter>
 		<parameter type="text" id="includetrackno"><value>1</value></parameter>
 		<parameter type="text" id="includebitrate"><value>1</value></parameter>
 		<parameter type="text" id="includeduration"><value>1</value></parameter>
