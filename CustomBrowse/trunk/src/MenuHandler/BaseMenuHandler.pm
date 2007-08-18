@@ -824,11 +824,15 @@ sub getPageItemsForContext {
 						$it->{'url'} .= $contextParams->{'itemurl'};
 						my $regExp = "&"."contexttype=";
 						my $type = undef;
+						my $prefix = '';
 						if($contextParams->{'itemurl'} !~ /$regExp/) {
-							if(defined($it->{'menuwebcontext'})) {
-								$type = escape($it->{'menuwebcontext'});
+							if(defined($it->{'webcontextprefix'})) {
+								$prefix = escape($it->{'webcontextprefix'});
+							}
+							if(defined($it->{'webcontext'})) {
+								$type = escape($it->{'webcontext'});
 							}elsif(defined($it->{'itemtype'})) {
-								$type = escape($it->{'itemtype'});
+								$type = $prefix.escape($it->{'itemtype'});
 							}
 							if(defined($type)) {
 								$it->{'url'} .= "&contexttype=$type";
