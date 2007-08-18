@@ -1158,6 +1158,12 @@ sub checkDefaults {
 		debugMsg("Defaulting plugin_custombrowse_showmixbeforeexecuting to 1\n");
 		Slim::Utils::Prefs::set('plugin_custombrowse_showmixbeforeexecuting', 1);
 	}
+	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_header_value_separator');
+	if (! defined $prefVal) {
+		debugMsg("Defaulting plugin_custombrowse_header_value_separator to ,\n");
+		Slim::Utils::Prefs::set('plugin_custombrowse_header_value_separator', ', ');
+	}
+
 
 	$prefVal = Slim::Utils::Prefs::get('plugin_custombrowse_properties');
 	if (! $prefVal) {
@@ -1192,7 +1198,7 @@ sub setupGroup
 {
 	my %setupGroup =
 	(
-	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_image_cache','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_showmixbeforeexecuting','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
+	 PrefOrder => ['plugin_custombrowse_directory','plugin_custombrowse_template_directory','plugin_custombrowse_context_template_directory','plugin_custombrowse_image_cache','plugin_custombrowse_menuname','plugin_custombrowse_menuinsidebrowse','plugin_custombrowse_override_trackinfo','plugin_custombrowse_enable_mixerfunction','plugin_custombrowse_enable_web_mixerfunction','plugin_custombrowse_single_web_mixerbutton','plugin_custombrowse_showmixbeforeexecuting','plugin_custombrowse_header_value_separator','plugin_custombrowse_properties','plugin_custombrowse_showmessages'],
 	 GroupHead => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP'),
 	 GroupDesc => string('PLUGIN_CUSTOMBROWSE_SETUP_GROUP_DESC'),
 	 GroupLine => 1,
@@ -1310,6 +1316,12 @@ sub setupGroup
 			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_CONTEXT_TEMPLATE_DIRECTORY')
 			,'PrefSize' => 'large'
 			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_context_template_directory"); }
+		},
+	plugin_custombrowse_header_value_separator => {
+			'validate' => \&Slim::Utils::Validate::acceptAll
+			,'PrefChoose' => string('PLUGIN_CUSTOMBROWSE_HEADER_VALUE_SEPARATOR')
+			,'changeIntro' => string('PLUGIN_CUSTOMBROWSE_HEADER_VALUE_SEPARATOR')
+			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_custombrowse_header_value_separator"); }
 		},
 	plugin_custombrowse_menuname => {
 			'validate' => \&Slim::Utils::Validate::acceptAll
@@ -1488,6 +1500,11 @@ sub handleWebList {
 	if($params->{'mainBrowseMenu'}) {
 		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
 	}
+	$params->{'pluginCustomBrowseValueSeparator'} = Slim::Utils::Prefs::get("plugin_custombrowse_header_value_separator");
+	if(defined($params->{'pluginCustomBrowseValueSeparator'})) {
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\\\/\\/;
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\n/\n/;
+	}
 
 	$params->{'pluginCustomBrowsePlayAddAll'} = 1;
 	if(defined($context) && scalar(@$context)>0) {
@@ -1647,6 +1664,11 @@ sub handleWebContextList {
 	$params->{'pluginCustomBrowseSelectedOption'} = $params->{'option'};
 	if($params->{'mainBrowseMenu'}) {
 		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
+	}
+	$params->{'pluginCustomBrowseValueSeparator'} = Slim::Utils::Prefs::get("plugin_custombrowse_header_value_separator");
+	if(defined($params->{'pluginCustomBrowseValueSeparator'})) {
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\\\/\\/;
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\n/\n/;
 	}
 
 	if(defined($context) && scalar(@$context)>0) {
@@ -3160,6 +3182,9 @@ PLUGIN_CUSTOMBROWSE_PROPERTIES
 PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING
 	EN	Show mix before executing in player interface
 
+PLUGIN_CUSTOMBROWSE_HEADER_VALUE_SEPARATOR
+	EN	Default separator characters for multiple items in header
+
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMESSAGES
 	EN	Debugging
 
@@ -3183,6 +3208,9 @@ SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 
 SETUP_PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING
 	EN	Show mix before executing
+
+SETUP_PLUGIN_CUSTOMBROWSE_SHOWMIXBEFOREEXECUTING
+	EN	Default separator characters for header
 
 PLUGIN_CUSTOMBROWSE_DIRECTORY
 	EN	Browse configuration directory

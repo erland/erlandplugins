@@ -16,6 +16,9 @@
 		<menuprefix>[% menuprefix %]: </menuprefix>
 		<itemseparator>: </itemseparator>
 		[% END %]
+		[%- IF valueseparator %]
+		<valueseparator>[% valueseparator %]</valueseparator>
+		[%- END %]
 		<menuheader>{context.itemname} {count}</menuheader>
 		<itemtype>genre</itemtype>
                 <menutype>sql</menutype>

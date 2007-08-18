@@ -33,7 +33,7 @@
 						[% prevImage=0 %]
 						[% FOREACH it IN item.multipleitems %]
 							[% IF itemCount<11 %]
-								[%IF itemCount and !prevImage%], [% END %][% PROCESS contextInfo it=it %]
+								[%IF itemCount and !prevImage%][% IF item.valueseparator %][% item.valueseparator |html_line_break %][% ELSE %][% pluginCustomBrowseValueSeparator |html_line_break %][% END %][% END %][% PROCESS contextInfo it=it %]
 								[% itemCount = itemCount + 1 %]
 							[% ELSE %]
 								...

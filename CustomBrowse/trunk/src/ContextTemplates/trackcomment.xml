@@ -8,6 +8,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Comment"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
+		<parameter type="text" id="valueseparator" name="Separator character between multiple items" value=""/>
 		<parameter type="checkbox" id="showlinks" name="Show links" value="0"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>

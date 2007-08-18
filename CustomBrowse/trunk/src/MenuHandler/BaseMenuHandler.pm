@@ -776,6 +776,10 @@ sub getPageItemsForContext {
 			if(!defined($it->{'itemid'})) {
 				$it->{'itemid'} = $it->{'id'}
 			}
+			if(defined($it->{'valueseparator'})) {
+				$it->{'valueseparator'} =~ s/\\\\/\\/;
+				$it->{'valueseparator'} =~ s/\\n/\n/;
+			}
 			$it->{'itemname'} = $self->getItemText($client,$it);
 			if(defined($it->{'itemseparator'})) {
 				my $separator = $it->{'itemseparator'};

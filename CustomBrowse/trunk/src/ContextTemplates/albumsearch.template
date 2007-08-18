@@ -11,6 +11,9 @@
 		<menuheader>{context.itemname} {count}</menuheader>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<itemseparator>: </itemseparator>
+		[%- IF valueseparator %]
+		<valueseparator>[% valueseparator %]</valueseparator>
+		[%- END %]
 		<itemformat>interneturl</itemformat>
 		<itemformaturlnewwindow>1</itemformaturlnewwindow>
 		[% IF ascii %]<itemformatascii>1</itemformatascii>[% END %]

@@ -8,6 +8,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Search on"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="60"/>
+		<parameter type="text" id="valueseparator" name="Separator character between multiple items" value=""/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="text" id="webname" name="Web site name" value="Google"/>
 		<parameter type="text" id="weburl" name="Web site address" value="http://www.google.com/search?q="/>

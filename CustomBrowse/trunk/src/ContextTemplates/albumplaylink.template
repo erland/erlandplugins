@@ -11,6 +11,9 @@
 		<menuheader>{context.itemname} {count}</menuheader>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<itemseparator>:</itemseparator>
+		[%- IF valueseparator %]
+		<valueseparator>[% valueseparator %]</valueseparator>
+		[%- END %]
 		<itemformat>statusurl</itemformat>
                 <menutype>function</menutype>
 		<menudata>Plugins::CustomBrowse::Plugin::playLink|albumid={context.itemid}</menudata>

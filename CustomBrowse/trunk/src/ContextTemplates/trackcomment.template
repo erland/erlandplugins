@@ -11,6 +11,9 @@
 		<menuheader>{context.itemname} {count}</menuheader>
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<itemseparator>: </itemseparator>
+		[%- IF valueseparator %]
+		<valueseparator>[% valueseparator %]</valueseparator>
+		[%- END %]
                 <menutype>sql</menutype>
 		<menudata>
 			select comments.id,comments.value from tracks,comments
