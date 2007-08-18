@@ -25,11 +25,11 @@
 		<menulinks>alpha</menulinks>
 		<pathtype>sql</pathtype>
 		<pathtypedata>
-			select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+			select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
 					where 
 						module='mixedtag' and
 						attr='[% customtag1 %]' and
-						value='{context.itemid}'
+						extravalue='{context.itemid}'
 		</pathtypedata>
 		[% IF customtagtype1 %]
 		<itemtype>[% customtagtype1 %]</itemtype>
@@ -76,11 +76,11 @@
 			<menuname>[% IF level3name %][% level3name %][% ELSE %][% IF customtag3 %][% customtag3 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
 			<pathtype>sql</pathtype>
 			<pathtypedata>
-				select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+				select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
 						where 
 							module='mixedtag' and
 							attr='[% customtag2 %]' and
-							value='{context.itemid}'
+							extravalue='{context.itemid}'
 			</pathtypedata>
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
@@ -134,11 +134,11 @@
 				<menuname>[% IF level4name %][% level4name %][% ELSE %][% IF customtag4 %][% customtag4 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
 				<pathtype>sql</pathtype>
 				<pathtypedata>
-					select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+					select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
 							where 
 								module='mixedtag' and
 								attr='[% customtag3 %]' and
-								value='{context.itemid}'
+								extravalue='{context.itemid}'
 				</pathtypedata>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
@@ -197,11 +197,11 @@
 					<menuname>Songs</menuname>
 					<pathtype>sql</pathtype>
 					<pathtypedata>
-						select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+						select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
 								where 
 									module='mixedtag' and
 									attr='[% customtag4 %]' and
-									value='{context.itemid}'
+									extravalue='{context.itemid}'
 					</pathtypedata>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
@@ -265,11 +265,11 @@
 						<menuname>Songs</menuname>
 						<pathtype>sql</pathtype>
 						<pathtypedata>
-							select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+							select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
 									where 
 										module='mixedtag' and
 										attr='[% customtag5 %]' and
-										value='{context.itemid}'
+										extravalue='{context.itemid}'
 						</pathtypedata>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
