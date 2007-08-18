@@ -424,7 +424,38 @@ sub getCustomBrowseContextTemplates {
 sub getCustomBrowseContextMenus {
 	my $client = shift;
 	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','ContextMenus','xml','template','menu','simple',1);
-	return $result;
+	my @filteredResult = ();
+	my $dbh = getCurrentDBH();
+	for my $playlist (@$result) {
+		my $sql = undef;
+		my $include = 1;
+		if($playlist->{'id'} =~ /^cslastfm_/) {
+			$sql = "SELECT id from customscan_contributor_attributes where module='cslastfm' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^customtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='customtag' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^mixedtag_/) {
+			$sql = "SELECT id from customscan_track_attributes where module='mixedtag' limit 1";
+			$include = 0;
+		}elsif($playlist->{'id'} =~ /^csamazon_/) {
+			$sql = "SELECT id from customscan_album_attributes where module='csamazon' limit 1";
+			$include = 0;
+		}
+		if(defined($sql)) {
+			my $sth = $dbh->prepare($sql);
+			eval {
+				$sth->execute();
+				if($sth->fetch()) {
+					$include = 1;
+				}
+			};
+		}
+		if($include) {
+			push @filteredResult,$playlist;
+		}
+	}
+	return \@filteredResult;
 }
 sub getCustomBrowseMixes {
 	my $client = shift;
