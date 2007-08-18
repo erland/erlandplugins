@@ -3,6 +3,7 @@
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>1.17</minpluginversion>
 	<template>
+		<downloadidentifier>194</downloadidentifier>
 		<name>Albums for LastFM tag</name>
 		<description>Albums for LastFM tag, requires the Custom Scan plugin</description>
 		<parameter type="text" id="menuname" name="Menu name" value="LastFM Tag Albums"/>
