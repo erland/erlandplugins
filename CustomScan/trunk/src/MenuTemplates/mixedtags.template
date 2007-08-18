@@ -11,6 +11,14 @@
 		<menu>
 			<id>customtag1</id>
 			<menuname>[% IF level2name %][% level2name %][% ELSE %][% IF customtag2 %][% customtag2 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+			<pathtype>sql</pathtype>
+			<pathtypedata>
+				select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+						where 
+							module='mixedtag' and
+							attr='[% customtag1 %]' and
+							value='{context.itemid}'
+			</pathtypedata>
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			[% IF customtagtype1 %]
@@ -79,6 +87,14 @@
 			<menu>
 				<id>customtag2</id>
 				<menuname>[% IF level3name %][% level3name %][% ELSE %][% IF customtag3 %][% customtag3 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+				<pathtype>sql</pathtype>
+				<pathtypedata>
+					select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+							where 
+								module='mixedtag' and
+								attr='[% customtag2 %]' and
+								value='{context.itemid}'
+				</pathtypedata>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				[% IF customtagtype2 %]
@@ -147,6 +163,14 @@
 				<menu>
 					<id>customtag3</id>
 					<menuname>[% IF level4name %][% level4name %][% ELSE %][% IF customtag4 %][% customtag4 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
+					<pathtype>sql</pathtype>
+					<pathtypedata>
+						select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+								where 
+									module='mixedtag' and
+									attr='[% customtag3 %]' and
+									value='{context.itemid}'
+					</pathtypedata>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					[% IF customtagtype3 %]
@@ -214,6 +238,14 @@
 					<menu>
 						<id>customtag4</id>
 						<menuname>Songs</menuname>
+						<pathtype>sql</pathtype>
+						<pathtypedata>
+							select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+									where 
+										module='mixedtag' and
+										attr='[% customtag4 %]' and
+										value='{context.itemid}'
+						</pathtypedata>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						[% IF customtagtype4 %]
@@ -280,6 +312,14 @@
 						<menu>
 							<id>customtag5</id>
 							<menuname>Songs</menuname>
+							<pathtype>sql</pathtype>
+							<pathtypedata>
+								select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+										where 
+											module='mixedtag' and
+											attr='[% customtag5 %]' and
+											value='{context.itemid}'
+							</pathtypedata>
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							[% IF customtagtype5 %]

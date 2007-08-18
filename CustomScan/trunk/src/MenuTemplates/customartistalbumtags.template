@@ -56,6 +56,8 @@
 				<menu>
 					<id>customtag</id>
 					<menuname>Albums</menuname>
+					<pathtype>sql</pathtype>
+					<pathtypedata>select '{context.itemid}','{context.itemid}'</pathtypedata>
 					<menutype>sql</menutype>
 					<menudata>
 						select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
@@ -198,6 +200,14 @@
 				<menu>
 					<id>customtag</id>
 					<menuname>Songs</menuname>
+					<pathtype>sql</pathtype>
+					<pathtypedata>
+						select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+								where 
+									module='customtag' and
+									attr='[% customtag %]' and
+									value='{context.itemid}'
+					</pathtypedata>
 					<menutype>sql</menutype>
 					<menudata>
 						select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes

@@ -18,6 +18,8 @@
 		[% END %]
 		<menuheader>{context.itemname} {count}</menuheader>
 		<contextid>amazonrating</contextid>
+		<pathtype>sql</pathtype>
+		<pathtypedata>select {context.itemid},concat(format(floor(({context.itemid}+5)/10)/2,1),' stars')</pathtypedata>
 		<menutype>sql</menutype>
 		<menudata>
 			select floor((customscan_album_attributes.value+5)/10)*10,concat(format(floor((customscan_album_attributes.value+5)/10)/2,1),' stars') from customscan_album_attributes,tracks,albums[% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %] 

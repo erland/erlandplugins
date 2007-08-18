@@ -87,6 +87,14 @@
 			<menu>
 				<id>album</id>
 				<menuname>Songs</menuname>
+				<pathtype>sql</pathtype>
+				<pathtypedata>
+					select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+							where 
+								module='customtag' and
+								attr='[% customtag %]' and
+								value='{context.itemid}'
+				</pathtypedata>
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<playtype>sql</playtype>

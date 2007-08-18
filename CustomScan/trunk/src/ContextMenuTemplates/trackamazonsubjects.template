@@ -21,6 +21,14 @@
 		[%- END %]
 		<menuheader>{context.itemname} {count}</menuheader>
 		<contextid>amazonsubject</contextid>
+		<pathtype>sql</pathtype>
+		<pathtypedata>
+			select distinct customscan_album_attributes.value,customscan_album_attributes.value from customscan_album_attributes 
+					where 
+						module='csamazon' and
+						attr='subject' and
+						value='{context.itemid}'
+		</pathtypedata>
 		<menutype>sql</menutype>
 		<menulinks>alpha</menulinks>
 		<menudata>
