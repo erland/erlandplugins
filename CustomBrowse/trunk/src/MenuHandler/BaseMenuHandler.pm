@@ -1163,7 +1163,7 @@ sub _getSubContext {
 					if($item->{'pathtype'} eq 'sql') {
 						my $data = $item->{'pathtypedata'};
 						my %context = (
-							'itemid' => $currentValue
+							'itemid' => $parameters{$currentUrl}
 						);
 						my $result = $self->sqlHandler->getData($client,$data,$parameterContainer,\%context);
 						if(scalar(@$result)>0) {
@@ -1186,7 +1186,14 @@ sub _getSubContext {
 						my $genre = Slim::Schema->resultset('Genre')->find($currentValue);
 						$resultItem{'name'} = $genre->name;
 					}elsif($item->{'itemtype'} eq 'year') {
-						$resultItem{'name'} = $currentValue;
+						if($currentValue) {
+							$resultItem{'name'} = $currentValue;
+						}else {
+							$resultItem{'name'} = string('UNK');
+						}
+					}elsif($item->{'itemtype'} eq 'playlist') {
+						my $playlist = Slim::Schema->resultset('Track')->find($currentValue);
+						$resultItem{'name'} = $playlist->title;
 					}elsif($item->{'itemtype'} eq 'track') {
 						my $track = Slim::Schema->resultset('Track')->find($currentValue);
 						$resultItem{'name'} = Slim::Music::Info::standardTitle(undef, $track);
