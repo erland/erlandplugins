@@ -278,8 +278,9 @@ sub updateTags {
 sub quoteValue {
 	my $value = shift;
 	if(defined($value)) {
-		$value = Slim::Schema->storage->dbh()->quote($value);
-		$value = substr($value, 1, -1);
+		$value =~ s/\\/\\\\/g;
+		$value =~ s/\"/\\\"/g;
+		$value =~ s/\'/\\\'/g;
 	}
 	return $value;
 }
@@ -378,7 +379,7 @@ sub getMixedTagMenuItems {
 				$tagssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 		}
 		$tagssql .= " where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentTag)."'";
-		$pathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentTag)."' and customscan_track_attributes.extravalue=\{context.itemid\}";
+		$pathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentTag)."' and customscan_track_attributes.extravalue='\{context.itemid\}'";
 		if(defined($selectedValues{$currentTag})) {
 			my $values = $selectedValues{$currentTag};
 			$tagssql .=" and customscan_track_attributes.extravalue not in ($values)";
@@ -390,7 +391,7 @@ sub getMixedTagMenuItems {
 	}
 	my $customtagpathsql=undef;
 	if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
-		$customtagpathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue=\{context.itemid\}";
+		$customtagpathsql = "select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),customscan_track_attributes.valuetype from customscan_track_attributes where customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue='\{context.itemid\}'";
 	}
 
 	my $taggroupssql = undef;
@@ -483,7 +484,7 @@ sub getMixedTagMenuItems {
 		}
 
 
-		if(!defined($parameters->{'findcustomtag'}) || $parameters->{'findcustomtag'} ne '') {
+		if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
 			# Create All customtag SQL
 			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
 			for my $it (@items) {
@@ -699,7 +700,7 @@ sub getMixedTagMenuItems {
 			'menutype' => 'trackdetails',
 			'menudata' => 'track|0'
 		);
-		my $sql = "select tracks.id,tracks.title from tracks join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue=\{customtag\}";
+		my $sql = "select tracks.id,tracks.title from tracks join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' and customscan_track_attributes.extravalue='\{customtag\}'";
 		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
 			$trackDetails{'menudata'} .= "|library=\{clientproperty.plugin_multilibrary_activelibraryno\}";
 			$sql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
