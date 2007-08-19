@@ -3,53 +3,53 @@
 	<dataquery>
 		<name>[% queryname %]</name>
 		<query>
-			select distinct 'Missing rows in contributor_album table' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from contributor_track,tracks
+			select distinct 'Missing rows in contributor_album table' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from contributor_track,tracks
 			where
 				tracks.id=contributor_track.track and
 				not exists(select * from contributor_album where contributor=contributor_track.contributor and
 						role=contributor_track.role and album=tracks.album)
 		</query>
 		<query>
-			select distinct 'Invalid musicbrainz song tags' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from tracks
+			select distinct 'Invalid musicbrainz song tags' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks
 			where
 				musicbrainz_id is not null and
 				musicbrainz_id not like '%-%-%-%-%'
 		</query>
 		<query>
-			select distinct 'Invalid musicbrainz album tags' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from albums
+			select distinct 'Invalid musicbrainz album tags' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from albums
 			where
 				musicbrainz_id is not null and
 				musicbrainz_id not like '%-%-%-%-%'
 		</query>
 		<query>
-			select distinct 'Invalid musicbrainz artist tags' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from contributors
+			select distinct 'Invalid musicbrainz artist tags' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from contributors
 			where
 				musicbrainz_id is not null and
 				musicbrainz_id not like '%-%-%-%-%'
 		</query>
 		<query>
-			select distinct 'Duplicate musicbrainz song tags' as problem,if(count(*)>1,'Yes','No') as 'possible problem' from tracks
+			select distinct 'Duplicate musicbrainz song tags' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from tracks
 			where
 				musicbrainz_id is not null
 			group by musicbrainz_id
 			having count(*)>1
 		</query>
 		<query>
-			select distinct 'Duplicate musicbrainz album tags' as problem,if(count(*)>1,'Yes','No') as 'possible problem' from albums
+			select distinct 'Duplicate musicbrainz album tags' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from albums
 			where
 				musicbrainz_id is not null
 			group by musicbrainz_id
 			having count(*)>1
 		</query>
 		<query>
-			select distinct 'Duplicate musicbrainz artist tags' as problem,if(count(*)>1,'Yes','No') as 'possible problem' from contributors
+			select distinct 'Duplicate musicbrainz artist tags' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from contributors
 			where
 				musicbrainz_id is not null
 			group by musicbrainz_id
 			having count(*)>1
 		</query>
 		<query>
-			select distinct 'Artists without any songs' as problem,if(count(*)>1,'Yes','No') as 'possible problem' from contributors
+			select distinct 'Artists without any songs' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', null as 'Number of' from contributors
 				left join contributor_track on
 					contributor_track.contributor=contributors.id
 				left join tracks on 
@@ -58,14 +58,14 @@
 				tracks.id is null
 		</query>
 		<query>
-			select distinct 'Albums without any songs' as problem,if(count(*)>1,'Yes','No') as 'possible problem' from albums
+			select distinct 'Albums without any songs' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', null as 'Number of' from albums
 				left join tracks on 
 					albums.id=tracks.album
 			where
 				tracks.id is null
 		</query>
 		<query>
-			select distinct 'Genres without any songs' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from genres
+			select distinct 'Genres without any songs' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', null as 'Number of' from genres
 				left join genre_track on
 					genre_track.genre=genres.id
 				left join tracks on 
@@ -74,14 +74,14 @@
 				tracks.id is null
 		</query>
 		<query>
-			select distinct 'Years without any songs' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from years
+			select distinct 'Years without any songs' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', null as 'Number of' from years
 				left join tracks on 
 					years.id=tracks.year
 			where
 				tracks.id is null
 		</query>
 		<query>
-			select distinct 'Unsupported old MySQL version' as problem,if(substring_index(version(),'.',1)&lt;5,'Yes','No') as 'possible problem'
+			select distinct 'Unsupported old MySQL version' as 'Problem type',if(substring_index(version(),'.',1)&lt;5,'Yes','No') as 'Possible problem', version() as 'Number of'
 		</query>
 	</dataquery>
 </databasequery>
