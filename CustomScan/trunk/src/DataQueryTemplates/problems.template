@@ -3,67 +3,67 @@
 	<dataquery>
 		<name>[% queryname %]</name>
 		<query>
-			select distinct 'Not refreshed entries in Custom Scan song data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
+			select 'Not refreshed entries in Custom Scan song data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from customscan_track_attributes,tracks where (tracks.url=customscan_track_attributes.url) or (customscan_track_attributes.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id)) t1,
 				(select count(*) as cnt from customscan_track_attributes,tracks where tracks.id=customscan_track_attributes.track and tracks.url=customscan_track_attributes.url and tracks.audio=1) t2 
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in Custom Scan artist data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
+			select 'Not refreshed entries in Custom Scan artist data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from customscan_contributor_attributes,contributors where contributors.name=customscan_contributor_attributes.name or (customscan_contributor_attributes.musicbrainz_id is not null and contributors.musicbrainz_id=customscan_contributor_attributes.musicbrainz_id)) t1,
 				(select count(*) as cnt from customscan_contributor_attributes,contributors where contributors.id=customscan_contributor_attributes.contributor and contributors.name=customscan_contributor_attributes.name) t2 
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in Custom Scan album data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
+			select 'Not refreshed entries in Custom Scan album data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from customscan_album_attributes,albums where albums.title=customscan_album_attributes.title or (customscan_album_attributes.musicbrainz_id is not null and albums.musicbrainz_id=customscan_album_attributes.musicbrainz_id)) t1,
 				(select count(*) as cnt from customscan_album_attributes,albums where albums.id=customscan_album_attributes.album and albums.title=customscan_album_attributes.title) t2
 		</query>
 		<query>
-			select distinct 'Unused entries in Custom Scan song data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
+			select 'Unused entries in Custom Scan song data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from customscan_track_attributes) t1,
 				(select count(*) as cnt from customscan_track_attributes,tracks where tracks.id=customscan_track_attributes.track and tracks.audio=1) t2
 		</query>
 		<query>
-			select distinct 'Unused entries in Custom Scan artist data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from
+			select 'Unused entries in Custom Scan artist data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from
 				(select count(*) as cnt from customscan_contributor_attributes) t1,
 				(select count(*) as cnt from customscan_contributor_attributes,contributors where contributors.id=customscan_contributor_attributes.contributor) t2
 		</query>
 		<query>
-			select distinct 'Unused entries in Custom Scan album data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
+			select 'Unused entries in Custom Scan album data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from customscan_album_attributes) t1,
 				(select count(*) as cnt from customscan_album_attributes,albums where albums.id=customscan_album_attributes.album) t2
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan song data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', count(*) as 'Number of' from customscan_track_attributes 
+			select distinct 'Duplicate entries in Custom Scan song data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_track_attributes 
 				group by track,module,attr,value
 				having count(*)>1
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan artist data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', count(*) as 'Number of' from customscan_contributor_attributes 
+			select distinct 'Duplicate entries in Custom Scan artist data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_contributor_attributes 
 				group by contributor,module,attr,value
 				having count(*)>1
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan album data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', count(*) as 'Number of' from customscan_album_attributes 
+			select distinct 'Duplicate entries in Custom Scan album data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_album_attributes 
 				group by album,module,attr,value
 				having count(*)>1
 		</query>
 		<query>
-			select distinct 'Songs with really long urls (Longer than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
+			select 'Songs with really long urls (Longer than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
 				where audio=1 and length(url)&gt;511
 		</query>
 		<query>
-			select distinct 'Songs with long urls (Longer than 255 and shorter than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
+			select 'Songs with long urls (Longer than 255 and shorter than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
 				where audio=1 and length(url)&gt;255 and length(url)&lt;512
 		</query>
 		<query>
-			select distinct 'Duplicate artists with same name without musicbrainz tags' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', ifnull(sum(cnt),0) as 'Number of' from
+			select 'Duplicate artists with same name without musicbrainz tags' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', ifnull(sum(cnt),0) as 'Number of' from
 				(select count(*) as cnt from contributors 
 					where musicbrainz_id is null
 					group by contributors.name
 					having count(*)>1) result
 		</query>
 		<query>
-			select distinct 'Duplicate albums with same title without musicbrainz tags' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from
+			select 'Duplicate albums with same title without musicbrainz tags' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from
 				(select count(*) as cnt from albums 
 					where musicbrainz_id is null
 					group by albums.title
