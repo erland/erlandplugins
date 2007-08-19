@@ -3,7 +3,7 @@
 	<dataquery>
 		<name>[% queryname %]</name>
 		<query>
-			select distinct 'Missing entries in TrackStat' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from tracks
+			select distinct 'Missing entries in TrackStat' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks
 				left join track_statistics
 					on tracks.url=track_statistics.url
 			where
@@ -11,7 +11,7 @@
 				track_statistics.url is null
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in TrackStat' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_statistics
+			select distinct 'Not refreshed entries in TrackStat' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_statistics
 				left join tracks
 					on tracks.url=track_statistics.url
 			where
@@ -20,7 +20,7 @@
 				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in TrackStat history' as problem,if(count(*)>0,'Yes','No') as 'possible problem' from track_history
+			select distinct 'Not refreshed entries in TrackStat history' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_history
 				join track_statistics
 					on track_statistics.url=track_history.url
 				left join tracks
@@ -31,14 +31,22 @@
 				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
 		</query>
 		<query>
-			select distinct 'Unused entries in TrackStat data' as problem,if(t1.cnt-t2.cnt>0,'Yes','No') as 'possible problem' from 
+			select distinct 'Unused entries in TrackStat data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from track_statistics) t1,
 				(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and tracks.audio=1) t2;
 		</query>
 		<query>
-			select distinct 'Unused entries in TrackStat history' as problem,if(t1.cnt-t2.cnt>0,'Yes','No') as 'possible problem' from 
+			select distinct 'Unused entries in TrackStat history' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 				(select count(*) as cnt from track_history) t1,
 				(select count(*) as cnt from track_history,tracks where tracks.url=track_history.url and tracks.audio=1) t2;
+		</query>
+		<query>
+			select distinct 'Songs with really long urls (Longer than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
+				where audio=1 and length(url)&gt;511
+		</query>
+		<query>
+			select distinct 'Songs with long urls (Longer than 255 and shorter than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
+				where audio=1 and length(url)&gt;255 and length(url)&lt;512
 		</query>
 	</dataquery>
 </databasequery>
