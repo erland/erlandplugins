@@ -3,32 +3,19 @@
 	<dataquery>
 		<name>[% queryname %]</name>
 		<query>
-			select distinct 'Missing entries in TrackStat' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks
-				left join track_statistics
-					on tracks.url=track_statistics.url
-			where
-				audio=1 and
-				track_statistics.url is null
+			select 'Missing entries in TrackStat' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt  'Number of' from 
+				(select count(*) as cnt from tracks where audio=1) t1,
+				(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and tracks.audio=1) t2
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in TrackStat' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_statistics
-				left join tracks
-					on tracks.url=track_statistics.url
-			where
-				tracks.id is null and
-				track_statistics.musicbrainz_id is not null and
-				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
+			select 'Not refreshed entries in TrackStat' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt  'Number of' from 
+				(select count(*) as cnt from track_statistics,tracks where tracks.musicbrainz_id=track_statistics.musicbrainz_id and audio=1 and track_statistics.musicbrainz_id is not null) t1,
+				(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
 		</query>
 		<query>
-			select distinct 'Not refreshed entries in TrackStat history' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_history
-				join track_statistics
-					on track_statistics.url=track_history.url
-				left join tracks
-					on tracks.url=track_statistics.url
-			where
-				tracks.id is null and
-				track_statistics.musicbrainz_id is not null and
-				exists (select * from tracks where audio=1 and musicbrainz_id=track_statistics.musicbrainz_id)
+			select distinct 'Not refreshed entries in TrackStat history' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt 'Number of' from 
+				(select count(*) as cnt from track_history,track_statistics,tracks where track_history.url=track_statistics.url and tracks.musicbrainz_id=track_statistics.musicbrainz_id and audio=1 and track_statistics.musicbrainz_id is not null) t1,
+				(select count(*) as cnt from track_history,track_statistics,tracks where track_history.url=track_statistics.url and tracks.url=track_statistics.url and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
 		</query>
 		<query>
 			select distinct 'Unused entries in TrackStat data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
