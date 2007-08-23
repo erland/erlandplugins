@@ -3,9 +3,16 @@
 	<dataquery>
 		<name>[% queryname %]</name>
 		<query>
-			select albums.id,albums.title[% IF showalbumsort %],albums.titlesort[% END %][% IF showmusicbrainz %],albums.musicbrainz_id[% END %] from albums
+			select albums.id,albums.title[% IF showalbumsort %],albums.titlesort[% END %][% IF showyear %],if(albums.year=0,null,albums.year) as year[% END %][% IF showmusicbrainz %],albums.musicbrainz_id[% END %][% IF roles %],group_concat(distinct contributors.name order by contributors.name separator ',') as artist[% END %] from albums
 				left join tracks on
 					albums.id=tracks.album
+				[%- IF roles %]
+				left join contributor_track on
+					contributor_track.track=tracks.id and
+					contributor_track.role in ([% roles %])
+				left join contributors on
+					contributor_track.contributor=contributors.id
+				[%- END %]
 			where
 				albums.id is not null
 				[% IF withtracks %]
