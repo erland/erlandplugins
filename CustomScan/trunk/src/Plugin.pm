@@ -296,11 +296,11 @@ sub getPluginModules {
 
 sub getSQLPlayListTemplates {
 	my $client = shift;
-	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','PlaylistTemplates','xml');
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/SQLPlayList','PlaylistTemplates','xml');
 }
 sub getSQLPlayListPlaylists {
 	my $client = shift;
-	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Playlists','xml','template','playlist','simple',1);
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/SQLPlayList','Playlists','xml','template','playlist','simple',1);
 	my @filteredResult = ();
 	my $dbh = getCurrentDBH();
 	for my $playlist (@$result) {
@@ -337,7 +337,7 @@ sub getSQLPlayListPlaylists {
 
 sub getDatabaseQueryDataQueries {
 	my $client = shift;
-	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','DataQueries','xml','template','dataquery','simple',1);
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/DatabaseQuery','DataQueries','xml','template','dataquery','simple',1);
 	my @filteredResult = ();
 	my $dbh = getCurrentDBH();
 	for my $query (@$result) {
@@ -373,12 +373,12 @@ sub getDatabaseQueryDataQueries {
 }
 sub getDatabaseQueryTemplates {
 	my $client = shift;
-	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','DataQueryTemplates','xml');
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/DatabaseQuery','DataQueryTemplates','xml');
 }
 
 sub getCustomBrowseMenus {
 	my $client = shift;
-	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Menus','xml','template','menu','simple',1);
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/CustomBrowse','Menus','xml','template','menu','simple',1);
 	my @filteredResult = ();
 	my $dbh = getCurrentDBH();
 	for my $playlist (@$result) {
@@ -414,16 +414,16 @@ sub getCustomBrowseMenus {
 }
 sub getCustomBrowseTemplates {
 	my $client = shift;
-	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','MenuTemplates','xml');
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/CustomBrowse','MenuTemplates','xml');
 }
 sub getCustomBrowseContextTemplates {
 	my $client = shift;
-	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','ContextMenuTemplates','xml');
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/CustomBrowse','ContextMenuTemplates','xml');
 }
 
 sub getCustomBrowseContextMenus {
 	my $client = shift;
-	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','ContextMenus','xml','template','menu','simple',1);
+	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/CustomBrowse','ContextMenus','xml','template','menu','simple',1);
 	my @filteredResult = ();
 	my $dbh = getCurrentDBH();
 	for my $playlist (@$result) {
@@ -459,7 +459,7 @@ sub getCustomBrowseContextMenus {
 }
 sub getCustomBrowseMixes {
 	my $client = shift;
-	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','Mixes','xml','mix');
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan','FileCache/CustomBrowse','Mixes','xml','mix');
 }
 sub getSQLPlayListTemplateData {
 	my $client = shift;
