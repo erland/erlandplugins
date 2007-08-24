@@ -2669,7 +2669,7 @@ sub cliStopPlaylist {
 
 sub getCustomBrowseMixes {
 	my $client = shift;
-	return Plugins::DynamicPlayList::Template::Reader::getTemplates($client,'DynamicPlayList','Mixes','xml','mix');
+	return Plugins::DynamicPlayList::Template::Reader::getTemplates($client,'DynamicPlayList','FileCache/CustomBrowse','Mixes','xml','mix');
 }
 
 sub getDynamicPlayLists {
