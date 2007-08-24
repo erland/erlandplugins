@@ -33,19 +33,23 @@
 				(select count(*) as cnt from customscan_album_attributes,albums where albums.id=customscan_album_attributes.album) t2
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan song data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_track_attributes 
-				group by track,module,attr,value
-				having count(*)>1
+			select distinct 'Duplicate entries in Custom Scan song data' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from 
+				(select count(*) as cnt from customscan_track_attributes 
+					group by track,module,attr,value
+					having count(*)>1) result
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan artist data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_contributor_attributes 
-				group by contributor,module,attr,value
-				having count(*)>1
+			select distinct 'Duplicate entries in Custom Scan artist data' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from 
+				(select count(*) as cnt from customscan_contributor_attributes 
+					group by contributor,module,attr,value
+					having count(*)>1) result
+				
 		</query>
 		<query>
-			select distinct 'Duplicate entries in Custom Scan album data' as 'Problem type',if(count(*)>1,'Yes','No') as 'Possible problem', null as 'Number of' from customscan_album_attributes 
-				group by album,module,attr,value
-				having count(*)>1
+			select distinct 'Duplicate entries in Custom Scan album data' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from 
+				(select count(*) as cnt from customscan_album_attributes 
+					group by album,module,attr,value
+					having count(*)>1) result
 		</query>
 		<query>
 			select 'Songs with really long urls (Longer than 511 characters)' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from tracks 
