@@ -1852,36 +1852,36 @@ sub getStatisticPluginsStrings {
 
 sub getSQLPlayListTemplates {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','PlaylistTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/SQLPlayList','PlaylistTemplates','xml');
 }
 sub getDatabaseQueryTemplates {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','DataQueryTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/DatabaseQuery','DataQueryTemplates','xml');
 }
 
 sub getDatabaseQueryDataQueries {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','DataQueries','xml','template','dataquery','simple',1);
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',,'FileCache/DatabaseQuery','DataQueries','xml','template','dataquery','simple',1);
 }
 
 sub getCustomBrowseTemplates {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','MenuTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/CustomBrowse','MenuTemplates','xml');
 }
 
 sub getCustomBrowseContextTemplates {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenuTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/CustomBrowse','ContextMenuTemplates','xml');
 }
 
 sub getCustomBrowseMenus {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','Menus','xml','template','menu','simple',1);
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/CustomBrowse','Menus','xml','template','menu','simple',1);
 }
 
 sub getCustomBrowseContextMenus {
 	my $client = shift;
-	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','ContextMenus','xml','template','menu','simple',1);
+	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/CustomBrowse','ContextMenus','xml','template','menu','simple',1);
 	if($result) {
 		for my $item (@$result) {
 			my $content = $item->{'menu'};
@@ -1901,7 +1901,7 @@ sub replaceMenuParameters {
 }
 sub getCustomBrowseMixes {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','Mixes','xml','mix');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat','FileCache/CustomBrowse','Mixes','xml','mix');
 }
 
 sub getSQLPlayListTemplateData {

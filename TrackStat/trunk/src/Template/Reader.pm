@@ -31,15 +31,26 @@ use XML::Simple;
 
 use FindBin qw($Bin);
 
+use Cache::Cache qw( $EXPIRES_NEVER);
+
 sub getTemplates {
 	my $client = shift;
 	my $mainPlugin = shift;
+	my $cachePrefix = shift;
 	my $directory = shift;
 	my $extension = shift;
 	my $templateType = shift;
 	my $contentType = shift;
 	my $resultType = shift;
 	my $raw = shift;
+
+	my $cacheName = undef;;
+	my $cache = undef;
+	if($cachePrefix) {
+		$cacheName = $cachePrefix."/".$mainPlugin."/".$directory;
+		$cache = Slim::Utils::Cache->new($cacheName);
+	}
+
 	my @result = ();
 	my @pluginDirs = ();
 	if(!defined($templateType)) {
@@ -56,6 +67,18 @@ sub getTemplates {
 	}else {
 		@pluginDirs = catdir($Bin, "Plugins");
 	}
+	my $cacheItems = undef;
+	if(defined($cache)) {
+		$cacheItems = $cache->get($cacheName);
+		if(!defined($cacheItems)) {
+			my %noItems = ();
+			my %empty = (
+				'items' => \%noItems,
+				'timestamp' => undef
+			);
+			$cacheItems = \%empty;
+		}
+	}
 	for my $plugindir (@pluginDirs) {
 		my $templateDir = catdir($plugindir,$mainPlugin,$directory);
 		next unless -d $templateDir;
@@ -64,16 +87,37 @@ sub getTemplates {
 			next if -d catdir($templateDir,$item);
 			my $templateId = $item;
 			$templateId =~ s/\.$extension$//;
+			my $timestamp = (stat (catdir($templateDir,$item)) )[9];
+			if(defined($cacheItems)) {
+				if(defined($cacheItems->{'items'}->{$item}) && $cacheItems->{'items'}->{$item}->{'timestamp'}>$timestamp) {
+					#debugMsg("Reading $item from cache\n");
+					push @result,$cacheItems->{'items'}->{$item}->{'data'};
+					next;
+				}
+			}
 			my $template = readTemplateConfiguration($templateId,catdir($templateDir,$item),$templateType,$raw);
 			if(defined($template)) {
 				my %templateItem = (
 					'id' => $templateId,
 					'type' => $resultType,
+					'timestamp' => $timestamp,
 					$contentType => $template
 				);
+				if(defined($cacheItems) && defined($timestamp)) {
+					my %entry = (
+						'data' => \%templateItem,
+						'timestamp' => $timestamp,
+					);
+					delete $cacheItems->{'items'}->{$item};
+					$cacheItems->{'items'}->{$item} = \%templateItem;
+				}
 				push @result,\%templateItem;
 			}
 		}
+	}
+	if(defined($cacheItems)) {
+		$cacheItems->{'timestamp'} = time();
+		$cache->set($cacheName,$cacheItems,$EXPIRES_NEVER);
 	}
 	return \@result;
 }
