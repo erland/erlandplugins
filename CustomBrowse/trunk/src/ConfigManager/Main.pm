@@ -80,10 +80,13 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback
+			'errorCallback' => $self->errorCallback,
 		);
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::CustomBrowse::ConfigManager::TemplateParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/Menus";
 		$self->contentParser(Plugins::CustomBrowse::ConfigManager::ContentParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/Mixes";
 		$self->mixParser(Plugins::CustomBrowse::ConfigManager::MixParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -97,6 +100,7 @@ sub init {
 		my %directoryHandlerParameters = (
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback,
+			'cacheName' => "FileCache/CustomBrowse/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "cb.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -141,6 +145,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::CustomBrowse::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/Menus";
 		$self->templateContentParser(Plugins::CustomBrowse::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "cb.values.xml";

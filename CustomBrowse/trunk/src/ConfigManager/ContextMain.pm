@@ -78,7 +78,9 @@ sub init {
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback
 		);
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextTemplates";
 		$self->templateParser(Plugins::CustomBrowse::ConfigManager::TemplateParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextMenus";
 		$self->contentParser(Plugins::CustomBrowse::ConfigManager::ContextContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -92,6 +94,7 @@ sub init {
 		my %directoryHandlerParameters = (
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback,
+			'cacheName' => "FileCache/CustomBrowse/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "cb.context.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -124,6 +127,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::CustomBrowse::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
+		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextMenus";
 		$self->templateContentParser(Plugins::CustomBrowse::ConfigManager::ContextTemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "cb.context.values.xml";

@@ -45,10 +45,10 @@ sub parse {
 	my $content = shift;
 	my $items = shift;
 	my $globalcontext = shift;
+	my $localcontext = shift;
 
-	my %localcontext = ();
 	if($globalcontext->{'source'} ne 'plugin') {
-		return $self->parseContent($client,$item,$content,$items,$globalcontext,\%localcontext);
+		return $self->parseContent($client,$item,$content,$items,$globalcontext,$localcontext);
 	}else {
 		$content->{'id'} = $item;
 		#debugMsg(Dumper($content));

@@ -1482,6 +1482,10 @@ sub handleWebList {
         my ($client, $params) = @_;
 
 	$sqlerrors = '';
+	if(defined($params->{'cleancache'}) && $params->{'cleancache'}) {
+		my $cache = Slim::Utils::Cache->new("FileCache/CustomBrowse");
+		$cache->clear();
+	}
 	if(defined($params->{'refresh'})) {
 		readBrowseConfiguration($client);
 		readContextBrowseConfiguration($client);

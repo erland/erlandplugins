@@ -146,7 +146,7 @@ END;
 <tr><td></td><td colspan="4">
 <br>
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
 </td></tr>
 [% IF pluginCustomBrowseError %]
