@@ -79,7 +79,9 @@ sub init {
 			'errorCallback' => $self->errorCallback,
 			'utf8filenames' => Slim::Utils::Prefs::get('plugin_ipod_utf8filenames')
 		);
+		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::iPod::ConfigManager::TemplateParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Libraries";
 		$self->contentParser(Plugins::iPod::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -93,6 +95,7 @@ sub init {
 		my %directoryHandlerParameters = (
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback,
+			'cacheName' => "FileCache/iPod/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ipod.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -125,6 +128,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::iPod::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
+		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Libraries";
 		$self->templateContentParser(Plugins::iPod::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "ipod.values.xml";
