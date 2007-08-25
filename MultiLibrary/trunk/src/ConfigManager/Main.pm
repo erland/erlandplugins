@@ -79,7 +79,9 @@ sub init {
 			'errorCallback' => $self->errorCallback,
 			'utf8filenames' => Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames')
 		);
+		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::MultiLibrary::ConfigManager::TemplateParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Libraries";
 		$self->contentParser(Plugins::MultiLibrary::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -93,6 +95,7 @@ sub init {
 		my %directoryHandlerParameters = (
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback,
+			'cacheName' => "FileCache/MultiLibrary/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ml.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -125,6 +128,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::MultiLibrary::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
+		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Libraries";
 		$self->templateContentParser(Plugins::MultiLibrary::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "ml.values.xml";
