@@ -52,7 +52,7 @@
 					having count(*)>1) result
 		</query>
 		<query>
-			select distinct 'Artists without any songs' as 'Problem type',if(sum(cnt)>1,'Yes','No') as 'Possible problem', sum(cnt)-1 as 'Number of' from 
+			select distinct 'Artists without any songs' as 'Problem type',if(sum(cnt)>1,'Yes','No') as 'Possible problem', if(sum(cnt)>1,sum(cnt)-1,0) as 'Number of' from 
 				(select count(distinct contributors.id) as cnt from contributors
 					left join contributor_track on
 						contributor_track.contributor=contributors.id
