@@ -43,7 +43,6 @@
 				(select count(*) as cnt from customscan_contributor_attributes 
 					group by contributor,module,attr,value
 					having count(*)>1) result
-				
 		</query>
 		<query>
 			select distinct 'Duplicate entries in Custom Scan album data' as 'Problem type',if(sum(result.cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from 
