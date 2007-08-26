@@ -23,7 +23,7 @@
 					[% ELSE %]
 						,&nbsp;
 					[% END %]
-					<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.binfile?type=[% pluginDatabaseQueryId %]&as=[% module.id %]&player=[% player | uri %]&[% pluginDatabaseQueryContextUrl %]" title="[% "PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT" | string %] [% module.description %]">[% module.name %]</a>
+					<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.binfile?type=[% pluginDatabaseQueryId %]&as=[% module.id %]&player=[% player | uri %]&[% pluginDatabaseQueryContextUrl %]" title="[% "PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT" | string %] [% module.description %]" [% IF module.warning %]onClick="return confirm('[% module.warning %]')")[% END %]>[% module.name %]</a>
 				[% END %]
 				)
 				</td>
