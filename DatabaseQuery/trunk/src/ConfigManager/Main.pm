@@ -79,7 +79,9 @@ sub init {
 			'errorCallback' => $self->errorCallback,
 			'utf8filenames' => Slim::Utils::Prefs::get('plugin_DatabaseQuery_utf8filenames')
 		);
+		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::DatabaseQuery::ConfigManager::TemplateParser->new(\%parserParameters));
+		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/DataQueries";
 		$self->contentParser(Plugins::DatabaseQuery::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -93,6 +95,7 @@ sub init {
 		my %directoryHandlerParameters = (
 			'debugCallback' => $self->debugCallback,
 			'errorCallback' => $self->errorCallback,
+			'cacheName' => "FileCache/DatabaseQuery/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "dataquery.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -125,6 +128,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::DatabaseQuery::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
+		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/DataQueries";
 		$self->templateContentParser(Plugins::DatabaseQuery::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "dataquery.values.xml";
