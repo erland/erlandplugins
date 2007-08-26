@@ -14,7 +14,7 @@
      users to make setting changes then click on a new mix without having to press the submit button. %]
 
 			<tr>
-				<td colspan="4"><br><b>[% pluginDatabaseQueryName |html %]</b> (<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.html?type=[% pluginDatabaseQueryId %]&player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_EXECUTE" | string %]</a>)
+				<td colspan="4"><br><b>[% pluginDatabaseQuery.name |html %]</b> (<a href="[% webroot %]plugins/DatabaseQuery/webadminmethods_edititem.html?item=[% pluginDatabaseQueryId %]&player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_EDIT_ITEM" | string %]</a> <a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.html?type=[% pluginDatabaseQueryId %]&player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_EXECUTE" | string %]</a>)
 				[% first = 1 %]
 				[% FOREACH module IN pluginDatabaseQueryExportModules %]
 					[% IF first %]
@@ -26,7 +26,10 @@
 					<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.binfile?type=[% pluginDatabaseQueryId %]&as=[% module.id %]&player=[% player | uri %]&[% pluginDatabaseQueryContextUrl %]" title="[% "PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT" | string %] [% module.description %]">[% module.name %]</a>
 				[% END %]
 				)
-				<br><br></td>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4"><br>[% pluginDatabaseQuery.description |html %]<br><br></td>
 			</tr>
 			[% IF pluginDatabaseQueryError %]
 			<tr>

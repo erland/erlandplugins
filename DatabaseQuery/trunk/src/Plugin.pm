@@ -160,6 +160,14 @@ sub handleWebList {
 		}
 		initDataQueries($client);
 	}
+	if($params->{'execute'}) {
+		my $queryId = $params->{'file'};
+		$queryId =~ s/\.dataquery\.xml$//;
+		$queryId =~ s/\.dataquery\.values\.xml$//;
+		$params->{'type'} = $queryId;
+		return handleWebExecuteDataQuery($client, $params);
+	}
+
 	my $name = undef;
 	my @webDataQueries = ();
 	for my $key (keys %$dataQueries) {
@@ -294,7 +302,7 @@ sub handleWebExecuteDataQuery {
 				}
 			}
 			$params->{'pluginDatabaseQueryId'} = $dataQuery->{'id'};
-			$params->{'pluginDatabaseQueryName'} = $dataQuery->{'name'};
+			$params->{'pluginDatabaseQuery'} = $dataQuery;
 			$params->{'pluginDatabaseQueryColumns'} = $result->{'columns'};
 			$params->{'pluginDatabaseQueryResultItems'} = $result->{'resultitems'};
 			if(exists $params->{'hierarchy'}) {
@@ -934,6 +942,8 @@ PLUGIN_DATABASEQUERY_EXECUTE
 PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT
 	EN	Execute and export as
 
+PLUGIN_DATABASEQUERY_SAVEEXECUTE
+	EN	Save &amp; Execute
 EOF
 
 }
