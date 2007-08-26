@@ -2,6 +2,7 @@
 <databasequery>
 	<dataquery>
 		<name>[% queryname %]</name>
+		<queryid>track</queryid>
 		<query>
 			select tracks.id,tracks.disc,tracks.tracknum,tracks.title[% IF showalbum %],albums.id as album_id,albums.title as album[% END %][% IF showtracksort %],tracks.titlesort[% END %][% IF showmusicbrainz %],tracks.musicbrainz_id[% END %][% IF showbitrate %],concat(round(tracks.bitrate/1000),' kbit/s') as bitrate[% END %] from tracks
 				join albums on

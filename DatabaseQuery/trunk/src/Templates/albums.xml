@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databasequery>
+	<minpluginversion>1.1</minpluginversion>
 	<template>
 		<downloadidentifier>183</downloadidentifier>
 		<name>Album query</name>

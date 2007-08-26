@@ -23,7 +23,7 @@
 					[% ELSE %]
 						,&nbsp;
 					[% END %]
-					<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.binfile?type=[% pluginDatabaseQueryId %]&as=[% module.id %]&player=[% player | uri %]" title="[% "PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT" | string %] [% module.description %]">[% module.name %]</a>
+					<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.binfile?type=[% pluginDatabaseQueryId %]&as=[% module.id %]&player=[% player | uri %]&[% pluginDatabaseQueryContextUrl %]" title="[% "PLUGIN_DATABASEQUERY_EXECUTE_AND_EXPORT" | string %] [% module.description %]">[% module.name %]</a>
 				[% END %]
 				)
 				<br><br></td>
@@ -46,8 +46,14 @@
 				[% odd = 1 %]
 				[% FOREACH item IN pluginDatabaseQueryResultItems %]
 					[% WRAPPER DatabaseQueryRow %]
+						[% i = 0 %]
 						[% FOREACH value IN item %]
-							<td nowrap>[% value |html %]&nbsp;&nbsp;&nbsp;</td>
+							[% IF i>=4 %]
+								<td nowrap>[% IF suburl %]<a href="[% webroot %]plugins/DatabaseQuery/databasequery_executedataquery.html?type=[% pluginDatabaseQueryId %]&player=[% player | uri %]&[% suburl %]">[% value |html %]</a>[% ELSE %][% value |html %][% END %]&nbsp;&nbsp;&nbsp;</td>
+							[% ELSIF i==1 %]
+								[% suburl = value %]
+							[% END %]
+							[% i = i +1 %]
 						[% END %]
 					[% END %]
 				[% odd = (not odd) %]

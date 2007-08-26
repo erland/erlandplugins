@@ -41,7 +41,9 @@ sub getDatabaseQueryExportModules {
 }
 
 sub createReport {
+	my $queryId = shift;
 	my $reportData = shift;
+	my $dataRetreivalCallback = shift;
 
 	my $rows = $reportData->{'resultitems'};
 	my $columns = $reportData->{'columns'};
@@ -63,6 +65,11 @@ sub createReport {
 
 	for my $row (@$rows) {
 		$first = 1;
+		# We skip the four first columns, they just contains the context url of the row
+		shift @$row;
+		shift @$row;
+		shift @$row;
+		shift @$row;
 		for my $column (@$row) {
 			if(!$first) {
 				$result .= ';'

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databasequery>
+	<minpluginversion>1.1</minpluginversion>
 	<template>
 		<downloadidentifier>187</downloadidentifier>
 		<name>Inconsistency/problems query</name>

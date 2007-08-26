@@ -42,7 +42,9 @@ sub getDatabaseQueryExportModules {
 }
 
 sub createReport {
+	my $queryId = shift;
 	my $reportData = shift;
+	my $dataRetreivalCallback = shift;
 
 	my $columns = $reportData->{'columns'};
 	my $rows = $reportData->{'resultitems'};
@@ -51,13 +53,24 @@ sub createReport {
 	$result .= "<result>\n";
 
 	for my $row (@$rows) {
-		$result .= "  <resultitem>\n";
-		my @itemColumns = @$columns;
-		for my $column (@$row) {
-			my $columnName = shift @itemColumns;
-			$result .= ("    <".encode_entities($columnName,"&<>%").">".encode_entities($column,"&<>%")."</".encode_entities($columnName,"&<>%").">\n");
+		# We skip the four first columns, they just contains the context url of the row
+		my $name = shift @$row;
+		if(!defined($name)) {
+			$name = "resultitem";
 		}
-		$result .= "  </resultitem>\n";
+		$name =~ s/\s/_/g;
+		shift @$row;
+		shift @$row;
+		shift @$row;
+		my @itemColumns = @$columns;
+		$result .= "  <$name>\n";
+		for my $value (@$row) {
+			my $columnName = shift @itemColumns;
+			my $elementName = encode_entities($columnName,"&<>%");
+			$elementName =~ s/\s/_/g;
+			$result .= ("    <$elementName>".(defined($value)?encode_entities($value,"&<>%"):"")."</$elementName>\n");
+		}
+		$result .= "  </$name>\n";
 	}
 	$result .= "</result>\n";
 	return \$result;

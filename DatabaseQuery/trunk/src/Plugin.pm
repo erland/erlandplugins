@@ -41,7 +41,7 @@ my $dataQueries = undef;
 my $sqlerrors = '';
 my $soapLiteError = 0;
 my $supportDownloadError = undef;
-my $PLUGINVERSION = '1.0';
+my $PLUGINVERSION = '1.1';
 
 my $configManager = undef;
 
@@ -276,11 +276,15 @@ sub handleWebExecuteDataQuery {
 		my $dataQueryId = unescape($params->{'type'});
 		if(defined($dataQueries->{$dataQueryId})) {
 			my $dataQuery = $dataQueries->{$dataQueryId};
-			my $result = executeDataQuery($dataQuery);
+			my %parameters = ();
+			my $result = executeDataQueryTree($dataQuery,$params,\%parameters);
 			my $modules = getExportModules();
 			if(!defined($result->{'error'}) && defined($params->{'as'}) && defined($modules->{$params->{'as'}})) {
 				my $module = $modules->{$params->{'as'}};
-				my $resultText = eval { $module->{'callback'}($result); };
+				my $resultText = eval { $module->{'callback'}($dataQueryId, $result,\&getMoreData); };
+				if($@) {
+					errorMsg("Report error: $@\n");
+				}
 				if(defined($resultText)) {
 					$response->header("Content-Disposition","attachment; filename=result.".$module->{'extension'});
 					return $resultText;
@@ -290,6 +294,13 @@ sub handleWebExecuteDataQuery {
 			$params->{'pluginDatabaseQueryName'} = $dataQuery->{'name'};
 			$params->{'pluginDatabaseQueryColumns'} = $result->{'columns'};
 			$params->{'pluginDatabaseQueryResultItems'} = $result->{'resultitems'};
+			if(exists $params->{'hierarchy'}) {
+				$params->{'pluginDatabaseQueryContextUrl'} = 'hierarchy='.$params->{'hierarchy'}; 
+				my @path = split(/,/,$params->{'hierarchy'});
+				for my $attr (@path) {
+					$params->{'pluginDatabaseQueryContextUrl'} .= '&'.$attr.'='.$params->{$attr};
+				}
+			}
 			my @webExportModules = ();
 			for my $key (keys %$modules) {
 				my %webModule = ();
@@ -313,10 +324,102 @@ sub handleWebExecuteDataQuery {
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
 
+sub getMoreData {
+	my $dataQueryId = shift;
+	my $path = shift;
+	my $parameters = shift;
+
+	my $dataQuery = $dataQueries->{$dataQueryId};
+	return executeDataQueryTree($dataQuery,$parameters,$parameters,$path);
+}
+
+sub executeDataQueryTree {
+	my $dataQuery = shift;
+	my $params = shift;
+	my $parameters = shift;
+	my $fullPath = shift;
+	my $handledPath = shift;
+
+	my @path = ();
+	if(defined($fullPath)) {
+		@path = @$fullPath;
+	}else {
+		if(defined($params->{'hierarchy'})) {
+			@path = split(/,/,$params->{'hierarchy'});
+		}
+	}
+	if(!exists $dataQuery->{'querytree'}) {
+		return executeDataQuery($dataQuery,$parameters,$handledPath);
+	}
+	my $queryTree = $dataQuery->{'querytree'};
+	my @queryTrees = ();
+	if(ref($queryTree) eq 'ARRAY') {
+		for my $tree (@$queryTree) {
+			push  @queryTrees,$tree;
+		}
+	}else {
+		push @queryTrees,$queryTree;
+	}
+	if(scalar(@path)>0) {
+		my $firstPath = shift @path;
+		my $queryTreeToUse = undef;
+		for my $tree (@queryTrees) {
+			if($tree->{'queryid'} eq $firstPath) {
+				$queryTreeToUse = $tree;
+				last;
+			}
+		}
+		if(!defined($queryTreeToUse)) {
+			my %result = (
+				'error' => "No query defined for specified hierarchy",
+			);
+			return \%result;
+		}else {
+			$parameters->{$firstPath} = $params->{$firstPath};
+			if(!defined($handledPath)) {
+				my @empty = ();
+				$handledPath = \@empty;
+			}
+			push @$handledPath,$firstPath;
+			return executeDataQueryTree($queryTreeToUse,$params,$parameters,\@path,$handledPath);
+		}
+	}
+
+	my %result = ();
+	for my $tree (@queryTrees) {
+		my $subresult = executeDataQuery($tree,$parameters,$handledPath);
+		if(!defined($result{'resultitems'}) && defined($subresult->{'resultitems'})) {
+			$result{'columns'} = $subresult->{'columns'};
+			$result{'resultitems'} = $subresult->{'resultitems'};
+		}elsif(defined($result{'resultitems'}) && defined($subresult->{'resultitems'})) {
+			my $previousResult = $result{'resultitems'};
+			my $newResult = $subresult->{'resultitems'};
+			push @$previousResult,@$newResult;
+		}else {
+			if(!defined($result{'error'})) {
+				$result{'error'} = '';
+			}else {
+				$result{'error'} .= "\n";
+			}
+			$result{'error'} .= $subresult->{'error'};
+		}
+	}
+	if(!defined($result{'resultitems'}) && !defined($result{'error'})) {
+		$result{'error'} = "No query defined";
+	}
+	return \%result;
+}
+
 sub executeDataQuery {
 	my $dataQuery = shift;
+	my $parameters = shift;
+	my $path = shift;
 
 	my $sql = $dataQuery->{'query'} if exists $dataQuery->{'query'};
+	my $queryId = $dataQuery->{'queryid'} if exists $dataQuery->{'queryid'};
+	my $subQueriesExists = 0;
+	$subQueriesExists = 1 if exists $dataQuery->{'querytree'};
+
 	my @statements = ();
 	if(ref($sql) eq 'ARRAY') {
 		for my $statement (@$sql) {
@@ -335,6 +438,7 @@ sub executeDataQuery {
 		}
 		eval {
 			if(defined($sql)) {
+				$sql = replaceParameters($sql,$parameters);
 				debugMsg("Executing: $sql\n");
 				my $sth = getCurrentDBH()->prepare($sql);
 				$sth->execute();
@@ -349,6 +453,37 @@ sub executeDataQuery {
 					my @resultValues = @values;
 					for my $value (@resultValues) {
 						$value = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8')) if defined($value);
+					}
+					my @pathelements = ();
+					if($subQueriesExists && defined($queryId) && $queryId ne '' && defined($path)) {
+						@pathelements = @$path;
+						push @pathelements,$queryId;
+					}elsif($subQueriesExists && defined($queryId) && $queryId ne '') {
+						push @pathelements,$queryId;
+					}
+					if(scalar(@pathelements)>0) {
+						my $itemurl = undef;
+						for my $key (@pathelements) {
+							if(!defined($itemurl)) {
+								$itemurl = 'hierarchy=';
+							}else {
+								$itemurl .= ',';
+							}
+							$itemurl .= $key;
+						}
+						for my $key (keys %$parameters) {
+							$itemurl .= '&'.$key.'='.$parameters->{$key};
+						}
+						$itemurl .= '&'.$queryId.'='.@resultValues->[0];
+						unshift @resultValues,$parameters;
+						unshift @resultValues,\@pathelements;
+						unshift @resultValues,$itemurl;
+						unshift @resultValues,$queryId;
+					}else {
+						unshift @resultValues,undef;
+						unshift @resultValues,undef;
+						unshift @resultValues,undef;
+						unshift @resultValues,$queryId;
 					}
 					push @resultItems,\@resultValues;
 				}
@@ -382,6 +517,29 @@ sub executeDataQuery {
 		}
 	}
 	return \%result;
+}
+
+sub replaceParameters {
+	my $originalValue = shift;
+	my $parameters = shift;
+	my $quote = shift;
+
+	if(defined($parameters)) {
+		for my $param (keys %$parameters) {
+			my $propertyValue = $parameters->{$param};
+			if(!defined($propertyValue)) {
+				$propertyValue='';
+			}
+			if($quote) {
+				$propertyValue =~ s/\'/\\\'/g;
+				$propertyValue =~ s/\"/\\\"/g;
+				$propertyValue =~ s/\\/\\\\/g;
+			}
+			$originalValue =~ s/\{$param\}/$propertyValue/g;
+		}
+	}
+
+	return $originalValue;
 }
 
 sub handleWebEditDataQuery {
