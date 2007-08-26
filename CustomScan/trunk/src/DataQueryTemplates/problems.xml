@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <databasequery>
 	<requireplugins>CustomScan</requireplugins>
+	<minpluginversion>1.1</minpluginversion>
 	<template>
 		<downloadidentifier>192</downloadidentifier>
 		<name>Custom Scan Inconsistency/problems query</name>
