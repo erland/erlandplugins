@@ -2,6 +2,7 @@
 <databasequery>
 	<minpluginversion>1.1</minpluginversion>
 	<template>
+		<downloadidentifier>197</downloadidentifier>
 		<name>Free form query</name>
 		<description>Query that allows you to enter SQL as free text</description>
 		<parameter type="text" id="queryname" name="Data query name" value="Free form query"/>
