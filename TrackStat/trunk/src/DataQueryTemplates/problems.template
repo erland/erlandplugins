@@ -54,6 +54,8 @@
 						left join tracks on
 							tracks.url=track_statistics.url and
 							tracks.audio=1
+					where 
+						tracks.url is null
 					order by track_statistics.url
 				</query>
 			</querytree>
@@ -72,6 +74,8 @@
 						left join tracks on
 							tracks.url=track_history.url and
 							tracks.audio=1
+						where 
+							tracks.url is null
 					order by track_history.played desc
 				</query>
 			</querytree>
