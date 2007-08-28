@@ -3005,153 +3005,199 @@ sub strings {
 	return <<EOF;
 DYNAMICPLAYLIST
 	EN	Dynamic Playlists
+	DA	Dynamiske playlister
 
 PLUGIN_DYNAMICPLAYLIST
 	EN	Dynamic Playlists
+	DA	Dynamiske playlister
 
 PLUGIN_DYNAMICPLAYLIST_DISABLED
 	EN	DynamicPlayList Stopped
+	DA	DynamiskPlaylist stoppet
 
 PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW
 	EN	Choose a playlist:
+	DA	Vælg en playliste:
 
 PLUGIN_DYNAMICPLAYLIST_CONTEXT_CHOOSE_BELOW
 	EN	Choose a playlist related to: 
+	DA	Vælg en playliste relateret til:	
 
 PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS
 	EN	Now Playing will show
+	DA	Aktiv playliste vil vise
 
 PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_TRACKS
 	EN	upcoming songs and
+	DA	efterfølgende sange og
 
 PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_OLD_TRACKS
 	EN	recently played songs.
+	DA	fornylig afspillede sange.
 
 PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP
 	EN	Dynamic PlayLists
+	DA	Dynamiske playlister
 
 PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC
 	EN	DynamicPlayList is a plugin which makes it easy to write your own dynamic playlist plugin and it below the same menu as the other playlists
+	DA	Dynamiske playlister er et plugin, som gør det nemt at skrive dit eget dynamisk playlist plugin, og placere dem under den samme menu som de andre playlister.
 
 PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST
 	EN	Remeber active playlist after slimserver restart
 
 PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES
 	EN	Show debug messages
+	DA	Vis debug beskeder
 
 PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME
 	EN	Favourites group name
+	DA	Favorit gruppe navn
 
 PLUGIN_DYNAMICPLAYLIST_FAVOURITES
 	EN	Favourites
+	DA	Favoritter
 
 PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS
 	EN	Include saved playlists
+	DA	Inkluder gemte playlister
 
 PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS
 	EN	Play saved playlist in random
+	DA	Afspil gemte playlister i tilfældig rækkefølge
 
 PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS
 	EN	Add all tracks in saved playlists immediately
+	DA	Tilføj alle spor i gemte playlister omgående
 
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
+	DA	Antal spor
 
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES
 	EN	Number of retires when filtering
 
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
+	DA	Antal gamle spor
 
 PLUGIN_DYNAMICPLAYLIST_UNGROUPED
 	EN	Group for playlists without a group
+	DA	Gruppe til playlists uden en gruppe
 
 PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
+	DA	Vis alle playlists i toppen
 
 PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS
 	EN	Show DynamicPlayList button in browse pages. May require slimserver restart.
+	DA	Vis DynamiskPlayList knap på gennemse sider. Kræver måske slimserver genstart.
 
 PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
 	EN	Enable DynamicPlayList play+hold action. May require slimserver restart.
+	DA	Aktiver DynamiskPlayList play+hold funktion. Kræver måske slimserver genstart.
 
 PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
 	EN	Use saved playlist sub directories as groups
+	DA	Anvend gemte playlister underfoldere som grupper
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST
 	EN	Remeber active playlist
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_SHOWMESSAGES
 	EN	Debugging
+	DA	Fejlsøgning
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS
 	EN	Saved playlists
+	DA	Gemte playlister
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_RANDOMSAVEDPLAYLISTS
 	EN	Random saved playlists
+	DA	Gemte playlister tilfældig
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FULLSAVEDPLAYLISTS
 	EN	Whole saved playlists
+	DA	Komplette gemte playlists
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS
 	EN	Number of tracks
+	DA	Antal spor
 
 PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES
 	EN	Number of retries when filtering
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS
 	EN	Number of old tracks
+	DA	Antal gamle spor
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_UNGROUPED
 	EN	Playlists without a group
+	DA	Playlister uden en gruppe
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS
 	EN	Buttons in browse pages
+	DA	Knapper på gennemse sider
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
 	EN	Play+Hold mixer action
+	DA	Play+Hold mixer funktion
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top
+	DA	Vis alle playlister i toppen
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS
 	EN	Use saved playlist sub directories as groups
+	DA	Anvend gemte playlister underfoldere som grupper
 
 PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS
 	EN	Now Playing will show
+	DA	Aktiv playliste vil vise
 
 PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_TRACKS
 	EN	upcoming songs and
+	DA	sange der skal afspilles
 
 PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_OLD_TRACKS
 	EN	recently played songs.
+	DA	for nylig afspillede sange.
 
 PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW
 	EN	Choose a playlist with music from your library:
+	DA	Vælg en playliste med musik fra din samling:
 
 PLUGIN_DYNAMICPLAYLIST_PLAYING
 	EN	Playing
+	DA	Afspiller
 
 PLUGIN_DYNAMICPLAYLIST_PRESS_RIGHT
 	EN	Press RIGHT to stop adding songs
+	DA	Tryk højre for at stoppe med at tilføje sange
 
 PLUGIN_DYNAMICPLAYLIST_GENERAL_HELP
 	EN	You can add or remove songs from your mix at any time. To stop adding songs, clear your playlist or click to
+	DA	Du kan tilføje eller fjerne sange fra dit mix til enhver tid. For at stoppe med at tilføje sange, ryd playlisten eller klik for at
 
 PLUGIN_DYNAMICPLAYLIST_DISABLE
 	EN	Stop adding songs
+	DA	Stop med at tilføje sange
 
 PLUGIN_DYNAMICPLAYLIST_CONTINUOUS_MODE
 	EN	Add new items when old ones finish
+	DA	Tilføj nye sange når de gamle slutter
 
 PLUGIN_DYNAMICPLAYLIST_NOW_PLAYING_FAILED
 	EN	Failed 
+	DA	Fejlet
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS
 	EN	Enable/Disable playlists 
+	DA	Aktiver/deaktiver playlister
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE
 	EN	Select enabled playlists
+	DA	Vælg aktiverede playlister
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS
 	EN	Enable/Disable filters 
@@ -3161,15 +3207,19 @@ PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_TITLE
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS_TITLE
 	EN	Select enabled playlist groups
+	DA	Vælg aktiverede playlist grupper
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_FAVOURITES_TITLE
 	EN	Select favourites
+	DA	Vælg favoritter
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_NONE
 	EN	No Playlists
+	DA	Ingen playlister
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_ALL
 	EN	All Playlists
+	DA	Alle playlister
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_NONE
 	EN	No filters
@@ -3179,9 +3229,11 @@ PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_ALL
 
 PLUGIN_DYNAMICPLAYLIST_NEXT
 	EN	Next
+	DA	Næste
 
 PLUGIN_DYNAMICPLAYLIST_PARAMETERS_TITLE
 	EN	Enter additional parameters for playlist
+	DA	Angiv flere parametre for playliste
 
 PLUGIN_DYNAMICPLAYLIST_SELECT_FILTERS_CONFIGURE
 	EN	Configure filter
