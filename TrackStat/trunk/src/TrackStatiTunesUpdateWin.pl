@@ -30,7 +30,7 @@ Win32::OLE->Option(Warn => \&OLEError);
 
 # 1 sets chatty debug messages to ON
 # 0 sets chatty debug messages to OFF
-my $ITUNES_DEBUG = 1;
+my $ITUNES_DEBUG = 0;
 
 # handle for iTunes app
 my $iTunesHandle=();
@@ -234,7 +234,7 @@ sub _openiTunesWin {
 			$iTunesHandle = new Win32::OLE( "iTunes.Application") 
 				or	$failure = 1;
  			if ($failure) {
-				iTunesUpdateMsg( "Failed to launch iTunes through OLE!!!\n");
+				warn "Failed to launch iTunes through OLE!!!\n";
 				return 0;
 			}
 		my $iTunesVersion = $iTunesHandle->Version;
