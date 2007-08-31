@@ -1545,6 +1545,45 @@ sub getAddedTime {
 	return $track->timestamp;
 }
 
+sub getSQLPropertyValues {
+	my $sqlstatements = shift;
+	my @result =();
+	my $dbh = Slim::Schema->storage->dbh();
+	my $trackno = 0;
+    	for my $sql (split(/[;]/,$sqlstatements)) {
+	    	eval {
+			$sql =~ s/^\s+//g;
+			$sql =~ s/\s+$//g;
+			my $sth = $dbh->prepare( $sql );
+			debugMsg("Executing: $sql\n");
+			$sth->execute() or do {
+				warn "Error executing: $sql\n";
+				$sql = undef;
+			};
+	
+			if ($sql =~ /^SELECT+/oi) {
+				debugMsg("Executing and collecting: $sql\n");
+				my $id;
+				my $name;
+				$sth->bind_col( 1, \$id);
+				$sth->bind_col( 2, \$name);
+				while( $sth->fetch() ) {
+					my %item = (
+						'id' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')),
+						'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
+					);
+					push @result, \%item;
+				}
+			}
+			$sth->finish();
+		};
+		if( $@ ) {
+			warn "Database error: $DBI::errstr\n";
+		}		
+	}
+	return \@result;
+}
+
 # A wrapper to allow us to uniformly turn on & off debug messages
 sub debugMsg
 {

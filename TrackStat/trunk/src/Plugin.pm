@@ -4160,6 +4160,18 @@ sub getNextDynamicPlayListTracks {
 	return \@resultArray;
 }
 
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = Slim::Utils::PluginManager::enabledPlugin($plugin,$client);
+		}
+	}
+	return $enabledPlugin;
+}
+
 sub validateIsDirOrEmpty {
 	my $arg = shift;
 	if(!$arg || $arg eq '') {

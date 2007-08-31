@@ -30,6 +30,8 @@ use File::Spec::Functions qw(:ALL);
 use File::Basename;
 use XML::Parser;
 use DBI qw(:sql_types);
+use Plugins::TrackStat::Storage;
+use Plugins::TrackStat::Plugin;
 
 if ($] > 5.007) {
 	require Encode;
@@ -48,7 +50,8 @@ my $iBase = '';
 
 my $inPlaylists;
 my $inTracks;
-our %tracks;
+my %tracks;
+my $importCount;
 
 my $iTunesLibraryFile;
 my $iTunesParser;
@@ -85,6 +88,7 @@ sub getCustomScanFunctions {
 		'name' => 'iTunes Statistics',
 		'description' => "This module imports statistic information in SlimServer from iTunes. The information imported are ratings, playcounts, last played time<br>Information is imported from the specified iTunes Music Library.xml file, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in iTunes and SlimServer, for example the iTunes library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running iTunes and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&scanFunction,
 		'properties' => [
@@ -120,6 +124,19 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'itunesimportlibraries',
+			'name' => 'Libraries to limit the import to',
+			'description' => 'Limit the import to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+	}
 	return \%functions;
 		
 }
@@ -185,6 +202,7 @@ sub initScanTrack {
 	resetScanState();
 
 	$isScanning = 1;
+	$importCount = 0;
 
 	$iTunesParser = XML::Parser->new(
 		'ErrorContext'     => 2,
@@ -231,13 +249,13 @@ sub doneScanning {
 
 		$lastITunesMusicLibraryDate = $mtime;
 
-		msg("TrackStat::iTunes::Import: Import completed in ".(time() - $iTunesScanStartTime)." seconds.\n");
+		msg("TrackStat::iTunes::Import: Import completed in ".(time() - $iTunesScanStartTime)." seconds, imported statistics for $importCount songs\n");
 
 		Slim::Utils::Prefs::set('plugin_trackstat_lastITunesMusicLibraryDate', $lastITunesMusicLibraryDate);
 	}elsif($isScanning==-1) {
-		msg("TrackStat::iTunes::Import: Import failed after ".(time() - $iTunesScanStartTime)." seconds.\n");
+		msg("TrackStat::iTunes::Import: Import failed after ".(time() - $iTunesScanStartTime)." seconds, imported statistics for $importCount songs\n");
 	}else {
-		msg("TrackStat::iTunes::Import: Import skipped after ".(time() - $iTunesScanStartTime)." seconds.\n");
+		msg("TrackStat::iTunes::Import: Import skipped after ".(time() - $iTunesScanStartTime)." seconds, imported statistics for $importCount songs\n");
 	}
 }
 
@@ -616,7 +634,11 @@ sub normalize_location {
 
 	# on non-mac or windows, we need to substitute the itunes library path for the one in the iTunes xml file
 	my $explicit_path = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesslimservermusicpath");
-	
+	if(!defined($explicit_path) || $explicit_path eq '') {
+		# Use iTunes import path as backup
+		$explicit_path = Slim::Utils::Prefs::get('audiodir');
+	}
+
 	if ($explicit_path) {
 
 		# find the new base location.  make sure it ends with a slash.
@@ -687,6 +709,33 @@ sub sendTrackToStorage()
 	my $lastPlayed = $attributes->{'LASTPLAYED'};
 	my $rating = $attributes->{'RATING'};
 	
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesimportlibraries");
+
+	if($libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+		
+		my $sth = $dbh->prepare( "SELECT id from tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries) and tracks.url=?" );
+		my $include = 1;
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			my $id;
+			$sth->bind_columns( undef, \$id);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, doesnt exist in selected libraries: $url\n");
+				$include = 0;
+			}
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr for track: $url\n";
+			$include = 0;
+		}
+		if(!$include) {
+			return;
+		}
+	}
+	$importCount++;
 	Plugins::TrackStat::Storage::mergeTrack($url,undef,$playCount,$lastPlayed,$rating);
 }
 

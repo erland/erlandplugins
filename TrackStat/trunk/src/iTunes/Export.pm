@@ -32,7 +32,8 @@ use POSIX qw(strftime);
 use File::Spec::Functions qw(:ALL);
 use File::Basename;
 use DBI qw(:sql_types);
-
+use Plugins::TrackStat::Plugin;
+use Plugins::TrackStat::Storage;
 use Slim::Utils::Misc;
 
 
@@ -44,6 +45,7 @@ sub getCustomScanFunctions {
 		'name' => 'iTunes Statistics Export',
 		'description' => "This module exports statistic information in SlimServer to iTunes. The information exported are ratings, playcounts, last played time and added time.<br><br>Information is exported from TrackStat to an export file which will be placed in the specified output directory. Note that the generated iTunes history file must be run with the TrackStatiTunesUpdateWin.pl script which only supports iTunes on Windows to actually export the data to iTunes. A complete export will generate a TrackStat_iTunes_Complete.txt file, the continously written history file when playing and changing ratings will generate a TrackStat_iTunes_Hist.txt file.<br><br>The export module is prepared for having separate libraries in iTunes and SlimServer, for example the iTunes library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in iTunes. If you are running iTunes and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'exitScanTrack' => \&exitScanTrack,
 		'scanText' => 'Export',
 		'properties' => [
@@ -52,7 +54,7 @@ sub getCustomScanFunctions {
 				'name' => 'Output directory',
 				'description' => 'Full path to the directory to write the export to',
 				'type' => 'text',
-				'validate' => \&Slim::Utils::validate::isDir,
+				'validate' => \&Slim::Utils::Validate::isDir,
 				'value' => defined(Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"))?Slim::Utils::Prefs::get("plugin_trackstat_itunes_export_dir"):Slim::Utils::Prefs::get('playlistdir')
 			},
 			{
@@ -86,6 +88,19 @@ sub getCustomScanFunctions {
 			}			
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'itunesexportlibraries',
+			'name' => 'Libraries to limit the export to',
+			'description' => 'Limit the export to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+	}
 	return \%functions;
 		
 }
@@ -98,13 +113,20 @@ sub exitScanTrack
 		return undef;
 	}
 	my $filename = catfile($dir,"TrackStat_iTunes_Complete.txt");
-	
+
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibraries");
 	debugMsg("Exporting to iTunes: $filename\n");
 
-	my $sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating, track_statistics.added FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.added is not null or track_statistics.lastPlayed is not null or track_statistics.rating>0)";
+	my $sql = undef;
+	if($libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		$sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating, track_statistics.added FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and (track_statistics.added is not null or track_statistics.lastPlayed is not null or track_statistics.rating>0) and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+	}else {
+		$sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating, track_statistics.added FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.added is not null or track_statistics.lastPlayed is not null or track_statistics.rating>0)";
+	}
 
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+	debugMsg("Retreiving tracks with: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 
 	my $output = FileHandle->new($filename, ">") or do {
@@ -112,6 +134,7 @@ sub exitScanTrack
 		return undef;
 	};
 
+	my $count = 0;
 	my( $url, $title, $lastPlayed, $playCount, $rating, $added );
 	eval {
 		$sth->execute();
@@ -119,7 +142,7 @@ sub exitScanTrack
 		my $result;
 		while( $sth->fetch() ) {
 			if($url) {
-				if(!defined($rating)) {
+				if(!defined($rating) || !$rating) {
 					$rating='';
 				}
 				if(!defined($playCount)) {
@@ -129,9 +152,11 @@ sub exitScanTrack
 				$title = Slim::Utils::Unicode::utf8decode($title,'utf8');
 				
 				if($lastPlayed) {
+					$count++;
 					my $timestr = strftime ("%Y%m%d%H%M%S", localtime $lastPlayed);
 					print $output "$title|||$path|played|$timestr|$rating|$playCount|$added\n";
 				}elsif($rating && $rating>0) {
+					$count++;
 					print $output "$title|||$path|rated||$rating||$added\n";
 				}
 			}
@@ -143,7 +168,7 @@ sub exitScanTrack
 	$sth->finish();
 
 	close $output;
-	msg("TrackStat::iTunes::Export: Exporting to iTunes completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
+	msg("TrackStat::iTunes::Export: Exporting to iTunes completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime())).", exported $count songs\n");
 	return undef;
 }
 
@@ -154,7 +179,7 @@ sub getiTunesURL {
 	my $nativeRoot = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesslimservermusicpath");
 	if(!defined($nativeRoot) || $nativeRoot eq '') {
 		# Use iTunes import path as backup
-		Slim::Utils::Prefs::get('audiodir');
+		$nativeRoot = Slim::Utils::Prefs::get('audiodir');
 	}
 	$nativeRoot =~ s/\\/\//isg;
 	if(defined($replacePath) && $replacePath ne '') {
