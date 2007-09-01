@@ -27,6 +27,7 @@ package Plugins::TrackStat::MusicMagic::Export;
 use Slim::Utils::Misc;
 use Class::Struct;
 use POSIX qw(floor);
+use DBI qw(:sql_types);
 
 my $lastMusicMagicFinishTime = undef;
 my $lastMusicMagicDate = 0;
@@ -52,6 +53,7 @@ sub getCustomScanFunctions {
 		'name' => 'MusicIP Statistics Export',
 		'description' => "This module exports statistic information in SlimServer to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and SlimServer, for example the MusicIP library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&scanFunction,
 		'scanText' => 'Export',
@@ -101,6 +103,27 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'musicmagicexportlibraries',
+			'name' => 'Libraries to limit the export to',
+			'description' => 'Limit the export to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+		my %dynamiclibrary = (
+			'id' => 'musicmagicexportlibrariesdynamicupdate',
+			'name' => 'Limit dynamic update to libraries',
+			'description' => 'Limit the continously written dynamic updates to selected libraries',
+			'type' => 'checkbox',
+			'value' => 1
+		);
+		push @$properties,\%dynamiclibrary,
+	}
 	return \%functions;
 		
 }
@@ -109,8 +132,14 @@ sub initScanTrack {
 	checkDefaults();
 	@songs = ();
 	$MusicMagicScanStartTime = time();
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicexportlibraries");
 	
-	my $sql = "SELECT track_statistics.url, track_statistics.playCount, track_statistics.lastPlayed, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.lastPlayed is not null or track_statistics.rating>0)";
+	my $sql = undef;
+	if($libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		$sql = "SELECT track_statistics.url, track_statistics.playCount, track_statistics.lastPlayed, track_statistics.rating FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and (track_statistics.lastPlayed is not null or track_statistics.rating>0) and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+	}else {
+		$sql = "SELECT track_statistics.url, track_statistics.playCount, track_statistics.lastPlayed, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.lastPlayed is not null or track_statistics.rating>0)";
+	}
 
 	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
@@ -300,7 +329,7 @@ sub sendTrackToStorage()
 sub getMusicMagicURL {
 	my $url = shift;
 	my $replacePath = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicmusicpath");
-	if(defined(!$replacePath) && $replacePath ne '') {
+	if(defined($replacePath) && $replacePath ne '') {
 		$replacePath =~ s/\\/\//isg;
 		$replacePath = escape($replacePath);
 		my $nativeRoot = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicslimservermusicpath");;
@@ -336,35 +365,37 @@ sub exportRating {
 	my $lowrating = floor(($rating+10) / 20);
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicdynamicupdate")) {
-		my $mmurl = getMusicMagicURL($url);
+		if(isAllowedToExport($url)) {
+			my $mmurl = getMusicMagicURL($url);
 		
-		my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
-		my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
-		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
-		debugMsg("Calling: $musicmagicurl\n");
-		my $http = Slim::Player::Protocols::HTTP->new({
-			'url'    => "$musicmagicurl",
-			'create' => 0,
-		});
-		if(defined($http)) {
-			my $result = $http->content;
-			chomp $result;
-			if($result eq "1") {
-				debugMsg("Success setting Music Magic rating\n");
-			}else {
-				debugMsg("Error setting Music Magic rating, error code = $result\n");
-			}
-			$http->close();
-			$http = Slim::Player::Protocols::HTTP->new({
-				'url'    => "http://$hostname:$port/api/flush",
+			my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
+			my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
+			my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
+			debugMsg("Calling: $musicmagicurl\n");
+			my $http = Slim::Player::Protocols::HTTP->new({
+				'url'    => "$musicmagicurl",
 				'create' => 0,
 			});
 			if(defined($http)) {
-				$result = $http->content;
+				my $result = $http->content;
+				chomp $result;
+				if($result eq "1") {
+					debugMsg("Success setting Music Magic rating\n");
+				}else {
+					debugMsg("Error setting Music Magic rating, error code = $result\n");
+				}
 				$http->close();
+				$http = Slim::Player::Protocols::HTTP->new({
+					'url'    => "http://$hostname:$port/api/flush",
+					'create' => 0,
+				});
+				if(defined($http)) {
+					$result = $http->content;
+					$http->close();
+				}
+			}else {
+				debugMsg("Failure setting Music Magic rating\n");
 			}
-		}else {
-			debugMsg("Failure setting Music Magic rating\n");
 		}
 	}
 }
@@ -375,21 +406,50 @@ sub exportStatistic {
 	my $lastPlayed = shift;
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicdynamicupdate")) {
-		my $mmurl = getMusicMagicURL($url);
+		if(isAllowedToExport($url)) {
+			my $mmurl = getMusicMagicURL($url);
 		
-		my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
-		my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
-		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$mmurl&count=$playCount";
-		debugMsg("Calling: $musicmagicurl\n");
-		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
-		$http->get($musicmagicurl);
-		$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$mmurl&time=$lastPlayed";
-		debugMsg("Calling: $musicmagicurl\n");
-		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
-		$http->get($musicmagicurl);
-		$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'flush' });
-		$http->get("http://$hostname:$port/api/flush");
+			my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
+			my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
+			my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$mmurl&count=$playCount";
+			debugMsg("Calling: $musicmagicurl\n");
+			my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
+			$http->get($musicmagicurl);
+			$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$mmurl&time=$lastPlayed";
+			debugMsg("Calling: $musicmagicurl\n");
+			$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
+			$http->get($musicmagicurl);
+			$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'flush' });
+			$http->get("http://$hostname:$port/api/flush");
+		}
 	}
+}
+
+sub isAllowedToExport {
+	my $url = shift;
+
+	my $include = 1;
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicexportlibraries");
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicexportlibrariesdynamicupdate") && $libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.url=? and multilibrary_track.library in ($libraries)";
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+		debugMsg("Executing: $sql\n");
+		eval {
+			my $sth = $dbh->prepare( $sql );
+			$sth->bind_param(1,$url,SQL_VARCHAR);
+			$sth->execute();
+			$sth->bind_columns( undef, \$include);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, not part of selected libraries: ".$url."\n");
+				$include = 0;
+			}
+			$sth->finish();
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr, $@\n";
+		}
+	}
+	return $include;
 }
 
 sub gotViaHTTP {

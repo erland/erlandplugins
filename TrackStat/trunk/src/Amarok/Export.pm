@@ -37,6 +37,7 @@ sub getCustomScanFunctions {
 		'name' => 'Amarok Statistics Export',
 		'description' => "This module exports statistic information in SlimServer to Amarok media player. The information exported are ratings, playcounts, last played time and added time. The export module only supports Amarok running towards a MySQL database, by default Amarok runs with a SQLite database and then this scanning module doesn\'t work. The exported information is written directly to the Amarok database.<br><br>The export module is prepared for having separate libraries in Amarok and SlimServer, for example the Amarok library can be in mp3 format and the SlimServer library can be in flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in Amarok. If you are running Amarok and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'scanTrack' => \&scanTrack,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&exitScanTrack,
@@ -94,24 +95,49 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'amarokexportlibraries',
+			'name' => 'Libraries to limit the export to',
+			'description' => 'Limit the export to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+		my %dynamiclibrary = (
+			'id' => 'amarokexportlibrariesdynamicupdate',
+			'name' => 'Limit history to libraries',
+			'description' => 'Limit the continously written history file to selected libraries',
+			'type' => 'checkbox',
+			'value' => 1
+		);
+		push @$properties,\%dynamiclibrary,
+	}
 	return \%functions;
 		
 }
 
 sub initScanTrack {
-	my $dsn = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabaseurl");
-	my $user = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabaseuser");
-	my $password = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabasepassword");
-	eval {
-		$amarokDbh = DBI->connect($dsn, $user, $password);
-	};
-	if( $@ ) {
-		warn "Database error: $DBI::errstr, $@\n";
-		$amarokDbh = undef;
-	}
+	connectToAmarokDB();
 	return undef;
 }
-
+sub connectToAmarokDB {
+	if(!defined($amarokDbh)) {
+		my $dsn = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabaseurl");
+		my $user = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabaseuser");
+		my $password = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdatabasepassword");
+		eval {
+			$amarokDbh = DBI->connect($dsn, $user, $password);
+		};
+		if( $@ ) {
+			warn "Database error: $DBI::errstr, $@\n";
+			$amarokDbh = undef;
+		}
+	}
+}
 sub exitScanTrack {
 	if(defined($amarokDbh)) {
 		eval { 
@@ -125,7 +151,11 @@ sub exitScanTrack {
 }
 sub scanTrack {
 	my $track = shift;
-	return writeTrack($track);
+	if(isAllowedToExport($track,1)) {
+		return writeTrack($track);
+	}
+	my @result = ();
+	return \@result;
 }
 
 sub writeTrack {
@@ -193,9 +223,37 @@ sub exportRating {
 	my $rating = shift;
 	my $track = shift;
 
-	if(Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdynamicupdate")) {
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdynamicupdate") && isAllowedToExport($track)) {
+		connectToAmarokDB();
 		writeTrack($track,$rating);
 	}
+}
+
+sub isAllowedToExport {
+	my $track = shift;
+	my $force = shift;
+
+	my $include = 1;
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokexportlibraries");
+	if((defined($force) || Plugins::CustomScan::Plugin::getCustomScanProperty("amarokexportlibrariesdynamicupdate")) && $libraries  && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=".$track->id." and multilibrary_track.library in ($libraries)";
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+		debugMsg("Executing: $sql\n");
+		eval {
+			my $sth = $dbh->prepare( $sql );
+			$sth->execute();
+			$sth->bind_columns( undef, \$include);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, not part of selected libraries: ".$track->url."\n");
+				$include = 0;
+			}
+			$sth->finish();
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr, $@\n";
+		}
+	}
+	return $include;
 }
 
 sub exportStatistic {
@@ -212,7 +270,8 @@ sub exportStatistic {
 		debugMsg("Error retrieving track: $url\n");
 	}
 	if($track) {
-		if(Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdynamicupdate")) {
+		if(Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdynamicupdate") && isAllowedToExport($track)) {
+			connectToAmarokDB();
 			writeTrack($track,$rating,$playCount,$lastPlayed);
 		}
 	}

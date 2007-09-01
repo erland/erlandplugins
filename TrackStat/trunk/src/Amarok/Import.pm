@@ -28,15 +28,18 @@ use Plugins::TrackStat::Storage;
 use Plugins::TrackStat::Amarok::Common;
 
 my $amarokDbh = undef;
+my $importCount = 0;
+my $amarokScanStartTime = 0;
 
 sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'amarokimport',
 		'order' => '70',
 		'defaultenabled' => 0,
-		'name' => 'Amarok Statistics',
+		'name' => 'Amarok Statistics Import',
 		'description' => "This module imports statistic information to SlimServer from Amarok media player. The information imported are ratings, playcounts and last played time. The import module only supports Amarok running towards a MySQL database, by default Amarok runs with a SQLite database and then this scanning module doesn\'t work. The imported information is read directly from the Amarok database.<br><br>The import module is prepared for having separate libraries in Amarok and SlimServer, for example the Amarok library in mp3 format and the SlimServer library in flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running Amarok and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'scanTrack' => \&scanTrack,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&exitScanTrack,
@@ -86,6 +89,19 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'amarokimportlibraries',
+			'name' => 'Libraries to limit the import to',
+			'description' => 'Limit the import to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+	}
 	return \%functions;
 		
 }
@@ -101,6 +117,8 @@ sub initScanTrack {
 		warn "Database error: $DBI::errstr, $@\n";
 		$amarokDbh = undef;
 	}
+	$importCount = 0;
+	$amarokScanStartTime = time();
 	return undef;
 }
 
@@ -113,6 +131,7 @@ sub exitScanTrack {
 			warn "Database error: $DBI::errstr, $@\n";
 		}
 	}
+	msg("TrackStat::Amarok::Import: Import completed in ".(time() - $amarokScanStartTime)." seconds, imported statistics for $importCount songs\n");
 	return undef;
 }
 
@@ -122,33 +141,61 @@ sub scanTrack {
 
 	return \@result unless defined $amarokDbh;
 
-	my $path = Plugins::TrackStat::Amarok::Common::getAmarokPath($track->path);
+	my $include = 1;
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("amarokimportlibraries");
+	if($libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 
-	my $amarokSth = $amarokDbh->prepare("select accessdate,percentage,rating,playcounter from statistics where url=?");
-	eval {
-		$amarokSth->bind_param(1, $path , SQL_VARCHAR);
-		$amarokSth->execute();
-		my $lastplayed;
-		my $rating;
-		my $percentage;
-		my $playcount;
-		$amarokSth->bind_col( 1, \$lastplayed);
-		$amarokSth->bind_col( 2, \$percentage);
-		$amarokSth->bind_col( 3, \$rating);
-		$amarokSth->bind_col( 4, \$playcount);
-		if( $amarokSth->fetch() ) {
-			if(defined($rating)) {
-				$rating = $rating*10;
+		my $sth = $dbh->prepare( "SELECT id from tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries) and tracks.url=?" );
+		eval {
+			$sth->bind_param(1, $track->url , SQL_VARCHAR);
+			$sth->execute();
+			my $id;
+			$sth->bind_columns( undef, \$id);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, doesnt exist in selected libraries: ".$track->url."\n");
+				$include = 0;
 			}
-			debugMsg("Importing track: ".$path.", ".(defined($rating)?"Rating:".$rating:"").", ".(defined($playcount)?"Playcount:".$playcount:"")."\n");
-			Plugins::TrackStat::Storage::mergeTrack($track->url,undef,$playcount,$lastplayed,$rating);
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr for track: ".$track->url."\n";
+			$include = 0;
 		}
-		$amarokSth->finish();
-	};
-	if( $@ ) {
-		warn "Database error: $DBI::errstr, $@\n";
 	}
 
+	if($include) {
+		my $path = Plugins::TrackStat::Amarok::Common::getAmarokPath($track->path);
+
+		my $amarokSth = $amarokDbh->prepare("select accessdate,percentage,rating,playcounter from statistics where url=?");
+		eval {
+			$amarokSth->bind_param(1, $path , SQL_VARCHAR);
+			$amarokSth->execute();
+			my $lastplayed;
+			my $rating;
+			my $percentage;
+			my $playcount;
+			$amarokSth->bind_col( 1, \$lastplayed);
+			$amarokSth->bind_col( 2, \$percentage);
+			$amarokSth->bind_col( 3, \$rating);
+			$amarokSth->bind_col( 4, \$playcount);
+			if( $amarokSth->fetch() ) {
+				if(defined($rating)) {
+					$rating = $rating*10;
+				}
+	
+				debugMsg("Importing track: ".$path.", ".(defined($rating)?"Rating:".$rating:"").", ".(defined($playcount)?"Playcount:".$playcount:"")."\n");
+				$importCount++;
+				Plugins::TrackStat::Storage::mergeTrack($track->url,undef,$playcount,$lastplayed,$rating);
+			}else {
+				debugMsg("Didnt find statistics for: $path\n");
+			}
+			$amarokSth->finish();
+		};
+		if( $@ ) {
+			warn "Database error: $DBI::errstr, $@\n";
+		}
+	}	
 	return \@result;
 }
 

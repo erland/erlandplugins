@@ -25,13 +25,14 @@ use warnings;
 package Plugins::TrackStat::MusicMagic::Import;
 
 use Slim::Utils::Misc;
+use DBI qw(:sql_types);
 
 my $lastMusicMagicFinishTime = undef;
 my $lastMusicMagicDate = 0;
 my $MusicMagicScanStartTime = 0;
 
 my $isScanning = 0;
-
+my $importCount;
 my @songs = ();
 
 sub getCustomScanFunctions {
@@ -39,9 +40,10 @@ sub getCustomScanFunctions {
 		'id' => 'musicmagicimport',
 		'order' => '70',
 		'defaultenabled' => 0,
-		'name' => 'MusicIP Statistics',
+		'name' => 'MusicIP Statistics Import',
 		'description' => "This module imports statistic information in SlimServer from MusicIP Mixer. The information imported are ratings, playcounts, last played time<br>Information is imported from the MusicIP service running at the specified host and port, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in MusicIP and SlimServer, for example the MusicIP library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running MusicIP and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&scanFunction,
 		'properties' => [
@@ -90,6 +92,19 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $properties = $functions{'properties'};
+		my $values = Plugins::TrackStat::Storage::getSQLPropertyValues("select id,name from multilibrary_libraries");
+		my %library = (
+			'id' => 'musicmagicimportlibraries',
+			'name' => 'Libraries to limit the import to',
+			'description' => 'Limit the import to songs in the selected libraries (None selected equals no limit)',
+			'type' => 'multiplelist',
+			'values' => $values,
+			'value' => '',
+		);
+		push @$properties,\%library;
+	}
 	return \%functions;
 		
 }
@@ -134,7 +149,7 @@ sub initScanTrack {
 
 	checkDefaults();
 	@songs = ();
-
+	$importCount = 0;
 	$MusicMagicScanStartTime = time();
 
 	my $musicMagicStatus = isMusicLibraryFileChanged();
@@ -195,11 +210,11 @@ sub doneScanning {
 	if($isScanning==1) {
 		$isScanning = 0;
 		Slim::Utils::Prefs::set('plugin_trackstat_lastMusicMagicDate', $lastMusicMagicDate);
-		msg("TrackStat::MusicMagic::Import: Import completed in ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+		msg("TrackStat::MusicMagic::Import: Import completed in ".(time() - $MusicMagicScanStartTime)." seconds, imported statistics for $importCount songs.\n");
 	}elsif($isScanning==-1) {
-		msg("TrackStat::MusicMagic::Import: Import failed after ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+		msg("TrackStat::MusicMagic::Import: Import failed after ".(time() - $MusicMagicScanStartTime)." seconds, imported statistics for $importCount songs.\n");
 	}else {
-		msg("TrackStat::MusicMagic::Import: Import skipped after ".(time() - $MusicMagicScanStartTime)." seconds.\n");
+		msg("TrackStat::MusicMagic::Import: Import skipped after ".(time() - $MusicMagicScanStartTime)." seconds, imported statistics for $importCount songs.\n");
 	}
 }
 
@@ -224,7 +239,7 @@ sub scanFunction {
 
 sub handleTrack {
 	my $trackData = shift;
-	debugMsg("Start handling next track\n");
+	#debugMsg("Start handling next track\n");
 	my @rows = split(/\n/, $trackData);
 	
 	my $url;
@@ -306,6 +321,7 @@ sub handleTrack {
 		}
 		$url =~ s/\\/\//isg;
 		debugMsg("Store Track: $url\n");
+		$importCount++;
 		sendTrackToStorage($url,$rating,$lastPlayed,$playCount);
 	}
 }
@@ -328,6 +344,33 @@ sub sendTrackToStorage()
 	my $rating = shift;
 	my $lastPlayed = shift;
 	my $playCount = shift;
+
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicimportlibraries");
+
+	if($libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+		my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+		
+		my $sth = $dbh->prepare( "SELECT id from tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries) and tracks.url=?" );
+		my $include = 1;
+		eval {
+			$sth->bind_param(1, $url , SQL_VARCHAR);
+			$sth->execute();
+			my $id;
+			$sth->bind_columns( undef, \$id);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, doesnt exist in selected libraries: $url\n");
+				$include = 0;
+			}
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr for track: $url\n";
+			$include = 0;
+		}
+		if(!$include) {
+			return;
+		}
+	}
 
 	Plugins::TrackStat::Storage::mergeTrack($url,undef,$playCount,$lastPlayed,$rating);
 }
