@@ -240,7 +240,7 @@ sub isAllowedToExport {
 
 	my $include = 1;
 	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibraries");
-	if(Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibrariesdynamicupdate") && $libraries) {
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibrariesdynamicupdate") && $libraries  && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
 		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=".$track->id." and multilibrary_track.library in ($libraries)";
 		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
 		debugMsg("Executing: $sql\n");
