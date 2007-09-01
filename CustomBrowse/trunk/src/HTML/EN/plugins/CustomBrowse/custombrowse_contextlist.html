@@ -20,7 +20,7 @@
         [% END %]
 [% END -%]
 [%- pageHeaderInfo = BLOCK %]
-&nbsp;
+[% IF pluginCustomBrowseScanWarning %]<p>[% PROCESS scanwarning %] [% ELSE %]&nbsp;[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
 [%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);

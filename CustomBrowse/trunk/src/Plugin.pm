@@ -1528,6 +1528,9 @@ sub handleWebList {
 	if(Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton")) {
 		$params->{'pluginCustomBrowseSingleMixButton'}=1;
 	}
+	if (Slim::Music::Import->stillScanning || (UNIVERSAL::can("Plugins::CustomScan::Plugin","isScanning") && eval { Plugins::CustomScan::Plugin::isScanning() })) {
+		$params->{'pluginCustomBrowseScanWarning'} = 1;
+	}
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
 }
@@ -1692,6 +1695,9 @@ sub handleWebContextList {
 	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
 	if(Slim::Utils::Prefs::get("plugin_custombrowse_single_web_mixerbutton")) {
 		$params->{'pluginCustomBrowseSingleMixButton'}=1;
+	}
+	if (Slim::Music::Import->stillScanning || (UNIVERSAL::can("Plugins::CustomScan::Plugin","isScanning") && eval { Plugins::CustomScan::Plugin::isScanning() })) {
+		$params->{'pluginCustomBrowseScanWarning'} = 1;
 	}
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_contextlist.html', $params);
