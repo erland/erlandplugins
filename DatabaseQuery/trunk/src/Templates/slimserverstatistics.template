@@ -164,7 +164,7 @@
 			select 'Number of local songs' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.remote=0
 		</query>
 		<query>
-			select 'Number of remote songs' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.remote=1
+			select 'Number of remote songs' as parameter,count(distinct tracks.id) from tracks where tracks.remote=1
 		</query>
 		<query>
 			select concat('Number of songs tagged with ',tracks.tagversion) as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.tagversion is not null group by tracks.tagversion
