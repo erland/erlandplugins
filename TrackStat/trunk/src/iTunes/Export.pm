@@ -100,6 +100,14 @@ sub getCustomScanFunctions {
 			'value' => '',
 		);
 		push @$properties,\%library;
+		my %dynamiclibrary = (
+			'id' => 'itunesexportlibrariesdynamicupdate',
+			'name' => 'Limit history to libraries',
+			'description' => 'Limit the continously written history file to selected libraries',
+			'type' => 'checkbox',
+			'value' => 1
+		);
+		push @$properties,\%dynamiclibrary,
 	}
 	return \%functions;
 		
@@ -220,11 +228,38 @@ sub exportRating {
 			$track = Plugins::TrackStat::Storage::objectForUrl($url);
 		}
 		
-		print $output "".$track->title."|||$itunesurl|rated||$rating\n";
+		if(isAllowedToExport($track)) {
+			print $output "".$track->title."|||$itunesurl|rated||$rating\n";
+		}
 		close $output;
 	}
 }
 
+sub isAllowedToExport {
+	my $track = shift;
+
+	my $include = 1;
+	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibraries");
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("itunesexportlibrariesdynamicupdate") && $libraries) {
+		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=".$track->id." and multilibrary_track.library in ($libraries)";
+		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+		debugMsg("Executing: $sql\n");
+		eval {
+			my $sth = $dbh->prepare( $sql );
+			$sth->execute();
+			$sth->bind_columns( undef, \$include);
+			if( !$sth->fetch() ) {
+				debugMsg("Ignoring track, not part of selected libraries: ".$track->url."\n");
+				$include = 0;
+			}
+			$sth->finish();
+		};
+		if($@) {
+			warn "Database error: $DBI::errstr, $@\n";
+		}
+	}
+	return $include;
+}
 sub exportStatistic {
 	my $url = shift;
 	my $rating = shift;
@@ -248,7 +283,7 @@ sub exportStatistic {
 		if(!defined $rating) {
 			$rating = '';
 		}
-		if(defined $lastPlayed) {
+		if(defined $lastPlayed && isAllowedToExport($track)) {
 			my $timestr = strftime ("%Y%m%d%H%M%S", localtime $lastPlayed);
 			print $output "".$track->title."|||$itunesurl|played|$timestr|$rating\n";
 		}
