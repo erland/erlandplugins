@@ -229,22 +229,24 @@ sub getPluginModules {
 				if ($@) {
 					msg("CustomScan: Failed to load module $fullname: $@\n");
 				}elsif(UNIVERSAL::can("${fullname}","getCustomScanFunctions")) {
-					my $data = eval { &{$fullname . "::getCustomScanFunctions"}(); };
+					my $data = eval { &{$fullname . "::getCustomScanFunctions"}($PLUGINVERSION); };
 					if ($@) {
 						msg("CustomScan: Failed to call module $fullname: $@\n");
 					}elsif(defined($data) && defined($data->{'id'}) && defined($data->{'name'})) {
-						$plugins{$fullname} = $data;
-						my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_enabled');
-						if((!defined($enabled) && $data->{'defaultenabled'})|| $enabled) {
-							$plugins{$fullname}->{'enabled'} = 1;
-						}else {
-							$plugins{$fullname}->{'enabled'} = 0;
-						}
-						my $order = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_order');
-						if((!defined($order) && $data->{'order'})) {
-							$plugins{$fullname}->{'order'} = $data->{'order'};
-						}else {
-							$plugins{$fullname}->{'order'} = $order;
+						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
+							$plugins{$fullname} = $data;
+							my $enabled = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_enabled');
+							if((!defined($enabled) && $data->{'defaultenabled'})|| $enabled) {
+								$plugins{$fullname}->{'enabled'} = 1;
+							}else {
+								$plugins{$fullname}->{'enabled'} = 0;
+							}
+							my $order = Slim::Utils::Prefs::get('plugin_customscan_module_'.$data->{'id'}.'_order');
+							if((!defined($order) && $data->{'order'})) {
+								$plugins{$fullname}->{'order'} = $data->{'order'};
+							}else {
+								$plugins{$fullname}->{'order'} = $order;
+							}
 						}
 					}
 				}
@@ -292,6 +294,26 @@ sub getPluginModules {
 		use strict 'refs';
 	}
 	return \%plugins;
+}
+
+sub isAllowedVersion {
+	my $minpluginversion = shift;
+
+	my $include = 1;
+	if(defined($minpluginversion) && $minpluginversion =~ /(\d+)\.(\d+).*/) {
+		my $downloadMajor = $1;
+		my $downloadMinor = $2;
+		if($PLUGINVERSION =~ /(\d+)\.(\d+).*/) {
+			my $pluginMajor = $1;
+			my $pluginMinor = $2;
+			if($pluginMajor>=$downloadMajor && $pluginMinor>=$downloadMinor) {
+				$include = 1;
+			}else {
+				$include = 0;
+			}
+		}
+	}
+	return $include;
 }
 
 sub getSQLPlayListTemplates {
@@ -731,6 +753,21 @@ sub fullAbort {
 		msg("CustomScan: Aborting scanning...\n");
 		return;
 	}
+}
+
+sub isScanning {
+	my $module = shift;
+
+	if(!defined($module)) {
+		if(scalar(grep (/1/,values %scanningModulesInProgress))>0) {
+			return 1;
+		}
+	}else {
+		if($scanningModulesInProgress{$module} == 1 || $scanningModulesInProgress{$module} == -1) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 sub fullClear {
@@ -1761,6 +1798,22 @@ sub handleWebSettings {
 			$value = $property->{'value'};
 		}
 		$p{'value'} = $value;
+		if(defined($property->{'values'})) {
+			my $values = $property->{'values'};
+			$p{'values'} = $values;
+			my @selectedValuesArray = ();
+			if(defined($p{'value'})) {
+				@selectedValuesArray = split(/,/,$p{'value'});
+			}
+			for my $value (@$values) {
+				delete $value->{'selected'};
+				for my $selectedValue (@selectedValuesArray) {
+					if($value->{'id'} eq $selectedValue) {
+						$value->{'selected'} = 1;
+					}
+				}
+			}
+		}
 		push @properties,\%p;
 	}	
 	$params->{'pluginCustomScanModuleProperties'} = \@properties;
@@ -1785,7 +1838,7 @@ sub handleWebSaveSettings {
 	my %errorItems = ();
 	foreach my $property (@$moduleProperties) {
 		my $propertyid = "property_".$property->{'id'};
-		if($params->{$propertyid}) {
+		if($params->{$propertyid} && $property->{'type'} !~ /.*multiplelist$/) {
 			my $value = $params->{$propertyid};
 			if(defined($property->{'validate'})) {
 				eval { $value = &{$property->{'validate'}}($value)};
@@ -1798,12 +1851,20 @@ sub handleWebSaveSettings {
 			}else {
 				$errorItems{$property->{'id'}} = 1;
 			}
-		}else {
-			if($property->{'type'} eq 'checkbox') {
-				setCustomScanProperty($property->{'id'},0);
-			}else {
-				setCustomScanProperty($property->{'id'},'');
+		}elsif($property->{'type'} eq 'checkbox') {
+			setCustomScanProperty($property->{'id'},0);
+		}elsif($property->{'type'} =~ /.*multiplelist$/) {
+			my $values = getMultipleListQueryParameter($params, 'property_'.$property->{'id'});
+			my $valuesString = '';
+			for my $value (keys %$values) {
+				if($valuesString ne '') {
+					$valuesString .= ',';
+				}
+				$valuesString .= $value;
 			}
+			setCustomScanProperty($property->{'id'},$valuesString);
+		}else {
+			setCustomScanProperty($property->{'id'},'');
 		}
 	}
 	if($params->{'moduleenabled'}) {
@@ -1823,6 +1884,34 @@ sub handleWebSaveSettings {
 	}else {
 		handleWebList($client, $params);
 	}
+}
+
+sub getMultipleListQueryParameter {
+	my $params = shift;
+	my $parameter = shift;
+
+	my $query = $params->{url_query};
+	my %result = ();
+	if($query) {
+		foreach my $param (split /\&/, $query) {
+			if ($param =~ /([^=]+)=(.*)/) {
+				my $name  = unescape($1);
+				my $value = unescape($2);
+				if($name eq $parameter) {
+					# We need to turn perl's internal
+					# representation of the unescaped
+					# UTF-8 string into a "real" UTF-8
+					# string with the appropriate magic set.
+					if ($value ne '*' && $value ne '') {
+						$value = Slim::Utils::Unicode::utf8on($value);
+						$value = Slim::Utils::Unicode::utf8encode_locale($value);
+					}
+					$result{$value} = 1;
+				}
+			}
+		}
+	}
+	return \%result;
 }
 
 sub setCustomScanProperty {
