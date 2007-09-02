@@ -1853,6 +1853,16 @@ sub handleWebSaveSettings {
 			}
 		}elsif($property->{'type'} eq 'checkbox') {
 			setCustomScanProperty($property->{'id'},0);
+		}elsif($property->{'type'} eq 'checkboxes') {
+			my $values = getCheckBoxesQueryParameter($params, 'property_'.$property->{'id'});
+			my $valuesString = '';
+			for my $value (keys %$values) {
+				if($valuesString ne '') {
+					$valuesString .= ',';
+				}
+				$valuesString .= $value;
+			}
+			setCustomScanProperty($property->{'id'},$valuesString);
 		}elsif($property->{'type'} =~ /.*multiplelist$/) {
 			my $values = getMultipleListQueryParameter($params, 'property_'.$property->{'id'});
 			my $valuesString = '';
@@ -1884,6 +1894,25 @@ sub handleWebSaveSettings {
 	}else {
 		handleWebList($client, $params);
 	}
+}
+
+sub getCheckBoxesQueryParameter {
+	my $params = shift;
+	my $parameter = shift;
+
+	my %result = ();
+	foreach my $key (keys %$params) {
+		my $pattern = '^'.$parameter.'_(.*)';
+		if ($key =~ /$pattern/) {
+			my $id  = unescape($1);
+			if ($id ne '*' && $id ne '') {
+				$id = Slim::Utils::Unicode::utf8on($id);
+				$id = Slim::Utils::Unicode::utf8encode_locale($id);
+			}
+			$result{$id} = 1;
+		}
+	}
+	return \%result;
 }
 
 sub getMultipleListQueryParameter {

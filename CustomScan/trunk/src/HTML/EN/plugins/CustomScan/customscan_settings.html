@@ -50,6 +50,21 @@
 							</select>
 						</td></tr>
 					</table>
+				[% ELSIF property.type == 'checkboxes' %]
+					<table border="0">[% USE table property.values, cols=3, pad=0 %]
+						[%- FOREACH itemrow = table.rows %]
+							<tr>
+							[%- FOREACH item = itemrow %]
+								[%- itemid = propertyid _ "_" _ item.id %]
+								[%- IF not loop.first %]
+									<td>[% nbsp = "&nbsp"; nbsp.repeat(10) %]</td>
+								[%- END %]
+								<td><input type="checkbox" name="[% itemid %]" id="[% itemid %]" value="1" [% item.selected ? "checked" : "" %]>
+								<label for="[% itemid %]">[% item.name | html %]</label></td>
+							[%- END %]
+							</tr>
+						[%- END %]
+					</table>
 				[% ELSE %]
 					<input type="text" name="[% propertyid %]" id="[% propertyid %]" value="[% property.value %]">
 				[% END %]
