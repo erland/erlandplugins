@@ -28,6 +28,28 @@
 					<input type="checkbox" name="[% propertyid %]" id="[% propertyid %]" value="1" [% property.value ? "checked" : "" %]>
 				[% ELSIF property.type == 'password' %]
 					<input type="password" name="[% propertyid %]" id="[% propertyid %]" value="[% property.value %]">
+				[% ELSIF property.type == 'singlelist' %]
+					<table border="0">
+						<tr><td>
+							<select name="[% propertyid %]">
+							[%- FOREACH item = property.values %]
+								[%- itemid = item.id %]
+								<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]" [% IF item.selected %]selected[% END %]>[% item.name | html %]</option>
+							[%- END %]
+							</select>
+						</td></tr>
+					</table>
+				[% ELSIF property.type == 'multiplelist' %]
+					<table border="0">
+						<tr><td>
+							<select name="[% propertyid %]" multiple size="5">
+							[%- FOREACH item = property.values %]
+								[%- itemid = item.id %]
+								<option name="[% itemid %]" id="[% itemid %]" value="[% itemid %]" [% IF item.selected %]selected[% END %]>[% item.name | html %]</option>
+							[%- END %]
+							</select>
+						</td></tr>
+					</table>
 				[% ELSE %]
 					<input type="text" name="[% propertyid %]" id="[% propertyid %]" value="[% property.value %]">
 				[% END %]
