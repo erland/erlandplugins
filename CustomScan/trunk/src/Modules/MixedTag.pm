@@ -474,12 +474,12 @@ sub getMixedTagMenuItems {
 			$albumssqlbyartists .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 			$albumssqlbyartists .= "left join contributors on contributor_track.contributor=contributors.id ";
 
-			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
+			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'}) {
 				$albumssql = "select albums.id,ifnull(if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 				$albumssql .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 				$albumssql .= "left join contributors on contributor_track.contributor=contributors.id ";
 
-				$albumssqlbyyear = "select albums.id,ifnull(if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+				$albumssqlbyyear = "select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,' ')), ifnull(group_concat(distinct contributors.name separator ','),'') ,')')),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 				$albumssqlbyyear .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 				$albumssqlbyyear .= "left join contributors on contributor_track.contributor=contributors.id ";
 			}else {
@@ -722,7 +722,7 @@ sub getMixedTagMenuItems {
 			'menudata' => $albumssql,
 			'menu' => \%menutracks
 		);
-		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
+		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'}) {
 			$menualbums{'itemformat'} = 'albumconcat';
 		}
 		if(defined($parameters->{'defaultalbumsort'}) && $parameters->{'defaultalbumsort'}) {
