@@ -464,7 +464,17 @@ sub getMixedTagMenuItems {
 
 		if(!defined($parameters->{'findalbums'}) || $parameters->{'findalbums'} ne '0') {
 			# Create All albums SQL
-			$albumssql = "select albums.id,albums.title,substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
+				my $roles = "1,5";
+				if(defined($parameters->{'roles'})) {
+					$roles = $parameters->{'roles'};
+				}
+				$albumssql = "select albums.id,ifnull(if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+				$albumssql .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
+				$albumssql .= "left join contributors on contributor_track.contributor=contributors.id ";
+			}else {
+				$albumssql = "select albums.id,albums.title,substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+			}
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
 					my $attr = "attr".$it->{'id'};
@@ -562,7 +572,13 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'findcustomtagname'})) {
 			$menu{'menufunction'} .= "|findcustomtagname=".$parameters->{'findcustomtagname'};
 		}
-		
+		if(defined($parameters->{'showartistwithalbum'})) {
+			$menu{'menufunction'} .= "|showartistwithalbum=".$parameters->{'showartistwithalbum'};
+		}		
+		if(defined($parameters->{'roles'})) {
+			$menu{'menufunction'} .= "|roles=".$parameters->{'roles'};
+		}		
+
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
 		}elsif(defined($parameters->{'library'})) {
@@ -629,6 +645,12 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'findcustomtagname'})) {
 			$menu{'menufunction'} .= "|findcustomtagname=".$parameters->{'findcustomtagname'};
 		}
+		if(defined($parameters->{'showartistwithalbum'})) {
+			$menu{'menufunction'} .= "|showartistwithalbum=".$parameters->{'showartistwithalbum'};
+		}		
+		if(defined($parameters->{'roles'})) {
+			$menu{'menufunction'} .= "|roles=".$parameters->{'roles'};
+		}		
 		
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
@@ -678,6 +700,10 @@ sub getMixedTagMenuItems {
 			'menudata' => $albumssql,
 			'menu' => \%menutracks
 		);
+		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
+			$menualbums{'itemformat'} = 'albumconcat';
+		}
+
 		my %allalbums = (
 			'id' => 'matchingalbums',
 			'playtypeall' => 'none',
