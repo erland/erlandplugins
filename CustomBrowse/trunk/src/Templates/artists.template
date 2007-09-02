@@ -30,8 +30,19 @@
 				<option>
 					<id>byyear</id>
 					<name>Sort by year</name>
-					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					<itemformat>albumconcat</itemformat>
 					<menulinks>number</menulinks>
+					<menudata>
+						select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from albums[% IF library or activelibrary %],multilibrary_album[% END %]
+						where
+							[%- IF library or activelibrary %]
+							albums.id=multilibrary_album.album and
+							multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							[%- END %]
+							albums.compilation = 1
+						group by albums.id
+						order by albums.year desc,albums.titlesort asc
+	                                </menudata>
 				</option>
 				<option>
 					<id>bytitle</id>
@@ -116,8 +127,21 @@
 				<option>
                                         <id>byyear</id>
                                         <name>Sort by year</name>
-                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					<itemformat>albumconcat</itemformat>
                                         <menulinks>number</menulinks>
+					<menudata>
+						select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')),substr(albums.titlesort,1,1) from contributor_album,albums[% IF library or activelibrary %],multilibrary_album[% END %] 
+						where 
+							[%- IF library or activelibrary %]
+							albums.id=multilibrary_album.album and
+							multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							[%- END %]
+							albums.id=contributor_album.album and 
+							contributor_album.contributor={artist} and 
+							contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) 
+						group by albums.id 
+						order by albums.year desc,albums.titlesort asc
+					</menudata>
                                 </option>
                                 <option>
                                         <id>bytitle</id>
