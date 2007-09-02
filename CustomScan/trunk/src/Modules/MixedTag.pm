@@ -397,6 +397,8 @@ sub getMixedTagMenuItems {
 	my $taggroupssql = undef;
 	my $trackssql = undef;
 	my $albumssql = undef;
+	my $albumssqlbyartists = undef;
+	my $albumssqlbyyear = undef;
 	my $customtagsql = undef;
 	if(!defined($currentTag)) {
 		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1) from customscan_track_attributes ";
@@ -464,33 +466,47 @@ sub getMixedTagMenuItems {
 
 		if(!defined($parameters->{'findalbums'}) || $parameters->{'findalbums'} ne '0') {
 			# Create All albums SQL
+			my $roles = "1,5";
+			if(defined($parameters->{'roles'}) && $parameters->{'roles'}) {
+				$roles = $parameters->{'roles'};
+			}
+			$albumssqlbyartists = "select albums.id,ifnull(if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+			$albumssqlbyartists .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
+			$albumssqlbyartists .= "left join contributors on contributor_track.contributor=contributors.id ";
+
 			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
-				my $roles = "1,5";
-				if(defined($parameters->{'roles'})) {
-					$roles = $parameters->{'roles'};
-				}
 				$albumssql = "select albums.id,ifnull(if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 				$albumssql .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 				$albumssql .= "left join contributors on contributor_track.contributor=contributors.id ";
+
+				$albumssqlbyyear = "select albums.id,ifnull(if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+				$albumssqlbyyear .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
+				$albumssqlbyyear .= "left join contributors on contributor_track.contributor=contributors.id ";
 			}else {
 				$albumssql = "select albums.id,albums.title,substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
+				$albumssqlbyyear = "select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 			}
+			my $commonsql = '';
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
 					my $attr = "attr".$it->{'id'};
-					$albumssql .= "join customscan_track_attributes $attr on tracks.id=$attr.track and $attr.module='mixedtag' and $attr.attr='".quoteValue($it->{'tag'})."' and $attr.extravalue='".quoteValue($it->{'value'})."' ";
+					$commonsql .= "join customscan_track_attributes $attr on tracks.id=$attr.track and $attr.module='mixedtag' and $attr.attr='".quoteValue($it->{'tag'})."' and $attr.extravalue='".quoteValue($it->{'value'})."' ";
 				}
 			}
 			if(defined($currentItem->{'value'})) {
-				$albumssql .= "join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentItem->{'tag'})."' and customscan_track_attributes.extravalue='".quoteValue($currentItem->{'value'})."' ";
+				$commonsql .= "join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentItem->{'tag'})."' and customscan_track_attributes.extravalue='".quoteValue($currentItem->{'value'})."' ";
 			}
 			if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
-				$albumssql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
+				$commonsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
 			}elsif(defined($parameters->{'library'})) {
-				$albumssql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
+				$commonsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 			}
-			$albumssql .= " where tracks.audio=1";
+			$albumssql .= $commonsql." where tracks.audio=1";
 			$albumssql .=" group by albums.id order by albums.titlesort";
+			$albumssqlbyyear .= $commonsql." where tracks.audio=1";
+			$albumssqlbyyear .=" group by albums.id order by albums.year desc,albums.titlesort";
+			$albumssqlbyartists .= $commonsql." where tracks.audio=1";
+			$albumssqlbyartists .=" group by albums.id order by contributors.namesort,albums.titlesort";
 		}
 
 
@@ -578,6 +594,9 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'roles'})) {
 			$menu{'menufunction'} .= "|roles=".$parameters->{'roles'};
 		}		
+		if(defined($parameters->{'defaultalbumsort'})) {
+			$menu{'menufunction'} .= "|defaultalbumsort=".$parameters->{'defaultalbumsort'};
+		}		
 
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
@@ -651,6 +670,9 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'roles'})) {
 			$menu{'menufunction'} .= "|roles=".$parameters->{'roles'};
 		}		
+		if(defined($parameters->{'defaultalbumsort'})) {
+			$menu{'menufunction'} .= "|defaultalbumsort=".$parameters->{'defaultalbumsort'};
+		}		
 		
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
@@ -703,6 +725,33 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} ne '0') {
 			$menualbums{'itemformat'} = 'albumconcat';
 		}
+		if(defined($parameters->{'defaultalbumsort'}) && $parameters->{'defaultalbumsort'}) {
+			$menualbums{'defaultoption'} = $parameters->{'defaultalbumsort'};
+		}
+		my %menualbumsbytitle = (
+			'id' => 'bytitle',
+			'name' => 'Sort by title',
+			'menulinks' => 'alpha',
+		);
+		my %menualbumsbyyear = (
+			'id' => 'byyear',
+			'name' => 'Sort by year',
+			'itemformat' => 'albumconcat',
+			'menulinks' => 'number',
+			'menudata' => $albumssqlbyyear,
+		);
+		my %menualbumsbyartists = (
+			'id' => 'byartist',
+			'name' => 'Sort by artist',
+			'itemformat' => 'albumconcat',
+			'menulinks' => 'number',
+			'menudata' => $albumssqlbyartists,
+		);
+		my @options = ();
+		push @options, \%menualbumsbytitle;
+		push @options, \%menualbumsbyyear;
+		push @options, \%menualbumsbyartists;
+		$menualbums{'option'} = \@options;
 
 		my %allalbums = (
 			'id' => 'matchingalbums',
