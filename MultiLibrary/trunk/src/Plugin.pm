@@ -612,7 +612,7 @@ sub getCustomBrowseContextMenus {
 
 sub getCustomBrowseContextTemplates {
 	my $client = shift;
-	return Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary','FileCache/CustomBrowse','ContextMenuTemplates','xml');
+	return Plugins::MultiLibrary::Template::Reader::getTemplates($client,'MultiLibrary',$PLUGINVERSION,'FileCache/CustomBrowse','ContextMenuTemplates','xml');
 }
 
 sub getCustomBrowseContextTemplateData {

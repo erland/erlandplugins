@@ -36,6 +36,7 @@ use Cache::Cache qw( $EXPIRES_NEVER);
 sub getTemplates {
 	my $client = shift;
 	my $mainPlugin = shift;
+	my $pluginVersion = shift;
 	my $cachePrefix = shift;
 	my $directory = shift;
 	my $extension = shift;
@@ -47,7 +48,7 @@ sub getTemplates {
 	my $cacheName = undef;;
 	my $cache = undef;
 	if($cachePrefix) {
-		$cacheName = $cachePrefix."/".$mainPlugin."/".$directory;
+		$cacheName = $cachePrefix."/".$mainPlugin."/".$pluginVersion."/".$directory;
 		$cache = Slim::Utils::Cache->new($cacheName);
 	}
 
@@ -109,7 +110,7 @@ sub getTemplates {
 						'timestamp' => $timestamp,
 					);
 					delete $cacheItems->{'items'}->{$item};
-					$cacheItems->{'items'}->{$item} = \%templateItem;
+					$cacheItems->{'items'}->{$item} = \%entry;
 				}
 				push @result,\%templateItem;
 			}
