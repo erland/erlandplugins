@@ -41,7 +41,7 @@ my $dataQueries = undef;
 my $sqlerrors = '';
 my $soapLiteError = 0;
 my $supportDownloadError = undef;
-my $PLUGINVERSION = '1.1';
+my $PLUGINVERSION = '1.1.1';
 
 my $configManager = undef;
 
