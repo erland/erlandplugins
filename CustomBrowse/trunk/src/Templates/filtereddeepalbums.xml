@@ -2,6 +2,7 @@
 <custombrowse>
 	<minpluginversion>1.24</minpluginversion>
 	<template>
+		<downloadidentifier>198</downloadidentifier>
 		<name>Filtered Albums by letter</name>
 		<description>Menu that browses albums but it has an extra level where you have to select the first letter of the album before you can browse albums for the selected letter, the included albums is limited to included/excluded genres and comment</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Filtered Albums by letter"/>
