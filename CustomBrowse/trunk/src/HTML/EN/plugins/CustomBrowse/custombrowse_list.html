@@ -105,6 +105,7 @@ END;
 					[% IF item.playtype != 'none' %]
 						[% IF item.attributes %]
 							[% WRAPPER playlink   %][% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
+							[% WRAPPER insertlink   %][% PROCESS cmdHRef cmdType='insert' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 						        [% WRAPPER addlink    %][% PROCESS cmdHRef cmdType='add' target='status' itemobj=item.itemobj attributes=item.attributes %][% END %]
 							<!--
 							[% FOREACH mixer = item.mixerlinks.values.sort %]
