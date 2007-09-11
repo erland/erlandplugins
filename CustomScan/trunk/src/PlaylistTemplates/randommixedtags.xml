@@ -2,6 +2,7 @@
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
 	<template>
+		<downloadidentifier>199</downloadidentifier>
 		<name>Random for mixed tags</name>
 		<description>Random songs for specified tags from the Mixed Tag scanning module in Custom Scan, requires Custom Scan plugin</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="Random for mixed tags"/>
