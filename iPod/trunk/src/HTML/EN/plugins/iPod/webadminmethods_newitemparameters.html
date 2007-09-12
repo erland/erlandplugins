@@ -17,6 +17,7 @@
 	<tr><td colspan="3"><b>[% "PLUGIN_IPOD_NEW_ITEM_PARAMETERS_TITLE" | string %]</b></td></tr>
 	<tr><td colspan="3">&nbsp;</td></tr>
 	[%- FOREACH parameter = pluginWebAdminMethodsNewItemParameters %]
+		[% IF !(parameter.type.match('list') or parameter.type.match('checkboxes')) or parameter.values.size!=0 %]
 		<tr>
 			<td>[% parameter.name %]</td>
 			<td>&nbsp;&nbsp;&nbsp;</td>
@@ -25,7 +26,7 @@
 				<input type="text" name="itemparameter_[% parameter.id %]" value="[% parameter.value | html %]">
 			[% ELSIF parameter.type == 'multilinetext' %]
 				<textarea name="itemparameter_[% parameter.id %]" cols="60" rows="10" style="width:95%;height:100%;" wrap="off" onkeydown="return catchTab(this,event)">[% parameter.value | html %]</textarea>
-			[% ELSIF parameter.type == 'singlelist' or parameter.type == 'sqlsinglelist' or parameter.type == 'functionsinglelist' or parameter.type == 'optionalsinglelist' or parameter.type == 'sqloptionalsinglelist' or parameter.type == 'functionoptionalsinglelist'%]
+			[% ELSIF parameter.type.match('singlelist') %]
 				<table border="0">
 					<tr><td>
 						<select name="itemparameter_[% parameter.id %]">
@@ -36,7 +37,7 @@
 						</select>
 					</td></tr>
 				</table>
-			[% ELSIF parameter.type == 'multiplelist' or parameter.type == 'sqlmultiplelist' or parameter.type == 'functionmultiplelist' or parameter.type == 'optionalmultiplelist' or parameter.type == 'sqloptionalmultiplelist' or parameter.type == 'functionoptionalmultiplelist'%]
+			[% ELSIF parameter.type.match('multiplelist') %]
 				<table border="0">
 					<tr><td>
 						<select name="itemparameter_[% parameter.id %]" multiple size="10">
@@ -49,7 +50,7 @@
 				</table>
 			[% ELSIF parameter.type == 'checkbox' %]
 				<input type="checkbox" name="itemparameter_[% parameter.id %]" id="itemparameter_[% parameter.id %]" value="1" [% parameter.value ? "checked" : "" %]>
-			[% ELSIF parameter.type == 'checkboxes' or parameter.type == 'sqlcheckboxes' or parameter.type == 'functioncheckboxes'%]
+			[% ELSIF parameter.type.match('checkboxes') %]
 				<table border="0">[% USE table parameter.values, cols=3, pad=0 %]
 					[%- FOREACH itemrow = table.rows %]
 						<tr>
@@ -68,6 +69,7 @@
 			</td>
 		</tr>
 		<tr><td>&nbsp;</td></tr>
+		[% END %]
 	[%- END %]
 	<tr>
 		<td>[% "PLUGIN_IPOD_ITEMTYPE" | string %]</td>
