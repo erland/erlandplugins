@@ -48,6 +48,10 @@ sub getItems {
 	return \@result;
 }
 
+sub implementsPlay {
+	return 0;
+}
+
 sub combineKeywords {
 	my $self = shift;
 	my $parentKeywords = shift;

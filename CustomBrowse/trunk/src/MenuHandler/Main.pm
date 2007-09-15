@@ -37,6 +37,8 @@ use Plugins::CustomBrowse::MenuHandler::MenuMix;
 use Plugins::CustomBrowse::MenuHandler::ModeMix;
 use Plugins::CustomBrowse::MenuHandler::FunctionMix;
 use Plugins::CustomBrowse::MenuHandler::SQLPlay;
+use Plugins::CustomBrowse::MenuHandler::FunctionPlay;
+use Plugins::CustomBrowse::MenuHandler::FunctionCmdPlay;
 use Plugins::CustomBrowse::MenuHandler::AllPlay;
 
 use File::Spec::Functions qw(:ALL);
@@ -66,6 +68,8 @@ sub new {
 	);
 	my %playHandlers = (
 		'sql' => Plugins::CustomBrowse::MenuHandler::SQLPlay->new($parameters),
+		'function' => Plugins::CustomBrowse::MenuHandler::FunctionPlay->new($parameters),
+		'functioncmd' => Plugins::CustomBrowse::MenuHandler::FunctionCmdPlay->new($parameters),
 		'all' => Plugins::CustomBrowse::MenuHandler::AllPlay->new($parameters),
 	);
 	$parameters->{'menuHandlers'} = \%menuHandlers;

@@ -788,6 +788,74 @@ sub getPageItemsForContext {
 					$it->{'itemvalue'} = $2;
 				}
 			}
+
+			my $id = $it->{'itemid'};
+			my $attributeName = undef;
+			if(defined($it->{'contextid'})) {
+				$attributeName = $it->{'contextid'};
+			}
+			if(!defined($attributeName)) {
+				 $attributeName = $it->{'id'};
+			}
+
+			my $menuurl = undef;
+			if(defined($context)) {
+				if(defined($contextParams) && defined($contextParams->{'hierarchy'})) {
+					$menuurl=$contextParams->{'hierarchy'};
+				}else {
+					$menuurl = $context->{'url'}.',';
+				}
+				$menuurl .= $attributeName.$context->{'valueUrl'}.'&'.$attributeName.'='.=escape(escape($id));
+			}else {
+				$menuurl='&hierarchy='.$attributeName.'&'.$attributeName.'='.escape(escape($id));
+			}
+			if(defined($contextParams)) {
+				$menuurl .= $contextParams->{'itemurl'};
+				my $regExp = "&"."contexttype=";
+				my $type = undef;
+				my $prefix = '';
+				if($contextParams->{'itemurl'} !~ /$regExp/) {
+					if(defined($it->{'webcontextprefix'})) {
+						$prefix = escape($it->{'webcontextprefix'});
+					}
+					if(defined($it->{'webcontext'})) {
+						$type = escape($it->{'webcontext'});
+					}elsif(defined($it->{'itemtype'})) {
+						$type = $prefix.escape($it->{'itemtype'});
+					}
+					if(defined($type)) {
+						$menuurl .= "&contexttype=$type";
+					}
+				}
+				if($checkContextType) {
+					my $contextitems = $self->items;
+					if(!defined($type) || !defined($contextitems->{'group_'.$type})) {
+						$menuurl = undef;
+					}
+				}
+				$regExp = "&"."contextname=";
+				if(defined($menuurl) && $contextParams->{'itemurl'} !~ /$regExp/) {
+					my $name = undef;
+					if(defined($it->{'itemvalue'})) {
+						$name = escape($it->{'itemvalue'});
+					}else {
+						$name = escape($it->{'itemname'});
+					}
+					$menuurl .= "&contextname=$name";
+				}
+				$regExp = "&"."contextid=";
+				if(defined($menuurl) && $contextParams->{'itemurl'} !~ /$regExp/) {
+					my $contextid = undef;
+					if(defined($it->{'itemid'})) {
+						$contextid = escape($id);
+					}
+					$menuurl .= "&contextid=$contextid";
+				}
+			}
+			if(defined($menuurl) && ((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'})) {
+				$menuurl .= "&mainBrowseMenu=1";
+			}
+
 			if(defined($it->{'menu'}) || defined($it->{'menufunction'})) {
 				my $hasExternalUrl = undef;
 				if(defined($it->{'menu'}) && ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'})) {
@@ -801,73 +869,10 @@ sub getPageItemsForContext {
 					}
 				}
 				if(!$hasExternalUrl) {
-					my $id = $it->{'itemid'};
-					my $attributeName = undef;
-					if(defined($it->{'contextid'})) {
-						$attributeName = $it->{'contextid'};
-					}
-					if(!defined($attributeName)) {
-						 $attributeName = $it->{'id'};
-					}
-
-					if(defined($context)) {
-						if(defined($contextParams) && defined($contextParams->{'hierarchy'})) {
-							$it->{'url'}=$contextParams->{'hierarchy'};
-						}else {
-							$it->{'url'} = $context->{'url'}.',';
-						}
-						$it->{'url'} .= $attributeName.$context->{'valueUrl'}.'&'.$attributeName.'='.=escape(escape($id));
-					}else {
-						$it->{'url'}='&hierarchy='.$attributeName.'&'.$attributeName.'='.escape(escape($id));
-					}
-					if(defined($contextParams)) {
-						$it->{'url'} .= $contextParams->{'itemurl'};
-						my $regExp = "&"."contexttype=";
-						my $type = undef;
-						my $prefix = '';
-						if($contextParams->{'itemurl'} !~ /$regExp/) {
-							if(defined($it->{'webcontextprefix'})) {
-								$prefix = escape($it->{'webcontextprefix'});
-							}
-							if(defined($it->{'webcontext'})) {
-								$type = escape($it->{'webcontext'});
-							}elsif(defined($it->{'itemtype'})) {
-								$type = $prefix.escape($it->{'itemtype'});
-							}
-							if(defined($type)) {
-								$it->{'url'} .= "&contexttype=$type";
-							}
-						}
-						if($checkContextType) {
-							my $contextitems = $self->items;
-							if(!defined($type) || !defined($contextitems->{'group_'.$type})) {
-								$it->{'url'} = undef;
-							}
-						}
-						$regExp = "&"."contextname=";
-						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
-							my $name = undef;
-							if(defined($it->{'itemvalue'})) {
-								$name = escape($it->{'itemvalue'});
-							}else {
-								$name = escape($it->{'itemname'});
-							}
-							$it->{'url'} .= "&contextname=$name";
-						}
-						$regExp = "&"."contextid=";
-						if(defined($it->{'url'}) && $contextParams->{'itemurl'} !~ /$regExp/) {
-							my $contextid = undef;
-							if(defined($it->{'itemid'})) {
-								$contextid = escape($id);
-							}
-							$it->{'url'} .= "&contextid=$contextid";
-						}
-					}
-					if(defined($it->{'url'}) && ((defined($client) && $client->param('mainBrowseMenu')) || $params->{'mainBrowseMenu'})) {
-						$it->{'url'} .= "&mainBrowseMenu=1";
-					}
+					$it->{'url'} = $menuurl;
 				}
 			}
+			
 			if(defined($it->{'itemformat'})) {
 				my $format = $it->{'itemformat'};
 				if($format eq 'track') {
@@ -979,6 +984,12 @@ sub getPageItemsForContext {
 			}
 			if($result{'playable'} && ((defined($it->{'playtype'}) && $it->{'playtype'} eq 'none') || (defined($it->{'playtypeall'}) && $it->{'playtypeall'} eq 'none'))) {
 				$result{'playable'} = 0;
+			}
+			if(defined($menuurl) && defined($it->{'playtype'}) && $it->{'playtype'} ne 'none') {
+				my $playHandler = $self->playHandlers->{$it->{'playtype'}};
+				if(defined($playHandler)) {
+					$it->{'playurl'} = $menuurl;
+				}
 			}
 
 			push @resultItems, $it;
@@ -1611,8 +1622,19 @@ sub _playAddItem {
 	}else {
 		my $playHandler = $self->playHandlers->{$item->{'playtype'}};
 		if(defined($playHandler)) {
-			my $tmpItems = $playHandler->getItems($client,$item,$listRef);
-			push @items,@$tmpItems;
+			if($playHandler->implementsPlay()) {
+				my $cmd = "play";
+				if($command eq 'inserttracks') {
+					$cmd = "insert";
+				}elsif($command eq 'addtracks') {
+					$cmd = "add";
+				}
+				$playHandler->play($client,$item,$listRef,$cmd);
+				return;
+			}else {
+				my $tmpItems = $playHandler->getItems($client,$item,$listRef);
+				push @items,@$tmpItems;
+			}
 		}
 	}
 
@@ -1731,20 +1753,29 @@ sub _playAddItem {
         	$client->execute(["playlist", "shuffle", 1]);
         }
 	if(($playedMultiple || defined($request)) && defined($displayString)) {
-		my $line1;
-		my $line2;
-
-		if ($client->linesPerScreen == 1) {
-			$line2 = $client->doubleString($displayString);
-		} else {
-			$line1 = $client->string($displayString);
-			$line2 = $self->getItemText($client,$item);
-		}
-		$client->showBriefly({
-			'line'    => [ $line1, $line2 ],
-			'overlay' => [ undef, $client->symbols('notesymbol') ],
-		});
+		$self->showBrieflyPlayStatus($client,$displayString,$item);
 	}
+}
+
+sub showBrieflyPlayStatus {
+	my $self = shift;
+	my $client = shift;
+	my $displayString = shift;
+	my $item = shift;
+
+	my $line1;
+	my $line2;
+
+	if ($client->linesPerScreen == 1) {
+		$line2 = $client->doubleString($displayString);
+	} else {
+		$line1 = $client->string($displayString);
+		$line2 = $self->getItemText($client,$item);
+	}
+	$client->showBriefly({
+		'line'    => [ $line1, $line2 ],
+		'overlay' => [ undef, $client->symbols('notesymbol') ],
+	});
 }
 
 sub _playTracks {
