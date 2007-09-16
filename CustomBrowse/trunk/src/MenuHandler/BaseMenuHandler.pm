@@ -566,6 +566,62 @@ sub getMenu {
 	return \%params;
 }
 
+sub browseTo {
+	my $self = shift;
+	my $client = shift;
+	my $arg = shift;
+
+	my %params = ();
+	if(defined($arg)) {
+		my @parray = split(/\|/, $arg);
+		for my $p (@parray) {
+			if($p =~ /^(.+?)=(.+)$/) {
+				$params{$1}=$2;
+			}
+		}
+	}
+	$self->_browseTo($client, \%params);
+}
+
+sub _browseTo {
+	my $self = shift;
+	my $client = shift;
+	my $params = shift;
+	my $item = shift;
+
+	my $menu = $self->getMenu($client,$item,undef);
+	if(defined($menu) && !defined($menu->{'useMode'}) && defined($params->{'hierarchy'}) && $params->{'hierarchy'} ne '') {
+		my $items = $menu->{'listRef'};
+		if(defined($items) && ref($items) eq 'ARRAY') {
+			my @hierarchyItems = split(/,/,$params->{'hierarchy'});
+			if(scalar(@hierarchyItems)>0)  {
+				my $nextAttr = @hierarchyItems->[0];
+				my $nextAttrValue = $params->{$nextAttr};
+				if(!defined($nextAttrValue)) {
+					$nextAttrValue = $nextAttr;
+				}
+				for my $it (@$items) {
+					if(defined($it->{'id'}) && $it->{'id'} eq $nextAttrValue) {
+						if($params->{'hierarchy'} =~ /^(.+?),(.+)$/) {
+							$params->{'hierarchy'} = $2;
+						}else {
+							delete $params->{'hierarchy'};
+						}
+						$self->_browseTo($client,$params,$it);
+						last;
+					}
+				}
+			}
+		}
+	}elsif(defined($menu)) {
+		if(defined($menu->{'useMode'})) {
+			Slim::Buttons::Common::pushModeLeft($client, $menu->{'useMode'}, 
+				$menu->{'parameters'});
+		}else {
+			Slim::Buttons::Common::pushModeLeft($client, $self->menuMode, $menu);
+		}
+	}
+}
 sub getHeaderText {
 	my ($self,$client, $item, $context) = @_;
 	if(defined($item->{'menuheader'})) {

@@ -1129,7 +1129,14 @@ sub getFunctions {
 		'right' => sub  {
 			my $client = shift;
 			$client->bumpRight();
-		}
+		},
+		'browse' => sub  {
+			my $client = shift;
+			my $button = shift;
+			my $args = shift;
+			
+			getMenuHandler()->browseTo($client, $args);
+		},
 	}
 }
 
