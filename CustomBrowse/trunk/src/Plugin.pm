@@ -73,7 +73,7 @@ my %choiceMapping = (
         'arrow_right' => 'exit_right',
         'play' => 'dead',
 	'play.single' => 'play_0',
-	'play.hold' => 'create_mix',
+	'play.hold' => 'createmix',
         'add' => 'dead',
         'add.single' => 'add_0',
         'add.hold' => 'insert_0',
@@ -850,7 +850,7 @@ sub initPlugin {
 	}
 
 	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
-	$choiceFunctions{'create_mix'} = sub {Slim::Buttons::Input::Choice::callCallback('onCreateMix', @_)};
+	$choiceFunctions{'createmix'} = sub {callCallbackWithArg('onCreateMix', @_)};
 	$choiceFunctions{'saveRating'} = sub {
 		my $client = shift;
 		my $button = shift;
@@ -957,6 +957,36 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mixescontext','_contexttype','_contextid'], [1, 1, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
+}
+
+sub callCallbackWithArg {
+        my $callbackName = shift;
+        my $client       = shift;
+        my $funct        = shift;
+        my $functarg     = shift;
+
+        my $valueRef = $client->modeParam('valueRef');
+        my $callback = Slim::Buttons::Input::Choice::getParam($client, $callbackName);
+        if (ref($callback) eq 'CODE') {
+
+                my @args = ($client, $valueRef ? ($$valueRef) : undef, $functarg);
+
+                eval { $callback->(@args) };
+
+                if ($@) {
+
+                        logError("Couldn't run callback: [$callbackName] : $@");
+                
+                } elsif (Slim::Buttons::Input::Choice::getParam($client,'pref')) {
+                
+                        $client->update;
+                }
+
+
+        } else {
+
+                Slim::Buttons::Input::Choice::passback($client, $funct, $functarg);
+        }
 }
 
 sub title {

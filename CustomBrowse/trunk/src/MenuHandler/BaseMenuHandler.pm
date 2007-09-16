@@ -502,8 +502,17 @@ sub getMenu {
 		parentMode => Slim::Buttons::Common::param($client,'parentMode'),
 		onCreateMix => 
 			sub {
-				my ($client, $item) = @_;
-				$self->_createMix($client, $item);
+				my ($client, $item, $arg) = @_;
+				my %params = ();
+				if(defined($arg)) {
+					my @parray = split(/\|/, $arg);
+					for my $p (@parray) {
+						if($p =~ /^(.+?)=(.+)$/) {
+							$params{$1}=$2;
+						}
+					}
+				}
+				$self->_createMix($client, $item, \%params);
 			},				
 		onInsert => 
 			sub {
@@ -1436,11 +1445,24 @@ sub _sortMenu {
 }
 
 sub _createMix {
-	my ($self,$client,$item) = @_;
+	my ($self,$client,$item,$parameters) = @_;
 
 	my $mixes = $self->mixHandler->getMixes($client,$item,'player');
 	for my $mix (@$mixes) {
 		$self->debugCallback->("Got mix: ".$mix->{'mixname'}."\n");
+	}
+	my $selectedMix = undef;
+	if(defined($item->{'itemtype'}) && defined($parameters->{$item->{'itemtype'}."mix"})) {
+		$selectedMix = $parameters->{$item->{'itemtype'}."mix"};
+	}
+	if(defined($selectedMix)) {
+		my @selectedMixArray = ();
+		for my $m (@$mixes) {
+			if($m->{'id'} eq $selectedMix) {
+				push @selectedMixArray,$m;
+			}
+		}
+		$mixes = \@selectedMixArray;
 	}
 
 	if(!$self->showMixBeforeExecuting && scalar(@$mixes)==1) {
