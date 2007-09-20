@@ -2145,14 +2145,23 @@ sub handleWebPlayAdd {
 			delete $params->{'hierarchy'};
 		}
 	}
-	if(!$gotoparent) {
-		$params->{'hierarchy'} = $hierarchy;
+	if($gotoparent) {
+		$hierarchy = $params->{'hierarchy'};
+		if($params->{'url_query'} =~ /[&?]hierarchy=/) {
+			$params->{'url_query'} =~ s/([&?]hierarchy=)([^&]*)/$1$hierarchy/;
+		}
+		if($params->{'url_query'} =~ /[&?]hierarchy=&/) {
+			$params->{'url_query'} =~ s/[&?]hierarchy=&//;
+		}
 	}
 	if($usecontext) {
-		$params->{'path'} = 'plugins/CustomBrowse/custombrowse_contextlist.html';
-		return handleWebContextList($client,$params);
+		$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_contextlist.html';
+		$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 	}else {
-		return handleWebList($client,$params);
+		$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
+		$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+		return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 	}
 }
 sub handleWebPlay {
@@ -2223,8 +2232,17 @@ sub handleWebMix {
 			$i=$i+1;
 		}
 		$params->{'hierarchy'} = $newHierarchy;
+		$hierarchy = $newHierarchy;
 	}
-	return handleWebList($client,$params);
+	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
+	if($params->{'url_query'} =~ /[&?]hierarchy=/) {
+		$params->{'url_query'} =~ s/([&?]hierarchy=)([^&]*)/$1$hierarchy/;
+	}
+	if($params->{'url_query'} =~ /[&?]hierarchy=&/) {
+		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
+	}
+	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
 sub handleWebMixContext {
@@ -2286,8 +2304,17 @@ sub handleWebMixContext {
 			$i=$i+1;
 		}
 		$params->{'hierarchy'} = $newHierarchy;
+		$hierarchy = $newHierarchy;
 	}
-	return handleWebList($client,$params);
+	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_contextlist.html';
+	if($params->{'url_query'} =~ /[&?]hierarchy=/) {
+		$params->{'url_query'} =~ s/([&?]hierarchy=)([^&]*)/$1$hierarchy/;
+	}
+	if($params->{'url_query'} =~ /[&?]hierarchy=&/) {
+		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
+	}
+	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
 sub retreiveMixList {
@@ -2391,8 +2418,17 @@ sub handleWebExecuteMix {
 			$i=$i+1;
 		}
 		$params->{'hierarchy'} = $newHierarchy;
+		$hierarchy = $newHierarchy;
 	}
-	return handleWebList($client,$params);
+	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
+	if($params->{'url_query'} =~ /[&?]hierarchy=/) {
+		$params->{'url_query'} =~ s/([&?]hierarchy=)([^&]*)/$1$hierarchy/;
+	}
+	if($params->{'url_query'} =~ /[&?]hierarchy=&/) {
+		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
+	}
+	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
 sub handleWebExecuteMixContext {
@@ -2452,8 +2488,17 @@ sub handleWebExecuteMixContext {
 			$i=$i+1;
 		}
 		$params->{'hierarchy'} = $newHierarchy;
+		$hierarchy = $newHierarchy;
 	}
-	return handleWebContextList($client,$params);
+	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_contextlist.html';
+	if($params->{'url_query'} =~ /[&?]hierarchy=/) {
+		$params->{'url_query'} =~ s/([&?]hierarchy=)([^&]*)/$1$hierarchy/;
+	}
+	if($params->{'url_query'} =~ /[&?]hierarchy=&/) {
+		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
+	}
+	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
 sub executeMix {
@@ -2698,7 +2743,9 @@ sub handleWebSaveSelectMenus {
                 }
         }
 	$params->{'refresh'} = 1;
-        handleWebList($client, $params);
+
+	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
 sub cliHandler {

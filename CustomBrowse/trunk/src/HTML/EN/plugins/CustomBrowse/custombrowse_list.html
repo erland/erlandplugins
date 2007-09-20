@@ -72,8 +72,8 @@ END;
 			[% WRAPPER contentcontainer %]
 				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
 					[% BLOCK allsongscontrols %]
-						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
-					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %]"[% END %]
+						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 					[% END %]
 					[%- WRAPPER contentitem controls='allsongscontrols' %]
 			        		[% "ALL_SONGS" | string %]<br>
@@ -90,14 +90,14 @@ END;
 				[% BLOCK controls %]
 					[% IF pluginCustomBrowseSingleMixButton %]
 						[% IF item.mixes and item.mixes.size>0 and item.url %]
-							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
 						[% END %]
 					[% ELSE %]
 					[% FOREACH mix = item.mixes %]
 						[% IF mix.url %]
 							<a href="[% webroot %][% mix.url %]&player=[% player | uri %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
 						[% ELSE %]
-							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
+							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemix.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %][% IF start %]&start=[% start %][% END %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
 						[% END %]
 					[% END %]
 					[% END %]
@@ -113,11 +113,11 @@ END;
 						        [% END %]
 							-->
 						[% ELSIF item.url %]
-							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %]"[% END %]
-						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.url %]"[% END %]
+							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% ELSIF item.playurl %]
-							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.playurl %]"[% END %]
-						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.playurl %]"[% END %]
+							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]"[% END %]
+						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
 					[% END %]
 				[% END %]
