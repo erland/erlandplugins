@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.17</minpluginversion>
+	<minpluginversion>1.21</minpluginversion>
 	<template>
+		<downloadidentifier>201</downloadidentifier>
 		<name>Random for similar mixed tags</name>
 		<description>Random songs for songs with similar tags as the user selectable song, tags from the Mixed Tag scanning module in Custom Scan is used, so it requires Custom Scan plugin</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="Random for similar mixed tags"/>
