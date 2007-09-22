@@ -287,6 +287,21 @@ sub initDatabaseLibrary {
 	}
 	return $id;
 }
+
+sub getLibraryTrackCount {
+	my $library = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("select count(*) from multilibrary_track where library=?");
+	$sth->bind_param(1,$library->{'libraryno'},SQL_VARCHAR);
+	$sth->execute();
+		
+	my $count = 0;
+	$sth->bind_col(1, \$count);
+	$sth->fetch();
+	return $count;
+}
+
 sub getCustomSkipFilterTypes {
 	my @result = ();
 	my %notactive = (
@@ -986,7 +1001,10 @@ sub refreshLibraries {
 							);
 							$sql = replaceParameters($sql,\%keywords);
 							$sth = $dbh->prepare('INSERT INTO multilibrary_track (library,track) '.$sql);
-							$sth->execute();
+							my $noOfTracks = $sth->execute();
+							if($noOfTracks eq '0E0') {
+								$noOfTracks = 0;
+							}
 							$sth->finish();
 							
 							$sth = $dbh->prepare('INSERT INTO multilibrary_album (library,album) SELECT ?,tracks.album FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and multilibrary_track.library=? group by tracks.album');
@@ -1012,6 +1030,7 @@ sub refreshLibraries {
 							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
+							debugMsg("Added $noOfTracks songs to the library\n");
 						}
 					}
 				}
@@ -1301,6 +1320,8 @@ sub handleWebList {
 		if(!isLibraryEnabledForClient($client,\%weblibrary)) {
 			$weblibrary{'enabled'} = 0;
 		}
+		$weblibrary{'nooftracks'} = getLibraryTrackCount($lib);
+
 		push @weblibraries,\%weblibrary;
 	}
 	@weblibraries = sort { $a->{'name'} cmp $b->{'name'} } @weblibraries;
@@ -1897,6 +1918,10 @@ SETUP_PLUGIN_MULTILIBRARY_REFRESH_SAVE
 
 PLUGIN_MULTILIBRARY_SELECT
 	EN	Select a library
+
+PLUGIN_MULTILIBRARY_NOOFTRACKS
+	EN	Number of songs
+
 EOF
 
 }
