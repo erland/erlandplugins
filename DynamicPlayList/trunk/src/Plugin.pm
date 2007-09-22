@@ -377,22 +377,25 @@ sub playRandom {
 		}
 	}
 
+	# String to show with showBriefly
+	my $string = '';
+	my $playlist = getPlayList($client,$type);
+	if($playlist) {
+		$string = $playlist->{'name'};
+	}
+
 	my $count = 0;
 	if ($numItems) {
 		unless ($addOnly) {
-			$client->execute(['stop']);
-			$client->execute(['power', '1']);
+			my $request = $client->execute(['stop']);
+			$request->source('PLUGIN_DYNAMICPLAYLIST');
+			if(!$client->power()) {
+				$request = $client->execute(['power', '1']);
+				$request->source('PLUGIN_DYNAMICPLAYLIST');
+			}
 		}
 		Slim::Player::Playlist::shuffle($client, 0);
 		
-		# String to show with showBriefly
-		my $string = '';
-
-		my $playlist = getPlayList($client,$type);
-		if($playlist) {
-			$string = $playlist->{'name'};
-		}
-
 		# Strings for non-track modes could be long so need some time to scroll
 		my $showTime = 5;
 		
@@ -439,6 +442,7 @@ sub playRandom {
 		}
 		$mixInfo{$client} = undef;
 		$client->prefDelete('plugin_dynamicplaylist_playlist');
+		$client->prefDelete('plugin_dynamicplaylist_playlist_parameters');
 		$client->prefDelete('plugin_dynamicplaylist_offset');
 	} else {
 		if(!$numItems || $numItems==0 || $count>0) {
@@ -449,6 +453,20 @@ sub playRandom {
 				# Do this last to prevent menu items changing too soon
 				$mixInfo{$client}->{'type'} = $type;
 				$client->prefSet('plugin_dynamicplaylist_playlist',$type);
+				if(defined($playlist->{'parameters'})) {
+					my $i = 0;
+					$client->prefDelete('plugin_dynamicplaylist_playlist_parameters');
+					foreach my $p (keys %{$playlist->{'parameters'}}) {
+						if(defined($playlist->{'parameters'}->{$p})) {
+							my $param = $playlist->{'parameters'}->{$p};
+							$client->prefSet('plugin_dynamicplaylist_playlist_parameters',$param->{'value'},$i);
+							$i++;
+						}
+					}
+
+				}else {
+					$client->prefDelete('plugin_dynamicplaylist_playlist_parameters');
+				}
 			}
 			if($mixInfo{$client}->{'type'} eq $type) {
 				$mixInfo{$client}->{'offset'} = $offset;
@@ -467,6 +485,7 @@ sub playRandom {
 			}
 			$mixInfo{$client}->{'type'} = undef;
 			$client->prefDelete('plugin_dynamicplaylist_playlist');
+			$client->prefDelete('plugin_dynamicplaylist_playlist_parameters');
 			$client->prefDelete('plugin_dynamicplaylist_offset');
 		}
 	}
@@ -601,8 +620,10 @@ sub initPlayListTypes {
 			if(defined($playlist->{'parameters'})) {
 				my $parameter1 = $playlist->{'parameters'}->{'1'};
 				if(defined($parameter1)) {
-					if($parameter1->{'type'} eq 'album' || $parameter1->{'type'} eq 'artist' || $parameter1->{'type'} eq 'year' || $parameter1->{'type'} eq 'genre' || $parameter1->{'type'} eq 'playlist') {
+					if($parameter1->{'type'} eq 'album' || $parameter1->{'type'} eq 'artist' || $parameter1->{'type'} eq 'year' || $parameter1->{'type'} eq 'genre' || $parameter1->{'type'} eq 'playlist' || $parameter1->{'type'} eq 'track') {
 						$localPlayListTypes{$parameter1->{'type'}} = 1;
+					}elsif($parameter1->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/) {
+						$localPlayListTypes{$1} = 1;
 					}
 				}
 			}
@@ -814,6 +835,8 @@ sub addParameterValues {
 		$sql = "select year,year from tracks where year is not null group by year order by year desc";
 	}elsif(lc($parameter->{'type'}) eq 'playlist') {
 		$sql = "select playlist_track.playlist,tracks.title,substr(tracks.titlesort,1,1) from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
+	}elsif(lc($parameter->{'type'}) eq 'track') {
+		$sql = "select tracks.id,concat(albums.title,' ',tracks.tracknum,'. ',tracks.title),substr(tracks.titlesort,1,1) from tracks, albums where tracks.album=albums.id and audio=1 group by tracks.id order by albums.titlesort,albums.disc,tracks.tracknum";
 	}elsif(lc($parameter->{'type'}) eq 'list') {
 		my $value = $parameter->{'definition'};
 		if(defined($value) && $value ne "" ) {
@@ -845,7 +868,7 @@ sub addParameterValues {
 				debugMsg("Error, invalid parameter value: $value\n");
 			}
 		}
-	}elsif(lc($parameter->{'type'}) eq 'custom') {
+	}elsif(lc($parameter->{'type'}) =~ /^custom(album|artist|year|genre|playlist|track)$/) {
 		if(defined($parameter->{'definition'}) && lc($parameter->{'definition'}) =~ /^select/ ) {
 			$sql = $parameter->{'definition'};
 			for (my $i=1;$i<$parameter->{'id'};$i++) {
@@ -964,7 +987,7 @@ sub setMode {
 				if(!defined($playlisttype)) {
 					push @listRef, \%flatPlaylistItem;
 				}else {
-					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && $playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype) {
+					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
 						push @listRef, \%flatPlaylistItem;
 					}
 				}
@@ -978,7 +1001,7 @@ sub setMode {
 				}else {
 					if(defined($playListItems->{$menuItemKey}->{'playlist'})) {
 						my $playlist = $playListItems->{$menuItemKey}->{'playlist'};
-						if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && $playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype) {
+						if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
 							push @listRef, $playListItems->{$menuItemKey};
 						}
 					}else {
@@ -1206,7 +1229,7 @@ sub getSetModeDataForSubItems {
 			}else {
 				if(defined($items->{$menuItemKey}->{'playlist'})) {
 					my $playlist = $items->{$menuItemKey}->{'playlist'};
-					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && $playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype) {
+					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
 						push @listRefSub, $items->{$menuItemKey};
 					}
 				}else {
@@ -1375,6 +1398,15 @@ sub powerCallback {
 				my $offset = $client->prefGet('plugin_dynamicplaylist_offset');
 				if(defined($offset)) {
 					$mixInfo{$client}->{'offset'} = $offset;
+				}
+				my @parameters = $client->prefGetArray('plugin_dynamicplaylist_playlist_parameters');
+				my $playlist = getPlayList($client,$type);
+				if(defined($playlist->{'parameters'})) {
+					foreach my $p (keys %{$playlist->{'parameters'}}) {
+						if(defined($playlist->{'parameters'}->{$p})) {
+							$playlist->{'parameters'}->{$p}->{'value'} = shift @parameters;
+						}
+					}
 				}
 			}
 		}
@@ -1559,6 +1591,20 @@ sub mixerFunction {
 				debugMsg("Calling playlist playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
 				$client->update();
+			}elsif($mixerType eq 'track') {
+				my %p = (
+					'id' => $currentItem->id,
+					'name' => Slim::Music::Info::standardTitle(undef, $currentItem),
+				);
+				my %params = (
+					'dynamicplaylist_parameter_1' => \%p,
+					'playlisttype' => 'track',
+					'flatlist' => 1,
+					'extrapopmode' => 1
+				);
+				debugMsg("Calling track playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				$client->update();
 			}else {
 				debugMsg("Unknown playlisttype = ".$mixerType."\n");
 			}
@@ -1586,7 +1632,7 @@ sub mixerlink {
 		initPlayListTypes();
 	}
 	if($form->{'noDynamicPlayListButton'}) {
-	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
+	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist' || $levelName eq 'track')) {
 		if($levelName eq 'contributor') {
 			$levelName = 'artist';
 		}
@@ -1618,10 +1664,16 @@ sub mixerlink {
 			if(defined($form->{'levelName'}) && $form->{'levelName'} eq 'age') {
 				$form->{'dynamicplaylist_playlisttype'} = 'album';
 				$form->{'albumid'} = $item->id;
-			}
+			}elsif(ref($item) eq 'Slim::Schema::Album') {
+				$form->{'dynamicplaylist_playlisttype'} = 'album';
+				$form->{'albumid'} = $item->id;
+			}elsif(ref($item) eq 'Slim::Schema::Track') {
+				$form->{'dynamicplaylist_playlisttype'} = 'track';
+				$form->{'trackid'} = $item->id;
+	    		}
 		}
 	
-		if(defined($form->{'albumid'}) || defined($form->{'playlist'})) {
+		if(defined($form->{'albumid'}) || defined($form->{'trackid'}) || defined($form->{'playlist'})) {
 			if($playListTypes->{$form->{'dynamicplaylist_playlisttype'}}) {
 	    			$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 			}
@@ -1975,6 +2027,11 @@ sub getPlayListFilterDescription {
 				if(defined($artist)) {
 					return $artist->name;
 				}
+			}elsif($params->{'playlisttype'} eq 'track') {
+				my $track = objectForId('track',$parameter1);
+				if(defined($track)) {
+					return Slim::Music::Info::standardTitle(undef, $track);
+				}
 			}elsif($params->{'playlisttype'} eq 'genre') {
 				my $genre = objectForId('genre',$parameter1);
 				if(defined($genre)) {
@@ -2049,7 +2106,7 @@ sub getPlayListsForContext {
 	if(Slim::Utils::Prefs::get('plugin_dynamicplaylist_flatlist') || $params->{'flatlist'}) {
 		foreach my $itemKey (keys %$playLists) {
 			my $playlist = $playLists->{$itemKey};
-			if(!defined($playlisttype) || (defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && $playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype)) {
+			if(!defined($playlisttype) || (defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype)))) {
 				debugMsg("Adding playlist: $itemKey\n");
 				push @result, $playlist;
 			}
@@ -2071,7 +2128,7 @@ sub getPlayListsForContext {
 				my $item = $currentItems->{$itemKey};
 				if(defined($item->{'playlist'})) {
 					my $playlist = $item->{'playlist'};
-					if(!defined($playlisttype) || (defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && $playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype)) {
+					if(!defined($playlisttype) || (defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype)))) {
 						debugMsg("Adding playlist: $itemKey\n");
 						push @result, $item->{'playlist'};
 					}
