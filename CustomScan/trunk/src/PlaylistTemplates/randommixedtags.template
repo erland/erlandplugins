@@ -1,5 +1,9 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 select tracks.url from tracks
 	join albums on
 		tracks.album=albums.id
@@ -130,4 +134,4 @@ select tracks.url from tracks
 		[%- END %]
 	group by tracks.id
 	order by rand()
-	limit 10;
+	[% IF nooftracks %]limit [% nooftracks %][% END %];
