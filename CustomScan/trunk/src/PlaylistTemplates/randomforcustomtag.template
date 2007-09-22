@@ -1,6 +1,10 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
 -- PlaylistParameter1:custom:Select [% customtaguserfriendlyname %]:select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes where customscan_track_attributes.module='customtag' and customscan_track_attributes.attr='[% customtagname %]' group by customscan_track_attributes.value order by customscan_track_attributes.value
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 select tracks.url from tracks
 	join track_statistics on
 		tracks.url=track_statistics.url
@@ -17,4 +21,4 @@ select tracks.url from tracks
 	[%- END %]
 	group by tracks.id
 	order by rand()
-	limit 10;
+	[% IF nooftracks %]limit [% nooftracks %][% END %];

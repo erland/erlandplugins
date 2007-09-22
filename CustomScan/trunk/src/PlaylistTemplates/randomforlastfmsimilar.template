@@ -4,6 +4,10 @@
 [%- IF nooftracks %]
 -- PlaylistOption Unlimited:1
 [%- END %]
+[%- IF customskipfilter %]
+-- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
+-- PlaylistStopAction1:cli:customskip clearsecondaryfilter
+[%- END %]
 [% IF toprated %]select url from ([% END -%]
 (select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
