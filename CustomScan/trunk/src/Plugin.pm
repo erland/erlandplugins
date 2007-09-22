@@ -2288,6 +2288,7 @@ sub initDatabase {
 		my $foundExtraValueAttrModuleTrack = 0;
 		my $foundTrackModuleAttrExtraValue = 0;
 		my $foundModuleAttrExtraValue = 0;
+		my $foundModuleAttrValueSort = 0;
 		while( $sth->fetch() ) {
 			if($keyname eq "musicbrainzIndex") {
 				$foundMB = 1;
@@ -2303,6 +2304,8 @@ sub initDatabase {
 				$foundTrackModuleAttrExtraValue = 1;
 			}elsif($keyname eq "module_attr_extravalue_idx") {
 				$foundModuleAttrExtraValue = 1;
+			}elsif($keyname eq "module_attr_valuesort_idx") {
+				$foundModuleAttrValueSort = 1;
 			}
 		}
 		if(!$foundMB) {
@@ -2350,6 +2353,13 @@ sub initDatabase {
 		if(!$foundModuleAttrExtraValue) {
 			msg("CustomScan: No module_attr_extravalue_idx index found in customscan_track_attributes, creating index...\n");
 			eval { $dbh->do("create index module_attr_extravalue_idx on customscan_track_attributes (module,attr,extravalue);") };
+			if ($@) {
+				debugMsg("Couldn't add index: $@\n");
+			}
+		}
+		if(!$foundModuleAttrValueSort) {
+			msg("CustomScan: No module_attr_valuesort_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_valuesort_idx on customscan_track_attributes (module,attr,valuesort);") };
 			if ($@) {
 				debugMsg("Couldn't add index: $@\n");
 			}
