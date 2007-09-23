@@ -46,7 +46,7 @@ my $minorMysqlVersion = undef;
 
 my $modules = ();
 my @pluginDirs = ();
-my $PLUGINVERSION = '1.23.1';
+my $PLUGINVERSION = '1.24';
 
 # Indicator if hooked or not
 # 0= No
