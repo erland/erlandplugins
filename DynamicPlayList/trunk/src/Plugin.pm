@@ -35,7 +35,7 @@ use FindBin qw($Bin);
 use Scalar::Util qw(blessed);
 use Plugins::DynamicPlayList::Template::Reader;
 
-my $PLUGINVERSION = '1.13';
+my $PLUGINVERSION = '1.14';
 
 my $driver;
 my %stopcommands = ();
