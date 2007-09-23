@@ -805,6 +805,7 @@ sub imageCacheFiles {
 	if(defined($dir) && defined($name)) {
 		my $extension = undef;
 		my $file = $name;
+		$name =~ s/[:\"]/ /g;
 		if(defined($section) && $section ne '') {
 			$file = catfile($section,$name);
 		}
@@ -1848,6 +1849,7 @@ sub handleWebImageCacheFile {
 	if(defined($dir) && defined($name)) {
 		my $extension = undef;
 		my $file = $name;
+		$name =~ s/[:\"]/ /g;
 		if(defined($section) && $section ne '') {
 			$file = catfile($section,$name);
 		}
