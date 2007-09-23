@@ -43,7 +43,7 @@ my $sqlerrors = '';
 my $soapLiteError = 0;
 my $supportDownloadError = undef;
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.5.4';
+my $PLUGINVERSION = '1.6';
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
 
