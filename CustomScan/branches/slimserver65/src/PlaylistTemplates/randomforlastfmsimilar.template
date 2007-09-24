@@ -12,7 +12,7 @@
 (select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
-	[%- IF toprated or notrated %]
+	[%- IF toprated or notrated or recentlyplayed %]
 	left join track_statistics on
 		tracks.url=track_statistics.url
 	[%- END %]
@@ -38,6 +38,9 @@
 	[%- IF notrated %]
 		and track_statistics.rating is null 
 	[%- END %]
+	[%- IF recentlyplayed %]
+		and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
+	[%- END %]
 [%- IF toprated %]
 order by track_statistics.rating desc
 [%- END %]
@@ -45,7 +48,7 @@ order by track_statistics.rating desc
 (select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
-	[%- IF toprated or notrated %]
+	[%- IF toprated or notrated or recentlyplayed %]
 	left join track_statistics on
 		tracks.url=track_statistics.url
 	[%- END %]
@@ -69,6 +72,9 @@ order by track_statistics.rating desc
 	[%- IF notrated %]
 		and track_statistics.rating is null 
 	[%- END %]
+	[%- IF recentlyplayed %]
+		and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
+	[%- END %]
 [%- IF toprated %]
 order by track_statistics.rating desc
 [%- END %]
@@ -76,7 +82,7 @@ order by track_statistics.rating desc
 (select distinct tracks.url[% IF toprated %],track_statistics.rating[% END %] from tracks
 	join contributor_track on contributor_track.track=tracks.id and contributor_track.role in (1,5)
 	join contributors on contributors.id=contributor_track.contributor
-	[%- IF toprated or notrated %]
+	[%- IF toprated or notrated or recentlyplayed %]
 	left join track_statistics on
 		tracks.url=track_statistics.url
 	[%- END %]
@@ -92,6 +98,9 @@ order by track_statistics.rating desc
 		and contributors.id='PlaylistParameter1'
 	[%- IF notrated %]
 		and track_statistics.rating is null 
+	[%- END %]
+	[%- IF recentlyplayed %]
+		and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
 	[%- END %]
 [%- IF toprated %]
 order by track_statistics.rating desc
