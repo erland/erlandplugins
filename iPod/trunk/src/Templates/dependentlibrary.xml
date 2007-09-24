@@ -15,7 +15,6 @@
 		<parameter type="singlelist" id="orderby" name="Order songs by" value="random" data="random=Random,lastadded=Last Added,toprated=Top Rated,mostplayed=Most Played"/>
 		<parameter type="text" id="limitnooftracks" name="Maximum number of songs" value=""/>
 		<parameter type="text" id="limitsize" name="Maximum library size (in MB)" value=""/>
-		<parameter type="text" id="ipodmountpath" name="iPod mount path (empty means no export)" value=""/>
 	</template>
 </ipod>
 

@@ -32,6 +32,8 @@ use GNUpod::FileMagic;
 use GNUpod::CustomXMLhelper;
 use GNUpod::FooBar;
 use File::Copy;
+use Slim::Schema;
+use Slim::Utils::Unicode;
 
 use constant MACTIME => GNUpod::FooBar::MACTIME;
 
@@ -46,19 +48,83 @@ sub getCustomScanFunctions {
 		'id' => 'ipodscan',
 		'order' => '75',
 		'defaultenabled' => 1,
-		'name' => 'iPod Export',
+		'name' => 'iPod Synchronization',
 		'description' => "This module scans the SlimServer library and generates the contents of the iPod libraries as defined in the iPod plugin.",
 		'alwaysRescanTrack' => 1,
+		'clearEnabled' => 0,
+		'scanText' => 'Sync',
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&exitScanTrack,
-		'properties' => []
+		'properties' => [
+			{
+				'id' => 'ipodmountpath',
+				'name' => 'iPod Mount Path',
+				'description' => 'The path to your iPod',
+				'type' => 'text',
+				'value' => '/media/ipod'
+			},
+		],
 	);
+	my $values = getSQLPropertyValues("select id,name from ipod_libraries");
+	my %libraries = (
+		'id' => 'ipodsynclibraries',
+		'name' => 'Libraries to synchronize',
+		'description' => 'The libraries that should be synchronized with your iPod',
+		'type' => 'multiplelist',
+		'values' => $values,
+		'value' => ''
+	);
+	my $properties = $functions{'properties'};
+	push @$properties,\%libraries;
+
 	return \%functions;
-		
+}
+
+sub getSQLPropertyValues {
+	my $sqlstatements = shift;
+	my @result =();
+	my $dbh = Slim::Schema->storage->dbh();
+	my $trackno = 0;
+    	for my $sql (split(/[;]/,$sqlstatements)) {
+	    	eval {
+			$sql =~ s/^\s+//g;
+			$sql =~ s/\s+$//g;
+			my $sth = $dbh->prepare( $sql );
+			debugMsg("Executing: $sql\n");
+			$sth->execute() or do {
+				warn "Error executing: $sql\n";
+				$sql = undef;
+			};
+	
+			if ($sql =~ /^SELECT+/oi) {
+				debugMsg("Executing and collecting: $sql\n");
+				my $id;
+				my $name;
+				$sth->bind_col( 1, \$id);
+				$sth->bind_col( 2, \$name);
+				while( $sth->fetch() ) {
+					my %item = (
+						'id' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')),
+						'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
+					);
+					push @result, \%item;
+				}
+			}
+			$sth->finish();
+		};
+		if( $@ ) {
+			warn "Database error: $DBI::errstr\n";
+		}		
+	}
+	return \@result;
 }
 
 sub initScanTrack {
 	my $context = shift;
+	my $iPodMountPath = Plugins::CustomScan::Plugin::getCustomScanProperty("ipodmountpath");
+	if(defined($iPodMountPath) && $iPodMountPath eq '') {	
+		$iPodMountPath = undef;
+	}
 
 	if(!defined($context->{'libraries'})) {
 		debugMsg("Step: Retreiving available libraries\n");
@@ -178,7 +244,7 @@ sub initScanTrack {
 				my $transformedFile = $file;
 				$transformedFile =~ s/:/\//g;
 				$transformedFile =~ s/^\///;  # Remove / in beginning of path
-				my $fullpath = catfile($library->{'ipodpath'},$transformedFile);
+				my $fullpath = catfile($iPodMountPath,$transformedFile);
 				if(-e $fullpath) {
 					debugMsg("Deleteing file: $fullpath\n");
 					unlink($fullpath) or debugMsg("Failed to delete: $fullpath\n");
@@ -195,7 +261,7 @@ sub initScanTrack {
 
 			my %opts = (
 				_no_sync => 0,
-				mount => $library->{'ipodpath'}
+				mount => $iPodMountPath
 			);
 			my $con = GNUpod::FooBar::connect(\%opts);
 			if($con->{status}) {
@@ -250,7 +316,7 @@ sub initScanTrack {
 					return 1;
 				}
 
-				($fh->{path}, my $target) = GNUpod::CustomXMLhelper::getpath($library->{'ipodpath'},$path,{
+				($fh->{path}, my $target) = GNUpod::CustomXMLhelper::getpath($iPodMountPath,$path,{
 								format=>$wtf_frmt, 
 								extension=>$wtf_ext, 
 								keepfile=>0});
@@ -285,20 +351,41 @@ sub initScanTrack {
 	}elsif(defined($context->{'writexml'}) && defined($context->{'library'})) {
 		debugMsg("Step: Connecting to iPod\n");
 		my $library = $context->{'library'};
-		if(!defined($library->{'ipodpath'}) || !(-d $library->{'ipodpath'})) {
-			debugMsg("Not generating XML, iPod Mount path is not set or incorrect".(defined($library->{'ipodpath'})?": ".$library->{'ipodpath'}:"")."\n");
+		my $iPodSyncLibraries = Plugins::CustomScan::Plugin::getCustomScanProperty("ipodsynclibraries");
+		if(defined($iPodSyncLibraries) && $iPodSyncLibraries eq '') {	
+			$iPodSyncLibraries = undef;
+		}
+		if(!defined($iPodSyncLibraries)) {
+			debugMsg("Not generating XML, no library is selected to be synchronized with iPod\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
-		my $ipodXMLDir = catdir($library->{'ipodpath'},'iPod_Control');
+		my $librarysql = "select id,name from ipod_libraries where ipod_libraries.id=".$library->{'libraryno'}." and ipod_libraries.id in ($iPodSyncLibraries)";
+		debugMsg("Checking libraries with:".$librarysql."\n");
+		my $librarysth = Slim::Schema->storage->dbh()->prepare($librarysql);
+		$librarysth->execute();
+		if(!$librarysth->fetch()) {
+			debugMsg("Not generating XML, library shouldn't be synchronized with iPod: ".$library->{'name'}."\n");
+			delete $context->{'writexml'};
+			return 1;
+		}
+		$librarysth->finish();
+
+		if(!defined($iPodMountPath) || !(-d $iPodMountPath)) {
+			debugMsg("Not generating XML, iPod Mount path is not set or incorrect".(defined($iPodMountPath)?": ".$iPodMountPath:"")."\n");
+			delete $context->{'writexml'};
+			return 1;
+		}
+		my $ipodXMLDir = catdir($iPodMountPath,'iPod_Control');
 		if(!(-e $ipodXMLDir)) {
-			debugMsg("Not writing XML file, iPod not mounted at ".$library->{'ipodpath'}."\n");
+			debugMsg("Not writing XML file, iPod not mounted at ".$iPodMountPath."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
+
 		my %opts = (
 			_no_sync => 0,
-			mount => $library->{'ipodpath'}
+			mount => $iPodMountPath
 		);
 		my $con = GNUpod::FooBar::connect(\%opts);
 		if($con->{status}) {

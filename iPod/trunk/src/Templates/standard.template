@@ -118,8 +118,5 @@
 			<ipodextension>[% ipodextension %]</ipodextension>
 			[%- END %]
 		</track>
-		[%- IF ipodmountpath %]
-		<ipodpath>[% ipodmountpath %]</ipodpath>
-		[%- END %]
 	</library>
 </ipod>
