@@ -25,6 +25,14 @@ use Slim::Utils::Misc;
 use Slim::Utils::Unicode;
 use DBI qw(:sql_types);
 use Slim::Utils::Strings qw(string);
+use Slim::Utils::Prefs;
+my $prefs = preferences('plugin.customscan');
+use Slim::Utils::Log;
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customscan',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSCAN',
+});
 
 my %friendlyNames = ();
 my %friendlyNamesList = ();
@@ -192,7 +200,7 @@ sub parseTag {
 	}
 }
 sub exitScanTrack {
-	debugMsg("Scanning init track\n");
+	$log->debug("Scanning init track\n");
 	%friendlyNames = ();
 	%friendlyNamesList = ();
 	my $tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagartisttags");
@@ -225,13 +233,13 @@ sub exitScanTrack {
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagcustomtags");
 	if($tags) {
 		eval {
-			debugMsg("Writing custom tags\n");
+			$log->debug("Writing custom tags\n");
 			my $dbh = Slim::Schema->storage->dbh();
 			my $sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag'");
 			$sth->execute();
 		};
 		if ($@) {
-			Slim::Utils::Misc::msg("CustomScan: Failed to scan SlimServer Custom Scan custom tags: $@\n");
+			$log->error("CustomScan: Failed to scan SlimServer Custom Scan custom tags: $@\n");
 		}	
 	}
 	parseTag(Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagfriendlynames"));
@@ -263,14 +271,14 @@ sub updateTags {
 			$tag = $1;
 		}
 		eval {
-			debugMsg("Writing $tag using: $sql\n");
+			$log->debug("Writing $tag using: $sql\n");
 			my $dbh = Slim::Schema->storage->dbh();
 			my $sth = $dbh->prepare($sql);
 			$sth->bind_param(1,$tag,SQL_VARCHAR);
 			$sth->execute();
 		};
 		if ($@) {
-			Slim::Utils::Misc::msg("CustomScan: Failed to scan SlimServer tags: $@\n");
+			$log->error("CustomScan: Failed to scan SlimServer tags: $@\n");
 		}	
 	}
 }
@@ -878,12 +886,6 @@ sub getMixedTagMenuItems {
 		my $result = \@menus;
 		return $result->[0];
 	}
-}
-
-sub debugMsg
-{
-	my $message = join '','CustomScan:MixedTag ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customscan_showmessages"));
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

@@ -24,6 +24,14 @@ package Plugins::CustomScan::Modules::CustomTag;
 use Slim::Utils::Misc;
 use Slim::Utils::Unicode;
 use MP3::Info;
+use Slim::Utils::Prefs;
+my $prefs = preferences('plugin.customscan');
+use Slim::Utils::Log;
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customscan',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSCAN',
+});
 
 my %rawTagNames = (
 	'TT1' => 'CONTENTGROUP',
@@ -222,14 +230,14 @@ sub getCustomScanFunctions {
 sub scanTrack {
 	my $track = shift;
 	my @result = ();
-	debugMsg("Scanning track: ".$track->title."\n");
+	$log->debug("Scanning track: ".$track->title."\n");
 	my $tags = Slim::Formats->readTags($track->url);
 	if($track->content_type() eq 'mp3') {
 		eval {
 			getRawMP3Tags($track->url,$tags);
 		};
 		if ($@) {
-			msg("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
+			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
 		}
 	}
 	if(defined($tags)) {
@@ -389,12 +397,6 @@ sub getRawMP3Tags {
 			}
 		}
 	}
-}
-
-sub debugMsg
-{
-	my $message = join '','CustomScan:CustomTag ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customscan_showmessages"));
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

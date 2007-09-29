@@ -28,8 +28,17 @@ use Slim::Utils::Misc;
 use XML::Simple;
 use Text::Unidecode;
 use POSIX qw(ceil);
+use Slim::Utils::Prefs;
+my $prefs = preferences('plugin.customscan');
 
 my $lastCalled = undef;
+
+use Slim::Utils::Log;
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customscan',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSCAN',
+});
 
 sub getCustomScanFunctions {
 	my %functions = (
@@ -85,13 +94,13 @@ sub scanAlbum {
 	}
 	my $url = undef;
 	if($artist) {
-		debugMsg("Scanning album: ".$title.", artist: ".$artist."\n");
+		$log->debug("Scanning album: ".$title.", artist: ".$artist."\n");
 		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=$accessKey&Operation=ItemSearch&SearchIndex=Music&Artist=".escape($artist)."&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
 	}else {
-		debugMsg("Scanning album: ".$title."\n");
+		$log->debug("Scanning album: ".$title."\n");
 		$url = "http://webservices.amazon.com/onca/xml?Service=AWSECommerceService&AWSAccessKeyId=$accessKey&Operation=ItemSearch&SearchIndex=Music&Title=".escape($title)."&ResponseGroup=Reviews,Subjects";
 	}
-	debugMsg("Calling url: $url\n");
+	$log->debug("Calling url: $url\n");
 	my $currentTime = time();
 
 	# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
@@ -106,12 +115,12 @@ sub scanAlbum {
 	if(defined($http)) {
 		my $xml = eval { XMLin($http->content, forcearray => ["Item","Subject","Review"], keyattr => []) };
 		if ($@) {
-			debugMsg("Got xml:\n".Dumper($xml)."\n");
-			msg("AmazonScan: Failed to parse XML: $@\n");
+			$log->debug("Got xml:\n".Dumper($xml)."\n");
+			$log->error("AmazonScan: Failed to parse XML: $@\n");
 		}
 		if($xml) {
 			my $hits = $xml->{'Items'}->{'Item'};
-			#debugMsg("Got xml:\n".Dumper($xml)."\n");
+			#$log->debug("Got xml:\n".Dumper($xml)."\n");
 			if($hits && scalar(@$hits)>0) {
 				my $firstHit = $hits->[0];
 				my $maxSubjectLength = Plugins::CustomScan::Plugin::getCustomScanProperty("amazonmaxsubjectlength");
@@ -206,11 +215,11 @@ sub rateUnratedTracksOnAlbum {
 		my $client = Slim::Player::Client::clientRandom();
 		for my $track (@tracks) {
 			if($trackStat && defined($client)) {
-				debugMsg("Setting TrackStat rating on ".$track->title." to $rating\n");
+				$log->debug("Setting TrackStat rating on ".$track->title." to $rating\n");
 				my $request = $client->execute(['trackstat', 'setrating', $track->id, sprintf('%d%', $rating)]);
 				$request->source('PLUGIN_CUSTOMSCAN');
 			}else {
-				debugMsg("Setting slimserver rating on ".$track->title." to $rating\n");
+				$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");
 				# Run this within eval for now so it hides all errors until this is standard
 				eval {
 					$track->set('rating' => $rating);
@@ -220,12 +229,6 @@ sub rateUnratedTracksOnAlbum {
 			}
 		}
 	}
-}
-
-sub debugMsg
-{
-	my $message = join '','CustomScan:Amazon ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customscan_showmessages"));
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

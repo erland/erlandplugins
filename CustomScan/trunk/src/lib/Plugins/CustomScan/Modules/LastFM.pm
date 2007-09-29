@@ -29,6 +29,14 @@ use Slim::Utils::Misc;
 use XML::Simple;
 use File::Spec::Functions qw(:ALL);
 #use Data::Dumper;
+use Slim::Utils::Prefs;
+my $prefs = preferences('plugin.customscan');
+use Slim::Utils::Log;
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customscan',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSCAN',
+});
 
 my $lastCalled = undef;
 
@@ -84,7 +92,7 @@ sub scanArtist {
 	my $artist = shift;
 	my @result = ();
 	
-	debugMsg("Scanning artist: ".$artist->name."\n");
+	$log->debug("Scanning artist: ".$artist->name."\n");
 
 	# **** Scan for related artists and picture for artist **** 
 	my $similarArtistLimit = Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmsimilarartistpercent");
@@ -105,7 +113,7 @@ sub scanArtist {
 	$lastCalled = time();
 	if(defined($http)) {
 		my $xml = eval { XMLin($http->content, forcearray => ["artist"], keyattr => []) };
-		#msg("Got xml:\n".Dumper($xml)."\n");
+		#$log->debug("Got xml:\n".Dumper($xml)."\n");
 		my $similarartists = $xml->{'artist'};
 		if($similarartists) {
 			if(ref($similarartists) eq 'ARRAY') {
@@ -118,7 +126,7 @@ sub scanArtist {
 								'extravalue' => $similarartist->{'match'}
 							);
 							push @result,\%item;
-							#msg("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
+							#$log->debug("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
 						}
 					}
 				}
@@ -158,7 +166,9 @@ sub scanArtist {
 				}
 			}
 		}
-		$http->close();
+	    	if(defined($http)) {
+			$http->close();
+		}
 	}
 	$http = undef;
 
@@ -181,7 +191,7 @@ sub scanArtist {
 	$lastCalled = time();
 	if(defined($http)) {
 		my $xml = eval { XMLin($http->content, forcearray => ["tag"], keyattr => []) };
-		#msg("Got xml:\n".Dumper($xml)."\n");
+		#$log->debug("Got xml:\n".Dumper($xml)."\n");
 		my $tags = $xml->{'tag'};
 		if($tags) {
 			for my $tag (@$tags) {
@@ -192,7 +202,7 @@ sub scanArtist {
 						'extravalue' => $tag->{'count'}
 					);
 					push @result,\%item;
-					#msg("CustomScan::LastFM: Adding tag: ".$tag->{'name'}."\n");
+					#$log->debug("CustomScan::LastFM: Adding tag: ".$tag->{'name'}."\n");
 				}
 			}
 		}
@@ -208,12 +218,6 @@ sub scanArtist {
 	push @result,\%item;
 
 	return \@result;
-}
-
-sub debugMsg
-{
-	my $message = join '','CustomScan:LastFM ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customscan_showmessages"));
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

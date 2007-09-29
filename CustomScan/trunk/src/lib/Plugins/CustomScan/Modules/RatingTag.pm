@@ -24,6 +24,14 @@ package Plugins::CustomScan::Modules::RatingTag;
 use Slim::Utils::Misc;
 use MP3::Info;
 use POSIX qw(floor);
+use Slim::Utils::Prefs;
+my $prefs = preferences('plugin.customscan');
+use Slim::Utils::Log;
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customscan',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSCAN',
+});
 
 my $trackStat;
 
@@ -65,17 +73,13 @@ sub getCustomScanFunctions {
 }
 
 sub scanInit {
-	if ($::VERSION ge '6.5') {
-		$trackStat = Slim::Utils::PluginManager::enabledPlugin("TrackStat",undef);
-	}else {
-		$trackStat = grep(/TrackStat/,Slim::Buttons::Plugins::enabledPlugins(undef));
-	}
+	$trackStat =  grep(/TrackStat/, Slim::Utils::PluginManager->enabledPlugins(undef));;
 }
 
 sub scanTrack {
 	my $track = shift;
 	my @result = ();
-	debugMsg("Scanning track: ".$track->title."\n");
+	$log->debug("Scanning track: ".$track->title."\n");
 
 	my $writeratingtag = Plugins::CustomScan::Plugin::getCustomScanProperty("writeratingtag");
 	if($track->content_type() eq 'mp3') {
@@ -166,12 +170,12 @@ sub rateTrack {
 
 	my $client = Slim::Player::Client::clientRandom();
 	if($trackStat && defined($client)) {
-		debugMsg("Setting TrackStat rating on ".$track->title." to $rating\n");
+		$log->debug("Setting TrackStat rating on ".$track->title." to $rating\n");
 		my $ratingPercent = $rating."%";
 		my $request = $client->execute(['trackstat', 'setrating', $track->id, $ratingPercent]);
 		$request->source('PLUGIN_CUSTOMSCAN');
 	}else {
-		debugMsg("Setting slimserver rating on ".$track->title." to $rating\n");
+		$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
 			$track->set('rating' => $rating);
@@ -179,12 +183,6 @@ sub rateTrack {
 			Slim::Schema->forceCommit();
 		};
 	}
-}
-
-sub debugMsg
-{
-	my $message = join '','CustomScan:RatingTag ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customscan_showmessages"));
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

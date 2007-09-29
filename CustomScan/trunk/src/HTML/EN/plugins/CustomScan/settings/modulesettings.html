@@ -1,15 +1,8 @@
-[%- pagetitle = 'PLUGIN_CUSTOMSCAN' | string; pageicon = 'PLUGIN_CUSTOMSCAN' -%]
+[% page = "PLUGIN_CUSTOMSCAN" %]
+[% PROCESS settings/header.html %]
 
-[%- pwd_list = BLOCK -%]/
-	<a href="[% webroot %]plugins/CustomScan/customscan_list.html?player=[% player | uri %]">
-		[% "PLUGIN_CUSTOMSCAN" | string %]
-	</a>
-[% END -%]
-[%- pageHeaderInfo = BLOCK %]
-[% END -%]
-[% PROCESS pageheader.html %]
+[% PROCESS plugins/CustomScan/settings/subpage_chooser.html %]
 
-<form action="[% webroot %]plugins/CustomScan/customscan_savesettings.html" name="editForm">
 	<input type="hidden" name="module" value="[% pluginCustomScanModuleId %]">
 	<table border="0">
 		<tr><td colspan="4"><strong>[% pluginCustomScanModuleName %] [% "PLUGIN_CUSTOMSCAN_SETTINGS_TITLE" | string %]</strong></td></tr>
@@ -77,7 +70,6 @@
 			</tr>
 			<tr><td>&nbsp;</td></tr>
 		[%- END %]
-		<tr><td>&nbsp;</td><td><input type="submit" value="[% "SAVE" | string %]"></td></tr>
 	</table>
-</form>
-[% PROCESS pagefooter.html %]
+[% PROCESS settings/footer.html %]
+
