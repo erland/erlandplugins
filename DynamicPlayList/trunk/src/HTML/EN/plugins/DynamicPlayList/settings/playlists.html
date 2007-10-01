@@ -1,21 +1,13 @@
-[%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
+[% page = "PLUGIN_DYNAMICPLAYLIST" %]
+[% PROCESS settings/header.html %]
 
-[%- pwd_list = BLOCK -%]/
-	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
-		[% "PLUGIN_DYNAMICPLAYLIST" | string %]
-	</a>
-[% END -%]
-[%- pageHeaderInfo = BLOCK %]
-	[% IF pluginDynamicPlayListNowPlaying != '' %]
-		<strong>[% "NOW_PLAYING" | string %]:</strong>
-		<span class="exboldnowplaying">[% pluginDynamicPlayListNowPlaying %]</span>
-	[% END %]
-[% END -%]
-[% PROCESS pageheader.html %]
+[% PROCESS plugins/DynamicPlayList/settings/subpage_chooser.html %]
+	[% IF pluginDynamicPlayListGroups.size>0 %]
+	<div class="settingSection">
+		<div class="prefHead">[% "SETUP_PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS" | string | upper %]</div>
+		<div class="prefDesc">[% "SETUP_PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS_DESC" | string %]</div>
 
-<form action="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_saveselectplaylists.html" name="editForm">
 	<table border="0">
-		<tr><td colspan="3"><b>[% "PLUGIN_DYNAMICPLAYLIST_SELECT_GROUPS_TITLE" | string %]</b></td></tr>
 		[%- FOREACH group IN pluginDynamicPlayListGroups %]
 			<tr>
 				[%- groupid = "playlist_" _ group.id %]
@@ -23,18 +15,23 @@
 				<label for="[% groupid %]">[% group.name | html %]</label></td>
 			</tr>
 		[%- END %]
-		<tr><td>&nbsp;</td></tr>
-		<tr><td><b>[% "PLUGIN_DYNAMICPLAYLIST_SELECT_FAVOURITES_TITLE" | string %]</b>&nbsp;&nbsp;&nbsp;</td><td colspan="2"><b>[% "PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_TITLE" | string %]</b></td></tr>
+	</table>
+	</div>
+	[% END %]
+	<div class="settingSection">
+		<div class="prefHead">[% "SETUP_PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS" | string | upper %]</div>
+		<div class="prefDesc">[% "SETUP_PLUGIN_DYNAMICPLAYLIST_SELECT_PLAYLISTS_DESC" | string %]</div>
+
+	<table border="0">
 		[%- FOREACH playlist IN pluginDynamicPlayListPlayLists.keys.sort %]
 			<tr>
-				[%- playlistfavouriteid = "playlistfavourite_" _ pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistid %]
-				<td><input type="checkbox" name="[% playlistfavouriteid %]" id="[% playlistfavouriteid %]" value="1" [% pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistfavourite ? "checked" : "" %] onclick="changeNumSelected(this)"></td>
 				[%- playlistid = "playlist_" _ pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistid %]
 				<td><input type="checkbox" name="[% playlistid %]" id="[% playlistid %]" value="1" [% pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistenabled ? "checked" : "" %] onclick="changeNumSelected(this)">
 				<label for="[% playlistid %]">[% pluginDynamicPlayListPlayLists.$playlist.name | html %]</label></td><td>([% pluginDynamicPlayListPlayLists.$playlist.dynamicplaylistplugin | html %])</td>
 			</tr>
 		[%- END %]
 	</table>
+	</div>
 	<script type="text/javascript">
 	<!--
 		var f = document.editForm;
@@ -92,7 +89,4 @@
 									 + '" id="selectAllPlaylistsButton" onclick="selectAllPlaylists()">');
 	// -->
 	</script>
-	<br><br>
-	<input type="submit" value="[% "SAVE" | string %]">
-</form>
-[% PROCESS pagefooter.html %]
+[% PROCESS settings/footer.html %]
