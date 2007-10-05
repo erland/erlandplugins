@@ -72,7 +72,7 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS
 	DA	Gemte playlister
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS_DESC
-	EN	Includera standard saved playlists in the Dynamic Playlists menu
+	EN	Include standard saved playlists in the Dynamic Playlists menu
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_RANDOMSAVEDPLAYLISTS
 	EN	Random saved playlists
