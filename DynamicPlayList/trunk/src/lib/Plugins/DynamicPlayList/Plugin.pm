@@ -45,6 +45,7 @@ use Plugins::DynamicPlayList::FavouriteSettings;
 our $PLUGINVERSION =  undef;
 
 my $prefs = preferences('plugin.dynamicplaylist');
+my $multiLibraryPrefs = preferences('plugin.multilibrary');
 my $serverPrefs = preferences('server');
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.dynamicplaylist',
@@ -908,7 +909,7 @@ sub addParameterValues {
 			}
 			my $activeLibrary = 0;
 			if(isPluginsInstalled($client,'MultiLibrary::Plugin')) {
-				$activeLibrary = $prefs->client($client)->get('plugin_multilibrary_activelibraryno');
+				$activeLibrary = $multiLibraryPrefs->client($client)->get('activelibraryno');
 				if(!defined($activeLibrary)) {
 					$activeLibrary = 0;
 				}
@@ -1665,6 +1666,9 @@ sub mixerlink {
 			$levelName = 'artist';
 		}
 		if($playListTypes->{$levelName} && ($levelName ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
+			if($levelName eq 'track') {
+				$form->{'trackid'} = $item->id;
+			}
 			$form->{'dynamicplaylist_playlisttype'} = $levelName;
 	        	$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 		}
@@ -2638,12 +2642,12 @@ sub cliGetPlaylists {
   	$count = 0;
 	foreach my $playlist (sort keys %$playLists) {
 		if(!defined($playLists->{$playlist}->{'parameters'}) && ($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all)) {
-			$request->addResultLoop('@playlists', $count,'playlistid', $playlist);
+			$request->addResultLoop('playlists_loop', $count,'playlistid', $playlist);
 			my $p = $playLists->{$playlist};
 			my $name = $p->{'name'};
-			$request->addResultLoop('@playlists', $count,'playlistname', $name);
+			$request->addResultLoop('playlists_loop', $count,'playlistname', $name);
 			if(defined $all) {
-				$request->addResultLoop('@playlists', $count,'playlistenabled', $playLists->{$playlist}->{'dynamicplaylistenabled'});
+				$request->addResultLoop('playlists_loop', $count,'playlistenabled', $playLists->{$playlist}->{'dynamicplaylistenabled'});
 			}
 			$count++;
 		}
