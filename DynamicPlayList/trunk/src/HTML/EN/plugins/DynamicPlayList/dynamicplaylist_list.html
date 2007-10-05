@@ -70,7 +70,7 @@ href="[% webroot %][%- IF customurl -%]
 						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" parameters=playlist.parameters %]
 						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" parameters=playlist.parameters %]
 					[% END %]
-					[%- WRAPPER contentitem controls='controls' itemobj.id = loop.count %]
+					[%- WRAPPER contentitem controls='controls' %]
 						[% IF playlist.url %]
 							<a href="[% webroot %][% playlist.url %]&player=[% player | uri %]">[% playlist.name %]</a>
 						[% ELSE %]
@@ -94,12 +94,12 @@ href="[% webroot %][%- IF customurl -%]
 					<td>&nbsp;</td>
 				</tr>
 
-				[%- WRAPPER contentitem %]
+				<p>
 						<em>
 							[% "PLUGIN_DYNAMICPLAYLIST_GENERAL_HELP" | string %]
 							[% PROCESS dynamicPlayListLink type="disable" addOnly="0" %]
 						</em>
-				[% END %]
+				</p>
 
 				<tr>
 					<td>&nbsp;</td>
@@ -127,8 +127,7 @@ href="[% webroot %][%- IF customurl -%]
 			[% "PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_OLD_TRACKS" | string %]
 		</p>
 
-		<p><input type="submit" value="[% "SAVE" | string %]"></p>
+		<p><input type="submit" value="[% "SAVE" | string %]"><div style="float:right;">([% "PLUGIN_DYNAMICPLAYLIST" | string %] [% pluginDynamicPlayListVersion %])</div></p>
 	[% END %]
 </form>
-<tr><td><div style="float:right;">([% "PLUGIN_DYNAMICPLAYLIST" | string %] [% pluginDynamicPlayListVersion %])</div></td></tr>
 [% PROCESS pagefooter.html %]
