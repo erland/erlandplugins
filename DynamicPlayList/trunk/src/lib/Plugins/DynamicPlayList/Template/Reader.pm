@@ -24,6 +24,7 @@ package Plugins::DynamicPlayList::Template::Reader;
 use Slim::Player::Client;
 use File::Spec::Functions qw(:ALL);
 
+use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 
 use File::Slurp;
@@ -32,6 +33,8 @@ use XML::Simple;
 use FindBin qw($Bin);
 
 use Cache::Cache qw( $EXPIRES_NEVER);
+
+my $serverPrefs = preferences('server');
 
 sub getTemplates {
 	my $client = shift;
@@ -227,7 +230,7 @@ sub isTemplateEnabled {
 	}
 	if(defined($xml->{'database'}) && $include) {
 		$include = 0;
-		my $driver = Slim::Utils::Prefs::get('dbsource');
+		my $driver = $serverPrefs->get('dbsource');
 		$driver =~ s/dbi:(.*?):(.*)$/$1/;
 		if($driver eq $xml->{'database'}) {
 			$include = 1;
