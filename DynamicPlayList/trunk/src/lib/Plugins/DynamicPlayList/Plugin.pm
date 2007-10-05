@@ -566,17 +566,17 @@ sub getOverlay {
 
 	# Put the right arrow by genre filter and notesymbol by mixes
 	if (defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
-		return [undef, Slim::Display::Display::symbol('rightarrow')];
+		return [undef, $client->symbols('rightarrow')];
 	}elsif(!defined($item->{'playlist'})) {
-		return [undef, Slim::Display::Display::symbol('rightarrow')];
+		return [undef, $client->symbols('rightarrow')];
 	}elsif (!defined($mixInfo{$client}) || !defined($mixInfo{$client}->{'type'}) || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
 		if(defined($item->{'playlist'}->{'parameters'})) {
-			return [Slim::Display::Display::symbol('rightarrow'), Slim::Display::Display::symbol('notesymbol')];
+			return [$client->symbols('rightarrow'), $client->symbols('notesymbol')];
 		}else {
-			return [undef, Slim::Display::Display::symbol('notesymbol')];
+			return [undef, $client->symbols('notesymbol')];
 		}
 	}elsif(defined($item->{'playlist'}->{'parameters'})) {
-		return [Slim::Display::Display::symbol('rightarrow'), undef];
+		return [$client->symbols('rightarrow'), undef];
 	}
 	return [undef, undef];
 }
@@ -585,7 +585,7 @@ sub getOverlay {
 sub getChooseParametersOverlay {
 	my ($client, $item) = @_;
 
-	return [undef, Slim::Display::Display::symbol('rightarrow')];
+	return [undef, $client->symbols('rightarrow')];
 }
 
 # Do what's necessary when play or add button is pressed
@@ -901,7 +901,7 @@ sub addParameterValues {
 		if(defined($parameter->{'definition'}) && lc($parameter->{'definition'}) =~ /^select/ ) {
 			$sql = $parameter->{'definition'};
 			for (my $i=1;$i<$parameter->{'id'};$i++) {
-				my $parameter = $client->param('dynamicplaylist_parameter_'.$i);
+				my $parameter = $client->modeParam('dynamicplaylist_parameter_'.$i);
 				my $value = $parameter->{'id'};
 				my $parameterid = "\'PlaylistParameter".$i."\'";
 				$log->debug("Replacing ".$parameterid." with ".$value."\n");
@@ -990,6 +990,7 @@ sub printPlayListItems {
 }
 
 sub setMode {
+	my $class = shift;
 	my $client = shift;
 	my $method = shift;
 	
@@ -1002,9 +1003,9 @@ sub setMode {
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
-	my $playlisttype = $client->param('playlisttype');
+	my $playlisttype = $client->modeParam('playlisttype');
 	my $showFlat = $prefs->get('flatlist');
-	if($showFlat || defined($client->param('flatlist'))) {
+	if($showFlat || defined($client->modeParam('flatlist'))) {
 		foreach my $flatItem (sort keys %$playLists) {
 			my $playlist = $playLists->{$flatItem};
 			if($playlist->{'dynamicplaylistenabled'}) {
@@ -1039,7 +1040,7 @@ sub setMode {
 				}
 			}
 		}
-		my $playlistgroup = $client->param('selectedgroup');
+		my $playlistgroup = $client->modeParam('selectedgroup');
 		if($playlistgroup) {
 			my @playlistGroups = split(/\//,$playlistgroup);
 			if(enterSelectedGroup($client,\@listRef,\@playlistGroups)) {
@@ -1075,12 +1076,12 @@ sub setMode {
 				if(defined($playlist->{'parameters'})) {
 					my %parameterValues = ();
 					my $i=1;
-					while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 						$i++;
 					}
-					if(defined($client->param('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+					if(defined($client->modeParam('extrapopmode'))) {
+						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
 					requestFirstParameter($client,$playlist,0,\%parameterValues);
 				}else {
@@ -1095,12 +1096,12 @@ sub setMode {
 				if(defined($playlist->{'parameters'})) {
 					my %parameterValues = ();
 					my $i=1;
-					while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 						$i++;
 					}
-					if(defined($client->param('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+					if(defined($client->modeParam('extrapopmode'))) {
+						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
 					requestFirstParameter($client,$playlist,0,\%parameterValues);
 				}else {
@@ -1117,12 +1118,12 @@ sub setMode {
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
-				while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-					$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+				while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+					$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 					$i++;
 				}
-				if(defined($client->param('extrapopmode'))) {
-					$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+				if(defined($client->modeParam('extrapopmode'))) {
+					$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 				}
 				requestFirstParameter($client,$item->{'playlist'},0,\%parameterValues)
 			}else {
@@ -1131,12 +1132,12 @@ sub setMode {
 		},
 	);
 	my $i=1;
-	while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-		$params{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+	while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+		$params{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 		$i++;
 	}
-	if(defined($client->param('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->param('extrapopmode');
+	if(defined($client->modeParam('extrapopmode'))) {
+		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
 	}
 	
 	# if we have an active mode, temporarily add the disable option to the list.
@@ -1171,6 +1172,7 @@ sub enterSelectedGroup {
 }
 
 sub setModeChooseParameters {
+	my $class = shift;
 	my $client = shift;
 	my $method = shift;
 	
@@ -1179,10 +1181,10 @@ sub setModeChooseParameters {
 		return;
 	}
 
-	my $parameterId = $client->param('dynamicplaylist_nextparameter');
-	my $playlist = $client->param('dynamicplaylist_selectedplaylist');
+	my $parameterId = $client->modeParam('dynamicplaylist_nextparameter');
+	my $playlist = $client->modeParam('dynamicplaylist_selectedplaylist');
 	if(!defined($playlist)) {
-		my $playlistId = $client->param('dynamicplaylist_selectedplaylistid');
+		my $playlistId = $client->modeParam('dynamicplaylist_selectedplaylistid');
 		if(defined($playlistId)) {
 			$playlist = getPlayList($client,$playlistId);
 		}
@@ -1232,13 +1234,13 @@ sub setModeChooseParameters {
 		},
 		dynamicplaylist_nextparameter => $parameterId,
 		dynamicplaylist_selectedplaylist => $playlist,
-		dynamicplaylist_addonly => $client->param('dynamicplaylist_addonly')
+		dynamicplaylist_addonly => $client->modeParam('dynamicplaylist_addonly')
 	);
 	for(my $i=1;$i<$parameterId;$i++) {
-		$params{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+		$params{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 	}
-	if(defined($client->param('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->param('extrapopmode');
+	if(defined($client->modeParam('extrapopmode'))) {
+		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
 	}
 
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
@@ -1252,7 +1254,7 @@ sub getSetModeDataForSubItems {
 	my @listRefSub = ();
 	foreach my $menuItemKey (sort keys %$items) {
 		if($items->{$menuItemKey}->{'dynamicplaylistenabled'}) {
-			my $playlisttype = $client->param('playlisttype');
+			my $playlisttype = $client->modeParam('playlisttype');
 			if(!defined($playlisttype)) {
 				push @listRefSub, $items->{$menuItemKey};
 			}else {
@@ -1281,12 +1283,12 @@ sub getSetModeDataForSubItems {
 				if(defined($playlist->{'parameters'})) {
 					my %parameterValues = ();
 					my $i=1;
-					while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 						$i++;
 					}
-					if(defined($client->param('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+					if(defined($client->modeParam('extrapopmode'))) {
+						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
 					requestFirstParameter($client,$playlist,0,\%parameterValues);
 				}else {
@@ -1301,12 +1303,12 @@ sub getSetModeDataForSubItems {
 				if(defined($playlist->{'parameters'})) {
 					my %parameterValues = ();
 					my $i=1;
-					while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 						$i++;
 					}
-					if(defined($client->param('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+					if(defined($client->modeParam('extrapopmode'))) {
+						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
 					requestFirstParameter($client,$playlist,1,\%parameterValues);
 				}else {
@@ -1321,12 +1323,12 @@ sub getSetModeDataForSubItems {
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
-				while(defined($client->param('dynamicplaylist_parameter_'.$i))) {
-					$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+				while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+					$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 					$i++;
 				}
-				if(defined($client->param('extrapopmode'))) {
-					$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+				if(defined($client->modeParam('extrapopmode'))) {
+					$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 				}
 				requestFirstParameter($client,$item->{'playlist'},0,\%parameterValues);
 			}else {
@@ -1345,9 +1347,9 @@ sub requestNextParameter {
 	my $addOnly = shift;
 	
 	if(!defined($addOnly)) {
-		$addOnly = $client->param('dynamicplaylist_addonly');
+		$addOnly = $client->modeParam('dynamicplaylist_addonly');
 	}
-	$client->param('dynamicplaylist_parameter_'.$parameterId,$item);
+	$client->modeParam('dynamicplaylist_parameter_'.$parameterId,$item);
 	if(defined($playlist->{'parameters'}->{$parameterId+1})) {
 		my %nextParameter = (
 			'dynamicplaylist_nextparameter' => $parameterId+1,
@@ -1356,17 +1358,17 @@ sub requestNextParameter {
 		);
 		my $i;
 		for($i=1;$i<=$parameterId;$i++) {
-			$nextParameter{'dynamicplaylist_parameter_'.$i} = $client->param('dynamicplaylist_parameter_'.$i);
+			$nextParameter{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
 		}
 		Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.ChooseParameters',\%nextParameter);
 	}else {
 		for(my $i=1;$i<=$parameterId;$i++) {
-			$playlist->{'parameters'}->{$i}->{'value'} = $client->param('dynamicplaylist_parameter_'.$i)->{'id'};
+			$playlist->{'parameters'}->{$i}->{'value'} = $client->modeParam('dynamicplaylist_parameter_'.$i)->{'id'};
 		}
 		for(my $i=1;$i<=$parameterId;$i++) {
 			Slim::Buttons::Common::popMode($client);
 		}
-		if(defined($client->param('extrapopmode'))) {
+		if(defined($client->modeParam('extrapopmode'))) {
 			Slim::Buttons::Common::popMode($client);
 		}
 		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
@@ -1528,7 +1530,7 @@ sub mixable {
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
-	my $paramref = defined $client->param('parentParams') ? $client->param('parentParams') : $client->modeParameterStack(-1);
+	my $paramref = defined $client->modeParam('parentParams') ? $client->modeParam('parentParams') : $client->modeParameterStack(-1);
 	if(defined($paramref)) {
 		if(!$playListTypes) {
 			initPlayListTypes();
@@ -1899,7 +1901,7 @@ sub handleWebMixParameters {
 		my %value = (
 			'id' => $params->{'dynamicplaylist_parameter_'.$i}
 		);
-		$client->param('dynamicplaylist_parameter_'.$i,\%value);
+		$client->modeParam('dynamicplaylist_parameter_'.$i,\%value);
 		$log->debug("Storing parameter $i=".$value{'id'}."\n");
 
 		if($params->{'dynamicplaylist_parameter_changed'} eq $i) {
@@ -1946,7 +1948,7 @@ sub handleWebMixParameters {
 		return Slim::Web::HTTP::filltemplatefile('plugins/DynamicPlayList/dynamicplaylist_mixparameters.html', $params);
 	}else {
 		for(my $i=1;$i<$parameterId;$i++) {
-			$playlist->{'parameters'}->{$i}->{'value'} = $client->param('dynamicplaylist_parameter_'.$i)->{'id'};
+			$playlist->{'parameters'}->{$i}->{'value'} = $client->modeParam('dynamicplaylist_parameter_'.$i)->{'id'};
 		}
 		playRandom($client, $params->{'type'}, $params->{'addOnly'}, 1, 1);
 		$log->debug("Exiting handleWebMixParameters\n");
@@ -2427,148 +2429,6 @@ sub checkDefaults {
 	}
 
 }
-
-sub setupGroup
-{
-	my %setupGroup =
-	(
-	 PrefOrder => ['plugin_dynamicplaylist_number_of_tracks','plugin_dynamicplaylist_number_of_old_tracks','plugin_dynamicplaylist_skipped_tracks_retries','plugin_dynamicplaylist_ungrouped','plugin_dynamicplaylist_flatlist','plugin_dynamicplaylist_includesavedplaylists','plugin_dynamicplaylist_web_show_mixerlinks','plugin_dynamicplaylist_enable_mixerfunction','plugin_dynamicplaylist_structured_savedplaylists','plugin_dynamicplaylist_randomsavedplaylists','plugin_dynamicplaylist_fullsavedplaylists','plugin_dynamicplaylist_favouritesname','plugin_dynamicplaylist_rememberactiveplaylist','plugin_dynamicplaylist_showmessages'],
-	 GroupHead => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP'),
-	 GroupDesc => string('PLUGIN_DYNAMICPLAYLIST_SETUP_GROUP_DESC'),
-	 GroupLine => 1,
-	 GroupSub  => 1,
-	 Suppress_PrefSub  => 1,
-	 Suppress_PrefLine => 1
-	);
-	my %setupPrefs =
-	(
-	plugin_dynamicplaylist_showmessages => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_SHOW_MESSAGES')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("showmessages"); }
-		},		
-	plugin_dynamicplaylist_includesavedplaylists => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_INCLUDE_SAVED_PLAYLISTS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("includesavedplaylists"); }
-		},		
-	plugin_dynamicplaylist_randomsavedplaylists => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_RANDOM_SAVED_PLAYLISTS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("randomsavedplaylists"); }
-		},		
-	plugin_dynamicplaylist_fullsavedplaylists => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FULL_SAVED_PLAYLISTS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("fullsavedplaylists"); }
-		},		
-	plugin_dynamicplaylist_number_of_tracks => {
-			'validate' => \&Slim::Utils::Validate::isInt
-			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS')
-			,'currentValue' => sub { return $prefs->get("number_of_tracks"); }
-		},
-	plugin_dynamicplaylist_skipped_tracks_retries => {
-			'validate' => \&Slim::Utils::Validate::isInt
-			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_SKIPPED_TRACKS_RETRIES')
-			,'currentValue' => sub { return $prefs->get("skipped_tracks_retries"); }
-		},
-	plugin_dynamicplaylist_number_of_old_tracks => {
-			'validate' => \&validateIntOrEmpty
-			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_OLD_TRACKS')
-			,'currentValue' => sub { return $prefs->get("number_of_old_tracks"); }
-		},
-	plugin_dynamicplaylist_flatlist => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_FLATLIST')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FLATLIST')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("flatlist"); }
-		},		
-	plugin_dynamicplaylist_structured_savedplaylists => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("structured_savedplaylists"); }
-		},	
-	plugin_dynamicplaylist_ungrouped => {
-			'validate' => \&Slim::Utils::Validate::acceptAll
-			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_UNGROUPED')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_UNGROUPED')
-			,'currentValue' => sub { return $prefs->get("ungrouped"); }
-			,'PrefSize' => 'large'
-		},
-	plugin_dynamicplaylist_web_show_mixerlinks => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("web_show_mixerlinks"); }
-		},
-	plugin_dynamicplaylist_enable_mixerfunction => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("enable_mixerfunction"); }
-		},
-	plugin_dynamicplaylist_rememberactiveplaylist => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return $prefs->get("rememberactiveplaylist"); }
-		},
-	plugin_dynamicplaylist_favouritesname => {
-			'validate' => \&Slim::Utils::Validate::acceptAll
-			,'PrefChoose' => string('PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME')
-			,'changeIntro' => string('PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME')
-			,'currentValue' => sub { return $prefs->get("favouritesname"); }
-			,'PrefSize' => 'large'
-		}
-	);
-	return (\%setupGroup,\%setupPrefs);
-}
-
-
 
 sub getTracksForPlaylist {
 	my $client = shift;
