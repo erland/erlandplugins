@@ -79,16 +79,28 @@ $prefs->migrate(1, sub {
 	$prefs->set('number_of_tracks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_number_of_tracks') || 10  );
 	$prefs->set('skipped_tracks_retries', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_skipped_tracks_retries') || 20  );
 	$prefs->set('number_of_old_tracks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_number_of_old_tracks') || ''  );
-	$prefs->set('keep_adding_tracks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_keep_adding_tracks') || 1  );
-	$prefs->set('includesavedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_includesavedplaylists') || 1  );
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_keep_adding_tracks'))) {
+		$prefs->set('keep_adding_tracks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_keep_adding_tracks'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_includesavedplaylists'))) {
+		$prefs->set('includesavedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_includesavedplaylists'));
+	}
 	$prefs->set('randomsavedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_randomsavedplaylists') || 0  );
 	$prefs->set('fullsavedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_fullsavedplaylists') || 0  );
 	$prefs->set('ungrouped', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_ungrouped') || ''  );
 	$prefs->set('flatlist', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_flatlist') || 0  );
-	$prefs->set('structured_savedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_savedplaylists') || 1  );
-	$prefs->set('rememberactiveplaylist', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_rememberactiveplaylist') || 1  );
-	$prefs->set('web_show_mixerlinks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_web_show_mixerlinks') || 1  );
-	$prefs->set('enable_mixerfunction', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_enable_mixerfunction') || 1  );
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_savedplaylists'))) {
+		$prefs->set('structured_savedplaylists', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_savedplaylists'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_rememberactiveplaylist'))) {
+		$prefs->set('rememberactiveplaylist', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_structured_rememberactiveplaylist'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_web_show_mixerlinks'))) {
+		$prefs->set('web_show_mixerlinks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_web_show_mixerlinks'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_enable_mixerfunction'))) {
+		$prefs->set('enable_mixerfunction', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_enable_mixerfunction'));
+	}
 	$prefs->set('favouritesname', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_favouritesname') || string('PLUGIN_DYNAMICPLAYLIST_FAVOURITES')  );
 	1;
 });
