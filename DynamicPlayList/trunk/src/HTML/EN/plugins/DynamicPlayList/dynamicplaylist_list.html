@@ -10,12 +10,12 @@
 		[% END %]
 	[% END %]
 [% END -%]
+[% IF pluginDynamicPlayListNowPlaying != '' %]
 [%- pageHeaderInfo = BLOCK %]
-	[% IF pluginDynamicPlayListNowPlaying != '' %]
 		<strong>[% "NOW_PLAYING" | string %]:</strong>
 		<span class="exboldnowplaying">[% pluginDynamicPlayListNowPlaying %]</span>
-	[% END %]
 [% END -%]
+[% END %]
 [% PROCESS pageheader.html %]
 [% PROCESS plugins/DynamicPlayList/dynamicplaylistlink.html %]
 
@@ -67,6 +67,7 @@ href="[% webroot %][%- IF customurl -%]
 			[% FOREACH playlist IN pluginDynamicPlayListPlayLists %]
 				[% IF playlist.dynamicplaylistenabled %]
 					[% BLOCK controls %]
+						[% WRAPPER editlink noTarget=1 -%]href="[% webroot %][% playlist.url %]&player=[% player | uri %]"[%- END %]
 						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" parameters=playlist.parameters %]
 						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" parameters=playlist.parameters %]
 					[% END %]
