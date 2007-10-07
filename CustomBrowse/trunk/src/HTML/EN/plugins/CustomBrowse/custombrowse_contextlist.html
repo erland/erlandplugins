@@ -31,6 +31,7 @@ ELSE;
 	container = 'contentcontainer';
 END;
 %]
+[% PROCESS plugins/CustomBrowse/cbmixerlink.html %]
 
 [% BLOCK galleryitem %]
 	<li>
@@ -91,15 +92,11 @@ END;
 				[% BLOCK controls %]
 					[% IF pluginCustomBrowseSingleMixButton %]
 						[% IF item.mixes and item.mixes.size>0 and item.url %]
-							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"><img src="[% webroot %]plugins/CustomBrowse/html/images/mixbutton.gif" alt='[% "PLUGIN_CUSTOMBROWSE" | string %]' title='[% "PLUGIN_CUSTOMBROWSE" | string %]' onMouseOver="self.status='[% "PLUGIN_CUSTOMBROWSE" | string %]';return true"></a>
+							[% WRAPPER cmdlink cmdimage='mixbutton.gif' cmdtitle='PLUGIN_CUSTOMBROWSE' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
 					[% ELSE %]
 					[% FOREACH mix = item.mixes %]
-						[% IF mix.url %]
-							<a href="[% webroot %][% mix.url %]&player=[% player | uri %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
-						[% ELSE %]
-							<a href="[% webroot %]plugins/CustomBrowse/custombrowse_executemixcontext.html?player=[% player | uri %]&[% item.url %]&mix=[% mix.id %][% IF start %]&start=[% start %][% END %]"><img src="[% webroot %][% IF mix.image %][% mix.image %][% ELSE %]plugins/CustomBrowse/html/images/mixbutton.gif[% END %]" alt='[% mix.name %]' title='[% mix.name %]' onMouseOver="self.status='[% mix.name %]';return true"></a>
-						[% END %]
+						[% PROCESS custombrowse_mixerlink mixurl='${webroot}.plugins/CustomBrowse/custombrowse_executemixcontext.html' %]
 					[% END %]
 					[% END %]
 

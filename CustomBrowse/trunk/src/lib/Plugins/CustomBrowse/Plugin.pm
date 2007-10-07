@@ -77,6 +77,7 @@ my $supportContextDownloadError = undef;
 my $prefs = preferences('plugin.custombrowse');
 my $trackstatPrefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
+my $musicmagicPrefs = preferences('plugin.musicmagic');
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.custombrowse',
 	'defaultLevel' => 'WARN',
@@ -291,12 +292,12 @@ sub musicMagicMixable {
 	my $class = shift;
 	my $item  = shift;
 
-	if($serverPrefs->get('musicmagic')) {
-		if(UNIVERSAL::can("Plugins::MusicMagic::Plugin","mixable")) {
-			$log->debug("Calling Plugins::MusicMagic::Plugin->mixable\n");
-			my $enabled = eval { Plugins::MusicMagic::Plugin->mixable($item) };
+	if($musicmagicPrefs->get('musicmagic')) {
+		if(UNIVERSAL::can("Slim::Plugin::MusicMagic::Plugin","mixable")) {
+			$log->debug("Calling Slim::Plugin::MusicMagic::Plugin->mixable\n");
+			my $enabled = eval { Slim::Plugin::MusicMagic::Plugin->mixable($item) };
 			if ($@) {
-				$log->warn("Error calling Plugins::MusicMagic::Plugin->mixable: $@\n");
+				$log->warn("Error calling Slim::Plugin::MusicMagic::Plugin->mixable: $@\n");
 			}
 			if($enabled) {
 				return 1;
@@ -315,16 +316,16 @@ sub musicMagicMix {
 	if(ref($item) eq 'Slim::Schema::Album') {
 		my $trackObj = $item->tracks->next;
 		if($trackObj) {
-			$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$trackObj->path,'album') };
+			$trackUrls = eval { Slim::Plugin::MusicMagic::Plugin::getMix($client,$trackObj->path,'album') };
 		}
 	}elsif(ref($item) eq 'Slim::Schema::Track') {
-		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->path,'track') };
+		$trackUrls = eval { Slim::Plugin::MusicMagic::Plugin::getMix($client,$item->path,'track') };
 	}elsif(ref($item) eq 'Slim::Schema::Contributor') {
-		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'artist') };
+		$trackUrls = eval { Slim::Plugin::MusicMagic::Plugin::getMix($client,$item->name,'artist') };
 	}elsif(ref($item) eq 'Slim::Schema::Genre') {
-		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->name,'genre') };
+		$trackUrls = eval { Slim::Plugin::MusicMagic::Plugin::getMix($client,$item->name,'genre') };
 	}elsif(ref($item) eq 'Slim::Schema::Year') {
-		$trackUrls = eval { Plugins::MusicMagic::Plugin::getMix($client,$item->id,'year') };
+		$trackUrls = eval { Slim::Plugin::MusicMagic::Plugin::getMix($client,$item->id,'year') };
 	}
 	if ($@) {
 		$log->warn("Error calling MusicMagic plugin: $@\n");
@@ -1436,45 +1437,45 @@ sub setupGroup
 sub webPages {
 	my $class = shift;
 	my %pages = (
-                "custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
-                "custombrowse_contextlist\.(?:htm|xml)"     => \&handleWebContextList,
-                "custombrowse_settings\.(?:htm|xml)"     => \&handleWebSettings,
-                "custombrowse_albumimage\.(?:jpg|gif|png)"     => \&handleWebAlbumImage,
-                "custombrowse_albumfile\.(?:txt|pdf|htm)"     => \&handleWebAlbumFile,
-                "custombrowse_imagecachefile\.(?:jpg|gif|png)"     => \&handleWebImageCacheFile,
-                #"webadminmethods_edititems\.(?:htm|xml)"     => \&handleWebEditMenus,
-                "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditMenu,
-                "webadminmethods_hideitem\.(?:htm|xml)"     => \&handleWebHideMenu,
-                "webadminmethods_showitem\.(?:htm|xml)"     => \&handleWebShowMenu,
-                "webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveMenu,
-                "webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleMenu,
-                "webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewMenu,
-                "webadminmethods_savenewsimpleitem\.(?:htm|xml)"     => \&handleWebSaveNewSimpleMenu,
-                "webadminmethods_removeitem\.(?:htm|xml)"     => \&handleWebRemoveMenu,
-                "webadminmethods_newitemtypes\.(?:htm|xml)"     => \&handleWebNewMenuTypes,
-                "webadminmethods_newitemparameters\.(?:htm|xml)"     => \&handleWebNewMenuParameters,
-                "webadminmethods_newitem\.(?:htm|xml)"     => \&handleWebNewMenu,
-		"webadminmethods_login\.(?:htm|xml)"      => \&handleWebLogin,
-		"webadminmethods_downloadnewitems\.(?:htm|xml)"      => \&handleWebDownloadNewMenus,
-		"webadminmethods_downloaditems\.(?:htm|xml)"      => \&handleWebDownloadMenus,
-		"webadminmethods_downloaditem\.(?:htm|xml)"      => \&handleWebDownloadMenu,
-		"webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishMenuParameters,
-		"webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishMenu,
-		"webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteMenuType,
-                "custombrowse_mix\.(?:htm|xml)"     => \&handleWebMix,
-                "custombrowse_executemix\.(?:htm|xml)"     => \&handleWebExecuteMix,
-                "custombrowse_mixcontext\.(?:htm|xml)"     => \&handleWebMixContext,
-                "custombrowse_executemixcontext\.(?:htm|xml)"     => \&handleWebExecuteMixContext,
-                "custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
-                "custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
-                "custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
-                "custombrowse_playall\.(?:htm|xml)"     => \&handleWebPlayAll,
-                "custombrowse_contextadd\.(?:htm|xml)"     => \&handleWebContextAdd,
-                "custombrowse_contextplay\.(?:htm|xml)"     => \&handleWebContextPlay,
-                "custombrowse_contextaddall\.(?:htm|xml)"     => \&handleWebContextAddAll,
-                "custombrowse_contextplayall\.(?:htm|xml)"     => \&handleWebContextPlayAll,
-		"custombrowse_selectmenus\.(?:htm|xml)" => \&handleWebSelectMenus,
-		"custombrowse_saveselectmenus\.(?:htm|xml)" => \&handleWebSaveSelectMenus,
+                "CustomBrowse/custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
+                "CustomBrowse/custombrowse_contextlist\.(?:htm|xml)"     => \&handleWebContextList,
+                "CustomBrowse/custombrowse_settings\.(?:htm|xml)"     => \&handleWebSettings,
+                "CustomBrowse/custombrowse_albumimage\.(?:jpg|gif|png)"     => \&handleWebAlbumImage,
+                "CustomBrowse/custombrowse_albumfile\.(?:txt|pdf|htm)"     => \&handleWebAlbumFile,
+                "CustomBrowse/custombrowse_imagecachefile\.(?:jpg|gif|png)"     => \&handleWebImageCacheFile,
+                #"CustomBrowse/webadminmethods_edititems\.(?:htm|xml)"     => \&handleWebEditMenus,
+                "CustomBrowse/webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditMenu,
+                "CustomBrowse/webadminmethods_hideitem\.(?:htm|xml)"     => \&handleWebHideMenu,
+                "CustomBrowse/webadminmethods_showitem\.(?:htm|xml)"     => \&handleWebShowMenu,
+                "CustomBrowse/webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveMenu,
+                "CustomBrowse/webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleMenu,
+                "CustomBrowse/webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewMenu,
+                "CustomBrowse/webadminmethods_savenewsimpleitem\.(?:htm|xml)"     => \&handleWebSaveNewSimpleMenu,
+                "CustomBrowse/webadminmethods_removeitem\.(?:htm|xml)"     => \&handleWebRemoveMenu,
+                "CustomBrowse/webadminmethods_newitemtypes\.(?:htm|xml)"     => \&handleWebNewMenuTypes,
+                "CustomBrowse/webadminmethods_newitemparameters\.(?:htm|xml)"     => \&handleWebNewMenuParameters,
+                "CustomBrowse/webadminmethods_newitem\.(?:htm|xml)"     => \&handleWebNewMenu,
+		"CustomBrowse/webadminmethods_login\.(?:htm|xml)"      => \&handleWebLogin,
+		"CustomBrowse/webadminmethods_downloadnewitems\.(?:htm|xml)"      => \&handleWebDownloadNewMenus,
+		"CustomBrowse/webadminmethods_downloaditems\.(?:htm|xml)"      => \&handleWebDownloadMenus,
+		"CustomBrowse/webadminmethods_downloaditem\.(?:htm|xml)"      => \&handleWebDownloadMenu,
+		"CustomBrowse/webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishMenuParameters,
+		"CustomBrowse/webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishMenu,
+		"CustomBrowse/webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteMenuType,
+                "CustomBrowse/custombrowse_mix\.(?:htm|xml)"     => \&handleWebMix,
+                "CustomBrowse/custombrowse_executemix\.(?:htm|xml)"     => \&handleWebExecuteMix,
+                "CustomBrowse/custombrowse_mixcontext\.(?:htm|xml)"     => \&handleWebMixContext,
+                "CustomBrowse/custombrowse_executemixcontext\.(?:htm|xml)"     => \&handleWebExecuteMixContext,
+                "CustomBrowse/custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
+                "CustomBrowse/custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
+                "CustomBrowse/custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
+                "CustomBrowse/custombrowse_playall\.(?:htm|xml)"     => \&handleWebPlayAll,
+                "CustomBrowse/custombrowse_contextadd\.(?:htm|xml)"     => \&handleWebContextAdd,
+                "CustomBrowse/custombrowse_contextplay\.(?:htm|xml)"     => \&handleWebContextPlay,
+                "CustomBrowse/custombrowse_contextaddall\.(?:htm|xml)"     => \&handleWebContextAddAll,
+                "CustomBrowse/custombrowse_contextplayall\.(?:htm|xml)"     => \&handleWebContextPlayAll,
+		"CustomBrowse/custombrowse_selectmenus\.(?:htm|xml)" => \&handleWebSelectMenus,
+		"CustomBrowse/custombrowse_saveselectmenus\.(?:htm|xml)" => \&handleWebSaveSelectMenus,
         );
 
         my $value = 'plugins/CustomBrowse/custombrowse_list.html';

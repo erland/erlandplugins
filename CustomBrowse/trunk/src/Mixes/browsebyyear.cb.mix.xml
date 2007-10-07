@@ -10,6 +10,6 @@
 		<mixcheckdata>Plugins::CustomBrowse::Plugin::browseByMixable</mixcheckdata>
 		<mixdata>Plugins::CustomBrowse::Plugin::browseByMix</mixdata>
 		<mixurl>plugins/CustomBrowse/custombrowse_contextlist.html?contextname={itemname}&amp;contexttype={itemtype}&amp;contextid={itemid}</mixurl>
-		<miximage>plugins/CustomBrowse/html/images/browsebutton.gif</miximage>
+		<miximage>html/images/browsebyselected.gif</miximage>
 	</mix>
 </custombrowse>

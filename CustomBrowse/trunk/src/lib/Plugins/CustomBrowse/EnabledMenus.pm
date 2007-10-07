@@ -109,5 +109,9 @@ sub handler {
 	return $class->SUPER::handler($client, $paramRef);
 }
 
+
+# other people call us externally.
+*escape   = \&URI::Escape::uri_escape_utf8;
+
 		
 1;
