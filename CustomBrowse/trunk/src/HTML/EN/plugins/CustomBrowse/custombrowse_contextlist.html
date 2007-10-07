@@ -70,7 +70,7 @@ END;
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
 		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
-			[% WRAPPER contentcontainer %]
+			<!-- [% WRAPPER contentcontainer %] -->
 				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
 					[% BLOCK allsongscontrols %]
 						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
@@ -82,7 +82,7 @@ END;
 					[% odd = (not odd) %]
 				[% END %]
 				[% count = 0 %]
-			[% END %]
+			<!-- [% END %] -->
 		[% ELSIF !pluginCustomBrowseNoItems %]
 			[% "PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND" | string %]<br>
 		[% END %]
