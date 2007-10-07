@@ -1131,7 +1131,7 @@ sub getConfigManager {
 			'pluginId' => 'CustomBrowse',
 			'downloadApplicationId' => 'CustomBrowse',
 			'pluginVersion' => $PLUGINVERSION,
-			'supportDownloadError' => $supportDownloadError,
+			'supportDownloadError' => "Download is not supported yet",
 			'addSqlErrorCallback' => \&addSQLError
 		);
 		$configManager = Plugins::CustomBrowse::ConfigManager::Main->new(\%parameters);
@@ -1150,7 +1150,7 @@ sub getContextConfigManager {
 			'pluginId' => 'CustomBrowse',
 			'downloadApplicationId' => 'CustomBrowseContext',
 			'pluginVersion' => $PLUGINVERSION,
-			'supportDownloadError' => $supportContextDownloadError,
+			'supportDownloadError' => "Download is not supported yet",
 			'addSqlErrorCallback' => \&addSQLError
 		);
 		$contextConfigManager = Plugins::CustomBrowse::ConfigManager::ContextMain->new(\%parameters);
