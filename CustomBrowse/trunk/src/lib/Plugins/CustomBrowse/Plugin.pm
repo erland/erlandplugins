@@ -984,15 +984,6 @@ sub initPlugin {
 		Slim::Buttons::Common::addMode('trackinfo',getFunctions(),\&setModeContext);
 	}
 
-	eval {
-		getConfigManager();
-		getMenuHandler();
-		readBrowseConfiguration();
-		readContextBrowseConfiguration();
-	};
-	if ($@) {
-		$log->error("Failed to load Custom Browse:\n$@\n");
-	}
 	my %submenu = (
 		'useMode' => 'PLUGIN.CustomBrowse',
 	);
@@ -1029,6 +1020,20 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mixescontext','_contexttype','_contextid'], [1, 1, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
+
+	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
+}
+
+sub lateInitPlugin {
+	eval {
+		getConfigManager();
+		getMenuHandler();
+		readBrowseConfiguration();
+		readContextBrowseConfiguration();
+	};
+	if ($@) {
+		$log->error("Failed to load Custom Browse:\n$@\n");
+	}
 }
 
 sub callCallbackWithArg {
