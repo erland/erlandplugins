@@ -28,6 +28,7 @@ use DBI qw(:sql_types);
 use Plugins::CustomScan::Time::Stopwatch;
 
 #Load internal scanning modules
+use Plugins::CustomScan::Modules::MixedTag;
 use Plugins::CustomScan::Modules::CustomTag;
 use Plugins::CustomScan::Modules::RatingTag;
 use Plugins::CustomScan::Modules::Amazon;
