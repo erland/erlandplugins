@@ -20,7 +20,7 @@
 					select contributors.id,contributors.name from contributors
 					where
 						contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
-						{property.variousArtistAutoIdentification}=1
+						{property:server:variousArtistAutoIdentification}=1
 					group by contributors.id
 				</menudata>
 				<menu>
@@ -118,7 +118,7 @@
 						(
 							albums.compilation is null or 
 							albums.compilation=0 or 
-							{property.variousArtistAutoIdentification}=0 
+							{property:server:variousArtistAutoIdentification}=0 
 						) 
 						[%- END %]
 						[%- IF includedgenres %]
@@ -352,7 +352,7 @@
 						select contributors.id,contributors.name from contributors
 						where
 							contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
-							{property.variousArtistAutoIdentification}=1
+							{property:server:variousArtistAutoIdentification}=1
 						group by contributors.id
 					</menudata>
 					<menu>
@@ -459,7 +459,7 @@
 							(
 								albums.compilation is null or 
 								albums.compilation=0 or 
-								{property.variousArtistAutoIdentification}=0 
+								{property:server:variousArtistAutoIdentification}=0 
 							) 
 							[%- END %]
 							[%- IF includedgenres %]

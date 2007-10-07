@@ -26,7 +26,7 @@
 						select contributors.id,contributors.name from contributors
 						where
 							contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
-							{property.variousArtistAutoIdentification}=1
+							{property:server:variousArtistAutoIdentification}=1
 						group by contributors.id
 					</menudata>
 					<menu>
@@ -77,7 +77,7 @@
 							<menu>
 								<id>trackdetails</id>
 								<menutype>trackdetails</menutype>
-								<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+								<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 							</menu>
 						</menu>
 					</menu>
@@ -101,7 +101,7 @@
 							(
 								albums.compilation is null or 
 								albums.compilation=0 or 
-								{property.variousArtistAutoIdentification}=0 
+								{property:server:variousArtistAutoIdentification}=0 
 							) and
 							[%- END %]
 							tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
@@ -159,7 +159,7 @@
 							<menu>
 								<id>trackdetails</id>
 								<menutype>trackdetails</menutype>
-								<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+								<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 							</menu>
 						</menu>
 					</menu>
@@ -224,7 +224,7 @@
 		                                <menu>
 		                                        <id>trackdetails</id>
 		                                        <menutype>trackdetails</menutype>
-		                                        <menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+		                                        <menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 		                                </menu>
 		                        </menu>
 		                </menu>
@@ -257,7 +257,7 @@
 							select contributors.id,contributors.name from contributors
 							where
 								contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
-								{property.variousArtistAutoIdentification}=1
+								{property:server:variousArtistAutoIdentification}=1
 							group by contributors.id
 						</menudata>
 						<menu>
@@ -312,7 +312,7 @@
 								<menu>
 									<id>trackdetails</id>
 									<menutype>trackdetails</menutype>
-									<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+									<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 								</menu>
 							</menu>
 						</menu>
@@ -337,7 +337,7 @@
 								(
 									albums.compilation is null or 
 									albums.compilation=0 or 
-									{property.variousArtistAutoIdentification}=0 
+									{property:server:variousArtistAutoIdentification}=0 
 								) and
 								[%- END %]
 								tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
@@ -399,7 +399,7 @@
 								<menu>
 									<id>trackdetails</id>
 									<menutype>trackdetails</menutype>
-									<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+									<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 								</menu>
 							</menu>
 						</menu>

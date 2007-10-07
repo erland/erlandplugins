@@ -28,7 +28,7 @@
 			where 
 				[%- IF library or activelibrary %]
 				albums.id=multilibrary_album.album and
-				multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+				multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				albums.id={albumid}
 			order by albums.titlesort asc

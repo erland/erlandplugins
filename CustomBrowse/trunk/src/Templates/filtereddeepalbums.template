@@ -21,7 +21,7 @@
 					tracks.album=albums.id 
 					[%- IF library or activelibrary %]
 					and tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					[%- IF lossless %]
 					and tracks.lossless=1
@@ -91,7 +91,7 @@
 							contributor_track.contributor=contributors.id 
 							[%- IF library or activelibrary %]
 							and tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 							[%- END %]
 							[%- IF lossless %]
 							and tracks.lossless=1
@@ -137,7 +137,7 @@
 						substr(albums.titlesort,1,1)='{albumletter}'
 						[%- IF library or activelibrary %]
 						and tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 						[%- END %]
 						[%- IF lossless %]
 						and tracks.lossless=1
@@ -189,7 +189,7 @@
 							tracks.album={album}
 							[%- IF library or activelibrary %]
 							and tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 							[%- END %]
 							[%- IF lossless %]
 							and tracks.lossless=1
@@ -230,7 +230,7 @@
 					<menu>
 						<id>trackdetails</id>
 						<menutype>trackdetails</menutype>
-						<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+						<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 					</menu>
 				</menu>
 			</menu>

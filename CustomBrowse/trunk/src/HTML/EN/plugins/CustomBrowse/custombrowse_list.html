@@ -69,19 +69,17 @@ END;
     	<tr valign="top"><td></td><td colspan="4">
 		[% odd = 1 %]
 		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
-			[% WRAPPER contentcontainer %]
-				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
-					[% BLOCK allsongscontrols %]
-						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
-					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
-					[% END %]
-					[%- WRAPPER contentitem controls='allsongscontrols' %]
-			        		[% "ALL_SONGS" | string %]<br>
-			        	[% END %]
-					[% odd = (not odd) %]
+			[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
+				[% BLOCK allsongscontrols %]
+					[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+				        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 				[% END %]
-				[% count = 0 %]
+				[%- WRAPPER contentitem controls='allsongscontrols' %]
+		        		[% "ALL_SONGS" | string %]<br>
+		        	[% END %]
+				[% odd = (not odd) %]
 			[% END %]
+			[% count = 0 %]
 		[% ELSE %]
 			[% "PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND" | string %]<br>
 		[% END %]
@@ -148,7 +146,7 @@ END;
 [% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 <tr><td></td><td colspan="4">
 <br>
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
+<a href="[% webroot %]plugins/CustomBrowse/settings/basic.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
 </td></tr>

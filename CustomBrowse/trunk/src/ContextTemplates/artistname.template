@@ -23,7 +23,7 @@
 			where 
 				[%- IF library or activelibrary %]
 				contributors.id=multilibrary_contributor.contributor and
-				multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+				multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				contributors.id={artistid}
 			order by contributors.namesort asc

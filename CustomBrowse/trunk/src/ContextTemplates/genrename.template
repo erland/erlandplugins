@@ -23,7 +23,7 @@
 			where 
 				[%- IF library or activelibrary %]
 				genres.id=multilibrary_genre.genre and
-				multilibrary_genre.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+				multilibrary_genre.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				genres.id={genreid}
 			order by genres.namesort asc

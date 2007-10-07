@@ -22,7 +22,7 @@
 			where 
 				[%- IF library or activelibrary %]
 				years.id=multilibrary_year.year and
-				multilibrary_year.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+				multilibrary_year.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				years.id={yearid}
 			order by years.id desc

@@ -16,7 +16,7 @@
 				select contributors.id,contributors.name from contributors
 				where
 					contributors.name='[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]' and
-					{property.variousArtistAutoIdentification}=1
+					{property:server:variousArtistAutoIdentification}=1
 				group by contributors.id
 			</menudata>
 			<menu>
@@ -30,7 +30,7 @@
 					where
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
-						multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						albums.compilation = 1
 					group by albums.id
@@ -49,7 +49,7 @@
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and
 							tracks.album={album}
@@ -59,7 +59,7 @@
 					<menu>
 						<id>trackdetails</id>
 						<menutype>trackdetails</menutype>
-						<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+						<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 					</menu>
 				</menu>
 			</menu>
@@ -76,7 +76,7 @@
 				where
 					[%- IF library or activelibrary %]
 					contributors.id=multilibrary_contributor.contributor and
-					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
@@ -84,7 +84,7 @@
 					(
 						albums.compilation is null or
 						albums.compilation=0 or
-						{property.variousArtistAutoIdentification}=0
+						{property:server:variousArtistAutoIdentification}=0
 					)
 				group by substr(contributors.namesort,1,1)
 				order by contributors.namesort asc
@@ -100,7 +100,7 @@
 					where 
 						[%- IF library or activelibrary %]
 						contributors.id=multilibrary_contributor.contributor and
-						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						contributor_album.contributor=contributors.id and
 						contributor_album.album=albums.id and
@@ -108,7 +108,7 @@
 						(
 							albums.compilation is null or 
 							albums.compilation=0 or 
-							{property.variousArtistAutoIdentification}=0
+							{property:server:variousArtistAutoIdentification}=0
 						) and
 						substr(contributors.namesort,1,1)='{artistletter}'
 					group by contributors.id 
@@ -126,7 +126,7 @@
 						where 
 							[%- IF library or activelibrary %]
 							albums.id=multilibrary_album.album and
-							multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							albums.id=contributor_album.album and 
 							contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and 
@@ -147,7 +147,7 @@
 							where 
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
-								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
@@ -160,7 +160,7 @@
 						<menu>
 							<id>trackdetails</id>
 							<menutype>trackdetails</menutype>
-							<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+							<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 						</menu>
 					</menu>
 				</menu>

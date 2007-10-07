@@ -9,6 +9,7 @@
 &nbsp;
 [% END -%]
 [% PROCESS pageheader.html %]
+[% PROCESS plugins/CustomBrowse/settings/subpage_chooser.html %]
 
     	<tr valign="top"><td></td><td colspan="4">
 		<a href="[% webroot %]plugins/CustomBrowse/webadminmethods_newitemtypes.html?player=[% player | uri %][% IF pluginWebAdminMethodsRedirect %]&redirect=[% pluginWebAdminMethodsRedirect %][% END %][% IF pluginWebAdminMethodsHandler %]&webadminmethodshandler=[% pluginWebAdminMethodsHandler %][% END %]">[% "PLUGIN_CUSTOMBROWSE_NEW_ITEM" | string %]</a>[% IF pluginWebAdminMethodsDownloadSupported %]&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomBrowse/webadminmethods_downloadnewitems.html?player=[% player | uri %][% IF pluginWebAdminMethodsRedirect %]&redirect=[% pluginWebAdminMethodsRedirect %][% END %][% IF pluginWebAdminMethodsHandler %]&webadminmethodshandler=[% pluginWebAdminMethodsHandler %][% END %]" [% IF pluginWebAdminMethodsDownloadMessage %]onClick="alert('[% pluginWebAdminMethodsDownloadMessage %]');return false;"[% ELSE %]onClick="return confirm('[% "PLUGIN_CUSTOMBROWSE_DOWNLOAD_QUESTION" |string %]');"[% END %]>[% "PLUGIN_CUSTOMBROWSE_REFRESH_DOWNLOADED_ITEMS" | string %]</a>[% END %]

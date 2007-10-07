@@ -36,7 +36,7 @@
 					where
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
-						multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						albums.id=contributor_album.album and
 						contributor_album.contributor=contributors.id and
@@ -47,7 +47,7 @@
 					[%- IF library or activelibrary %]
 					where
 						albums.id=multilibrary_album.album
-						and multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+						and multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					[%- END %]
 					order by albums.year desc, albums.titlesort asc
@@ -63,7 +63,7 @@
 					where 
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
-						multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						albums.id=contributor_album.album and
 						contributor_album.contributor=contributors.id and
@@ -83,7 +83,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.id=contributor_track.track and
@@ -96,7 +96,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track
-						and multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						and multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.url=track_statistics.url
@@ -115,7 +115,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.id=contributor_track.track and
@@ -128,7 +128,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track
-						and multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						and multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.url=track_statistics.url
@@ -147,7 +147,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.id=contributor_track.track and
@@ -160,7 +160,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track
-						and multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						and multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.url=track_statistics.url
@@ -179,7 +179,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.id=contributor_track.track and
@@ -192,7 +192,7 @@
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track
-						and multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						and multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.album=albums.id and
 						tracks.url=track_statistics.url
@@ -208,7 +208,7 @@
 				where
 					[%- IF library or activelibrary %]
 					albums.id=multilibrary_album.album and
-					multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+					multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					albums.id=contributor_album.album and
 					contributor_album.contributor=contributors.id and
@@ -219,7 +219,7 @@
 				[%- IF library or activelibrary %]
 				where
 					albums.id=multilibrary_album.album
-					and multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					and multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				[%- END %]
 				order by {orderby}
@@ -237,7 +237,7 @@
 					where 
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						tracks.album={album} 
@@ -246,7 +246,7 @@
 				<menu>
 					<id>trackdetails</id>
 					<menutype>trackdetails</menutype>
-					<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+					<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 				</menu>
 			</menu>
 		</menu>

@@ -19,15 +19,14 @@
 [% END -%]
 
 [% BLOCK itemColumn %]
-<div class="songInfo">
-	<ul>
+<div id="songInfo">
 		[% FOREACH item = items %]
 			[% IF (column=='left' and item.itemplacement=='left') or (column=='right' and item.itemplacement!='left') %]
-			<li>
+			<div id="[% item.itemname %]">
 				[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %]
-				<div class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</div>
+				<span class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</span>
 				[% END %]
-				<div[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %] class="songInfoText"[% END %]>
+				<span[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %] class="songInfoText"[% END %]>
 					[% IF item.multipleitems %]
 						[% itemCount=0 %]
 						[% prevImage=0 %]
@@ -44,11 +43,10 @@
 					[% ELSE %]
 						[% PROCESS contextInfo it=item %]
 					[% END %]
-				</div>
-			</li>
+				</span>
+			</div>
 			[% END %]
 		[% END %]
-	</ul>
 </div>
 [% END %]
 [% hasleft =0 %]
