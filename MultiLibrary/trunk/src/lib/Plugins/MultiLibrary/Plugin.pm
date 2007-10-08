@@ -20,6 +20,9 @@ package Plugins::MultiLibrary::Plugin;
 
 use strict;
 
+use base qw(Slim::Plugin::Base);
+
+use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
@@ -34,19 +37,52 @@ use DBI qw(:sql_types);
 use Plugins::MultiLibrary::ConfigManager::Main;
 use Plugins::MultiLibrary::Template::Reader;
 
+use Plugins::MultiLibrary::Settings;
+use Plugins::MultiLibrary::ManageLibraries;
+
 use Slim::Schema;
+
+my $prefs = preferences('plugin.multilibrary');
+my $serverPrefs = preferences('server');
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.multilibrary',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_MULTILIBRARY',
+});
+
+$prefs->migrate(1, sub {
+	$prefs->set('library_directory', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_library_directory') || $serverPrefs->get('playlistdir')  );
+	$prefs->set('template_directory',  Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_template_directory')   || ''  );
+	$prefs->set('download_url',  Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_download_url')   || 'http://erland.homeip.net/datacollection/services/DataCollection'  );
+	$prefs->set('question_startup', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_question_startup') || 0);
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_startup'))) {
+		$prefs->set('refresh_startup', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_startup'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_rescan'))) {
+		$prefs->set('refresh_rescan', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_rescan'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_save'))) {
+		$prefs->set('refresh_save', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_refresh_save'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_custombrowse_menus'))) {
+		$prefs->set('custombrowse_menus', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_custombrowse_menus'));
+	}
+	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_utf8filenames'))) {
+		$prefs->set('utf8filenames', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_utf8filenames'));
+	}
+	1;
+});
 
 # Information on each clients multilibrary
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
 my $libraries = undef;
 my $sqlerrors = '';
-my $soapLiteError = 0;
 my $supportDownloadError = undef;
 my %currentLibrary = ();
-my $PLUGINVERSION = '1.6';
+my $PLUGINVERSION = undef;
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
-
+my $manageLibraryHandler = undef;
 my $configManager = undef;
 
 # Indicator if hooked or not
@@ -64,7 +100,7 @@ sub getLibrary {
 	
 	return undef unless $type;
 
-	debugMsg("Get library: $type\n");
+	$log->debug("Get library: $type\n");
 	if(!$libraries) {
 		initLibraries($client);
 	}
@@ -95,9 +131,9 @@ sub getOverlay {
 	my $library = getCurrentLibrary($client);
 	my $itemId = $item->{'id'};
 	if(defined($itemId) && defined($library) && $itemId eq $library->{'id'}) {
-		return [Slim::Display::Display::symbol('notesymbol'), Slim::Display::Display::symbol('rightarrow')];
+		return [$client->symbols('notesymbol'), $client->symbols('rightarrow')];
 	}else {
-		return [undef, Slim::Display::Display::symbol('rightarrow')];
+		return [undef, $client->symbols('rightarrow')];
 	}
 }
 
@@ -132,6 +168,7 @@ sub isLibraryEnabledForClient {
 
 
 sub setMode {
+	my $class = shift;
 	my $client = shift;
 	my $method = shift;
 	
@@ -180,7 +217,7 @@ sub setMode {
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on add\n");
+			$log->debug("Do nothing on add\n");
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -208,13 +245,13 @@ sub selectLibrary {
 	}
 	if(defined($key) && defined($libraryId) && defined($libraries->{$libraryId})) {
 		$currentLibrary{$key} = $libraryId;
-		$client->prefSet('plugin_multilibrary_activelibrary',$libraryId);
-		$client->prefSet('plugin_multilibrary_activelibraryno',$libraries->{$libraryId}->{'libraryno'});
+		$prefs->client($client)->set('activelibrary',$libraryId);
+		$prefs->client($client)->set('activelibraryno',$libraries->{$libraryId}->{'libraryno'});
 		if($showUser) {
-			$client->showBriefly(
-				$client->string( 'PLUGIN_MULTILIBRARY'),
-				$client->string( 'PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY').": ".$libraries->{$libraryId}->{'name'},
-				1);
+			$client->showBriefly({
+				'line'    => [ $client->string( 'PLUGIN_MULTILIBRARY'), 
+						$client->string( 'PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY').": ".$libraries->{$libraryId}->{'name'} ],
+				},1);
 		}
 		if(defined($libraries->{$libraryId}->{'action'})) {
 			my $actionValue = $libraries->{$libraryId}->{'action'};
@@ -227,13 +264,13 @@ sub selectLibrary {
 			for my $action  (@actions) {
 				if($action->{'type'} eq 'cli') {
 					eval { 
-						debugMsg("Executing action: ".$action->{'type'}.", ".$action->{'data'}."\n");
+						$log->debug("Executing action: ".$action->{'type'}.", ".$action->{'data'}."\n");
 						my @parts = split(/ /,$action->{'data'});
 						my $request = $client->execute(\@parts);
 						$request->source('PLUGIN_MULTILIBRARY');
 					};
 					if ($@) {
-						errorMsg("MultiLibrary: Failed to execute action:".$action->{'type'}.", ".$action->{'data'}.":$@\n");
+						$log->warn("MultiLibrary: Failed to execute action:".$action->{'type'}.", ".$action->{'data'}.":$@\n");
 					}
 				}
 			}
@@ -426,7 +463,7 @@ sub getAvailableCustomBrowseMenus {
 	my $client = shift;
 
 	my @result = ();
-	if(Slim::Utils::Prefs::get('plugin_multilibrary_custombrowse_menus')) {
+	if($prefs->get('custombrowse_menus')) {
 		my $menus = getCustomBrowseMenuTemplates($client);
 		if(defined($menus)) {
 			for my $menu (@$menus) {
@@ -500,11 +537,11 @@ sub getCustomBrowseMenuTemplates {
 	my $client = shift;
 	my @result = ();
 	if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","getMultiLibraryMenus")) {
-		debugMsg("Getting library templates from Custom Browse\n");
+		$log->debug("Getting library templates from Custom Browse\n");
 		no strict 'refs';
 		my $items = eval { &{"Plugins::CustomBrowse::Plugin::getMultiLibraryMenus"}($client) };
 		if ($@) {
-			debugMsg("Error getting templates: $@\n");
+			$log->warn("Error getting templates: $@\n");
 		}
 		use strict 'refs';
 		for my $item (@$items) {
@@ -528,11 +565,11 @@ sub getCustomBrowseContextMenuTemplates {
 	my $client = shift;
 	my @result = ();
 	if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","getMultiLibraryContextMenus")) {
-		debugMsg("Getting library templates from Custom Browse\n");
+		$log->debug("Getting library templates from Custom Browse\n");
 		no strict 'refs';
 		my $items = eval { &{"Plugins::CustomBrowse::Plugin::getMultiLibraryContextMenus"}($client) };
 		if ($@) {
-			debugMsg("Error getting templates: $@\n");
+			$log->warn("Error getting templates: $@\n");
 		}
 		use strict 'refs';
 		for my $item (@$items) {
@@ -772,35 +809,22 @@ sub getCustomBrowseContextMenuData {
 }
 
 sub initPlugin {
-	$soapLiteError = 0;
-	eval "use SOAP::Lite";
-	if ($@) {
-		my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
-		for my $plugindir (@pluginDirs) {
-			next unless -d catdir($plugindir,"MultiLibrary","libs");
-			push @INC,catdir($plugindir,"MultiLibrary","libs");
-			last;
-		}
-		debugMsg("Using internal implementation of SOAP::Lite\n");
-		eval "use SOAP::Lite";
-		if ($@) {
-			$soapLiteError = 1;
-			msg("MultiLibrary: ERROR! Cant load internal implementation of SOAP::Lite, download/publish functionallity will not be available\n");
-		}
-	}
-	if(!defined($supportDownloadError) && $soapLiteError) {
-		$supportDownloadError = "Could not use the internal web service implementation, please download and install SOAP::Lite manually";
-	}
+	my $class = shift;
+	$class->SUPER::initPlugin(@_);
+	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
+	Plugins::MultiLibrary::Settings->new($class);
+	$manageLibraryHandler = Plugins::MultiLibrary::ManageLibraries->new($class);
+
 	checkDefaults();
 	initDatabase();
 	eval {
 		initLibraries();
 	};
 	if( $@ ) {
-	    	errorMsg("Startup error: $@\n");
+	    	$log->error("Startup error: $@\n");
 	}		
 
-	if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup")) {
+	if($prefs->get("refresh_startup")) {
 		refreshLibraries();
 	}
 	if ( !$MULTILIBRARY_HOOK ) {
@@ -810,13 +834,12 @@ sub initPlugin {
 
 sub getConfigManager {
 	if(!defined($configManager)) {
-		my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
+		my $templateDir = $prefs->get('template_directory');
 		if(!defined($templateDir) || !-d $templateDir) {
 			$supportDownloadError = 'You have to specify a template directory before you can download libraries';
 		}
 		my %parameters = (
-			'debugCallback' => \&debugMsg,
-			'errorCallback' => \&errorMsg,
+			'logHandler' => $log,
 			'pluginId' => 'MultiLibrary',
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'MultiLibrary',
@@ -838,7 +861,7 @@ sub shutdownPlugin {
 # Do this as soon as possible during startup.
 sub installHook()
 {  
-	debugMsg("Hook activated.\n");
+	$log->debug("Hook activated.\n");
 	Slim::Control::Request::subscribe(\&Plugins::MultiLibrary::Plugin::rescanCallback,[['rescan']]);
 	Slim::Control::Request::subscribe(\&Plugins::MultiLibrary::Plugin::powerCallback,[['power']]);
 	$MULTILIBRARY_HOOK=1;
@@ -848,7 +871,7 @@ sub installHook()
 # Do this as the plugin shuts down, if possible.
 sub uninstallHook()
 {
-	debugMsg("Hook deactivated.\n");
+	$log->debug("Hook deactivated.\n");
 	Slim::Control::Request::unsubscribe(\&Plugins::MultiLibrary::Plugin::rescanCallback);
 	Slim::Control::Request::unsubscribe(\&Plugins::MultiLibrary::Plugin::powerCallback);
 	$MULTILIBRARY_HOOK=0;
@@ -856,7 +879,7 @@ sub uninstallHook()
 
 sub rescanCallback($) 
 {
-	debugMsg("Entering rescanCallback\n");
+	$log->debug("Entering rescanCallback\n");
 	# These are the two passed parameters
 	my $request=shift;
 	my $client = $request->client();
@@ -866,21 +889,21 @@ sub rescanCallback($)
 	######################################
 	if ( $request->isCommand([['rescan'],['done']]) )
 	{
-		if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_rescan")) {
+		if($prefs->get("refresh_rescan")) {
 			refreshLibraries();
 		}
 
 	}
-	debugMsg("Exiting rescanCallback\n");
+	$log->debug("Exiting rescanCallback\n");
 }
 
 sub powerCallback($) 
 {
-	debugMsg("Entering powerCallback\n");
+	$log->debug("Entering powerCallback\n");
 	# These are the two passed parameters
 	my $request=shift;
 	my $client = $request->client();
-	if(Slim::Utils::Prefs::get('plugin_multilibrary_question_startup')) {
+	if($prefs->get('question_startup')) {
 
 		######################################
 		## Rescan finished
@@ -889,17 +912,17 @@ sub powerCallback($)
 		{
 			my $power = $request->getParam('_newvalue');
 			if($power) {
-				debugMsg("Asking for library\n");
+				$log->debug("Asking for library\n");
 				Slim::Buttons::Common::pushMode($client,'PLUGIN.MultiLibrary::Plugin',undef);
 				$client->update();
 			}
 		}
 	}
-	debugMsg("Exiting powerCallback\n");
+	$log->debug("Exiting powerCallback\n");
 }
 
 sub refreshLibraries {
-	msg("MultiLibrary: Synchronizing libraries data, please wait...\n");
+	$log->info("MultiLibrary: Synchronizing libraries data, please wait...\n");
 	eval {
 		initLibraries();
 		my $dbh = getCurrentDBH();
@@ -912,7 +935,7 @@ sub refreshLibraries {
 		}
 	
 		# remove non existent libraries
-		debugMsg("Deleting removed libraries\n");
+		$log->debug("Deleting removed libraries\n");
 		my $sth = undef;
 		if($libraryIds ne '') {
 			$sth = $dbh->prepare("DELETE from multilibrary_libraries where libraryid not in ($libraryIds)");
@@ -968,10 +991,10 @@ sub refreshLibraries {
 		
 		for my $library (@sortedLibraries) {
 			eval {
-				debugMsg("Checking library ".$library->{'id'}."\n");
+				$log->debug("Checking library ".$library->{'id'}."\n");
 				my $id = initDatabaseLibrary($library);
 				if(defined($id)) {
-					debugMsg("Deleting data for library $id\n");
+					$log->debug("Deleting data for library $id\n");
 					$sth = $dbh->prepare("DELETE from multilibrary_track where library=?");
 					$sth->bind_param(1,$id,SQL_INTEGER);
 					$sth->execute();
@@ -995,7 +1018,7 @@ sub refreshLibraries {
 					if(defined($library->{'track'})) {
 						my $sql = $library->{'track'}->{'data'};
 						if(defined($sql)) {
-							debugMsg("Adding new data for library ".$library->{'id'}.", running $sql\n");
+							$log->debug("Adding new data for library ".$library->{'id'}.", running $sql\n");
 							my %keywords = (
 								'library' => $id
 							);
@@ -1030,20 +1053,20 @@ sub refreshLibraries {
 							$sth->bind_param(2,$id,SQL_INTEGER);
 							$sth->execute();
 							$sth->finish();
-							debugMsg("Added $noOfTracks songs to the library\n");
+							$log->debug("Added $noOfTracks songs to the library\n");
 						}
 					}
 				}
 			};
 			if( $@ ) {
-			    	warn "Database error: $DBI::errstr\n$@\n";
+			    	$log->warn("Database error: $DBI::errstr\n$@\n");
 			}		
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n$@\n";
+	    $log->warn("Database error: $DBI::errstr\n$@\n");
 	}		
-	msg("MultiLibrary: Synchronization finished\n");
+	$log->info("MultiLibrary: Synchronization finished\n");
 }
 
 
@@ -1061,7 +1084,7 @@ sub replaceParameters {
         }
     }
     while($originalValue =~ m/\{property\.(.*?)\}/) {
-	my $propertyValue = Slim::Utils::Prefs::get($1);
+	my $propertyValue = $serverPrefs->get($1);
 	if(defined($propertyValue)) {
 		$propertyValue = encode_entities($propertyValue,"&<>\'\"");
 	    	$propertyValue = substr($propertyValue, 1, -1);
@@ -1075,11 +1098,11 @@ sub replaceParameters {
 }
 
 sub initDatabase {
-	my $driver = Slim::Utils::Prefs::get('dbsource');
+	my $driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
     
 	#Check if tables exists and create them if not
-	debugMsg("Checking if multilibrary_track database table exists\n");
+	$log->debug("Checking if multilibrary_track database table exists\n");
 	my $dbh = getCurrentDBH();
 	my $st = $dbh->table_info();
 	my $tblexists;
@@ -1096,7 +1119,7 @@ sub initDatabase {
 	my $sth = $dbh->prepare("show create table tracks");
 	my $charset;
 	eval {
-		debugMsg("Checking charsets on tables\n");
+		$log->debug("Checking charsets on tables\n");
 		$sth->execute();
 		my $line = undef;
 		$sth->bind_col( 2, \$line);
@@ -1107,7 +1130,7 @@ sub initDatabase {
 				if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
 					$collate = $1;
 				}
-				debugMsg("Got tracks charset = $charset and collate = $collate\n");
+				$log->debug("Got tracks charset = $charset and collate = $collate\n");
 				
 				if(defined($charset)) {
 					
@@ -1121,7 +1144,7 @@ sub initDatabase {
 		}
 	};
 	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+	    $log->warn("Database error: $DBI::errstr\n");
 	}
 	$sth->finish();
 }
@@ -1143,16 +1166,16 @@ sub updateCharSet {
 			if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
 				$table_collate = $1;
 			}
-			debugMsg("Got $table charset = $table_charset and collate = $table_collate\n");
+			$log->debug("Got $table charset = $table_charset and collate = $table_collate\n");
 			if($charset ne $table_charset || ($collate && (!$table_collate || $collate ne $table_collate))) {
-				debugMsg("Converting $table to correct charset=$charset collate=$collate\n");
+				$log->warn("Converting $table to correct charset=$charset collate=$collate\n");
 				if(!$collate) {
 					eval { $dbh->do("alter table $table convert to character set $charset") };
 				}else {
 					eval { $dbh->do("alter table $table convert to character set $charset collate $collate") };
 				}
 				if ($@) {
-					debugMsg("Couldn't convert charsets: $@\n");
+					$log->warn("Couldn't convert charsets: $@\n");
 				}
 			}
 		}
@@ -1162,7 +1185,7 @@ sub updateCharSet {
 
 sub executeSQLFile {
         my $file  = shift;
-	my $driver = Slim::Utils::Prefs::get('dbsource');
+	my $driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
 
         my $sqlFile;
@@ -1172,7 +1195,7 @@ sub executeSQLFile {
        		closedir(DIR);
        	}
 
-        debugMsg("Executing SQL file $sqlFile\n");
+        $log->debug("Executing SQL file $sqlFile\n");
 
         open(my $fh, $sqlFile) or do {
 
@@ -1204,7 +1227,7 @@ sub executeSQLFile {
                         $statement .= $line;
 
 
-                        debugMsg("Executing SQL statement: [$statement]\n");
+                        $log->debug("Executing SQL statement: [$statement]\n");
 
                         eval { $dbh->do($statement) };
 
@@ -1228,37 +1251,30 @@ sub executeSQLFile {
 sub webPages {
 
 	my %pages = (
-		"multilibrary_list\.(?:htm|xml)"     => \&handleWebList,
-		"multilibrary_refreshlibraries\.(?:htm|xml)"     => \&handleWebRefreshLibraries,
-                "webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditLibrary,
-                "webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveLibrary,
-                "webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleLibrary,
-                "webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewLibrary,
-                "webadminmethods_savenewsimpleitem\.(?:htm|xml)"     => \&handleWebSaveNewSimpleLibrary,
-                "webadminmethods_removeitem\.(?:htm|xml)"     => \&handleWebRemoveLibrary,
-                "webadminmethods_newitemtypes\.(?:htm|xml)"     => \&handleWebNewLibraryTypes,
-                "webadminmethods_newitemparameters\.(?:htm|xml)"     => \&handleWebNewLibraryParameters,
-                "webadminmethods_newitem\.(?:htm|xml)"     => \&handleWebNewLibrary,
-		"webadminmethods_login\.(?:htm|xml)"      => \&handleWebLogin,
-		"webadminmethods_downloadnewitems\.(?:htm|xml)"      => \&handleWebDownloadNewLibraries,
-		"webadminmethods_downloaditems\.(?:htm|xml)"      => \&handleWebDownloadLibraries,
-		"webadminmethods_downloaditem\.(?:htm|xml)"      => \&handleWebDownloadLibrary,
-		"webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishLibraryParameters,
-		"webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishLibrary,
-		"webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteLibraryType,
-		"multilibrary_selectlibrary\.(?:htm|xml)"      => \&handleWebSelectLibrary,
+		"MultiLibrary/multilibrary_list\.(?:htm|xml)"     => \&handleWebList,
+		"MultiLibrary/multilibrary_refreshlibraries\.(?:htm|xml)"     => \&handleWebRefreshLibraries,
+                "MultiLibrary/webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditLibrary,
+                "MultiLibrary/webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveLibrary,
+                "MultiLibrary/webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleLibrary,
+                "MultiLibrary/webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewLibrary,
+                "MultiLibrary/webadminmethods_savenewsimpleitem\.(?:htm|xml)"     => \&handleWebSaveNewSimpleLibrary,
+                "MultiLibrary/webadminmethods_removeitem\.(?:htm|xml)"     => \&handleWebRemoveLibrary,
+                "MultiLibrary/webadminmethods_newitemtypes\.(?:htm|xml)"     => \&handleWebNewLibraryTypes,
+                "MultiLibrary/webadminmethods_newitemparameters\.(?:htm|xml)"     => \&handleWebNewLibraryParameters,
+                "MultiLibrary/webadminmethods_newitem\.(?:htm|xml)"     => \&handleWebNewLibrary,
+		"MultiLibrary/webadminmethods_login\.(?:htm|xml)"      => \&handleWebLogin,
+		"MultiLibrary/webadminmethods_downloadnewitems\.(?:htm|xml)"      => \&handleWebDownloadNewLibraries,
+		"MultiLibrary/webadminmethods_downloaditems\.(?:htm|xml)"      => \&handleWebDownloadLibraries,
+		"MultiLibrary/webadminmethods_downloaditem\.(?:htm|xml)"      => \&handleWebDownloadLibrary,
+		"MultiLibrary/webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishLibraryParameters,
+		"MultiLibrary/webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishLibrary,
+		"MultiLibrary/webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteLibraryType,
+		"MultiLibrary/multilibrary_selectlibrary\.(?:htm|xml)"      => \&handleWebSelectLibrary,
 	);
 
-	my $value = $htmlTemplate;
-
-	if (grep { /^MultiLibrary::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
-
-		$value = undef;
-	} 
-
-	#Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_MULTILIBRARY' => $value });
-
-	return (\%pages,$value);
+	for my $page (keys %pages) {
+		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+	}
 }
 
 sub getCurrentLibrary {
@@ -1274,7 +1290,7 @@ sub getCurrentLibrary {
 		if(defined($currentLibrary{$key}) && defined($libraries->{$currentLibrary{$key}}) && isLibraryEnabledForClient($client,$libraries->{$currentLibrary{$key}})) {
 			return $libraries->{$currentLibrary{$key}};
 		}else {
-			my $library = $client->prefGet('plugin_multilibrary_activelibrary');
+			my $library = $prefs->client($client)->get('activelibrary');
 			if(defined($library) && defined($libraries->{$library}) && isLibraryEnabledForClient($client,$libraries->{$library})) {
 				selectLibrary($client,$library);
 				return $libraries->{$library};
@@ -1291,7 +1307,7 @@ sub getCurrentLibrary {
 		}	
 	}
 	if(defined($client)) {
-		$client->prefDelete('plugin_multilibrary_activelibrary');
+		$prefs->client($client)->delete('activelibrary');
 	}
 	return undef;
 }
@@ -1299,6 +1315,7 @@ sub getCurrentLibrary {
 # Draws the plugin's web page
 sub handleWebList {
 	my ($client, $params) = @_;
+	$manageLibraryHandler->prepare($client,$params);
 
 	# Pass on the current pref values and now playing info
 	if(!defined($params->{'donotrefresh'})) {
@@ -1461,50 +1478,44 @@ sub getFunctions {
 }
 
 sub checkDefaults {
-	my $prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_library_directory');
+	my $prefVal = $prefs->get('library_directory');
 	if (! defined $prefVal) {
 		# Default to standard library directory
-		my $dir=Slim::Utils::Prefs::get('playlistdir');
-		debugMsg("Defaulting plugin_multilibrary_library_directory to:$dir\n");
-		Slim::Utils::Prefs::set('plugin_multilibrary_library_directory', $dir);
+		my $dir=$serverPrefs->get('playlistdir');
+		$log->debug("Defaulting plugin_multilibrary_library_directory to:$dir\n");
+		$prefs->set('library_directory', $dir);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_showmessages');
+	$prefVal = $prefs->get('refresh_startup');
 	if (! defined $prefVal) {
-		# Default to not show debug messages
-		debugMsg("Defaulting plugin_multilibrary_showmessages to 0\n");
-		Slim::Utils::Prefs::set('plugin_multilibrary_showmessages', 0);
+		$prefs->set('refresh_startup', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_refresh_startup');
+	$prefVal = $prefs->get('refresh_rescan');
 	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_startup', 1);
+		$prefs->set('refresh_rescan', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_refresh_rescan');
+	$prefVal = $prefs->get('refresh_save');
 	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_rescan', 1);
+		$prefs->set('refresh_save', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_refresh_save');
+	$prefVal = $prefs->get('question_startup');
 	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_refresh_save', 1);
+		$prefs->set('question_startup', 0);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_question_startup');
+	$prefVal = $prefs->get('custombrowse_menus');
 	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_question_startup', 0);
+		$prefs->set('custombrowse_menus', 1);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_custombrowse_menus');
-	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_custombrowse_menus', 1);
-	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames');
+	$prefVal = $prefs->get('utf8filenames');
 	if (! defined $prefVal) {
 		if(Slim::Utils::OSDetect::OS() eq 'win') {
-			Slim::Utils::Prefs::set('plugin_multilibrary_utf8filenames', 0);
+			$prefs->set('utf8filenames', 0);
 		}else {
-			Slim::Utils::Prefs::set('plugin_multilibrary_utf8filenames', 1);
+			$prefs->set('utf8filenames', 1);
 		}
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_multilibrary_download_url');
+	$prefVal = $prefs->get('download_url');
 	if (! defined $prefVal) {
-		Slim::Utils::Prefs::set('plugin_multilibrary_download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
+		$prefs->set('download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
 	}
 }
 
@@ -1670,261 +1681,6 @@ sub unescape {
         return $in;
 }
 
-# A wrapper to allow us to uniformly turn on & off debug messages
-sub debugMsg
-{
-	my $message = join '','MultiLibrary: ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_multilibrary_showmessages"));
-}
-
-sub strings {
-	return <<EOF;
-PLUGIN_MULTILIBRARY
-	EN	Multi Library
-
-PLUGIN_MULTILIBRARY_SETUP_GROUP
-	EN	Multi Library
-
-PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC
-	EN	Multi Library is a sub library plugin based on SQL queries
-
-PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY
-	EN	Library directory
-
-PLUGIN_MULTILIBRARY_SHOW_MESSAGES
-	EN	Show debug messages
-
-PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY
-	EN	Library templates directory
-
-SETUP_PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY
-	EN	Library directory
-
-SETUP_PLUGIN_MULTILIBRARY_SHOWMESSAGES
-	EN	Debugging
-
-SETUP_PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY
-	EN	Library templates directory
-
-PLUGIN_MULTILIBRARY_CHOOSE_BELOW
-	EN	Choose a sub library of music to activate:
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM
-	EN	Edit
-
-PLUGIN_MULTILIBRARY_NEW_ITEM
-	EN	Create new library
-
-PLUGIN_MULTILIBRARY_NEW_ITEM_TYPES_TITLE
-	EN	Select type of library
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM_DATA
-	EN	Library Configuration
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM_NAME
-	EN	Library Name
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM_FILENAME
-	EN	Filename
-
-PLUGIN_MULTILIBRARY_REMOVE_ITEM_QUESTION
-	EN	Are you sure you want to delete this library ?
-
-PLUGIN_MULTILIBRARY_REMOVE_ITEM_TYPE_QUESTION
-	EN	Removing a library type might cause problems later if it is used in existing libraries, are you really sure you want to delete this library type ?
-
-PLUGIN_MULTILIBRARY_REMOVE_ITEM
-	EN	Delete
-
-PLUGIN_MULTILIBRARY_REMOVE_ITEM_QUESTION
-	EN	Are you sure you want to delete this library ?
-
-PLUGIN_MULTILIBRARY_TEMPLATE_GENRES_TITLE
-	EN	Genres
-
-PLUGIN_MULTILIBRARY_TEMPLATE_GENRES_SELECT_NONE
-	EN	No Genres
-
-PLUGIN_MULTILIBRARY_TEMPLATE_GENRES_SELECT_ALL
-	EN	All Genres
-
-PLUGIN_MULTILIBRARY_TEMPLATE_ARTISTS_SELECT_NONE
-	EN	No Artists
-
-PLUGIN_MULTILIBRARY_TEMPLATE_ARTISTS_SELECT_ALL
-	EN	All Artists
-
-PLUGIN_MULTILIBRARY_TEMPLATE_ARTISTS_TITLE
-	EN	Artists
-
-PLUGIN_MULTILIBRARY_SAVE
-	EN	Save
-
-PLUGIN_MULTILIBRARY_NEXT
-	EN	Next
-
-PLUGIN_MULTILIBRARY_TEMPLATE_PARAMETER_LIBRARIES
-	EN	Libraries with user selectable parameters
-
-PLUGIN_MULTILIBRARY_ITEMTYPE
-	EN	Customize SQL
-	
-PLUGIN_MULTILIBRARY_ITEMTYPE_SIMPLE
-	EN	Use predefined
-
-PLUGIN_MULTILIBRARY_ITEMTYPE_ADVANCED
-	EN	Customize SQL
-
-PLUGIN_MULTILIBRARY_NEW_ITEM_PARAMETERS_TITLE
-	EN	Please enter library parameters
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM_PARAMETERS_TITLE
-	EN	Please enter library parameters
-
-PLUGIN_MULTILIBRARY_LOGIN_USER
-	EN	Username
-
-PLUGIN_MULTILIBRARY_LOGIN_PASSWORD
-	EN	Password
-
-PLUGIN_MULTILIBRARY_LOGIN_FIRSTNAME
-	EN	First name
-
-PLUGIN_MULTILIBRARY_LOGIN_LASTNAME
-	EN	Last name
-
-PLUGIN_MULTILIBRARY_LOGIN_EMAIL
-	EN	e-mail
-
-PLUGIN_MULTILIBRARY_ANONYMOUSLOGIN
-	EN	Anonymous
-
-PLUGIN_MULTILIBRARY_LOGIN
-	EN	Login
-
-PLUGIN_MULTILIBRARY_REGISTERLOGIN
-	EN	Register &amp; Login
-
-PLUGIN_MULTILIBRARY_REGISTER_TITLE
-	EN	Register a new user
-
-PLUGIN_MULTILIBRARY_LOGIN_TITLE
-	EN	Login
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_ITEMS
-	EN	Download more libraries
-
-PLUGIN_MULTILIBRARY_PUBLISH_ITEM
-	EN	Publish
-
-PLUGIN_MULTILIBRARY_PUBLISH
-	EN	Publish
-
-PLUGIN_MULTILIBRARY_PUBLISHPARAMETERS_TITLE
-	EN	Please specify information about the library
-
-PLUGIN_MULTILIBRARY_PUBLISH_NAME
-	EN	Name
-
-PLUGIN_MULTILIBRARY_PUBLISH_DESCRIPTION
-	EN	Description
-
-PLUGIN_MULTILIBRARY_PUBLISH_ID
-	EN	Unique identifier
-
-PLUGIN_MULTILIBRARY_LASTCHANGED
-	EN	Last changed
-
-PLUGIN_MULTILIBRARY_PUBLISHMESSAGE
-	EN	Thanks for choosing to publish your library. The advantage of publishing a library is that other users can use it and it will also be used for ideas of new functionallity in the Multi Library plugin. Publishing a library is also a great way of improving the functionality in the Multi Library plugin by showing the developer what types of libraries you use, besides those already included with the plugin.
-
-PLUGIN_MULTILIBRARY_REGISTERMESSAGE
-	EN	You can choose to publish your library either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the library, you will get credit for it and you will also be sure that no one else can update or change your published library. The e-mail adress will only be used to contact you if I have some questions to you regarding one of your libraries, it will not show up on any web pages. If you already have registered a user, just hit the Login button.
-
-PLUGIN_MULTILIBRARY_LOGINMESSAGE
-	EN	You can choose to publish your library either anonymously or by registering a user and login. The advantage of registering is that other people will be able to see that you have published the library, you will get credit for it and you will also be sure that no one else can update or change your published library. Hit the &quot;Register &amp; Login&quot; button if you have not previously registered.
-
-PLUGIN_MULTILIBRARY_PUBLISHMESSAGE_DESCRIPTION
-	EN	It is important that you enter a good description of your library, describe what your library do and if it is based on one of the existing libraries it is a good idea to mention this and describe which extensions you have made. <br><br>It is also a good idea to try to make the &quot;Unique identifier&quot; as uniqe as possible as this will be used for filename when downloading the library. This is especially important if you have choosen to publish your library anonymously as it can easily be overwritten if the identifier is not unique. Please try to not use spaces and language specific characters in the unique identifier since these could cause problems on some operating systems.
-
-PLUGIN_MULTILIBRARY_REFRESH_DOWNLOADED_ITEMS
-	EN	Download last version of existing libraries
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_OVERWRITE_WARNING
-	EN	A library type with that name already exists, please change the name or select to overwrite the existing library type
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_OVERWRITE
-	EN	Overwrite existing
-
-PLUGIN_MULTILIBRARY_PUBLISH_OVERWRITE
-	EN	Overwrite existing
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_TEMPLATE_NAME
-	EN	Unique identifier
-
-PLUGIN_MULTILIBRARY_EDIT_ITEM_OVERWRITE
-	EN	Overwrite existing
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_ITEMS
-	EN	Download more libraries
-
-PLUGIN_MULTILIBRARY_DOWNLOAD_QUESTION
-	EN	This operation will download latest version of all libraries, this might take some time. Please note that this will overwrite any local changes you have made in built-in or previously downloaded library types. Are you sure you want to continue ?
-
-PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY
-	EN	Active library
-
-PLUGIN_MULTILIBRARY_REFRESH_LIBRARIES
-	EN	Refresh libraries
-
-PLUGIN_MULTILIBRARY_ACTIVATING_LIBRARY
-	EN	Activating
-
-PLUGIN_MULTILIBRARY_REFRESH_RESCAN
-	EN	Refresh libraries after rescan
-
-SETUP_PLUGIN_MULTILIBRARY_REFRESH_RESCAN
-	EN	Rescan refresh
-
-PLUGIN_MULTILIBRARY_REFRESH_STARTUP
-	EN	Refresh libraries at slimserver startup
-
-SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP
-	EN	Startup refresh
-
-PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
-	EN	Selectable Custom Browse menus
-
-SETUP_PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
-	EN	Custom Browse menus
-
-PLUGIN_MULTILIBRARY_UTF8FILENAMES
-	EN	UTF-8 encoded filenames (requires slimserver restart)
-
-SETUP_PLUGIN_MULTILIBRARY_UTF8FILENAMES
-	EN	Filename encoding
-
-PLUGIN_MULTILIBRARY_QUESTION_STARTUP
-	EN	Ask for library at startup
-
-SETUP_PLUGIN_MULTILIBRARY_QUESTION_STARTUP
-	EN	Ask for library
-
-PLUGIN_MULTILIBRARY_REFRESH_SAVE
-	EN	Refresh libraries after library has been save
-
-SETUP_PLUGIN_MULTILIBRARY_REFRESH_SAVE
-	EN	Refresh on save
-
-PLUGIN_MULTILIBRARY_SELECT
-	EN	Select a library
-
-PLUGIN_MULTILIBRARY_NOOFTRACKS
-	EN	Number of songs
-
-EOF
-
-}
 
 1;
 

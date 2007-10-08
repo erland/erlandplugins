@@ -1,17 +1,14 @@
-[%- pagetitle = 'PLUGIN_MULTILIBRARY' | string; pageicon = 'PLUGIN_MULTILIBRARY' -%]
+[% page = "PLUGIN_MULTILIBRARY" %]
+[% PROCESS settings/header.html %]
 
-[%- pwd_list = BLOCK -%]/
-	<a href="[% webroot %]plugins/MultiLibrary/multilibrary_list.html?player=[% player | uri %]">
-		[% "PLUGIN_MULTILIBRARY" | string %]
-	</a>
-[% END -%]
-[%- pageHeaderInfo = BLOCK %]
-	[% IF pluginMultiLibraryActiveLibrary %]
-		<strong>[% "PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY" | string %]:</strong>
-		<span class="exboldnowplaying">[% pluginMultiLibraryActiveLibrary.name %]</span>
-	[% END %]
-[% END -%]
-[% PROCESS pageheader.html %]
+[% PROCESS plugins/MultiLibrary/settings/subpage_chooser.html %]
+
+[% IF pluginMultiLibraryActiveLibrary %]
+	<p>
+	<strong>[% "PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY" | string %]:</strong>
+	<span class="exboldnowplaying">[% pluginMultiLibraryActiveLibrary.name %]</span>
+	</p>
+[% END %]
 
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
      users to make setting changes then click on a new mix without having to press the submit button. %]
@@ -63,4 +60,4 @@
 				<tr><td colspan="4"><br><br>[% pluginMultiLibraryMessage %]</td></tr>
 			[% END %]
 		[% END %]
-[% PROCESS pagefooter.html %]
+[% PROCESS settings/footer.html %]

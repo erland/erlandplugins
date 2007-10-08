@@ -31,16 +31,19 @@ use Plugins::MultiLibrary::ConfigManager::ParameterHandler;
 use Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
+use Slim::Utils::Prefs;
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+
+my $prefs = preferences('plugin.multilibrary');
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = {
-		'debugCallback' => $parameters->{'debugCallback'},
-		'errorCallback' => $parameters->{'errorCallback'},
+		'logHandler' => $parameters->{'logHandler'},
+		'pluginPrefs' => $parameters->{'pluginPrefs'},
 		'pluginId' => $parameters->{'pluginId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
@@ -75,9 +78,8 @@ sub init {
 		my %parserParameters = (
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
-			'utf8filenames' => Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames')
+			'logHandler' => $self->logHandler,
+			'utf8filenames' => $prefs->get('utf8filenames')
 		);
 		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::MultiLibrary::ConfigManager::TemplateParser->new(\%parserParameters));
@@ -85,16 +87,14 @@ sub init {
 		$self->contentParser(Plugins::MultiLibrary::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'criticalErrorCallback' => $self->addSqlErrorCallback,
 			'parameterPrefix' => 'itemparameter'
 		);
 		$self->parameterHandler(Plugins::MultiLibrary::ConfigManager::ParameterHandler->new(\%parameters));
 
 		my %directoryHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'cacheName' => "FileCache/MultiLibrary/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ml.xml";
@@ -115,8 +115,7 @@ sub init {
 		$self->templateDataDirectoryHandler(Plugins::MultiLibrary::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		my %pluginHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
 		);
 
@@ -165,11 +164,11 @@ sub initWebAdminMethods {
 
 	my @itemDirectories = ();
 	my @templateDirectories = ();
-	my $dir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
+	my $dir = $prefs->get("library_directory");
 	if (defined $dir && -d $dir) {
 		push @itemDirectories,$dir
 	}
-	$dir = Slim::Utils::Prefs::get("plugin_multilibrary_template_directory");
+	$dir = $prefs->get("template_directory");
 	if (defined $dir && -d $dir) {
 		push @templateDirectories,$dir
 	}
@@ -185,11 +184,11 @@ sub initWebAdminMethods {
 	my %webAdminMethodsParameters = (
 		'pluginId' => $self->pluginId,
 		'pluginVersion' => $self->pluginVersion,
+		'pluginPrefs' => $self->pluginPrefs,
 		'downloadApplicationId' => $self->downloadApplicationId,
 		'extension' => 'ml.xml',
 		'simpleExtension' => 'ml.values.xml',
-		'debugCallback' => $self->debugCallback,
-		'errorCallback' => $self->errorCallback,
+		'logHandler' => $self->logHandler,
 		'contentPluginHandler' => $self->contentPluginHandler,
 		'templatePluginHandler' => $self->templatePluginHandler,
 		'contentDirectoryHandler' => $self->contentDirectoryHandler,
@@ -200,14 +199,14 @@ sub initWebAdminMethods {
 		'contentParser' => $self->contentParser,
 		'templateDirectories' => \@templateDirectories,
 		'itemDirectories' => \@itemDirectories,
-		'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"),
-		'customItemDirectory' => Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"),
+		'customTemplateDirectory' => $prefs->get("template_directory"),
+		'customItemDirectory' => $prefs->get("library_directory"),
 		'supportDownload' => 1,
 		'supportDownloadError' => $self->supportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
-		'downloadUrl' => Slim::Utils::Prefs::get("plugin_multilibrary_download_url"),
-		'utf8filenames' => Slim::Utils::Prefs::get('plugin_multilibrary_utf8filenames')
+		'downloadUrl' => $prefs->get("download_url"),
+		'utf8filenames' => $prefs->get('utf8filenames')
 	);
 	$self->webAdminMethods(Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
 
@@ -221,6 +220,7 @@ sub readTemplateConfiguration {
 	my %globalcontext = ();
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"MultiLibrary","Templates")."\n");
 		next unless -d catdir($plugindir,"MultiLibrary","Templates");
 		$globalcontext{'source'} = 'builtin';
 		$self->templateDirectoryHandler()->readFromDir($client,catdir($plugindir,"MultiLibrary","Templates"),\%templates,\%globalcontext);
@@ -229,7 +229,8 @@ sub readTemplateConfiguration {
 	$globalcontext{'source'} = 'plugin';
 	$self->templatePluginHandler()->readFromPlugins($client,\%templates,undef,\%globalcontext);
 
-	my $templateDir = Slim::Utils::Prefs::get('plugin_multilibrary_template_directory');
+	my $templateDir = $prefs->get('template_directory');
+	$self->logHandler->debug("Checking for dir: $templateDir\n");
 	if($templateDir && -d $templateDir) {
 		$globalcontext{'source'} = 'custom';
 		$self->templateDirectoryHandler()->readFromDir($client,$templateDir,\%templates,\%globalcontext);
@@ -242,8 +243,8 @@ sub readItemConfiguration {
 	my $client = shift;
 	my $storeInCache = shift;
 	
-	my $dir = Slim::Utils::Prefs::get("plugin_multilibrary_library_directory");
-    	$self->debugCallback->("Searching for item configuration in: $dir\n");
+	my $dir = $prefs->get("library_directory");
+    	$self->logHandler->debug("Searching for item configuration in: $dir\n");
     
 	my %localItems = ();
 
@@ -258,13 +259,15 @@ sub readItemConfiguration {
 	$self->contentPluginHandler->readFromPlugins($client,\%localItems,undef,\%globalcontext);
 	for my $plugindir (@pluginDirs) {
 		$globalcontext{'source'} = 'builtin';
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"MultiLibrary","Menus")."\n");
 		if( -d catdir($plugindir,"MultiLibrary","Libraries")) {
 			$self->contentDirectoryHandler()->readFromDir($client,catdir($plugindir,"MultiLibrary","Libraries"),\%localItems,\%globalcontext);
 			$self->templateContentDirectoryHandler()->readFromDir($client,catdir($plugindir,"MultiLibrary","Libraries"),\%localItems, \%globalcontext);
 		}
 	}
+	$self->logHandler->debug("Checking for dir: $dir\n");
 	if (!defined $dir || !-d $dir) {
-		$self->debugCallback->("Skipping custom browse configuration scan - directory is undefined\n");
+		$self->logHandler->debug("Skipping custom browse configuration scan - directory is undefined\n");
 	}else {
 		$globalcontext{'source'} = 'custom';
 		$self->contentDirectoryHandler()->readFromDir($client,$dir,\%localItems,\%globalcontext);
@@ -297,7 +300,7 @@ sub postProcessItem {
 sub changedItemConfiguration {
         my ($self, $client, $params) = @_;
 	Plugins::MultiLibrary::Plugin::initLibraries($client);
-	if(Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save")) {
+	if($prefs->get("refresh_save")) {
 		Plugins::MultiLibrary::Plugin::refreshLibraries();
 		if(UNIVERSAL::can("Plugins::CustomBrowse::Plugin","readBrowseConfiguration")) {
 			no strict 'refs';
