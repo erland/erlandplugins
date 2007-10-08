@@ -2984,7 +2984,7 @@ sub getMultiLibraryInformation {
 	my $cfgMgr = shift;
 	my $menuHandler = shift;
 
-	my $itemConfiguration = $cfgMgr->readItemConfiguration($client,1,'MultiLibrary::Plugin');
+	my $itemConfiguration = $cfgMgr->readItemConfiguration($client,1,'Plugins::MultiLibrary::Plugin');
     	$templates = $itemConfiguration->{'templates'};
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
 	foreach my $menu (keys %$localBrowseMenus) {
