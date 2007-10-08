@@ -1,6 +1,6 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
 
-[% PROCESS plugins/CustomBrowse/iteminfo %]
+[% PROCESS plugins/CustomBrowse/iteminfo.html %]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
