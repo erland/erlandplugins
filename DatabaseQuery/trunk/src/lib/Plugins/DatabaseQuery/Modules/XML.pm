@@ -19,7 +19,7 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-package Plugins::DatabaseQuery::Modules::XMLTree;
+package Plugins::DatabaseQuery::Modules::XML;
 
 use strict;
 
@@ -29,11 +29,10 @@ use HTML::Entities;
 
 sub getDatabaseQueryExportModules {
 	my %module = (
-		'id' => 'xmltree',
-		'name' => 'Structured XML',
+		'id' => 'xml',
+		'name' => 'XML',
 		'extension' => 'xml',
-		'description' => "XML formatted file as a hierarchical structure",
-		'warning' => 'Queries with many nested levels or many matches might take a bit time to export as hierarchical XML.\nAre you sure you want to continue ?',
+		'description' => "XML formatted file",
 		'callback' => \&createReport,
 	);
 	my @modules = ();
@@ -47,60 +46,36 @@ sub createReport {
 	my $reportData = shift;
 	my $dataRetreivalCallback = shift;
 
-
-	my $result = '<?xml version="1.0" encoding="utf-8"?>'."\n";
-	$result .= "<result>\n";
-	$result .= createSubTree($queryId,$reportData,$dataRetreivalCallback);
-	$result .= "</result>\n";
-	return \$result;
-}
-
-sub createSubTree {
-	my $queryId = shift;
-	my $reportData = shift;
-	my $dataRetreivalCallback = shift;
-
 	my $columns = $reportData->{'columns'};
 	my $rows = $reportData->{'resultitems'};
 
-	my $result = '';
+	my $result = '<?xml version="1.0" encoding="utf-8"?>'."\n";
+	$result .= "<result>\n";
+
 	for my $row (@$rows) {
+		# We skip the four first columns, they just contains the context url of the row
 		my $name = shift @$row;
-		shift @$row;
-		my $path = shift @$row;
-		my $params = shift @$row;
-		my $subquery = 1;
-		if(!defined($path) || scalar(@$path)==0) {
-			$subquery = 0;
-		}
 		if(!defined($name)) {
 			$name = "resultitem";
 		}
 		$name =~ s/\s/_/g;
-		$result .= "  <$name>\n";
+		shift @$row;
+		shift @$row;
+		shift @$row;
 		my @itemColumns = @$columns;
-		# We skip the tree first columns, they just contains the context url of the row
+		$result .= "  <$name>\n";
 		for my $value (@$row) {
 			my $columnName = shift @itemColumns;
 			my $elementName = encode_entities($columnName,"&<>%");
 			$elementName =~ s/\s/_/g;
 			$result .= ("    <$elementName>".(defined($value)?encode_entities($value,"&<>%"):"")."</$elementName>\n");
 		}
-		$params->{$name} = $row->[0];
-		if($subquery) {
-			my $subResult = eval { $dataRetreivalCallback->($queryId, $path, $params); };
-			my $subresult = createSubTree($queryId,$subResult,$dataRetreivalCallback);
-			$result .= $subresult;
-		}
 		$result .= "  </$name>\n";
 	}
-	return $result;
+	$result .= "</result>\n";
+	return \$result;
 }
-sub debugMsg
-{
-	my $message = join '','DatabaseQuery:XML ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_databasequery_showmessages"));
-}
+
 
 *escape   = \&URI::Escape::uri_escape_utf8;
 

@@ -86,11 +86,6 @@ sub createReport {
 	return \$result;
 }
 
-sub debugMsg
-{
-	my $message = join '','DatabaseQuery:CSV ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_databasequery_showmessages"));
-}
 
 *escape   = \&URI::Escape::uri_escape_utf8;
 

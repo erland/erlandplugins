@@ -31,17 +31,20 @@ use Plugins::DatabaseQuery::ConfigManager::ParameterHandler;
 use Plugins::DatabaseQuery::ConfigManager::QueryWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
+use Slim::Utils::Prefs;
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+
+my $prefs = preferences('plugin.databasequery');
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = {
-		'debugCallback' => $parameters->{'debugCallback'},
-		'errorCallback' => $parameters->{'errorCallback'},
+		'logHandler' => $parameters->{'logHandler'},
 		'pluginId' => $parameters->{'pluginId'},
+		'pluginPrefs' => $parameters->{'pluginPrefs'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
 		'supportDownloadError' => $parameters->{'supportDownloadError'},
@@ -75,9 +78,7 @@ sub init {
 		my %parserParameters = (
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
-			'utf8filenames' => Slim::Utils::Prefs::get('plugin_DatabaseQuery_utf8filenames')
+			'logHandler' => $self->logHandler,
 		);
 		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::DatabaseQuery::ConfigManager::TemplateParser->new(\%parserParameters));
@@ -85,16 +86,14 @@ sub init {
 		$self->contentParser(Plugins::DatabaseQuery::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'criticalErrorCallback' => $self->addSqlErrorCallback,
 			'parameterPrefix' => 'itemparameter'
 		);
 		$self->parameterHandler(Plugins::DatabaseQuery::ConfigManager::ParameterHandler->new(\%parameters));
 
 		my %directoryHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'cacheName' => "FileCache/DatabaseQuery/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "dataquery.xml";
@@ -115,8 +114,7 @@ sub init {
 		$self->templateDataDirectoryHandler(Plugins::DatabaseQuery::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		my %pluginHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
 		);
 
@@ -165,14 +163,22 @@ sub initWebAdminMethods {
 
 	my @itemDirectories = ();
 	my @templateDirectories = ();
-	my $dir = Slim::Utils::Prefs::get("plugin_databasequery_dataqueries_directory");
+	my $dir = $prefs->get("dataqueries_directory");
 	if (defined $dir && -d $dir) {
 		push @itemDirectories,$dir
 	}
-	$dir = Slim::Utils::Prefs::get("plugin_databasequery_template_directory");
+	$dir = $prefs->get("template_directory");
 	if (defined $dir && -d $dir) {
 		push @templateDirectories,$dir
 	}
+	my $internalSupportDownloadError = undef;
+	if(!defined($dir) || !-d $dir) {
+		$internalSupportDownloadError = 'You have to specify a template directory before you can download data queries';
+	}
+	if(defined($self->supportDownloadError)) {
+		$internalSupportDownloadError = $self->supportDownloadError;
+	}
+
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
 		if( -d catdir($plugindir,"DatabaseQuery","DataQueries")) {
@@ -184,12 +190,12 @@ sub initWebAdminMethods {
 	}
 	my %webAdminMethodsParameters = (
 		'pluginId' => $self->pluginId,
+		'pluginPrefs' => $self->pluginPrefs,
 		'pluginVersion' => $self->pluginVersion,
 		'downloadApplicationId' => $self->downloadApplicationId,
 		'extension' => 'dataquery.xml',
 		'simpleExtension' => 'dataquery.values.xml',
-		'debugCallback' => $self->debugCallback,
-		'errorCallback' => $self->errorCallback,
+		'logHandler' => $self->logHandler,
 		'contentPluginHandler' => $self->contentPluginHandler,
 		'templatePluginHandler' => $self->templatePluginHandler,
 		'contentDirectoryHandler' => $self->contentDirectoryHandler,
@@ -200,14 +206,13 @@ sub initWebAdminMethods {
 		'contentParser' => $self->contentParser,
 		'templateDirectories' => \@templateDirectories,
 		'itemDirectories' => \@itemDirectories,
-		'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_databasequery_template_directory"),
-		'customItemDirectory' => Slim::Utils::Prefs::get("plugin_databasequery_dataqueries_directory"),
+		'customTemplateDirectory' => $prefs->get("template_directory"),
+		'customItemDirectory' => $prefs->get("dataqueries_directory"),
 		'supportDownload' => 1,
-		'supportDownloadError' => $self->supportDownloadError,
+		'supportDownloadError' => $internalSupportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
-		'downloadUrl' => Slim::Utils::Prefs::get("plugin_databasequery_download_url"),
-		'utf8filenames' => Slim::Utils::Prefs::get('plugin_databasequery_utf8filenames')
+		'downloadUrl' => $prefs->get("download_url"),
 	);
 	$self->webAdminMethods(Plugins::DatabaseQuery::ConfigManager::QueryWebAdminMethods->new(\%webAdminMethodsParameters));
 
@@ -221,6 +226,7 @@ sub readTemplateConfiguration {
 	my %globalcontext = ();
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"DatabaseQuery","Templates")."\n");
 		next unless -d catdir($plugindir,"DatabaseQuery","Templates");
 		$globalcontext{'source'} = 'builtin';
 		$self->templateDirectoryHandler()->readFromDir($client,catdir($plugindir,"DatabaseQuery","Templates"),\%templates,\%globalcontext);
@@ -229,7 +235,8 @@ sub readTemplateConfiguration {
 	$globalcontext{'source'} = 'plugin';
 	$self->templatePluginHandler()->readFromPlugins($client,\%templates,undef,\%globalcontext);
 
-	my $templateDir = Slim::Utils::Prefs::get('plugin_databasequery_template_directory');
+	my $templateDir = $prefs->get('template_directory');
+	$self->logHandler->debug("Checking for dir: $templateDir\n");
 	if($templateDir && -d $templateDir) {
 		$globalcontext{'source'} = 'custom';
 		$self->templateDirectoryHandler()->readFromDir($client,$templateDir,\%templates,\%globalcontext);
@@ -242,8 +249,8 @@ sub readItemConfiguration {
 	my $client = shift;
 	my $storeInCache = shift;
 	
-	my $dir = Slim::Utils::Prefs::get("plugin_databasequery_dataqueries_directory");
-    	$self->debugCallback->("Searching for item configuration in: $dir\n");
+	my $dir = $prefs->get("dataqueries_directory");
+    	$self->logHandler->debug("Searching for item configuration in: $dir\n");
     
 	my %localItems = ();
 
@@ -258,13 +265,15 @@ sub readItemConfiguration {
 	$self->contentPluginHandler->readFromPlugins($client,\%localItems,undef,\%globalcontext);
 	for my $plugindir (@pluginDirs) {
 		$globalcontext{'source'} = 'builtin';
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"DatabaseQuery","DataQueries")."\n");
 		if( -d catdir($plugindir,"DatabaseQuery","DataQueries")) {
 			$self->contentDirectoryHandler()->readFromDir($client,catdir($plugindir,"DatabaseQuery","DataQueries"),\%localItems,\%globalcontext);
 			$self->templateContentDirectoryHandler()->readFromDir($client,catdir($plugindir,"DatabaseQuery","DataQueries"),\%localItems, \%globalcontext);
 		}
 	}
+	$self->logHandler->debug("Checking for dir: $dir\n");
 	if (!defined $dir || !-d $dir) {
-		$self->debugCallback->("Skipping custom browse configuration scan - directory is undefined\n");
+		$self->logHandler->debug("Skipping custom browse configuration scan - directory is undefined\n");
 	}else {
 		$globalcontext{'source'} = 'custom';
 		$self->contentDirectoryHandler()->readFromDir($client,$dir,\%localItems,\%globalcontext);
