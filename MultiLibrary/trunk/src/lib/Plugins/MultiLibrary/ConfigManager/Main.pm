@@ -172,6 +172,13 @@ sub initWebAdminMethods {
 	if (defined $dir && -d $dir) {
 		push @templateDirectories,$dir
 	}
+	my $internalSupportDownloadError = undef;
+	if(!defined($dir) || !-d $dir) {
+		$internalSupportDownloadError = 'You have to specify a template directory before you can download library templates';
+	}
+	if(defined($self->supportDownloadError)) {
+		$internalSupportDownloadError = $self->supportDownloadError;
+	}
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
 		if( -d catdir($plugindir,"MultiLibrary","Libraries")) {
@@ -202,7 +209,7 @@ sub initWebAdminMethods {
 		'customTemplateDirectory' => $prefs->get("template_directory"),
 		'customItemDirectory' => $prefs->get("library_directory"),
 		'supportDownload' => 1,
-		'supportDownloadError' => $self->supportDownloadError,
+		'supportDownloadError' => $internalSupportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
 		'downloadUrl' => $prefs->get("download_url"),

@@ -77,7 +77,6 @@ $prefs->migrate(1, sub {
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
 my $libraries = undef;
 my $sqlerrors = '';
-my $supportDownloadError = undef;
 my %currentLibrary = ();
 my $PLUGINVERSION = undef;
 my $internalMenus = undef;
@@ -834,16 +833,12 @@ sub initPlugin {
 
 sub getConfigManager {
 	if(!defined($configManager)) {
-		my $templateDir = $prefs->get('template_directory');
-		if(!defined($templateDir) || !-d $templateDir) {
-			$supportDownloadError = 'You have to specify a template directory before you can download libraries';
-		}
 		my %parameters = (
 			'logHandler' => $log,
+			'pluginPrefs' => $prefs,
 			'pluginId' => 'MultiLibrary',
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'MultiLibrary',
-			'supportDownloadError' => $supportDownloadError,
 			'addSqlErrorCallback' => \&addSQLError
 		);
 		$configManager = Plugins::MultiLibrary::ConfigManager::Main->new(\%parameters);
@@ -1345,8 +1340,9 @@ sub handleWebList {
 
 	$params->{'pluginMultiLibraryLibraries'} = \@weblibraries;
 	$params->{'pluginMultiLibraryActiveLibrary'} = $library;
-	if(defined($supportDownloadError)) {
-		$params->{'pluginMultiLibraryDownloadMessage'} = $supportDownloadError;
+	my $templateDir = $prefs->get('template_directory');
+	if(!defined($templateDir) || !-d $templateDir) {
+		$params->{'pluginMultiLibraryDownloadMessage'} = 'You have to specify a template directory before you can download libraries';
 	}
 	$params->{'pluginMultiLibraryVersion'} = $PLUGINVERSION;
 	if(defined($params->{'redirect'})) {
