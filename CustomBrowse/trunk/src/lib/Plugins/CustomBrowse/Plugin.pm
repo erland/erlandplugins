@@ -71,9 +71,6 @@ my $contextMenuHandler = undef;
 
 my $parameterHandler = undef;
 
-my $supportDownloadError = undef;
-my $supportContextDownloadError = undef;
-
 my $prefs = preferences('plugin.custombrowse');
 my $trackstatPrefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
@@ -1122,10 +1119,6 @@ sub getContextMenuHandler {
 
 sub getConfigManager {
 	if(!defined($configManager)) {
-		my $templateDir = $prefs->get('template_directory');
-		if(!defined($templateDir) || !-d $templateDir) {
-			$supportDownloadError = 'You have to specify a template directory before you can download menus';
-		}
 		my %parameters = (
 			'logHandler' => $log,
 			'pluginId' => 'CustomBrowse',
@@ -1141,10 +1134,6 @@ sub getConfigManager {
 
 sub getContextConfigManager {
 	if(!defined($contextConfigManager)) {
-		my $templateDir = $prefs->get('context_template_directory');
-		if(!defined($templateDir) || !-d $templateDir) {
-			$supportContextDownloadError = 'You have to specify a context template directory before you can download context menus';
-		}
 		my %parameters = (
 			'logHandler' => $log,
 			'pluginId' => 'CustomBrowse',
