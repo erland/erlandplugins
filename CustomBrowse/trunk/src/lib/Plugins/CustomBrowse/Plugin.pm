@@ -239,6 +239,27 @@ sub setMode {
 	}
 }
 
+sub setModeBrowse {
+	my $client = shift;
+	my $method = shift;
+	
+	if ($method eq 'pop') {
+		Slim::Buttons::Common::popMode($client);
+		return;
+	}
+        #readBrowseConfiguration($client);
+        my $params = getMenuHandler()->getMenu($client,undef);
+	if(defined($params)) {
+		if(defined($params->{'useMode'})) {
+			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+		}else {
+			Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
+		}
+	}else {
+	        $client->bumpRight();
+	}
+}
+
 sub setModeContext {
 	my $client = shift;
 	my $method = shift;
@@ -974,7 +995,7 @@ sub initPlugin {
 	}
         Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.CustomBrowse.Choice',\%choiceMapping);
 
-	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse', getFunctions(), \&setMode);
+	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Browse', getFunctions(), \&setModeBrowse);
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Context', getFunctions(), \&setModeContext);
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
 	if($prefs->get('override_trackinfo')) {
@@ -1154,12 +1175,12 @@ sub addPlayerMenus {
             my $name = getMenuHandler()->getItemText($client,$menu);
             if($menu->{'enabledbrowse'}) {
 		my %submenubrowse = (
-			'useMode' => 'PLUGIN.CustomBrowse',
+			'useMode' => 'PLUGIN.CustomBrowse.Browse',
 			'selectedMenu' => $menu->{'id'},
 			'mainBrowseMenu' => 1
 		);
 		my %submenuhome = (
-			'useMode' => 'PLUGIN.CustomBrowse',
+			'useMode' => 'PLUGIN.CustomBrowse.Browse',
 			'selectedMenu' => $menu->{'id'},
 			'mainBrowseMenu' => 1
 		);
