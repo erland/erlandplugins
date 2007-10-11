@@ -222,21 +222,7 @@ sub setMode {
 	my $client = shift;
 	my $method = shift;
 	
-	if ($method eq 'pop') {
-		Slim::Buttons::Common::popMode($client);
-		return;
-	}
-        #readBrowseConfiguration($client);
-        my $params = getMenuHandler()->getMenu($client,undef);
-	if(defined($params)) {
-		if(defined($params->{'useMode'})) {
-			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
-		}else {
-			Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
-		}
-	}else {
-	        $client->bumpRight();
-	}
+	setModeBrowse($client, $method);
 }
 
 sub setModeBrowse {
