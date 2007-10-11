@@ -1001,11 +1001,10 @@ sub printPlayListItems {
 	}
 }
 
-sub setMode {
-	my $class = shift;
+sub setModeMixer {
 	my $client = shift;
 	my $method = shift;
-	
+
 	if ($method eq 'pop') {
 		Slim::Buttons::Common::popMode($client);
 		return;
@@ -1160,6 +1159,14 @@ sub setMode {
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
 }
 
+sub setMode {
+	my $class = shift;
+	my $client = shift;
+	my $method = shift;
+	
+	setModeMixer($client,$method);
+}
+
 sub enterSelectedGroup {
 	my $client = shift;
 	my $listRef = shift;
@@ -1184,7 +1191,6 @@ sub enterSelectedGroup {
 }
 
 sub setModeChooseParameters {
-	my $class = shift;
 	my $client = shift;
 	my $method = shift;
 	
@@ -1574,7 +1580,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling album playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}elsif($mixerType eq 'year') {
 				my %p = (
@@ -1590,7 +1596,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling year playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}elsif($mixerType eq 'artist') {
 				my %p = (
@@ -1604,7 +1610,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling artist playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}elsif($mixerType eq 'genre') {
 				my %p = (
@@ -1618,7 +1624,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling album playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}elsif($mixerType eq 'playlist') {
 				my %p = (
@@ -1632,7 +1638,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling playlist playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}elsif($mixerType eq 'track') {
 				my %p = (
@@ -1646,7 +1652,7 @@ sub mixerFunction {
 					'extrapopmode' => 1
 				);
 				$log->debug("Calling track playlists with ".$params{'dynamicplaylist_parameter_1'}->{'name'}."(".$params{'dynamicplaylist_parameter_1'}->{'id'}.")\n");
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList',\%params);
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%params);
 				$client->update();
 			}else {
 				$log->warn("Unknown playlisttype = ".$mixerType."\n");
@@ -1752,7 +1758,7 @@ sub initPlugin {
 	initDatabase();
 	clearPlayListHistory();
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.ChooseParameters', getFunctions(), \&setModeChooseParameters);
-	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList', getFunctions(), \&setMode);
+	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.Mixer', getFunctions(), \&setModeMixer);
 	
 		my %mixerMap = ();
 		if($prefs->get("web_show_mixerlinks")) {
