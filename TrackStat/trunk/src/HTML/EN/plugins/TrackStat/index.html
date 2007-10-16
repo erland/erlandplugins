@@ -1,11 +1,11 @@
 [% pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' %]
 [% IF pluginTrackStatMaxRating==10 %]
-[% PROCESS plugins/TrackStat/css10scale %]
+[% PROCESS plugins/TrackStat/trackstat10scale.css %]
 [% ELSE %]
-[% PROCESS plugins/TrackStat/css %]
+[% PROCESS plugins/TrackStat/trackstat.css %]
 [% END %]
-[% PROCESS plugins/TrackStat/controls %]
-[% PROCESS plugins/TrackStat/listitems %]
+[% PROCESS plugins/TrackStat/controls.html %]
+[% PROCESS plugins/TrackStat/listitems.html %]
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
@@ -93,7 +93,7 @@
 		<td>&nbsp;</td>
 	</tr>
 	<div>
-		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong> (<a href="[% webroot %]plugins/TrackStat/selectstatistics.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SELECT_STATISTICS" | string %]</a>, <a href="[% webroot %]plugins/TrackStat/selectfavourites.html?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SELECT_FAVOURITES" | string %]</a>)<br>
+		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong><br>
 		<table width="100%">
     	<tr valign="top"><td>
 		[% count = 0 %]
@@ -252,6 +252,6 @@
 		[% END %]
 		[% END %]
 	[% END %]
-	<tr><td><div style="float:right;">([% "PLUGIN_TRACKSTAT" | string %] [% pluginTrackStatVersion %])</div></td></tr>
+	<tr><td><div id="pageFooterInfo" style="float:right;">([% "PLUGIN_TRACKSTAT" | string %] [% pluginTrackStatVersion %])</div></td></tr>
 <!-- end plugins output -->
 [% PROCESS pagefooter.html %]
