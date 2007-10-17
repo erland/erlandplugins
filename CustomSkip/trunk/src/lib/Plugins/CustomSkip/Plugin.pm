@@ -20,6 +20,9 @@ package Plugins::CustomSkip::Plugin;
 
 use strict;
 
+use base qw(Slim::Plugin::Base);
+
+use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
@@ -33,7 +36,15 @@ use XML::Simple;
 use Data::Dumper;
 use HTML::Entities;
 use Plugins::CustomSkip::Template::Reader;
+use Plugins::CustomSkip::Settings;
 
+my $prefs = preferences('plugin.customskip');
+my $serverPrefs = preferences('server');
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.customskip',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_CUSTOMSKIP',
+});
 
 my $driver;
 my $htmlTemplate = 'plugins/CustomSkip/customskip_list.html';
@@ -43,9 +54,17 @@ my $mixTypes = undef;
 my $filters = ();
 my %currentFilter = ();
 my %currentSecondaryFilter = ();
-my $PLUGINVERSION = '1.4';
+my $PLUGINVERSION = undef;
 
 my %filterPlugins = ();
+
+$prefs->migrate(1, sub {
+	$prefs->set('directory', Slim::Utils::Prefs::OldPrefs->get('plugin_customskip_directory'));
+	$prefs->set('web_show_mixerlinks', Slim::Utils::Prefs::OldPrefs->get('plugin_customskip_web_show_mixerlinks'));
+	$prefs->set('enable_mixerfunction', Slim::Utils::Prefs::OldPrefs->get('plugin_customskip_enable_mixerfunction'));
+	$prefs->set('global_skipping', Slim::Utils::Prefs::OldPrefs->get('plugin_customskip_global_skipping'));
+	1;
+});
 	
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMSKIP';
@@ -286,7 +305,7 @@ sub checkCustomSkipFilterType {
 	my $parameters = $filter->{'parameter'};
 	if($filter->{'id'} eq 'zapped') {
 		my $zappedPlaylistName = Slim::Utils::Strings::string('ZAPPED_SONGS');
-		my $url = Slim::Utils::Misc::fileURLFromPath( catfile( Slim::Utils::Prefs::get('playlistdir'), $zappedPlaylistName . '.m3u' ) );
+		my $url = Slim::Utils::Misc::fileURLFromPath( catfile( $serverPrefs->get('playlistdir'), $zappedPlaylistName . '.m3u' ) );
 		my $dbh = getCurrentDBH();
 		my $sth = $dbh->prepare('select playlist_track.track from tracks,playlist_track where tracks.id=playlist_track.playlist and tracks.url=? and playlist_track.track=?');
 		my $result = 0;
@@ -299,7 +318,7 @@ sub checkCustomSkipFilterType {
 			}
 		};
 		if ($@) {
-			debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+			$log->warn("Error executing SQL: $@\n$DBI::errstr\n");
 		}
 		$sth->finish();
 		if($result) {
@@ -407,7 +426,7 @@ sub checkCustomSkipFilterType {
 					}
 				};
 				if ($@) {
-					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+					$log->warn("Error executing SQL: $@\n$DBI::errstr\n");
 				}
 				$sth->finish();
 				if($result) {
@@ -433,7 +452,7 @@ sub checkCustomSkipFilterType {
 					}
 				};
 				if ($@) {
-					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+					$log->warn("Error executing SQL: $@\n$DBI::errstr\n");
 				}
 				$sth->finish();
 				if(!$result) {
@@ -541,8 +560,8 @@ sub executeDynamicPlayListFilter {
 		my $skippercentage = 0;
 		my $retrylater = undef;
 		if(defined($filter) || defined($secondaryFilter)) {
-			debugMsg("Using primary filter: ".$filter->{'name'}."\n") if defined($filter);
-			debugMsg("Using secondary filter: ".$secondaryFilter->{'name'}."\n") if defined($secondaryFilter);
+			$log->debug("Using primary filter: ".$filter->{'name'}."\n") if defined($filter);
+			$log->debug("Using secondary filter: ".$secondaryFilter->{'name'}."\n") if defined($secondaryFilter);
 			my @filteritems = ();
 			if(defined($filter)) {
 				removeExpiredFilterItems($filter);
@@ -564,16 +583,16 @@ sub executeDynamicPlayListFilter {
 			
 				my $id = $filteritem->{'id'};
 				my $plugin = $filterPlugins{$id};
-				debugMsg("Calling: $plugin for ".$filteritem->{'id'}." with: ".$track->url."\n");
+				$log->debug("Calling: $plugin for ".$filteritem->{'id'}." with: ".$track->url."\n");
 				no strict 'refs';
-				debugMsg("Calling: $plugin :: checkCustomSkipFilterType\n");
+				$log->debug("Calling: $plugin :: checkCustomSkipFilterType\n");
 				my $match =  eval { &{"${plugin}::checkCustomSkipFilterType"}($client,$filteritem,$track) };
 				if ($@) {
-					debugMsg("Error filtering tracks with $plugin: $@\n");
+					$log->warn("Error filtering tracks with $plugin: $@\n");
 				}
 				use strict 'refs';
 				if($match) {
-					debugMsg("Filter ".$filteritem->{'id'}." matched\n");
+					$log->debug("Filter ".$filteritem->{'id'}." matched\n");
 					my $parameters = $filteritem->{'parameter'};
 					for my $p (@$parameters) {
 						if($p->{'id'} eq 'customskippercentage') {
@@ -581,7 +600,7 @@ sub executeDynamicPlayListFilter {
 							if(defined($values) && scalar(@$values)>0) {
 								if($values->[0] >= $skippercentage) {
 									$skippercentage = $values->[0];
-									debugMsg("Use skip percentage ".$skippercentage."%\n");
+									$log->debug("Use skip percentage ".$skippercentage."%\n");
 								}
 							}
 						}
@@ -606,10 +625,10 @@ sub executeDynamicPlayListFilter {
 				return 1;
 			}else {
 				if($retrylater) {
-					debugMsg("Skip track \"".$track->title."\"now, retry later\n");
+					$log->debug("Skip track \"".$track->title."\"now, retry later\n");
 					return -1;
 				}else {
-					debugMsg("Skip track: ".$track->title."\n");
+					$log->debug("Skip track: ".$track->title."\n");
 					return 0;
 				}
 			}
@@ -657,14 +676,14 @@ sub getOverlay {
 	my $secondaryfilter = getCurrentSecondaryFilter($client);
 	my $itemFilter = $item->{'filter'};
 	if(defined($itemFilter) && !defined($item->{'filteritem'}) && $item->{'id'} ne 'newitem' && (!defined($filter) || $itemFilter->{'id'} ne $filter->{'id'})) {
-		return [Slim::Display::Display::symbol('notesymbol'), Slim::Display::Display::symbol('rightarrow')];
+		return [$client->symbols('notesymbol'), $client->symbols('rightarrow')];
 	}else {
-		return [undef, Slim::Display::Display::symbol('rightarrow')];
+		return [undef, $client->symbols('rightarrow')];
 	}
 }
 
 sub initFilterTypes {
-	debugMsg("Searching for filter types\n");
+	$log->debug("Searching for filter types\n");
 	
 	my %localFilterTypes = ();
 	my %localMixTypes = ();
@@ -672,23 +691,23 @@ sub initFilterTypes {
 	no strict 'refs';
 	my @enabledplugins;
 	if ($::VERSION ge '6.5') {
-		@enabledplugins = Slim::Utils::PluginManager::enabledPlugins();
+		@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
 	}else {
-		@enabledplugins = Slim::Buttons::Plugins::enabledPlugins();
+		@enabledplugins = Slim::Buttons::Plugins->enabledPlugins();
 	}
 	for my $plugin (@enabledplugins) {
-		if(UNIVERSAL::can("Plugins::$plugin","getCustomSkipFilterTypes") && UNIVERSAL::can("Plugins::$plugin","checkCustomSkipFilterType")) {
-			debugMsg("Getting filter types for: $plugin\n");
-			my $items = eval { &{"Plugins::${plugin}::getCustomSkipFilterTypes"}() };
+		if(UNIVERSAL::can("$plugin","getCustomSkipFilterTypes") && UNIVERSAL::can("$plugin","checkCustomSkipFilterType")) {
+			$log->debug("Getting filter types for: $plugin\n");
+			my $items = eval { &{"${plugin}::getCustomSkipFilterTypes"}() };
 			if ($@) {
-				debugMsg("Error getting filter types from $plugin: $@\n");
+				$log->warn("Error getting filter types from $plugin: $@\n");
 			}
 			for my $item (@$items) {
 				my $id = $item->{'id'};
 				if(defined($id)) {
-					$filterPlugins{$id} = "Plugins::${plugin}";
+					$filterPlugins{$id} = "${plugin}";
 					my $filter = $item;
-					debugMsg("Got filter types: ".$filter->{'name'}."\n");
+					$log->debug("Got filter types: ".$filter->{'name'}."\n");
 					my @allparameters = ();
 					if(defined($filter->{'parameters'})) {
 						my $parameters = $filter->{'parameters'};
@@ -737,6 +756,7 @@ sub initFilterTypes {
 
 
 sub setMode {
+	my $class = shift;
 	my $client = shift;
 	my $method = shift;
 	
@@ -781,26 +801,26 @@ sub setMode {
 			}
 			if(defined($item->{'filter'}) && defined($key)) {
 				$currentFilter{$key} = $item->{'id'};
-				$client->prefSet('plugin_customskip_filter',$item->{'id'});
+				$prefs->client($client)->set('filter',$item->{'id'});
 				$currentSecondaryFilter{$key} = undef;
-				$client->showBriefly(
-					$client->string( 'PLUGIN_CUSTOMSKIP'),
-					$client->string( 'PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER').": ".$item->{'filter'}->{'name'},
+				$client->showBriefly({ 'line' => 
+					[$client->string( 'PLUGIN_CUSTOMSKIP'),
+					$client->string( 'PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER').": ".$item->{'filter'}->{'name'}]},
 					1);
 				
 			}elsif($item->{'id'} eq 'disable' && defined($key)) {
 				$currentFilter{$key} = undef;
-				$client->prefSet('plugin_customskip_filter',0);
+				$prefs->client($client)->set('filter',0);
 				$currentSecondaryFilter{$key} = undef;
-				$client->showBriefly(
-					$client->string( 'PLUGIN_CUSTOMSKIP'),
-					$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
+				$client->showBriefly({ 'line' => 
+					[$client->string( 'PLUGIN_CUSTOMSKIP'),
+					$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER')]},
 					1);
 			}
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on add\n");
+			$log->debug("Do nothing on add\n");
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -819,11 +839,11 @@ sub setMode {
 						$key = "SyncGroup".$client->syncgroupid;
 					}
 					$currentFilter{$key} = undef;
-					$client->prefSet('plugin_customskip_filter',0);
+					$prefs->client($client)->set('filter',0);
 					$currentSecondaryFilter{$key} = undef;
-					$client->showBriefly(
-						$client->string( 'PLUGIN_CUSTOMSKIP'),
-						$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER'),
+					$client->showBriefly({ 'line' => 
+						[$client->string( 'PLUGIN_CUSTOMSKIP'),
+						$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER')]},
 						1);
 				}
 			}else {
@@ -872,11 +892,11 @@ sub setModeMix {
 		parentMode => 'PLUGIN.CustomSkipMix',
 		onPlay     => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on play\n");
+			$log->debug("Do nothing on play\n");
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on add\n");
+			$log->debug("Do nothing on add\n");
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -942,7 +962,7 @@ sub setModeMix {
 
 					requestFirstParameter($client,$filterType,\%parameterValues);
 				}else {
-					my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+					my $browseDir = $prefs->get("directory");
 					
 					my $filter = undef;
 					if(defined($client->param('filter'))) {
@@ -1105,7 +1125,7 @@ sub requestNextParameter {
 		}
 		Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkip.ChooseParameters',\%nextParameter);
 	}else {
-		my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+		my $browseDir = $prefs->get("directory");
 		
 		my $filter = undef;
 		if(defined($client->param('filter'))) {
@@ -1120,7 +1140,7 @@ sub requestNextParameter {
 
 			$success = saveFilterItem($client,$url,$filter,$filterType);
 		}else {
-			debugMsg("No filter activated, not saving\n");
+			$log->warn("No filter activated, not saving\n");
 		}
 		my $startParameter = $client->param('customskip_startparameter');
 		if(!defined($startParameter)) {
@@ -1138,14 +1158,14 @@ sub requestNextParameter {
 		Slim::Buttons::Common::popMode($client);
 		$client->update();
 		if($success) {
-			$client->showBriefly(
-				$client->string( 'PLUGIN_CUSTOMSKIP'),
-				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS').": ".$filter->{'name'},
+			$client->showBriefly({ 'line' => 
+				[$client->string( 'PLUGIN_CUSTOMSKIP'),
+				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS').": ".$filter->{'name'}]},
 				1);
 		}else {
-			$client->showBriefly(
-				$client->string( 'PLUGIN_CUSTOMSKIP'),
-				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE'),
+			$client->showBriefly({ 'line' => 
+				[$client->string( 'PLUGIN_CUSTOMSKIP'),
+				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE')]},
 				1);
 		}
 
@@ -1179,7 +1199,7 @@ sub requestFirstParameter {
 	if(defined($parameters) && scalar(@$parameters)>=$nextParameters{'customskip_nextparameter'}) {
 		Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkip.ChooseParameters',\%nextParameters);
 	}else {
-		my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+		my $browseDir = $prefs->get("directory");
 		
 		my $filter = undef;
 		if(defined($client->param('filter'))) {
@@ -1194,7 +1214,7 @@ sub requestFirstParameter {
 
 			$success = saveFilterItem($client,$url,$filter,$filterType);
 		}else {
-			debugMsg("No filter activated, not saving\n");
+			$log->warn("No filter activated, not saving\n");
 		}
 
 		Slim::Buttons::Common::popMode($client);
@@ -1205,14 +1225,14 @@ sub requestFirstParameter {
 		}
 		$client->update();
 		if($success) {
-			$client->showBriefly(
-				$client->string( 'PLUGIN_CUSTOMSKIP'),
-				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS').": ".$filter->{'name'},
+			$client->showBriefly({ 'line' => 
+				[$client->string( 'PLUGIN_CUSTOMSKIP'),
+				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS').": ".$filter->{'name'}]},
 				1);
 		}else {
-			$client->showBriefly(
-				$client->string( 'PLUGIN_CUSTOMSKIP'),
-				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE'),
+			$client->showBriefly({ 'line' => 
+				[$client->string( 'PLUGIN_CUSTOMSKIP'),
+				$client->string( 'PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE')]},
 				1);
 		}
 
@@ -1312,11 +1332,11 @@ sub getFilterItemsMenu {
 		parentMode => 'PLUGIN.CustomSkip',
 		onPlay     => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on play\n");
+			$log->debug("Do nothing on play\n");
 		},
 		onAdd      => sub {
 			my ($client, $item) = @_;
-			debugMsg("Do nothing on add\n");
+			$log->debug("Do nothing on add\n");
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -1408,15 +1428,15 @@ sub trackMix {
 			parentMode => 'PLUGIN.CustomSkipMix',
 			onPlay     => sub {
 				my ($client, $item) = @_;
-				debugMsg("Do nothing on play\n");
+				$log->debug("Do nothing on play\n");
 			},
 			onAdd      => sub {
 				my ($client, $item) = @_;
-				debugMsg("Do nothing on add\n");
+				$log->debug("Do nothing on add\n");
 			},
 			onRight    => sub {
 				my ($client, $item) = @_;
-				debugMsg("Do something on right for ".$item->{'item'}."\n");
+				$log->debug("Do something on right for ".$item->{'item'}."\n");
 				my $blessed = blessed($item->{'item'});
 					if($blessed eq 'Slim::Schema::Track') {
 					my %p = (
@@ -1535,13 +1555,13 @@ sub mixerFunction {
 				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
 				$client->update();
 			}else {
-				debugMsg("Unknown mixertype = ".$mixerType."\n");
+				$log->warn("Unknown mixertype = ".$mixerType."\n");
 			}
 		}else {
-			debugMsg("No filter types found for ".$mixerType."\n");
+			$log->warn("No filter types found for ".$mixerType."\n");
 		}
 	}else {
-		debugMsg("No parent parameter found\n");
+		$log->warn("No parent parameter found\n");
 	}
 
 }
@@ -1550,11 +1570,11 @@ sub mixerlink {
     my $item = shift;
     my $form = shift;
     my $descend = shift;
-#		debugMsg("***********************************\n");
+#		$log->debug("***********************************\n");
 #		for my $it (keys %$form) {
-#			debugMsg("form{$it}=".$form->{$it}."\n");
+#			$log->debug("form{$it}=".$form->{$it}."\n");
 #		}
-#		debugMsg("***********************************\n");
+#		$log->debug("***********************************\n");
 	
 	my $levelName = $form->{'levelName'};
 	if(!$mixTypes) {
@@ -1635,16 +1655,18 @@ sub mixable {
 
 sub initPlugin {
 	my $class = shift;
+	$class->SUPER::initPlugin(@_);
+	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
+	Plugins::CustomSkip::Settings->new();
 	
 	checkDefaults();
-	Slim::Buttons::Common::addMode('PLUGIN.CustomSkip', getFunctions(), \&setMode);
 	Slim::Buttons::Common::addMode('PLUGIN.CustomSkipMix', getFunctions(), \&setModeMix);
 	Slim::Buttons::Common::addMode('PLUGIN.CustomSkip.ChooseParameters', getFunctions(), \&setModeChooseParameters);
 
 	initFilterTypes();
 	initFilters();
 	if(scalar(keys %$filters)==0) {
-		my $url = Slim::Utils::Prefs::get('plugin_customskip_directory');
+		my $url = $prefs->get('directory');
 		if(-e $url) {
 			my %filter = (
 				'id' => 'defaultfilterset.cs.xml',
@@ -1655,19 +1677,19 @@ sub initPlugin {
 		}
 	}
 	my %mixerMap = ();
-	if(Slim::Utils::Prefs::get("plugin_customskip_web_show_mixerlinks")) {
+	if($prefs->get("web_show_mixerlinks")) {
 #		$mixerMap{'mixerlink'} = \&mixerlink;
 	}
-	if(Slim::Utils::Prefs::get("plugin_customskip_enable_mixerfunction")) {
+	if($prefs->get("enable_mixerfunction")) {
 		$mixerMap{'mixer'} = \&mixerFunction;
 	}
-	if(Slim::Utils::Prefs::get("plugin_customskip_web_show_mixerlinks") ||
-		Slim::Utils::Prefs::get("plugin_customskip_enable_mixerfunction")) {
+	if($prefs->get("web_show_mixerlinks") ||
+		$prefs->get("enable_mixerfunction")) {
 
 		Slim::Music::Import->addImporter($class, \%mixerMap);
 	    	Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 1);
 	}
-	debugMsg("CustomSkip: Registering hook.\n");
+	$log->debug("CustomSkip: Registering hook.\n");
 	Slim::Control::Request::subscribe(\&newSongCallback, [['playlist'], ['newsong']]);
 	Slim::Control::Request::addDispatch(['customskip','setfilter', '_filterid'], [1, 0, 0, \&setCLIFilter]);
 	Slim::Control::Request::addDispatch(['customskip','setsecondaryfilter', '_filterid'], [1, 0, 0, \&setCLISecondaryFilter]);
@@ -1687,8 +1709,8 @@ sub title {
 }
 
 sub shutdownPlugin {
-	if(Slim::Utils::Prefs::get("plugin_customskip_web_show_mixerlinks") ||
-		Slim::Utils::Prefs::get("plugin_customskip_enable_mixerfunction")) {
+	if($prefs->get("web_show_mixerlinks") ||
+		$prefs->get("enable_mixerfunction")) {
 
 		Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 0);
 	}
@@ -1696,6 +1718,7 @@ sub shutdownPlugin {
 }
 
 sub webPages {
+	my $class = shift;
 
 	my %pages = (
 		"customskip_list\.(?:htm|xml)"     => \&handleWebList,
@@ -1715,49 +1738,46 @@ sub webPages {
 
 	my $value = $htmlTemplate;
 
-	if (grep { /^CustomSkip::Plugin$/ } Slim::Utils::Prefs::getArray('disabledplugins')) {
+	for my $page (keys %pages) {
+		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+	}
 
-		$value = undef;
-	} 
-
-	#Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMSKIP' => $value });
-
-	return (\%pages,$value);
+	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_CUSTOMSKIP' => $value });
 }
 
 sub setCLIFilter {
-	debugMsg("Entering setCLIFilter\n");
+	$log->debug("Entering setCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['customskip'],['setfilter']])) {
-		debugMsg("Incorrect command\n");
+		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
-		debugMsg("Exiting setCLIFilter\n");
+		$log->debug("Exiting setCLIFilter\n");
 		return;
 	}
 	if(!defined $client) {
-		debugMsg("Client required\n");
+		$log->warn("Client required\n");
 		$request->setStatusNeedsClient();
-		debugMsg("Exiting setCLIFilter\n");
+		$log->debug("Exiting setCLIFilter\n");
 		return;
 	}
 
 	# get our parameters
   	my $filterId    = $request->getParam('_filterid');
   	if(!defined $filterId || $filterId eq '') {
-		debugMsg("_filterid not defined\n");
+		$log->warn("_filterid not defined\n");
 		$request->setStatusBadParams();
-		debugMsg("Exiting setCLIFilter\n");
+		$log->debug("Exiting setCLIFilter\n");
 		return;
   	}
   	
 	initFilters();
 
 	if(!defined($filters->{$filterId})) {
-		debugMsg("Unknown filter $filterId\n");
+		$log->warn("Unknown filter $filterId\n");
 		$request->setStatusBadParams();
-		debugMsg("Exiting setCLIFilter\n");
+		$log->debug("Exiting setCLIFilter\n");
 		return;
   	}
 	my $key = $client;
@@ -1765,46 +1785,46 @@ sub setCLIFilter {
 		$key = "SyncGroup".$client->syncgroupid;
 	}
 	$currentFilter{$key} = $filterId;
-	$client->prefSet('plugin_customskip_filter',$filterId);
+	$prefs->client($client)->set('filter',$filterId);
 
 	$request->addResult('filter', $filterId);
 	$request->setStatusDone();
-	debugMsg("Exiting setCLIFilter\n");
+	$log->debug("Exiting setCLIFilter\n");
 }
 
 sub setCLISecondaryFilter {
-	debugMsg("Entering setCLISecondaryFilter\n");
+	$log->debug("Entering setCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['customskip'],['setsecondaryfilter']])) {
-		debugMsg("Incorrect command\n");
+		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
-		debugMsg("Exiting setCLISecondaryFilter\n");
+		$log->debug("Exiting setCLISecondaryFilter\n");
 		return;
 	}
 	if(!defined $client) {
-		debugMsg("Client required\n");
+		$log->warn("Client required\n");
 		$request->setStatusNeedsClient();
-		debugMsg("Exiting setCLISecondaryFilter\n");
+		$log->debug("Exiting setCLISecondaryFilter\n");
 		return;
 	}
 
 	# get our parameters
   	my $filterId    = $request->getParam('_filterid');
   	if(!defined $filterId || $filterId eq '') {
-		debugMsg("_filterid not defined\n");
+		$log->warn("_filterid not defined\n");
 		$request->setStatusBadParams();
-		debugMsg("Exiting setCLISecondaryFilter\n");
+		$log->debug("Exiting setCLISecondaryFilter\n");
 		return;
   	}
   	
 	initFilters();
 
 	if(!defined($filters->{$filterId})) {
-		debugMsg("Unknown filter $filterId\n");
+		$log->warn("Unknown filter $filterId\n");
 		$request->setStatusBadParams();
-		debugMsg("Exiting setCLISecondaryFilter\n");
+		$log->debug("Exiting setCLISecondaryFilter\n");
 		return;
   	}
 	my $key = $client;
@@ -1815,24 +1835,24 @@ sub setCLISecondaryFilter {
 
 	$request->addResult('filter', $filterId);
 	$request->setStatusDone();
-	debugMsg("Exiting setCLISecondaryFilter\n");
+	$log->debug("Exiting setCLISecondaryFilter\n");
 }
 
 sub clearCLIFilter {
-	debugMsg("Entering clearCLIFilter\n");
+	$log->debug("Entering clearCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['customskip'],['clearfilter']])) {
-		debugMsg("Incorrect command\n");
+		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
-		debugMsg("Exiting setCLIFilter\n");
+		$log->debug("Exiting setCLIFilter\n");
 		return;
 	}
 	if(!defined $client) {
-		debugMsg("Client required\n");
+		$log->warn("Client required\n");
 		$request->setStatusNeedsClient();
-		debugMsg("Exiting clearCLIFilter\n");
+		$log->debug("Exiting clearCLIFilter\n");
 		return;
 	}
 
@@ -1841,28 +1861,28 @@ sub clearCLIFilter {
 		$key = "SyncGroup".$client->syncgroupid;
 	}
 	$currentFilter{$key} = undef;
-	$client->prefSet('plugin_customskip_filter',0);
+	$prefs->client($client)->set('filter',0);
 	$currentSecondaryFilter{$key} = undef;
 
 	$request->setStatusDone();
-	debugMsg("Exiting clearCLIFilter\n");
+	$log->debug("Exiting clearCLIFilter\n");
 }
 
 sub clearCLISecondaryFilter {
-	debugMsg("Entering clearCLISecondaryFilter\n");
+	$log->debug("Entering clearCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
 	
 	if ($request->isNotCommand([['customskip'],['clearsecondaryfilter']])) {
-		debugMsg("Incorrect command\n");
+		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
-		debugMsg("Exiting clearCLISecondaryFilter\n");
+		$log->debug("Exiting clearCLISecondaryFilter\n");
 		return;
 	}
 	if(!defined $client) {
-		debugMsg("Client required\n");
+		$log->warn("Client required\n");
 		$request->setStatusNeedsClient();
-		debugMsg("Exiting clearCLISecondaryFilter\n");
+		$log->debug("Exiting clearCLISecondaryFilter\n");
 		return;
 	}
 
@@ -1873,7 +1893,7 @@ sub clearCLISecondaryFilter {
 	$currentSecondaryFilter{$key} = undef;
 
 	$request->setStatusDone();
-	debugMsg("Exiting clearCLISecondaryFilter\n");
+	$log->debug("Exiting clearCLISecondaryFilter\n");
 }
 
 sub newSongCallback 
@@ -1882,15 +1902,15 @@ sub newSongCallback
 	my $client = undef;
 	my $command = undef;
 	
-	return unless Slim::Utils::Prefs::get('plugin_customskip_global_skipping');
+	return unless $prefs->get('global_skipping');
 	$client = $request->client();	
 	if (defined($client) && !defined($client->master) && $request->getRequest(0) eq 'playlist') {
 		$command = $request->getRequest(1);
 		my $track  = Slim::Player::Playlist::song($client);
 		if (defined $track) {
-			debugMsg("Received newsong for ".$track->url."\n");
+			$log->debug("Received newsong for ".$track->url."\n");
 			my $result = 0;
-			if(Slim::Utils::PluginManager::enabledPlugin("DynamicPlayList::Plugin",$client)) {
+			if(grep(/DynamicPlayList::Plugin/, Slim::Utils::PluginManager->enabledPlugins($client))) {
 				my $dbh = getCurrentDBH();
 				my $sth = $dbh->prepare('select dynamicplaylist_history.id from dynamicplaylist_history where client=? and id=?');
 
@@ -1904,7 +1924,7 @@ sub newSongCallback
 				};
 				if ($@) {
 					$result = 1;
-					debugMsg("Error executing SQL: $@\n$DBI::errstr\n");
+					$log->warn("Error executing SQL: $@\n$DBI::errstr\n");
 				}
 				$sth->finish();
 			}
@@ -1914,7 +1934,7 @@ sub newSongCallback
 			}
 			if(!$keep) {
 				$client->execute(["playlist", "deleteitem", $track->url]);
-				debugMsg("Removing song from client playlist\n");
+				$log->debug("Removing song from client playlist\n");
 			}
 		}
 	}	
@@ -1934,7 +1954,7 @@ sub getCurrentFilter {
 		if(defined($currentFilter{$key})) {
 			return $filters->{$currentFilter{$key}};
 		}else {
-			my $filter = $client->prefGet('plugin_customskip_filter');
+			my $filter = $prefs->client($client)->get('filter');
 			if(defined($filter) && defined($filters->{$filter})) {
 				$currentFilter{$key} = $filter;
 				return $filters->{$filter};
@@ -1943,7 +1963,7 @@ sub getCurrentFilter {
 					my $filteritems = $filters->{'defaultfilterset.cs.xml'}->{'filter'};
 					if(!defined($filteritems) || scalar(@$filteritems)==0) {
 						$currentFilter{$key} = 'defaultfilterset.cs.xml';
-						$client->prefSet('plugin_customskip_filter','defaultfilterset.cs.xml');
+						$prefs->client($client)->set('filter','defaultfilterset.cs.xml');
 					}
 				}
 			}
@@ -1999,7 +2019,7 @@ sub handleWebSelectFilter {
 			$key = "SyncGroup".$client->syncgroupid;
 		}
 		$currentFilter{$key} = $params->{'filter'};
-		$client->prefSet('plugin_customskip_filter',$params->{'filter'});
+		$prefs->client($client)->set('filter',$params->{'filter'});
 		$currentSecondaryFilter{$key} = undef;
 	}
 	return handleWebList($client,$params);
@@ -2014,7 +2034,7 @@ sub handleWebDisableFilter {
 		}
 		$currentFilter{$key} = undef;
 		$currentSecondaryFilter{$key} = undef;
-		$client->prefSet('plugin_customskip_filter',0);
+		$prefs->client($client)->set('filter',0);
 	}
 	return handleWebList($client,$params);
 }
@@ -2038,7 +2058,7 @@ sub handleWebSaveNewFilter {
 	# Pass on the current pref values and now playing info
 	initFilters();
 
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginCustomSkipError'} = 'No custom skip directory configured';
@@ -2082,7 +2102,7 @@ sub handleWebSaveFilter {
 	# Pass on the current pref values and now playing info
 	initFilters();
 
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginCustomSkipError'} = 'No custom skip directory configured';
@@ -2147,7 +2167,7 @@ sub handleWebSaveFilterItem {
 	initFilters();
 	my $filter = $filters->{$params->{'filter'}};
 
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginCustomSkipError'} = 'No custom skip directory configured';
@@ -2177,12 +2197,12 @@ sub handleWebDeleteFilter {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomSkipSlimserver65'} = 1;
         }
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	my $file = unescape($params->{'filter'});
 	my $url = catfile($browseDir, $file);
 	if(defined($browseDir) && -d $browseDir && $file && -e $url) {
 		unlink($url) or do {
-			warn "Unable to delete file: ".$url.": $! \n";
+			$log->warn("Unable to delete file: ".$url.": $! \n");
 		}
 	}		
 	initFilters();
@@ -2213,7 +2233,7 @@ sub handleWebDeleteFilterItem {
         if ($::VERSION ge '6.5') {
                 $params->{'pluginCustomSkipSlimserver65'} = 1;
         }
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	if (!defined $browseDir || !-d $browseDir) {
 		$params->{'pluginCustomSkipError'} = 'No custom skip directory configured';
 	}
@@ -2373,13 +2393,13 @@ sub saveFilter {
 	}
 	$data .= "</customskip>\n";
 
-	debugMsg("Opening browse configuration file: $url\n");
+	$log->debug("Opening browse configuration file: $url\n");
 	open($fh,"> $url") or do {
             return 'Error saving filter';
 	};
-	debugMsg("Writing to file: $url\n");
+	$log->debug("Writing to file: $url\n");
 	print $fh $data;
-	debugMsg("Writing to file succeeded\n");
+	$log->debug("Writing to file succeeded\n");
 	close $fh;
 
 	return undef;
@@ -2661,18 +2681,18 @@ sub getSQLTemplateData {
 	my $trackno = 0;
 	my $sqlerrors = "";
     	for my $sql (split(/[;]/,$sqlstatements)) {
-    	eval {
+	    	eval {
 			$sql =~ s/^\s+//g;
 			$sql =~ s/\s+$//g;
 			my $sth = $dbh->prepare( $sql );
-			debugMsg("Executing: $sql\n");
+			$log->debug("Executing: $sql\n");
 			$sth->execute() or do {
-	            debugMsg("Error executing: $sql\n");
-	            $sql = undef;
+				$log->warn("Error executing: $sql\n");
+				$sql = undef;
 			};
 
-	        if ($sql =~ /^SELECT+/oi) {
-				debugMsg("Executing and collecting: $sql\n");
+			if ($sql =~ /^SELECT+/oi) {
+				$log->debug("Executing and collecting: $sql\n");
 				my $id;
                                 my $name;
                                 my $value;
@@ -2691,7 +2711,7 @@ sub getSQLTemplateData {
 			$sth->finish();
 		};
 		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
+		    $log->warn("Database error: $DBI::errstr\n");
 		}		
 	}
 	return \@result;
@@ -2704,7 +2724,7 @@ sub getFilters {
 	initFilters($client);
 	foreach my $key (keys %$filters) {
 		my $filter = $filters->{$key};
-		debugMsg("Adding filter: ".$filter->{'id'}."\n");
+		$log->debug("Adding filter: ".$filter->{'id'}."\n");
 		push @result, $filter;
 	}
 	@result = sort { $a->{'name'} cmp $b->{'name'} } @result;
@@ -2746,13 +2766,13 @@ sub getFilterTypes {
 sub initFilters {
 	my $client = shift;
 
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
-	debugMsg("Searching for custom skip configuration in: $browseDir\n");
+	my $browseDir = $prefs->get("directory");
+	$log->debug("Searching for custom skip configuration in: $browseDir\n");
 	initFilterTypes($client);
 
 	my %localFilters = ();
 	if (!defined $browseDir || !-d $browseDir) {
-		debugMsg("Skipping custom skip configuration scan - directory is undefined\n");
+		$log->debug("Skipping custom skip configuration scan - directory is undefined\n");
 	}else {
 		readFiltersFromDir($client,$browseDir,\%localFilters, $filterTypes);
 	}
@@ -2767,7 +2787,7 @@ sub initFilters {
 sub removeExpiredFilterItems {
 	my $filter = shift;
 
-	my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+	my $browseDir = $prefs->get("directory");
 	return unless defined $browseDir && -d $browseDir;
 
 	my $filteritems = $filter->{'filter'};
@@ -2780,7 +2800,7 @@ sub removeExpiredFilterItems {
 				my $values = $p->{'value'};
 				if(defined($values) && scalar(@$values)>0 && $values->[0]>0) {
 					if($values->[0] < time()) {
-						debugMsg("Remove expired filter item ".($i+1)."\n");
+						$log->debug("Remove expired filter item ".($i+1)."\n");
 						push @removeItems,$i;
 					}
 				}
@@ -2795,7 +2815,7 @@ sub removeExpiredFilterItems {
 			$i = $i - 1;
 		}
 		$filter->{'filter'} = $filteritems;
-		my $browseDir = Slim::Utils::Prefs::get("plugin_customskip_directory");
+		my $browseDir = $prefs->get("directory");
 		if (defined $browseDir || -d $browseDir) {
 			my $file = unescape($filter->{'id'});
 			my $url = catfile($browseDir, $file);
@@ -2810,7 +2830,7 @@ sub readFiltersFromDir {
 	my $browseDir = shift;
 	my $localFilters = shift;
 	my $filterTypes = shift;
-	debugMsg("Loading skip configuration from: $browseDir\n");
+	$log->debug("Loading skip configuration from: $browseDir\n");
 
 	my @dircontents = Slim::Utils::Misc::readDirectory($browseDir,"cs.xml");
 	for my $item (@dircontents) {
@@ -2824,13 +2844,13 @@ sub readFiltersFromDir {
 		if ( $content ) {
 			my $errorMsg = parseFilterContent($client,$item,$content,$localFilters,$filterTypes);
 			if($errorMsg) {
-				errorMsg("CustomSkip: Unable to open configuration file: $path\n$errorMsg\n");
+				$log->warn("CustomSkip: Unable to open configuration file: $path\n$errorMsg\n");
 			}
 		}else {
 			if ($@) {
-				errorMsg("CustomSkip: Unable to open configuration file: $path\nBecause of:\n$@\n");
+				$log->warn("CustomSkip: Unable to open configuration file: $path\nBecause of:\n$@\n");
 			}else {
-				errorMsg("CustomSkip: Unable to open configuration file: $path\n");
+				$log->warn("CustomSkip: Unable to open configuration file: $path\n");
 			}
 		}
 	}
@@ -2849,10 +2869,10 @@ sub parseFilterContent {
         if ( $content ) {
 		$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
 		my $xml = eval { XMLin($content, forcearray => ["filter","parameter","value"], keyattr => []) };
-		#debugMsg(Dumper($valuesXml));
+		#$log->debug(Dumper($valuesXml));
 		if ($@) {
 			$errorMsg = "$@";
-			errorMsg("CustomSkip: Failed to parse configuration because:\n$@\n");
+			$log->warn("CustomSkip: Failed to parse configuration because:\n$@\n");
 		}else {
 			my $filters = $xml->{'filter'};
 			$xml->{'id'} = $filterId;
@@ -2875,7 +2895,7 @@ sub parseFilterContent {
 								$value .= encode_entities($v);
 							}
 						}
-						#debugMsg("Setting: ".$p->{'id'}."=".$value."\n");
+						#$log->debug("Setting: ".$p->{'id'}."=".$value."\n");
 						$filterParameters{$p->{'id'}}=$value;
 					}
 					if(defined($filterType->{'customskipparameters'})) {
@@ -2887,7 +2907,7 @@ sub parseFilterContent {
 									if(!defined($value)) {
 										$value='';
 									}
-									debugMsg("Setting default value ".$p->{'id'}."=".$value."\n");
+									$log->debug("Setting default value ".$p->{'id'}."=".$value."\n");
 									$filterParameters{$p->{'id'}} = $value;
 								}
 							}
@@ -2922,7 +2942,7 @@ sub parseFilterContent {
 					$filter->{'parametervalues'} = \%filterParameters;
 
 				}else {
-					debugMsg("Skipping unknown filter type: ".$filter->{'id'}."\n");
+					$log->warn("Skipping unknown filter type: ".$filter->{'id'}."\n");
 				}
 			}
 	                $localFilters->{$filterId} = $xml;
@@ -2932,7 +2952,7 @@ sub parseFilterContent {
 		}
 	}else {
 		$errorMsg = "Incorrect information in skip data";
-		errorMsg("CustomSkip: Unable to to read skip configuration\n");
+		$log->warn("CustomSkip: Unable to to read skip configuration\n");
 	}
 	return $errorMsg;
 }
@@ -2960,31 +2980,26 @@ sub getFunctions {
 }
 
 sub checkDefaults {
-	my $prefVal = Slim::Utils::Prefs::get('plugin_customskip_showmessages');
+	my $prefVal = $prefs->get('global_skipping');
 	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_customskip_showmessages to 0\n");
-		Slim::Utils::Prefs::set('plugin_customskip_showmessages', 0);
+		$log->debug("Defaulting plugin_customskip_global_skipping to 0\n");
+		$prefs->set('global_skipping', 0);
 	}
-	$prefVal = Slim::Utils::Prefs::get('plugin_customskip_global_skipping');
+        $prefVal = $prefs->get('directory');
 	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_customskip_global_skipping to 0\n");
-		Slim::Utils::Prefs::set('plugin_customskip_global_skipping', 0);
+		my $dir=$serverPrefs->get('playlistdir');
+		$log->debug("Defaulting plugin_customskip_directory to:$dir\n");
+		$prefs->set('directory', $dir);
 	}
-        $prefVal = Slim::Utils::Prefs::get('plugin_customskip_directory');
+        $prefVal = $prefs->get('enable_mixerfunction');
 	if (! defined $prefVal) {
-		my $dir=Slim::Utils::Prefs::get('playlistdir');
-		debugMsg("Defaulting plugin_customskip_directory to:$dir\n");
-		Slim::Utils::Prefs::set('plugin_customskip_directory', $dir);
+		$log->debug("Defaulting plugin_customskip_enable_mixerfunction to: 1\n");
+		$prefs->set('enable_mixerfunction', 1);
 	}
-        $prefVal = Slim::Utils::Prefs::get('plugin_customskip_enable_mixerfunction');
+        $prefVal = $prefs->get('web_show_mixerlinks');
 	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_customskip_enable_mixerfunction to: 1\n");
-		Slim::Utils::Prefs::set('plugin_customskip_enable_mixerfunction', 1);
-	}
-        $prefVal = Slim::Utils::Prefs::get('plugin_customskip_web_show_mixerlinks');
-	if (! defined $prefVal) {
-		debugMsg("Defaulting plugin_customskip_web_show_mixerlinks to: 1\n");
-		Slim::Utils::Prefs::set('plugin_customskip_web_show_mixerlinks', 1);
+		$log->debug("Defaulting plugin_customskip_web_show_mixerlinks to: 1\n");
+		$prefs->set('web_show_mixerlinks', 1);
 	}
 }
 
@@ -3198,131 +3213,6 @@ sub unescape {
         return $in;
 }
 
-# A wrapper to allow us to uniformly turn on & off debug messages
-sub debugMsg
-{
-	my $message = join '','CustomSkip: ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_customskip_showmessages"));
-}
-
-sub strings {
-	return <<EOF;
-CUSTOMSKIP
-	EN	Custom Skip
-
-PLUGIN_CUSTOMSKIP
-	EN	Custom Skip
-
-PLUGIN_CUSTOMSKIP_SETUP_GROUP
-	EN	Custom Skip
-
-PLUGIN_CUSTOMSKIP_SETUP_GROUP_DESC
-	EN	Custom Filter is a plugin which makes it easy to define filters on tracks that shouldnt be played
-
-PLUGIN_CUSTOMSKIP_SHOW_MESSAGES
-	EN	Show debug messages
-
-PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING
-	EN	Enable filtering on all playlists (Off = only on Dynamic Playlists)
-
-SETUP_PLUGIN_CUSTOMSKIP_SHOWMESSAGES
-	EN	Debugging
-
-SETUP_PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING
-	EN	Enable filtering on all playlists
-
-PLUGIN_CUSTOMSKIP_DIRECTORY
-	EN	Filter directory
-
-SETUP_PLUGIN_CUSTOMSKIP_DIRECTORY
-	EN	Filter directory
-
-PLUGIN_CUSTOMSKIP_CHOOSE_BELOW
-	EN	Choose a filter set for skipping music:
-
-PLUGIN_CUSTOMSKIP_NEW_FILTER
-	EN	Create new filter set
-
-PLUGIN_CUSTOMSKIP_NEW_FILTER_TITLE
-	EN	Enter attributes for new filter set
-
-PLUGIN_CUSTOMSKIP_EDIT_FILTER_NAME
-	EN	Filter Set Name
-
-PLUGIN_CUSTOMSKIP_EDIT_FILTER_FILE_NAME
-	EN	File name
-
-PLUGIN_CUSTOMSKIP_NEW_FILTER_TYPES_TITLE
-	EN	Select type of filter item to add to filter set
-
-PLUGIN_CUSTOMSKIP_EDIT_FILTER_PARAMETERS_TITLE
-	EN	Enter filter item parameters
-
-PLUGIN_CUSTOMSKIP_DELETE_FILTER
-	EN	Delete
-
-PLUGIN_CUSTOMSKIP_DELETE_FILTER_QUESTION
-	EN	Are you sure you want to delete this filter set ?
-
-PLUGIN_CUSTOMSKIP_EDIT_FILTER
-	EN	Edit
-
-PLUGIN_CUSTOMSKIP_CHOOSE_FILTERITEM_BELOW
-	EN	Choose a filter item to edit or create a new one
-
-PLUGIN_CUSTOMSKIP_NEW_FILTERITEM
-	EN	Create new filter item
-
-PLUGIN_CUSTOMSKIP_DELETE_FILTERITEM
-	EN	Delete
-
-PLUGIN_CUSTOMSKIP_DELETE_FILTERITEM_QUESTION
-	EN	Are you sure you want to delete this filter item ?
-
-PLUGIN_CUSTOMSKIP_EDIT_FILTERITEM
-	EN	Edit
-
-PLUGIN_CUSTOMSKIP_ACTIVE
-	EN	Active filter set
-
-PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER
-	EN	Activating 
-
-PLUGIN_CUSTOMSKIP_DISABLE_FILTER
-	EN	Turn off filtering
-
-PLUGIN_CUSTOMSKIP_DISABLING_FILTER
-	EN	Filtering turned off
-
-PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS
-	EN	Show Custom Skip button in browse pages. May require slimserver restart.
-
-PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION
-	EN	Enable Custom Skip play+hold action. May require slimserver restart.
-
-SETUP_PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS
-	EN	Buttons in browse pages
-
-SETUP_PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION
-	EN	Play+Hold mixer action
-
-PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE
-	EN	Select type of skip filter
-
-PLUGIN_CUSTOMSKIP_MIX_FILTER_SUCCESS
-	EN	Updated filter set
-
-PLUGIN_CUSTOMSKIP_MIX_FILTER_FAILURE
-	EN	Update failed
-
-PLUGIN_CUSTOMSKIP_SELECT_MIX_ITEM
-	EN	Select item to filter on
-
-PLUGIN_CUSTOMSKIP_SELECT_FILTER_SET
-	EN	Select this filter set for skipping music
-EOF
-
-}
 
 1;
 

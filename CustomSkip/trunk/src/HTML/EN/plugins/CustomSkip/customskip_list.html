@@ -1,9 +1,4 @@
 [%- pagetitle = 'PLUGIN_CUSTOMSKIP' | string; pageicon = 'PLUGIN_CUSTOMSKIP' -%]
-[% IF !pluginCustomSkipSlimserver65 %]
-	[% PROCESS plugins/CustomSkip/hreftemplate65 %]
-	[% PROCESS plugins/CustomSkip/cmdwrappers65 %]
-	[% PROCESS plugins/CustomSkip/css65 %]
-[% END %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/CustomSkip/customskip_list.html?player=[% player | uri %]">
@@ -17,9 +12,6 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF !pluginCustomSkipSlimserver65 %]
-	[% PROCESS plugins/CustomSkip/pageheaderinfo65 %]
-[% END %]
 
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
      users to make setting changes then click on a new mix without having to press the submit button. %]
