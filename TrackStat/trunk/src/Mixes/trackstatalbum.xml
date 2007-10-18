@@ -9,6 +9,6 @@
 		<mixcheckdata>Plugins::TrackStat::Plugin::mixable</mixcheckdata>
 		<mixdata>PLUGIN.TrackStat::Plugin|album={itemid}|statistictype=album|flatlist=1</mixdata>
 		<mixurl>plugins/TrackStat/all.html?&amp;album={itemid}&amp;flatlist=1</mixurl>
-		<miximage>plugins/TrackStat/html/images/mixbutton.gif</miximage>
+		<miximage>html/images/trackstat_mixbutton.gif</miximage>
 	</mix>
 </custombrowse>
