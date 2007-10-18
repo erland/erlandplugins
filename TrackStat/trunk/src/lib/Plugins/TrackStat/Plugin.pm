@@ -3929,9 +3929,11 @@ sub setTrackStatRating {
 			$ds->forceCommit();
 		};
 	}
-	Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track);
-	Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track);
-	Plugins::TrackStat::Amarok::Export::exportRating($url,$rating,$track);
+	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
+		Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track);
+		Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track);
+		Plugins::TrackStat::Amarok::Export::exportRating($url,$rating,$track);
+	}
 	$log->debug("Exiting setTrackStatRating\n");
 }
 
@@ -4150,9 +4152,11 @@ sub setTrackStatStatistic {
 	my $playCount = $statistic->{'playCount'};
 	my $lastPlayed = $statistic->{'lastPlayed'};	
 	my $rating = $statistic->{'rating'};
-	Plugins::TrackStat::MusicMagic::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
-	Plugins::TrackStat::iTunes::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
-	Plugins::TrackStat::Amarok::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
+		Plugins::TrackStat::MusicMagic::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+		Plugins::TrackStat::iTunes::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+		Plugins::TrackStat::Amarok::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+	}
 	$log->debug("Exiting setTrackStatStatistic\n");
 }
 
