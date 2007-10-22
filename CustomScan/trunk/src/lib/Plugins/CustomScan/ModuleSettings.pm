@@ -234,5 +234,18 @@ sub getMultipleListQueryParameter {
 	}
 	return \%result;
 }
+
+# don't use the external one because it doesn't know about the difference
+# between a param and not...
+#*unescape = \&URI::Escape::unescape;
+sub unescape {
+        my $in      = shift;
+        my $isParam = shift;
+
+        $in =~ s/\+/ /g if $isParam;
+        $in =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
+
+        return $in;
+}
 		
 1;
