@@ -111,7 +111,6 @@ END;
 [% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 <br>
 <div style="float:left;">
-<a href="[% webroot %]plugins/CustomBrowse/settings/basic.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
 <a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a></div><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
 
