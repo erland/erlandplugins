@@ -1,5 +1,7 @@
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-
+[%- titleRight = BLOCK %]
+<div id="viewSelect"></div>
+[% END %]
 [% PROCESS plugins/CustomBrowse/iteminfo.html %]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
@@ -22,7 +24,7 @@
 [%- pageHeaderInfo = BLOCK %]
 [% IF pluginCustomBrowseScanWarning %]<p>[% PROCESS scanwarning %] [% ELSE %]&nbsp;[% END %]
 [% END -%]
-[% PROCESS pageheader.html %]
+[% PROCESS pageheader.html dontscroll=1 %]
 [%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
         contentwrapper = 'galleryitem';
 	container = 'gallerycontainer';
@@ -31,63 +33,38 @@ ELSE;
 	container = 'contentcontainer';
 END;
 %]
+[% CustomBrowseUrl = 'plugins/CustomBrowse/custombrowse_contextlist.html'; %]
+[% CustomBrowseItemText = 'CustomBrowseContextItemText' %]
 [% PROCESS plugins/CustomBrowse/cbmixerlink.html %]
+[% PROCESS plugins/CustomBrowse/cbcomponents.html %]
+[% PROCESS plugins/CustomBrowse/custombrowse.css %]
 
-[% BLOCK galleryitem %]
-	<li>
-	<div style="width:[% item.size %]px;">
-		[%- IF anchor %]
-		        <a name="[% anchor | uri %]"></a>
-		[%- END -%]
-
-	        <div class="artworkImage" style="width: [% item.size %];">
-	                [% IF item.coverThumb %]
-	                        <div style="width:[% item.size %]px;height:[% item.size %]px;">
-				<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]" target="browser">[% PROCESS thumbnailItemImg height="$item.size" %]</a>
-	                        </div>
-	                [% ELSE %]
-				<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]" target="browser">[% PROCESS dummyItemImg height="$item.size" %]</a>
-	                [% END %]
-	        </div>
-	
-	        [% SET class = 'even' odd = 0 %]
-	        <div class="artworkControls">
-	                [%- PROCESS $controls -%]
-	        </div>
-
-	        <div class="artworkText" style="width:[% item.size %]px;"><span style="width:[% item.size %]px;">
-	        [%- content | indent(4) %]
-	        </span></div>
-	</div></li>
-[%- END %]
-
-	<tr valign="top"><td></td><td colspan="4">
+	<div id="browsedbHeader">
 		[% IF !pluginCustomBrowseNoItems && pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
-			[% "ITEMS" | string %] [% pluginCustomBrowsePageInfo.startitem + 1 %] [% "TO" | string %] [% pluginCustomBrowsePageInfo.enditem + 1 %] [% "OF" | string %] [% pluginCustomBrowsePageInfo.totalitems %]
-			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
+			[% PROCESS cbitemcount %]
+			[% PROCESS cbpagebar %]
 		[% END %]
-	</td></tr>
-[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseHeaderItems %]
-    	<tr valign="top"><td></td><td colspan="4">
-		[% odd = 1 %]
-		[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
-			<!-- [% WRAPPER contentcontainer %] -->
-				[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
-					[% BLOCK allsongscontrols %]
-						[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
-					        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextaddall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
-					[% END %]
-					[%- WRAPPER contentitem controls='allsongscontrols' %]
-			        		[% "ALL_SONGS" | string %]<br>
-			        	[% END %]
-					[% odd = (not odd) %]
-				[% END %]
-				[% count = 0 %]
-			<!-- [% END %] -->
-		[% ELSIF !pluginCustomBrowseNoItems %]
-			[% "PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND" | string %]<br>
-		[% END %]
+		[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseHeaderItems %]
+	</div>
 		[% WRAPPER $container %]
+			[% odd = 1 %]
+			[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
+				<!-- [% WRAPPER contentcontainer %] -->
+					[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
+						[% BLOCK allsongscontrols %]
+							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextaddall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+						[% END %]
+						[%- WRAPPER contentitem controls='allsongscontrols' %]
+				        		[% "ALL_SONGS" | string %]<br>
+				        	[% END %]
+						[% odd = (not odd) %]
+					[% END %]
+					[% count = 0 %]
+				<!-- [% END %] -->
+			[% ELSIF !pluginCustomBrowseNoItems %]
+				[% "PLUGIN_CUSTOMBROWSE_NO_ITEMS_FOUND" | string %]<br>
+			[% END %]
 			[% FOREACH item = pluginCustomBrowseItems %]
 				[% BLOCK controls %]
 					[% IF pluginCustomBrowseSingleMixButton %]
@@ -118,38 +95,24 @@ END;
 				[% END %]
 				[%- WRAPPER $contentwrapper controls='controls' %]
 			        	[% count = count + 1 %]
-					[% IF item.itemobj %]
-						[% PROCESS trackinfo %]
-					[% ELSE %]
-						[% IF item.slimserverurl %]
-				        		<a href="[% webroot %][% item.slimserverurl %]">[% PROCESS CustomBrowseContextItemText %]</a><br>
-						[% ELSIF item.url %]
-				        		<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% item.url %]">[% PROCESS CustomBrowseContextItemText %]</a><br>
-						[% ELSE %]
-				        		[% PROCESS CustomBrowseContextItemText %]<br>
-						[% END %]
-					[% END %]
+					[% PROCESS cbcontentitem %]
 			        [% END %]
 				[% odd = (not odd) %]
 		        [% END %]
 		[% END %]
-    	</td></tr>
-	<tr valign="top"><td></td><td colspan="4">
+<div id="pageFooterInfo">
 		[% IF !pluginCustomBrowseNoItems && pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
-			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
+			[% PROCESS cbpagebar %]
 		[% END %]
-	</td></tr>
-<tr><td></td><td colspan="4">&nbsp;</td></tr>
 [% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
-<tr><td></td><td colspan="4">
 <br>
+<div style="float:left;">
 <a href="[% webroot %]plugins/CustomBrowse/basic/settings.html?player=[% player | uri %]">[% "PLUGIN_CUSTOMBROWSE_SETTINGS" | string %]</a>&nbsp;&nbsp;&nbsp;
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a></div><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
 <br>
-</td></tr>
 [% IF pluginCustomBrowseError %]
-	<tr><td colspan="4">
+	<div>
 	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
-	</td></tr>
+	</div>
 [% END %]
 [% PROCESS pagefooter.html %]

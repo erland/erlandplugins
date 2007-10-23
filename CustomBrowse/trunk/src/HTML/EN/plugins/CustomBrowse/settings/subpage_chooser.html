@@ -1,7 +1,4 @@
-<div class="settingSection">
-	<div class="groupHead">[% "SETUP_PLUGIN_CUSTOMBROWSE_GROUP" | string | upper %]</div>
-	<div class="groupDesc">[% "SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC" | string %]</div>
-
+[% WRAPPER settingGroup title="SETUP_PLUGIN_CUSTOMBROWSE_GROUP" desc="SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC" %]
 	[% IF subpages.size>1 %]
 	<select class="stdedit" name="subpage" id="subpage" onchange="location.href=options[selectedIndex].value">
 		[% FOREACH option = subpages.keys.sort %]
@@ -10,7 +7,7 @@
 		[%- END -%]
 	</select>
 	[% END %]
-</div>
+[% END %]
 [% IF subpages.size>1 %]
 <br>
 [% END %]

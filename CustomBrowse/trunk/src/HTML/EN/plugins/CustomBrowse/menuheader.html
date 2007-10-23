@@ -19,14 +19,14 @@
 [% END -%]
 
 [% BLOCK itemColumn %]
-<div id="songInfo">
+<div id="pageFooterHeaderInfo">
 		[% FOREACH item = items %]
 			[% IF (column=='left' and item.itemplacement=='left') or (column=='right' and item.itemplacement!='left') %]
 			<div id="[% item.itemname %]">
 				[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %]
-				<span class="songInfoTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</span>
+				<span class="pageFooterHeaderTitle">[% IF item.itemvalue %][% item.itemname %][% "COLON" | string %][% ELSE %]&nbsp;[% END %]</span>
 				[% END %]
-				<span[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %] class="songInfoText"[% END %]>
+				<span[% IF (!item.slimserverimage and !item.internetimage and !item.internetslimserverimage) %] class="pageFooterHeaderText"[% END %]>
 					[% IF item.multipleitems %]
 						[% itemCount=0 %]
 						[% prevImage=0 %]
@@ -51,7 +51,7 @@
 [% END %]
 [% hasleft =0 %]
 [% IF items %]
-    	<tr valign="top"><td></td><td colspan="4" width="100%">
+    	<div>
 [% FOREACH item = items %]
 	[% IF item.itemplacement == 'left' %]
 		[% hasleft =1 %]
@@ -82,6 +82,6 @@
 [% END %]
 <br>
 
-    	</td></tr>
+    	</div>
 [% END %]
 
