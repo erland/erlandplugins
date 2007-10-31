@@ -63,6 +63,7 @@ my $filters = undef;
 my $playLists = undef;
 my $playListTypes = undef;
 my $playListItems = undef;
+my $jiveMenu = undef;
 
 my %plugins = ();
 my %filterPlugins = ();
@@ -1783,11 +1784,121 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue', '_playlistid'], [1, 0, 0, \&cliContinuePlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
 
 	initFilters();
+	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
+
+sub lateInitPlugin {
+	initPlayLists();
+	initPlayListTypes();
+	registerJiveMenu();
+	return 0;
+}
+
 sub title {
 	return 'DYNAMICPLAYLIST';
+}
+
+sub registerJiveMenu {
+	my $client = shift;
+	my @playlistItems = ();
+	my $showFlat = $prefs->get('flatlist');
+	if($showFlat) {
+		foreach my $flatItem (sort keys %$playLists) {
+			my $playlist = $playLists->{$flatItem};
+			if($playlist->{'dynamicplaylistenabled'}) {
+				my %flatPlaylistItem = (
+					'playlist' => $playlist,
+					'dynamicplaylistenabled' => 1,
+					'value' => $playlist->{'dynamicplaylistid'}
+				);
+				push @playlistItems, \%flatPlaylistItem;
+			}
+		}
+	}else {
+		foreach my $menuItemKey (sort keys %$playListItems) {
+			if($playListItems->{$menuItemKey}->{'dynamicplaylistenabled'}) {
+				push @playlistItems, $playListItems->{$menuItemKey};
+			}
+		}
+	}
+	my @menuItems = ();
+        foreach my $menu (@playlistItems) {
+		my $name = undef;
+		my $id = undef;
+		my $menuitem;
+		if(defined($menu->{'playlist'})) {
+			$name = $menu->{'playlist'}->{'name'};
+			$id = $menu->{'playlist'}->{'dynamicplaylistid'};
+			my %itemParams = (
+				'_playlistid' => $id,
+			);
+			$menuitem = {
+				text => $name,
+				actions => {
+					do => {
+						'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+						'params' => \%itemParams,
+					},
+					play => {
+						'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+						'params' => \%itemParams,
+					},
+					add => {
+						'cmd' => ['dynamicplaylist', 'playlist', 'add'],
+						'params' => \%itemParams,
+					},
+				},
+				style => 'itemNoAction',
+			};
+		}else {
+			$name = $menu->{'name'};
+			$id = escape($menu->{'name'});
+			$menuitem = {
+				text => $name."/",
+				actions => {
+					go => {
+						cmd => ['dynamicplaylist', 'browsejive'],
+						params => {
+							group1 => $id,
+						},
+					},
+				},
+			};
+		}
+		push @menuItems,$menuitem;
+	}
+	@menuItems = sort { 
+		if($a->{'text'} =~ /\/$/) {
+			if($b->{'text'} =~ /\/$/) {
+				return lc($a->{'text'}) cmp lc($b->{'text'});
+			}else {
+				return -1;
+			}
+		}else {
+			if($b->{'text'} =~ /\/$/) {
+				return 1;
+			}else {
+				return lc($a->{'text'}) cmp lc($b->{'text'});
+			}
+		}
+	} @menuItems;
+
+	if(!defined($jiveMenu)) {
+		$jiveMenu = {
+			text => Slim::Utils::Strings::string(getDisplayName()),
+			count => scalar(@menuItems),
+			offset => 0,
+			window => { titleStyle => 'mymusic'},
+			item_loop => \@menuItems,
+		};
+		Slim::Control::Jive::registerPluginMenu($jiveMenu,'mymusic');
+	}else {
+		$jiveMenu->{'count'} = scalar(@menuItems);
+		$jiveMenu->{'item_loop'} = \@menuItems;
+	}
 }
 
 sub initDatabase {
@@ -1853,6 +1964,7 @@ sub handleWebList {
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
+	registerJiveMenu();
 	my $playlist = undef;
 	if(defined($client) && defined($mixInfo{$client}) && defined($mixInfo{$client}->{'type'})) {
 		$playlist = getPlayList($client,$mixInfo{$client}->{'type'});
@@ -2486,6 +2598,115 @@ sub getTracksForPlaylist {
 	return $result;
 }
 
+sub cliJiveHandler {
+	$log->debug("Entering cliJiveHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['dynamicplaylist'],['browsejive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	if(!$playLists) {
+		initPlayLists($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+	}
+
+	$log->debug("Executing CLI browsejive command\n");
+	my $menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
+	my $menuResult = getPlayListsForContext($client,$params,$playListItems,1);
+	my $count = scalar(@$menuGroupResult)+scalar(@$menuResult);
+
+	my %baseParams = ();
+	my $nextGroup = 1;
+	foreach my $param (keys %$params) {
+		if($param !~ /^_/) {
+			$baseParams{$param} = $params->{$param};
+		}
+		if($param =~ /^group/) {
+			$nextGroup++;
+		}
+	}
+	my $baseMenu = {
+		'actions' => {
+			'do' => {
+				'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+				'itemsParams' => 'params',
+			},
+			'play' => {
+				'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+				'itemsParams' => 'params',
+			},
+			'add' => {
+				'cmd' => ['dynamicplaylist', 'playlist', 'add'],
+				'itemsParams' => 'params',
+			},
+		},
+	};
+	$request->addResult('base',$baseMenu);
+
+	my $cnt = 0;
+	foreach my $item (@$menuGroupResult) {
+		my $name;
+		my $id;
+		$name = $item->{'name'};
+		$id = escape($item->{'name'});
+		
+		my %itemParams = ();
+		foreach my $p (keys %baseParams) {
+			if($p =~ /^group/) {
+				$itemParams{$p}=$baseParams{$p}
+			}
+		}
+		$itemParams{'group'.$nextGroup} = $id;
+
+		my $actions = {
+			'go' => {
+				'cmd' => ['dynamicplaylist', 'browsejive'],
+				'params' => \%itemParams,
+				'itemsParams' => 'params',
+			},
+		};
+		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'text',$name."/");
+		$cnt++;
+	}
+
+	foreach my $item (@$menuResult) {
+		my $name;
+		my $id;
+		$name = $item->{'name'};
+		$id = $item->{'dynamicplaylistid'};
+		
+		my %itemParams = (
+			'_playlistid'=>$id,
+		);
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'text',$name);
+		$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+		$cnt++;
+	}
+
+	$request->addResult('offset',0);
+	$request->addResult('count',$count);
+
+	$request->setStatusDone();
+	$log->debug("Exiting cliJiveHandler\n");
+}
+
 sub cliGetPlaylists {
 	$log->debug("Entering cliGetPlaylists\n");
 	my $request = shift;
@@ -2554,6 +2775,9 @@ sub cliPlayPlaylist {
 	}
 	
   	my $playlistId    = $request->getParam('_playlistid');
+	if($playlistId =~ /^_playlistid:(.+)$/) {
+		$playlistId = $1;
+	}
 
 	playRandom($client, $playlistId, 0, 1);
 	
@@ -2580,6 +2804,9 @@ sub cliContinuePlaylist {
 	}
 	
   	my $playlistId    = $request->getParam('_playlistid');
+	if($playlistId =~ /^_playlistid:(.+)$/) {
+		$playlistId = $1;
+	}
 
 	playRandom($client, $playlistId, 0, 1,undef,1);
 	
@@ -2606,6 +2833,9 @@ sub cliAddPlaylist {
 	}
 	
   	my $playlistId    = $request->getParam('_playlistid');
+	if($playlistId =~ /^_playlistid:(.+)$/) {
+		$playlistId = $1;
+	}
 
 	playRandom($client, $playlistId, 1, 1, 1);
 	
