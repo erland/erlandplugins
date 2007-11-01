@@ -71,7 +71,7 @@ sub handler {
 		Plugins::CustomBrowse::Plugin::getConfigManager()->initWebAdminMethods();
 		Plugins::CustomBrowse::Plugin::getContextConfigManager()->initWebAdminMethods();
 		if($prefs->get('override_trackinfo')) {
-			Slim::Buttons::Common::addMode('trackinfo',getFunctions(),\&setModeContext);
+			Slim::Buttons::Common::addMode('trackinfo',Plugins::CustomBrowse::Plugin::getFunctions(),\&setModeContext);
 		}else {
 			Slim::Buttons::Common::addMode('trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
 		}
