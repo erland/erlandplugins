@@ -37,6 +37,7 @@ use Scalar::Util qw(blessed);
 use Text::Unidecode;
 use SOAP::Lite;
 use Slim::Utils::PluginManager;
+use Slim::Control::Jive;
 
 use Plugins::CustomBrowse::Settings;
 use Plugins::CustomBrowse::EnabledMixers;
@@ -62,6 +63,7 @@ my $mixer;
 my $PLUGINVERSION = undef;
 my $sqlerrors = '';
 my %uPNPCache = ();
+my $jiveMenu = undef;
 
 my $configManager = undef;
 my $contextConfigManager = undef;
@@ -1024,19 +1026,88 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mixescontext','_contexttype','_contextid'], [1, 1, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
 
 	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
 sub lateInitPlugin {
+	Slim::Utils::Timers::setTimer(undef,time()+1,\&delayedLateInitPlugin);
+	return 0;
+}
+
+sub delayedLateInitPlugin {
 	eval {
 		getConfigManager();
 		getMenuHandler();
 		readBrowseConfiguration();
 		readContextBrowseConfiguration();
+		registerJiveMenu();
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
+	}
+}
+
+sub registerJiveMenu {
+	my $client = shift;
+	my @menuItems = ();
+	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'jive');
+        for my $menu (@$menus) {
+		my $name = getMenuHandler()->getItemText($client,$menu);
+		my $menuitem = {
+			text => $name,
+			actions => {
+				go => {
+					cmd => ['custombrowse', 'browsejive'],
+					params => {
+						hierarchy => $menu->{'id'},
+					},
+				},
+			},
+		};
+		if(defined($menu->{'menu'})) {
+			my @submenus = ();
+			if(ref($menu->{'menu'}) eq 'ARRAY') {
+				my $m = $menu->{'menu'};
+				@submenus = @$m;
+			}else {
+				push @submenus,$menu->{'menu'};
+			}
+			my $mode = 0;
+			foreach my $submenu (@submenus) {
+				if(defined($submenu->{'menutype'}) && $submenu->{'menutype'} eq 'mode') {
+					$mode = 1;
+					last;
+				}
+			}
+			if($mode) {
+				$menuitem->{'style'} = 'noItemAction';
+			}
+		}elsif(!defined($menu->{'menufunction'})) {
+			$menuitem->{'style'} = 'noItemAction';
+		}
+		if(ref($menu->{'menu'}) ne 'ARRAY' && defined($menu->{'menu'}->{'itemtype'}) && $menu->{'menu'}->{'itemtype'} eq 'album') {
+			$menuitem->{'window'} = {menuStyle=>'album'};
+		}
+		push @menuItems,$menuitem;
+	}
+	if(!defined($jiveMenu)) {
+		$jiveMenu = {
+			text => Slim::Utils::Strings::string(getDisplayName()),
+			count => scalar(@menuItems),
+			offset => 0,
+			weight => 95,
+			window => { titleStyle => 'mymusic'},
+			item_loop => \@menuItems,
+		};
+		Slim::Control::Jive::registerPluginMenu($jiveMenu,'extras');
+		if($prefs->get('menuinsidebrowse')) {
+			Slim::Control::Jive::registerPluginMenu($jiveMenu,'mymusic');
+		}
+	}else {
+		$jiveMenu->{count} = scalar(@menuItems);
+		$jiveMenu->{item_loop} = \@menuItems;
 	}
 }
 
@@ -2674,6 +2745,203 @@ sub handleWebSaveSelectMenus {
 
 	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
+}
+
+sub cliJiveHandler {
+	$log->debug("Entering cliJiveHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['custombrowse'],['browsejive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	if(!$browseMenusFlat) {
+		readBrowseConfiguration($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+	}
+
+	my $start = $request->getParam('_start');
+	if(!defined($start) || $start eq '') {
+		$start=0;
+	}
+	$params->{'start'}=$start;
+	my $itemsPerPage = $request->getParam('_itemsPerResponse');
+	if(defined($itemsPerPage) || $itemsPerPage ne '') {
+		$params->{'itemsperpage'}=$itemsPerPage;
+	}
+
+	my $menuResult = undef;
+	$log->debug("Executing CLI browsejive command\n");
+	$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
+	my $context = getMenuHandler()->getContext($client,$params,1);
+	my $currentContext = undef;
+	if(defined($context) && scalar(@$context)>0) {
+		$currentContext = $context->[scalar(@$context)-1];
+	}
+	my $menuItems = $menuResult->{'items'};
+	my $count = $menuResult->{'pageinfo'}->{'totalitems'};
+	my %baseParams = ();
+	foreach my $param (keys %$params) {
+		if($param ne 'hierarchy' && $param ne 'start' && $param ne 'itemsperpage' && $param !~ /^_/) {
+			$baseParams{$param} = $params->{$param};
+		}
+	}
+	my $baseMenu = {
+		'actions' => {
+			'go' => {
+				'cmd' => ['custombrowse', 'browsejive'],
+				'params' => \%baseParams,
+				'itemsParams' => 'params',
+			},
+			'add' => {
+				'cmd' => ['custombrowse', 'add'],
+				'params' => \%baseParams,
+				'itemsParams' => 'params',
+			},
+			'play' => {
+				'cmd' => ['custombrowse', 'play'],
+				'params' => \%baseParams,
+				'itemsParams' => 'params',
+			},
+		}
+	};
+	if(defined($currentContext) && defined($currentContext->{'item'}->{'menu'})) {
+		my $menuRef = $currentContext->{'item'}->{'menu'};
+		my @menus = ();
+		if(ref($menuRef) eq 'ARRAY') {
+			@menus = @$menuRef;
+		}else {
+			push @menus,$menuRef;
+		}
+		my $itemtype = undef;
+		foreach my $submenu (@menus) {
+			if(defined($submenu->{'menu'})) {
+				$menuRef = $submenu->{'menu'};
+				my @submenus = ();
+				if(ref($menuRef) eq 'ARRAY') {
+					@submenus = @$menuRef;
+				}else {
+					push @submenus,$menuRef;
+				}
+				foreach my $nextmenu (@submenus) {
+					if(defined($nextmenu->{'itemtype'})) {
+						if(!defined($itemtype)) {
+							$itemtype = $nextmenu->{'itemtype'};
+						}elsif($itemtype ne $nextmenu->{'itemtype'}) {
+							$itemtype = "NOTUSED";
+						}
+					}
+				}
+			}
+		}
+		if($itemtype eq 'album') {
+			$baseMenu->{'window'} = {'menuStyle' => 'album'};
+			if($menuResult->{'artwork'}) {
+				$baseMenu->{'window'}->{'titleStyle'} = 'album';
+			}
+		}elsif($menuResult->{'artwork'}) {
+			$baseMenu->{'window'} = {'titleStyle'=> 'album'};
+		}
+	}elsif($menuResult->{'artwork'}) {
+		$baseMenu->{'window'} = {'titleStyle' => 'album'};
+	}
+	$request->addResult('base',$baseMenu);
+
+	my $cnt = 0;
+	foreach my $item (@$menuItems) {
+		my $name;
+		if(defined($item->{'itemvalue'})) {
+			$name = $item->{'itemvalue'};
+		}else {
+			$name = $item->{'itemname'};
+		}
+		my %itemParams = ();
+		if(defined($item->{'contextid'})) {
+			$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'contextid'};
+			$itemParams{$item->{'contextid'}} = $item->{'itemid'};
+		}else {
+			$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'id'};
+			$itemParams{$item->{'id'}} = $item->{'itemid'};
+		}
+		if($item->{'playtype'} eq 'none') {
+			foreach my $p (keys %baseParams) {
+				$itemParams{$p}=$baseParams{$p};
+			}
+			my $actions = {
+				'go' => {
+					'cmd' => ['custombrowse', 'browsejive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				},
+			};
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		}else {
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		}
+		if($menuResult->{'artwork'}) {
+			$request->addResultLoop('item_loop',$cnt,'text',$name."\n");
+			$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
+		}else {
+			$request->addResultLoop('item_loop',$cnt,'text',$name);
+		}
+		if(defined($item->{'menu'})) {
+			my @submenus = ();
+			if(ref($item->{'menu'}) eq 'ARRAY') {
+				my $m = $item->{'menu'};
+				@submenus = @$m;
+			}else {
+				push @submenus,$item->{'menu'};
+			}
+			my $songInfo = 0;
+			my $mode = 0;
+			foreach my $submenu (@submenus) {
+				if(defined($submenu->{'menutype'}) && $submenu->{'menutype'} eq 'trackdetails') {
+					$songInfo = 1;
+					last;
+				}elsif(defined($submenu->{'menutype'}) && $submenu->{'menutype'} eq 'mode') {
+					$mode = 1;
+					last;
+				}
+			}
+			if($songInfo) {
+				my $songInfoParams = {
+					track_id => $item->{'itemid'},
+					menu => 'nowhere',
+					cmd => 'load',
+				};
+				my $actions = {
+					'go' => {
+						'cmd' => ['songinfo'],
+						'params' => $songInfoParams,
+					},
+				};
+				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			}elsif($mode) {
+				$request->addResultLoop('item_loop',$cnt,'style','noItemAction');
+			}
+		}elsif(!defined($item->{'menufunction'})) {
+			$request->addResultLoop('item_loop',$cnt,'style','noItemAction');
+		}
+		$cnt++;
+	}
+	$request->addResult('offset',$start);
+	$request->addResult('count',$count);
+
+	$request->setStatusDone();
+	$log->debug("Exiting cliJiveHandler\n");
 }
 
 sub cliHandler {
