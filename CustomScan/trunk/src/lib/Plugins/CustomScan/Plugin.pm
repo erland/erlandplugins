@@ -104,6 +104,11 @@ sub initPlugin {
 }
 
 sub lateInitPlugin {
+	Slim::Utils::Timers::setTimer(undef,time()+1,\&delayedLateInitPlugin);
+	return 0;
+}
+
+sub delayedLateInitPlugin {
 	Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION);
 }
 
