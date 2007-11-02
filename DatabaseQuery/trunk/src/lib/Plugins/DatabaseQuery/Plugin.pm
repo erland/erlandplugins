@@ -88,15 +88,18 @@ sub initPlugin {
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::DatabaseQuery::Settings->new($class);
 	checkDefaults();
+
+	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
+	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
+}
+
+sub postinitPlugin {
 	eval {
 		initDataQueries();
 	};
 	if( $@ ) {
 	    	$log->warn("Startup error: $@\n");
 	}		
-
-	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
-	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
 }
 
 sub getConfigManager {
