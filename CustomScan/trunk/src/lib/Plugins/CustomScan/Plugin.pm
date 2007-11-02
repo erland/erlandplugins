@@ -99,15 +99,9 @@ sub initPlugin {
 	Plugins::CustomScan::Settings->new($class);
 	Plugins::CustomScan::Manage->new($class);
 	Plugins::CustomScan::ModuleSettings->new($class);
-	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
-sub lateInitPlugin {
-	Slim::Utils::Timers::setTimer(undef,time()+1,\&delayedLateInitPlugin);
-	return 0;
-}
-
-sub delayedLateInitPlugin {
+sub postinitPlugin {
 	Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION);
 }
 
