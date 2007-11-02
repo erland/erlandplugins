@@ -1787,14 +1787,12 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
 
 	initFilters();
-	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
-sub lateInitPlugin {
+sub postinitPlugin {
 	initPlayLists();
 	initPlayListTypes();
 	registerJiveMenu();
-	return 0;
 }
 
 sub title {
