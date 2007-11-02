@@ -42,12 +42,7 @@ my $modules = ();
 
 my $prefs = preferences('plugin.customscan');
 
-my $log = Slim::Utils::Log->addLogCategory({
-	'category'     => 'plugin.customscan',
-	'defaultLevel' => 'WARN',
-	'description'  => 'PLUGIN_CUSTOMSCAN',
-});
-
+my $log = Slim::Utils::Log::logger('plugin.customscan');
 
 sub initScanner {
 	$PLUGINVERSION = shift;
@@ -77,6 +72,461 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
+}
+
+sub initDatabase {
+	#Check if tables exists and create them if not
+	$log->debug("Checking if customscan_track_attributes database table exists\n");
+	my $dbh = getCurrentDBH();
+	my $st = $dbh->table_info();
+	my $tblexists;
+	while (my ( $qual, $owner, $table, $type ) = $st->fetchrow_array()) {
+		if($table eq "customscan_track_attributes") {
+			$tblexists=1;
+		}
+	}
+	unless ($tblexists) {
+		$log->warn("CustomScan: Creating database tables\n");
+		executeSQLFile("dbcreate.sql");
+	}
+
+	eval { $dbh->do("select valuesort from customscan_track_attributes limit 1;") };
+	if ($@) {
+		$log->warn("CustomScan: Upgrading database adding table column valuesort, please wait...\n");
+		executeSQLFile("dbupgrade_valuesort.sql");
+	}
+
+	eval { $dbh->do("select extravalue from customscan_track_attributes limit 1;") };
+	if ($@) {
+		$log->warn("CustomScan: Upgrading database adding table column extravalue, please wait...\n");
+		executeSQLFile("dbupgrade_extravalue.sql");
+	}
+
+	eval { $dbh->do("select valuetype from customscan_track_attributes limit 1;") };
+	if ($@) {
+		$log->warn("CustomScan: Upgrading database adding table column valuetype, please wait...\n");
+		executeSQLFile("dbupgrade_valuetype.sql");
+	}
+
+	my $sth = $dbh->prepare("select version()");
+	my $majorMysqlVersion = undef;
+	my $minorMysqlVersion = undef;
+	eval {
+		$log->info("Checking MySQL version\n");
+		$sth->execute();
+		my $version = undef;
+		$sth->bind_col( 1, \$version);
+		if( $sth->fetch() ) {
+			if(defined($version) && (lc($version) =~ /^(\d+)\.(\d+)\.(\d+)[^\d]*/)) {
+				$majorMysqlVersion = $1;
+				$minorMysqlVersion = $2;
+				$log->info("Got MySQL $version\n");
+			}
+		}
+		$sth->finish();
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n$@\n");
+	}
+	if(!defined($majorMysqlVersion)) {
+		$majorMysqlVersion = 5;
+		$minorMysqlVersion = 0;
+		$log->warn("Unable to retrieve MySQL version, using default\n");
+	}
+	$useLongUrls = 1;
+	if($majorMysqlVersion<5 || !$prefs->get("long_urls")) {
+		$useLongUrls = 0;
+		$prefs->set("long_urls",0);
+	}
+	$sth = $dbh->prepare("show create table customscan_track_attributes");
+	eval {
+		$log->info("Checking datatype on customscan_track_attributes\n");
+		$sth->execute();
+		my $line = undef;
+		$sth->bind_col( 2, \$line);
+		if( $sth->fetch() ) {
+			if(defined($line) && (lc($line) =~ /url.*(text|mediumtext)/m)) {
+				$log->warn("CustomScan: Upgrading database changing type of url column, please wait...\n");
+				if($useLongUrls) {
+					executeSQLFile("dbupgrade_url_type.sql");
+				}else {
+					executeSQLFile("dbupgrade_url_type255.sql");
+				}
+			}elsif(defined($line) && $useLongUrls && (lc($line) =~ /url.*(varchar\(255\))/m)) {
+				$log->warn("CustomScan: Upgrading database changing type of url column to varchar(511), please wait...\n");
+				executeSQLFile("dbupgrade_url_type.sql");
+			}elsif(defined($line) && !$useLongUrls && (lc($line) =~ /url.*(varchar\(511\))/m)) {
+				$log->warn("CustomScan: Upgrading database changing type of url column to varchar(255), please wait...\n");
+				executeSQLFile("dbupgrade_url_type255.sql");
+			}
+			if(defined($line) && (lc($line) =~ /attr.*(varchar\(255\))/m)) {
+				$log->warn("CustomScan: Upgrading database changing type of attr column to varchar(40), please wait...\n");
+				executeSQLFile("dbupgrade_attr_type.sql");
+			}
+		}
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n$@\n");
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show create table tracks");
+	my $charset;
+	eval {
+		$log->debug("Checking charsets on tables\n");
+		$sth->execute();
+		my $line = undef;
+		$sth->bind_col( 2, \$line);
+		if( $sth->fetch() ) {
+			if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+				$charset = $1;
+				my $collate = '';
+				if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+					$collate = $1;
+				}elsif($line =~ /.*collate\s+([^\s\r\n]+).*/) {
+					$collate = $1;
+				}
+
+				$log->debug("Got tracks charset = $charset and collate = $collate\n");
+				
+				if(defined($charset)) {
+					
+					$sth->finish();
+					updateCharSet("customscan_contributor_attributes",$charset,$collate);
+					updateCharSet("customscan_album_attributes",$charset,$collate);
+					updateCharSet("customscan_track_attributes",$charset,$collate);
+				}
+			}
+		}
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n");
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_album_attributes;");
+	my $timeMeasure = Time::Stopwatch->new();
+
+	eval {
+		$log->debug("Checking if indexes is needed for customscan_album_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		my $foundValue = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}
+			if($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
+			}
+		}
+		if(!$foundMB) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No musicbrainzIndex index found in customscan_album_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_album_attributes (musicbrainz_id);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundValue) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No module_attr_value_idx index found in customscan_album_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_album_attributes (module,attr,value);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n$@\n");
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_contributor_attributes;");
+	eval {
+		$log->debug("Checking if indexes is needed for customscan_contributor_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		my $foundValue = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}elsif($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
+			}
+		}
+		if(!$foundMB) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No musicbrainzIndex index found in customscan_contributor_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_contributor_attributes (musicbrainz_id);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundValue) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No module_attr_value_idx index found in customscan_contributor_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_contributor_attributes (module,attr,value);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n$@\n");
+	}
+	$sth->finish();
+	$sth = $dbh->prepare("show index from customscan_track_attributes;");
+	eval {
+		$log->info("Checking if indexes is needed for customscan_track_attributes\n");
+		$sth->execute();
+		my $keyname;
+		$sth->bind_col( 3, \$keyname );
+		my $foundMB = 0;
+		my $foundUrl = 0;
+		my $foundValue = 0;
+		my $foundAttrModule = 0;
+		my $foundModuleAttrExtraValue = 0;
+		my $foundExtraValueAttrModuleTrack = 0;
+		my $foundTrackModuleAttrExtraValue = 0;
+		my $foundModuleAttrExtraValue = 0;
+		my $foundModuleAttrValueSort = 0;
+		while( $sth->fetch() ) {
+			if($keyname eq "musicbrainzIndex") {
+				$foundMB = 1;
+			}elsif($keyname eq "urlIndex") {
+				$foundUrl = 1;
+			}elsif($keyname eq "module_attr_value_idx") {
+				$foundValue = 1;
+			}elsif($keyname eq "attr_module_idx") {
+				$foundAttrModule = 1;
+			}elsif($keyname eq "extravalue_attr_module_track_idx") {
+				$foundExtraValueAttrModuleTrack = 1;
+			}elsif($keyname eq "track_module_attr_extravalue_idx") {
+				$foundTrackModuleAttrExtraValue = 1;
+			}elsif($keyname eq "module_attr_extravalue_idx") {
+				$foundModuleAttrExtraValue = 1;
+			}elsif($keyname eq "module_attr_valuesort_idx") {
+				$foundModuleAttrValueSort = 1;
+			}
+		}
+		if(!$foundMB) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No musicbrainzIndex index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index musicbrainzIndex on customscan_track_attributes (musicbrainz_id);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundUrl) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No urlIndex index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index urlIndex on customscan_track_attributes (url(255));") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("CustomScan: Index creation finished\n");
+			}
+		}
+		if(!$foundValue) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No module_attr_value_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_value_idx on customscan_track_attributes (module,attr,value);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundAttrModule) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No attr_module_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index attr_module_idx on customscan_track_attributes (attr,module);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundExtraValueAttrModuleTrack) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No extravalue_attr_module_track_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index extravalue_attr_module_track_idx on customscan_track_attributes (extravalue,attr,module,track);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("CustomScan: Index creation finished\n");
+			}
+		}
+		if(!$foundTrackModuleAttrExtraValue) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No track_module_attr_extravalue_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index track_module_attr_extravalue_idx on customscan_track_attributes (track,module,attr,extravalue);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundModuleAttrExtraValue) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No module_attr_extravalue_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_extravalue_idx on customscan_track_attributes (module,attr,extravalue);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+		if(!$foundModuleAttrValueSort) {
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->warn("CustomScan: No module_attr_valuesort_idx index found in customscan_track_attributes, creating index...\n");
+			eval { $dbh->do("create index module_attr_valuesort_idx on customscan_track_attributes (module,attr,valuesort);") };
+			if ($@) {
+				$log->error("Couldn't add index: $@\n");
+			}else {
+				$log->warn("Index created after ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
+		}
+	};
+	if( $@ ) {
+	    $log->error("Database error: $DBI::errstr\n$@\n");
+	}
+	$sth->finish();
+
+	if($prefs->get("refresh_startup")) {
+		refreshData();
+	}
+}
+
+sub updateCharSet {
+	my $table = shift;
+	my $charset = shift;
+	my $collate = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("show create table $table");
+	$sth->execute();
+	my $line = undef;
+	$sth->bind_col( 2, \$line);
+	if( $sth->fetch() ) {
+		if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+			my $table_charset = $1;
+			my $table_collate = '';
+			if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+				$table_collate = $1;
+			}
+			$log->debug("Got $table charset = $table_charset and collate = $table_collate\n");
+			if($charset ne $table_charset || ($collate && (!$table_collate || $collate ne $table_collate))) {
+				$log->warn("Converting $table to correct charset=$charset collate=$collate\n");
+				if(!$collate) {
+					eval { $dbh->do("alter table $table convert to character set $charset") };
+				}else {
+					eval { $dbh->do("alter table $table convert to character set $charset collate $collate") };
+				}
+				if ($@) {
+					$log->error("Couldn't convert charsets: $@\n");
+				}
+			}
+		}
+	}
+	$sth->finish();
+}
+
+sub executeSQLFile {
+        my $file  = shift;
+
+        my $sqlFile;
+	for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
+		opendir(DIR, catdir($plugindir,"CustomScan")) || next;
+       		$sqlFile = catdir($plugindir,"CustomScan", "SQL", "mysql", $file);
+       		closedir(DIR);
+       	}
+
+        $log->info("Executing SQL file $sqlFile\n");
+
+        open(my $fh, $sqlFile) or do {
+
+                $log->error("Couldn't open: $sqlFile : $!\n");
+                return;
+        };
+
+		my $dbh = getCurrentDBH();
+
+        my $statement   = '';
+        my $inStatement = 0;
+
+        for my $line (<$fh>) {
+                chomp $line;
+
+                # skip and strip comments & empty lines
+                $line =~ s/\s*--.*?$//o;
+                $line =~ s/^\s*//o;
+
+                next if $line =~ /^--/;
+                next if $line =~ /^\s*$/;
+
+                if ($line =~ /^\s*(?:CREATE|SET|INSERT|UPDATE|DELETE|DROP|SELECT|ALTER|DROP)\s+/oi) {
+                        $inStatement = 1;
+                }
+
+                if ($line =~ /;/ && $inStatement) {
+
+                        $statement .= $line;
+
+
+                        $log->debug("Executing SQL statement: [$statement]\n");
+
+                        eval { $dbh->do($statement) };
+
+                        if ($@) {
+                                $log->error("Couldn't execute SQL statement: [$statement] : [$@]\n");
+                        }
+
+                        $statement   = '';
+                        $inStatement = 0;
+                        next;
+                }
+
+                $statement .= $line if $inStatement;
+        }
+
+        commit($dbh);
+
+        close $fh;
 }
 
 sub shutdownScanner {
@@ -1268,6 +1718,7 @@ sub refreshData
 	my $count;
 	my $timeMeasure = Time::Stopwatch->new();
 	$timeMeasure->clear();
+	$log->warn("CustomScan: Synchronizing Custom Scan data, please wait...\n");
 
 	$timeMeasure->start();
 	$log->info("Starting to update musicbrainz id's in custom scan artist data based on names\n");
@@ -1496,6 +1947,7 @@ sub refreshData
 	$sth->finish();
 	$log->info("Finished updating custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	main::idleStreams();
+	$log->warn("CustomScan: Synchronization finished\n");
 	$timeMeasure->stop();
 	$timeMeasure->clear();
 }
