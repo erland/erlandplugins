@@ -1027,16 +1027,9 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
-
-	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
-sub lateInitPlugin {
-	Slim::Utils::Timers::setTimer(undef,time()+1,\&delayedLateInitPlugin);
-	return 0;
-}
-
-sub delayedLateInitPlugin {
+sub postinitPlugin {
 	eval {
 		getConfigManager();
 		getMenuHandler();
