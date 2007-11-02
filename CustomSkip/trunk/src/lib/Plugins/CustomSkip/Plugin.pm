@@ -1695,13 +1695,11 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['customskip','setsecondaryfilter', '_filterid'], [1, 0, 0, \&setCLISecondaryFilter]);
 	Slim::Control::Request::addDispatch(['customskip','clearfilter', '_filterid'], [1, 0, 0, \&clearCLIFilter]);
 	Slim::Control::Request::addDispatch(['customskip','clearsecondaryfilter', '_filterid'], [1, 0, 0, \&clearCLISecondaryFilter]);
-	Slim::Utils::Scheduler::add_task(\&lateInitPlugin);
 }
 
-sub lateInitPlugin {
+sub postinitPlugin {
 	initFilterTypes();
 	initFilters();
-	return 0;
 }
 
 sub title {
