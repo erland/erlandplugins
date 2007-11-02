@@ -3,8 +3,8 @@
 <div id="viewSelect"></div>
 [% END %]
 [% PROCESS plugins/CustomBrowse/iteminfo.html %]
-
-[%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
+[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
+[%- pwd_list = BLOCK -%]/
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
 		[% "PLUGIN_CUSTOMBROWSE" | string %]
