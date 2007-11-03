@@ -991,7 +991,7 @@ sub initPlugin {
 	}
 
 	my %submenu = (
-		'useMode' => 'PLUGIN.CustomBrowse',
+		'useMode' => 'PLUGIN.CustomBrowse.Browse',
 	);
 	my $menuName = $prefs->get('menuname');
 	if($menuName) {
