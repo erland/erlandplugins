@@ -105,6 +105,9 @@ $prefs->migrate(1, sub {
 	$prefs->set('favouritesname', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_favouritesname') || string('PLUGIN_DYNAMICPLAYLIST_FAVOURITES')  );
 	1;
 });
+$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'number_of_tracks'  );
+$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'skipped_tracks_retries'  );
+$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'number_of_old_tracks'  );
 
 sub getDisplayName {
 	return 'PLUGIN_DYNAMICPLAYLIST';
