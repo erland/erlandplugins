@@ -34,6 +34,12 @@ PLUGIN_CUSTOMBROWSE_WEB_CONTEXTNAME
 SETUP_PLUGIN_CUSTOMBROWSE_GROUP
 	EN	Custom Browse
 
+SETUP_PLUGIN_CUSTOMBROWSE_SECTION
+	EN	Settings Section
+
+SETUP_PLUGIN_CUSTOMBROWSE_SECTION_DESC
+	EN	Select a settings section
+
 SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC
 	EN	Custom Browse is a plugin which makes it possible to create your own menus
 
