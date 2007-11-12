@@ -26,6 +26,7 @@ use Slim::Utils::Unicode;
 use DBI qw(:sql_types);
 use Plugins::TrackStat::Storage;
 use Plugins::TrackStat::Amarok::Common;
+use Plugins::CustomScan::Validators;
 
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.trackstat',
@@ -90,7 +91,7 @@ sub getCustomScanFunctions {
 				'name' => 'Music path in SlimServer',
 				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
 				'type' => 'text',
-				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => ''
 			}
 		]

@@ -27,6 +27,7 @@ package Plugins::TrackStat::MusicMagic::Import;
 use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use DBI qw(:sql_types);
+use Plugins::CustomScan::Validators;
 
 my $prefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
@@ -89,7 +90,7 @@ sub getCustomScanFunctions {
 				'name' => 'Music path in SlimServer',
 				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
 				'type' => 'text',
-				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("musicmagic_library_music_path")
 			},
 			{

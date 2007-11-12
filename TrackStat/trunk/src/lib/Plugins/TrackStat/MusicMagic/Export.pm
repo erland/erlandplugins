@@ -29,6 +29,7 @@ use Slim::Utils::Misc;
 use Class::Struct;
 use POSIX qw(floor);
 use DBI qw(:sql_types);
+use Plugins::CustomScan::Validators;
 
 my $lastMusicMagicFinishTime = undef;
 my $lastMusicMagicDate = 0;
@@ -100,7 +101,7 @@ sub getCustomScanFunctions {
 				'name' => 'Music path in SlimServer',
 				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
 				'type' => 'text',
-				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("musicmagic_library_music_path")
 			},
 			{

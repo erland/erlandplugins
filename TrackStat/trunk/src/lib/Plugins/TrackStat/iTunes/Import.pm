@@ -33,6 +33,7 @@ use XML::Parser;
 use DBI qw(:sql_types);
 use Plugins::TrackStat::Storage;
 use Plugins::TrackStat::Plugin;
+use Plugins::CustomScan::Validators;
 
 if ($] > 5.007) {
 	require Encode;
@@ -106,7 +107,7 @@ sub getCustomScanFunctions {
 				'name' => 'iTunes Library XML file',
 				'description' => 'Full path to iTunes Music Library.xml file to read',
 				'type' => 'text',
-				'validate' => \&Slim::Utils::Validate::isFile,
+				'validate' => \&Plugins::CustomScan::Validators::isFile,
 				'value' => $prefs->get("itunes_library_file")
 			},
 			{
@@ -121,7 +122,7 @@ sub getCustomScanFunctions {
 				'name' => 'Music path in SlimServer',
 				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
 				'type' => 'text',
-				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("itunes_library_music_path")
 			},
 			{

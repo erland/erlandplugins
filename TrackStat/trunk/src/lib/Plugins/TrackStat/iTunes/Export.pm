@@ -36,6 +36,7 @@ use DBI qw(:sql_types);
 use Plugins::TrackStat::Plugin;
 use Plugins::TrackStat::Storage;
 use Slim::Utils::Misc;
+use Plugins::CustomScan::Validators;
 
 my $prefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
@@ -62,7 +63,7 @@ sub getCustomScanFunctions {
 				'name' => 'Output directory',
 				'description' => 'Full path to the directory to write the export to',
 				'type' => 'text',
-				'validate' => \&Slim::Utils::Validate::isDir,
+				'validate' => \&Plugins::CustomScan::Validators::isDir,
 				'value' => defined($prefs->get("itunes_export_dir"))?$prefs->get("itunes_export_dir"):$serverPrefs->get('playlistdir')
 			},
 			{
@@ -84,7 +85,7 @@ sub getCustomScanFunctions {
 				'name' => 'Music path in SlimServer',
 				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
 				'type' => 'text',
-				'validate' => \&Plugins::TrackStat::Plugin::validateIsDirOrEmpty,
+				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("itunes_library_music_path")
 			},
 			{
