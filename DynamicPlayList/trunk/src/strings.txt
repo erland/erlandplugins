@@ -42,6 +42,12 @@ PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_OLD_TRACKS
 	EN	recently played songs.
 	DA	fornylig afspillede sange.
 
+SETUP_PLUGIN_DYNAMICPLAYLIST_SECTION
+	EN	Settings Section
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_SECTION_DESC
+	EN	Select a settings section
+
 SETUP_PLUGIN_DYNAMICPLAYLIST_GROUP
 	EN	Dynamic PlayLists
 	DA	Dynamiske playlister
