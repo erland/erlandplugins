@@ -56,7 +56,7 @@ do {
 				$playCount = $2;
 			}
 			if($playCount =~ /^(.*?)\|(.*)$/) {
-				$rating = $1;
+				$playCount = $1;
 				$added = $2;
 			}
 			if ($played eq 'played' or $rating ne '' or $added ne '') {
@@ -147,9 +147,10 @@ sub _logTrackToiTunesWin($%)
 			iTunesUpdateMsg("Updating rating in iTunes\n");
 			$status = $trackHandle->{rating} = $data{rating};
 		}
-		if($data{added} ne "") {
-			$status = $trackHandle->{dateAdded} = $data{added};
-		}
+		#iTunes doesn't support to write to the dateAdded field so this will not work
+		#if($data{added} ne "") {
+		#	$status = $trackHandle->{dateAdded} = $data{added};
+		#}
 	} else {
 		iTunesUpdateMsg("Track not found in iTunes\n");
 	}
