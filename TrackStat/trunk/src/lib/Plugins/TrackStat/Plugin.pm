@@ -54,12 +54,6 @@ use Scalar::Util qw(blessed);
 
 use FindBin qw($Bin);
 use Time::Stopwatch;
-use Plugins::TrackStat::iTunes::Import;
-use Plugins::TrackStat::iTunes::Export;
-use Plugins::TrackStat::MusicMagic::Import;
-use Plugins::TrackStat::MusicMagic::Export;
-use Plugins::TrackStat::Amarok::Export;
-use Plugins::TrackStat::Amarok::Import;
 use Plugins::TrackStat::Backup::File;
 use Plugins::TrackStat::Storage;
 
@@ -1713,6 +1707,12 @@ sub checkCustomSkipFilterType {
 
 sub getCustomScanFunctions {
 	my @result = ();
+	eval "use Plugins::TrackStat::iTunes::Import";
+	eval "use Plugins::TrackStat::iTunes::Export";
+	eval "use Plugins::TrackStat::MusicMagic::Import";
+	eval "use Plugins::TrackStat::MusicMagic::Export";
+	eval "use Plugins::TrackStat::Amarok::Export";
+	eval "use Plugins::TrackStat::Amarok::Import";
 	push @result,Plugins::TrackStat::Amarok::Export::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::Amarok::Import::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::MusicMagic::Export::getCustomScanFunctions();
@@ -2281,6 +2281,17 @@ sub initPlugin
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
+}
+
+sub postinitPlugin {
+	if(isPluginsInstalled(undef,"CustomScan::Plugin")) {
+		eval "use Plugins::TrackStat::iTunes::Import";
+		eval "use Plugins::TrackStat::iTunes::Export";
+		eval "use Plugins::TrackStat::MusicMagic::Import";
+		eval "use Plugins::TrackStat::MusicMagic::Export";
+		eval "use Plugins::TrackStat::Amarok::Export";
+		eval "use Plugins::TrackStat::Amarok::Import";
+	}
 }
 
 sub checkAndPerformScheduledBackup {
