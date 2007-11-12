@@ -65,6 +65,7 @@ $prefs->migrate(1, sub {
 	$prefs->set('global_skipping', Slim::Utils::Prefs::OldPrefs->get('plugin_customskip_global_skipping'));
 	1;
 });
+$prefs->setValidate('dir','directory');
 	
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMSKIP';
@@ -3001,106 +3002,6 @@ sub checkDefaults {
 	}
 }
 
-sub setupGroup
-{
-	my %setupGroup =
-	(
-	 PrefOrder => ['plugin_customskip_directory','plugin_customskip_web_show_mixerlinks','plugin_customskip_enable_mixerfunction','plugin_customskip_global_skipping','plugin_customskip_showmessages'],
-	 GroupHead => string('PLUGIN_CUSTOMSKIP_SETUP_GROUP'),
-	 GroupDesc => string('PLUGIN_CUSTOMSKIP_SETUP_GROUP_DESC'),
-	 GroupLine => 1,
-	 GroupSub  => 1,
-	 Suppress_PrefSub  => 1,
-	 Suppress_PrefLine => 1
-	);
-	my %setupPrefs =
-	(
-	plugin_customskip_showmessages => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMSKIP_SHOW_MESSAGES')
-			,'changeIntro' => string('PLUGIN_CUSTOMSKIP_SHOW_MESSAGES')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customskip_showmessages"); }
-		},		
-	plugin_customskip_global_skipping => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING')
-			,'changeIntro' => string('PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customskip_global_skipping"); }
-		},		
-	plugin_customskip_web_show_mixerlinks => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS')
-			,'changeIntro' => string('PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customskip_web_show_mixerlinks"); }
-		},
-	plugin_customskip_enable_mixerfunction => {
-			'validate'     => \&validateTrueFalseWrapper
-			,'PrefChoose'  => string('PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION')
-			,'changeIntro' => string('PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customskip_enable_mixerfunction"); }
-		},
-	plugin_customskip_directory => {
-			'validate' => \&validateIsDirWrapper
-			,'PrefChoose' => string('PLUGIN_CUSTOMSKIP_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_CUSTOMSKIP_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_customskip_directory"); }
-		},
-	);
-	return (\%setupGroup,\%setupPrefs);
-}
-
-sub validateIntWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isInt($arg);
-	}else {
-		return Slim::Web::Setup::validateInt($arg);
-	}
-}
-
-sub validateTrueFalseWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::trueFalse($arg);
-	}else {
-		return Slim::Web::Setup::validateTrueFalse($arg);
-	}
-}
-
-sub validateAcceptAllWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::acceptAll($arg);
-	}else {
-		return Slim::Web::Setup::validateAcceptAll($arg);
-	}
-}
-
-sub validateIsDirWrapper {
-	my $arg = shift;
-	if ($::VERSION ge '6.5') {
-		return Slim::Utils::Validate::isDir($arg);
-	}else {
-		return Slim::Web::Setup::validateIsDir($arg);
-	}
-}
 
 sub fisher_yates_shuffle {
     my $myarray = shift;  
@@ -3111,14 +3012,6 @@ sub fisher_yates_shuffle {
 	        @$myarray[$i,$j] = @$myarray[$j,$i];
 	    }
     }
-}
-
-sub validateIntOrEmpty {
-	my $arg = shift;
-	if(!$arg || $arg eq '' || $arg =~ /^\d+$/) {
-		return $arg;
-	}
-	return undef;
 }
 
 sub getCurrentDBH {
