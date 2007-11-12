@@ -72,6 +72,8 @@ $prefs->migrate(1, sub {
 	}
 	1;
 });
+$prefs->setValidate('dir', 'library_directory'  );
+$prefs->setValidate('dir', 'template_directory'  );
 
 # Information on each clients multilibrary
 my $htmlTemplate = 'plugins/MultiLibrary/multilibrary_list.html';
@@ -1513,109 +1515,6 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		$prefs->set('download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
 	}
-}
-
-sub setupGroup
-{
-	my %setupGroup =
-	(
-	 PrefOrder => ['plugin_multilibrary_library_directory','plugin_multilibrary_template_directory','plugin_multilibrary_refresh_save','plugin_multilibrary_refresh_rescan','plugin_multilibrary_refresh_startup','plugin_multilibrary_question_startup','plugin_multilibrary_custombrowse_menus','plugin_multilibrary_utf8filenames','plugin_multilibrary_showmessages'],
-	 GroupHead => string('PLUGIN_MULTILIBRARY_SETUP_GROUP'),
-	 GroupDesc => string('PLUGIN_MULTILIBRARY_SETUP_GROUP_DESC'),
-	 GroupLine => 1,
-	 GroupSub  => 1,
-	 Suppress_PrefSub  => 1,
-	 Suppress_PrefLine => 1
-	);
-	my %setupPrefs =
-	(
-	plugin_multilibrary_showmessages => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_SHOW_MESSAGES')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_SHOW_MESSAGES')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_showmessages"); }
-		},		
-	plugin_multilibrary_refresh_rescan => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_RESCAN')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_rescan"); }
-		},		
-	plugin_multilibrary_refresh_startup => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_STARTUP')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_startup"); }
-		},		
-	plugin_multilibrary_question_startup => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_QUESTION_STARTUP')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_question_startup"); }
-		},		
-	plugin_multilibrary_refresh_save => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_REFRESH_SAVE')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_refresh_save"); }
-		},		
-	plugin_multilibrary_custombrowse_menus => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_custombrowse_menus"); }
-		},		
-	plugin_multilibrary_utf8filenames => {
-			'validate'     => \&Slim::Utils::Validate::trueFalse
-			,'PrefChoose'  => string('PLUGIN_MULTILIBRARY_UTF8FILENAMES')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_UTF8FILENAMES')
-			,'options' => {
-					 '1' => string('ON')
-					,'0' => string('OFF')
-				}
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_utf8filenames"); }
-		},
-	plugin_multilibrary_library_directory => {
-			'validate' => \&Slim::Utils::Validate::isDir
-			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_LIBRARY_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_library_directory"); }
-		},
-	plugin_multilibrary_template_directory => {
-			'validate' => \&Slim::Utils::Validate::isDir
-			,'PrefChoose' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
-			,'changeIntro' => string('PLUGIN_MULTILIBRARY_TEMPLATE_DIRECTORY')
-			,'PrefSize' => 'large'
-			,'currentValue' => sub { return Slim::Utils::Prefs::get("plugin_multilibrary_template_directory"); }
-		},
-	);
-	getConfigManager()->initWebAdminMethods();
-	return (\%setupGroup,\%setupPrefs);
 }
 
 
