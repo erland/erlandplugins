@@ -40,8 +40,14 @@ PLUGIN_TRACKSTAT_LAST_PLAYED
 PLUGIN_TRACKSTAT_PLAY_COUNT
 	EN	Play Count:
 	
+SETUP_PLUGIN_TRACKSTAT_SECTION
+	EN	Settings Section
+
+SETUP_PLUGIN_TRACKSTAT_SECTION_DESC
+	EN	Select a settings section
+
 SETUP_PLUGIN_TRACKSTAT_GROUP
-	EN	TrackStat settings
+	EN	TrackStat
 
 SETUP_PLUGIN_TRACKSTAT_GROUP_DESC
 	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes, MusicIP and Amarok.
