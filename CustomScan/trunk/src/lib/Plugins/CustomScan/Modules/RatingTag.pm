@@ -25,6 +25,7 @@ use Slim::Utils::Misc;
 use MP3::Info;
 use POSIX qw(floor);
 use Slim::Utils::Prefs;
+use Plugins::CustomScan::Validators;
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
@@ -63,7 +64,7 @@ sub getCustomScanFunctions {
 				'name' => 'Max rating value',
 				'description' => 'The value of maximum rating in the scanned tag, this is used to convert the rating to a value between 0-100 to be stored in SlimServer',
 				'type' => 'text',
-				'validate' => \&Slim::Utils::Validate::isInt,
+				'validate' => \&Plugins::CustomScan::Validators::isInt,
 				'value' => 100
 			}
 		]

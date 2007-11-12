@@ -22,7 +22,6 @@ use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
-use Slim::Utils::Validate;
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 use Plugins::CustomScan::Time::Stopwatch;

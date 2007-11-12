@@ -29,6 +29,7 @@ use XML::Simple;
 use Text::Unidecode;
 use POSIX qw(ceil);
 use Slim::Utils::Prefs;
+use Plugins::CustomScan::Validators;
 my $prefs = preferences('plugin.customscan');
 
 my $lastCalled = undef;
@@ -60,7 +61,7 @@ sub getCustomScanFunctions {
 				'id' => 'amazonmaxsubjectlength',
 				'name' => 'Ignore genres longer than',
 				'type' => 'text',
-				'validate' => \&Slim::Utils::Validate::isInt,
+				'validate' => \&Plugins::CustomScan::Validators::isInt,
 				'value' => 40
 			},
 			{

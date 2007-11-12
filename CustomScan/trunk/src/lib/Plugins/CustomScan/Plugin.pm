@@ -35,7 +35,6 @@ use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
-use Slim::Utils::Validate;
 use POSIX qw(ceil);
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
@@ -81,6 +80,8 @@ $prefs->migrate(1, sub {
 	$prefs->set('properties', \%propertiesHash);
 	1;
 });
+$prefs->setValidate('array','titleformats');
+$prefs->setValidate('hash','properties');
 
 sub getDisplayName {
 	return 'PLUGIN_CUSTOMSCAN';
@@ -629,51 +630,6 @@ sub getCustomScanProperty {
 sub getCustomScanProperties {
 	my $result = $prefs->get('properties');
 	return $result;
-}
-
-sub validateProperty {
-	my $arg = shift;
-	if($arg eq '' || $arg =~ /^[a-zA-Z0-9_]+\s*=\s*.+$/) {
-		return $arg;
-	}else {
-		return undef;
-	}
-}
-
-sub validateIntWrapper {
-	my $arg = shift;
-	return Slim::Utils::Validate::isInt($arg);
-}
-
-sub validateTrueFalseWrapper {
-	my $arg = shift;
-	return Slim::Utils::Validate::trueFalse($arg);
-}
-
-sub validateProperty {
-	my $arg = shift;
-	if($arg eq '' || $arg =~ /^[a-zA-Z0-9]+\s*=\s*.+$/) {
-		return $arg;
-	}else {
-		return undef;
-	}
-}
-sub validateIsDirWrapper {
-	my $arg = shift;
-	return Slim::Utils::Validate::isDir($arg);
-}
-
-sub validateAcceptAllWrapper {
-	my $arg = shift;
-	return Slim::Utils::Validate::acceptAll($arg);
-}
-
-sub validateIntOrEmpty {
-	my $arg = shift;
-	if(!$arg || $arg eq '' || $arg =~ /^\d+$/) {
-		return $arg;
-	}
-	return undef;
 }
 
 sub cliGetStatus {
