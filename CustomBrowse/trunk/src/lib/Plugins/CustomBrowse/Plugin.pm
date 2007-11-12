@@ -144,6 +144,12 @@ $prefs->migrate(1, sub {
 	1;
 });
 
+$prefs->setValidate('dir', 'menu_directory');
+$prefs->setValidate('dir', 'template_directory');
+$prefs->setValidate('dir', 'context_template_directory');
+$prefs->setValidate('dir', 'image_cache');
+$prefs->setValidate('hash','properties');
+
 sub getDisplayName {
 	my $menuName = $prefs->get('menuname');
 	if($menuName) {
@@ -1027,6 +1033,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixesjive'], [1, 1, 1, \&cliJiveMixesHandler]);
 }
 
 sub postinitPlugin {
@@ -1045,62 +1052,22 @@ sub postinitPlugin {
 sub registerJiveMenu {
 	my $client = shift;
 	my @menuItems = ();
-	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'jive');
-        for my $menu (@$menus) {
-		my $name = getMenuHandler()->getItemText($client,$menu);
-		my $menuitem = {
-			text => $name,
-			actions => {
-				go => {
-					cmd => ['custombrowse', 'browsejive'],
-					params => {
-						hierarchy => $menu->{'id'},
-					},
-				},
-			},
-		};
-		if(defined($menu->{'menu'})) {
-			my @submenus = ();
-			if(ref($menu->{'menu'}) eq 'ARRAY') {
-				my $m = $menu->{'menu'};
-				@submenus = @$m;
-			}else {
-				push @submenus,$menu->{'menu'};
-			}
-			my $mode = 0;
-			foreach my $submenu (@submenus) {
-				if(defined($submenu->{'menutype'}) && $submenu->{'menutype'} eq 'mode') {
-					$mode = 1;
-					last;
-				}
-			}
-			if($mode) {
-				$menuitem->{'style'} = 'noItemAction';
-			}
-		}elsif(!defined($menu->{'menufunction'})) {
-			$menuitem->{'style'} = 'noItemAction';
-		}
-		if(ref($menu->{'menu'}) ne 'ARRAY' && defined($menu->{'menu'}->{'itemtype'}) && $menu->{'menu'}->{'itemtype'} eq 'album') {
-			$menuitem->{'window'} = {menuStyle=>'album'};
-		}
-		push @menuItems,$menuitem;
-	}
 	if(!defined($jiveMenu)) {
 		$jiveMenu = {
 			text => Slim::Utils::Strings::string(getDisplayName()),
-			count => scalar(@menuItems),
 			offset => 0,
 			weight => 95,
 			window => { titleStyle => 'mymusic'},
-			item_loop => \@menuItems,
+			actions => {
+				'go' => {
+					'cmd' => ['custombrowse', 'browsejive'],
+				},
+			},
 		};
 		Slim::Control::Jive::registerPluginMenu($jiveMenu,'extras');
 		if($prefs->get('menuinsidebrowse')) {
 			Slim::Control::Jive::registerPluginMenu($jiveMenu,'mymusic');
 		}
-	}else {
-		$jiveMenu->{count} = scalar(@menuItems);
-		$jiveMenu->{item_loop} = \@menuItems;
 	}
 }
 
@@ -2811,46 +2778,6 @@ sub cliJiveHandler {
 			},
 		}
 	};
-	if(defined($currentContext) && defined($currentContext->{'item'}->{'menu'})) {
-		my $menuRef = $currentContext->{'item'}->{'menu'};
-		my @menus = ();
-		if(ref($menuRef) eq 'ARRAY') {
-			@menus = @$menuRef;
-		}else {
-			push @menus,$menuRef;
-		}
-		my $itemtype = undef;
-		foreach my $submenu (@menus) {
-			if(defined($submenu->{'menu'})) {
-				$menuRef = $submenu->{'menu'};
-				my @submenus = ();
-				if(ref($menuRef) eq 'ARRAY') {
-					@submenus = @$menuRef;
-				}else {
-					push @submenus,$menuRef;
-				}
-				foreach my $nextmenu (@submenus) {
-					if(defined($nextmenu->{'itemtype'})) {
-						if(!defined($itemtype)) {
-							$itemtype = $nextmenu->{'itemtype'};
-						}elsif($itemtype ne $nextmenu->{'itemtype'}) {
-							$itemtype = "NOTUSED";
-						}
-					}
-				}
-			}
-		}
-		if($itemtype eq 'album') {
-			$baseMenu->{'window'} = {'menuStyle' => 'album'};
-			if($menuResult->{'artwork'}) {
-				$baseMenu->{'window'}->{'titleStyle'} = 'album';
-			}
-		}elsif($menuResult->{'artwork'}) {
-			$baseMenu->{'window'} = {'titleStyle'=> 'album'};
-		}
-	}elsif($menuResult->{'artwork'}) {
-		$baseMenu->{'window'} = {'titleStyle' => 'album'};
-	}
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
@@ -2861,12 +2788,50 @@ sub cliJiveHandler {
 		}else {
 			$name = $item->{'itemname'};
 		}
+
+		my $itemtype = undef;
+		if(defined($item->{'menu'})) {
+			my $menuRef = $item->{'menu'};
+			my @submenus = ();
+			if(ref($menuRef) eq 'ARRAY') {
+				@submenus = @$menuRef;
+			}else {
+				push @submenus,$menuRef;
+			}
+			foreach my $nextmenu (@submenus) {
+				if(defined($nextmenu->{'itemtype'})) {
+					if(!defined($itemtype)) {
+						$itemtype = $nextmenu->{'itemtype'};
+					}elsif($itemtype ne $nextmenu->{'itemtype'}) {
+						$itemtype = "NOTUSED";
+					}
+				}
+			}
+		}
+		if(defined($itemtype) && $itemtype eq 'album') {
+			if($menuResult->{'artwork'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'menuStyle' => 'album'});
+			}else {
+				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album'});
+			}
+		}elsif($menuResult->{'artwork'}) {
+			$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album'});
+		}
+
 		my %itemParams = ();
 		if(defined($item->{'contextid'})) {
-			$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'contextid'};
+			if(defined($params->{'hierarchy'}) && $params->{'hierarchy'} ne '') {
+				$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'contextid'};
+			}else {
+				$itemParams{'hierarchy'} = $item->{'contextid'};
+			}
 			$itemParams{$item->{'contextid'}} = $item->{'itemid'};
 		}else {
-			$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'id'};
+			if(defined($params->{'hierarchy'}) && $params->{'hierarchy'} ne '') {
+				$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'id'};
+			}else {
+				$itemParams{'hierarchy'} = $item->{'id'};
+			}
 			$itemParams{$item->{'id'}} = $item->{'itemid'};
 		}
 		if($item->{'playtype'} eq 'none') {
@@ -2935,6 +2900,111 @@ sub cliJiveHandler {
 
 	$request->setStatusDone();
 	$log->debug("Exiting cliJiveHandler\n");
+}
+
+sub cliJiveMixesHandler {
+	$log->debug("Entering cliJiveHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['custombrowse'],['mixesjive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJiveMixesHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveMixesHandler\n");
+		return;
+	}
+
+	if(!$browseMenusFlat) {
+		readBrowseConfiguration($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	$log->debug("Starting to prepare CLI mixes command\n");
+	$params->{'hierarchy'} =~ s/^(.*)(,.+?)$/$1/;
+	my $attr = $2;
+	$attr =~ s/^,(.*)$/$1/;
+	my $itemid = $params->{$attr};
+	my $menuResult = undef;
+	$params->{'start'}=0;
+	$params->{'itemsperpage'}=100000;
+	$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
+
+	if(defined($menuResult) && defined($menuResult->{'items'})) {
+		my $items = $menuResult->{'items'};
+		foreach my $item (@$items) {
+			if($item->{'itemid'} eq $itemid) {
+				if(defined($item->{'mixes'})) {
+					my %baseParams = ();
+					foreach my $param (keys %$params) {
+						if($param ne 'hierarchy' && $param ne 'start' && $param ne 'itemsperpage' && $param !~ /^_/) {
+							$baseParams{$param} = $params->{$param};
+						}
+					}
+
+					my $baseMenu = {
+						'actions' => {
+							'go' => {
+								'cmd' => ['custombrowse', 'mixjive'],
+								'params' => \%baseParams,
+								'itemsParams' => 'params',
+							},
+							'add' => {
+								'cmd' => ['custombrowse', 'mixjive'],
+								'params' => \%baseParams,
+								'itemsParams' => 'params',
+							},
+							'play' => {
+								'cmd' => ['custombrowse', 'mixjive'],
+								'params' => \%baseParams,
+								'itemsParams' => 'params',
+							},
+						},
+					};
+					$request->addResult('base',$baseMenu);
+
+
+					my $mixes = $item->{'mixes'};
+				  	$request->addResult('count',scalar(@$mixes));
+				  	$request->addResult('offset',0);
+					my $mixno = 0;
+					for my $mix (@$mixes) {
+						my %itemParams = ();
+						if(defined($item->{'contextid'})) {
+							if(defined($params->{'hierarchy'}) && $params->{'hierarchy'} ne '') {
+								$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'contextid'};
+							}else {
+								$itemParams{'hierarchy'} = $item->{'contextid'};
+							}
+							$itemParams{$item->{'contextid'}} = $item->{'itemid'};
+						}else {
+							if(defined($params->{'hierarchy'}) && $params->{'hierarchy'} ne '') {
+								$itemParams{'hierarchy'} = $params->{'hierarchy'}.','.$item->{'id'};
+							}else {
+								$itemParams{'hierarchy'} = $item->{'id'};
+							}
+							$itemParams{$item->{'id'}} = $item->{'itemid'};
+						}
+						$itemParams{'mixid'} = $mix->{'id'};
+						$request->addResultLoop('item_loop',$mixno,'params',\%itemParams);
+
+					  	$request->addResultLoop('item_loop',$mixno,'text',$mix->{'name'});
+						$mixno++;
+
+					}
+				}
+				last;
+			}
+		}
+	}
+
+	$request->setStatusDone();
+	$log->debug("Exiting cliJiveMixesHandler\n");
 }
 
 sub cliHandler {
