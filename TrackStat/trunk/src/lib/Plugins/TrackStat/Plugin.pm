@@ -54,6 +54,7 @@ use Scalar::Util qw(blessed);
 
 use FindBin qw($Bin);
 use Time::Stopwatch;
+use File::Basename qw(dirname);
 use Plugins::TrackStat::Backup::File;
 use Plugins::TrackStat::Storage;
 
@@ -136,7 +137,7 @@ $prefs->migrate(1, sub {
 	$prefs->set('long_urls',  Slim::Utils::Prefs::OldPrefs->get('plugin_trackstat_long_urls'));
 	1;
 });
-$prefs->setValidate('file', 'backup_file'  );
+$prefs->setValidate({'validator' => \&isWritableFile }, 'backup_file'  );
 $prefs->setValidate('dir', 'backup_dir'  );
 $prefs->setValidate({ 'validator' => \&isTimeOrEmpty }, 'backup_time'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'recent_number_of_days'  );
@@ -3671,6 +3672,8 @@ sub backupToFile()
 	}
 	if($backupfile) {
 		Plugins::TrackStat::Backup::File::backupToFile($backupfile);
+	}else {
+		$log->error("No backup file specified\n");
 	}
 }
 
@@ -3679,6 +3682,8 @@ sub restoreFromFile()
 	my $backupfile = $prefs->get("backup_file");
 	if($backupfile) {
 		Plugins::TrackStat::Backup::File::restoreFromFile($backupfile);
+	}else {
+		$log->error("No backup file specified\n");
 	}
 }
 
@@ -3766,10 +3771,23 @@ sub getLinkAttribute {
 }
 
 sub isTimeOrEmpty {
+        my $name = shift;
         my $arg = shift;
         if(!$arg || $arg eq '') {
                 return $arg;
         }elsif ($arg =~ m/^([0\s]?[0-9]|1[0-9]|2[0-4]):([0-5][0-9])\s*(P|PM|A|AM)?$/isg) {
+                return $arg;
+
+        }
+	return undef;
+}
+
+sub isWritableFile {
+        my $name = shift;
+        my $arg = shift;
+        if(!$arg || $arg eq '') {
+                return $arg;
+        }elsif (-e dirname($arg) && !-d $arg) {
                 return $arg;
 
         }

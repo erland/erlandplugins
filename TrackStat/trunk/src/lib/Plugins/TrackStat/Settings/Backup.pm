@@ -64,36 +64,70 @@ sub prefs {
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;
-
 	my $result = undef;
+	my $callHandler = 1;
 	if ($paramRef->{'saveSettings'}) {
 		$result = $class->SUPER::handler($client, $paramRef);
-	}elsif($paramRef->{'refresh_tracks'}) {
-		$paramRef->{'saveSettings'} = 1;
-		$result = $class->SUPER::handler($client, $paramRef);
-		Plugins::TrackStat::Storage::refreshTracks();
+		$callHandler = 0;
+	}
+	if($paramRef->{'refresh_tracks'}) {
+		if($callHandler) {
+			$paramRef->{'saveSettings'} = 1;
+			$result = $class->SUPER::handler($client, $paramRef);
+		}
+		if(validatedOk($paramRef)) {
+			Plugins::TrackStat::Storage::refreshTracks();
+		}
 	}elsif($paramRef->{'purge_tracks'}) {
-		$paramRef->{'saveSettings'} = 1;
-		$result = $class->SUPER::handler($client, $paramRef);
-		Plugins::TrackStat::Storage::purgeTracks();
+		if($callHandler) {
+			$paramRef->{'saveSettings'} = 1;
+			$result = $class->SUPER::handler($client, $paramRef);
+		}
+		if(validatedOk($paramRef)) {
+			Plugins::TrackStat::Storage::purgeTracks();
+		}
 	}elsif($paramRef->{'clear'}) {
-		$paramRef->{'saveSettings'} = 1;
-		$result = $class->SUPER::handler($client, $paramRef);
-		Plugins::TrackStat::Storage::deleteAllTracks();
+		if($callHandler) {
+			$paramRef->{'saveSettings'} = 1;
+			$result = $class->SUPER::handler($client, $paramRef);
+		}
+		if(validatedOk($paramRef)) {
+			Plugins::TrackStat::Storage::deleteAllTracks();
+		}
 	}elsif($paramRef->{'restore'}) {
-		$paramRef->{'saveSettings'} = 1;
-		$result = $class->SUPER::handler($client, $paramRef);
-		Plugins::TrackStat::Plugin::restoreFromFile();
+		if($callHandler) {
+			$paramRef->{'saveSettings'} = 1;
+			$result = $class->SUPER::handler($client, $paramRef);
+		}
+		if(validatedOk($paramRef)) {
+			Plugins::TrackStat::Plugin::restoreFromFile();
+		}
 	}elsif($paramRef->{'backup'}) {
-		$paramRef->{'saveSettings'} = 1;
-		$result = $class->SUPER::handler($client, $paramRef);
-		Plugins::TrackStat::Plugin::backupToFile();
-	}else {
+		if($callHandler) {
+			$paramRef->{'saveSettings'} = 1;
+			$result = $class->SUPER::handler($client, $paramRef);
+		}
+		if(validatedOk($paramRef)) {
+			Plugins::TrackStat::Plugin::backupToFile();
+		}
+	}elsif($callHandler) {
 		$result = $class->SUPER::handler($client, $paramRef);
 	}
 		
 	return $result;
 }
 
-		
+sub validatedOk {
+	my $paramRef = shift;
+	if(defined($paramRef->{'validated'})) {
+		my $validatedPrefs = $paramRef->{'validated'};
+		for my $p (keys %$validatedPrefs) {
+			if(!$validatedPrefs->{$p}) {
+				return 0;
+			}
+		}
+	}
+	return 1;
+	
+}		
 1;

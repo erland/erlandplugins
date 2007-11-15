@@ -150,7 +150,7 @@ sub backupToFile
 sub restoreFromFile
 {
 	$backupFile = shift;
-	$log->info("Restore from: $backupFile\n");
+	$log->warn("Restore from: $backupFile\n");
 	$isScanning = 1;
 	$backupParser = XML::Parser->new(
 		'ErrorContext'     => 2,
