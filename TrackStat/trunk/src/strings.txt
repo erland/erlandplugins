@@ -68,7 +68,7 @@ SETUP_PLUGIN_TRACKSTAT_LONG_URLS
 	EN	Long paths support
 
 SETUP_PLUGIN_TRACKSTAT_LONG_URLS_DESC
-	EN	 This will activate support for longer paths,  if not enabled only urls up to 255 characters is supported, with this option is supports urls with 511 characters. <br>Note! You will have to restart SlimServer for this option to take effect.
+	EN	 This will activate support for longer paths,  if not enabled only urls up to 255 characters is supported, with this option is supports urls with 511 characters. <br>Note! You will have to restart SqueezeCenter for this option to take effect.
 
 PLUGIN_TRACKSTAT_DEEP_HIERARCHY
 	EN	Group statistics into deep group hierarchy
@@ -77,7 +77,7 @@ SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY
 	EN	Group statistics into deep group hierarchy
 
 SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY_DESC
-	EN	This will create a deeper group hierarchy making the groups a little smaller
+	EN	This will create a deeper group hierarchy making the groups a little smaller.<br>Note! This setting will not take effect until you restart SqueezeCenter.
 
 PLUGIN_TRACKSTAT_WEB_FLATLIST
 	EN	Group statistics into groups
@@ -113,16 +113,16 @@ SETUP_PLUGIN_TRACKSTAT_REFRESH_STARTUP
 	EN	Startup refresh
 
 SETUP_PLUGIN_TRACKSTAT_REFRESH_STARTUP_DESC
-	EN	This will activate/deactivate the refresh statistic operation at slimserver startup, the only reason to turn this if is if you get performance issues with refresh statistics
+	EN	This will activate/deactivate the refresh statistic operation at SqueezeCenter startup, the only reason to turn this if is if you get performance issues with refresh statistics
 
 PLUGIN_TRACKSTAT_REFRESH_RESCAN
 	EN	Rescan refresh
 
 SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN
-	EN	Rescan refresh (slimserver 6.5 only)
+	EN	Rescan refresh
 
 SETUP_PLUGIN_TRACKSTAT_REFRESH_RESCAN_DESC
-	EN	This will activate/deactivate the automatic refresh statistic operation after a rescan has been performed in slimserver, the only reason to turn this if is if you get performance issues with refresh statistics.<br>Note! This parameter does only have effect if you run slimserver 6.5
+	EN	This will activate/deactivate the automatic refresh statistic operation after a rescan has been performed in SqueezeCenter, the only reason to turn this if is if you get performance issues with refresh statistics.
 
 PLUGIN_TRACKSTAT_HISTORY_ENABLED
 	EN	Enable/disable History
@@ -227,7 +227,7 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE
 	EN	Backup file
 
 SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE_DESC
-	EN	File used for TrackStat information backup. This file must be in a place where the user which is running slimserver has read/write access.
+	EN	File used for TrackStat information backup. This file must be in a place where the user which is running SqueezeCenter has read/write access.
 
 PLUGIN_TRACKSTAT_BACKUP_DIR
 	EN	Backup dir
@@ -236,7 +236,7 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR
 	EN	Backup dir
 
 SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR_DESC
-	EN	Directory used for scheduled backups of TrackStat information. This directory must be in a place where the user which is running slimserver has read/write access.
+	EN	Directory used for scheduled backups of TrackStat information. This directory must be in a place where the user which is running SqueezeCenter has read/write access.
 
 PLUGIN_TRACKSTAT_BACKUP_TIME
 	EN	Backup time
@@ -374,7 +374,7 @@ SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS
 	EN	Show MusicIP mixer links
 
 SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS_DESC
-	EN	Show MusicIP mixer links in TrackStat pages, requires that MusicMagic plugin is enabled and configured to be used in SlimServer
+	EN	Show MusicIP mixer links in TrackStat pages, requires that MusicMagic plugin is enabled and configured to be used in SqueezeCenter
 
 PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS
 	EN	Show MusicIP mixer links
@@ -383,7 +383,7 @@ SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION
 	EN	Show TrackStat buttons on web
 
 SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION_DESC
-	EN	Show TrackStat buttons in browse pages in web interface.<br>Note! Slimserver may have to be restarted for this to take effect
+	EN	Show TrackStat buttons in browse pages in web interface.<br>Note! SqueezeCenter may have to be restarted for this to take effect
 
 PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION
 	EN	Show TrackStat buttons on web
@@ -392,7 +392,7 @@ SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION
 	EN	Enable TrackStat play+hold
 
 SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION_DESC
-	EN	Enable TrackStat play+hold action with remote when browsing music on SqueezeBox.<br>Note! Slimserver may have to be restarted for this to take effect
+	EN	Enable TrackStat play+hold action with remote when browsing music on SqueezeBox.<br>Note! SqueezeCenter may have to be restarted for this to take effect
 
 PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION
 	EN	Enable TrackStat play+hold
@@ -431,7 +431,7 @@ SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL
 	EN	Disable number scroll
 
 SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL_DESC
-	EN	This will disable the scrolling functionallity on SqueezeBox while single clicking a number on the remote, usefull for universial remotes which can cause a single click before the hold action for set rating is executed.<br><b>Note!</b><br>You have to restart slimserver after changing this option.
+	EN	This will disable the scrolling functionallity on SqueezeBox while single clicking a number on the remote, usefull for universial remotes which can cause a single click before the hold action for set rating is executed.<br><b>Note!</b><br>You have to restart SqueezeCenter after changing this option.
 
 PLUGIN_TRACKSTAT_NO_TRACK
 	EN	No statistics found
@@ -473,7 +473,7 @@ SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS
 	EN	Refresh statistic after rescan
 
 SETUP_PLUGIN_TRACKSTAT_REFRESH_TRACKS_DESC
-	EN	Refresh TrackStat information after a complete rescan, this is only neccesary if you have changed some filenames or directory names. As long as you only have added new files you don't need to perform a refresh. The refresh operation will not destroy or remove any data, it will just make sure the TrackStat information is synchronized with the standard slimserver database.<br>In slimserver 6.5 this operation is performed automatically after each slimserver rescan.
+	EN	Refresh TrackStat information after a complete rescan, this is only neccesary if you have changed some filenames or directory names. As long as you only have added new files you don't need to perform a refresh. The refresh operation will not destroy or remove any data, it will just make sure the TrackStat information is synchronized with the standard SqueezeCenter database. This operation is also performed automatically after each SqueezeCenter rescan.
 
 PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK
 	EN	Play as dynamic playlist
