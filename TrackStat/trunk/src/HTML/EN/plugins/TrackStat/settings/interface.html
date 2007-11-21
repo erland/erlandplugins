@@ -5,15 +5,15 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST" desc="SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST_DESC" %]
 		<select name="web_flatlist">
-			<option value="1" [% IF prefs.web_flatlist %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.web_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_flatlist %]selected[% END %]>[% "ON" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST" desc="SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST_DESC" %]
 		<select name="player_flatlist">
-			<option value="1" [% IF prefs.player_flatlist %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.player_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.player_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="0" [% IF NOT prefs.player_flatlist %]selected[% END %]>[% "ON" | string %]</option>
 		</select>
 	[% END %]
 
