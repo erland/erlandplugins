@@ -1118,7 +1118,7 @@ sub setModeMixer {
 					if(defined($client->modeParam('extrapopmode'))) {
 						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
-					requestFirstParameter($client,$playlist,0,\%parameterValues);
+					requestFirstParameter($client,$playlist,1,\%parameterValues);
 				}else {
 					handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
 				}
