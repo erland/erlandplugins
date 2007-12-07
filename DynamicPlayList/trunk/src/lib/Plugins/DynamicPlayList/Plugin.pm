@@ -913,7 +913,7 @@ sub addParameterValues {
 				$log->warn("Error, invalid parameter value: $value\n");
 			}
 		}
-	}elsif(lc($parameter->{'type'}) =~ /^custom(album|artist|year|genre|playlist|track)$/) {
+	}elsif(lc($parameter->{'type'}) eq 'custom' || lc($parameter->{'type'}) =~ /^custom(album|artist|year|genre|playlist|track)$/) {
 		if(defined($parameter->{'definition'}) && lc($parameter->{'definition'}) =~ /^select/ ) {
 			$sql = $parameter->{'definition'};
 			for (my $i=1;$i<$parameter->{'id'};$i++) {
@@ -1387,14 +1387,12 @@ sub requestNextParameter {
 		for(my $i=1;$i<=$parameterId;$i++) {
 			$playlist->{'parameters'}->{$i}->{'value'} = $client->modeParam('dynamicplaylist_parameter_'.$i)->{'id'};
 		}
-		for(my $i=1;$i<=$parameterId;$i++) {
-			Slim::Buttons::Common::popMode($client);
-		}
-		if(defined($client->modeParam('extrapopmode'))) {
-			Slim::Buttons::Common::popMode($client);
-		}
 		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
-
+		my $noOfLevels = $parameterId+1;
+		if(defined($client->modeParam('extrapopmode'))) {
+			$noOfLevels++;
+		}
+		Slim::Utils::Timers::setTimer($client, Time::HiRes::time(), \&stepOut, $noOfLevels);
 		$client->update();
 	}
 }
@@ -1425,15 +1423,23 @@ sub requestFirstParameter {
 		for($i=1;$i<$nextParameters{'dynamicplaylist_nextparameter'};$i++) {
 			$playlist->{'parameters'}->{$i}->{'value'} = $params->{'dynamicplaylist_parameter_'.$i}->{'id'};
 		}
-		for(my $i=1;$i<$nextParameters{'dynamicplaylist_nextparameter'};$i++) {
-			Slim::Buttons::Common::popMode($client);
-		}
-		if(defined($nextParameters{'extrapopmode'})) {
-			Slim::Buttons::Common::popMode($client);
-		}
 		handlePlayOrAdd($client, $playlist->{'dynamicplaylistid'}, $addOnly);
+		my $noOfLevels = $nextParameters{'dynamicplaylist_nextparameter'};
+		if(defined($nextParameters{'extrapopmode'})) {
+			$noOfLevels++;
+		}
+		Slim::Utils::Timers::setTimer($client, Time::HiRes::time(), \&stepOut, $noOfLevels);
 		$client->update();
 	}
+}
+
+sub stepOut {
+	my $client = shift;
+	my $noOfSteps = shift;
+	for(my $i=1;$i<$noOfSteps;$i++) {
+		Slim::Buttons::Common::popMode($client);
+	}
+	$client->update();
 }
 
 sub powerCallback {
