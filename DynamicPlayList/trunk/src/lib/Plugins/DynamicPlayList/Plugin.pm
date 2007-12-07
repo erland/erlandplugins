@@ -492,9 +492,9 @@ sub playRandom {
 			$client->showBriefly({'line' => [string('PLUGIN_DYNAMICPLAYLIST'), string('PLUGIN_DYNAMICPLAYLIST_DISABLED')]});
 		}
 		$mixInfo{$client} = undef;
-		$prefs->client($client)->delete('playlist');
-		$prefs->client($client)->delete('playlist_parameters');
-		$prefs->client($client)->delete('offset');
+		$prefs->client($client)->remove('playlist');
+		$prefs->client($client)->remove('playlist_parameters');
+		$prefs->client($client)->remove('offset');
 	} else {
 		if(!$numItems || $numItems==0 || $count>0) {
 			$log->debug(($addOnly?"Adding ":"Playing ").($continuousMode ? 'continuous' : 'static')." $type with ".Slim::Player::Playlist::count($client)." items\n");
@@ -505,7 +505,7 @@ sub playRandom {
 				$mixInfo{$client}->{'type'} = $type;
 				$prefs->client($client)->set('playlist',$type);
 				if(defined($playlist->{'parameters'})) {
-					$prefs->client($client)->delete('playlist_parameters');
+					$prefs->client($client)->remove('playlist_parameters');
 					my %storeParams = ();
 					for my $p (keys %{$playlist->{'parameters'}}) {
 						if(defined($playlist->{'parameters'}->{$p})) {
@@ -514,7 +514,7 @@ sub playRandom {
 					}
 					$prefs->client($client)->set('playlist_parameters',\%storeParams);
 				}else {
-					$prefs->client($client)->delete('playlist_parameters');
+					$prefs->client($client)->remove('playlist_parameters');
 				}
 			}
 			if($mixInfo{$client}->{'type'} eq $type) {
@@ -533,9 +533,9 @@ sub playRandom {
 				}
 			}
 			$mixInfo{$client}->{'type'} = undef;
-			$prefs->client($client)->delete('playlist');
-			$prefs->client($client)->delete('playlist_parameters');
-			$prefs->client($client)->delete('offset');
+			$prefs->client($client)->remove('playlist');
+			$prefs->client($client)->remove('playlist_parameters');
+			$prefs->client($client)->remove('offset');
 		}
 	}
 }
