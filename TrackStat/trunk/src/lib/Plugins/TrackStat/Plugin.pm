@@ -2277,6 +2277,8 @@ sub initPlugin
 	addTitleFormat('PLAYING (X_OF_Y) (TRACKSTATRATINGSTATIC)');
 	addTitleFormat('PLAYING (X_OF_Y) TRACKSTATRATINGSTATIC');
 	addTitleFormat('TRACKSTATRATINGNUMBER');
+	addTitleFormat('TRACKSTATRATINGSTATIC');
+	addTitleFormat('TRACKSTATRATINGDYNAMIC');
 
 
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
@@ -3517,48 +3519,6 @@ sub setTrackStatStatistic {
 		Plugins::TrackStat::Amarok::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
 	}
 	$log->debug("Exiting setTrackStatStatistic\n");
-}
-
-my %musicInfoSCRItems = (
-	'TRACKSTAT_RATING_DYNAMIC' => 'TRACKSTAT_RATING_DYNAMIC',
-	'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC' => 'PLAYING (X_OF_Y) TRACKSTAT_RATING_DYNAMIC',
-	'TRACKSTAT_RATING_STATIC' => 'TRACKSTAT_RATING_STATIC',
-	'PLAYING (X_OF_Y) TRACKSTAT_RATING_STATIC' => 'PLAYING (X_OF_Y) TRACKSTAT_RATING_STATIC',
-	'TRACKSTAT_RATING_NUMBER' => 'TRACKSTAT_RATING_NUMBER',
-);
-
-sub getMusicInfoSCRCustomItems() 
-{
-	return \%musicInfoSCRItems;
-}
-
-sub getMusicInfoSCRCustomItem()
-{
-	$log->debug("Entering getMusicInfoSCRCustomItem\n");
-	my $client = shift;
-    my $formattedString  = shift;
-	if ($formattedString =~ /TRACKSTAT_RATING_STATIC/) {
-		my $playStatus = getTrackInfo($client);
-		my $string = $NO_RATING_CHARACTER x 5;
-		if($playStatus->currentSongRating()) {
-			$string = ($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():'');
-			my $left = 5 - $playStatus->currentSongRating();
-			$string = $string . ($NO_RATING_CHARACTER x $left);
-		}
-		$formattedString =~ s/TRACKSTAT_RATING_STATIC/$string/g;
-	}
-	if ($formattedString =~ /TRACKSTAT_RATING_DYNAMIC/) {
-		my $playStatus = getTrackInfo($client);
-		my $string = ($playStatus->currentSongRating()?$RATING_CHARACTER x $playStatus->currentSongRating():'');
-		$formattedString =~ s/TRACKSTAT_RATING_DYNAMIC/$string/g;
-	}
-	if ($formattedString =~ /TRACKSTAT_RATING_NUMBER/) {
-		my $playStatus = getTrackInfo($client);
-		my $string = ($playStatus->currentSongRating()?$playStatus->currentSongRating():'');
-		$formattedString =~ s/TRACKSTAT_RATING_NUMBER/$string/g;
-	}
-	$log->debug("Exiting getMusicInfoSCRCustomItem\n");
-	return $formattedString;
 }
 
 sub ratingStringFormat {
