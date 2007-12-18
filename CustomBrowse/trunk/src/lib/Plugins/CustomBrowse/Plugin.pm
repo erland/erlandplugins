@@ -1051,23 +1051,37 @@ sub postinitPlugin {
 
 sub registerJiveMenu {
 	my $client = shift;
-	my @menuItems = ();
 	if(!defined($jiveMenu)) {
-		$jiveMenu = {
-			text => Slim::Utils::Strings::string(getDisplayName()),
-			offset => 0,
-			weight => 95,
-			window => { titleStyle => 'mymusic'},
-			actions => {
-				'go' => {
-					'cmd' => ['custombrowse', 'browsejive'],
-				},
-			},
-		};
-		Slim::Control::Jive::registerPluginMenu($jiveMenu,'extras');
 		if($prefs->get('menuinsidebrowse')) {
-			Slim::Control::Jive::registerPluginMenu($jiveMenu,'mymusic');
+			$jiveMenu = {
+				text => Slim::Utils::Strings::string(getDisplayName()),
+				id => 'custombrowse',
+				node => 'myMusic',
+				window => { titleStyle => 'mymusic'},
+				displayWhenOff => 0,
+				displayWhenEmpty => 1,
+				actions => {
+					'go' => {
+						'cmd' => ['custombrowse', 'browsejive'],
+					},
+				},
+			};
+		}else {
+			$jiveMenu = {
+				text => Slim::Utils::Strings::string(getDisplayName()),
+				id => 'custombrowse',
+				node => 'extras',
+				window => { titleStyle => 'mymusic'},
+				displayWhenOff => 0,
+				displayWhenEmpty => 1,
+				actions => {
+					'go' => {
+						'cmd' => ['custombrowse', 'browsejive'],
+					},
+				},
+			};
 		}
+		Slim::Control::Jive::registerPluginNode($jiveMenu);
 	}
 }
 
