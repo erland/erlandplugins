@@ -1843,6 +1843,7 @@ sub registerJiveMenu {
 				'_playlistid' => $id,
 			);
 			$menuitem = {
+				id => $id,
 				text => $name,
 				actions => {
 					do => {
@@ -1864,6 +1865,7 @@ sub registerJiveMenu {
 			$name = $menu->{'name'};
 			$id = escape($menu->{'name'});
 			$menuitem = {
+				id => $id,
 				text => $name."/",
 				actions => {
 					go => {
@@ -1892,20 +1894,18 @@ sub registerJiveMenu {
 			}
 		}
 	} @menuItems;
-
 	if(!defined($jiveMenu)) {
 		$jiveMenu = {
 			text => Slim::Utils::Strings::string(getDisplayName()),
-			count => scalar(@menuItems),
-			offset => 0,
+			weight => 85,
+			id => 'dynamicplaylist',
+			node => 'myMusic',
+			displayWhenOff => 0,
 			window => { titleStyle => 'mymusic'},
-			item_loop => \@menuItems,
 		};
-		Slim::Control::Jive::registerPluginMenu($jiveMenu,'mymusic');
-	}else {
-		$jiveMenu->{'count'} = scalar(@menuItems);
-		$jiveMenu->{'item_loop'} = \@menuItems;
+		Slim::Control::Jive::registerPluginNode($jiveMenu);
 	}
+	Slim::Control::Jive::registerPluginMenu(\@menuItems,'dynamicplaylist');
 }
 
 sub initDatabase {
