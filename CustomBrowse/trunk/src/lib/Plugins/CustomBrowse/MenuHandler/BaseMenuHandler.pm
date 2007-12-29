@@ -28,6 +28,7 @@ use POSIX qw(ceil);
 use Text::Unidecode;
 use HTML::Entities;
 use Slim::Utils::Prefs;
+use Slim::Utils::Strings;
 
 __PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
 
@@ -1273,7 +1274,7 @@ sub _getSubContext {
 						if($currentValue) {
 							$resultItem{'name'} = $currentValue;
 						}else {
-							$resultItem{'name'} = string('UNK');
+							$resultItem{'name'} = Slim::Utils::Strings::string('UNK');
 						}
 					}elsif($item->{'itemtype'} eq 'playlist') {
 						my $playlist = Slim::Schema->resultset('Track')->find($currentValue);
