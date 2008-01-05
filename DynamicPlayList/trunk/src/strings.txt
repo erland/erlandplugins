@@ -28,7 +28,7 @@ PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW
 
 PLUGIN_DYNAMICPLAYLIST_CONTEXT_CHOOSE_BELOW
 	EN	Choose a playlist related to: 
-	DA	Vælg en playliste relateret til:	
+	DA	Vælg en playliste relateret til: 
 
 PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS
 	EN	Now Playing will show

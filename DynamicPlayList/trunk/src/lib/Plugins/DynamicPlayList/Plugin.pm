@@ -1810,102 +1810,20 @@ sub title {
 
 sub registerJiveMenu {
 	my $client = shift;
-	my @playlistItems = ();
-	my $showFlat = $prefs->get('flatlist');
-	if($showFlat) {
-		foreach my $flatItem (sort keys %$playLists) {
-			my $playlist = $playLists->{$flatItem};
-			if($playlist->{'dynamicplaylistenabled'}) {
-				my %flatPlaylistItem = (
-					'playlist' => $playlist,
-					'dynamicplaylistenabled' => 1,
-					'value' => $playlist->{'dynamicplaylistid'}
-				);
-				push @playlistItems, \%flatPlaylistItem;
-			}
-		}
-	}else {
-		foreach my $menuItemKey (sort keys %$playListItems) {
-			if($playListItems->{$menuItemKey}->{'dynamicplaylistenabled'}) {
-				push @playlistItems, $playListItems->{$menuItemKey};
-			}
-		}
-	}
-	my @menuItems = ();
-        foreach my $menu (@playlistItems) {
-		my $name = undef;
-		my $id = undef;
-		my $menuitem;
-		if(defined($menu->{'playlist'})) {
-			$name = $menu->{'playlist'}->{'name'};
-			$id = $menu->{'playlist'}->{'dynamicplaylistid'};
-			my %itemParams = (
-				'_playlistid' => $id,
-			);
-			$menuitem = {
-				id => $id,
-				text => $name,
-				actions => {
-					do => {
-						'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
-						'params' => \%itemParams,
-					},
-					play => {
-						'cmd' => ['dynamicplaylist', 'playlist', 'play'],
-						'params' => \%itemParams,
-					},
-					add => {
-						'cmd' => ['dynamicplaylist', 'playlist', 'add'],
-						'params' => \%itemParams,
-					},
-				},
-				style => 'itemNoAction',
-			};
-		}else {
-			$name = $menu->{'name'};
-			$id = escape($menu->{'name'});
-			$menuitem = {
-				id => $id,
-				text => $name."/",
-				actions => {
-					go => {
-						cmd => ['dynamicplaylist', 'browsejive'],
-						params => {
-							group1 => $id,
-						},
-					},
-				},
-			};
-		}
-		push @menuItems,$menuitem;
-	}
-	@menuItems = sort { 
-		if($a->{'text'} =~ /\/$/) {
-			if($b->{'text'} =~ /\/$/) {
-				return lc($a->{'text'}) cmp lc($b->{'text'});
-			}else {
-				return -1;
-			}
-		}else {
-			if($b->{'text'} =~ /\/$/) {
-				return 1;
-			}else {
-				return lc($a->{'text'}) cmp lc($b->{'text'});
-			}
-		}
-	} @menuItems;
-	if(!defined($jiveMenu)) {
-		$jiveMenu = {
+	my @menuItems = (
+		{
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 85,
 			id => 'dynamicplaylist',
-			node => 'myMusic',
-			displayWhenOff => 0,
 			window => { titleStyle => 'mymusic'},
-		};
-		Slim::Control::Jive::registerPluginNode($jiveMenu);
-	}
-	Slim::Control::Jive::registerPluginMenu(\@menuItems,'dynamicplaylist');
+			actions => {
+				go => {
+					cmd => ['dynamicplaylist', 'browsejive'],
+				},
+			},
+		},
+	);
+	Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
 }
 
 sub initDatabase {
@@ -1960,7 +1878,8 @@ sub webPages {
 		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
 	}
 
-	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
+	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
+	Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
 }
 
 # Draws the plugin's web page
@@ -2632,7 +2551,13 @@ sub cliJiveHandler {
 	}
 
 	$log->debug("Executing CLI browsejive command\n");
-	my $menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
+	my $menuGroupResult;
+	my $showFlat = $prefs->get('flatlist');
+	if($showFlat) {
+		$menuGroupResult = ();
+	}else {
+		$menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
+	}
 	my $menuResult = getPlayListsForContext($client,$params,$playListItems,1);
 	my $count = scalar(@$menuGroupResult)+scalar(@$menuResult);
 
@@ -2648,10 +2573,6 @@ sub cliJiveHandler {
 	}
 	my $baseMenu = {
 		'actions' => {
-			'do' => {
-				'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
-				'itemsParams' => 'params',
-			},
 			'play' => {
 				'cmd' => ['dynamicplaylist', 'playlist', 'play'],
 				'itemsParams' => 'params',
@@ -2680,6 +2601,8 @@ sub cliJiveHandler {
 		$itemParams{'group'.$nextGroup} = $id;
 
 		my $actions = {
+			'play' => undef,
+			'add' => undef,
 			'go' => {
 				'cmd' => ['dynamicplaylist', 'browsejive'],
 				'params' => \%itemParams,
@@ -2701,6 +2624,14 @@ sub cliJiveHandler {
 		my %itemParams = (
 			'_playlistid'=>$id,
 		);
+
+		my $actions = {
+			'do' => {
+				'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+				'itemsParams' => 'params',
+			},
+		};
+		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 		$request->addResultLoop('item_loop',$cnt,'text',$name);
 		$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');

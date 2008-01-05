@@ -1,4 +1,5 @@
 [%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
+[% PROCESS plugins/DynamicPlayList/dpcomponents.html %]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
@@ -12,8 +13,7 @@
 [% END -%]
 [% IF pluginDynamicPlayListNowPlaying != '' %]
 [%- pageHeaderInfo = BLOCK %]
-		<strong>[% "NOW_PLAYING" | string %]:</strong>
-		<span class="exboldnowplaying">[% pluginDynamicPlayListNowPlaying %]</span>
+	[% PROCESS dpnowplaying %]
 [% END -%]
 [% END %]
 [% PROCESS pageheader.html %]
@@ -34,101 +34,33 @@ href="[% webroot %][%- IF customurl -%]
 		[%- END -%]
 [% END %]
 
-<form action="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_settings.html" name="genreForm">
-	<input type="hidden" name="type" value="">
-	<input type="hidden" name="addOnly" value="0">
-	<input type="hidden" name="player" value="[% player %]">
-	[% IF playlisttype and dynamicplaylist_parameter_1 %]
-		<input type="hidden" name="dynamicplaylist_parameter_1" value="">
-	[% END %]
-
-	[% WRAPPER contentcontainer %]
+	[% WRAPPER dpcontentcontainer %]
 		[% IF player == '' %]
-			<p>[% "NO_PLAYER_FOUND" | string %]</p>
+			[% "NO_PLAYER_FOUND" | string %]
 		[% ELSE %]
 			[% IF pluginDynamicPlayListContextName %]
-				<p>[% "PLUGIN_DYNAMICPLAYLIST_CONTEXT_CHOOSE_BELOW" | string %]: <strong>[% pluginDynamicPlayListContextName %]</strong></p>
+				[% WRAPPER contentitem %][% "PLUGIN_DYNAMICPLAYLIST_CONTEXT_CHOOSE_BELOW" | string %]<strong>[% pluginDynamicPlayListContextName %]</strong>[% END %]
 			[% ELSE %]
-				<p>[% "PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW" | string %]</p>
+				[% WRAPPER contentanchor %][% "PLUGIN_DYNAMICPLAYLIST_CHOOSE_BELOW" | string %][% END %]
 			[% END %]
-		<tr>
-			<td colspan="4"><hr></td>
-		</tr>
 
 			[% odd = 1 %]
 			[% FOREACH group IN pluginDynamicPlayListGroups %]
 				[% IF group.dynamicplaylistenabled %]
 					[%- WRAPPER contentitem %]
-						<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name %]/</a>
+						[% PROCESS dpcontentitemgroup %]
 					[% END %]
 					[% odd = (not odd) %]
 				[% END %]
 			[% END %]
 			[% FOREACH playlist IN pluginDynamicPlayListPlayLists %]
 				[% IF playlist.dynamicplaylistenabled %]
-					[% BLOCK controls %]
-						[% WRAPPER editlink noTarget=1 -%]href="[% webroot %][% playlist.url %]&player=[% player | uri %]"[%- END %]
-						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="0" parameters=playlist.parameters %]
-						[% PROCESS dynamicPlayListLink type="$playlist.dynamicplaylistid" addOnly="1" parameters=playlist.parameters %]
-					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
-						[% IF playlist.url %]
-							<a href="[% webroot %][% playlist.url %]&player=[% player | uri %]">[% playlist.name %]</a>
-						[% ELSE %]
-							[% playlist.name %]
-						[% END %]
+						[% PROCESS dpcontentitemplaylist %]
 					[% END %]
 					[% odd = (not odd) %]
 				[% END %]
 			[% END %]
-			[% odd = 0 %]
-			[% IF pluginDynamicPlayListNowPlaying != '' %]
-				[%# Reload status and playlist to reflect any new mixes %]
-				<script type="text/javascript">
-					for (var i=0; i < parent.frames.length; i++) {
-						if (parent.frames[i].name == "status") {
-							parent.frames[i].location.replace(parent.frames[i].location.pathname + "?player=[% player | uri %]&amp;refresh=1");
-						}
-					}
-				</script>
-				<tr>
-					<td>&nbsp;</td>
-				</tr>
-
-				<p>
-						<em>
-							[% "PLUGIN_DYNAMICPLAYLIST_GENERAL_HELP" | string %]
-							[% PROCESS dynamicPlayListLink type="disable" addOnly="0" %]
-						</em>
-				</p>
-
-				<tr>
-					<td>&nbsp;</td>
-				</tr>
-			[% END %]
 		[% END %]
-
-		<tr>
-			<td colspan="4"><hr></td>
-		</tr>
-
-		<p>
-			<label>
-				<input class="stdedit" type="checkbox" name="continuousMode" value="1"
-				[% IF pluginDynamicPlayListContinuousMode %]checked[% END %]>
-				[% "PLUGIN_DYNAMICPLAYLIST_CONTINUOUS_MODE" | string %]
-			</label>
-		</p>
-
-		<p>
-			[% "PLUGIN_DYNAMICPLAYLIST_BEFORE_NUM_TRACKS" | string %]
-			<input class="stdedit" type="text" size="2" name="numTracks" value="[% pluginDynamicPlayListNumTracks %]">
-			[% "PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_TRACKS" | string %]
-			<input class="stdedit" type="text" size="2" name="numOldTracks" value="[% pluginDynamicPlayListNumOldTracks %]">
-			[% "PLUGIN_DYNAMICPLAYLIST_AFTER_NUM_OLD_TRACKS" | string %]
-		</p>
-
-		<p><input type="submit" value="[% "SAVE" | string %]"><div style="float:right;">([% "PLUGIN_DYNAMICPLAYLIST" | string %] [% pluginDynamicPlayListVersion %])</div></p>
 	[% END %]
-</form>
 [% PROCESS pagefooter.html %]
