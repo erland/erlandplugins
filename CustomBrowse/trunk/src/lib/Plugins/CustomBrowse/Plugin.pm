@@ -1042,7 +1042,7 @@ sub postinitPlugin {
 		getMenuHandler();
 		readBrowseConfiguration();
 		readContextBrowseConfiguration();
-		registerJiveMenu();
+		#registerJiveMenu();
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
