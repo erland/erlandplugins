@@ -1034,7 +1034,8 @@ sub webPages {
 		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
 	}
 
-	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
+	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
+	Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
 }
 
 sub baseWebPage {
@@ -3669,6 +3670,7 @@ sub getDynamicPlayLists {
 			$playlistItem{'name'} = $statistics->{$item}->{'name'};
 		}
 		$playlistItem{'url'}="plugins/TrackStat/".$id.".html?";
+		$playlistItem{'urlcontext'}="#songlist";
 		if(defined($statistics->{$item}->{'groups'})) {
 			$playlistItem{'groups'} = $statistics->{$item}->{'groups'};
 		}
