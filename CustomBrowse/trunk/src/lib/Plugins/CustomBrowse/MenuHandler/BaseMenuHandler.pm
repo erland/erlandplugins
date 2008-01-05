@@ -826,6 +826,8 @@ sub getPageItemsForContext {
 		my $count = 0;
 		my $prevLetter = '';
 		$result{'playable'} = 1;
+		my $anchorText;
+		my $lastAnchor = '';
 		for my $it (@$items) {
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
 				$count = $count + 1;
@@ -1059,7 +1061,13 @@ sub getPageItemsForContext {
 					$it->{'playurl'} = $menuurl;
 				}
 			}
-
+			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
+				$anchorText = $it->{'itemlink'};
+				if($anchorText ne $lastAnchor) {
+					$it->{'anchor'} = $anchorText;
+					$lastAnchor = $anchorText;
+				}
+			}
 			push @resultItems, $it;
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$prevLetter = $it->{'itemlink'};

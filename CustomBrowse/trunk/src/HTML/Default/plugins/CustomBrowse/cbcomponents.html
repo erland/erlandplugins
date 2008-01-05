@@ -1,3 +1,19 @@
+[% BLOCK cbfooter %]
+	<div>
+		[% PROCESS cbpagebarfooter %]
+	</div>
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
+<br>
+<div style="float:left;">
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a></div><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
+<br>
+
+[% IF pluginCustomBrowseError %]
+	<div>
+	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
+	</div>
+[% END %]
+[% END %]
 [% BLOCK cbpagebar %]
 		[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
 			<div class="pagerbox">
@@ -8,6 +24,22 @@
 				<div class="pagerbox_bottom"><div></div></div>
 			</div>
 		[% END %]
+[% END %]
+
+[% BLOCK cbcontextfooter %]
+	<div>
+		[% PROCESS cbpagebarfooter %]
+	</div>
+[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
+<br>
+<div style="float:left;">
+<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a></div><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
+<br>
+[% IF pluginCustomBrowseError %]
+	<div>
+	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
+	</div>
+[% END %]
 [% END %]
 
 [% BLOCK cbpagebarfooter %]
@@ -36,6 +68,18 @@
                 </div></div></div></div></div></div>
         </li>
 [%- END %]
+
+[% BLOCK cbcontentitemlist %]
+	[%- WRAPPER $contentwrapper controls='controls' %]
+        	[% count = count + 1 %]
+		[% PROCESS cbcontentitem %]
+        [% END %]
+[% END %]
+[% BLOCK cbcontentitemallsongs %]
+	[%- WRAPPER contentitem controls='allsongscontrols' %]
+       		[% "ALL_SONGS" | string %]<br>
+       	[% END %]
+[% END %]
 
 [% BLOCK cbcontentitem %]
 		[% IF item.itemobj %]
@@ -76,4 +120,6 @@
 		[% END %]
 [% END %]
 
-
+[% BLOCK cbcontainer %]
+	[% content %]
+[% END %]

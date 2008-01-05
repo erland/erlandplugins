@@ -1394,6 +1394,7 @@ sub webPages {
 		}
 		if($prefs->get('menuinsidebrowse')) {
 		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		        Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		}
 		delSlimserverWebMenus();
 	}
@@ -1402,6 +1403,7 @@ sub webPages {
 	        return (\%pages);
 	}else {
 		Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_CUSTOMBROWSE' => $value });
+	        Slim::Web::Pages->addPageLinks("pluginsiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
 	}
 }
 
@@ -1463,13 +1465,16 @@ sub addWebMenus {
 			my $url = getMenuHandler()->getCustomUrl($client,$menu->{'menu'});
 			$log->debug("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
+		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $url });
 		}else {
 			$log->debug("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
+		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 		}
             }else {
 		$log->debug("Removing menu: $name\n");
 		Slim::Web::Pages->addPageLinks("browse", {$name => undef});
+		Slim::Web::Pages->addPageLinks("browseiPeng", {$name => undef});
             }
         }
 }

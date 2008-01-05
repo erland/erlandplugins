@@ -1,8 +1,8 @@
 [%- BLOCK CustomBrowseItemText %]
-[% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break %][% ELSE %][% item.itemname |html %][% END %]
+[% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break %][% ELSE %][% IF truncateAt %][% item.itemname |html |truncate(truncateAt)%][% ELSE %][% item.itemname |html %][% END %][% END %]
 [%- END %]
 [%- BLOCK CustomBrowseContextItemText %]
-[% IF item.itemvalue %][% item.itemname |html %][% "COLON" |string %] [% IF item.itemformat == 'multiline' %][% item.itemvalue |html_line_break %][% ELSE %][% item.itemvalue |html %][% END %][% ELSE %][% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break%][% ELSE %][% item.itemname |html %][% END %][% END %]
+[% IF item.itemvalue %][% IF truncateAt %][% extraTruncate=item.itemname.length+1 %][% truncateAt=truncateAt-extraTruncate %][% END %][% item.itemname |html %][% "COLON" |string %] [% IF item.itemformat == 'multiline' %][% item.itemvalue |html_line_break %][% ELSE %][% IF truncateAt %][% item.itemvalue |html|truncate(truncateAt) %][% ELSE %][% item.itemvalue |html %][% END %][% END %][% ELSE %][% IF item.itemformat == 'multiline' %][% item.itemname |html_line_break%][% ELSE %][% IF truncateAt %][% item.itemname |html|truncate(truncateAt) %][% ELSE %][% item.itemname |html %][% END %][% END %][% END %]
 [%- END %]
 [% BLOCK songinfoItemHRef -%]
 href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&amp;contextid=[% item.itemobj.id %]&amp;contexttype=track&amp;contextname=[% item.itemobj.title | uri %]&amp;player=[% playerURI %]"

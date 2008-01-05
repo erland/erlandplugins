@@ -99,6 +99,7 @@ sub getPreparedMixes {
 				my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 				$url = $self->itemParameterHandler->replaceParameters($client,$url,$keywords);
 				$webMix{'url'} = $url;
+				$webMix{'urlcontext'} = $mix->{'mixurlcontext'};
 			}
 			push @webMixes,\%webMix;
 		}

@@ -17,6 +17,7 @@
 		[% IF group.enabled %]
 	                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %][% IF contextNo %]plugins/CustomBrowse/custombrowse_contextlist.html[% ELSE %][% path %][% END %]?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name | html%]</a>
 			[% skipPrefix = 0 %]
+			[% pagetitle = group.name %]
 		[% END %]
 		[% contextNo = contextNo + 1 %]
         [% END %]
@@ -55,9 +56,7 @@ END;
 							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextaddall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
-						[%- WRAPPER contentitem controls='allsongscontrols' %]
-				        		[% "ALL_SONGS" | string %]<br>
-				        	[% END %]
+						[% PROCESS cbcontentitemallsongs %]
 						[% odd = (not odd) %]
 					[% END %]
 					[% count = 0 %]
@@ -93,25 +92,11 @@ END;
 						[% END %]
 					[% END %]
 				[% END %]
-				[%- WRAPPER $contentwrapper controls='controls' %]
-			        	[% count = count + 1 %]
-					[% PROCESS cbcontentitem %]
-			        [% END %]
+				[% PROCESS cbcontentitemlist %]
 				[% odd = (not odd) %]
 		        [% END %]
 		[% END %]
 <div id="pageFooterInfo">
-		[% IF !pluginCustomBrowseNoItems && pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
-			[% PROCESS cbpagebar %]
-		[% END %]
-[% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
-<br>
-<div style="float:left;">
-<a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?[% IF pluginCustomBrowseNoItems%]noitems=1&[% END %]player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]&refresh=1&cleancache=1&player=[% playerURI %]">[% "PLUGIN_CUSTOMBROWSE_REFRESH" | string %]</a></div><div style="float:right;">([% "PLUGIN_CUSTOMBROWSE" | string %] [% pluginCustomBrowseVersion %])</div>
-<br>
-[% IF pluginCustomBrowseError %]
-	<div>
-	<br><div style="color:red;">Error:<br>[% pluginCustomBrowseError %]</div><br>
-	</div>
-[% END %]
+	[% PROCESS cbcontextfooter %]
+</div>
 [% PROCESS pagefooter.html %]
