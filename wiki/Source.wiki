@@ -3,31 +3,34 @@
 Project members authenticate over HTTPS to allow committing changes.
 If you plan to make changes, use this command to check out the code as yourself using HTTPS:
 
-*{{{Custom Browse}}}*
+*{{{Custom Browse}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomBrowse/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomBrowse/trunk CustomBrowse --username yourgooglecodeid}}}
 
-*{{{Custom Scan}}}*
+*{{{Custom Scan}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomScan/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomScan/trunk CustomScan --username yourgooglecodeid}}}
 
-*{{{Custom Skip}}}*
+*{{{Custom Skip}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomSkip/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip --username yourgooglecodeid}}}
 
-*{{{Dynamic Playlist}}}*
+*{{{Dynamic Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/DynamicPlayList/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList --username yourgooglecodeid}}}
 
-*{{{Multi Library}}}*
+*{{{iPod}}}* ([http://code.google.com/p/erlandplugins/source/browse/iPod/trunk/src browse]) *Unfinished*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/iPod/trunk iPod --username yourgooglecodeid}}}
+
+*{{{Multi Library}}}* ([http://code.google.com/p/erlandplugins/source/browse/MultiLibrary/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary --username yourgooglecodeid}}}
 
-*{{{Random Playlist}}}*
+*{{{Random Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/RandomPlayList/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/RandomPlayList/trunk RandomPlayList --username yourgooglecodeid}}}
 
-*{{{Remove Played Songs}}}*
+*{{{Remove Played Songs}}}* ([http://code.google.com/p/erlandplugins/source/browse/RemovePlayedSongs/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk RemovePlayedSongs --username yourgooglecodeid}}}
 
-*{{{SQL Playlist}}}*
+*{{{SQL Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/SQLPlayList/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/SQLPlayList/trunk SQLPlayList --username yourgooglecodeid}}}
 
-*{{{TrackStat}}}*
+*{{{TrackStat}}}* ([http://code.google.com/p/erlandplugins/source/browse/TrackStat/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/TrackStat/trunk TrackStat --username yourgooglecodeid}}}
 
 When prompted, enter your generated [http://code.google.com/hosting/settings googlecode.com password].
@@ -36,31 +39,34 @@ When prompted, enter your generated [http://code.google.com/hosting/settings goo
 Non-members may check out a read-only working copy anonymously over HTTP.
 Use this command to anonymously check out the latest project source code:
 
-*{{{Custom Browse}}}*
+*{{{Custom Browse}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomBrowse/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomBrowse/trunk CustomBrowse}}}
 
-*{{{Custom Scan}}}*
+*{{{Custom Scan}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomScan/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomScan/trunk CustomScan}}}
 
-*{{{Custom Skip}}}*
+*{{{Custom Skip}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomSkip/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip}}}
 
-*{{{Dynamic Playlist}}}*
+*{{{Dynamic Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/DynamicPlayList/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList}}}
 
-*{{{Multi Library}}}*
+*{{{iPod}}}* ([http://code.google.com/p/erlandplugins/source/browse/iPod/trunk/src browse]) *Unfinished*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/iPod/trunk iPod}}}
+
+*{{{Multi Library}}}* ([http://code.google.com/p/erlandplugins/source/browse/MultiLibrary/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary}}}
 
-*{{{Random Playlist}}}*
+*{{{Random Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/RandomPlayList/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/RandomPlayList/trunk RandomPlayList}}}
 
-*{{{Remove Played Songs}}}*
+*{{{Remove Played Songs}}}* ([http://code.google.com/p/erlandplugins/source/browse/RemovePlayedSongs/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk RemovePlayedSongs}}}
 
-*{{{SQL Playlist}}}*
+*{{{SQL Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/SQLPlayList/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/SQLPlayList/trunk SQLPlayList}}}
 
-*{{{TrackStat}}}*
+*{{{TrackStat}}}* ([http://code.google.com/p/erlandplugins/source/browse/TrackStat/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/TrackStat/trunk TrackStat}}}
 
 ===GUI and IDE Access===
