@@ -1,3 +1,7 @@
+==Browsing source==
+ * [http://code.google.com/p/erlandplugins/source/browse Browse source]
+ * [http://code.google.com/p/erlandplugins/source/list Changes]
+
 ==Command-Line Access==
 
 ===Project members===
