@@ -1,3 +1,6 @@
+===Browsing===
+A ten minute delayed browsable SubVersion archive is available here:
+ http://source.erland.homeip.net/viewvc.cgi/slimserver/
 ===Command-Line Access===
 ====Project members====
 Project members authenticate over HTTPS to allow committing changes.
