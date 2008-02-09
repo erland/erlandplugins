@@ -1,73 +1,68 @@
-==Browsing source==
- * [http://code.google.com/p/erlandplugins/source/browse Browse source]
- * [http://code.google.com/p/erlandplugins/source/list Changes]
-
-==Command-Line Access==
-
-===Project members===
+===Command-Line Access===
+====Project members====
 Project members authenticate over HTTPS to allow committing changes.
 If you plan to make changes, use this command to check out the code as yourself using HTTPS:
 
-*Custom Browse*
- svn checkout https://erlandplugins.googlecode.com/svn/CustomBrowse/trunk/ CustomBrowse --username yourgooglecodeid
+*{{{Custom Browse}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomBrowse/trunk CustomBrowse --username yourgooglecodeid}}}
 
-*Custom Scan*
- svn checkout https://erlandplugins.googlecode.com/svn/CustomScan/trunk/ CustomScan --username yourgooglecodeid
+*{{{Custom Scan}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomScan/trunk CustomScan --username yourgooglecodeid}}}
 
-*Custom Skip*
- svn checkout https://erlandplugins.googlecode.com/svn/CustomSkip/trunk/ CustomSkip --username yourgooglecodeid
+*{{{Custom Skip}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip --username yourgooglecodeid}}}
 
-*Dynamic Playlist*
- svn checkout https://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk/ DynamicPlayList --username yourgooglecodeid
+*{{{Dynamic Playlist}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList --username yourgooglecodeid}}}
 
-*Multi Library*
- svn checkout https://erlandplugins.googlecode.com/svn/MultiLibrary/trunk/ MultiLibrary --username yourgooglecodeid
+*{{{Multi Library}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary --username yourgooglecodeid}}}
 
-*Random Playlist*
- svn checkout https://erlandplugins.googlecode.com/svn/RandomPlayList/trunk/ RandomPlayList --username yourgooglecodeid
+*{{{Random Playlist}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/RandomPlayList/trunk RandomPlayList --username yourgooglecodeid}}}
 
-*Remove Played Songs*
- svn checkout https://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk/ RemovePlayedSongs --username yourgooglecodeid
+*{{{Remove Played Songs}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk RemovePlayedSongs --username yourgooglecodeid}}}
 
-*SQL Playlist*
- svn checkout https://erlandplugins.googlecode.com/svn/SQLPlayList/trunk/ SQLPlayList --username yourgooglecodeid
+*{{{SQL Playlist}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/SQLPlayList/trunk SQLPlayList --username yourgooglecodeid}}}
 
-*TrackStat*
- svn checkout https://erlandplugins.googlecode.com/svn/TrackStat/trunk/ TrackStat --username yourgooglecodeid
+*{{{TrackStat}}}*
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/TrackStat/trunk TrackStat --username yourgooglecodeid}}}
 
 When prompted, enter your generated [http://code.google.com/hosting/settings googlecode.com password].
 
-===Anonymous access===
+====Anonymous access====
 Non-members may check out a read-only working copy anonymously over HTTP.
 Use this command to anonymously check out the latest project source code:
 
-*Custom Browse*
- svn checkout http://erlandplugins.googlecode.com/svn/CustomBrowse/trunk/ CustomBrowse
+*{{{Custom Browse}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomBrowse/trunk CustomBrowse}}}
 
-*Custom Scan*
- svn checkout http://erlandplugins.googlecode.com/svn/CustomScan/trunk/ CustomScan
+*{{{Custom Scan}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomScan/trunk CustomScan}}}
 
-*Custom Skip*
- svn checkout http://erlandplugins.googlecode.com/svn/CustomSkip/trunk/ CustomSkip
+*{{{Custom Skip}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip}}}
 
-*Dynamic Playlist*
- svn checkout http://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk/ DynamicPlayList
+*{{{Dynamic Playlist}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList}}}
 
-*Multi Library*
- svn checkout http://erlandplugins.googlecode.com/svn/MultiLibrary/trunk/ MultiLibrary
+*{{{Multi Library}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary}}}
 
-*Random Playlist*
- svn checkout http://erlandplugins.googlecode.com/svn/RandomPlayList/trunk/ RandomPlayList
+*{{{Random Playlist}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/RandomPlayList/trunk RandomPlayList}}}
 
-*Remove Played Songs*
- svn checkout http://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk/ RemovePlayedSongs
+*{{{Remove Played Songs}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/RemovePlayedSongs/trunk RemovePlayedSongs}}}
 
-*SQL Playlist*
- svn checkout http://erlandplugins.googlecode.com/svn/SQLPlayList/trunk/ SQLPlayList
+*{{{SQL Playlist}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/SQLPlayList/trunk SQLPlayList}}}
 
-*TrackStat*
- svn checkout http://erlandplugins.googlecode.com/svn/TrackStat/trunk/ TrackStat
+*{{{TrackStat}}}*
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/TrackStat/trunk TrackStat}}}
 
-==GUI and IDE Access==
+===GUI and IDE Access===
 
 This project's Subversion repository may be accessed using many different [http://subversion.tigris.org/links.html#clients client programs and plug-ins]. See your client's documentation for more information.
