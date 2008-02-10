@@ -7,7 +7,7 @@
 		<mixtype>mode</mixtype>
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::TrackStat::Plugin::mixable</mixcheckdata>
-		<mixdata>PLUGIN.TrackStat::Plugin|album={itemid}|statistictype=album|flatlist=1</mixdata>
+		<mixdata>Plugins::TrackStat::Plugin|album={itemid}|statistictype=album|flatlist=1</mixdata>
 		<mixurl>plugins/TrackStat/all.html?&amp;album={itemid}&amp;flatlist=1</mixurl>
 		<mixurlcontext>#songlist</mixurlcontext>
 		<miximage>html/images/trackstat_mixbutton.gif</miximage>
