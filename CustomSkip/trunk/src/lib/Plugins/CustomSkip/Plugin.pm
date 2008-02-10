@@ -863,8 +863,8 @@ sub setModeMix {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
-	my $selectedFilterType = $client->param('filtertype');
-	my $item = $client->param('item');
+	my $selectedFilterType = $client->modeParam('filtertype');
+	my $item = $client->modeParam('item');
 
 	initFilterTypes();
 	initFilters();
@@ -906,27 +906,27 @@ sub setModeMix {
 				if(defined($filterType->{'customskipparameters'})) {
 					my %parameterValues = ();
 					my $i=1;
-					while(defined($client->param('customskip_parameter_'.$i))) {
-						$parameterValues{'customskip_parameter_'.$i} = $client->param('customskip_parameter_'.$i);
+					while(defined($client->modeParam('customskip_parameter_'.$i))) {
+						$parameterValues{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
 						$i++;
 					}
-					if(defined($client->param('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->param('extrapopmode');
+					if(defined($client->modeParam('extrapopmode'))) {
+						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
-					if(defined($client->param('filter'))) {
-						$parameterValues{'filter'} = $client->param('filter');
+					if(defined($client->modeParam('filter'))) {
+						$parameterValues{'filter'} = $client->modeParam('filter');
 					}
 
 					my $filter = undef;
-					if(defined($client->param('filter'))) {
-						$filter = $filters->{$client->param('filter')};
+					if(defined($client->modeParam('filter'))) {
+						$filter = $filters->{$client->modeParam('filter')};
 					}else {
 						$filter = getCurrentFilter($client);
 					}
 					my $filteritems = $filter->{'filter'};
 					my $i = 1;
 					for my $filteritem (@$filteritems) {
-						if($filteritem->{'id'} eq $item->{'id'} && defined($client->param('customskip_parameter_1'))) {
+						if($filteritem->{'id'} eq $item->{'id'} && defined($client->modeParam('customskip_parameter_1'))) {
 							my $parameters = $filterType->{'parameters'};
 							my $itemParameters = $filteritem->{'parameter'};
 							if(defined($parameters) && scalar(@$parameters)>0 && defined($itemParameters) && scalar(@$itemParameters)>0) {
@@ -936,14 +936,14 @@ sub setModeMix {
 								if(defined($itemValues) && scalar(@$itemValues)==1) {
 									my $itemValue = $itemValues->[0];
 									my %currentValues = (
-										$client->param('customskip_parameter_1') => $client->param('customskip_parameter_1')
+										$client->modeParam('customskip_parameter_1') => $client->modeParam('customskip_parameter_1')
 									);
 									addValuesToFilterParameter($parameter,\%currentValues);
 									my $values = $parameter->{'values'};
 									if(defined($values)) {
 										for my $item (@$values) {
 											if($itemValue eq $item->{'value'}) {
-												if($item->{'id'} eq $client->param('customskip_parameter_1')) {
+												if($item->{'id'} eq $client->modeParam('customskip_parameter_1')) {
 													$parameterValues{'filteritem'} = $i;
 												}
 												last;
@@ -951,7 +951,7 @@ sub setModeMix {
 										}
 									}else {
 										my $value = $parameter->{'value'};
-										if($value eq $client->param('customskip_parameter_1')) {
+										if($value eq $client->modeParam('customskip_parameter_1')) {
 											$parameterValues{'filteritem'} = $i;
 										}
 									}
@@ -966,8 +966,8 @@ sub setModeMix {
 					my $browseDir = $prefs->get("directory");
 					
 					my $filter = undef;
-					if(defined($client->param('filter'))) {
-						$filter = $filters->{$client->param('filter')};
+					if(defined($client->modeParam('filter'))) {
+						$filter = $filters->{$client->modeParam('filter')};
 					}else {
 						$filter = getCurrentFilter($client);
 					}
@@ -982,15 +982,15 @@ sub setModeMix {
 		},
 	);
 	my $i = 1;
-	while(defined($client->param('customskip_parameter_'.$i))) {
-		$params{'customskip_parameter_'.$i} = $client->param('customskip_parameter_'.$i);
+	while(defined($client->modeParam('customskip_parameter_'.$i))) {
+		$params{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
 		$i++;
 	}
-	if(defined($client->param('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->param('extrapopmode');
+	if(defined($client->modeParam('extrapopmode'))) {
+		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
 	}
-	if(defined($client->param('filter'))) {
-		$params{'filter'} = $client->param('filter');
+	if(defined($client->modeParam('filter'))) {
+		$params{'filter'} = $client->modeParam('filter');
 	}
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
 }
@@ -1004,20 +1004,20 @@ sub setModeChooseParameters {
 		return;
 	}
 
-	my $parameterId = $client->param('customskip_nextparameter');
-	my $filterType = $client->param('filtertype');
+	my $parameterId = $client->modeParam('customskip_nextparameter');
+	my $filterType = $client->modeParam('filtertype');
 	my $parameter= $filterType->{'customskipparameters'}->[$parameterId-1];
 
 	my @listRef = ();
 	my $currentValues = undef;
-	if($client->param('filteritem')) {
+	if($client->modeParam('filteritem')) {
 		my $filter = undef;
-		if(defined($client->param('filter'))) {
-			$filter = $filters->{$client->param('filter')};
+		if(defined($client->modeParam('filter'))) {
+			$filter = $filters->{$client->modeParam('filter')};
 		}else {
 			$filter = getCurrentFilter($client);
 		}
-		my $filteritem = $filter->{'filter'}->[$client->param('filteritem')-1];
+		my $filteritem = $filter->{'filter'}->[$client->modeParam('filteritem')-1];
 		my $parameters = $filteritem->{'parameter'};
 		for my $p (@$parameters) {
 			if($p->{'id'} eq $parameter->{'id'}) {
@@ -1074,21 +1074,21 @@ sub setModeChooseParameters {
 		$i = $i + 1;
 	}
 	$i=1;
-	while(defined($client->param('customskip_parameter_'.$i))) {
-		$params{'customskip_parameter_'.$i} = $client->param('customskip_parameter_'.$i);
+	while(defined($client->modeParam('customskip_parameter_'.$i))) {
+		$params{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
 		$i++;
 	}
-	if(defined($client->param('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->param('extrapopmode');
+	if(defined($client->modeParam('extrapopmode'))) {
+		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
 	}
-	if(defined($client->param('filter'))) {
-		$params{'filter'} = $client->param('filter');
+	if(defined($client->modeParam('filter'))) {
+		$params{'filter'} = $client->modeParam('filter');
 	}
-	if(defined($client->param('customskip_startparameter'))) {
-		$params{'customskip_startparameter'} = $client->param('customskip_startparameter');
+	if(defined($client->modeParam('customskip_startparameter'))) {
+		$params{'customskip_startparameter'} = $client->modeParam('customskip_startparameter');
 	}
-	if(defined($client->param('filteritem'))) {
-		$params{'filteritem'} = $client->param('filteritem');
+	if(defined($client->modeParam('filteritem'))) {
+		$params{'filteritem'} = $client->modeParam('filteritem');
 	}
 
 	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
@@ -1100,7 +1100,7 @@ sub requestNextParameter {
 	my $parameterId = shift;
 	my $filterType = shift;
 
-	$client->param('customskip_parameter_'.$parameterId,$item->{'id'});
+	$client->modeParam('customskip_parameter_'.$parameterId,$item->{'id'});
 	my $parameters = $filterType->{'customskipparameters'};
 	if(scalar(@$parameters)>$parameterId) {
 		my %nextParameter = (
@@ -1108,29 +1108,29 @@ sub requestNextParameter {
 			'filtertype' => $filterType
 		);
 		my $i=1;
-		while(defined($client->param('customskip_parameter_'.$i))) {
-			$nextParameter{'customskip_parameter_'.$i} = $client->param('customskip_parameter_'.$i);
+		while(defined($client->modeParam('customskip_parameter_'.$i))) {
+			$nextParameter{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
 			$i++;
 		}
-		if(defined($client->param('customskip_startparameter'))) {
-			$nextParameter{'customskip_startparameter'} = $client->param('customskip_startparameter');
+		if(defined($client->modeParam('customskip_startparameter'))) {
+			$nextParameter{'customskip_startparameter'} = $client->modeParam('customskip_startparameter');
 		}
-		if(defined($client->param('filteritem'))) {
-			$nextParameter{'filteritem'} = $client->param('filteritem');
+		if(defined($client->modeParam('filteritem'))) {
+			$nextParameter{'filteritem'} = $client->modeParam('filteritem');
 		}
-		if(defined($client->param('extrapopmode'))) {
-			$nextParameter{'extrapopmode'} = $client->param('extrapopmode');
+		if(defined($client->modeParam('extrapopmode'))) {
+			$nextParameter{'extrapopmode'} = $client->modeParam('extrapopmode');
 		}
-		if(defined($client->param('filter'))) {
-			$nextParameter{'filter'} = $client->param('filter');
+		if(defined($client->modeParam('filter'))) {
+			$nextParameter{'filter'} = $client->modeParam('filter');
 		}
 		Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkip.ChooseParameters',\%nextParameter);
 	}else {
 		my $browseDir = $prefs->get("directory");
 		
 		my $filter = undef;
-		if(defined($client->param('filter'))) {
-			$filter = $filters->{$client->param('filter')};
+		if(defined($client->modeParam('filter'))) {
+			$filter = $filters->{$client->modeParam('filter')};
 		}else {
 			$filter = getCurrentFilter($client);
 		}
@@ -1143,12 +1143,12 @@ sub requestNextParameter {
 		}else {
 			$log->warn("No filter activated, not saving\n");
 		}
-		my $startParameter = $client->param('customskip_startparameter');
+		my $startParameter = $client->modeParam('customskip_startparameter');
 		if(!defined($startParameter)) {
 			$startParameter = 1;
 		}
-		if(defined($client->param('extrapopmode'))) {
-			my $extramode = $client->param('extrapopmode');
+		if(defined($client->modeParam('extrapopmode'))) {
+			my $extramode = $client->modeParam('extrapopmode');
 			for(my $i=0;$i<$extramode;$i++) {
 				Slim::Buttons::Common::popMode($client);
 			}
@@ -1203,8 +1203,8 @@ sub requestFirstParameter {
 		my $browseDir = $prefs->get("directory");
 		
 		my $filter = undef;
-		if(defined($client->param('filter'))) {
-			$filter = $filters->{$client->param('filter')};
+		if(defined($client->modeParam('filter'))) {
+			$filter = $filters->{$client->modeParam('filter')};
 		}else {
 			$filter = getCurrentFilter($client);
 		}
@@ -1254,7 +1254,7 @@ sub saveFilterItem {
 		for my $p (@$parameters) {
 			if(defined($p->{'type'}) && defined($p->{'id'}) && defined($p->{'name'})) {
 				my %itemValue = (
-					$client->param('customskip_parameter_'.$i) => $client->param('customskip_parameter_'.$i)
+					$client->modeParam('customskip_parameter_'.$i) => $client->modeParam('customskip_parameter_'.$i)
 				);
 				addValuesToFilterParameter($p,\%itemValue);
 				my $values = getValueOfFilterParameter($client,$p,$i,"&<>\'\"");
@@ -1281,11 +1281,11 @@ sub saveFilterItem {
 		'id' => $filterType->{'id'},
 		'parameter' => \@parametersToSave
 	);
-	if(defined($client->param('filteritem'))) {
+	if(defined($client->modeParam('filteritem'))) {
 		if($skippercentage) {
-			splice(@$filterItems,$client->param('filteritem')-1,1,\%newFilterItem);
+			splice(@$filterItems,$client->modeParam('filteritem')-1,1,\%newFilterItem);
 		}else {
-			splice(@$filterItems,$client->param('filteritem')-1,1);
+			splice(@$filterItems,$client->modeParam('filteritem')-1,1);
 		}
 	}elsif($skippercentage) {
 		push @$filterItems,\%newFilterItem;
@@ -1482,7 +1482,7 @@ sub trackMix {
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
-	my $paramref = defined $client->param('parentParams') ? $client->param('parentParams') : $client->modeParameterStack(-1);
+	my $paramref = defined $client->modeParam('parentParams') ? $client->modeParam('parentParams') : $client->modeParameterStack(-1);
 	if(defined($paramref)) {
 		if(!$mixTypes) {
 			initFilterTypes();
@@ -2578,9 +2578,9 @@ sub getValueOfFilterParameter {
 	if($parameter->{'type'} =~ /.*multiplelist$/ || $parameter->{'type'} =~ /.*checkboxes$/) {
 		my $selectedValue = undef;
 		if($parameter->{'type'} =~ /.*multiplelist$/) {
-			$selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+			$selectedValue = $client->modeParam('customskip_parameter_'.$parameterNo);
 		}else {
-			$selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+			$selectedValue = $client->modeParam('customskip_parameter_'.$parameterNo);
 		}
 
 		my $values = $parameter->{'values'};
@@ -2600,7 +2600,7 @@ sub getValueOfFilterParameter {
 		return \@result;
 
 	}elsif($parameter->{'type'} =~ /.*singlelist$/) {
-		my $selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+		my $selectedValue = $client->modeParam('customskip_parameter_'.$parameterNo);
 		my $values = $parameter->{'values'};
 		my @result = ();
 		for my $item (@$values) {
@@ -2618,12 +2618,12 @@ sub getValueOfFilterParameter {
 		return \@result;
 	}elsif($parameter->{'type'} =~ /.*timelist$/) {
 		my @result = ();
-		my $selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+		my $selectedValue = $client->modeParam('customskip_parameter_'.$parameterNo);
 		push @result,$selectedValue;
 		return \@result;
 	}else{
 		my @result = ();
-		my $selectedValue = $client->param('customskip_parameter_'.$parameterNo);
+		my $selectedValue = $client->modeParam('customskip_parameter_'.$parameterNo);
 		push @result,$selectedValue;
 		return \@result;
 	}
