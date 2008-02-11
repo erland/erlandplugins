@@ -384,6 +384,10 @@ sub setMode()
 					'player' => $client->id,
 					'trackstatcmd' => 'play'
 				);
+				if(defined($client->modeParam('statistictype'))) {
+					$paramsData{'statistictype'} = $client->modeParam('statistictype');
+					$paramsData{$client->modeParam('statistictype')} = $client->modeParam($client->modeParam('statistictype'));
+				}
 				my $function = $item->{'item'}->{'webfunction'};
 			    my $listLength = $prefs->get("player_list_length");
 			    if(!defined $listLength || $listLength==0) {
@@ -406,6 +410,10 @@ sub setMode()
 					'player' => $client->id,
 					'trackstatcmd' => 'add'
 				);
+				if(defined($client->modeParam('statistictype'))) {
+					$paramsData{'statistictype'} = $client->modeParam('statistictype');
+					$paramsData{$client->modeParam('statistictype')} = $client->modeParam($client->modeParam('statistictype'));
+				}
 				my $function = $item->{'item'}->{'webfunction'};
 			    my $listLength = $prefs->get("player_list_length");
 			    if(!defined $listLength || $listLength==0) {
