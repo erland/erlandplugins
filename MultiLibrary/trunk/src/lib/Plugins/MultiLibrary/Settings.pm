@@ -35,11 +35,11 @@ sub new {
 	my $class = shift;
 	$plugin   = shift;
 
-	$class->SUPER::new($plugin);
+	$class->SUPER::new($plugin,1);
 }
 
 sub name {
-	return 'PLUGIN_MULTILIBRARY_SETTINGS';
+	return 'PLUGIN_MULTILIBRARY';
 }
 
 sub page {
@@ -47,7 +47,7 @@ sub page {
 }
 
 sub currentPage {
-	return name();
+	return Slim::Utils::Strings::string('PLUGIN_MULTILIBRARY_SETTINGS');
 }
 
 sub pages {

@@ -38,7 +38,6 @@ use Plugins::MultiLibrary::ConfigManager::Main;
 use Plugins::MultiLibrary::Template::Reader;
 
 use Plugins::MultiLibrary::Settings;
-use Plugins::MultiLibrary::ManageLibraries;
 
 use Slim::Schema;
 
@@ -83,7 +82,6 @@ my %currentLibrary = ();
 my $PLUGINVERSION = undef;
 my $internalMenus = undef;
 my $customBrowseMenus = undef;
-my $manageLibraryHandler = undef;
 my $configManager = undef;
 
 # Indicator if hooked or not
@@ -814,7 +812,6 @@ sub initPlugin {
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::MultiLibrary::Settings->new($class);
-	$manageLibraryHandler = Plugins::MultiLibrary::ManageLibraries->new($class);
 
 	checkDefaults();
 	initDatabase();
@@ -1272,6 +1269,7 @@ sub webPages {
 	for my $page (keys %pages) {
 		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
 	}
+	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_MULTILIBRARY' => 'plugins/MultiLibrary/multilibrary_list.html' });
 }
 
 sub getCurrentLibrary {
@@ -1312,7 +1310,6 @@ sub getCurrentLibrary {
 # Draws the plugin's web page
 sub handleWebList {
 	my ($client, $params) = @_;
-	$manageLibraryHandler->prepare($client,$params);
 
 	# Pass on the current pref values and now playing info
 	if(!defined($params->{'donotrefresh'})) {
