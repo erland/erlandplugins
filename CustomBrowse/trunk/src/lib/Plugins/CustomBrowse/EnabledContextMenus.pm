@@ -58,11 +58,8 @@ sub pages {
 	return \@pages;
 }
 
-sub handler {
-	my ($class, $client, $paramRef) = @_;
-
-	my $contextBrowseMenusFlat = Plugins::CustomBrowse::Plugin::readContextBrowseConfiguration($client);
-
+sub initMenus {
+	my $contextBrowseMenusFlat = shift;
 	my @contextMenus = ();
 	for my $key (keys %$contextBrowseMenusFlat) {
 		my %webmenu = ();
@@ -76,7 +73,14 @@ sub handler {
 		push @contextMenus,\%webmenu;
 	}
 	@contextMenus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @contextMenus;
+	return @contextMenus;
+}
+sub handler {
+	my ($class, $client, $paramRef) = @_;
 
+	my $contextBrowseMenusFlat = Plugins::CustomBrowse::Plugin::readContextBrowseConfiguration($client);
+
+	my @contextMenus = initMenus($contextBrowseMenusFlat);
         $paramRef->{'pluginCustomBrowseContextMenus'} = \@contextMenus;
 
 	if ($paramRef->{'saveSettings'}) {
@@ -90,6 +94,8 @@ sub handler {
 				$contextBrowseMenusFlat->{$menu}->{'enabled'}=0;
 	                }
 	        }
+		my @contextMenus = initMenus($contextBrowseMenusFlat);
+	        $paramRef->{'pluginCustomBrowseContextMenus'} = \@contextMenus;
         }
 
 	return $class->SUPER::handler($client, $paramRef);

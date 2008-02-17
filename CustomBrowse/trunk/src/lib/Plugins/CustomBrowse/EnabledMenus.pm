@@ -58,12 +58,8 @@ sub pages {
 	return \@pages;
 }
 
-sub handler {
-	my ($class, $client, $paramRef) = @_;
-
-	my $browseMenusFlat = Plugins::CustomBrowse::Plugin::readBrowseConfiguration($client);
-
-        # Pass on the current pref values and now playing info
+sub initMenus {
+	my $browseMenusFlat = shift;
 	my @menus = ();
 	for my $key (keys %$browseMenusFlat) {
 		my %webmenu = ();
@@ -77,7 +73,16 @@ sub handler {
 		push @menus,\%webmenu;
 	}
 	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
+	return @menus;
+}
+sub handler {
+	my ($class, $client, $paramRef) = @_;
 
+	my $browseMenusFlat = Plugins::CustomBrowse::Plugin::readBrowseConfiguration($client);
+
+        # Pass on the current pref values and now playing info
+
+	my @menus = initMenus($browseMenusFlat);
         $paramRef->{'pluginCustomBrowseMenus'} = \@menus;
 
 	if ($paramRef->{'saveSettings'}) {
@@ -104,6 +109,8 @@ sub handler {
 				}
         	        }
         	}
+		@menus = initMenus($browseMenusFlat);
+	        $paramRef->{'pluginCustomBrowseMenus'} = \@menus;
         }
 
 	return $class->SUPER::handler($client, $paramRef);

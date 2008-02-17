@@ -69,8 +69,10 @@ sub handler {
 			my $menuid = "slimservermenu_".escape($menu->{'id'});
 			if($paramRef->{$menuid}) {
 				$prefs->set($menuid.'_enabled',1);
+				$menu->{'enabled'}=1;
 			}else {
 				$prefs->set($menuid.'_enabled',0);
+				$menu->{'enabled'}=0;
 			}
 		}
 	}
