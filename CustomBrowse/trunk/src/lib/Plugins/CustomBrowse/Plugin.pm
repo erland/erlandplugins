@@ -1042,7 +1042,7 @@ sub postinitPlugin {
 		getMenuHandler();
 		readBrowseConfiguration();
 		readContextBrowseConfiguration();
-		#registerJiveMenu();
+		registerJiveMenu();
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
@@ -1051,38 +1051,20 @@ sub postinitPlugin {
 
 sub registerJiveMenu {
 	my $client = shift;
-	if(!defined($jiveMenu)) {
-		if($prefs->get('menuinsidebrowse')) {
-			$jiveMenu = {
-				text => Slim::Utils::Strings::string(getDisplayName()),
-				id => 'custombrowse',
-				node => 'myMusic',
-				window => { titleStyle => 'mymusic'},
-				displayWhenOff => 0,
-				displayWhenEmpty => 1,
-				actions => {
-					'go' => {
-						'cmd' => ['custombrowse', 'browsejive'],
-					},
+	my @menuItems = (
+		{
+			text => Slim::Utils::Strings::string(getDisplayName()),
+			weight => 80,
+			id => 'custombrowse',
+			window => { titleStyle => 'mymusic'},
+			actions => {
+				go => {
+					cmd => ['custombrowse', 'browsejive'],
 				},
-			};
-		}else {
-			$jiveMenu = {
-				text => Slim::Utils::Strings::string(getDisplayName()),
-				id => 'custombrowse',
-				node => 'extras',
-				window => { titleStyle => 'mymusic'},
-				displayWhenOff => 0,
-				displayWhenEmpty => 1,
-				actions => {
-					'go' => {
-						'cmd' => ['custombrowse', 'browsejive'],
-					},
-				},
-			};
-		}
-		Slim::Control::Jive::registerPluginNode($jiveMenu);
-	}
+			},
+		},
+	);
+	Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
 }
 
 sub callCallbackWithArg {
@@ -2806,10 +2788,14 @@ sub cliJiveHandler {
 	my $cnt = 0;
 	foreach my $item (@$menuItems) {
 		my $name;
+		my $itemkey;
 		if(defined($item->{'itemvalue'})) {
 			$name = $item->{'itemvalue'};
 		}else {
 			$name = $item->{'itemname'};
+		}
+		if(defined($item->{'itemlink'})) {
+			$itemkey = $item->{'itemlink'};
 		}
 
 		my $itemtype = undef;
@@ -2821,6 +2807,7 @@ sub cliJiveHandler {
 			}else {
 				push @submenus,$menuRef;
 			}
+			my $ignore = 0;
 			foreach my $nextmenu (@submenus) {
 				if(defined($nextmenu->{'itemtype'})) {
 					if(!defined($itemtype)) {
@@ -2829,6 +2816,14 @@ sub cliJiveHandler {
 						$itemtype = "NOTUSED";
 					}
 				}
+				if(defined($nextmenu->{'menutype'}) && $nextmenu->{'menutype'} eq 'mode') {
+					$ignore = 1;
+					last;
+				}
+			}
+			if($ignore) {
+				$count=$count-1;
+				next;
 			}
 		}
 		if(defined($itemtype) && $itemtype eq 'album') {
@@ -2856,6 +2851,10 @@ sub cliJiveHandler {
 				$itemParams{'hierarchy'} = $item->{'id'};
 			}
 			$itemParams{$item->{'id'}} = $item->{'itemid'};
+		}
+		if($itemkey) {
+			$itemParams{'textkey'} = $itemkey;
+			#$request->addResultLoop('item_loop',$cnt,'textkey',$itemkey);
 		}
 		if($item->{'playtype'} eq 'none') {
 			foreach my $p (keys %baseParams) {
