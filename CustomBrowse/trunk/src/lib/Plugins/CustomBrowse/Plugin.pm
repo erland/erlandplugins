@@ -1395,6 +1395,7 @@ sub webPages {
 		if($prefs->get('menuinsidebrowse')) {
 		        Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
+			Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_CUSTOMBROWSE' => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}
 		delSlimserverWebMenus();
 	}
@@ -1404,6 +1405,7 @@ sub webPages {
 	}else {
 		Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_CUSTOMBROWSE' => $value });
 	        Slim::Web::Pages->addPageLinks("pluginsiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
+		Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_CUSTOMBROWSE' => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 	}
 }
 
@@ -1466,10 +1468,12 @@ sub addWebMenus {
 			$log->debug("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $url });
+			Slim::Web::Pages->addPageLinks("icons", {$name => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}else {
 			$log->debug("Adding menu: $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
+			Slim::Web::Pages->addPageLinks("icons", {$name => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}
             }else {
 		$log->debug("Removing menu: $name\n");

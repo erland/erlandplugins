@@ -6,6 +6,7 @@
   <description>SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
   <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <icon>plugins/CustomBrowse/html/images/custombrowse.png</icon>
   <id>00CE8276-73D2-11DC-A3C4-F96E35E3D443</id>
   <module>Plugins::CustomBrowse::Plugin</module>
   <optionsURL>plugins/CustomBrowse/settings/basic.html</optionsURL>
