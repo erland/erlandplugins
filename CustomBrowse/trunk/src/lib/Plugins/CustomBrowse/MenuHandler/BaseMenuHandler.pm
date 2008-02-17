@@ -778,6 +778,7 @@ sub getPageItemsForContext {
 			my $pageItemNo=0;
 			my $startItemNo = 0;
 			my $moveAlphaLetter = 0;
+			my $pageNo = 0;
 			for my $alphaIt (@$items) {
 				if($pageItemNo>=$itemsPerPage) {
 					if($alphaIt->{'itemlink'} ne $letter) {
@@ -792,11 +793,13 @@ sub getPageItemsForContext {
 				$letter = $alphaIt->{'itemlink'};
 				if(defined($letter) && (!defined($prevLetter) || $letter ne $prevLetter)) {
 					$alphaMap{$letter}=$startItemNo;
+					$pageNo = $pageNo + 1;
 				}
 				$itemNo =$itemNo + 1;
 				$pageItemNo = $pageItemNo + 1;
 			}
 			$result{'pageinfo'}->{'alphamap'}=\%alphaMap;
+			$result{'pageinfo'}->{'totalalphapages'} = $pageNo;
 		}
 		my $start = 0;
 		if(defined($params->{'start'})) {

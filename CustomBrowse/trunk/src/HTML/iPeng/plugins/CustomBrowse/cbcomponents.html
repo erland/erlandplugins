@@ -1,11 +1,6 @@
 
 [% BLOCK cbfooter %]
-	<div id = 'crumblist[% IF page_vertical %]_vert[% END %]'>
-		<a href = "javascript:window.scrollTo (0,1)" title = '[% "MOVEUP" | string %]'>
-		<img src = "[% webroot %]html/images/top[% IF page_vertical %]_black[% END %].png" border = "0" width = "40" height = "25" alt 
-= '[% "MOVEUP" | string %]'></a>
-		[% PROCESS cbpagebarfooter %]
-	</div>
+	[% PROCESS cbpagebarfooter %]
 [% PROCESS plugins/CustomBrowse/menuheader.html items=pluginCustomBrowseFooterItems %]
 
 [% IF pluginCustomBrowseError %]
@@ -21,53 +16,31 @@
 
 [% BLOCK cbpagebar %]
 	[%- IF (pluginCustomBrowseItems.max > 10) && pluginCustomBrowsePageInfo.alphamap && ((pluginCustomBrowsePageInfo.totalpages > 1) || (pluginCustomBrowsePageInfo.totalalphapages != 1)) %]
-	        [% IF pluginCustomBrowseArtworkSupported %]
-	                [% IF artwork == 1 %]
-	                        [% htemp = (pluginCustomBrowseItems.max + 1) DIV 3 %]
-	                        [% IF ((pluginCustomBrowseItems.max + 1) MOD 3) %][% htemp = htemp + 1 %][% END %]
-	                        [% IF htemp < 3 %][% htemp = 3 %][% END %]
-	                        [% htemp = htemp * 180 %]
-	                [% ELSE %]
-	                        [% htemp = 49 * (pluginCustomBrowseItems.max + 1) %]
-	                [% END %]
-	        [% ELSE %]
-	                [%      htemp = 45 * (pluginCustomBrowseItems.max + 1) %]
-	        [% END %]
-	        [% mapSize = htemp DIV 26 %]
-	        <div id = 'alphamap' style = 'height: [% htemp %]px;[% IF !page_vertical %] left: 455px;[% END %]'>
+		[% has_pagebar = 1 %]
 	        [% map_vertical = 1 %]
 	[%- ELSIF (pluginCustomBrowsePageInfo.totalpages > 1) && (pluginCustomBrowsePageInfo.totalalphapages != 1) %]
-	        <div id = 'crumblist[% IF page_vertical %]_vert[% END %]'>
+	        [% has_pagebar = 1 %]
 	        [% map_vertical = 0 %]
 	[% END -%]
-	[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
-		[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
+	[% IF pluginCustomBrowsePageInfo %]
+		[% PROCESS top_pagebar pageinfo=pluginCustomBrowsePageInfo %]
 	[% END %]
 [% END %]
 
 [% BLOCK cbpagebarfooter %]
-	[%- IF (pluginCustomBrowseItems.max > 10) && pluginCustomBrowsePageInfo.alphamap && ((pluginCustomBrowsePageInfo.totalpages > 1) || (pluginCustomBrowsePageInfo.totalalphapages != 1)) %]
-	[%- ELSIF (pluginCustomBrowsePageInfo.totalpages > 1) && (pluginCustomBrowsePageInfo.totalalphapages != 1) %]
-		[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
-			[% PROCESS pagebar pageinfo=pluginCustomBrowsePageInfo %]
-			<div style="float:right;">
-			[% PROCESS cbitemcountiPeng %]
-			</div>
+	[% IF has_pagebar %]
+		[% IF pluginCustomBrowsePageInfo %]
+			[% PROCESS bottom_pagebar pageinfo=pluginCustomBrowsePageInfo %]
 		[% END %]
 	[% END %]
 	</div>
+[% IF has_pagebar && map_vertical;
+        PROCESS expandAlphamap;
+END %]
 [% END %]
 
 [% BLOCK cbitemcount %]
 [% END %]
-
-[% BLOCK cbitemcountiPeng %]
-	[%- IF (pluginCustomBrowseItems.max > 10) && pluginCustomBrowsePageInfo.alphamap && ((pluginCustomBrowsePageInfo.totalpages > 1) || (pluginCustomBrowsePageInfo.totalalphapages != 1)) %]
-	[% ELSIF (pluginCustomBrowsePageInfo.totalpages > 1) && (pluginCustomBrowsePageInfo.totalalphapages != 1) %]
-		[% "ITEMS" | string %] [% pluginCustomBrowsePageInfo.startitem + 1 %] [% "TO" | string %] [% pluginCustomBrowsePageInfo.enditem + 1 %] [% "OF" | string %] [% pluginCustomBrowsePageInfo.totalitems %]
-	[% END %]
-[% END %]
-
 
 [% BLOCK galleryitem %]
 	<li>
@@ -117,12 +90,20 @@
 		[% END %]
 	[% END %]
 [% END %]
+
+[% BLOCK anchorctrl %]
+	<div style = "float: right; padding: 2 [% IF map_vertical %]50[% ELSE %]30[% END %] -2 0; margin: 0 0 -2 0;">
+                [% PROCESS cmdToTop;
+                PROCESS cmdToBottom %]
+	</div>
+[% END %]
+
 [% BLOCK cbcontentitemlist %]
 	[% IF pluginCustomBrowsePageInfo.alphamap && ((pluginCustomBrowsePageInfo.totalpages > 1) || (pluginCustomBrowsePageInfo.totalalphapages != 1)) && pluginCustomBrowsePageInfo.totalitems>40 && item.anchor %]
 	[% ELSE %]
 		[% item.anchor='' %]
 	[% END %]
-	[%- WRAPPER $contentwrapper anchor=item.anchor rightcontrols='iPengcontrols' %]
+	[%- WRAPPER $contentwrapper anchorcontrols = 'anchorctrl' anchor=item.anchor rightcontrols='iPengcontrols' %]
         	[% count = count + 1 %]
 		[% PROCESS cbcontentitem %]
         [% END %]
@@ -143,19 +124,21 @@
 	[% ELSE %]
 			[% IF !artwork && pluginCustomBrowseArtworkSupported %]
 				<span class="browseCover">
-					[% IF item.slimserverurl %]
-	        				<a href="[% webroot %][% item.slimserverurl %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a><br>
+					[% IF item.attributes %]
+		        			<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %]>[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
 					[% ELSIF item.url %]
-	        				<a href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a><br>
+					        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+					[% ELSIF item.playurl %]
+					        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
 					[% END %]
 				</span>
 				<div class="browseItemDetail">
 					[% IF item.slimserverurl %]
-		        			<br><a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a><br>
+		        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
 					[% ELSIF item.url %]
-		        			<br><a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a><br>
+		        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
 					[% ELSE %]
-		        			<br>[% PROCESS $CustomBrowseItemText truncateAt=22 %]<br>
+		        			[% PROCESS $CustomBrowseItemText truncateAt=22 %]
 					[% END %]
 				</div>
 			[% ELSE %]
@@ -170,8 +153,26 @@
 	[% END %]
 [% END %]
 
+
 [% BLOCK cbcontainer %]
-	<div id="pagecontainer_vert" style = "min-height: 285;">
+	[% containerid = 'pagecontainer';
+	IF page_vertical;
+	        containerid = containerid _ '_vert';
+	END %]
+	<div id = '[% containerid %]' 
+        	 style = "min-height: [% IF (levelName == 'album' || levelName == 'age') %]287[% ELSE %]283[% END %]">
+        	<!-- keep buttons at bottom -->
+
+		<script>
+		        storeReturnPage();
+		</script>
+
+		[% IF warn %]
+		        <b>[% "NOTE" | string %]</b> [% "SCAN_WARNING" | string %] 
+		[% END %]
+
+		[% PROCESS activatePLcontainer %]
+
 		[% content %]
 	</div>
 [% END %]
