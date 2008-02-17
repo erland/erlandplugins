@@ -1,4 +1,4 @@
-[% IF (path == 'plugins/TrackStat/index.htm' OR path == 'plugins/TrackStat/index.html') AND pluginTrackStatStatisticContext.size==0 %]
+[% IF playing == 'true' AND (path == 'plugins/TrackStat/index.htm' OR path == 'plugins/TrackStat/index.html') AND pluginTrackStatStatisticContext.size==0 %]
 	[% PROCESS plugins/TrackStat/nowplaying.html %]
 [% ELSE %]
 	[% PROCESS plugins/TrackStat/browse.html %]

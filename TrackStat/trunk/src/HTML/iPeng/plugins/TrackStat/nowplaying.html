@@ -62,10 +62,10 @@
 		[% WRAPPER contentitem %]
 			<center><a class="tapblock" href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">Click here to refresh</a></center>
 		[% END %]
+	[% END %]
 		[% WRAPPER contentitem %]
 			<center><a class="tapblock" href="[% webroot %]plugins/TrackStat/toprated.html?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">Browse statistics</a></center>
 		[% END %]
-	[% END %]
 [% END %]
 <!-- end plugins output -->
 [% PROCESS pagefooter.html %]
