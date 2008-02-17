@@ -73,19 +73,18 @@ sub handler {
 		foreach my $playlist (keys %$playLists) {
 			my $playlistid = "playlist_".$playLists->{$playlist}{'dynamicplaylistid'};
 			if($paramRef->{$playlistid}) {
-				$prefs->delete('playlist_'.$playlist.'_enabled');
+				$prefs->set('playlist_'.$playlist.'_enabled',1);
 			}else {
 				$prefs->set('playlist_'.$playlist.'_enabled',0);
-			}
-			my $playlistfavouriteid = "playlistfavourite_".$playLists->{$playlist}{'dynamicplaylistid'};
-			if($paramRef->{$playlistfavouriteid}) {
-				$prefs->set('playlist_'.$playlist.'_favourite',1);
-			}else {
-				$prefs->delete('playlist_'.$playlist.'_favourite');
 			}
 		}
 	
 		savePlayListGroups($playListItems,$paramRef,"");
+		($playLists, $playListItems) = Plugins::DynamicPlayList::Plugin::initPlayLists($client);
+		$paramRef->{'pluginDynamicPlayListPlayLists'} = $playLists;
+		my @groupPath = ();
+		my @groupResult = ();
+		$paramRef->{'pluginDynamicPlayListGroups'} = Plugins::DynamicPlayList::Plugin::getPlayListGroups(\@groupPath,$playListItems,\@groupResult);
         }
 
 	return $class->SUPER::handler($client, $paramRef);

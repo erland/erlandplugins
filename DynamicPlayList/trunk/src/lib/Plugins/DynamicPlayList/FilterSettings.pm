@@ -83,6 +83,8 @@ sub handler {
 				$prefs->set('filter_'.$key.'_enabled',0);
 			}
 		}
+		$filters = Plugins::DynamicPlayList::Plugin::initFilters();
+		$paramRef->{'pluginDynamicPlayListFilters'} = $filters;
         }
 
 	return $class->SUPER::handler($client, $paramRef);

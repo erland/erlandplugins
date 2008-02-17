@@ -76,9 +76,11 @@ sub handler {
 			if($paramRef->{$playlistfavouriteid}) {
 				$prefs->set('playlist_'.$playlist.'_favourite',1);
 			}else {
-				$prefs->delete('playlist_'.$playlist.'_favourite');
+				$prefs->remove('playlist_'.$playlist.'_favourite');
 			}
 		}
+		($playLists, $playListItems) = Plugins::DynamicPlayList::Plugin::initPlayLists($client);
+		$paramRef->{'pluginDynamicPlayListPlayLists'} = $playLists;
         }
 
 	return $class->SUPER::handler($client, $paramRef);
