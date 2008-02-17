@@ -1801,7 +1801,7 @@ sub initPlugin {
 sub postinitPlugin {
 	initPlayLists();
 	initPlayListTypes();
-	#registerJiveMenu();
+	registerJiveMenu();
 }
 
 sub title {
@@ -1890,7 +1890,7 @@ sub handleWebList {
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
-	#registerJiveMenu();
+	registerJiveMenu();
 	my $playlist = undef;
 	if(defined($client) && defined($mixInfo{$client}) && defined($mixInfo{$client}->{'type'})) {
 		$playlist = getPlayList($client,$mixInfo{$client}->{'type'});
@@ -2628,6 +2628,7 @@ sub cliJiveHandler {
 		my $actions = {
 			'do' => {
 				'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+				'params' => \%itemParams,
 				'itemsParams' => 'params',
 			},
 		};
