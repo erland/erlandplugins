@@ -58,10 +58,9 @@ sub pages {
 	return \@pages;
 }
 
-sub handler {
-	my ($class, $client, $paramRef) = @_;
+sub initStatisticItems {
+	my $statistics = shift;
 
-	my $statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
 	my @statisticItems = ();
 	for my $item (keys %$statistics) {
 		my %itemData = ();
@@ -78,6 +77,14 @@ sub handler {
 		push @statisticItems, \%itemData;
 	}
 	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
+	return @statisticItems;
+}
+
+sub handler {
+	my ($class, $client, $paramRef) = @_;
+
+	my $statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
+	my @statisticItems = initStatisticItems($statistics);
 	$paramRef->{'pluginTrackStatStatisticItems'} = \@statisticItems;
 	$paramRef->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/2;
 
@@ -89,11 +96,15 @@ sub handler {
 				$prefs->set('statistics_'.$statistic.'_favourite',1);
 				$statistics->{$statistic}->{'trackstat_statistic_favourite'} = 1;
 			}else {
-				$prefs->delete('statistics_'.$statistic.'_favourite');
-				$statistics->{$statistic}->{'trackstat_statistic_favourite'} = 1;
+				$prefs->remove('statistics_'.$statistic.'_favourite');
+				$statistics->{$statistic}->{'trackstat_statistic_favourite'} = 0;
 			}
 		}
 		Plugins::TrackStat::Plugin::initStatisticPlugins();
+		$statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
+		my @statisticItems = initStatisticItems($statistics);
+		$paramRef->{'pluginTrackStatStatisticItems'} = \@statisticItems;
+		$paramRef->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/2;
         }
 
 	return $class->SUPER::handler($client, $paramRef);

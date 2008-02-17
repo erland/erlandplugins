@@ -58,10 +58,8 @@ sub pages {
 	return \@pages;
 }
 
-sub handler {
-	my ($class, $client, $paramRef) = @_;
-
-	my $statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
+sub initStatisticItems {
+	my $statistics = shift;
 	my @statisticItems = ();
 	for my $item (keys %$statistics) {
 		my %itemData = ();
@@ -78,6 +76,14 @@ sub handler {
 		push @statisticItems, \%itemData;
 	}
 	@statisticItems = sort { $a->{'name'} cmp $b->{'name'} } @statisticItems;
+	return @statisticItems;
+}
+
+sub handler {
+	my ($class, $client, $paramRef) = @_;
+
+	my $statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
+	my @statisticItems = initStatisticItems($statistics);
 	$paramRef->{'pluginTrackStatStatisticItems'} = \@statisticItems;
 	$paramRef->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/2;
 
@@ -86,7 +92,7 @@ sub handler {
 		foreach my $statistic (keys %$statistics) {
 			my $statisticid = "statistic_".$statistics->{$statistic}->{'id'};
 			if($paramRef->{$statisticid}) {
-				$prefs->delete('statistics_'.$statistic.'_enabled');
+				$prefs->set('statistics_'.$statistic.'_enabled',1);
 				$statistics->{$statistic}->{'trackstat_statistic_enabled'} = 1;
 			}else {
 				$prefs->set('statistics_'.$statistic.'_enabled',0);
@@ -94,6 +100,10 @@ sub handler {
 			}
 		}
 		Plugins::TrackStat::Plugin::initStatisticPlugins();
+		my $statistics = Plugins::TrackStat::Plugin::getStatisticPlugins();
+		my @statisticItems = initStatisticItems($statistics);
+		$paramRef->{'pluginTrackStatStatisticItems'} = \@statisticItems;
+		$paramRef->{'pluginTrackStatNoOfStatisticItemsPerColumn'} = scalar(@statisticItems)/2;
         }
 
 	return $class->SUPER::handler($client, $paramRef);
