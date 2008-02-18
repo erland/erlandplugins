@@ -458,10 +458,10 @@ PLUGIN_TRACKSTAT_PURGE_TRACKS
 	EN	Delete unused statistic
 
 SETUP_PLUGIN_TRACKSTAT_PURGE_TRACKS
-	EN	Delete unused statistic after rescan
+	EN	Delete unused statistic
 
 SETUP_PLUGIN_TRACKSTAT_PURGE_TRACKS_DESC
-	EN	This deletes statistic data for all tracks that no longer exists in a database after a rescan, note that if you have changed filename of a track and performed a rescan it till be detected as a completely new track if it does not contain MusicBrainz Id's. Due to this the old file in statistic data will be deleted if you perform this operation. <br><b>WARNING!</b><br>Deleted statistic data will not be possible to get back, so perform a backup of statistic data before you perform this operation.
+	EN	This deletes statistic data for all tracks that no longer exists in a database, note that if you have changed filename of a track and performed a rescan it till be detected as a completely new track if it does not contain MusicBrainz Id's. Due to this the old file in statistic data will be deleted if you perform this operation. <br><b>WARNING!</b><br>Deleted statistic data will not be possible to get back, so perform a backup of statistic data before you perform this operation.
 
 SETUP_PLUGIN_TRACKSTAT_PURGE_TRACKS_WARNING
 	EN	This will delete all statistics connected to tracks that no longer exists in SqueezeCenter database, are you sure you want to continue ?
