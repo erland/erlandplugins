@@ -1064,7 +1064,11 @@ sub registerJiveMenu {
 			},
 		},
 	);
-	Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
+	if($prefs->get('menuinsidebrowse')) {
+		Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
+	}else {
+		Slim::Control::Jive::registerPluginMenu(\@menuItems,'extras');
+	}
 }
 
 sub callCallbackWithArg {
