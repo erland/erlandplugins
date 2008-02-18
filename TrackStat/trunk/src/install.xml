@@ -6,6 +6,7 @@
   <description>SETUP_PLUGIN_TRACKSTAT_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
   <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <playerMenu>BROWSE_MUSIC</playerMenu>
   <id>8BA09E6A-77BB-11DC-91DD-A3F5D22FE61F</id>
   <module>Plugins::TrackStat::Plugin</module>
   <optionsURL>plugins/TrackStat/settings/basic.html</optionsURL>
