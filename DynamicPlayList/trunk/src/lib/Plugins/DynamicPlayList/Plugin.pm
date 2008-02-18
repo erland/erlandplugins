@@ -1292,6 +1292,19 @@ sub getSetModeDataForSubItems {
 		}
 	}
 	
+	@listRefSub = sort { 
+		if(defined($a->{'name'}) && defined($b->{'name'})) {
+			return $a->{'name'} cmp $b->{'name'};
+		}
+		if(defined($a->{'name'}) && !defined($b->{'name'})) {
+			return $a->{'name'} cmp $b->{'playlist'}->{'name'};
+		}
+		if(!defined($a->{'name'}) && defined($b->{'name'})) {
+			return $a->{'playlist'}->{'name'} cmp $b->{'name'};
+		}
+		return $a->{'playlist'}->{'name'} cmp $b->{'playlist'}->{'name'} 
+	} @listRefSub;
+
 	my %params = (
 		header     => '{PLUGIN_DYNAMICPLAYLIST} {count}',
 		listRef    => \@listRefSub,
