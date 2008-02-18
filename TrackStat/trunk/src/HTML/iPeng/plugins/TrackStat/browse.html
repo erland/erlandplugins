@@ -71,7 +71,9 @@
 						[% loop = loop + 1 %]
 					[% END %]
 					[% IF loop <= pluginTrackStatGroupRating %]
-						<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 alt="[% loop %]" title="[% pluginTrackStatGroupRatingNumber %]">
+						<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.png" width=27 height=27 alt="[% loop %]" title="[% pluginTrackStatGroupRatingNumber %]">
+					[% ELSE %]
+						<img src="[% webroot %]plugins/TrackStat/html/images/empty_noborder.gif" width=27 height=27>
 					[% END %]
 				[% END %]
 				&nbsp;

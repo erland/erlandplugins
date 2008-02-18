@@ -20,7 +20,7 @@
 			[% IF item.listtype == 'track' and player!='' %]
 				<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=rating&trackstatrating=[% loop %]&trackstattrackid=[% item.itemobj.id%][% statisticparameters %][% pluginTrackStatStatisticContextPath %]#songlist" border="0"><img style="visibility: visible;" border="0" src="[% webroot %]plugins/TrackStat/html/images/star.png" width=27 height=27 title="[% loop %]"></a>
 			[% ELSE %]
-				<img border="0" style="visibility: visible;" src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 title="[% item.ratingnumber %]">
+				<img border="0" style="visibility: visible;" src="[% webroot %]plugins/TrackStat/html/images/star_noborder.png" width=13 height=13 title="[% item.ratingnumber %]">
 			[% END %]
 		[% ELSE %]
 			[% IF item.listtype == 'track' and player!='' %]
