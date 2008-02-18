@@ -1210,6 +1210,74 @@ sub addPlayerMenus {
         }
 }
 
+sub addJivePlayerMenus {
+	my $client = shift;
+	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'jive');
+        for my $menu (@$menus) {
+            my $name = getMenuHandler()->getItemText($client,$menu);
+            if($menu->{'enabledbrowse'}) {
+		my %itemParams = ();
+		if(defined($menu->{'contextid'})) {
+			$itemParams{'hierarchy'} = $menu->{'contextid'};
+		}else {
+			$itemParams{'hierarchy'} = $menu->{'id'};
+		}
+
+		my $itemtype = undef;
+		if(defined($menu->{'menu'})) {
+			my $menuRef = $menu->{'menu'};
+			my @submenus = ();
+			if(ref($menuRef) eq 'ARRAY') {
+				@submenus = @$menuRef;
+			}else {
+				push @submenus,$menuRef;
+			}
+			my $ignore = 0;
+			foreach my $nextmenu (@submenus) {
+				if(defined($nextmenu->{'itemtype'})) {
+					if(!defined($itemtype)) {
+						$itemtype = $nextmenu->{'itemtype'};
+					}elsif($itemtype ne $nextmenu->{'itemtype'}) {
+						$itemtype = "NOTUSED";
+					}
+				}
+				if(defined($nextmenu->{'menutype'}) && $nextmenu->{'menutype'} eq 'mode') {
+					$ignore = 1;
+					last;
+				}
+			}
+			if($ignore) {
+				next;
+			}
+		}
+
+		my %menuStyle = ();
+		$menuStyle{titleStyle} = 'mymusic';
+		if(defined($itemtype) && $itemtype eq 'album') {
+			$menuStyle{'menuStyle'} = 'album';
+		}
+		my @menuItems = (
+			{
+				text => $name,
+				weight => defined($menu->{'menuorder'})?$menu->{'menuorder'}:80,
+				id => $menu->{'id'},
+				window => \%menuStyle,
+				actions => {
+					go => {
+						cmd => ['custombrowse', 'browsejive'],
+						params => \%itemParams,
+						itemsParams => 'params',
+					},
+				},
+			},
+		);
+		Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
+            }else {
+		Slim::Control::Jive::deleteMenuItem($menu->{'id'});
+	    }
+        }
+}
+
 sub getFunctions {
 	# Functions to allow mapping of mixes to keypresses
 	return {
@@ -3290,6 +3358,7 @@ sub readBrowseConfiguration {
 	delSlimserverWebMenus();
 	delSlimserverPlayerMenus();
 	addPlayerMenus($client);
+	addJivePlayerMenus($client);
 	return $browseMenusFlat;
 }
 
