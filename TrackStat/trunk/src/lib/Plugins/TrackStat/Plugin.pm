@@ -1044,6 +1044,7 @@ sub webPages {
 
 	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
 	Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
+	Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/html/images/trackstat.png'});
 }
 
 sub baseWebPage {
