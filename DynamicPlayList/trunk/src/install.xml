@@ -6,6 +6,7 @@
   <description>SETUP_PLUGIN_DYNAMICPLAYLIST_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
   <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <icon>plugins/DynamicPlayList/html/images/dynamicplaylist.png</icon>
   <playerMenu>BROWSE_MUSIC</playerMenu>
   <id>4CDE3E38-6EB2-11DC-B57E-AB0BE8B82636</id>
   <module>Plugins::DynamicPlayList::Plugin</module>

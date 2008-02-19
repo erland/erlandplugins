@@ -1893,6 +1893,7 @@ sub webPages {
 
 	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
 	Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
+	Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_DYNAMICPLAYLIST' => 'plugins/DynamicPlayList/html/images/dynamicplaylist.png'});
 }
 
 # Draws the plugin's web page
