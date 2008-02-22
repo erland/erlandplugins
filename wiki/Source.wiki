@@ -15,6 +15,9 @@ If you plan to make changes, use this command to check out the code as yourself 
 *{{{Custom Skip}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomSkip/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip --username yourgooglecodeid}}}
 
+*{{{Database Query}}}* ([http://code.google.com/p/erlandplugins/source/browse/DatabaseQuery/trunk/src browse])
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/DatabaseQuery/trunk DatabaseQuery --username yourgooglecodeid}}}
+
 *{{{Dynamic Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/DynamicPlayList/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList --username yourgooglecodeid}}}
 
@@ -50,6 +53,9 @@ Use this command to anonymously check out the latest project source code:
 
 *{{{Custom Skip}}}* ([http://code.google.com/p/erlandplugins/source/browse/CustomSkip/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/CustomSkip/trunk CustomSkip}}}
+
+*{{{Database Query}}}* ([http://code.google.com/p/erlandplugins/source/browse/DatabaseQuery/trunk/src browse])
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/DatabaseQuery/trunk DatabaseQuery}}}
 
 *{{{Dynamic Playlist}}}* ([http://code.google.com/p/erlandplugins/source/browse/DynamicPlayList/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/DynamicPlayList/trunk DynamicPlayList}}}
