@@ -153,7 +153,7 @@ $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'min_album_tracks'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'min_song_length'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'song_threshold_length'  );
-$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,  'high' => 100 }, 'song_threshold_length'  );
+$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,  'high' => 100 }, 'min_song_percent'  );
 
 my $PLUGINVERSION = undef;
 
