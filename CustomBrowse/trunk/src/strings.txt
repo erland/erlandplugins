@@ -20,7 +20,7 @@ PLUGIN_CUSTOMBROWSE_SETTINGS_ENABLEDMIXERS
 	EN	Enabled mixers
 
 PLUGIN_CUSTOMBROWSE_SETTINGS_ENABLEDSLIMSERVERMENUS
-	EN	Enabled SlimServer menus
+	EN	Enabled SqueezeCenter menus
 
 PLUGIN_CUSTOMBROWSE_SETTINGS_MANAGEMENUS
 	EN	Manage menus
@@ -53,13 +53,13 @@ SETUP_PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO
 	EN	Override standard track details
 
 SETUP_PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO_DESC
-	EN	Override standard track details. May require slimserver restart.
+	EN	Override standard track details. May require SqueezeCenter restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION
 	EN	Play+Hold browse by action
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION_DESC
-	EN	Enable Custom Browse play+hold browse by action. May require slimserver restart.
+	EN	Enable Custom Browse play+hold browse by action. May require SqueezeCenter restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON
 	EN	Single mixer button in web interface
@@ -71,13 +71,13 @@ SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION
 	EN	Mixer browse by icons
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION_DESC
-	EN	Enable Custom Browse mixer browse by selected in web interface. May require slimserver restart.
+	EN	Enable Custom Browse mixer browse by selected in web interface. May require SqueezeCenter restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 	EN	Menu position
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE_DESC
-	EN	Show Custom Browse menu inside Browse menu (requires slimserver restart)
+	EN	Show Custom Browse menu inside Browse menu (requires SqueezeCenter restart)
 
 SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
@@ -119,7 +119,7 @@ SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME
 	EN	Menu name
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME_DESC
-	EN	Menu name (Slimserver 6.5 only, requires restart)
+	EN	Menu name (Requires SqueezeCenter restart)
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS
 	EN	Enable/Disable menus/mixers
@@ -155,10 +155,10 @@ SETUP_PLUGIN_CUSTOMBROWSE_ENABLED_MIXERS_DESC
 	EN	Select enabled mixers
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLED_SLIMSERVER_MENUS
-	EN	Select enabled SlimServer menus
+	EN	Select enabled SqueezeCenter menus
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLED_SLIMSERVER_MENUS_DESC
-	EN	Select enabled SlimServer menus (changes requires SlimServer restart)
+	EN	Select enabled SqueezeCenter menus (changes requires SqueezeCenter restart)
 
 PLUGIN_CUSTOMBROWSE_SELECT_MIXES_TITLE
 	EN	Select enabled mixers
@@ -321,4 +321,7 @@ PLUGIN_CUSTOMBROWSE_SELECT_MIXES
 
 PLUGIN_CUSTOMBROWSE_DOWNLOAD_QUESTION
 	EN	This operation will download latest version of all menus, this might take some time. Please note that this will overwrite any local changes you have made in built-in or previously downloaded menu types. Are you sure you want to continue ?
+
+PLUGIN_CUSTOMBROWSE_MORE_INFO
+	EN	More information
 

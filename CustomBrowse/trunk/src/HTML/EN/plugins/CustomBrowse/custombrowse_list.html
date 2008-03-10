@@ -9,6 +9,8 @@
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
 		[% "PLUGIN_CUSTOMBROWSE" | string %]
 	</a>
+	[% goHomeURI = '"' _ webroot _ 'plugins/CustomBrowse/custombrowse_list.html?player=' _ playerURI _ '"' %]
+	[% homeString = "PLUGIN_CUSTOMBROWSE" | string %]
 	[% ELSE %]
 		[% skipPrefix = 1 %]
 	[% END %]
@@ -17,8 +19,18 @@
 	                [% IF !skipPrefix %]&nbsp;/&nbsp;[% END %]<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% group.url %][% group.valueUrl %][% IF pluginCustomBrowseMainBrowseMenu %]&mainBrowseMenu=1[% END %]">[% group.name | html%]</a>
 			[% skipPrefix = 0 %]
 			[% pagetitle = group.name %]
+			[% prevHomeString = homeString %]
+			[% prevHomeURI = goHomeURI %]
+			[% homeString = group.name %]
+			[% goHomeURI = '"' _ webroot _ 'plugins/CustomBrowse/custombrowse_list.html?player=' _ playerURI _ '&' _ group.url _ group.valueUrl %]
+			[% IF (pluginCustomBrowseMainBrowseMenu);
+				goHomeURI = goHomeURI _ '&mainBrowseMenu=1';
+			END %]
+			[% goHomeURI = goHomeURI _ '"' %]
 		[% END %]
         [% END %]
+	[% goHomeURI = prevHomeURI %]
+	[% homeString = prevHomeString %]
 [% END -%]
 [% IF pluginCustomBrowseScanWarning %]
 [%- pageHeaderInfo = BLOCK %]
@@ -50,6 +62,7 @@ END;
 	[% WRAPPER cbcontainer %]
 		[% WRAPPER $container %]
 			[% odd = 1 %]
+			[% PROCESS cbcontentitemheader %]
 			[% IF pluginCustomBrowseItems and pluginCustomBrowseItems.size>0 %]
 				<!-- [% WRAPPER contentcontainer %] -->
 					[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]

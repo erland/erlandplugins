@@ -72,7 +72,11 @@ END %]
 
 [% BLOCK iPengcontrols %]
 	[% IF item.mixes and item.mixes.size>0 and item.url %]
-		[% WRAPPER cmdlink cmdimage='mixbutton.png' cmdtitle='PLUGIN_CUSTOMBROWSE' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+		[% IF pluginCustomBrowseContextPage %]
+			[% WRAPPER cmdlink cmdimage='mixbutton.png' cmdtitle='PLUGIN_CUSTOMBROWSE' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+		[% ELSE %]
+			[% WRAPPER cmdlink cmdimage='mixbutton.png' cmdtitle='PLUGIN_CUSTOMBROWSE' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mix.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+		[% END %]
 	[% END %]
 
 	[% IF item.playtype != 'none' %]
@@ -84,9 +88,17 @@ END %]
 		        [% END %]
 			-->
 		[% ELSIF item.url %]
-		        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% IF pluginCustomBrowseContextPage %]
+			        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextadd.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% ELSE %]
+			        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% END %]
 		[% ELSIF item.playurl %]
-		        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% IF pluginCustomBrowseContextPage %]
+			        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextadd.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% ELSE %]
+			        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_add.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]"[% END %]
+			[% END %]
 		[% END %]
 	[% END %]
 [% END %]
@@ -98,23 +110,99 @@ END %]
 	</div>
 [% END %]
 
+[% BLOCK iPengcover %]
+	[% IF item.attributes %]
+		<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %]>[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+	[% ELSIF item.url %]
+		[% IF pluginCustomBrowseContextPage %]
+		        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplay.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+		[% ELSE %]
+		        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+		[% END %]
+	[% ELSIF item.playurl %]
+		[% IF pluginCustomBrowseContextPage %]
+		        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplay.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+		[% ELSE %]
+		        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+		[% END %]
+	[% END %]
+[% END %]
+
 [% BLOCK cbcontentitemlist %]
 	[% IF pluginCustomBrowsePageInfo.alphamap && ((pluginCustomBrowsePageInfo.totalpages > 1) || (pluginCustomBrowsePageInfo.totalalphapages != 1)) && pluginCustomBrowsePageInfo.totalitems>40 && item.anchor %]
 	[% ELSE %]
 		[% item.anchor='' %]
 	[% END %]
+	[% IF !artwork && pluginCustomBrowseArtworkSupported %]
+		[% leftcontrols='iPengcover' %]
+	[% ELSE %]
+		[% leftcontrols='' %]
+	[% END %]
+
 	[%- WRAPPER $contentwrapper anchorcontrols = 'anchorctrl' anchor=item.anchor rightcontrols='iPengcontrols' %]
         	[% count = count + 1 %]
 		[% PROCESS cbcontentitem %]
         [% END %]
 [% END %]
 [% BLOCK iPengallsongscontrols %]
-        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+	[% IF pluginCustomBrowseContextPage %]
+	        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextaddall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+	[% ELSE %]
+	        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_addall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+	[% END %]
+[% END %]
+
+[% BLOCK iPengHeaderInfoControls %]
+	[% IF pluginCustomBrowseArtworkSupported %] 
+                [% IF artwork %][% WRAPPER cmdlink cmdimage='artworkbutton.png' cmdtitle='SWITCH_TO_GALLERY' %]href="javascript:toggleGalleryView(0);"[% END %]
+                [% ELSE %][% WRAPPER cmdlink cmdimage='listbutton.png' cmdtitle='SWITCH_TO_LIST' %]href="javascript:toggleGalleryView(1);"[% END %]
+                [% END %]
+	[% END %]
+	[% IF pluginCustomBrowseHeaderItems.size>0 %]
+		[% IF pluginCustomBrowseContextPage %]
+			[% WRAPPER cmdlink cmdimage='infobutton.png' cmdtitle='PLUGIN_CUSTOMBROWSE_MORE_INFO' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextheader.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF artwork %]&artwork=1[% END %]&player=[% playerURI %]"[% END %]
+		[% ELSE %]
+			[% WRAPPER cmdlink cmdimage='infobutton.png' cmdtitle='PLUGIN_CUSTOMBROWSE_MORE_INFO' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_header.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF artwork %]&artwork=1[% END %]&player=[% playerURI %]"[% END %]
+		[% END %]
+	[% END %]
+[% END %]
+
+[% BLOCK cbcontentitemheader %]
+	[% IF pluginCustomBrowseOptions or pluginCustomBrowseArtworkSupported or pluginCustomBrowseHeaderItems.size>0 %]
+		[%- WRAPPER contentitem rightcontrols='iPengHeaderInfoControls' %]
+		<div>
+			<script type="text/javascript">
+				function chooseCustomBrowseOption(value, option)
+				{
+				        var url = '[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF artwork %]&artwork=1[% END %]&player=[% playerURI %]';
+		
+				        if (option) {
+				                url = url + '&option=' + option;
+				        }
+				        setCookie( 'SlimServer-CustomBrowse-option', option );
+				        window.location = url;
+				}
+			</script>
+			[% IF pluginCustomBrowseOptions %]
+		        <select class = "selectOptions" name="options" onChange="chooseCustomBrowseOption(selectedIndex,options[selectedIndex].value)">
+			        [% FOREACH option IN pluginCustomBrowseOptions %]
+			                <option [% IF pluginCustomBrowseSelectedOption == option.id %]selected[% END %] value="[% option.id %]">[% option.name %]</option>
+			        [% END %]
+			</select>
+			[% END %]
+			&nbsp;
+		</div>
+		[% END %]
+	[% END %]
 [% END %]
 
 [% BLOCK cbcontentitemallsongs %]
 	[%- WRAPPER contentitem rightcontrols='iPengallsongscontrols' %]
-       		[% "ALL_SONGS" | string %]<br>
+		[% IF pluginCustomBrowseContextPage %]
+	       		<a class="tapblock" href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]">[% "ALL_SONGS" | string %]</a><br>
+		[% ELSE %]
+       			<a class="tapblock" href="[% webroot %]plugins/CustomBrowse/custombrowse_playall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]">[% "ALL_SONGS" | string %]</a><br>
+		[% END %]
        	[% END %]
 [% END %]
 
@@ -122,34 +210,27 @@ END %]
 	[% IF item.itemobj %]
 		[% PROCESS trackinfo %]
 	[% ELSE %]
-			[% IF !artwork && pluginCustomBrowseArtworkSupported %]
-				<span class="browseCover">
-					[% IF item.attributes %]
-		        			<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %]>[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
-					[% ELSIF item.url %]
-					        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
-					[% ELSIF item.playurl %]
-					        <a href="[% webroot %]plugins/CustomBrowse/custombrowse_play.html?player=[% player | uri %]&[% item.playurl %][% IF start %]&start=[% start %][% END %]">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
-					[% END %]
-				</span>
-				<div class="browseItemDetail">
-					[% IF item.slimserverurl %]
-		        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
-					[% ELSIF item.url %]
-		        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
-					[% ELSE %]
-		        			[% PROCESS $CustomBrowseItemText truncateAt=22 %]
-					[% END %]
-				</div>
+		[% IF !artwork && pluginCustomBrowseArtworkSupported %]
+			<div class="browseItemDetailWithCover">
+			[% IF item.slimserverurl %]
+        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
+			[% ELSIF item.url %]
+        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
 			[% ELSE %]
-				[% IF item.slimserverurl %]
-	        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
-				[% ELSIF item.url %]
-	        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
-				[% ELSE %]
-	        			[% PROCESS $CustomBrowseItemText truncateAt=30 %]<br>
-				[% END %]
+        			[% PROCESS $CustomBrowseItemText truncateAt=22 %]
 			[% END %]
+			</div>
+		[% ELSE %]
+			<div class="browseItemDetail">
+			[% IF item.slimserverurl %]
+        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
+			[% ELSIF item.url %]
+        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
+			[% ELSE %]
+        			[% PROCESS $CustomBrowseItemText truncateAt=30 %]<br>
+			[% END %]
+			</div>
+		[% END %]
 	[% END %]
 [% END %]
 
@@ -165,6 +246,7 @@ END %]
 
 		<script>
 		        storeReturnPage();
+		        storeReturnLevel();
 		</script>
 
 		[% IF warn %]
@@ -176,3 +258,8 @@ END %]
 		[% content %]
 	</div>
 [% END %]
+
+<!-- Temporary fix since galleryitem and gallerycontainer currently don't work -->
+[% contentwrapper = 'contentitem' %]
+[% container = 'contentcontainer' %]
+

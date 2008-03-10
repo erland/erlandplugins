@@ -1392,6 +1392,8 @@ sub webPages {
 	my $class = shift;
 	my %pages = (
                 "CustomBrowse/custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
+                "CustomBrowse/custombrowse_header\.(?:htm|xml)"     => \&handleWebHeader,
+                "CustomBrowse/custombrowse_contextheader\.(?:htm|xml)"     => \&handleWebHeader,
                 "CustomBrowse/custombrowse_contextlist\.(?:htm|xml)"     => \&handleWebContextList,
                 "CustomBrowse/custombrowse_settings\.(?:htm|xml)"     => \&handleWebSettings,
                 "CustomBrowse/custombrowse_albumimage\.(?:jpg|gif|png)"     => \&handleWebAlbumImage,
@@ -1592,6 +1594,94 @@ sub handleWebList {
 	}
 
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
+}
+
+
+sub handleWebHeader {
+        my ($client, $params) = @_;
+
+	$sqlerrors = '';
+
+	my $context = undef;
+	my $contextParams = undef;
+	if($params->{'path'} =~ /contextheader/) {
+		if(defined($params->{'contexttype'})) {
+			if(defined($params->{'hierarchy'})) {
+				my $regExp = "^group_".$params->{'contexttype'}.".*";
+				if($params->{'hierarchy'} !~ /$regExp/) {
+					$params->{'hierarchy'} = 'group_'.$params->{'contexttype'}.','.$params->{'hierarchy'};
+				}
+			}else {
+				$params->{'hierarchy'} = 'group_'.$params->{'contexttype'};
+			}
+		}
+		if(defined($params->{'contextid'})) {
+			my %c = (
+				'itemid' => $params->{'contextid'},
+				'itemtype' => $params->{'contexttype'},
+				'itemname' => $params->{'contextname'}
+			);
+			my $contextString = '';
+			if(defined($c{'itemid'})) {
+				$contextString .= "&contextid=".$c{'itemid'};
+			}
+			if(defined($c{'itemtype'})) {
+				$contextString .= "&contexttype=".$c{'itemtype'};
+			}
+			if(defined($c{'itemname'})) {
+				$contextString .= "&contextname=".escape($c{'itemname'});
+			}
+			$c{'itemurl'} = $contextString;
+			if($params->{'noitems'}) {
+				$c{'noitems'} = '&noitems=1';
+			}
+			$contextParams = \%c;
+		}
+		$context = getContextMenuHandler()->getContext($client,$params,1);
+		if(scalar(@$context)>0) {
+			if(defined($contextParams->{'itemname'})) {
+				$context->[0]->{'name'} = Slim::Utils::Unicode::utf8decode($contextParams->{'itemname'},'utf8');
+			}else {
+				$context->[0]->{'name'} = "Context";
+			}
+		}
+	
+		for my $ctx (@$context) {
+			$ctx->{'valueUrl'} .= $contextParams->{'itemurl'};
+		}
+	}else {
+		$context = getMenuHandler()->getContext($client,$params,1);
+	}
+
+	$params->{'pluginCustomBrowseContext'} = $context;
+	$params->{'pluginCustomBrowseSelectedOption'} = $params->{'option'};
+	if($params->{'mainBrowseMenu'}) {
+		$params->{'pluginCustomBrowseMainBrowseMenu'} = 1;
+	}
+	$params->{'pluginCustomBrowseValueSeparator'} = $prefs->get("header_value_separator");
+	if(defined($params->{'pluginCustomBrowseValueSeparator'})) {
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\\\/\\/;
+		$params->{'pluginCustomBrowseValueSeparator'} =~ s/\\n/\n/;
+	}
+
+	if(defined($context) && scalar(@$context)>0) {
+		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+	}
+	if(defined($params->{'pluginCustomBrowseCurrentContext'})) {
+		$params->{'pluginCustomBrowseHeaderItems'} = getHeaderItems($client,$params,$params->{'pluginCustomBrowseCurrentContext'},$contextParams,"header");
+	}
+	if($sqlerrors && $sqlerrors ne '') {
+		$params->{'pluginCustomBrowseError'} = $sqlerrors;
+	}
+	$params->{'pluginCustomBrowseVersion'} = $PLUGINVERSION;
+	if($prefs->get("single_web_mixerbutton")) {
+		$params->{'pluginCustomBrowseSingleMixButton'}=1;
+	}
+	if (Slim::Music::Import->stillScanning || (UNIVERSAL::can("Plugins::CustomScan::Plugin","isScanning") && eval { Plugins::CustomScan::Plugin::isScanning() })) {
+		$params->{'pluginCustomBrowseScanWarning'} = 1;
+	}
+
+        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_header.html', $params);
 }
 
 sub getHeaderItems {
