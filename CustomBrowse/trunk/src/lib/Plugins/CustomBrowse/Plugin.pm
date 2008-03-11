@@ -2539,7 +2539,7 @@ sub handleWebExecuteMix {
 				$newHierarchy = $newHierarchy.',';
 			}
 			if($i<$noOfHierarchiesToUse) {
-				$newHierarchy = $hierarchyItem;
+				$newHierarchy .= $hierarchyItem;
 			}
 			$i=$i+1;
 		}
@@ -2554,6 +2554,7 @@ sub handleWebExecuteMix {
 		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
 	}
 	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
+$log->warn("GOT: ".$params->{'CustomBrowseReloadQuery'});
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
@@ -2609,7 +2610,7 @@ sub handleWebExecuteMixContext {
 				$newHierarchy = $newHierarchy.',';
 			}
 			if($i<$noOfHierarchiesToUse) {
-				$newHierarchy = $hierarchyItem;
+				$newHierarchy .= $hierarchyItem;
 			}
 			$i=$i+1;
 		}
