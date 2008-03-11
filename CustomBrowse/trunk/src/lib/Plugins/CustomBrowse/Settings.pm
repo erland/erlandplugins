@@ -60,12 +60,29 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator));
+        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator properties));
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;
-
 	# TODO: Handle properties attribute
+	if ($paramRef->{'saveSettings'}) {
+		my $properties = $prefs->get('properties');
+
+		for my $key (keys %$properties) {
+			if($paramRef->{'property_value_'.$key} eq '') {
+				delete $properties->{$key};
+			}else {
+				$properties->{$key} = $paramRef->{'property_value_'.$key};
+			}
+		}
+		if($paramRef->{'property_name_new'} ne '' && $paramRef->{'property_value_new'} ne '') {
+			my $name = $paramRef->{'property_name_new'};
+			if(exists $paramRef->{'property_value_new'}) {
+				$properties->{$name} = $paramRef->{'property_value_new'};
+			}
+		}
+		$paramRef->{'properties'} = $properties;
+	}
 	my $result = $class->SUPER::handler($client, $paramRef);
 	if ($paramRef->{'saveSettings'}) {
 		Plugins::CustomBrowse::Plugin::getConfigManager()->initWebAdminMethods();

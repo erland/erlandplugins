@@ -68,4 +68,16 @@
 		<input type="text" class="stdedit" name="header_value_separator" id="header_value_separator" value="[% prefs.header_value_separator %]" size="5">
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES" desc="SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES_DESC" %]
+		[% FOR property = prefs.properties.keys %]
+			<input type="text" class="stdedit" name="property_name_[% property %]" id="property_name_[% property %]" value="[% property %]" size="20" readonly>
+			&nbsp;&nbsp;
+			<input type="text" class="stdedit" name="property_value_[% property %]" id="property_value_[% property %]" value="[% prefs.properties.$property %]" size="40">
+			<br>
+		[% END %]
+		<input type="text" class="stdedit" name="property_name_new" id="property_name_new" value="" size="20">
+		&nbsp;&nbsp;
+		<input type="text" class="stdedit" name="property_value_new" id="property_value_new" value="" size="40">
+        [% END %]
+
 [% PROCESS settings/footer.html %]
