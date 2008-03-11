@@ -2554,7 +2554,6 @@ sub handleWebExecuteMix {
 		$params->{'url_query'} =~ s/[&?]hierarchy=&//;
 	}
 	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
-$log->warn("GOT: ".$params->{'CustomBrowseReloadQuery'});
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
 }
 
