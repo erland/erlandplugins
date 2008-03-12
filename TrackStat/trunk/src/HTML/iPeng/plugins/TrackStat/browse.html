@@ -99,13 +99,17 @@
 				[% BLOCK controls %]
 					[% PROCESS statisticitemcontrols %]
 				[% END %]
-				[%- WRAPPER contentitem controls='controls' %]
+				[% BLOCK leftcontrols %]
 					[% IF item.listtype=='album' %]
-						<span class="browseCover">
-							<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
-						</span>
-						<span class="browseItemDetail">
+						<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
 					[% END %]		
+				[% END %]
+				[% IF item.listtype=='album' %]
+					[% leftcontrols='leftcontrols' %]
+				[% ELSE %]
+					[% leftcontrols='' %]
+				[% END %]
+				[%- WRAPPER contentitem controls='controls' %]
 					<div>
 					[% IF item.listtype == 'track' %]
 						[% PROCESS trackstatlistitem %]
