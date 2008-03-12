@@ -37,6 +37,18 @@
 	[% IF songlist != '' %]
 		<tr><td><a name="songlist"></a></td></tr>
 		[% WRAPPER contentanchor %][% songlist %][% END %]
+[% WRAPPER contentitem %]
+<div style="float:left;width:180;">
+	<a class="tapblock" href="[% webroot %][% path %]?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</a>
+</div>
+<div style="float:right">
+			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=play"[% END %]
+			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=add"[% END %]
+			[% IF dynamicplaylist %]
+				<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=playdynamic&amp;dynamicplaylist=[% dynamicplaylist %]" title="[% "PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK" | string %]"><img src="[% webroot %]plugins/TrackStat/html/images/dynamicplaylist.png"></a>
+			[% END %]
+</div>
+[% END %]
 			[% IF pluginTrackStatShowGroupRatingControls and player!='' %]
 				[% BLOCK unrategroupcontrol %]
 <a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=0[% statisticparameters %][% pluginTrackStatStatisticContextPath %]" onClick="return confirm('[% "PLUGIN_TRACKSTAT_REMOVE_ALBUM_RATINGS_WARNING" | string %]')"><img src="[% webroot %]html/images/remove.png" alt="Unrate" title="Unrate" width=27 height=27></a>
@@ -81,14 +93,7 @@
 				</span>
 				[% END %]
 			[% END %]
-<!--
-			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=play"[% END %]
-			[% WRAPPER addlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=add"[% END %]
-			[% IF dynamicplaylist %]
-				<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=playdynamic&amp;dynamicplaylist=[% dynamicplaylist %]">[% "PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_LINK" | string %]</a>
-			[% END %]
-		</div>
--->
+
 			[% odd = 1 %]
             [% FOREACH item = browse_items %]
 				[% BLOCK controls %]
@@ -97,7 +102,7 @@
 				[%- WRAPPER contentitem controls='controls' %]
 					[% IF item.listtype=='album' %]
 						<span class="browseCover">
-							<a href="[% webroot %]plugins/TrackStat/[% currentstatisticitems.album %].html?album=[% item.itemobj.album.id %]&amp;player=[% playerURI %]&flatlist=1#songlist">[% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
+							<a [% PROCESS cmdHRef cmdType='play' target='status' itemobj=item.itemobj attributes=item.attributes %][% IF item.coverThumb; hreftype = "thumbnail"; ELSE; hreftype = "dummy"; END; PROCESS "${hreftype}ItemImg" height="50"  noby=0 %]</a>
 						</span>
 						<span class="browseItemDetail">
 					[% END %]		
