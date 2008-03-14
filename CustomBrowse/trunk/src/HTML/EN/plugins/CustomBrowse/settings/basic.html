@@ -24,8 +24,8 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE" desc="SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE_DESC" %]
 		<select name="menuinsidebrowse">
-			<option value="1" [% IF prefs.menuinsidebrowse %]selected[% END %]>[% "YES" | string %]</option>
-			<option value="0" [% IF NOT prefs.menuinsidebrowse %]selected[% END %]>[% "NO" | string %]</option>
+			<option value="1" [% IF prefs.menuinsidebrowse %]selected[% END %]>[% "MY_MUSIC" | string %]</option>
+			<option value="0" [% IF NOT prefs.menuinsidebrowse %]selected[% END %]>[% "PLUGINS" | string %]</option>
 		</select>
 	[% END %]
 
