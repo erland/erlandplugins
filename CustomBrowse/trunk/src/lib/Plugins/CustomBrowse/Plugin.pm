@@ -318,6 +318,26 @@ sub musicMagicMixable {
 	}
 }
 
+sub biographyMixable {
+	my $class = shift;
+	my $item  = shift;
+
+	if(UNIVERSAL::can("Plugins::Biography::Plugin","getArtistFromArtistId")) {
+		return 1;
+	}
+	return undef;
+}
+
+sub albumreviewMixable {
+	my $class = shift;
+	my $item  = shift;
+
+	if(UNIVERSAL::can("Plugins::AlbumReview::Plugin","getAlbumFromAlbumId")) {
+		return 1;
+	}
+	return undef;
+}
+
 sub musicMagicMix {
 	my $client = shift;
 	my $item = shift;
