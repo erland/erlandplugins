@@ -11,8 +11,8 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT" desc="SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT_DESC" %]
 		<select name="dynamicplaylist_norepeat">
-			<option value="1" [% IF prefs.dynamicplaylist_norepeat %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.dynamicplaylist_norepeat %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.dynamicplaylist_norepeat %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_NOTREPEATED" | string %]</option>
+			<option value="0" [% IF NOT prefs.dynamicplaylist_norepeat %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_REPEATED" | string %]</option>
 		</select>
 	[% END %]
 

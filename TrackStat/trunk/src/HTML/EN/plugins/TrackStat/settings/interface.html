@@ -5,22 +5,22 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST" desc="SETUP_PLUGIN_TRACKSTAT_WEB_FLATLIST_DESC" %]
 		<select name="web_flatlist">
-			<option value="1" [% IF prefs.web_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_flatlist %]selected[% END %]>[% "ON" | string %]</option>
+			<option value="1" [% IF prefs.web_flatlist %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_FLAT" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_flatlist %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_STRUCTURED" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST" desc="SETUP_PLUGIN_TRACKSTAT_PLAYER_FLATLIST_DESC" %]
 		<select name="player_flatlist">
-			<option value="1" [% IF prefs.player_flatlist %]selected[% END %]>[% "OFF" | string %]</option>
-			<option value="0" [% IF NOT prefs.player_flatlist %]selected[% END %]>[% "ON" | string %]</option>
+			<option value="1" [% IF prefs.player_flatlist %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_FLAT" | string %]</option>
+			<option value="0" [% IF NOT prefs.player_flatlist %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_STRUCTURED" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY" desc="SETUP_PLUGIN_TRACKSTAT_DEEP_HIERARCHY_DESC" %]
 		<select name="deep_hierarchy">
-			<option value="1" [% IF prefs.deep_hierarchy %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.deep_hierarchy %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.deep_hierarchy %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_DEEP" | string %]</option>
+			<option value="0" [% IF NOT prefs.deep_hierarchy %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_SHALLOW" | string %]</option>
 		</select>
 	[% END %]
 
@@ -34,29 +34,29 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH" desc="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH_DESC" %]
 		<select name="web_refresh">
-			<option value="1" [% IF prefs.web_refresh %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_refresh %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.web_refresh %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_refresh %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS" desc="SETUP_PLUGIN_TRACKSTAT_WEB_SHOW_MIXERLINKS_DESC" %]
 		<select name="web_show_mixerlinks">
-			<option value="1" [% IF prefs.web_show_mixerlinks %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_show_mixerlinks %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.web_show_mixerlinks %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_show_mixerlinks %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="web_enable_mixerfunction">
-			<option value="1" [% IF prefs.web_enable_mixerfunction %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_enable_mixerfunction %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.web_enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_TRACKSTAT_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="enable_mixerfunction">
-			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
@@ -78,8 +78,8 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL" desc="SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL_DESC" %]
 		<select name="disablenumberscroll">
-			<option value="1" [% IF prefs.disablenumberscroll %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.disablenumberscroll %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.disablenumberscroll %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_DISABLENUMBERSCROLL" | string %]</option>
+			<option value="0" [% IF NOT prefs.disablenumberscroll %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_ENABLENUMBERSCROLL" | string %]</option>
 		</select>
 	[% END %]
 

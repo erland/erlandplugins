@@ -152,7 +152,7 @@ SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT
 	EN	Dynamic Playlists do not repeat songs
 
 SETUP_PLUGIN_TRACKSTAT_DYNAMICPLAYLIST_NOREPEAT_DESC
-	EN	If enabled, this will make sure tracks are not repeated when playing one of the TrackStat playlists with Dynamic Playlists plugin
+	EN	Select if tracks are allowed to be repeated or not when playing one of the TrackStat playlists with Dynamic Playlists plugin
 
 PLUGIN_TRACKSTAT_RATINGCHAR
 	EN	Character
@@ -428,10 +428,10 @@ SETUP_PLUGIN_TRACKSTAT_CLEAR_WARNING
 	EN	This will remove all existing TrackStat data, are you sure you want to continue ?
 
 PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL
-	EN	Disable number scroll
+	EN	Number scroll
 
 SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL
-	EN	Disable number scroll
+	EN	Number scroll
 
 SETUP_PLUGIN_TRACKSTAT_DISABLENUMBERSCROLL_DESC
 	EN	This will disable the scrolling functionallity on SqueezeBox while single clicking a number on the remote, usefull for universial remotes which can cause a single click before the hold action for set rating is executed.<br><b>Note!</b><br>You have to restart SqueezeCenter after changing this option.
@@ -3544,3 +3544,32 @@ PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENTADDED_GROUP
 PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENTADDED_GROUP
 	EN	Top rated
 
+PLUGIN_TRACKSTAT_SETTINGS_NOTREPEATED
+	EN	Do not repeat
+
+PLUGIN_TRACKSTAT_SETTINGS_REPEATED
+	EN	Repeat
+
+PLUGIN_TRACKSTAT_SETTINGS_STRUCTURED
+	EN	Structured
+
+PLUGIN_TRACKSTAT_SETTINGS_FLAT
+	EN	Flat
+
+PLUGIN_TRACKSTAT_SETTINGS_DEEP
+	EN	Deep
+
+PLUGIN_TRACKSTAT_SETTINGS_SHALLOW
+	EN	Shallow
+
+PLUGIN_TRACKSTAT_SETTINGS_DISABLENUMBERSCROLL
+	EN	Disable number scroll
+
+PLUGIN_TRACKSTAT_SETTINGS_ENABLENUMBERSCROLL
+	EN	Enable number scroll
+
+PLUGIN_TRACKSTAT_SETTINGS_10SCALE
+	EN	1-10
+
+PLUGIN_TRACKSTAT_SETTINGS_5SCALE
+	EN	1-5

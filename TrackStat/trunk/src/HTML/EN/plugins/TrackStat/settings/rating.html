@@ -5,15 +5,15 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_FORCE_GROUPRATING" desc="SETUP_PLUGIN_TRACKSTAT_FORCE_GROUPRATING_DESC" %]
 		<select name="force_grouprating">
-			<option value="1" [% IF prefs.force_grouprating %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.force_grouprating %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.force_grouprating %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.force_grouprating %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE" desc="SETUP_PLUGIN_TRACKSTAT_RATING_10SCALE_DESC" %]
 		<select name="rating_10scale">
-			<option value="1" [% IF prefs.rating_10scale %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.rating_10scale %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.rating_10scale %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_10SCALE" | string %]</option>
+			<option value="0" [% IF NOT prefs.rating_10scale %]selected[% END %]>[% "PLUGIN_TRACKSTAT_SETTINGS_5SCALE" | string %]</option>
 		</select>
 	[% END %]
 
@@ -23,22 +23,22 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO" desc="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_DESC" %]
 		<select name="rating_auto">
-			<option value="1" [% IF prefs.rating_auto %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.rating_auto %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.rating_auto %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.rating_auto %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_SMART" desc="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_SMART_DESC" %]
 		<select name="rating_auto_smart">
-			<option value="1" [% IF prefs.rating_auto_smart %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.rating_auto_smart %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.rating_auto_smart %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.rating_auto_smart %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED" desc="SETUP_PLUGIN_TRACKSTAT_RATING_AUTO_NONRATED_DESC" %]
 		<select name="rating_auto_nonrated">
-			<option value="1" [% IF prefs.rating_auto_nonrated %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.rating_auto_nonrated %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.rating_auto_nonrated %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.rating_auto_nonrated %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
