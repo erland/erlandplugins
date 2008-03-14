@@ -5,29 +5,29 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS_DESC" %]
 		<select name="includesavedplaylists">
-			<option value="1" [% IF prefs.includesavedplaylists %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.includesavedplaylists %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.includesavedplaylists %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.includesavedplaylists %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_RANDOMSAVEDPLAYLISTS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_RANDOMSAVEDPLAYLISTS_DESC" %]
 		<select name="randomsavedplaylists">
-			<option value="1" [% IF prefs.randomsavedplaylists %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.randomsavedplaylists %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.randomsavedplaylists %]selected[% END %]>[% "PLUGIN_DYNAMICPLAYLIST_SETTINGS_RANDOM" | string %]</option>
+			<option value="0" [% IF NOT prefs.randomsavedplaylists %]selected[% END %]>[% "PLUGIN_DYNAMICPLAYLIST_SETTINGS_ORDERED" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_FULLSAVEDPLAYLISTS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_FULLSAVEDPLAYLISTS_DESC" %]
 		<select name="fullsavedplaylists">
-			<option value="1" [% IF prefs.fullsavedplaylists %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.fullsavedplaylists %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.fullsavedplaylists %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.fullsavedplaylists %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_STRUCTURED_SAVEDPLAYLISTS_DESC" %]
 		<select name="structured_savedplaylists">
-			<option value="1" [% IF prefs.structured_savedplaylists %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.structured_savedplaylists %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.structured_savedplaylists %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.structured_savedplaylists %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
@@ -37,29 +37,29 @@
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST_DESC" %]
 		<select name="flatlist">
-			<option value="1" [% IF prefs.flatlist %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.flatlist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.flatlist %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.flatlist %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST_DESC" %]
 		<select name="rememberactiveplaylist">
-			<option value="1" [% IF prefs.rememberactiveplaylist %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.rememberactiveplaylist %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.rememberactiveplaylist %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.rememberactiveplaylist %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS_DESC" %]
 		<select name="web_show_mixerlinks">
-			<option value="1" [% IF prefs.web_show_mixerlinks %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.web_show_mixerlinks %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.web_show_mixerlinks %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.web_show_mixerlinks %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="enable_mixerfunction">
-			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "OFF" | string %]</option>
+			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
