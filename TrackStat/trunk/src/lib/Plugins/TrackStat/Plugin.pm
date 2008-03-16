@@ -2044,9 +2044,7 @@ sub initPlugin
 		Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.TrackStat.Choice',\%choiceMapping);
 
 		# Alter mapping for functions & buttons in Now Playing mode.
-		Slim::Hardware::IR::addModeDefaultMapping('playlist',defaultMap());
-		my $functref = Slim::Buttons::Playlist::getFunctions();
-		$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying;
+		Slim::Hardware::IR::addModeDefaultMapping('playlist',defaultMap()) if(!$prefs->{'itunesupdate'});
 
 		# this will enable DynamicPlaylist integration by default
 		if (!defined($prefs->get("dynamicplaylist"))) { 
@@ -2244,6 +2242,10 @@ sub initPlugin
 			$prefs->set("long_urls",1);
 		}
 
+		if(!defined($prefs->get("itunesupdate"))) {
+			$prefs->set("itunesupdate",0);
+		}
+
 		initRatingChar();
 		
 		installHook();
@@ -2305,6 +2307,9 @@ sub postinitPlugin {
 		eval "use Plugins::TrackStat::Amarok::Export";
 		eval "use Plugins::TrackStat::Amarok::Import";
 	}
+	# Alter mapping for functions & buttons in Now Playing mode. (We need to do this in postinit to overwrite any iTunesUpdate changes)
+	my $functref = Slim::Buttons::Playlist::getFunctions();
+	$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying if(!$prefs->get("itunesupdate") || !exists $functref->{'saveRating'});
 }
 
 sub checkAndPerformScheduledBackup {
