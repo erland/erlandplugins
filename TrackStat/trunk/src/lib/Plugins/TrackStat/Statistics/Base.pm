@@ -350,7 +350,7 @@ sub getAlbumTracks {
 			$id = shift @albums;
 			my $album = Plugins::TrackStat::Storage::objectForId('album',$id);
 			$log->debug("Getting tracks for album: ".$album->title."\n");
-			my $iterator = $album->tracks;
+			my $iterator = $album->tracks(undef,{'order_by' => [qw(disc tracknum titlesort)]});
 			for my $item ($iterator->slice(0,$iterator->count)) {
 				push @result, $item;
 			}
