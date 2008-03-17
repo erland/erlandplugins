@@ -23,9 +23,12 @@ use base 'Class::Data::Accessor';
 use Plugins::iPod::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::iPod::ConfigManager::BaseParser);
 
+use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+
+my $prefs = preferences('plugin.ipod');
 
 sub new {
 	my $class = shift;

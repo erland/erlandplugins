@@ -16,7 +16,7 @@
 		[% WRAPPER contentcontainer %]
 
 			<tr>
-				<td>&nbsp;</td>
+				<td colspan="4"><hr></td>
 			</tr>
 
 				[% odd = 1 %]
@@ -26,9 +26,9 @@
 						<a href="[% webroot %]plugins/iPod/webadminmethods_login.html?item=[% library.id %]&player=[% player | uri %]">[% "PLUGIN_IPOD_PUBLISH_ITEM" | string %]</a>
 						[%- END %]
 						[%- IF !library.defaultitem %]
-						<a href="[% webroot %]plugins/iPod/webadminmethods_removeitem.html?item=[% library.id %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_IPOD_REMOVE_ITEM_QUESTION" | string %]')">[% "PLUGIN_IPOD_REMOVE_ITEM" | string %]</a>
+						[% WRAPPER removelink noTarget=1 -%]href="[% webroot %]plugins/iPod/webadminmethods_removeitem.html?item=[% library.id %]&player=[% player | uri %]" onClick="return confirm('[% "PLUGIN_IPOD_REMOVE_ITEM_QUESTION" | string %]')"[% END %]
 						[%- END %]
-						<a href="[% webroot %]plugins/iPod/webadminmethods_edititem.html?item=[% library.id %]&player=[% player | uri %]">[% "PLUGIN_IPOD_EDIT_ITEM" | string %]</a>
+						[% WRAPPER editlink noTarget=1 -%]href="[% webroot %]plugins/iPod/webadminmethods_edititem.html?item=[% library.id %]&player=[% player | uri %]"[% END %]
 					[% END %]
 					[%- WRAPPER contentitem controls='controls' %]
 						[% IF library.enabled %]

@@ -22,6 +22,7 @@ use strict;
 
 use base 'Class::Data::Accessor';
 
+use Slim::Utils::Prefs;
 use Plugins::iPod::ConfigManager::TemplateParser;
 use Plugins::iPod::ConfigManager::ContentParser;
 use Plugins::iPod::ConfigManager::TemplateContentParser;
@@ -32,15 +33,17 @@ use Plugins::iPod::ConfigManager::LibraryWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(debugCallback errorCallback pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+
+my $prefs = preferences('plugin.ipod');
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = {
-		'debugCallback' => $parameters->{'debugCallback'},
-		'errorCallback' => $parameters->{'errorCallback'},
+		'logHandler' => $parameters->{'logHandler'},
+		'pluginPrefs' => $parameters->{'pluginPrefs'},
 		'pluginId' => $parameters->{'pluginId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
@@ -75,9 +78,8 @@ sub init {
 		my %parserParameters = (
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
-			'utf8filenames' => Slim::Utils::Prefs::get('plugin_ipod_utf8filenames')
+			'logHandler' => $self->logHandler,
+			'utf8filenames' => $prefs->get('utf8filenames')
 		);
 		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Templates";
 		$self->templateParser(Plugins::iPod::ConfigManager::TemplateParser->new(\%parserParameters));
@@ -85,16 +87,14 @@ sub init {
 		$self->contentParser(Plugins::iPod::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'criticalErrorCallback' => $self->addSqlErrorCallback,
 			'parameterPrefix' => 'itemparameter'
 		);
 		$self->parameterHandler(Plugins::iPod::ConfigManager::ParameterHandler->new(\%parameters));
 
 		my %directoryHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'cacheName' => "FileCache/iPod/".$self->pluginVersion."/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ipod.xml";
@@ -115,8 +115,7 @@ sub init {
 		$self->templateDataDirectoryHandler(Plugins::iPod::ConfigManager::DirectoryLoader->new(\%directoryHandlerParameters));
 
 		my %pluginHandlerParameters = (
-			'debugCallback' => $self->debugCallback,
-			'errorCallback' => $self->errorCallback,
+			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
 		);
 
@@ -165,13 +164,20 @@ sub initWebAdminMethods {
 
 	my @itemDirectories = ();
 	my @templateDirectories = ();
-	my $dir = Slim::Utils::Prefs::get("plugin_ipod_library_directory");
+	my $dir = $prefs->get("library_directory");
 	if (defined $dir && -d $dir) {
 		push @itemDirectories,$dir
 	}
-	$dir = Slim::Utils::Prefs::get("plugin_ipod_template_directory");
+	$dir = $prefs->get("template_directory");
 	if (defined $dir && -d $dir) {
 		push @templateDirectories,$dir
+	}
+	my $internalSupportDownloadError = undef;
+	if(!defined($dir) || !-d $dir) {
+		$internalSupportDownloadError = 'You have to specify a template directory before you can download library templates';
+	}
+	if(defined($self->supportDownloadError)) {
+		$internalSupportDownloadError = $self->supportDownloadError;
 	}
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
@@ -183,13 +189,13 @@ sub initWebAdminMethods {
 		}
 	}
 	my %webAdminMethodsParameters = (
+		'pluginPrefs' => $self->pluginPrefs,
 		'pluginId' => $self->pluginId,
 		'pluginVersion' => $self->pluginVersion,
 		'downloadApplicationId' => $self->downloadApplicationId,
 		'extension' => 'ipod.xml',
 		'simpleExtension' => 'ipod.values.xml',
-		'debugCallback' => $self->debugCallback,
-		'errorCallback' => $self->errorCallback,
+		'logHandler' => $self->logHandler,
 		'contentPluginHandler' => $self->contentPluginHandler,
 		'templatePluginHandler' => $self->templatePluginHandler,
 		'contentDirectoryHandler' => $self->contentDirectoryHandler,
@@ -200,14 +206,14 @@ sub initWebAdminMethods {
 		'contentParser' => $self->contentParser,
 		'templateDirectories' => \@templateDirectories,
 		'itemDirectories' => \@itemDirectories,
-		'customTemplateDirectory' => Slim::Utils::Prefs::get("plugin_ipod_template_directory"),
-		'customItemDirectory' => Slim::Utils::Prefs::get("plugin_ipod_library_directory"),
+		'customTemplateDirectory' => $prefs->get("template_directory"),
+		'customItemDirectory' => $prefs->get("library_directory"),
 		'supportDownload' => 1,
-		'supportDownloadError' => $self->supportDownloadError,
+		'supportDownloadError' => $internalSupportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
-		'downloadUrl' => Slim::Utils::Prefs::get("plugin_ipod_download_url"),
-		'utf8filenames' => Slim::Utils::Prefs::get('plugin_ipod_utf8filenames')
+		'downloadUrl' => $prefs->get("download_url"),
+		'utf8filenames' => $prefs->get('utf8filenames')
 	);
 	$self->webAdminMethods(Plugins::iPod::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
 
@@ -221,6 +227,7 @@ sub readTemplateConfiguration {
 	my %globalcontext = ();
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"iPod","Templates")."\n");
 		next unless -d catdir($plugindir,"iPod","Templates");
 		$globalcontext{'source'} = 'builtin';
 		$self->templateDirectoryHandler()->readFromDir($client,catdir($plugindir,"iPod","Templates"),\%templates,\%globalcontext);
@@ -229,7 +236,8 @@ sub readTemplateConfiguration {
 	$globalcontext{'source'} = 'plugin';
 	$self->templatePluginHandler()->readFromPlugins($client,\%templates,undef,\%globalcontext);
 
-	my $templateDir = Slim::Utils::Prefs::get('plugin_ipod_template_directory');
+	my $templateDir = $prefs->get('template_directory');
+	$self->logHandler->debug("Checking for dir: $templateDir\n");
 	if($templateDir && -d $templateDir) {
 		$globalcontext{'source'} = 'custom';
 		$self->templateDirectoryHandler()->readFromDir($client,$templateDir,\%templates,\%globalcontext);
@@ -242,8 +250,8 @@ sub readItemConfiguration {
 	my $client = shift;
 	my $storeInCache = shift;
 	
-	my $dir = Slim::Utils::Prefs::get("plugin_ipod_library_directory");
-    	$self->debugCallback->("Searching for item configuration in: $dir\n");
+	my $dir = $prefs->get("library_directory");
+    	$self->logHandler->debug("Searching for item configuration in: $dir\n");
     
 	my %localItems = ();
 
@@ -258,13 +266,15 @@ sub readItemConfiguration {
 	$self->contentPluginHandler->readFromPlugins($client,\%localItems,undef,\%globalcontext);
 	for my $plugindir (@pluginDirs) {
 		$globalcontext{'source'} = 'builtin';
+		$self->logHandler->debug("Checking for dir: ".catdir($plugindir,"iPod","Libraries")."\n");
 		if( -d catdir($plugindir,"iPod","Libraries")) {
 			$self->contentDirectoryHandler()->readFromDir($client,catdir($plugindir,"iPod","Libraries"),\%localItems,\%globalcontext);
 			$self->templateContentDirectoryHandler()->readFromDir($client,catdir($plugindir,"iPod","Libraries"),\%localItems, \%globalcontext);
 		}
 	}
+	$self->logHandler->debug("Checking for dir: $dir\n");
 	if (!defined $dir || !-d $dir) {
-		$self->debugCallback->("Skipping custom browse configuration scan - directory is undefined\n");
+		$self->logHandler->debug("Skipping iPod configuration scan - directory is undefined\n");
 	}else {
 		$globalcontext{'source'} = 'custom';
 		$self->contentDirectoryHandler()->readFromDir($client,$dir,\%localItems,\%globalcontext);
@@ -297,7 +307,7 @@ sub postProcessItem {
 sub changedItemConfiguration {
         my ($self, $client, $params) = @_;
 	Plugins::iPod::Plugin::initLibraries($client);
-	if(Slim::Utils::Prefs::get("plugin_ipod_refresh_save")) {
+	if($prefs->get("refresh_save")) {
 		Plugins::iPod::Plugin::refreshLibraries();
 	}
 }

@@ -24,6 +24,7 @@ use warnings;
                    
 package Plugins::iPod::Scan;
 
+use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use DBI qw(:sql_types);
 use HTML::Entities;
@@ -34,6 +35,14 @@ use GNUpod::FooBar;
 use File::Copy;
 use Slim::Schema;
 use Slim::Utils::Unicode;
+
+my $prefs = preferences('plugin.ipod');
+my $serverPrefs = preferences('server');
+my $log = Slim::Utils::Log->addLogCategory({
+	'category'     => 'plugin.ipod',
+	'defaultLevel' => 'WARN',
+	'description'  => 'PLUGIN_IPOD',
+});
 
 use constant MACTIME => GNUpod::FooBar::MACTIME;
 
@@ -90,14 +99,14 @@ sub getSQLPropertyValues {
 			$sql =~ s/^\s+//g;
 			$sql =~ s/\s+$//g;
 			my $sth = $dbh->prepare( $sql );
-			debugMsg("Executing: $sql\n");
+			$log->debug("Executing: $sql\n");
 			$sth->execute() or do {
 				warn "Error executing: $sql\n";
 				$sql = undef;
 			};
 	
 			if ($sql =~ /^SELECT+/oi) {
-				debugMsg("Executing and collecting: $sql\n");
+				$log->debug("Executing and collecting: $sql\n");
 				my $id;
 				my $name;
 				$sth->bind_col( 1, \$id);
@@ -127,18 +136,18 @@ sub initScanTrack {
 	}
 
 	if(!defined($context->{'libraries'})) {
-		debugMsg("Step: Retreiving available libraries\n");
+		$log->debug("Step: Retreiving available libraries\n");
 		my $libraryHash = Plugins::iPod::Plugin::initLibraries();
 		my @libraries = ();
 		for my $key (keys %$libraryHash) {
 			my $lib = $libraryHash->{$key};
 			push @libraries,$lib;
-			debugMsg("Added library ".$lib->{'name'}."\n");
+			$log->debug("Added library ".$lib->{'name'}."\n");
 		}
 		$context->{'libraries'} = \@libraries;
 		return 1;
 	}elsif(defined($context->{'songs'})) {
-		debugMsg("Step: Scanning song\n");
+		$log->debug("Step: Scanning song\n");
 		my $sth = $context->{'songs'};
 		my $trackId = undef;
 		my $trackUrl = undef;
@@ -148,7 +157,7 @@ sub initScanTrack {
 		$sth->bind_col(3, \$trackMusicbrainzId);
 		if($sth->fetch()) {
 			my $path = Slim::Utils::Misc::pathFromFileURL($trackUrl);
-			debugMsg("Handling song ".$path."\n");
+			$log->debug("Handling song ".$path."\n");
 			my $library = $context->{'library'};
 			my $slimserverPath = $library->{'track'}->{'slimserverpath'};
 			my $iPodPath = $library->{'track'}->{'ipodpath'};
@@ -162,7 +171,7 @@ sub initScanTrack {
 			if(defined($iPodPath) && $iPodPath ne '') {
 				my $nativeRoot = $slimserverPath;
 				if(!defined($nativeRoot) || $nativeRoot eq '') {
-					$nativeRoot = Slim::Utils::Prefs::get('audiodir');
+					$nativeRoot = $serverPrefs->get('audiodir');
 				}
 				$nativeRoot =~ s/\\/\\\\/isg;
 				$path =~ s/$nativeRoot/$iPodPath/;
@@ -179,7 +188,7 @@ sub initScanTrack {
 					$context->{'writexml'} = 1;
 					return 1;
 				}
-				debugMsg("Storing song ".$path."\n");
+				$log->debug("Storing song ".$path."\n");
 				my $sql = "INSERT INTO ipod_track (library,track,slimserverurl,musicbrainz_id,ipodpath,ipodfilesize) values (?,?,?,?,?,?)";
 				my $sth = Slim::Schema->storage->dbh()->prepare( $sql );
 				eval {
@@ -207,7 +216,7 @@ sub initScanTrack {
 		}
 		return 1;
 	}elsif(defined($context->{'writexml'}) && defined($context->{'removesongs'})) {
-		debugMsg("Step: Removing songs from iPod\n");
+		$log->debug("Step: Removing songs from iPod\n");
 		my $library = $context->{'library'};
 		my $sth = $context->{'removesongs'};
 		my $trackId = undef;
@@ -233,28 +242,28 @@ sub initScanTrack {
 				}
 
 				delete $files_to_remove{$duppath};
-				debugMsg("Do not remove $path = $duppath\n");
+				$log->debug("Do not remove $path = $duppath\n");
 			}else {
-				debugMsg("File does not exist, skipping: $path\n");
+				$log->debug("File does not exist, skipping: $path\n");
 			}
 		}else {
 			$sth->finish();
-			debugMsg("Preparing to delete files from iPod\n");
+			$log->debug("Preparing to delete files from iPod\n");
 			for my $file (keys %files_to_remove) {
 				my $transformedFile = $file;
 				$transformedFile =~ s/:/\//g;
 				$transformedFile =~ s/^\///;  # Remove / in beginning of path
 				my $fullpath = catfile($iPodMountPath,$transformedFile);
 				if(-e $fullpath) {
-					debugMsg("Deleteing file: $fullpath\n");
-					unlink($fullpath) or debugMsg("Failed to delete: $fullpath\n");
+					$log->debug("Deleteing file: $fullpath\n");
+					unlink($fullpath) or $log->debug("Failed to delete: $fullpath\n");
 				}else {
-					debugMsg("File doesn't exist, no reason to delete: $fullpath\n");
+					$log->debug("File doesn't exist, no reason to delete: $fullpath\n");
 				}
 			}
 			delete $context->{'removesongs'};
 			my $sql = "select tracks.id,ipod_track.ipodpath from tracks,ipod_track where tracks.id=ipod_track.track and ipod_track.library=".$library->{'libraryno'};
-			debugMsg("Retreiving tracks with:".$sql."\n");
+			$log->debug("Retreiving tracks with:".$sql."\n");
 			my $sth = Slim::Schema->storage->dbh()->prepare($sql);
 			$sth->execute();
 			$context->{'xmlsongs'} = $sth;
@@ -265,7 +274,7 @@ sub initScanTrack {
 			);
 			my $con = GNUpod::FooBar::connect(\%opts);
 			if($con->{status}) {
-				debugMsg("Not writing XML file, ".$con->{status}."\n");
+				$log->debug("Not writing XML file, ".$con->{status}."\n");
 				delete $context->{'writexml'};
 				return 1;
 			}
@@ -276,7 +285,7 @@ sub initScanTrack {
 			%dupdb_lazy = ();
 			%dupdb_podcast = ();
 			if(!GNUpod::CustomXMLhelper::doxml($con->{xml})) {
-				debugMsg("Not writing XML file, failed to parse ".$con->{xml}."\n");
+				$log->debug("Not writing XML file, failed to parse ".$con->{xml}."\n");
 				delete $context->{'writexml'};
 				return 1;
 			}
@@ -284,7 +293,7 @@ sub initScanTrack {
 		}
 		return 1;
 	}elsif(defined($context->{'writexml'}) && defined($context->{'xmlsongs'})) {
-		debugMsg("Step: Writing song to iPod\n");
+		$log->debug("Step: Writing song to iPod\n");
 		my $sth = $context->{'xmlsongs'};
 		my $trackId = undef;
 		my $path = undef;
@@ -296,7 +305,7 @@ sub initScanTrack {
 
 				my $track = Slim::Schema->resultset('Track')->find($trackId);
 				if(!$track) {
-					debugMsg("File not found in SlimServer database, skipping: $path\n");
+					$log->debug("File not found in SlimServer database, skipping: $path\n");
 					return 1;
 				}
 
@@ -312,7 +321,7 @@ sub initScanTrack {
 
 				if(my $dup = checkdup($fh)) {
 	                        	#create_playlist_now($opts{playlist}, $dup);
-					debugMsg("Skipping, already exists in iPod: $path\n");
+					$log->debug("Skipping, already exists in iPod: $path\n");
 					return 1;
 				}
 
@@ -322,21 +331,21 @@ sub initScanTrack {
 								keepfile=>0});
 
 				if(!defined($target) || $target eq '') {
-					debugMsg("No target file could be generated, skipping: $path\n");
+					$log->debug("No target file could be generated, skipping: $path\n");
 					return 1;
 				}
 				
 				if(!File::Copy::copy($path, $target)) {
 					unlink($target);
-					debugMsg("Failed to copy file to iPod, skipping: \"$path\" to \"$target\"\n");
+					$log->debug("Failed to copy file to iPod, skipping: \"$path\" to \"$target\"\n");
 					return 1;
 				}
 				
-				debugMsg("Adding file: $path\n");
+				$log->debug("Adding file: $path\n");
 				my $id = GNUpod::CustomXMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
                         	#create_playlist_now($opts{playlist}, $id);
 			}else {
-				debugMsg("File does not exist, skipping: $path\n");
+				$log->debug("File does not exist, skipping: $path\n");
 			}
 		}else {
 			$sth->finish();
@@ -349,36 +358,36 @@ sub initScanTrack {
 		}
 		return 1;
 	}elsif(defined($context->{'writexml'}) && defined($context->{'library'})) {
-		debugMsg("Step: Connecting to iPod\n");
+		$log->debug("Step: Connecting to iPod\n");
 		my $library = $context->{'library'};
 		my $iPodSyncLibraries = Plugins::CustomScan::Plugin::getCustomScanProperty("ipodsynclibraries");
 		if(defined($iPodSyncLibraries) && $iPodSyncLibraries eq '') {	
 			$iPodSyncLibraries = undef;
 		}
 		if(!defined($iPodSyncLibraries)) {
-			debugMsg("Not generating XML, no library is selected to be synchronized with iPod\n");
+			$log->debug("Not generating XML, no library is selected to be synchronized with iPod\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
 		my $librarysql = "select id,name from ipod_libraries where ipod_libraries.id=".$library->{'libraryno'}." and ipod_libraries.id in ($iPodSyncLibraries)";
-		debugMsg("Checking libraries with:".$librarysql."\n");
+		$log->debug("Checking libraries with:".$librarysql."\n");
 		my $librarysth = Slim::Schema->storage->dbh()->prepare($librarysql);
 		$librarysth->execute();
 		if(!$librarysth->fetch()) {
-			debugMsg("Not generating XML, library shouldn't be synchronized with iPod: ".$library->{'name'}."\n");
+			$log->debug("Not generating XML, library shouldn't be synchronized with iPod: ".$library->{'name'}."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
 		$librarysth->finish();
 
 		if(!defined($iPodMountPath) || !(-d $iPodMountPath)) {
-			debugMsg("Not generating XML, iPod Mount path is not set or incorrect".(defined($iPodMountPath)?": ".$iPodMountPath:"")."\n");
+			$log->debug("Not generating XML, iPod Mount path is not set or incorrect".(defined($iPodMountPath)?": ".$iPodMountPath:"")."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
 		my $ipodXMLDir = catdir($iPodMountPath,'iPod_Control');
 		if(!(-e $ipodXMLDir)) {
-			debugMsg("Not writing XML file, iPod not mounted at ".$iPodMountPath."\n");
+			$log->debug("Not writing XML file, iPod not mounted at ".$iPodMountPath."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
@@ -389,7 +398,7 @@ sub initScanTrack {
 		);
 		my $con = GNUpod::FooBar::connect(\%opts);
 		if($con->{status}) {
-			debugMsg("Not writing XML file, ".$con->{status}."\n");
+			$log->debug("Not writing XML file, ".$con->{status}."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
@@ -406,26 +415,26 @@ sub initScanTrack {
 		%dupdb_podcast = ();
 		%files_to_remove = ();
 		if(!GNUpod::CustomXMLhelper::doxml($con->{xml})) {
-			debugMsg("Not writing XML file, failed to parse ".$con->{xml}."\n");
+			$log->debug("Not writing XML file, failed to parse ".$con->{xml}."\n");
 			delete $context->{'writexml'};
 			return 1;
 		}
 		$context->{'gnupodconnection'} = $con;
 
 		my $sql = "select tracks.id,ipod_track.ipodpath from tracks,ipod_track where tracks.id=ipod_track.track and ipod_track.library=".$library->{'libraryno'};
-		debugMsg("Retreiving tracks with:".$sql."\n");
+		$log->debug("Retreiving tracks with:".$sql."\n");
 		my $sth = Slim::Schema->storage->dbh()->prepare($sql);
 		$sth->execute();
 		$context->{'removesongs'} = $sth;
 		return 1;
 	}elsif(defined($context->{'libraries'})) {
-		debugMsg("Step: Getting next library\n");
+		$log->debug("Step: Getting next library\n");
 		my $libraries = $context->{'libraries'};
 		my $library = shift @$libraries;
 		if(!defined($library)) {
 			return undef;
 		}
-		debugMsg("Handling library ".$library->{'name'}."\n");
+		$log->debug("Handling library ".$library->{'name'}."\n");
 		my %limit = ();
 		my %limitstatus = ();
 		$context->{'limit'} = \%limit;
@@ -465,7 +474,7 @@ sub initScanTrack {
 			'library' => $library->{'libraryno'}
 		);
 		$sql = replaceParameters($sql,\%parameters);
-		debugMsg("Retreiving tracks with:".$sql."\n");
+		$log->debug("Retreiving tracks with:".$sql."\n");
 		$sth = Slim::Schema->storage->dbh()->prepare($sql);
 		$sth->execute();
 		$context->{'library'} = $library;
@@ -486,13 +495,13 @@ sub prepareSong {
 								decode=>0});
 
 	if(!$fh) {
-		debugMsg("Unknown file type, skipping: $path\n");
+		$log->debug("Unknown file type, skipping: $path\n");
 		return;
 	}
 
 	my $track = Slim::Schema->resultset('Track')->find($trackId);
 	if(!$track) {
-		debugMsg("File not found in SlimServer database, skipping: $path\n");
+		$log->debug("File not found in SlimServer database, skipping: $path\n");
 		return;
 	}
 
@@ -541,7 +550,7 @@ sub newFileCallback {
 		        $dupdb_podcast{$_[0]->{file}->{podcastguid}."\0".$_[0]->{file}->{podcastrss}}++;
 		}
         
-		debugMsg("Adding file from XML: ".$_[0]->{file}->{title}."\n");
+		$log->debug("Adding file from XML: ".$_[0]->{file}->{title}."\n");
 		GNUpod::CustomXMLhelper::mkfile($_[0],{addid=>1});
 	}
 }
@@ -610,13 +619,6 @@ sub commit {
 	if (!$dbh->{'AutoCommit'}) {
 		$dbh->commit();
 	}
-}
-
-# A wrapper to allow us to uniformly turn on & off debug messages
-sub debugMsg
-{
-	my $message = join '','iPod::Scan: ',@_;
-	msg ($message) if (Slim::Utils::Prefs::get("plugin_ipod_showmessages"));
 }
 
 # other people call us externally.
