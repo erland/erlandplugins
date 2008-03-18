@@ -28,7 +28,7 @@
 			[% IF library or activelibrary %]
 			join multilibrary_contributor on
 				contributor_track.contributor=multilibrary_contributor.contributor and
-				multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+				multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 			[% END %] 
 			left join track_statistics on 
 				tracks.url = track_statistics.url 

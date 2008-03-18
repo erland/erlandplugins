@@ -24,7 +24,7 @@
 			where
 				[%- IF library or activelibrary or contextlibrary %]
 				tracks.id=multilibrary_track.track and
-				multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+				multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				tracks.url=track_statistics.url and
 				[%- IF tenscale %]
@@ -46,7 +46,7 @@
 				and tracks.url=track_statistics.url
 			[%- IF library or activelibrary or contextlibrary %]
 				and tracks.id=multilibrary_track.track and
-				multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %]
+				multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %]
 			[%- END %]
 			[%- IF tenscale %]
 			group by floor((track_statistics.rating+5)/10)*10 
@@ -65,7 +65,7 @@
 				where
 					[%- IF library or activelibrary or contextlibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.url = track_statistics.url and
 					tracks.id = contributor_track.track and
@@ -86,7 +86,7 @@
 				where 
 					[%- IF library or activelibrary or contextlibrary %]
 					tracks.id=multilibrary_track.track and
-					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.audio=1 and 
 					tracks.id=contributor_track.track and 
@@ -112,7 +112,7 @@
 					where
 						[%- IF library or activelibrary or contextlibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.url = track_statistics.url and
 						tracks.id = contributor_track.track and
@@ -134,7 +134,7 @@
 					where 
 						[%- IF library or activelibrary or contextlibrary %]
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
 						albums.id=tracks.album and 
@@ -163,7 +163,7 @@
 						where 
 							[%- IF library or activelibrary or contextlibrary %]
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]{libraryid}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
 							contributor_track.track=tracks.id and 
@@ -182,7 +182,7 @@
 					<menu>
 						<id>trackdetails</id>
 						<menutype>trackdetails</menutype>
-						<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF contextlibrary %]|library={libraryid}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+						<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF contextlibrary %]|library={libraryid}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 					</menu>
 				</menu>
 			</menu>
