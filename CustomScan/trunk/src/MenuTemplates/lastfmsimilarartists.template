@@ -22,7 +22,7 @@
 				[%- IF library or activelibrary %]
 				join multilibrary_contributor on
 					contributors.id=multilibrary_contributor.contributor and
-					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				left join customscan_contributor_attributes as attr1 on 
 					attr1.contributor=contributors.id and
@@ -37,7 +37,7 @@
 						where 
 							[%- IF library or activelibrary %]
 							contributors.id=multilibrary_contributor.contributor and
-							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							name = attr1.value)
 				) union
@@ -47,7 +47,7 @@
 				[%- IF library or activelibrary %]
 				join multilibrary_contributor on
 					contributors.id=multilibrary_contributor.contributor and
-					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				left join customscan_contributor_attributes as attr2 on 
 					attr2.value=contributors.name and
@@ -62,7 +62,7 @@
 					and exists(select id from contributors as relatedcontributor,multilibrary_contributor where
 							attr2.contributor=relatedcontributor.id and
 							relatedcontributor.id=multilibrary_contributor.contributor and
-							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %])	
+							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %])	
 					[%- END %]
 				) order by namesort asc
 				[% ELSE %]
@@ -70,7 +70,7 @@
 				where 
 					[%- IF library or activelibrary %]
 					contributors.id=multilibrary_contributor.contributor and
-					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+					multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					contributor_album.contributor=contributors.id and
 					contributor_album.album=albums.id and
@@ -85,7 +85,7 @@
 						where 
 							[%- IF library or activelibrary %]
 							contributors.id=multilibrary_contributor.contributor and
-							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							name = customscan_contributor_attributes.value)
 				group by contributors.id 
@@ -104,7 +104,7 @@
 					[%- IF library or activelibrary %]
 					join multilibrary_contributor on
 						contributors.id=multilibrary_contributor.contributor and
-						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					left join customscan_contributor_attributes as attr1 on 
 						attr1.contributor={baseartist} and
@@ -120,14 +120,14 @@
 						and exists(select id from contributors as relatedcontributor,multilibrary_contributor where
 								attr1.contributor=relatedcontributor.id and
 								relatedcontributor.id=multilibrary_contributor.contributor and
-								multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %])	
+								multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %])	
 						[%- END %]
 					) union
 					(select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
 					[%- IF library or activelibrary %]
 					join multilibrary_contributor on
 						contributors.id=multilibrary_contributor.contributor and
-						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					left join customscan_contributor_attributes as attr2 on
 						attr2.module='cslastfm' and
@@ -141,7 +141,7 @@
 							exists (select id from contributors[% IF library or activelibrary %],multilibrary_contributor[% END %] where
 								[%- IF library or activelibrary %]
 								contributors.id=multilibrary_contributor.contributor and
-								multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+								multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								contributors.id={baseartist} and
 								contributors.name=attr2.value)
@@ -151,7 +151,7 @@
 					where 
 						[%- IF library or activelibrary %]
 						contributors.id=multilibrary_contributor.contributor and
-						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						customscan_contributor_attributes.contributor={baseartist} and
 						customscan_contributor_attributes.module='cslastfm' and
@@ -187,7 +187,7 @@
 						where 
 							[%- IF library or activelibrary %]
 							albums.id=multilibrary_album.album and
-							multilibrary_album.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							albums.id=contributor_album.album and 
 							contributor_album.contributor={artist} 
@@ -207,7 +207,7 @@
 							where 
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
-								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.audio=1 and 
 								contributor_track.track=tracks.id and 
@@ -219,7 +219,7 @@
 						<menu>
 							<id>trackdetails</id>
 							<menutype>trackdetails</menutype>
-							<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+							<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 						</menu>
 					</menu>
 				</menu>

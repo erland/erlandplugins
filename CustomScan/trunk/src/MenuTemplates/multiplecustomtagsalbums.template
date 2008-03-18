@@ -26,7 +26,7 @@
 				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
-					multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 				[%- END %]
 				[%- IF limituppertags %]
 				[%- IF customtag2 %]
@@ -99,7 +99,7 @@
 					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						customscan_track_attributes.track=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %]
 					join customscan_track_attributes as attr1 on
 						customscan_track_attributes.track=attr1.track and
@@ -172,7 +172,7 @@
 						[%- IF library or activelibrary %]
 						join multilibrary_track on
 							customscan_track_attributes.track=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 						[%- END %]
 						join customscan_track_attributes as attr1 on
 							customscan_track_attributes.track=attr1.track and
@@ -246,7 +246,7 @@
 							[%- IF library or activelibrary %]
 							join multilibrary_track on
 								customscan_track_attributes.track=multilibrary_track.track and
-								multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 							[%- END %]
 							join customscan_track_attributes as attr1 on
 								customscan_track_attributes.track=attr1.track and
@@ -318,7 +318,7 @@
 								[%- IF library or activelibrary %]
 								join multilibrary_track on
 									customscan_track_attributes.track=multilibrary_track.track and
-									multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %]
+									multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 								[%- END %]
 								join customscan_track_attributes as attr1 on
 									customscan_track_attributes.track=attr1.track and
@@ -402,7 +402,7 @@
 									[%- END %]
 										[%- IF library or activelibrary %]
 										tracks.id=multilibrary_track.track and
-										multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+										multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 										[%- END %]
 										tracks.audio=1 and 
 										albums.id=tracks.album and 
@@ -450,7 +450,7 @@
 										where 
 											[%- IF library or activelibrary %]
 											tracks.id=multilibrary_track.track and
-											multilibrary_track.library=[% IF activelibrary %]{clientproperty.plugin_multilibrary_activelibraryno}[% ELSE %][% library %][% END %] and
+											multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 											[%- END %]
 											tracks.audio=1 and 
 											tracks.id=attr1.track and
@@ -488,7 +488,7 @@
 									<menu>
 										<id>trackdetails</id>
 										<menutype>trackdetails</menutype>
-										<menudata>track|0[% IF activelibrary %]|library={clientproperty.plugin_multilibrary_activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
+										<menudata>track|0[% IF activelibrary %]|library={clientproperty:plugin.multilibrary:activelibraryno}[% ELSIF library %]|library=[% library %][% END %]</menudata>
 									</menu>
 								</menu>
 							[%- IF customtag5 %]
