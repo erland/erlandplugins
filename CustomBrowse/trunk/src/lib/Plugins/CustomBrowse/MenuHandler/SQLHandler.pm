@@ -66,6 +66,9 @@ sub _execute {
 		eval {
 			$sql =~ s/^\s+//g;
 			$sql =~ s/\s+$//g;
+			if(Slim::Utils::Unicode::currentLocale() ne 'utf8') {
+				$sql = Slim::Utils::Unicode::encode(Slim::Utils::Unicode::currentLocale(), $sql);
+			}
 			my $sth = $dbh->prepare( $sql );
 			$self->logHandler->debug("Executing: $sql\n");
 			$sth->execute() or do {
