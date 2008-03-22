@@ -2254,21 +2254,6 @@ sub initPlugin
 
 		initStatisticPlugins();
 		
-		no strict 'refs';
-		my @enabledplugins;
-		@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
-		for my $plugin (@enabledplugins) {
-			if(UNIVERSAL::can("$plugin","setTrackStatRating")) {
-				$log->debug("Added rating support for $plugin\n");
-				$ratingPlugins{$plugin} = "${plugin}::setTrackStatRating";
-			}
-			if(UNIVERSAL::can("Plugins::$plugin","setTrackStatStatistic")) {
-				$log->debug("Added play count support for $plugin\n");
-				$playCountPlugins{$plugin} = "${plugin}::setTrackStatStatistic";
-			}
-		}
-		use strict 'refs';
-		
 		my %mixerMap = ();
 		if($prefs->get("web_enable_mixerfunction")) {
 			$mixerMap{'mixerlink'} = \&mixerlink;
@@ -2310,6 +2295,21 @@ sub postinitPlugin {
 	# Alter mapping for functions & buttons in Now Playing mode. (We need to do this in postinit to overwrite any iTunesUpdate changes)
 	my $functref = Slim::Buttons::Playlist::getFunctions();
 	$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying if(!$prefs->get("itunesupdate") || !exists $functref->{'saveRating'});
+
+	no strict 'refs';
+	my @enabledplugins;
+	@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("$plugin","setTrackStatRating")) {
+			$log->debug("Added rating support for $plugin\n");
+			$ratingPlugins{$plugin} = "${plugin}::setTrackStatRating";
+		}
+		if(UNIVERSAL::can("$plugin","setTrackStatStatistic")) {
+			$log->debug("Added play count support for $plugin\n");
+			$playCountPlugins{$plugin} = "${plugin}::setTrackStatStatistic";
+		}
+	}
+	use strict 'refs';
 }
 
 sub checkAndPerformScheduledBackup {
