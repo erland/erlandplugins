@@ -97,7 +97,7 @@
 							customscan_album_attributes.module='{albummodule}' and
 							customscan_album_attributes.attr='{attribute}'
 						group by albums.id 
-						order by albums.titlesort asc
+						order by albums.titlesort asc,albums.disc asc
 					</menudata>
 					<menu>
 						<id>value</id>
@@ -173,7 +173,7 @@
 								customscan_track_attributes.module='{trackmodule}' and
 								customscan_track_attributes.attr='{attribute}'
 							group by albums.id 
-							order by albums.titlesort asc
+							order by albums.titlesort asc,albums.disc asc
 						</menudata>
 						<menu>
 							<id>track</id>

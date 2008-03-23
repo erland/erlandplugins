@@ -62,13 +62,13 @@
 						<id>byyear</id>
 						<name>Sort by year</name>
 						<menulinks>number</menulinks>
-						<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+						<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 					</option>
 					<option>
 						<id>bytitle</id>
 						<name>Sort by title</name>
 						<menulinks>alpha</menulinks>
-						<keyword name="orderby" value="albums.titlesort asc"/>
+						<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 					</option>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,customscan_album_attributes[% IF library or activelibrary %],multilibrary_track[% END %] 
