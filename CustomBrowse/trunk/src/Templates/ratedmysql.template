@@ -126,7 +126,7 @@
 							ifnull(track_statistics.rating,0)&gt;={rating}-10 and ifnull(track_statistics.rating,0)&lt;{rating}+10
 							[%- END %]
 						group by tracks.id
-						order by rand()
+						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</playdata>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
