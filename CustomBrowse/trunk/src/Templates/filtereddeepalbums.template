@@ -69,13 +69,13 @@
 				<option>
 					<id>byyear</id>
                                         <name>Sort by year</name>
-					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
                                         <menulinks>number</menulinks>
                                 </option>
                                 <option>
                                         <id>bytitle</id>
                                         <name>Sort by title</name>
-                                        <keyword name="orderby" value="albums.titlesort asc"/>
+                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
                                 </option>
 				<option>
 					<id>byartist</id>

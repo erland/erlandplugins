@@ -41,7 +41,7 @@
 								audio=1 and
 								albums.id=tracks.id
 							group by albums.id
-							order by albums.titlesort
+							order by albums.titlesort,albums.disc asc
 						</menudata>
 					</menu>
 				</menu>
@@ -68,7 +68,7 @@
 							where 
 								tracks.id is null
 							group by albums.id
-							order by albums.titlesort
+							order by albums.titlesort,albums.disc asc
 						</menudata>
 					</menu>
 				</menu>

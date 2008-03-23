@@ -58,7 +58,7 @@
 					contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 					tracks.album={albumid}
 				group by albums.id 
-				order by albums.titlesort asc
+				order by albums.titlesort asc,albums.disc asc
 			</menudata>
 			<menu>
 				<id>track</id>

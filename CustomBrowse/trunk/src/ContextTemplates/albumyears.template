@@ -54,7 +54,7 @@
 					tracks.year={year} and
 					tracks.album={albumid}
 				group by albums.id
-				order by albums.titlesort
+				order by albums.titlesort,albums.disc asc
 			</menudata>
 			<menu>
 				<id>track</id>

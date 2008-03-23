@@ -42,14 +42,14 @@
 					<option>
 						<id>byyear</id>
 	                                        <name>Sort by year</name>
-	                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+	                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 	                                        <menulinks>number</menulinks>
 	                                </option>
 	                                <option>
 	                                        <id>bytitle</id>
 	                                        <name>Sort by title</name>
 	                                        <menulinks>alpha</menulinks>
-	                                        <keyword name="orderby" value="albums.titlesort asc"/>
+	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
 					<option>
 						<id>byartist</id>
@@ -70,7 +70,7 @@
 								contributor_track.contributor=contributors.id and
 								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 							group by albums.id
-							order by contributors.namesort asc,albums.year desc
+							order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 						</menudata>
 					</option>
 					<menudata>
@@ -152,14 +152,14 @@
 						<option>
 							<id>byyear</id>
 		                                        <name>Sort by year</name>
-		                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+		                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 		                                        <menulinks>number</menulinks>
 		                                </option>
 		                                <option>
 		                                        <id>bytitle</id>
 		                                        <name>Sort by title</name>
 		                                        <menulinks>alpha</menulinks>
-		                                        <keyword name="orderby" value="albums.titlesort asc"/>
+		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
 						<option>
 							<id>byartist</id>
@@ -184,7 +184,7 @@
 											genre_track.track=tracks.id and
 											genre_track.genre={subgenre})
 								group by albums.id
-								order by contributors.namesort asc,albums.year desc
+								order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 							</menudata>
 						</option>
 						<menudata>
@@ -279,14 +279,14 @@
 							<option>
 								<id>byyear</id>
 			                                        <name>Sort by year</name>
-			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 			                                        <menulinks>number</menulinks>
 			                                </option>
 			                                <option>
 			                                        <id>bytitle</id>
 			                                        <name>Sort by title</name>
 			                                        <menulinks>alpha</menulinks>
-			                                        <keyword name="orderby" value="albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
 							<option>
 								<id>byartist</id>
@@ -315,7 +315,7 @@
 												genre_track.track=tracks.id and
 												genre_track.genre={subgenre2})
 									group by albums.id
-									order by contributors.namesort asc,albums.year desc
+									order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 								</menudata>
 							</option>
 							<menudata>
@@ -423,14 +423,14 @@
 								<option>
 									<id>byyear</id>
 				                                        <name>Sort by year</name>
-				                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+				                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 				                                        <menulinks>number</menulinks>
 				                                </option>
 				                                <option>
 				                                        <id>bytitle</id>
 				                                        <name>Sort by title</name>
 				                                        <menulinks>alpha</menulinks>
-				                                        <keyword name="orderby" value="albums.titlesort asc"/>
+				                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				                                </option>
 								<option>
 									<id>byartist</id>
@@ -463,7 +463,7 @@
 													genre_track.track=tracks.id and
 													genre_track.genre={subgenre3})
 										group by albums.id
-										order by contributors.namesort asc,albums.year desc
+										order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 									</menudata>
 								</option>
 								<menudata>
@@ -575,14 +575,14 @@
 								<option>
 									<id>byyear</id>
 				                                        <name>Sort by year</name>
-				                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+				                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 				                                        <menulinks>number</menulinks>
 				                                </option>
 				                                <option>
 				                                        <id>bytitle</id>
 				                                        <name>Sort by title</name>
 				                                        <menulinks>alpha</menulinks>
-				                                        <keyword name="orderby" value="albums.titlesort asc"/>
+				                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				                                </option>
 								<menudata>
 									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -696,14 +696,14 @@
 							<option>
 								<id>byyear</id>
 			                                        <name>Sort by year</name>
-			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 			                                        <menulinks>number</menulinks>
 			                                </option>
 			                                <option>
 			                                        <id>bytitle</id>
 			                                        <name>Sort by title</name>
 			                                        <menulinks>alpha</menulinks>
-			                                        <keyword name="orderby" value="albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -805,14 +805,14 @@
 						<option>
 							<id>byyear</id>
 		                                        <name>Sort by year</name>
-		                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+		                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 		                                        <menulinks>number</menulinks>
 		                                </option>
 		                                <option>
 		                                        <id>bytitle</id>
 		                                        <name>Sort by title</name>
 		                                        <menulinks>alpha</menulinks>
-		                                        <keyword name="orderby" value="albums.titlesort asc"/>
+		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
 						<menudata>
 							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -902,14 +902,14 @@
 					<option>
 						<id>byyear</id>
 	                                        <name>Sort by year</name>
-	                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+	                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 	                                        <menulinks>number</menulinks>
 	                                </option>
 	                                <option>
 	                                        <id>bytitle</id>
 	                                        <name>Sort by title</name>
 	                                        <menulinks>alpha</menulinks>
-	                                        <keyword name="orderby" value="albums.titlesort asc"/>
+	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]

@@ -31,7 +31,7 @@
 				multilibrary_album.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 				[%- END %]
 				albums.id={albumid}
-			order by albums.titlesort asc
+			order by albums.titlesort asc,albums.disc asc
 		</menudata>
 		<menu></menu>
 	</menu>

@@ -38,14 +38,14 @@
 						<option>
 							<id>byyear</id>
 							<name>Sort by year</name>
-							<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+							<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 							<menulinks>number</menulinks>
 						</option>
 						<option>
 							<id>bytitle</id>
 							<name>Sort by title</name>
 							<menulinks>alpha</menulinks>
-							<keyword name="orderby" value="albums.titlesort asc"/>
+							<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 						</option>
 						<menudata>
 							select albums.id,albums.title from albums,tracks
@@ -117,14 +117,14 @@
 						<option>
                                         		<id>byyear</id>
 		                                        <name>Sort by year</name>
-                		                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+                		                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 		                                        <menulinks>number</menulinks>
 		                                </option>
 		                                <option>
 		                                        <id>bytitle</id>
 		                                        <name>Sort by title</name>
 		                                        <menulinks>alpha</menulinks>
-		                                        <keyword name="orderby" value="albums.titlesort asc"/>
+		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
 						<menudata>
 							select albums.id,albums.title from tracks,contributor_track,albums 
@@ -203,7 +203,7 @@
 		                                        albums.id=tracks.album and
 							tracks.url like '{custombrowse.libraryAudioDirUrl}/{library}%'
 		                                group by albums.id
-		                                order by albums.titlesort asc
+		                                order by albums.titlesort asc,albums.disc asc
 		                        </menudata>
 		                        <menu>
 		                                <id>track</id>
@@ -269,14 +269,14 @@
 							<option>
 								<id>byyear</id>
 								<name>Sort by year</name>
-								<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+								<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 								<menulinks>number</menulinks>
 							</option>
 							<option>
 								<id>bytitle</id>
 								<name>Sort by title</name>
 								<menulinks>alpha</menulinks>
-								<keyword name="orderby" value="albums.titlesort asc"/>
+								<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 							</option>
 							<menudata>
 								select albums.id,albums.title from albums,tracks,genre_track
@@ -353,14 +353,14 @@
 							<option>
                                        				<id>byyear</id>
 			                                        <name>Sort by year</name>
-			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 			                                        <menulinks>number</menulinks>
 			                                </option>
 			                                <option>
 			                                        <id>bytitle</id>
 			                                        <name>Sort by title</name>
 			                                        <menulinks>alpha</menulinks>
-			                                        <keyword name="orderby" value="albums.titlesort asc"/>
+			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track 

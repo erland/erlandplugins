@@ -54,7 +54,7 @@
 					albums.id=contributor_album.album and 
 					contributor_album.contributor={artist} 
 				group by albums.id 
-				order by albums.titlesort asc
+				order by albums.titlesort asc,albums.disc asc
 			</menudata>
 			<menu>
 				<id>track</id>

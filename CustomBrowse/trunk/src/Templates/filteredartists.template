@@ -76,14 +76,14 @@
 									[%- END %])
 							[%- END %]
 						group by albums.id
-						order by albums.year desc,albums.titlesort asc
+						order by albums.year desc,albums.titlesort asc,albums.disc asc
 	                                </menudata>
 				</option>
 				<option>
 					<id>bytitle</id>
 					<name>Sort by title</name>
 					<menulinks>alpha</menulinks>
-					<keyword name="orderby" value="albums.titlesort asc"/>
+					<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				</option>
 				<menudata>
 					select albums.id,albums.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]

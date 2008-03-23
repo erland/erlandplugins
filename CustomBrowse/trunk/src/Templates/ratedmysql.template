@@ -149,7 +149,7 @@
 							ifnull(track_statistics.rating,0)&gt;={rating}-10 and ifnull(track_statistics.rating,0)&lt;{rating}+10
 							[%- END %]
 						group by albums.id 
-						order by albums.titlesort
+						order by albums.titlesort,albums.disc asc
 					</menudata>
 					<menu>
 						<id>track</id>

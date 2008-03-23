@@ -78,7 +78,7 @@
 						tracks.id=genre_track.track and 
 						genre_track.genre={genre} 
 					group by albums.id 
-					order by albums.titlesort asc
+					order by albums.titlesort asc,albums.disc asc
 				</menudata>
 				<menu>
 					<id>track</id>

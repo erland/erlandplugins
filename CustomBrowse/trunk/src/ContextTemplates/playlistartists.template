@@ -59,7 +59,7 @@
 					contributor_track.track=playlist_track.track and
 					playlist_track.playlist={playlistid}
 				group by albums.id 
-				order by albums.titlesort asc
+				order by albums.titlesort asc,albums.disc asc
 			</menudata>
 			<menu>
 				<id>track</id>

@@ -34,13 +34,13 @@
 					<id>byyear</id>
 					<name>Sort by year</name>
 					<menulinks>number</menulinks>
-					<keyword name="orderby" value="albums.year desc,albums.titlesort asc"/>
+					<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 				</option>
 				<option>
 					<id>bytitle</id>
 					<name>Sort by title</name>
 					<menulinks>alpha</menulinks>
-					<keyword name="orderby" value="albums.titlesort asc"/>
+					<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				</option>
 				<option>
 					<id>byartist</id>
@@ -62,7 +62,7 @@
 							tracks.id=genre_track.track and
 							genre_track.genre={genre}
 	                                        group by albums.id
-	                                        order by contributors.namesort asc,albums.year desc	
+	                                        order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc	
 					</menudata>
 				</option>
 				<menudata>
