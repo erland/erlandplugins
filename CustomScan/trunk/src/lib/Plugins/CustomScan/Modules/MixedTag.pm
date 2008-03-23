@@ -510,11 +510,11 @@ sub getMixedTagMenuItems {
 				$commonsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 			}
 			$albumssql .= $commonsql." where tracks.audio=1";
-			$albumssql .=" group by albums.id order by albums.titlesort";
+			$albumssql .=" group by albums.id order by albums.titlesort,albums.disc";
 			$albumssqlbyyear .= $commonsql." where tracks.audio=1";
-			$albumssqlbyyear .=" group by albums.id order by albums.year desc,albums.titlesort";
+			$albumssqlbyyear .=" group by albums.id order by albums.year desc,albums.titlesort,albums.disc";
 			$albumssqlbyartists .= $commonsql." where tracks.audio=1";
-			$albumssqlbyartists .=" group by albums.id order by contributors.namesort,albums.titlesort";
+			$albumssqlbyartists .=" group by albums.id order by contributors.namesort,albums.titlesort,albums.disc";
 		}
 
 
