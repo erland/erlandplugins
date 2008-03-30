@@ -1,5 +1,6 @@
-[%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
 [% PROCESS plugins/DynamicPlayList/dpcomponents.html %]
+[%- IF !ajaxUpdate %]
+[%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
 
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?player=[% player | uri %]">
@@ -17,6 +18,7 @@
 [% END -%]
 [% END %]
 [% PROCESS pageheader.html %]
+[% END %]
 [% PROCESS plugins/DynamicPlayList/dynamicplaylistlink.html %]
 
 [%# Following block generates links that submit the form if javascript is enabled.  This allows
@@ -63,4 +65,6 @@ href="[% webroot %][%- IF customurl -%]
 			[% END %]
 		[% END %]
 	[% END %]
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]

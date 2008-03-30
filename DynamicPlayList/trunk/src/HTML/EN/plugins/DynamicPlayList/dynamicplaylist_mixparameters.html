@@ -1,3 +1,4 @@
+[%- IF !ajaxUpdate %]
 [%- pagetitle = 'PLUGIN_DYNAMICPLAYLIST' | string; pageicon = 'PLUGIN_DYNAMICPLAYLIST' -%]
 
 [%- pwd_list = BLOCK -%]/
@@ -12,6 +13,7 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
+[% END %]
 
 [% BLOCK href %]
 href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mixparameters.html?type=[% type %]&player=[% player | uri %]"
@@ -42,4 +44,6 @@ href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_mixparameters.html?ty
 	</table>
 	<input type="submit" value="[% "PLUGIN_DYNAMICPLAYLIST_NEXT" | string %]">
 </form>
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
