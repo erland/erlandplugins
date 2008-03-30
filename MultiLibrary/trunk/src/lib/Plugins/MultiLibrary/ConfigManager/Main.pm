@@ -33,7 +33,7 @@ use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 use Slim::Utils::Prefs;
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.multilibrary');
 
@@ -48,7 +48,8 @@ sub new {
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
 		'supportDownloadError' => $parameters->{'supportDownloadError'},
-		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
+		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'},
+		'downloadVersion' => $parameters->{'downloadVersion'},
 	};
 
 	$self->{'contentDirectoryHandler'} = undef;
@@ -213,7 +214,8 @@ sub initWebAdminMethods {
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
 		'downloadUrl' => $prefs->get("download_url"),
-		'utf8filenames' => $prefs->get('utf8filenames')
+		'utf8filenames' => $prefs->get('utf8filenames'),
+		'downloadVersion' => $self->downloadVersion,
 	);
 	$self->webAdminMethods(Plugins::MultiLibrary::ConfigManager::LibraryWebAdminMethods->new(\%webAdminMethodsParameters));
 

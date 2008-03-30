@@ -838,7 +838,8 @@ sub getConfigManager {
 			'pluginId' => 'MultiLibrary',
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'MultiLibrary',
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'downloadVersion' => 2,
 		);
 		$configManager = Plugins::MultiLibrary::ConfigManager::Main->new(\%parameters);
 	}
