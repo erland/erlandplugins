@@ -2568,7 +2568,8 @@ sub cliJiveHandler {
 	my $menuGroupResult;
 	my $showFlat = $prefs->get('flatlist');
 	if($showFlat) {
-		$menuGroupResult = ();
+		my @empty = ();
+		$menuGroupResult = \@empty;
 	}else {
 		$menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
 	}
