@@ -2602,60 +2602,64 @@ sub cliJiveHandler {
 
 	my $cnt = 0;
 	foreach my $item (@$menuGroupResult) {
-		my $name;
-		my $id;
-		$name = $item->{'name'};
-		$id = escape($item->{'name'});
+		if($item->{'dynamicplaylistenabled'}) {
+			my $name;
+			my $id;
+			$name = $item->{'name'};
+			$id = escape($item->{'name'});
 		
-		my %itemParams = ();
-		foreach my $p (keys %baseParams) {
-			if($p =~ /^group/) {
-				$itemParams{$p}=$baseParams{$p}
+			my %itemParams = ();
+			foreach my $p (keys %baseParams) {
+				if($p =~ /^group/) {
+					$itemParams{$p}=$baseParams{$p}
+				}
 			}
+			$itemParams{'group'.$nextGroup} = $id;
+	
+			my $actions = {
+				'play' => undef,
+				'add' => undef,
+				'go' => {
+					'cmd' => ['dynamicplaylist', 'browsejive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				},
+			};
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+			$request->addResultLoop('item_loop',$cnt,'text',$name."/");
+			$cnt++;
 		}
-		$itemParams{'group'.$nextGroup} = $id;
-
-		my $actions = {
-			'play' => undef,
-			'add' => undef,
-			'go' => {
-				'cmd' => ['dynamicplaylist', 'browsejive'],
-				'params' => \%itemParams,
-				'itemsParams' => 'params',
-			},
-		};
-		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-		$request->addResultLoop('item_loop',$cnt,'text',$name."/");
-		$cnt++;
 	}
 
 	foreach my $item (@$menuResult) {
-		my $name;
-		my $id;
-		$name = $item->{'name'};
-		$id = $item->{'dynamicplaylistid'};
-		
-		my %itemParams = (
-			'_playlistid'=>$id,
-		);
-
-		my $actions = {
-			'do' => {
-				'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
-				'params' => \%itemParams,
-				'itemsParams' => 'params',
-			},
-		};
-		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-		$request->addResultLoop('item_loop',$cnt,'text',$name);
-		$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
-		$cnt++;
+		if($item->{'dynamicplaylistenabled'}) {
+			my $name;
+			my $id;
+			$name = $item->{'name'};
+			$id = $item->{'dynamicplaylistid'};
+			
+			my %itemParams = (
+				'_playlistid'=>$id,
+			);
+	
+			my $actions = {
+				'do' => {
+					'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				},
+			};
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+			$request->addResultLoop('item_loop',$cnt,'text',$name);
+			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+			$cnt++;
+		}
 	}
 
 	$request->addResult('offset',0);
-	$request->addResult('count',$count);
+	$request->addResult('count',$cnt);
 
 	$request->setStatusDone();
 	$log->debug("Exiting cliJiveHandler\n");
