@@ -112,7 +112,8 @@ sub getConfigManager {
 			'pluginId' => 'DatabaseQuery',
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'DatabaseQuery',
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'downloadVersion' => 2,
 		);
 		$configManager = Plugins::DatabaseQuery::ConfigManager::Main->new(\%parameters);
 	}
