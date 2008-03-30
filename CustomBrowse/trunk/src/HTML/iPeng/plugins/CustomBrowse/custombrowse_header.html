@@ -1,5 +1,5 @@
+[%- IF !ajaxUpdate %]
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
-[% PROCESS plugins/CustomBrowse/iteminfo.html %]
 [%- pwd_list = BLOCK -%]/
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">
@@ -26,6 +26,8 @@
 [% END -%]
 
 [% PROCESS pageheader.html dontscroll=1 %]
+[% END %]
+[% PROCESS plugins/CustomBrowse/iteminfo.html %]
 
 [%- BLOCK contextInfo -%]
 	[% IF it.slimserverimage %]
@@ -84,5 +86,7 @@
 	[% PROCESS itemColumn column='left' items=pluginCustomBrowseHeaderItems %]
 	[% PROCESS itemColumn column='right' items=pluginCustomBrowseHeaderItems %]
 [% END %]
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
 

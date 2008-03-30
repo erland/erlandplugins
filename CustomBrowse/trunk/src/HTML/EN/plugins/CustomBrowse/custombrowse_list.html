@@ -1,8 +1,8 @@
+[%- IF !ajaxUpdate %]
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
 [%- titleRight = BLOCK %]
 <div id="viewSelect"></div>
 [% END %]
-[% PROCESS plugins/CustomBrowse/iteminfo.html %]
 [%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 [%- pwd_list = BLOCK -%]/
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
@@ -38,6 +38,8 @@
 [% END -%]
 [% END %]
 [% PROCESS pageheader.html dontscroll=1 %]
+[% END %]
+[% PROCESS plugins/CustomBrowse/iteminfo.html %]
 [%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
         contentwrapper = 'galleryitem';
 	container = 'gallerycontainer';
@@ -117,4 +119,6 @@ END;
 <div id="pageFooterInfo">
 	[% PROCESS cbfooter %]
 </div>
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
