@@ -194,7 +194,8 @@ sub getConfigManager {
 			'pluginId' => 'iPod',
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'iPod',
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'downloadVersion' => 1,
 		);
 		$configManager = Plugins::iPod::ConfigManager::Main->new(\%parameters);
 	}
