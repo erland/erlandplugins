@@ -1,11 +1,5 @@
+[%- IF !ajaxUpdate %]
 [% pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' %]
-[% IF pluginTrackStatMaxRating==10 %]
-[% PROCESS plugins/TrackStat/trackstat10scale.css %]
-[% ELSE %]
-[% PROCESS plugins/TrackStat/trackstat.css %]
-[% END %]
-[% PROCESS plugins/TrackStat/controls.html %]
-[% PROCESS plugins/TrackStat/listitems.html %]
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
@@ -23,6 +17,14 @@
 	[% END %]
 [% END -%]
 [% PROCESS pageheader.html %]
+[% END %]
+[% IF pluginTrackStatMaxRating==10 %]
+[% PROCESS plugins/TrackStat/trackstat10scale.css %]
+[% ELSE %]
+[% PROCESS plugins/TrackStat/trackstat.css %]
+[% END %]
+[% PROCESS plugins/TrackStat/controls.html %]
+[% PROCESS plugins/TrackStat/listitems.html %]
 [% IF refresh > 0 %]  
 	<SCRIPT>
 	<!--
@@ -90,4 +92,6 @@
 	<br>Sorry!<br>TrackStat only supports to set rating of currently playing song in this skin. I you like to browse statistics using the web interface, you will currently need to use Fishbone or Classic skin.
 	<tr><td><div id="pageFooterInfo" style="float:right;">([% "PLUGIN_TRACKSTAT" | string %] [% pluginTrackStatVersion %])</div></td></tr>
 <!-- end plugins output -->
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]

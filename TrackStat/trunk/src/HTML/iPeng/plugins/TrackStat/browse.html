@@ -1,11 +1,5 @@
+[%- IF !ajaxUpdate %]
 [% pagetitle = 'PLUGIN_TRACKSTAT' | string; pageicon = 'PLUGIN_TRACKSTAT' %]
-[% IF pluginTrackStatMaxRating==10 %]
-[% PROCESS plugins/TrackStat/trackstat10scale.css %]
-[% ELSE %]
-[% PROCESS plugins/TrackStat/trackstat.css %]
-[% END %]
-[% PROCESS plugins/TrackStat/controls.html %]
-[% PROCESS plugins/TrackStat/listitems.html %]
 [%- pwd_list = BLOCK -%]/
 	<a href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">
 		[% "PLUGIN_TRACKSTAT" | string %]
@@ -19,6 +13,14 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
+[% END %]
+[% IF pluginTrackStatMaxRating==10 %]
+[% PROCESS plugins/TrackStat/trackstat10scale.css %]
+[% ELSE %]
+[% PROCESS plugins/TrackStat/trackstat.css %]
+[% END %]
+[% PROCESS plugins/TrackStat/controls.html %]
+[% PROCESS plugins/TrackStat/listitems.html %]
 	[% WRAPPER contentcontainer %]
 <div style = "float: right; top: 0; right: 0; width: 0;
      height: [% IF pageinfo.totalpages > 1 %]287[% ELSE %]323[% END %]px;
@@ -140,4 +142,6 @@
 
 	[% END %]
 <!-- end plugins output -->
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
