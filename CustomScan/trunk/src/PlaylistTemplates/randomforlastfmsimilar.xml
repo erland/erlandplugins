@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sqlplaylist>
-	<minpluginversion>1.18</minpluginversion>
 	<requireplugins>CustomScan</requireplugins>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>81</downloadidentifier>
 		<name>Random for LastFM similar artists</name>

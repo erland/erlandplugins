@@ -2,7 +2,7 @@
 <custombrowse>
 	<database>mysql</database>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.24</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>62</downloadidentifier>
 		<name>Custom Tag Singles</name>

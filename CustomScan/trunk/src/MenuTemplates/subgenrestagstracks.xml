@@ -2,7 +2,7 @@
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.17</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>180</downloadidentifier>
 		<name>Genres/Sub Genres with custom tags</name>

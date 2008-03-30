@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>1.17</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>164</downloadidentifier>
 		<name>LastFM Similar Artists for artist</name>
