@@ -2,7 +2,7 @@
 <custombrowse>
 	<database>mysql</database>
 	<requireplugins>TrackStat</requireplugins>
-	<minpluginversion>1.17</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>44</downloadidentifier>
 		<name>Ratings</name>

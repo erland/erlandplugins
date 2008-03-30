@@ -73,6 +73,7 @@ my $contextMenuHandler = undef;
 
 my $parameterHandler = undef;
 
+my $DOWNLOAD_VERSION = 2;
 my $prefs = preferences('plugin.custombrowse');
 my $trackstatPrefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
@@ -1182,8 +1183,8 @@ sub getConfigManager {
 			'pluginId' => 'CustomBrowse',
 			'downloadApplicationId' => 'CustomBrowse',
 			'pluginVersion' => $PLUGINVERSION,
-			'supportDownloadError' => "Download is not supported yet",
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'downloadVersion' => $DOWNLOAD_VERSION,
 		);
 		$configManager = Plugins::CustomBrowse::ConfigManager::Main->new(\%parameters);
 	}
@@ -1197,8 +1198,8 @@ sub getContextConfigManager {
 			'pluginId' => 'CustomBrowse',
 			'downloadApplicationId' => 'CustomBrowseContext',
 			'pluginVersion' => $PLUGINVERSION,
-			'supportDownloadError' => "Download is not supported yet",
-			'addSqlErrorCallback' => \&addSQLError
+			'addSqlErrorCallback' => \&addSQLError,
+			'downloadVersion' => $DOWNLOAD_VERSION,
 		);
 		$contextConfigManager = Plugins::CustomBrowse::ConfigManager::ContextMain->new(\%parameters);
 	}

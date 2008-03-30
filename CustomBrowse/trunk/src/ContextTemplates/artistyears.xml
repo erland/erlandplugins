@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<minslimserverversion>6.5</minslimserverversion>
-	<minpluginversion>1.20</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>115</downloadidentifier>
 		<name>Years for artist</name>

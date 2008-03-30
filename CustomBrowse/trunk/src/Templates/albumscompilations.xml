@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minpluginversion>1.24</minpluginversion>
+	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>19</downloadidentifier>
 		<name>Albums/Compilations</name>

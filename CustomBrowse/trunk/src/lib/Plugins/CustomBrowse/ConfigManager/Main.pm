@@ -34,7 +34,7 @@ use Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items) );
+__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.custombrowse');
 
@@ -49,7 +49,8 @@ sub new {
 		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
 		'pluginVersion' => $parameters->{'pluginVersion'},
 		'supportDownloadError' => $parameters->{'supportDownloadError'},
-		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
+		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'},
+		'downloadVersion' => $parameters->{'downloadVersion'},
 	};
 
 	$self->{'contentDirectoryHandler'} = undef;
@@ -230,7 +231,8 @@ sub initWebAdminMethods {
 		'supportDownloadError' => $internalSupportDownloadError,
 		'webCallbacks' => $self,
 		'webTemplates' => \%webTemplates,
-		'downloadUrl' => $prefs->get("download_url")
+		'downloadUrl' => $prefs->get("download_url"),
+		'downloadVersion' => $self->downloadVersion,
 	);
 	$self->webAdminMethods(Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods->new(\%webAdminMethodsParameters));
 
