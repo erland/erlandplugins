@@ -12,12 +12,12 @@
 [% END %]
 
 [% BLOCK dpcontentitemgroup %]
-	<a class="tapblock" href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name  | truncate(30) %]/</a>
+	<span style="text-overflow: ellipsis; overflow: hidden; whitespace: nowrap; display: block;max-width: 212;"><a class="tapblock" href="[% webroot %]plugins/DynamicPlayList/dynamicplaylist_list.html?[% group.url %]&player=[% player | uri %]">[% group.name %]/</a></span>
 [% END %]
 
 [% BLOCK dpcontentitemplaylist %]
 	[% IF playlist.url %]
-		<a class="tapblock" href="[% webroot %][% playlist.url %]&player=[% player | uri %][% playlist.urlcontext %]">[% playlist.name  | truncate(30)%]</a>
+		<span style="text-overflow: ellipsis; overflow: hidden; whitespace: nowrap; display: block;max-width: 212;"><a class="tapblock" href="[% webroot %][% playlist.url %]&player=[% player | uri %][% playlist.urlcontext %]">[% playlist.name  %]</a></span>
 	[% ELSE %]
 		[% playlist.name | truncate(30)%]
 	[% END %]
