@@ -1454,6 +1454,7 @@ sub webPages {
                 "CustomBrowse/custombrowse_executemix\.(?:htm|xml)"     => \&handleWebExecuteMix,
                 "CustomBrowse/custombrowse_mixcontext\.(?:htm|xml)"     => \&handleWebMixContext,
                 "CustomBrowse/custombrowse_executemixcontext\.(?:htm|xml)"     => \&handleWebExecuteMixContext,
+                "CustomBrowse/custombrowse_mixlist\.(?:htm|xml)"     => \&handleWebMixList,
                 "CustomBrowse/custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "CustomBrowse/custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
                 "CustomBrowse/custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
@@ -2510,6 +2511,51 @@ sub handleWebMixContext {
 	}
 	$params->{'CustomBrowseReloadQuery'} = $params->{'url_query'};
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
+}
+
+sub handleWebMixList {
+	my ($client, $params) = @_;
+	return unless $client;
+	my %c = (
+		'itemid' => $params->{'contextid'},
+		'itemtype' => $params->{'contexttype'},
+		'itemname' => $params->{'contextname'}
+	);
+	my $contextString = '';
+	if(defined($c{'itemid'})) {
+		$contextString .= "&contextid=".$c{'itemid'};
+	}
+	if(defined($c{'itemtype'})) {
+		$contextString .= "&contexttype=".$c{'itemtype'};
+	}
+	if(defined($c{'itemname'})) {
+		$contextString .= "&contextname=".escape($c{'itemname'});
+	}
+	my %p = (
+		'hierarchy' => 'group_'.$params->{'contexttype'}
+	);
+	$p{'contexttype'} = $params->{'contexttype'};
+	$p{'contextid'} = $params->{'contextid'};
+	$p{'contextname'} = $params->{'contextname'};
+	my $contextItems = getContextMenuHandler()->getContext($client,\%p);
+
+	my @contexts = @$contextItems;
+
+	my $currentcontext = undef;
+	if(scalar(@contexts)>0) {
+		$currentcontext = @contexts[scalar(@contexts)-1];
+	}
+
+	my $mixes = getContextMenuHandler()->getPreparedMixes($client,\%c,'web');
+	$params->{'pluginCustomBrowseMixes'} = $mixes;
+	$params->{'pluginCustomBrowseItemUrl'} = $currentcontext->{'url'}.$currentcontext->{'valueUrl'};
+
+	$params->{'pluginCustomBrowseItemUrl'} .= $contextString;
+
+	$params->{'pluginCustomBrowseContext'} = $contextItems;
+	$params->{'pluginCustomBrowseContextMixUrl'} = 1;
+	
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_listmixes.html', $params);
 }
 
 sub retreiveMixList {
