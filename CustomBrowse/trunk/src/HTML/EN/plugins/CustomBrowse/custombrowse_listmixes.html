@@ -1,3 +1,4 @@
+[%- IF !ajaxUpdate %]
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
@@ -12,6 +13,7 @@
 &nbsp;
 [% END -%]
 [% PROCESS pageheader.html %]
+[% END %]
 
     	<tr valign="top"><td></td><td colspan="4">
 		<strong>[% "PLUGIN_CUSTOMBROWSE_SELECT_MIXES" |string %]</strong><br><br>
@@ -28,4 +30,6 @@
 		        [% END %]
 		[% END %]
     	</td></tr>
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
