@@ -45,6 +45,13 @@
 	max-width: 212;
 	display: block;
 }
+.trackItemDetail {
+        text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 270;
+	display: block;
+}
 .selectOptions {
         font-size: 15px; 
         font-weight: bold;

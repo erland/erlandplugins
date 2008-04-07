@@ -208,7 +208,7 @@ END %]
 
 [% BLOCK cbcontentitem %]
 	[% IF item.itemobj %]
-		[% PROCESS trackinfo %]
+		<div class="trackItemDetail">[% PROCESS trackinfo %]</div>
 	[% ELSE %]
 		[% IF !artwork && pluginCustomBrowseArtworkSupported %]
 			<div class="browseItemDetailWithCover">
