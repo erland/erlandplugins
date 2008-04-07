@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<section id="nowplaying">
+		<subsection id="custombrowse_mix">
+			<name>CB Mixes:</name>
+			<weight>10</weight>
+			<command id="songmix">
+				<enableddefault>0</enableddefault>
+				<requireplugins>CustomBrowse</requireplugins>
+				<weight>10</weight>
+				<name>Song</name>
+				<icon>html/images/mixbutton.png</icon>
+				<url>plugins/CustomBrowse/custombrowse_mix.html?hierarchy=albums,album,track</url>
+				<type>content</type>
+				<parameters>
+					<id>track</id>
+					<player>player</player>
+				</parameters>
+			</command>
+			<command id="albummix">
+				<requireplugins>CustomBrowse</requireplugins>
+				<weight>20</weight>
+				<name>Album</name>
+				<icon>html/images/mixbutton.png</icon>
+				<url>plugins/CustomBrowse/custombrowse_mix.html?hierarchy=albums,album</url>
+				<type>content</type>
+				<parameters>
+					<album_id>album</album_id>
+					<player>player</player>
+				</parameters>
+			</command>
+			<command id="artistmix">
+				<requireplugins>CustomBrowse</requireplugins>
+				<weight>30</weight>
+				<name>Artist</name>
+				<icon>html/images/mixbutton.png</icon>
+				<url>plugins/CustomBrowse/custombrowse_mix.html?hierarchy=artists,artist</url>
+				<type>content</type>
+				<parameters>
+					<artist_id>artist</artist_id>
+					<player>player</player>
+				</parameters>
+			</command>
+		</subsection>
+	</section>
+</configuration>

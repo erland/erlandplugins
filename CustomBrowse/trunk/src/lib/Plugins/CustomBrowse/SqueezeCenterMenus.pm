@@ -13,7 +13,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-package Plugins::CustomBrowse::EnabledSlimServerMenus;
+package Plugins::CustomBrowse::SqueezeCenterMenus;
 
 use strict;
 use base qw(Plugins::CustomBrowse::BaseSettings);
@@ -38,11 +38,11 @@ sub new {
 }
 
 sub name {
-	return 'PLUGIN_CUSTOMBROWSE_SETTINGS_ENABLEDSLIMSERVERMENUS';
+	return 'PLUGIN_CUSTOMBROWSE_SETTINGS_SLIMSERVERMENUS';
 }
 
 sub page {
-	return 'plugins/CustomBrowse/settings/enabledslimservermenus.html';
+	return 'plugins/CustomBrowse/settings/squeezecentermenus.html';
 }
 
 sub currentPage {
@@ -58,23 +58,60 @@ sub pages {
 	return \@pages;
 }
 
+sub initMenus {
+	my $browseMenusFlat = shift;
+	my @menus = ();
+	my %addedGroups = ();
+	for my $key (keys %$browseMenusFlat) {
+		my %webmenu = ();
+		my $menu = $browseMenusFlat->{$key};
+		if(defined($menu->{'menugroup'})) {
+			my @groups = split('/',$menu->{'menugroup'});
+			my $group = pop @groups;
+			if(!exists $addedGroups{$group}) {
+				$webmenu{'menuname'} = $group;
+				$webmenu{'id'} = 'group_'.escape($group);
+				push @menus,\%webmenu;
+				$addedGroups{$group}=1;
+			}
+		}else {
+			for my $key (keys %$menu) {
+				$webmenu{$key} = $menu->{$key};
+			} 
+			push @menus,\%webmenu;
+		}
+	}
+	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
+	return @menus;
+}
+
 sub handler {
 	my ($class, $client, $paramRef) = @_;
 
 	$paramRef->{'pluginCustomBrowseSlimserverMenus'} = Plugins::CustomBrowse::Plugin::getSlimserverMenus();
+	my $browseMenusFlat = Plugins::CustomBrowse::Plugin::readBrowseConfiguration($client);
 
+        # Pass on the current pref values and now playing info
+
+	my @menus = initMenus($browseMenusFlat);
+	
+        $paramRef->{'pluginCustomBrowseMenus'} = \@menus;
+	
 	if ($paramRef->{'saveSettings'}) {
 			my $slimserverMenus = $paramRef->{'pluginCustomBrowseSlimserverMenus'};
 			foreach my $menu (@$slimserverMenus) {
-			my $menuid = "slimservermenu_".escape($menu->{'id'});
-			if($paramRef->{$menuid}) {
-				$prefs->set($menuid.'_enabled',1);
-				$menu->{'enabled'}=1;
-			}else {
-				$prefs->set($menuid.'_enabled',0);
-				$menu->{'enabled'}=0;
-			}
+				my $menuid = "squeezecenter_".escape($menu->{'id'}."_menu");
+				if($paramRef->{$menuid}) {
+					$prefs->set($menuid,$paramRef->{$menuid});
+				}else {
+					$prefs->set($menuid,'');
+				}
 		}
+	}
+
+	my $squeezecenterMenus = $paramRef->{'pluginCustomBrowseSlimserverMenus'};
+	foreach my $m (@$squeezecenterMenus) {
+		$paramRef->{'squeezecenter_'.$m->{'id'}.'_menu'} = $prefs->get('squeezecenter_'.$m->{'id'}.'_menu');
 	}
 
 	return $class->SUPER::handler($client, $paramRef);

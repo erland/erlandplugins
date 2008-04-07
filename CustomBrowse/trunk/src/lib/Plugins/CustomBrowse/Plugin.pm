@@ -41,7 +41,7 @@ use Slim::Control::Jive;
 
 use Plugins::CustomBrowse::Settings;
 use Plugins::CustomBrowse::EnabledMixers;
-use Plugins::CustomBrowse::EnabledSlimServerMenus;
+use Plugins::CustomBrowse::SqueezeCenterMenus;
 use Plugins::CustomBrowse::EnabledMenus;
 use Plugins::CustomBrowse::EnabledContextMenus;
 use Plugins::CustomBrowse::ManageMenus;
@@ -51,6 +51,8 @@ use Plugins::CustomBrowse::ConfigManager::ContextMain;
 
 use Plugins::CustomBrowse::MenuHandler::Main;
 use Plugins::CustomBrowse::MenuHandler::ParameterHandler;
+
+use Plugins::CustomBrowse::iPeng::Reader;
 
 my $manageMenuHandler = undef;
 
@@ -955,7 +957,7 @@ sub initPlugin {
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::CustomBrowse::Settings->new($class);
 	Plugins::CustomBrowse::EnabledMixers->new($class);
-	Plugins::CustomBrowse::EnabledSlimServerMenus->new($class);
+	Plugins::CustomBrowse::SqueezeCenterMenus->new($class);
 	Plugins::CustomBrowse::EnabledMenus->new($class);
 	Plugins::CustomBrowse::EnabledContextMenus->new($class);
 	$manageMenuHandler = Plugins::CustomBrowse::ManageMenus->new($class);
@@ -1027,8 +1029,8 @@ sub initPlugin {
 	if($prefs->get('menuinsidebrowse')) {
 		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
 	}
-	addPlayerMenus();
 	delSlimserverPlayerMenus();
+	addPlayerMenus();
 
 	my %mixerMap = ();
 	if($prefs->get("enable_web_mixerfunction")) {
@@ -1055,6 +1057,8 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixesjive'], [1, 1, 1, \&cliJiveMixesHandler]);
+
+	Plugins::CustomBrowse::iPeng::Reader::read("CustomBrowse","iPengConfiguration");
 }
 
 sub postinitPlugin {
@@ -1211,7 +1215,9 @@ sub addPlayerMenus {
 	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'web');
         for my $menu (@$menus) {
             my $name = getMenuHandler()->getItemText($client,$menu);
-            if($menu->{'enabledbrowse'}) {
+            my $key = getMenuKey($client,$menu,$name);
+
+            if($menu->{'enabledbrowse'} || $name ne $key) {
 		my %submenubrowse = (
 			'useMode' => 'PLUGIN.CustomBrowse.Browse',
 			'selectedMenu' => $menu->{'id'},
@@ -1222,11 +1228,11 @@ sub addPlayerMenus {
 			'selectedMenu' => $menu->{'id'},
 			'mainBrowseMenu' => 1
 		);
-		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$name,\%submenubrowse);
-		Slim::Buttons::Home::addMenuOption($name,\%submenuhome);
+		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',$key,\%submenubrowse);
+		Slim::Buttons::Home::addMenuOption($key,\%submenuhome);
             }else {
-                Slim::Buttons::Home::delSubMenu('BROWSE_MUSIC',$name);
-		Slim::Buttons::Home::delMenuOption($name);
+                Slim::Buttons::Home::delSubMenu('BROWSE_MUSIC',$key);
+		Slim::Buttons::Home::delMenuOption($key);
             }
         }
 }
@@ -1403,9 +1409,14 @@ sub checkDefaults {
 	my $slimserverMenus = getSlimserverMenus();
 	for my $menu (@$slimserverMenus) {
 		$prefVal = $prefs->get('slimservermenu_'.$menu->{'id'}.'_enabled');
-		if(! defined $prefVal) {
-			$prefs->set('slimservermenu_'.$menu->{'id'}.'_enabled',1);
+		if(defined $prefVal && !$prefVal && !defined($prefs->get('squeezecenter_'.$menu->{'id'}.'_menu'))) {
+			$prefs->set('squeezecenter_'.$menu->{'id'}.'_menu','disabled');
+			$prefs->delete('slimservermenu_'.$menu->{'id'}.'_enabled');
 		}
+	}
+	$prefVal = $prefs->get('squeezecenter_ipengbrowsemore_menu');
+	if(!defined $prefVal) {
+		$prefs->set('squeezecenter_ipengbrowsemore_menu','custombrowse');
 	}
 }
 
@@ -1451,8 +1462,6 @@ sub webPages {
                 "CustomBrowse/custombrowse_contextplay\.(?:htm|xml)"     => \&handleWebContextPlay,
                 "CustomBrowse/custombrowse_contextaddall\.(?:htm|xml)"     => \&handleWebContextAddAll,
                 "CustomBrowse/custombrowse_contextplayall\.(?:htm|xml)"     => \&handleWebContextPlayAll,
-		"CustomBrowse/custombrowse_selectmenus\.(?:htm|xml)" => \&handleWebSelectMenus,
-		"CustomBrowse/custombrowse_saveselectmenus\.(?:htm|xml)" => \&handleWebSaveSelectMenus,
         );
 
         my $value = 'plugins/CustomBrowse/custombrowse_list.html';
@@ -1464,6 +1473,7 @@ sub webPages {
 
 	if(defined($value)) {
 		#readBrowseConfiguration();
+		delSlimserverWebMenus();
 		addWebMenus(undef,$value);
 		my $menuName = $prefs->get('menuname');
 		if($menuName) {
@@ -1474,8 +1484,13 @@ sub webPages {
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
 			Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_CUSTOMBROWSE' => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}
-		delSlimserverWebMenus();
+		if(!defined($prefs->get('squeezecenter_ipengbrowsemore_menu')) || $prefs->get('squeezecenter_ipengbrowsemore_menu') eq 'custombrowse') {
+			Slim::Utils::Strings::setString( uc 'PLUGIN_IPENG_CUSTOM_BROWSE_MORE', $menuName );
+			Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_IPENG_CUSTOM_BROWSE_MORE' => $value });
+			Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_IPENG_CUSTOM_BROWSE_MORE' => 'plugins/CustomBrowse/html/images/custombrowse.png'});
+		}
 	}
+
 
 	if($prefs->get('menuinsidebrowse')) {
 	        return (\%pages);
@@ -1487,45 +1502,73 @@ sub webPages {
 }
 
 sub delSlimserverWebMenus {
-	if(!$prefs->get('slimservermenu_artist_enabled')) {
+	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ARTIST' => undef });
 	}
-	if(!$prefs->get('slimservermenu_genre_enabled')) {
+	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_GENRE' => undef });
 	}
-	if(!$prefs->get('slimservermenu_album_enabled')) {
+	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ALBUM' => undef });
 	}
-	if(!$prefs->get('slimservermenu_year_enabled')) {
+	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_YEAR' => undef });
 	}
-	if(!$prefs->get('slimservermenu_newmusic_enabled')) {
+	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_NEW_MUSIC' => undef });
 	}
-	if(!$prefs->get('slimservermenu_playlist_enabled')) {
+	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
 		Slim::Web::Pages->addPageLinks("browse", {'SAVED_PLAYLISTS' => undef });
 	}
 }
 
 sub delSlimserverPlayerMenus {
-	if(!$prefs->get('slimservermenu_artist_enabled')) {
+	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ARTIST');
 	}
-	if(!$prefs->get('slimservermenu_genre_enabled')) {
+	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_GENRE');
 	}
-	if(!$prefs->get('slimservermenu_album_enabled')) {
+	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ALBUM');
 	}
-	if(!$prefs->get('slimservermenu_year_enabled')) {
+	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_YEAR');
 	}
-	if(!$prefs->get('slimservermenu_newmusic_enabled')) {
+	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_NEW_MUSIC');
 	}
-	if(!$prefs->get('slimservermenu_playlist_enabled')) {
+	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
 		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'SAVED_PLAYLISTS');
 	}
+}
+
+sub getMenuKey {
+	my $client = shift;
+	my $menu = shift;
+	my $default = shift;
+
+	foreach my $key (qw(album artist genre year)) {
+		my $replaceMenu = $prefs->get('squeezecenter_'.$key.'_menu');
+		if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+			return 'BROWSE_BY_'.uc($key);
+		}
+	}
+	my $replaceMenu = $prefs->get('squeezecenter_newmusic_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'BROWSE_NEW_MUSIC';
+	}
+
+	$replaceMenu = $prefs->get('squeezecenter_playlist_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'SAVED_PLAYLISTS';
+	}
+
+	$replaceMenu = $prefs->get('squeezecenter_ipengbrowsemore_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'PLUGIN_IPENG_CUSTOM_BROWSE_MORE';
+	}
+	return $default;
 }
 
 sub addWebMenus {
@@ -1534,28 +1577,29 @@ sub addWebMenus {
 	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'web');
         for my $menu (@$menus) {
             my $name = getMenuHandler()->getItemText($client,$menu);
+            my $key = getMenuKey($client,$menu,$name);
 
-            if ( !Slim::Utils::Strings::stringExists($name) ) {
-               	Slim::Utils::Strings::setString( uc $name, $name );
+            if ( !Slim::Utils::Strings::stringExists($key) ) {
+               	Slim::Utils::Strings::setString( uc $key, $name );
             }
-            if($menu->{'enabledbrowse'}) {
+            if($menu->{'enabledbrowse'} || $key ne $name) {
 		if(defined($menu->{'menu'}) && ref($menu->{'menu'}) ne 'ARRAY' && getMenuHandler()->hasCustomUrl($client,$menu->{'menu'})) {
 			
 			my $url = getMenuHandler()->getCustomUrl($client,$menu->{'menu'});
-			$log->debug("Adding menu: $name\n");
-		        Slim::Web::Pages->addPageLinks("browse", { $name => $url });
-		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $url });
-			Slim::Web::Pages->addPageLinks("icons", {$name => 'plugins/CustomBrowse/html/images/custombrowse.png'});
+			$log->debug("Adding menu: $key = $name\n");
+		        Slim::Web::Pages->addPageLinks("browse", { $key => $url });
+		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $url });
+			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}else {
-			$log->debug("Adding menu: $name\n");
-		        Slim::Web::Pages->addPageLinks("browse", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
-		        Slim::Web::Pages->addPageLinks("browseiPeng", { $name => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
-			Slim::Web::Pages->addPageLinks("icons", {$name => 'plugins/CustomBrowse/html/images/custombrowse.png'});
+			$log->debug("Adding menu: $key = $name\n");
+		        Slim::Web::Pages->addPageLinks("browse", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
+		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
+			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}
             }else {
-		$log->debug("Removing menu: $name\n");
-		Slim::Web::Pages->addPageLinks("browse", {$name => undef});
-		Slim::Web::Pages->addPageLinks("browseiPeng", {$name => undef});
+		$log->debug("Removing menu: $key\n");
+		Slim::Web::Pages->addPageLinks("browse", {$key => undef});
+		Slim::Web::Pages->addPageLinks("browseiPeng", {$key => undef});
             }
         }
 }
@@ -1701,8 +1745,12 @@ sub handleWebHeader {
 	if (Slim::Music::Import->stillScanning || (UNIVERSAL::can("Plugins::CustomScan::Plugin","isScanning") && eval { Plugins::CustomScan::Plugin::isScanning() })) {
 		$params->{'pluginCustomBrowseScanWarning'} = 1;
 	}
-
-        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_header.html', $params);
+	
+	if(defined($params->{'customtemplate'}) && $params->{'customtemplate'} && $params->{'customtemplate'} !~ /\.\./ && $params->{'customtemplate'} !~ /\//) {
+	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/'.$params->{'customtemplate'}, $params);
+	}else {
+	        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_header.html', $params);
+	}
 }
 
 sub getHeaderItems {
@@ -2730,170 +2778,54 @@ sub hideMenu {
 		}
 	}
 }
-# Draws the plugin's select menus web page
-sub handleWebSelectMenus {
-        my ($client, $params) = @_;
-
-	if(!defined($browseMenusFlat)) {
-		readBrowseConfiguration($client);
-	}
-	if(!defined($contextBrowseMenusFlat)) {
-		readContextBrowseConfiguration($client);
-	}
-        # Pass on the current pref values and now playing info
-	my @menus = ();
-	for my $key (keys %$browseMenusFlat) {
-		my %webmenu = ();
-		my $menu = $browseMenusFlat->{$key};
-		for my $key (keys %$menu) {
-			$webmenu{$key} = $menu->{$key};
-		} 
-		if(defined($webmenu{'menuname'}) && defined($webmenu{'menugroup'})) {
-			$webmenu{'menuname'} = $webmenu{'menugroup'}.'/'.$webmenu{'menuname'};
-		}
-		push @menus,\%webmenu;
-	}
-	@menus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @menus;
-
-        $params->{'pluginCustomBrowseMenus'} = \@menus;
-
-
-	my @contextMenus = ();
-	for my $key (keys %$contextBrowseMenusFlat) {
-		my %webmenu = ();
-		my $menu = $contextBrowseMenusFlat->{$key};
-		for my $key (keys %$menu) {
-			$webmenu{$key} = $menu->{$key};
-		} 
-		if(defined($webmenu{'menuname'}) && defined($webmenu{'menugroup'})) {
-			$webmenu{'menuname'} = $webmenu{'menugroup'}.'/'.$webmenu{'menuname'};
-		}
-		push @contextMenus,\%webmenu;
-	}
-	@contextMenus = sort { $a->{'menuname'} cmp $b->{'menuname'} } @contextMenus;
-
-        $params->{'pluginCustomBrowseContextMenus'} = \@contextMenus;
-
-
-        $params->{'pluginCustomBrowseMixes'} = getMenuHandler()->getGlobalMixes();
-
-	$params->{'pluginCustomBrowseSlimserverMenus'} = getSlimserverMenus();
-
-        return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_selectmenus.html', $params);
-}
 
 sub getSlimserverMenus {
 	my @slimserverMenus = ();
 	my %browseByAlbum = (
 		'id' => 'album',
 		'name' => string('BROWSE_BY_ALBUM'),
-		'enabled' => $prefs->get('slimservermenu_album_enabled')
+		'enabled' => !$prefs->get('squeezecenter_album_menu')
 	);
 	push @slimserverMenus,\%browseByAlbum;
 	my %browseByArtist = (
 		'id' => 'artist',
 		'name' => string('BROWSE_BY_ARTIST'),
-		'enabled' => $prefs->get('slimservermenu_artist_enabled')
+		'enabled' => !$prefs->get('squeezecenter_artist_menu')
 	);
 	push @slimserverMenus,\%browseByArtist;
 	my %browseByGenre = (
 		'id' => 'genre',
 		'name' => string('BROWSE_BY_GENRE'),
-		'enabled' => $prefs->get('slimservermenu_genre_enabled')
+		'enabled' => !$prefs->get('squeezecenter_genre_menu')
 	);
 	push @slimserverMenus,\%browseByGenre;
 	my %browseByYear = (
 		'id' => 'year',
 		'name' => string('BROWSE_BY_YEAR'),
-		'enabled' => $prefs->get('slimservermenu_year_enabled')
+		'enabled' => !$prefs->get('squeezecenter_year_menu')
 	);
 	push @slimserverMenus,\%browseByYear;
 	my %browseNewMusic = (
 		'id' => 'newmusic',
 		'name' => string('BROWSE_NEW_MUSIC'),
-		'enabled' => $prefs->get('slimservermenu_newmusic_enabled')
+		'enabled' => !$prefs->get('squeezecenter_newmusic_menu')
 	);
 	push @slimserverMenus,\%browseNewMusic;
 	my %browsePlaylist = (
 		'id' => 'playlist',
 		'name' => string('SAVED_PLAYLISTS').' (Player menu)',
-		'enabled' => $prefs->get('slimservermenu_playlist_enabled')
+		'enabled' => !$prefs->get('squeezecenter_playlist_menu')
 	);
 	push @slimserverMenus,\%browsePlaylist;
+	my %iPengBrowseMore = (
+		'id' => 'ipengbrowsemore',
+		'name' => 'Browse More (iPeng skin)',
+		'enabled' => !$prefs->get('squeezecenter_ipengbrowsemore_menu')
+	);
+	push @slimserverMenus,\%iPengBrowseMore;
 	return \@slimserverMenus;
 }
 
-# Draws the plugin's web page
-sub handleWebSaveSelectMenus {
-        my ($client, $params) = @_;
-
-	if(!defined($browseMenusFlat)) {
-		readBrowseConfiguration($client);
-	}
-	if(!defined($contextBrowseMenusFlat)) {
-		readContextBrowseConfiguration($client);
-	}
-        foreach my $menu (keys %$browseMenusFlat) {
-                my $menuid = "menu_".escape($browseMenusFlat->{$menu}->{'id'});
-                my $menubrowseid = "menubrowse_".escape($browseMenusFlat->{$menu}->{'id'});
-                if($params->{$menuid}) {
-                        $prefs->set($menuid.'_enabled',1);
-			$browseMenusFlat->{$menu}->{'enabled'}=1;
-			if(!defined($browseMenusFlat->{$menu}->{'forceenabledbrowse'})) {
-				if($params->{$menubrowseid}) {
-                	        	$prefs->set($menubrowseid.'_enabled',1);
-					$browseMenusFlat->{$menu}->{'enabledbrowse'}=1;
-		                }else {
-	        			$prefs->set($menubrowseid.'_enabled',0);
-					$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
-	                	}
-			}
-                }else {
-                        $prefs->set($menuid.'_enabled',0);
-			$browseMenusFlat->{$menu}->{'enabled'}=0;
-			if(!defined($browseMenusFlat->{$menu}->{'forceenabledbrowse'})) {
-				$browseMenusFlat->{$menu}->{'enabledbrowse'}=0;
-			}
-                }
-        }
-
-        foreach my $menu (keys %$contextBrowseMenusFlat) {
-                my $menuid = "context_menu_".escape($contextBrowseMenusFlat->{$menu}->{'id'});
-                if($params->{$menuid}) {
-                        $prefs->set($menuid.'_enabled',1);
-			$contextBrowseMenusFlat->{$menu}->{'enabled'}=1;
-                }else {
-                        $prefs->set($menuid.'_enabled',0);
-			$contextBrowseMenusFlat->{$menu}->{'enabled'}=0;
-                }
-        }
-
-
-	my $browseMixes = getMenuHandler()->getGlobalMixes();
-        foreach my $mix (keys %$browseMixes) {
-                my $mixid = "mix_".escape($browseMixes->{$mix}->{'id'});
-                if($params->{$mixid}) {
-                        $prefs->set($mixid.'_enabled',1);
-			$browseMixes->{$mix}->{'enabled'}=1;
-                }else {
-                        $prefs->set($mixid.'_enabled',0);
-			$browseMixes->{$mix}->{'enabled'}=0;
-                }
-        }
-	my $slimserverMenus = getSlimserverMenus();
-        foreach my $menu (@$slimserverMenus) {
-                my $menuid = "slimservermenu_".escape($menu->{'id'});
-                if($params->{$menuid}) {
-                        $prefs->set($menuid.'_enabled',1);
-                }else {
-                        $prefs->set($menuid.'_enabled',0);
-                }
-        }
-	$params->{'refresh'} = 1;
-
-	$params->{'CustomBrowseReloadPath'} = 'plugins/CustomBrowse/custombrowse_list.html';
-	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_reload.html', $params);
-}
 
 sub cliJiveHandler {
 	$log->debug("Entering cliJiveHandler\n");
@@ -3465,9 +3397,9 @@ sub readBrowseConfiguration {
 	if (!grep(/CustomBrowse/, Slim::Utils::PluginManager->enabledPlugins($client))) {
 		$value = undef;
 	}
-	addWebMenus($client,$value);
 	delSlimserverWebMenus();
 	delSlimserverPlayerMenus();
+	addWebMenus($client,$value);
 	addPlayerMenus($client);
 	addJivePlayerMenus($client);
 	return $browseMenusFlat;
