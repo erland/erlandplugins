@@ -213,21 +213,21 @@ END %]
 		[% IF !artwork && pluginCustomBrowseArtworkSupported %]
 			<div class="browseItemDetailWithCover">
 			[% IF item.slimserverurl %]
-        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
+        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText %]</a>
 			[% ELSIF item.url %]
-        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=22 %]</a>
+        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText %]</a>
 			[% ELSE %]
-        			[% PROCESS $CustomBrowseItemText truncateAt=22 %]
+        			[% PROCESS $CustomBrowseItemText %]
 			[% END %]
 			</div>
 		[% ELSE %]
 			<div class="browseItemDetail">
 			[% IF item.slimserverurl %]
-        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
+        			<a class="tapblock" href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText %]</a><br>
 			[% ELSIF item.url %]
-        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText truncateAt=30 %]</a><br>
+        			<a class="tapblock" href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText %]</a><br>
 			[% ELSE %]
-        			[% PROCESS $CustomBrowseItemText truncateAt=30 %]<br>
+        			[% PROCESS $CustomBrowseItemText %]<br>
 			[% END %]
 			</div>
 		[% END %]

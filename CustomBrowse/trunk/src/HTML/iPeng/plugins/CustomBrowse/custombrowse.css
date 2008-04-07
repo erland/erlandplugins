@@ -32,12 +32,18 @@
 	left: -30px
 }
 .browseItemDetailWithCover {
-        overflow: hidden;
-	max-width: 166;
+        text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 162;
+	display: block;
 }
 .browseItemDetail {
-        overflow: hidden;
-	max-width: 216;
+        text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 212;
+	display: block;
 }
 .selectOptions {
         font-size: 15px; 
