@@ -1,3 +1,4 @@
+[%- IF !ajaxUpdate %]
 [%- pagetitle = 'PLUGIN_CUSTOMBROWSE' | string; pageicon = 'PLUGIN_CUSTOMBROWSE' -%]
 
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
@@ -11,7 +12,7 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-
+[% END %]
 		[% WRAPPER contentcontainer %]
 <div style = "float: right; top: 0; right: 0; width: 0;
      height: [% IF pageinfo.totalpages > 1 %]287[% ELSE %]323[% END %]px;
@@ -28,4 +29,6 @@
 				[% odd = (not odd) %]
 		        [% END %]
 		[% END %]
+[%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]
+[% END %]
