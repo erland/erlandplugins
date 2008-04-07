@@ -57,6 +57,7 @@ use Time::Stopwatch;
 use File::Basename qw(dirname);
 use Plugins::TrackStat::Backup::File;
 use Plugins::TrackStat::Storage;
+use Plugins::TrackStat::iPeng::Reader;
 
 use Plugins::TrackStat::Settings::Basic;
 use Plugins::TrackStat::Settings::Backup;
@@ -2281,6 +2282,8 @@ sub initPlugin
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGDYNAMIC',\&getRatingDynamicCustomItem);
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGSTATIC',\&getRatingStaticCustomItem);
 	Slim::Music::TitleFormatter::addFormat('TRACKSTATRATINGNUMBER',\&getRatingNumberCustomItem);
+
+	Plugins::TrackStat::iPeng::Reader::read("TrackStat","iPengConfiguration");
 }
 
 sub postinitPlugin {
