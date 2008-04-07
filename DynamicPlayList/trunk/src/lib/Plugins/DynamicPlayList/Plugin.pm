@@ -41,6 +41,7 @@ use Plugins::DynamicPlayList::Settings;
 use Plugins::DynamicPlayList::FilterSettings;
 use Plugins::DynamicPlayList::PlaylistSettings;
 use Plugins::DynamicPlayList::FavouriteSettings;
+use Plugins::DynamicPlayList::iPeng::Reader;
 
 our $PLUGINVERSION =  undef;
 
@@ -1809,6 +1810,9 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
 
 	initFilters();
+
+	Plugins::TrackStat::iPeng::Reader::read("DynamicPlayList","iPengConfiguration");
+
 }
 
 sub postinitPlugin {
