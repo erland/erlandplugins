@@ -6,7 +6,7 @@
 			<icon>html/images/mixbutton.png</icon>
 			<weight>10</weight>
 			<command id="songmix">
-				<enableddefault>0</enableddefault>
+				<defaultenabled>0</defaultenabled>
 				<requireplugins>DynamicPlayList</requireplugins>
 				<weight>10</weight>
 				<name>Song</name>

@@ -1811,7 +1811,7 @@ sub initPlugin {
 
 	initFilters();
 
-	Plugins::TrackStat::iPeng::Reader::read("DynamicPlayList","iPengConfiguration");
+	Plugins::DynamicPlayList::iPeng::Reader::read("DynamicPlayList","iPengConfiguration");
 
 }
 
