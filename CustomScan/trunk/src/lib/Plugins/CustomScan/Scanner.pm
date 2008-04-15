@@ -449,7 +449,7 @@ sub updateCharSet {
 				$table_collate = $1;
 			}
 			$log->debug("Got $table charset = $table_charset and collate = $table_collate\n");
-			if($charset ne $table_charset || ($collate && (!$table_collate || $collate ne $table_collate))) {
+			if($charset ne $table_charset || ($collate && (!$table_collate || $collate ne $table_collate)) || (!$collate && $table_collate)) {
 				$log->warn("Converting $table to correct charset=$charset collate=$collate\n");
 				if(!$collate) {
 					eval { $dbh->do("alter table $table convert to character set $charset") };
