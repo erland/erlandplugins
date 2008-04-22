@@ -277,7 +277,7 @@ sub init {
 								$ts_collate = $1;
 							}
 							$log->debug("Got track_statistics charset = $ts_charset and collate = $ts_collate\n");
-							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate)) || (!$collate && $ts_collate)) {
 								$log->warn("Converting track_statistics to correct charset=$charset collate=$collate\n");
 								if(!$collate) {
 									eval { $dbh->do("alter table track_statistics convert to character set $charset") };
@@ -304,7 +304,7 @@ sub init {
 								$ts_collate = $1;
 							}
 							$log->debug("Got track_history charset = $ts_charset and collate = $ts_collate\n");
-							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate))) {
+							if($charset ne $ts_charset || ($collate && (!$ts_collate || $collate ne $ts_collate)) || (!$collate && $ts_collate)) {
 								$log->warn("Converting track_history to correct charset=$charset collate=$collate\n");
 								if(!$collate) {
 									eval { $dbh->do("alter table track_history convert to character set $charset") };
