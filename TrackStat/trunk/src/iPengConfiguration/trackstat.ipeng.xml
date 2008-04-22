@@ -3,13 +3,13 @@
 	<section id="nowplaying">
 		<subsection id="trackstat">
 			<weight>90</weight>
-			<command id="trackstat">
+			<command id="trackstat_songinfo">
 				<requireplugins>TrackStat</requireplugins>
 				<name>TrackStat</name>
-				<url>plugins/TrackStat/index.html</url>
+				<url>plugins/TrackStat/songinfo.html</url>
 				<type>content</type>
 				<parameters>
-					<player>player</player>
+					<id>item</id>
 				</parameters>
 			</command>
 		</subsection>

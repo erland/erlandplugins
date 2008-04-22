@@ -33,7 +33,7 @@
 	        [% END %]
 	        [% FOREACH item = pluginTrackStatStatisticItems %]
         		[% WRAPPER contentitem %]
-	        		<a class="tapblock" href="[% item.item.id %].html?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]#songlist">[% item.name %]</a>
+	        		<a class="tapblock" href="[% item.item.id %].html?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]#songlist">[% item.name | html |truncate(40)%]</a>
 			[% END %]
 	        [% END %]
 	[% IF songlist != '' %]
@@ -130,9 +130,6 @@
 					<div>
 					[% PROCESS ratingcontrols %]
 					</div>
-					[% IF item.listtype=='album' %]
-						</span>
-					[% END %]
 				[% END %]
 				[% odd = (not odd) %]
 			[% END %]

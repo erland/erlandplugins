@@ -1029,6 +1029,7 @@ sub getFunctions()
 sub webPages {
 	my %pages = (
 		"TrackStat/index\.htm" => \&handleWebIndex,
+		"TrackStat/songinfo\.htm" => \&handleWebSongInfo,
 	);
 	
 	my $statistics = getStatisticPlugins();
@@ -1428,6 +1429,109 @@ sub handleWebIndex {
 	baseWebPage($client, $params);
 
 	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/index.html', $params);
+}
+
+sub handleWebSongInfo {
+	my ($client, $params) = @_;
+
+	my $track = undef;
+	my $nowPlayingTrack = undef;
+	if(defined($params->{'item'})) {
+		$track = Plugins::TrackStat::Storage::objectForId('track',$params->{'item'});
+	}
+	my $playStatus = undef;
+	# without a player, don't do anything
+	if ($client = Slim::Player::Client::getClient($params->{player})) {
+		$playStatus = getTrackInfo($client);
+	}
+	if(defined($playStatus)) {
+		$nowPlayingTrack = Slim::Player::Playlist::song($client);
+	}
+	if(!defined($track)) {
+		$track=$nowPlayingTrack
+	}
+	if(defined($nowPlayingTrack)) {
+		my %form = ();
+		$nowPlayingTrack->displayAsHTML(\%form);
+		$params->{'nowplayingtrackitem'} = \%form;
+		$params->{'nowplayingtrack'} = $nowPlayingTrack;
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $nowPlayingTrack->url,undef,$nowPlayingTrack);
+		if(defined($trackHandle)) {
+			my $rating = $trackHandle->rating || 0;
+			if($prefs->get("rating_10scale")) {
+				$rating = floor(($rating+5) / 10);
+			}else {
+				$rating = floor(($rating+10) / 20);
+			}
+			$params->{nowplayingrating} = $rating;
+			$params->{nowplayingplayCount} = $trackHandle->playCount;
+			$params->{nowplayinglastPlayed} = Slim::Utils::DateTime::shortDateF($trackHandle->lastPlayed).' '.Slim::Utils::DateTime::timeF($trackHandle->lastPlayed);
+		}
+		if(defined($nowPlayingTrack->artist)) {
+			$params->{'nowplayingartist'} = $nowPlayingTrack->artist;
+		}
+		if(defined($nowPlayingTrack->album)) {
+			$params->{'nowplayingalbum'} = $nowPlayingTrack->album;
+		}
+	}
+	if(defined($track)) {
+		my %form = ();
+		$track->displayAsHTML(\%form);
+		$params->{'trackitem'} = \%form;
+		$params->{'track'} = $track;
+		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle)) {
+			my $rating = $trackHandle->rating || 0;
+			if($prefs->get("rating_10scale")) {
+				$rating = floor(($rating+5) / 10);
+			}else {
+				$rating = floor(($rating+10) / 20);
+			}
+			$params->{rating} = $rating;
+			$params->{playCount} = $trackHandle->playCount;
+			$params->{lastPlayed} = Slim::Utils::DateTime::shortDateF($trackHandle->lastPlayed).' '.Slim::Utils::DateTime::timeF($trackHandle->lastPlayed);
+		}
+		if(defined($track->artist)) {
+			$params->{'artist'} = $track->artist;
+			my $artiststatistics =  Plugins::TrackStat::Storage::getGroupStatistic('artist',$track->artist->id);
+			my $rating;
+			my $ratingnumber;
+			if($prefs->get("rating_10scale")) {
+				$ratingnumber = ($artiststatistics->{'rating'}) / 10;
+				$rating = floor(($artiststatistics->{'rating'}+5) / 10);
+			}else {
+				$ratingnumber = sprintf("%.2f",($artiststatistics->{'rating'}) / 20);
+				$rating = floor(($artiststatistics->{'rating'}+10) / 20);
+			}
+			$params->{'artistrating'} = $rating;
+			$params->{'artistratingnumber'} = $ratingnumber;
+		}
+		if(defined($track->album)) {
+			my %form = ();
+			$track->album->displayAsHTML(\%form);
+			$params->{'item'} = \%form;
+			$params->{'album'} = $track->album;
+			my $albumstatistics =  Plugins::TrackStat::Storage::getGroupStatistic('album',$track->album->id);
+			my $rating;
+			my $ratingnumber;
+			if($prefs->get("rating_10scale")) {
+				$ratingnumber = sprintf("%.2f",($albumstatistics->{'rating'}) / 10);
+				$rating = floor(($albumstatistics->{'rating'}+5) / 10);
+			}else {
+				$ratingnumber = sprintf("%.2f",($albumstatistics->{'rating'}) / 20);
+				$rating = floor(($albumstatistics->{'rating'}+10) / 20);
+			}
+			$params->{'albumrating'} = $rating;
+			$params->{'albumratingnumber'} = $ratingnumber;
+		}
+
+	}
+	my $maxRating = 5;
+	if($prefs->get("rating_10scale")) {
+		$maxRating = 10;
+	}
+	$params->{'pluginTrackStatMaxRating'} = $maxRating;
+	return Slim::Web::HTTP::filltemplatefile('plugins/TrackStat/songinfo.html', $params);
 }
 
 sub getStatisticPlugins {
