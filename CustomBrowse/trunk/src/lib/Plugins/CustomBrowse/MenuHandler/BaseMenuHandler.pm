@@ -954,14 +954,14 @@ sub getPageItemsForContext {
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;
 					}
-				}elsif($format eq 'trackconcat') {
+				}elsif($format eq 'trackconcat' || $format eq 'trackcustom') {
 					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
 					$track->displayAsHTML($it);
 					delete $it->{'itemobj'};
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;
 					}
-				}elsif($format eq 'albumconcat' || $format eq 'album') {
+				}elsif($format eq 'albumconcat' || $format eq 'albumcustom' || $format eq 'album') {
 					my $album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					$album->displayAsHTML($it);
 					if(!defined($result{'artwork'})) {
