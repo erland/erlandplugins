@@ -104,6 +104,12 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS_DESC
 	EN	Number of tracks to add after the currently playing song
 	DA	Antal spor
 
+SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY
+	EN	Delay before adding new songs
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY_DESC
+	EN	Wait this number of seconds after song change before adding new songs
+
 SETUP_PLUGIN_DYNAMICPLAYLIST_SKIPPED_TRACKS_RETRIES
 	EN	Number of retries when filtering
 

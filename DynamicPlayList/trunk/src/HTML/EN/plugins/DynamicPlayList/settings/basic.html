@@ -75,4 +75,7 @@
 		<input type="text" class="stdedit" name="number_of_old_tracks" id="number_of_old_tracks" value="[% prefs.number_of_old_tracks %]" size="15">
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY_DESC" %]
+		<input type="text" class="stdedit" name="song_adding_delay" id="song_adding_delay" value="[% prefs.song_adding_delay %]" size="15">
+	[% END %]
 [% PROCESS settings/footer.html %]

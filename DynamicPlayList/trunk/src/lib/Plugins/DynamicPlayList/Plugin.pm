@@ -355,6 +355,7 @@ sub playRandom {
 	# If addOnly, then track(s) are appended to end.  Otherwise, a new playlist is created.
 	my ($client, $type, $addOnly, $showFeedback, $forcedAdd,$continue) = @_;
 
+	Slim::Utils::Timers::killTimers($client, \&playRandom);
 	$log->debug("playRandom called with type $type\n");
 	
 	# Whether to keep adding tracks after generating the initial playlist
@@ -1531,7 +1532,15 @@ sub commandCallback65 {
 			}
 		}
 
-		playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
+		my $songAddingDelay = $prefs->get('song_adding_delay') || 0;
+		my $songIndex = Slim::Player::Source::streamingSongIndex($client);
+		my $songsRemaining = Slim::Player::Playlist::count($client) - $songIndex - 1;
+		if($songAddingDelay && $songsRemaining>0) {
+			$log->debug("Adding new tracks in $songAddingDelay seconds");
+			Slim::Utils::Timers::setTimer($client, Time::HiRes::time()+$songAddingDelay, \&playRandom, $mixInfo{$client}->{'type'}, 1, 0);
+		}else {
+			playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
+		}
 	} elsif ($request->isCommand([['playlist'], [keys %stopcommands]])) {
 
 		$log->debug("cyclic mode ending due to playlist: ".($request->getRequestString())." command\n");
@@ -2502,6 +2511,10 @@ sub checkDefaults {
 		$prefs->set("favouritesname",string('PLUGIN_DYNAMICPLAYLIST_FAVOURITES'));
 	}
 
+	if(!defined($prefs->get("song_adding_delay"))) {
+		$log->debug("Defaulting song_adding_delay to 60");
+		$prefs->set("song_adding_delay",60);
+	}
 }
 
 sub getTracksForPlaylist {
