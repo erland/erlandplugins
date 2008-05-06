@@ -414,7 +414,7 @@ sub playRandom {
 	# Work out how many items need adding
 	my $numItems = 0;
 
-	if($type ne 'disable') {
+	if($type ne 'disable' && ($continuousMode || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type)) {
 		# Add new tracks if there aren't enough after the current track
 		my $numRandomTracks = $prefs->get('number_of_tracks');
 		if (! $addOnly && !$continue) {
