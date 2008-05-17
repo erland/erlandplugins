@@ -1,5 +1,18 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
+[%- IF requestfromuser == 'genre' %]
+[%- IF library or activelibrary %]
+-- PlaylistParameter1:customgenre:Select genre:select id,name,substr(namesort,1,1) from genres join multilibrary_genre on genres.id=multilibrary_genre.genre and multilibrary_genre.library=[% IF activelibrary %]'PlaylistActiveLibrary'[% ELSE %][% library %][% END %] order by genres.namesort
+[%- ELSE %]
+-- PlaylistParameter1:genre:Select genre:
+[%- END %]
+[%- ELSIF requestfromuser =='artist' %]
+[%- IF library or activelibrary %]
+-- PlaylistParameter1:customartist:Select artist:select id,name,substr(namesort,1,1) from contributors join multilibrary_contributor on contributors.id=multilibrary_contributor.contributor and multilibrary_contributor.library=[% IF activelibrary %]'PlaylistActiveLibrary'[% ELSE %][% library %][% END %] order by contributors.namesort
+[%- ELSE %]
+-- PlaylistParameter1:artist:Select artist:
+[%- END %]
+[%- END %]
 [%- IF customskipfilter %]
 -- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
 -- PlaylistStopAction1:cli:customskip clearsecondaryfilter
@@ -10,6 +23,15 @@ select url from
 		join multilibrary_track on
 			tracks.id=multilibrary_track.track and
 			multilibrary_track.library=[% IF activelibrary %]'PlaylistActiveLibrary'[% ELSE %][% library %][% END %]
+		[%- END %]
+		[%- IF requestfromuser == 'genre' %]
+		join genre_track on
+			tracks.id=genre_track.track and
+			genre_track.genre='PlaylistParameter1'
+		[%- ELSIF requestfromuser == 'artist' %]
+		join contributor_track on
+			tracks.id=contributor_track.track and
+			contributor_track.contributor='PlaylistParameter1'
 		[%- END %]
 		join track_statistics on
 			tracks.url=track_statistics.url
@@ -25,7 +47,7 @@ select url from
 		[%- IF recentlyplayed %]
 			and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
 		[%- END %]
-		[%- IF notrepeat %]
+		[%- IF notrepeat or requestfromuser %]
 		group by tracks.id
 		[%- END %]
 		order by track_statistics.rating desc,rand()
