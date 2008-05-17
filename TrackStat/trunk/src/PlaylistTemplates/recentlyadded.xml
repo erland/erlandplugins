@@ -13,6 +13,7 @@
 		<parameter type="checkbox" id="leastplayed" name="Play least played songs first" value="1"/>
 		<parameter type="checkbox" id="addedafter" name="Play songs added after" value="1"/>
 		<parameter type="text" id="noofdays" name="Number of days back" value="30"/>
+		<parameter type="optionalsinglelist" id="requestfromuser" requireplugins="TrackStat::Plugin" name="Request parameter from user" value="" data="artist=Artist,genre=Genre"/>
 		<parameter type="text" id="nooftracks" name="Use this number of songs" value=""/>
 		<parameter type="checkbox" id="notrepeat" name="Do not repeat tracks within same playlist" value="1"/>
 		<parameter type="optionalsinglelist" id="recentlyplayed" requireplugins="TrackStat::Plugin" name="Ignore songs played recently" value="" data="3600=1 hour,10800=3 hours,21600=6 hours,43200=12 hours,86400=24 hours,604800=1 week,1209600=2 weeks,2419200=4 weeks,7257600=12 weeks"/>
