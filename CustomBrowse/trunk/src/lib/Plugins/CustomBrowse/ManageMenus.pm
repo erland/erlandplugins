@@ -69,6 +69,7 @@ sub pages {
 
 sub prepare {
 	my ($class, $client, $params) = @_;
+	$params->{'nosubmit'} = 1;
 	$class->SUPER::handler($client, $params);
 }
 
