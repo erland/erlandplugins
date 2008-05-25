@@ -9,6 +9,7 @@
 				<weight>20</weight>
 				<namestring>ALBUMS</namestring>
 				<icon>html/images/iAlbumTrans.png</icon>
+				<selectedicon>html/images/iAlbumTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=albums&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>
@@ -22,6 +23,7 @@
 				<weight>21</weight>
 				<namestring>ARTISTS</namestring>
 				<icon>html/images/iArtistTrans.png</icon>
+				<selectedicon>html/images/iArtistTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=artists&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>
@@ -35,6 +37,7 @@
 				<weight>25</weight>
 				<namestring>IPENG_BUTTON_YEAR</namestring>
 				<icon>html/images/iTimeTrans.png</icon>
+				<selectedicon>html/images/iTimeTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=years65&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>
@@ -48,6 +51,7 @@
 				<weight>25</weight>
 				<name>Decades</name>
 				<icon>html/images/iTimeTrans.png</icon>
+				<selectedicon>html/images/iTimeTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=decades65&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>
@@ -61,6 +65,7 @@
 				<weight>25</weight>
 				<namestring>BROWSE_BY_GENRE</namestring>
 				<icon>html/images/iGenreTrans.png</icon>
+				<selectedicon>html/images/iGenreTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=genres&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>
@@ -74,6 +79,7 @@
 				<weight>25</weight>
 				<namestring>BROWSE_NEW_MUSIC</namestring>
 				<icon>html/images/iNewTrans.png</icon>
+				<selectedicon>html/images/iNewTransSelected.png</selectedicon>
 				<url>plugins/CustomBrowse/custombrowse_list.html?hierarchy=newalbums65&amp;mainBrowseMenu=1</url>
 				<type>content</type>
 				<parameters>

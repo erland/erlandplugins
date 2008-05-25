@@ -120,5 +120,6 @@ END;
 	[% PROCESS cbfooter %]
 </div>
 [%- IF !ajaxUpdate %]
+[% selectedButton = "custombrowse_" _ pluginCustomBrowseMenu.item.id %]
 [% PROCESS pagefooter.html %]
 [% END %]
