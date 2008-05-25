@@ -1211,7 +1211,7 @@ sub _getSubContext {
 				$currentValue = escape($params->{$group});
 			}
 			my $currentValueUnescaped = unescape($params->{$group}) if defined($params->{$group});
-			$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode_locale($currentValueUnescaped)) if defined($currentValueUnescaped);
+			$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($currentValueUnescaped)) if defined($currentValueUnescaped);
 			my %parameters = ();
 			$parameters{$currentUrl} = $currentValueUnescaped if defined($currentValueUnescaped);
 			$parameterContainer->{$currentUrl}= $currentValueUnescaped if defined($currentValueUnescaped);

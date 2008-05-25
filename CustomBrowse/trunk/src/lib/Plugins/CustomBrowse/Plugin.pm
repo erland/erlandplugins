@@ -1640,6 +1640,7 @@ sub handleWebList {
 	$params->{'pluginCustomBrowsePlayAddAll'} = 1;
 	if(defined($context) && scalar(@$context)>0) {
 		$params->{'pluginCustomBrowseCurrentContext'} = $context->[scalar(@$context)-1];
+		$params->{'pluginCustomBrowseMenu'} = $context->[0];
 	}
 	if(defined($items->{'playable'}) && !$items->{'playable'}) {
 		$params->{'pluginCustomBrowsePlayAddAll'} = 0;
