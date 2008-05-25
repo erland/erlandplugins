@@ -85,6 +85,10 @@ sub initMenus {
 	return @menus;
 }
 
+sub prefs {
+        return ($prefs, qw(replacewebmenus replaceplayermenus replacecontrollermenus));
+}
+
 sub handler {
 	my ($class, $client, $paramRef) = @_;
 

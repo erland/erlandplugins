@@ -160,6 +160,24 @@ SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS
 SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS_DESC
 	EN	Select replacements of standard SqueezeCenter menus (changes requires SqueezeCenter restart)
 
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS
+	EN	Replace in web interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS_DESC
+	EN	Replace selected menus in web interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_PLAYER_MENUS
+	EN	Replace in player interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_PLAYER_MENUS_DESC
+	EN	Replace selected menus in player interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_CONTROLLER_MENUS
+	EN	Replace in Controller interface
+
+SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_CONTROLLER_MENUS_DESC
+	EN	Replace selected menus in Controller interface
+
 PLUGIN_CUSTOMBROWSE_SELECT_MIXES_TITLE
 	EN	Select enabled mixers
 

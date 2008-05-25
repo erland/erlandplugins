@@ -1301,7 +1301,7 @@ sub addPlayerMenus {
             my $name = getMenuHandler()->getItemText($client,$menu);
             my $key = getMenuKey($client,$menu,$name);
 
-            if($menu->{'enabledbrowse'} || $name ne $key) {
+            if($menu->{'enabledbrowse'} || ($name ne $key && $prefs->get('replaceplayermenus'))) {
 		my %submenubrowse = (
 			'useMode' => 'PLUGIN.CustomBrowse.Browse',
 			'selectedMenu' => $menu->{'id'},
@@ -1326,7 +1326,8 @@ sub addJivePlayerMenus {
 	my $menus = getMenuHandler()->getMenuItems($client,undef,undef,'jive');
         for my $menu (@$menus) {
             my $name = getMenuHandler()->getItemText($client,$menu);
-            if($menu->{'enabledbrowse'}) {
+            my $key = getJiveMenuKey($client,$menu,$name);
+            if($menu->{'enabledbrowse'} || ($name ne $key && $prefs->get('replacecontrollermenus'))) {
 		my %itemParams = ();
 		if(defined($menu->{'contextid'})) {
 			$itemParams{'hierarchy'} = $menu->{'contextid'};
@@ -1382,6 +1383,9 @@ sub addJivePlayerMenus {
 				},
 			},
 		);
+		if($menu->{'id'} ne $key && $prefs->get('replacecontrollermenus')) {
+			Slim::Control::Jive::deleteMenuItem($key,$client);
+		}
 		Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
             }else {
 		Slim::Control::Jive::deleteMenuItem($menu->{'id'});
@@ -1471,6 +1475,18 @@ sub checkDefaults {
 	if (! defined $prefVal) {
 		$log->debug("Defaulting plugin_custombrowse_header_value_separator to ,\n");
 		$prefs->set('header_value_separator', ', ');
+	}
+	$prefVal = $prefs->get('replaceplayermenus');
+	if (! defined $prefVal) {
+		$prefs->set('replaceplayermenus', 1);
+	}
+	$prefVal = $prefs->get('replacewebmenus');
+	if (! defined $prefVal) {
+		$prefs->set('replacewebmenus', 1);
+	}
+	$prefVal = $prefs->get('replacecontrollermenus');
+	if (! defined $prefVal) {
+		$prefs->set('replacecontrollermenus', 0);
 	}
 
 
@@ -1587,23 +1603,25 @@ sub webPages {
 }
 
 sub delSlimserverWebMenus {
-	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ARTIST' => undef });
-	}
-	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_GENRE' => undef });
-	}
-	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ALBUM' => undef });
-	}
-	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_YEAR' => undef });
-	}
-	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'BROWSE_NEW_MUSIC' => undef });
-	}
-	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
-		Slim::Web::Pages->addPageLinks("browse", {'SAVED_PLAYLISTS' => undef });
+	if($prefs->get('replacewebmenus')) {
+		if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ARTIST' => undef });
+		}
+		if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_GENRE' => undef });
+		}
+		if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ALBUM' => undef });
+		}
+		if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_YEAR' => undef });
+		}
+		if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_NEW_MUSIC' => undef });
+		}
+		if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
+			Slim::Web::Pages->addPageLinks("browse", {'SAVED_PLAYLISTS' => undef });
+		}
 	}
 }
 
@@ -1653,6 +1671,44 @@ sub getMenuKey {
 	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
 		return 'PLUGIN_IPENG_CUSTOM_BROWSE_MORE';
 	}
+	return $default;
+}
+
+sub getJiveMenuKey {
+	my $client = shift;
+	my $menu = shift;
+	my $default = shift;
+
+	my $replaceMenu = $prefs->get('squeezecenter_album_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicAlbums';
+	}
+
+	my $replaceMenu = $prefs->get('squeezecenter_artist_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicArtists';
+	}
+
+	my $replaceMenu = $prefs->get('squeezecenter_genre_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicGenres';
+	}
+
+	my $replaceMenu = $prefs->get('squeezecenter_year_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicYears';
+	}
+
+	my $replaceMenu = $prefs->get('squeezecenter_newmusic_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicNewMusic';
+	}
+
+	$replaceMenu = $prefs->get('squeezecenter_playlist_menu');
+	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+		return 'myMusicPlaylists';
+	}
+
 	return $default;
 }
 
