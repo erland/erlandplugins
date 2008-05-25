@@ -1068,12 +1068,96 @@ sub postinitPlugin {
 		readBrowseConfiguration();
 		readContextBrowseConfiguration();
 		registerJiveMenu();
+		registerContextMenus();
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
 	}
 }
 
+sub registerContextMenus {
+	if(UNIVERSAL::can("Plugins::ContextMenu::Public","registerContextChoice")) {
+		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
+		if ( defined($contextMenuApi) && ($contextMenuApi >= 0.65) ) {
+			Plugins::ContextMenu::Public::registerContextChoice( { 
+				uid => 'plugin.CustomBrowse.browsebyselected',
+				coderef => sub  {
+					my $parameters = shift;
+					
+					my $client = $parameters->{'client'};
+					my $selectedItem = $parameters->{'selected'};
+
+					if($selectedItem && (ref($selectedItem) eq 'Slim::Schema::Contributor' || 
+						ref($selectedItem) eq 'Slim::Schema::Album' ||
+						ref($selectedItem) eq 'Slim::Schema::Track' ||
+						ref($selectedItem) eq 'Slim::Schema::Playlist' ||
+						ref($selectedItem) eq 'Slim::Schema::Year' ||
+						ref($selectedItem) eq 'Slim::Schema::Genre')) {
+						return ({
+							'label' => $client->string('PLUGIN_CUSTOMBROWSE_CONTEXTMIXER'),
+							'coderef' => \&contextMenuBrowseBy,
+							'execargs' => ({
+								'item' => $selectedItem,
+							}),
+						});
+					}else {
+						return undef;
+					}
+				},
+				displayname => string('PLUGIN_CUSTOMBROWSE_CONTEXTMIXER'),
+				pluginname => string('PLUGIN_CUSTOMBROWSE'),
+			} );
+		}
+	}
+}
+
+sub contextMenuBrowseBy {
+	my $params = shift;
+	my $client = $params->{'client'};
+	my $item = $params->{'execargs'}->{'item'};
+
+	my %p = ();
+	if($item && ref($item) eq 'Slim::Schema::Contributor') {
+		%p = (
+			'itemtype' => 'artist',
+			'itemname' => $item->name,
+			'itemid' => $item->id
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Album') {
+		%p = (
+			'itemtype' => 'album',
+			'itemname' => $item->title,
+			'itemid' => $item->id
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Track') {
+		%p = (
+			'itemtype' => 'track',
+			'itemname' => Slim::Music::Info::standardTitle(undef, $item),
+			'itemid' => $item->id
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Playlist') {
+		%p = (
+			'itemtype' => 'playlist',
+			'itemname' => $item->title,
+			'itemid' => $item->id
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Genre') {
+		%p = (
+			'itemtype' => 'genre',
+			'itemname' => $item->name,
+			'itemid' => $item->id
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Year') {
+		%p = (
+			'itemtype' => 'year',
+			'itemname' => ($item->id?$item->id:$client->string('UNK')),
+			'itemid' => $item->id
+		);
+	}
+
+	Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomBrowse.Context',\%p);
+	$client->update();
+}
 sub registerJiveMenu {
 	my $client = shift;
 	my @menuItems = (

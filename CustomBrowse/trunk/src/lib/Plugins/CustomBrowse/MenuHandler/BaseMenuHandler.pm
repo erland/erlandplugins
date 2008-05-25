@@ -503,6 +503,28 @@ sub getMenu {
 		overlayRef => $self->overlayCallback,
 		modeName   => 'PLUGIN.'.$self->pluginId.$modeNamePostFix,
 		parentMode => Slim::Buttons::Common::param($client,'parentMode'),
+		contextMenuValueRef => sub {
+				my ($client) = @_;
+				my $valueRef = $client->modeParam('valueRef');
+				if(defined($valueRef)) {
+					my $item = $$valueRef;
+					if($item->{'itemtype'} eq 'album') {
+						return Slim::Schema->resultset('Album')->find($item->{'itemid'});
+					}elsif($item->{'itemtype'} eq 'artist') {
+						return Slim::Schema->resultset('Contributor')->find($item->{'itemid'});
+					}elsif($item->{'itemtype'} eq 'genre') {
+						return Slim::Schema->resultset('Genre')->find($item->{'itemid'});
+					}elsif($item->{'itemtype'} eq 'track') {
+						return Slim::Schema->resultset('Track')->find($item->{'itemid'});
+					}elsif($item->{'itemtype'} eq 'playlist') {
+						return Slim::Schema->resultset('Track')->find($item->{'itemid'});
+					}elsif($item->{'itemtype'} eq 'year') {
+						return Slim::Schema->resultset('Year')->find($item->{'itemid'});
+					}
+					return $item;
+				}
+				return undef;
+			},
 		onCreateMix => 
 			sub {
 				my ($client, $item, $arg) = @_;
