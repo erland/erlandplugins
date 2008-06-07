@@ -267,6 +267,9 @@ sub setModeContext {
 	}
 	my $track = $client->modeParam('track');
 	my %contextHash = ();
+	if(!blessed($track)) {
+		$track = Slim::Schema->objectForUrl({'url' => $track});
+	}
 	if(!defined($track)) {
 		$contextHash{'itemtype'} = $client->modeParam('itemtype');
 		$contextHash{'itemname'} = $client->modeParam('itemname');
