@@ -15,7 +15,7 @@
 		<parameter type="text" id="customsorttag1" name="Level 1 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag1artistsort" name="Level 1 sort by ARTISTSORT" value=""/>
 		<parameter type="text" id="customtag2" name="Level 2 tag name" value=""/>
-		<parameter type="optionalsinglelist" id="customtagtype2" name="Level 3 tag type" value="" data="album=Album,artist=Artist,genre=Genre,year=Year,playlist=Playlist,track=Song"/>
+		<parameter type="optionalsinglelist" id="customtagtype2" name="Level 2 tag type" value="" data="album=Album,artist=Artist,genre=Genre,year=Year,playlist=Playlist,track=Song"/>
 		<parameter type="text" id="level2name" name="Level 2 name" value=""/>
 		<parameter type="text" id="customsorttag2" name="Level 2 sort tag name" value=""/>
 		<parameter type="checkbox" id="customtag2artistsort" name="Level 2 sort by ARTISTSORT" value=""/>
