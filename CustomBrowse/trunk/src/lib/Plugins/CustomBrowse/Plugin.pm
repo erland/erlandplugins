@@ -1017,7 +1017,11 @@ sub initPlugin {
 
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Browse', getFunctions(), \&setModeBrowse);
 	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.Context', getFunctions(), \&setModeContext);
-	Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+	if(UNIVERSAL::can("Slim::Buttons::TrackInfo","getFunctions")) {
+		Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+	}else {
+		Slim::Buttons::Common::addMode('PLUGIN.CustomBrowse.trackinfo',undef,\&Slim::Buttons::TrackInfo::setMode);
+	}
 	if($prefs->get('override_trackinfo')) {
 		Slim::Buttons::Common::addMode('trackinfo',getFunctions(),\&setModeContext);
 	}

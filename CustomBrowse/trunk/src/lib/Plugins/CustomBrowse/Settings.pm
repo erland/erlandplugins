@@ -90,7 +90,11 @@ sub handler {
 		if($prefs->get('override_trackinfo')) {
 			Slim::Buttons::Common::addMode('trackinfo',Plugins::CustomBrowse::Plugin::getFunctions(),\&Plugins::CustomBrowse::Plugin::setModeContext);
 		}else {
-			Slim::Buttons::Common::addMode('trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+			if(UNIVERSAL::can("Slim::Buttons::TrackInfo","getFunctions")) {
+				Slim::Buttons::Common::addMode('trackinfo',Slim::Buttons::TrackInfo::getFunctions(),\&Slim::Buttons::TrackInfo::setMode);
+			}else {
+				Slim::Buttons::Common::addMode('trackinfo',undef,\&Slim::Buttons::TrackInfo::setMode);
+			}
 		}
 	}	
 	return $result;
