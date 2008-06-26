@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<requireplugins>MusicIP</requireplugins>
+	<requireplugins>MusicMagic</requireplugins>
 	<minslimserverversion>6.5</minslimserverversion>
 	<mix>
-		<mixname>MusicMagic</mixname>
+		<mixname>MusicIP</mixname>
 		<mixcategory>track</mixcategory>
 		<mixtype>function</mixtype>
 		<mixchecktype>function</mixchecktype>

@@ -80,6 +80,7 @@ my $prefs = preferences('plugin.custombrowse');
 my $trackstatPrefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
 my $musicmagicPrefs = preferences('plugin.musicmagic');
+my $musicIPPrefs = preferences('plugin.musicip');
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.custombrowse',
 	'defaultLevel' => 'WARN',
@@ -310,7 +311,7 @@ sub musicMagicMixable {
 	my $class = shift;
 	my $item  = shift;
 
-	if($musicmagicPrefs->get('musicmagic')) {
+	if($musicmagicPrefs->get('musicmagic') || $musicIPPrefs->get('musicip')) {
 		if(UNIVERSAL::can("Slim::Plugin::MusicMagic::Plugin","mixable")) {
 			$log->debug("Calling Slim::Plugin::MusicMagic::Plugin->mixable\n");
 			my $enabled = eval { Slim::Plugin::MusicMagic::Plugin->mixable($item) };
