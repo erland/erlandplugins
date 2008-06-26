@@ -20,6 +20,7 @@
 		<menuheader>{context.itemname} {count}</menuheader>
 		<contextid>starttrack</contextid>
 		<menutype>sql</menutype>
+		<itemtype>track</itemtype>
 		<menudata>
 			select tracks.id,concat('Title: ',tracks.title) from tracks
 			where
