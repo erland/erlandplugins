@@ -820,13 +820,38 @@ sub initPlayLists {
 		}
 	}
 	use strict 'refs';
-
+	addAlarmPlaylists(\%localPlayLists);
 	$playLists = \%localPlayLists;
 	$playListItems = \%localPlayListItems;
 
 	return ($playLists,$playListItems);
 }
 
+sub addAlarmPlaylists {
+	my $localPlayLists = shift;
+
+	if(UNIVERSAL::can("Slim::Utils::Alarm","addPlaylists")) {
+		my %alarmPlaylists = ();
+		for my $playlist (values %$localPlayLists) {
+			if(!defined($playlist->{'parameters'})) {
+				if(defined($playlist->{'groups'})) {
+					my $groups = $playlist->{'groups'};
+					for my $subgroup (@$groups) {
+						my $group = '';
+						for my $subgroup (@$subgroup) {
+							$group .= $subgroup."/";
+						}
+						$alarmPlaylists{$group.$playlist->{'name'}} = 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'};
+					}
+				}else {
+					$alarmPlaylists{$playlist->{'name'}} = 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'};
+				}
+			}
+		}
+		$log->debug("Adding ".scalar(keys %alarmPlaylists)." playlists to alarm handler");
+		Slim::Utils::Alarm->addPlaylists('PLUGIN_DYNAMICPLAYLIST',\%alarmPlaylists);
+	}
+}
 
 sub initFilters {
 	$log->debug("Searching for filters\n");
