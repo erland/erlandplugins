@@ -43,6 +43,7 @@ use Plugins::DynamicPlayList::FilterSettings;
 use Plugins::DynamicPlayList::PlaylistSettings;
 use Plugins::DynamicPlayList::FavouriteSettings;
 use Plugins::DynamicPlayList::iPeng::Reader;
+use Plugins::DynamicPlayList::ProtocolHandler;
 
 our $PLUGINVERSION =  undef;
 
