@@ -378,14 +378,19 @@ sub musicMagicMix {
 		my @tracks = Slim::Schema->rs('Track')->search({ 'url' => $trackUrls });
 
 		my @trackItems = ();
-		for my $track (@tracks) {
-			my %trackItem = (
-				'itemid' => $track->id,
-				'itemurl' => $track->url,
-				'itemname' => $track->title,
-				'itemtype' => 'track'
-			);
-			push @trackItems,\%trackItem;
+		for my $url (@$trackUrls) {
+			for my $track (@tracks) {
+				if($track->url eq $url) {
+					my %trackItem = (
+						'itemid' => $track->id,
+						'itemurl' => $track->url,
+						'itemname' => $track->title,
+						'itemtype' => 'track'
+					);
+					push @trackItems,\%trackItem;
+					last;
+				}
+			}
 		}
 		getMenuHandler()->playAddItem($client,\@trackItems,\%playItem,$addOnly);
 		if($interfaceType eq 'player') {
