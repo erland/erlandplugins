@@ -31,6 +31,7 @@ use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+use Slim::Player::ProtocolHandlers;
 use File::Spec::Functions qw(:ALL);
 use Class::Struct;
 use DBI qw(:sql_types);
@@ -720,6 +721,7 @@ sub initPlayLists {
 					$playlist->{'dynamicplaylistfavourite'} = 0;
 				}
 
+				$playlist->{'isFavorite'} = Slim::Utils::Favorites->new($client)->findUrl("dynamicplaylist://".$playlist->{'dynamicplaylistid'})||0;
 				if(defined($playlist->{'parameters'})) {
 					foreach my $p (keys %{$playlist->{'parameters'}}) {
 						if(defined($playLists) 
@@ -1846,7 +1848,7 @@ sub initPlugin {
 	initFilters();
 
 	Plugins::DynamicPlayList::iPeng::Reader::read("DynamicPlayList","iPengConfiguration");
-
+	Slim::Player::ProtocolHandlers->registerHandler(dynamicplaylist => 'Plugins::DynamicPlayList::ProtocolHandler');
 }
 
 sub postinitPlugin {
@@ -1972,6 +1974,7 @@ sub handleWebList {
 	$params->{'pluginDynamicPlayListContinuousMode'} = $prefs->get('keep_adding_tracks');
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
 	$params->{'pluginDynamicPlayListVersion'} = $PLUGINVERSION;
+	$params->{'favoritesEnabled'} = 1;
 	
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
