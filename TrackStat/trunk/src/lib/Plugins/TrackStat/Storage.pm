@@ -416,7 +416,7 @@ sub getLastPlayedArtist {
 	my $artistId = shift;
 	my $ds = getCurrentDS();
 	
-	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,tracks.lastPlayed)) FROM tracks,track_statistics,contributor_track where tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=?";
+	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,0)) FROM tracks,track_statistics,contributor_track where tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributor_track.contributor=?";
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my $result = undef;
@@ -439,7 +439,7 @@ sub getLastPlayedAlbum {
 	my $albumId = shift;
 	my $ds = getCurrentDS();
 	
-	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,tracks.lastPlayed)) FROM tracks,track_statistics where tracks.url=track_statistics.url and tracks.album=?";
+	my $sql = "SELECT max(ifnull(track_statistics.lastPlayed,0)) FROM tracks,track_statistics where tracks.url=track_statistics.url and tracks.album=?";
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my $result = undef;
@@ -1179,7 +1179,11 @@ sub refreshTracks
 	$timeMeasure->start();
 	$log->debug("Starting to update ratings in standard slimserver database based on urls\n");
 	# Now lets set all ratings not already set in the slimserver standards database
-	$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
+		$sql = "UPDATE tracks_persistent,track_statistics set tracks_persistent.rating=track_statistics.rating where tracks_persistent.url=track_statistics.url and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null)";
+	}else {
+		$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
+	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1223,9 +1227,71 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
+	$log->debug("Starting to update play counts in statistic data based on urls\n");
+	# Now lets set all added times not already set
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.playCount is null and tracks_persistent.playCount is not null";
+	}else {
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.playCount=tracks.playCount where tracks.url=track_statistics.url and track_statistics.playCount is null and tracks.playCount is not null";
+	}
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    $log->warn("Database error: $DBI::errstr\n");
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	$log->debug("Finished updating play counts in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
+	$timeMeasure->clear();
+	$timeMeasure->start();
+	$log->debug("Starting to update last played times in statistic data based on urls\n");
+	# Now lets set all added times not already set
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
+	}else {
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.lastPlayed=tracks.lastPlayed where tracks.url=track_statistics.url and track_statistics.lastPlayed is null and tracks.lastPlayed is not null";
+	}
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    $log->warn("Database error: $DBI::errstr\n");
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	$log->debug("Finished updating last played times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
+	$timeMeasure->clear();
+	$timeMeasure->start();
 	$log->debug("Starting to add tracks without added times in statistic data based on urls\n");
 	# Now lets set all new tracks with added times not already set
-	$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
+		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+	}else {
+		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {
@@ -1250,7 +1316,11 @@ sub refreshTracks
 	$timeMeasure->start();
 	$log->debug("Starting to update ratings in statistic data based on urls\n");
 	# Now lets set all added times not already set
-	$sql = "UPDATE tracks,track_statistics SET track_statistics.rating=tracks.rating where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
+		$sql = "UPDATE tracks_persistent,track_statistics SET track_statistics.rating=tracks_persistent.rating where tracks_persistent.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0";
+	}else {
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.rating=tracks.rating where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
+	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
 	eval {

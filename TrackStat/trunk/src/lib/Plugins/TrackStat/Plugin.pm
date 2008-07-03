@@ -1541,6 +1541,11 @@ sub getStatisticPlugins {
 	return \%statisticPlugins;
 }
 
+sub getSQLPlayListPlaylists {
+	my $client = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/SQLPlayList','Playlists','xml','template','playlist','simple',1);
+}
+
 sub getSQLPlayListTemplates {
 	my $client = shift;
 	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/SQLPlayList','PlaylistTemplates','xml');
@@ -1603,6 +1608,14 @@ sub getSQLPlayListTemplateData {
 	return $data;
 }
 
+
+sub getSQLPlayListPlaylistData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	my $data = Plugins::TrackStat::Template::Reader::readTemplateData('TrackStat','Playlists',$templateItem->{'id'},"xml");
+	return $data;
+}
 
 sub getDatabaseQueryTemplateData {
 	my $client = shift;
@@ -3137,6 +3150,12 @@ sub stopTimingSong($$)
 			#$log->debug("Track was played long enough to count as listen\n");
 			markedAsPlayed($client,$playStatus->currentTrackOriginalFilename);
 			# We could also log to history at this point as well...
+		}else {
+			# Reset play counts to the one stored in TrackStat
+			my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename,undef);
+			if($trackHandle) {
+				setSqueezeCenterStatistics($playStatus->currentTrackOriginalFilename,$trackHandle->playCount || 0,undef);
+			}
 		}
 		# If automatic rating is enabled
 		if($prefs->get("rating_auto")) {
@@ -3407,8 +3426,13 @@ sub setTrackStatRating {
 	if($track) {
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			$track->set('rating' => $rating);
-			$track->update();
+			if(UNIVERSAL::can(ref($track),"persistent")) {
+				$track->persistent->set('rating' => $rating);
+				$track->persistent->update();
+			}else {
+				$track->set('rating' => $rating);
+				$track->update();
+			}
 			$ds->forceCommit();
 		};
 	}
@@ -3627,7 +3651,33 @@ sub setCLIStatistic {
 	$log->debug("Exiting setCLIStatistic\n");
 }
 
+sub setSqueezeCenterStatistics {
+	my ($url,$playCount, $lastPlayed)=@_;
 
+	my $track = undef;
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+	eval {
+		$track = Plugins::TrackStat::Storage::objectForUrl($url);
+	};
+	if ($@) {
+		$log->warn("Error retrieving track: $url\n");
+	}
+	if($track) {
+		# Run this within eval for now so it hides all errors until this is standard
+		eval {
+			if(UNIVERSAL::can(ref($track),"persistent")) {
+				$track->persistent->set('playcount' => $playCount) if defined($playCount);
+				$track->persistent->set('lastplayed' => $lastPlayed) if defined($lastPlayed);
+				$track->persistent->update();
+			}else {
+				$track->set('playcount' => $playCount) if defined($playCount);
+				$track->set('lastplayed' => $lastPlayed) if defined($lastPlayed);
+				$track->update();
+			}
+			$ds->forceCommit();
+		};
+	}
+}
 sub setTrackStatStatistic {
 	$log->debug("Entering setTrackStatStatistic\n");
 	my ($client,$url,$statistic)=@_;
@@ -3635,6 +3685,8 @@ sub setTrackStatStatistic {
 	my $playCount = $statistic->{'playCount'};
 	my $lastPlayed = $statistic->{'lastPlayed'};	
 	my $rating = $statistic->{'rating'};
+
+	setSqueezeCenterStatistics($url,$playCount,$lastPlayed);
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
 		Plugins::TrackStat::MusicMagic::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
 		Plugins::TrackStat::iTunes::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
