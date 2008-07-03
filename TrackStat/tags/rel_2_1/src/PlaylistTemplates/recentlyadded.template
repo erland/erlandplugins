@@ -36,7 +36,7 @@
 -- PlaylistStopAction1:cli:customskip clearsecondaryfilter
 [%- END %]
 select url from
-	(select tracks.url,(case when track_statistics.playCount is null then tracks.playCount else track_statistics.playCount end) as avgcount from tracks 
+	(select tracks.url,(ifnull(track_statistics.playCount,0)) as avgcount from tracks 
 		[%- IF library or activelibrary %]
 		join multilibrary_track on
 			tracks.id=multilibrary_track.track and
