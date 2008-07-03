@@ -61,6 +61,7 @@ sub pages {
 
 sub handler {
 	my ($class, $client, $params) = @_;
+	$params->{'nosubmit'} = 1;
 	if(defined($params->{'scantype'})) {
 		handlerScan($class,$client,$params);
 	}
