@@ -20,11 +20,19 @@
 			[% END %]
 			[% IF includerating %]
 			[% IF includetitle %]union[% END %]
+			[% IF SqueezeCenterVersion >= 7.0 %]
+			select 2,concat('Rating: ',tracks_persistent.rating,'/100') from tracks_persistent
+			where
+				tracks_persistent.rating is not null and
+				tracks_persistent.rating>0 and
+				tracks_persistent.id={context.itemid}
+			[% ELSE %]
 			select 2,concat('Rating: ',tracks.rating,'/100') from tracks
 			where
 				tracks.rating is not null and
 				tracks.rating>0 and
 				tracks.id={context.itemid}
+			[% END %]
 			[% END %]
 			[% IF includetrackno %]
 			[% IF includetitle or includerating %]union[% END %]
