@@ -1092,7 +1092,7 @@ sub baseWebPage {
 					$playStatus->currentSongRating($playStatus->currentSongRating() + 1);
 				} elsif ($params->{trackstatrating} eq 'down' and $playStatus->currentSongRating() > 0) {
 					$playStatus->currentSongRating($playStatus->currentSongRating() - 1);
-				} elsif ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating) {
+				} elsif ($params->{trackstatrating} ne 'up' && $params->{trackstatrating} ne 'down' && ($params->{trackstatrating} >= 0 or $params->{trackstatrating} <= $maxRating)) {
 					$playStatus->currentSongRating($params->{trackstatrating});
 				}
 				
@@ -1131,6 +1131,10 @@ sub baseWebPage {
 			}
 		}
 	}
+	my $statisticItems = getStatisticItemsForContext($client,$params,\%statisticItems,1);
+	my $statisticGroups = getStatisticGroupsForContext($client,$params,\%statisticItems,1);
+	my $context = getStatisticContext($client,$params,\%statisticItems,1);
+
 	if(defined($playStatus)) {
 		$params->{playing} = $playStatus->trackAlreadyLoaded();
 		if($prefs->get("web_refresh")) {
@@ -1145,9 +1149,6 @@ sub baseWebPage {
 		$params->{playCount} = $playStatus->playCount();
 	} 
 
-	my $statisticItems = getStatisticItemsForContext($client,$params,\%statisticItems,1);
-	my $statisticGroups = getStatisticGroupsForContext($client,$params,\%statisticItems,1);
-	my $context = getStatisticContext($client,$params,\%statisticItems,1);
 	$params->{'pluginTrackStatStatisticGroups'} = $statisticGroups;
 	$params->{'pluginTrackStatNoOfStatisticGroupsPerColumn'} = scalar(@$statisticGroups)/3;
 	$params->{'pluginTrackStatStatisticItems'} = $statisticItems;
