@@ -24,7 +24,7 @@ use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
 use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
-use Plugins::CustomScan::Time::Stopwatch;
+use Time::Stopwatch;
 
 #Load internal scanning modules
 use Plugins::CustomScan::Modules::MixedTag;
