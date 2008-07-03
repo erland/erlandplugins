@@ -722,7 +722,7 @@ sub initPlayLists {
 					$playlist->{'dynamicplaylistfavourite'} = 0;
 				}
 
-				$playlist->{'isFavorite'} = Slim::Utils::Favorites->new($client)->findUrl("dynamicplaylist://".$playlist->{'dynamicplaylistid'})||0;
+				$playlist->{'isFavorite'} = defined(Slim::Utils::Favorites->new($client)->findUrl("dynamicplaylist://".$playlist->{'dynamicplaylistid'}))?1:0;
 				if(defined($playlist->{'parameters'})) {
 					foreach my $p (keys %{$playlist->{'parameters'}}) {
 						if(defined($playLists) 
