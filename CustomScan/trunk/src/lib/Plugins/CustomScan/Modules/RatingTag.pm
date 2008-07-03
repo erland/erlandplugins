@@ -179,8 +179,13 @@ sub rateTrack {
 		$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			$track->set('rating' => $rating);
-			$track->update();
+			if(UNIVERSAL::can(ref($track),"persistent")) {
+				$track->persistent->set('rating' => $rating);
+				$track->persistent->update();
+			}else {
+				$track->set('rating' => $rating);
+				$track->update();
+			}
 			Slim::Schema->forceCommit();
 		};
 	}
