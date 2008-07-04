@@ -1,4 +1,4 @@
-	#    Copyright (c) 2008 Erland Isaksson (erland_i@hotmail.com)
+#    Copyright (c) 2008 Erland Isaksson (erland_i@hotmail.com)
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ sub canDirectStream {
 	return 0;
 }
 
-sub isAudioUrl {
+sub isAudioURL {
 	return 1;
 }
 
