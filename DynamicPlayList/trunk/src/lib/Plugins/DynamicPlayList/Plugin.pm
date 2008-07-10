@@ -112,6 +112,23 @@ $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'skipped_tracks_retries'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 }, 'number_of_old_tracks'  );
 
+my %choiceMapping = (
+        'arrow_left' => 'exit_left',
+        'arrow_right' => 'exit_right',
+	'play' => 'play',
+        'add' => 'add',
+        'search' => 'passback',
+        'stop' => 'passback',
+        'pause' => 'passback',
+	'favorites.hold' => 'favorites_add',
+	'preset_1.hold' => 'favorites_add1',
+	'preset_2.hold' => 'favorites_add2',
+	'preset_3.hold' => 'favorites_add3',
+	'preset_4.hold' => 'favorites_add4',
+	'preset_5.hold' => 'favorites_add5',
+	'preset_6.hold' => 'favorites_add6',
+);
+
 sub getDisplayName {
 	return 'PLUGIN_DYNAMICPLAYLIST';
 }
@@ -1107,7 +1124,7 @@ sub setModeMixer {
 		return $a->{'playlist'}->{'name'} cmp $b->{'playlist'}->{'name'} 
 	} @listRef;
 
-	# use INPUT.Choice to display the list of feeds
+	# use PLUGIN.DynamicPlayList.Choice to display the list of feeds
 	my %params = (
 		header     => '{PLUGIN_DYNAMICPLAYLIST} {count}',
 		listRef    => \@listRef,
@@ -1159,7 +1176,7 @@ sub setModeMixer {
 			if(defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
 				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
 			}elsif(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
@@ -1174,6 +1191,16 @@ sub setModeMixer {
 			}else {
 				$client->bumpRight();
 			}
+		},
+		onFavorites	=> sub {
+			my ($client, $item, $arg) = @_;
+			if (defined $arg && $arg =~ /^add$|^add(\d+)/) {
+				addFavorite($client,$item,$1);
+			} elsif (Slim::Buttons::Common::mode($client) ne 'FAVORITES') {
+				Slim::Buttons::Common::setMode($client, 'home');
+				Slim::Buttons::Home::jump($client, 'FAVORITES');
+				Slim::Buttons::Common::pushModeLeft($client, 'FAVORITES');
+	                }
 		},
 	);
 	my $i=1;
@@ -1190,9 +1217,45 @@ sub setModeMixer {
 		push @{$params{listRef}},\%disable;
 	}
 
-	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+	Slim::Buttons::Common::pushMode($client, 'PLUGIN.DynamicPlayList.Choice', \%params);
 }
 
+sub addFavorite {
+	my ($client, $item, $hotkey) = @_;
+	if($::VERSION ge '7.1' && Slim::Utils::Favorites->enabled && defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} ne 'disable' && !defined($item->{'playlist'}->{'parameters'})) {
+		my $url = "dynamicplaylist://".$item->{'playlist'}->{'dynamicplaylistid'};
+		my $favs = Slim::Utils::Favorites->new($client);
+		my ($index,$hk) = $favs->findUrl($url);
+		if(!defined($index)) {
+			if(defined $hotkey) {
+				my $oldindex = $favs->hasHotkey($hotkey);
+
+                                $favs->setHotkey($oldindex, undef) if defined $oldindex;
+
+                                my $newindex = $favs->add($url, $item->{'playlist'}->{'name'}, 'audio');
+
+                                $favs->setHotkey($newindex, $hotkey);
+			}else {
+				my (undef, $hotkey) = $favs->add($url, $item->{'playlist'}->{'name'}, 'audio', undef, 'hotkey');
+			}
+
+			$client->showBriefly( {
+				'line' => [ $client->string('FAVORITES_ADDING'), $item->{'playlist'}->{'name'} ]
+			} );
+		}elsif(defined($hotkey)) {
+			$favs->setHotkey($index, undef);
+			$favs->setHotkey($index, $hotkey);
+
+			$client->showBriefly( {
+				'line' => [ $client->string('FAVORITES_ADDING'), $item->{'playlist'}->{'name'} ]
+			} );
+		}else {
+			$log->info("Already exists as a favorite");
+		}
+	}else {
+		$log->warn("Favorites not supported on this item");
+	}
+}
 sub setMode {
 	my $class = shift;
 	my $client = shift;
@@ -1216,7 +1279,7 @@ sub enterSelectedGroup {
 				}
 				return enterSelectedGroup($client,\@itemArray,$selectedGroups);
 			}else {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 				return 1;
 			}
 		}
@@ -1384,7 +1447,7 @@ sub getSetModeDataForSubItems {
 		onRight    => sub {
 			my ($client, $item) = @_;
 			if(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
 			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 				my %parameterValues = ();
 				my $i=1;
@@ -1399,7 +1462,17 @@ sub getSetModeDataForSubItems {
 			}else {
 				$client->bumpRight();
 			}
-		}
+		},
+		onFavorites	=> sub {
+			my ($client, $item, $arg) = @_;
+			if (defined $arg && $arg =~ /^add$|^add(\d+)/) {
+				addFavorite($client,$item,$1);
+			} elsif (Slim::Buttons::Common::mode($client) ne 'FAVORITES') {
+				Slim::Buttons::Common::setMode($client, 'home');
+				Slim::Buttons::Home::jump($client, 'FAVORITES');
+				Slim::Buttons::Common::pushModeLeft($client, 'FAVORITES');
+	                }
+		},
 	);
 	return \%params;
 }
@@ -1524,6 +1597,14 @@ sub commandCallback65 {
 	}elsif(defined($request->source())) {
 		$log->debug("received command initiated by".$request->source()."\n");
 	}
+	if ( $request->isCommand( [['playlist'], ['play']] ) ) {
+		my $url  = $request->getParam('_item');
+		if ( $url =~ /^dynamicplaylist:\/\// ) {
+			$log->debug("Skipping ".$request->getRequestString()." $url");
+			return;
+		}
+	}
+
 	$log->debug("received command ".($request->getRequestString())."\n");
 
 	# because of the filter this should never happen
@@ -1820,6 +1901,27 @@ sub initPlugin {
 	clearPlayListHistory();
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.ChooseParameters', getFunctions(), \&setModeChooseParameters);
 	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.Mixer', getFunctions(), \&setModeMixer);
+	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
+	$choiceFunctions{'favorites'} = sub {Slim::Buttons::Input::Choice::callCallback('onFavorites', @_)};
+	Slim::Buttons::Common::addMode('PLUGIN.DynamicPlayList.Choice',\%choiceFunctions,\&Slim::Buttons::Input::Choice::setMode);
+	for my $buttonPressMode (qw{repeat hold hold_release single double}) {
+		if(!defined($choiceMapping{'play.' . $buttonPressMode})) {
+			$choiceMapping{'play.' . $buttonPressMode} = 'dead';
+		}
+		if(!defined($choiceMapping{'add.' . $buttonPressMode})) {
+			$choiceMapping{'add.' . $buttonPressMode} = 'dead';
+		}
+		if(!defined($choiceMapping{'search.' . $buttonPressMode})) {
+			$choiceMapping{'search.' . $buttonPressMode} = 'passback';
+		}
+		if(!defined($choiceMapping{'stop.' . $buttonPressMode})) {
+			$choiceMapping{'stop.' . $buttonPressMode} = 'passback';
+		}
+		if(!defined($choiceMapping{'pause.' . $buttonPressMode})) {
+			$choiceMapping{'pause.' . $buttonPressMode} = 'passback';
+		}
+	}
+        Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.DynamicPlayList.Choice',\%choiceMapping);
 	
 		my %mixerMap = ();
 		if($prefs->get("web_show_mixerlinks")) {
@@ -1975,7 +2077,6 @@ sub handleWebList {
 	$params->{'pluginDynamicPlayListContinuousMode'} = $prefs->get('keep_adding_tracks');
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
 	$params->{'pluginDynamicPlayListVersion'} = $PLUGINVERSION;
-	$params->{'favoritesEnabled'} = 1;
 	
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }

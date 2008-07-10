@@ -18,20 +18,16 @@ package Plugins::DynamicPlayList::ProtocolHandler;
 use strict;
 use base qw(FileHandle);
 
-sub new {
-	my $class  = shift;
-	my $args   = shift;
-
-	my $url    = $args->{'url'};
-	my $client = $args->{'client'};
-
+sub overridePlayback {
+	my ( $class, $client, $url ) = @_;
+	
 	if ($url !~ m|^dynamicplaylist://(.*)$|) {
 		return undef;
 	}
 
 	$client->execute(["dynamicplaylist", "playlist", "play", "$1"]);
 
-	return $class;
+	return 1;
 }
 
 sub canDirectStream {
