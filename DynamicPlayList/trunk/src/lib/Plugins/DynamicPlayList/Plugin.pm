@@ -390,7 +390,7 @@ sub playRandom {
 		}
 	}
 	# If this is a new mix, clear playlist history
-	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type || $songsRemaining<1) {
+	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
 		$continue = undef;
 		clearPlayListHistory($client);
 		# Executing actions related to new mix
@@ -434,7 +434,7 @@ sub playRandom {
 	# Work out how many items need adding
 	my $numItems = 0;
 
-	if($type ne 'disable' && ($continuousMode || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type)) {
+	if($type ne 'disable' && ($continuousMode || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type || $songsRemaining<1)) {
 		# Add new tracks if there aren't enough after the current track
 		my $numRandomTracks = $prefs->get('number_of_tracks');
 		if (! $addOnly && !$continue) {
