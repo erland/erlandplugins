@@ -390,7 +390,7 @@ sub playRandom {
 		}
 	}
 	# If this is a new mix, clear playlist history
-	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
+	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type || $songsRemaining<1) {
 		$continue = undef;
 		clearPlayListHistory($client);
 		# Executing actions related to new mix
