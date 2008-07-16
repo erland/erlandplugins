@@ -112,32 +112,37 @@
 		<td>&nbsp;</td>
 	</tr>
 	<div>
-		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong><br>
+		<a href="[% webroot %]plugins/TrackStat/index.htm?player=[% player | uri %]"><strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong></a>
+		[% FOREACH group IN pluginTrackStatStatisticContext %]
+			[% IF group.trackstat_statistic_enabled %]
+				&nbsp;/&nbsp;<a href="[% webroot %][% path %]?[% group.url %]&player=[% player | uri %][% statisticparameters %]">[% group.name %]</a>
+			[% END %]
+		[% END %]
+		<br>
 		<table width="100%">
     	<tr valign="top"><td>
+	<form>
+		<select onChange="location.replace(this.value)">
+		<option value=""></option>
+		<option value="[% webroot %]plugins/TrackStat/index.htm?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</option>
 		[% count = 0 %]
         [% FOREACH group = pluginTrackStatStatisticGroups %]
         	[% IF count>=pluginTrackStatNoOfStatisticGroupsPerColumn %]
-        		</td><td>
         		[% count = 0 %]
         	[% END %]
         	[% count = count + 1 %]
-        	<a href="[% webroot %]plugins/TrackStat/index.html?player=[% player | uri %][% statisticparameters %]&[% group.url %]">[% group.name %]/</a><br>
+        	<option value="[% webroot %]plugins/TrackStat/index.html?player=[% player | uri %][% statisticparameters %]&[% group.url %]">[% group.name %]/</option>
         [% END %]
-    	</td></tr>
-    	[% IF count > 0 %]
-    		<tr><td>&nbsp;</td></tr>
-    	[% END %]
-    	<tr valign="top"><td>
 		[% count = 0 %]
         [% FOREACH item = pluginTrackStatStatisticItems %]
         	[% IF count>=pluginTrackStatNoOfStatisticItemsPerColumn %]
-        		</td><td>
         		[% count = 0 %]
         	[% END %]
         	[% count = count + 1 %]
-        	<a href="[% item.item.id %].html?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]">[% item.name %]</a><br>
+        	<option value="[% item.item.id %].html?player=[% player | uri %][% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]" [% IF songlistid == item.item.id %]selected[% END %]>[% item.name %]</option>
         [% END %]
+		</select>
+	</form>
     	</td></tr>
 		</table>
 		<br>

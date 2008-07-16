@@ -108,12 +108,19 @@
 		<td>&nbsp;</td>
 	</tr>
 	<div>
-		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong><br>
+		<strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong>
+		[% FOREACH group IN pluginTrackStatStatisticContext %]
+			[% IF group.trackstat_statistic_enabled %]
+				&nbsp;/&nbsp;<a href="[% webroot %][% path %]?[% group.url %]&player=[% player | uri %][% statisticparameters %]">[% group.name %]</a>
+			[% END %]
+		[% END %]
+		<br>
 		<table width="100%">
     	<tr valign="top"><td>
 	<form>
 		<select onChange="location.replace(this.value)">
 		<option value=""></option>
+		<option value="[% webroot %]plugins/TrackStat/index.htm?player=[% player | uri %]">[% "PLUGIN_TRACKSTAT_SHOW_ALL_STATISTICS" | string %]</option>
 		[% count = 0 %]
         [% FOREACH group = pluginTrackStatStatisticGroups %]
         	[% IF count>=pluginTrackStatNoOfStatisticGroupsPerColumn %]
