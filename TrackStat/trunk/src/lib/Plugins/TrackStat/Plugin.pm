@@ -1154,6 +1154,7 @@ sub baseWebPage {
 		if(scalar(@contributors)>0) {
 			$params->{contributorsobj} = \@contributors;
 		}
+		$params->{currentPlaylist} = $client->currentPlaylist ? $client->currentPlaylist : Plugins::TrackStat::Storage::objectForUrl('clientplaylist://'.$client->id);
 		$params->{rating} = $playStatus->currentSongRating();
 		$params->{lastPlayed} = $playStatus->lastPlayed();
 		$params->{playCount} = $playStatus->playCount();

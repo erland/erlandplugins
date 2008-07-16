@@ -47,7 +47,7 @@
 		</script>
 			<table>
 				<tr height="5">
-					<td height="5" colspan="2"><strong>[% 'NOW_PLAYING' | string %]</strong></td>
+					<td height="5" colspan="2"><strong>[% 'NOW_PLAYING' | string %]</strong>[% IF currentPlaylist.id %] (<a href="[% webroot %]plugins/TrackStat/all.html?playlist=[% currentPlaylist.id %]&player=[% player| uri %]&flatlist=1">[% currentPlaylist.title %]</a>)[% END %]</td>
 				</tr>
 				<tr height="5">
 					<td height="5" width="30%">[% 'PLUGIN_TRACKSTAT_TRACK' | string %]</td>
