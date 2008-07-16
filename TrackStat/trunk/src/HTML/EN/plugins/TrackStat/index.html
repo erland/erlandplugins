@@ -52,8 +52,25 @@
 				</tr>
 				<tr height="5">
 					<td height="5" width="30%">[% 'PLUGIN_TRACKSTAT_TRACK' | string %]</td>
-					<td height="5" width="70%">[% track %]</td>
+					<td height="5" width="70%">[% track %] 
+					[% IF albumobj %]
+						[% 'FROM' | string %] <a href="[% webroot %]plugins/TrackStat/all.html?album=[% albumobj.id %]&currenttrackstatitem=[% trackid %]&player=[% player| uri %]&flatlist=1">[% albumobj.title %]</a></td>
+					[% END %]
+					</td>
 				</tr>
+				[% IF contributorsobj %]
+				<tr height="5">
+					<td height="5" width="30%">[% 'ARTIST' | string %]</td>
+					<td height="5" width="70%">
+					[% first = 1 %]
+					[% FOREACH contributor = contributorsobj %]
+						[% IF !first %], [% END %]
+						[% first = 0 %]
+						<a href="[% webroot %]plugins/TrackStat/all.html?artist=[% contributor.id %]&currenttrackstatitem=[% trackid %]&player=[% player| uri %]&flatlist=1">[% contributor.name %]</a>
+					[% END %]
+					</td>
+				</tr>
+				[% END %]
 				<tr height="5">
 					<td height="5">[% 'PLUGIN_TRACKSTAT_RATING' | string %]</td>
 					<td height="5">

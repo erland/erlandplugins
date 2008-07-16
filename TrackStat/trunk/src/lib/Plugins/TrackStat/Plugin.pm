@@ -1143,7 +1143,17 @@ sub baseWebPage {
 				$params->{refresh} = 30;
 			}
 		}
-		$params->{track} = $playStatus->currentSongTrack();
+		my $track = Plugins::TrackStat::Storage::objectForUrl($playStatus->currentTrackOriginalFilename());
+		$params->{track} = $track->title;
+		$params->{trackid} = $track->id;
+		my $album = $track->album;
+		if($album) {
+			$params->{albumobj} = $track->album;
+		}
+		my @contributors = $track->contributors;
+		if(scalar(@contributors)>0) {
+			$params->{contributorsobj} = \@contributors;
+		}
 		$params->{rating} = $playStatus->currentSongRating();
 		$params->{lastPlayed} = $playStatus->lastPlayed();
 		$params->{playCount} = $playStatus->playCount();
