@@ -104,6 +104,12 @@
 					<menulinks>number</menulinks>
 					<keyword name="orderby" value="tracks.disc,tracks.titlesort asc"/>
 				</option>
+				<option>
+					<id>byalbum</id>
+					<name>Sort by album</name>
+					<menulinks>number</menulinks>
+					<keyword name="orderby" value="tracks.album,tracks.disc,tracks.tracknum asc"/>
+				</option>
 				<menutype>sql</menutype>
 				<menudata>
 					select tracks.id,tracks.title from contributor_track,tracks[% IF singlecomment %],comments[% END %][% IF genres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_track[% END %]

@@ -9,7 +9,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Filtered Singles"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
-		<parameter type="singlelist" id="defaulttitlesort" name="Default song sorting" value="bytitle" data="bytitle=By title,bydisc=By Disc"/>
+		<parameter type="singlelist" id="defaulttitlesort" name="Default song sorting" value="bytitle" data="bytitle=By title,bydisc=By Disc,byalbum=By Album"/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="functionoptionalsinglelist" id="usetitleformat" name="Use custom title" value="" data="Plugins::CustomBrowse::Plugin,getAvailableTitleFormats"/>
 		<parameter type="checkbox" id="containssinglecomment" name="Check comment tag for sub strings" value=""/>
