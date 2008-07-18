@@ -2820,6 +2820,9 @@ sub installHook()
 	Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
 	Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
 	Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setratingpercent', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setalbumrating', '_albumid', '_rating', '_force'], [1, 0, 0, \&setCLIAlbumRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setalbumratingpercent', '_albumid', '_rating', '_force'], [1, 0, 0, \&setCLIAlbumRating]);
 	Slim::Control::Request::addDispatch(['trackstat','setstatistic', '_trackid','_playcount','_lastplayed'], [1, 0, 0, \&setCLIStatistic]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedrating', '_url', '_trackid', '_rating', '_ratingpercent'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedstatistic', '_url', '_trackid', '_playcount','_lastplayed'],[0, 0, 0, undef]);
@@ -3522,7 +3525,7 @@ sub setCLIRating {
 	my $request = shift;
 	my $client = $request->client();
 	
-	if ($request->isNotCommand([['trackstat'],['setrating']])) {
+	if ($request->isNotCommand([['trackstat'],['setrating']]) && $request->isNotCommand([['trackstat'],['setratingpercent']])) {
 		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
 		$log->debug("Exiting setCLIRating\n");
@@ -3544,6 +3547,9 @@ sub setCLIRating {
 		$log->debug("Exiting setCLIRating\n");
 		return;
   	}
+	if($request->isCommand([['trackstat'],['setratingpercent']])  && $rating !~ /.*%$/) {
+		$rating .= "%";
+	}
   	
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
@@ -3586,6 +3592,62 @@ sub setCLIRating {
 	$request->addResult('ratingpercentage', $rating);
 	$request->setStatusDone();
 	$log->debug("Exiting setCLIRating\n");
+}
+
+sub setCLIAlbumRating {
+	$log->debug("Entering setCLIAlbumRating\n");
+	my $request = shift;
+	my $client = $request->client();
+	
+	if ($request->isNotCommand([['trackstat'],['setalbumrating']]) && $request->isNotCommand([['trackstat'],['setalbumratingpercent']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting setAlbumCLIRating\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting setCLIAlbumRating\n");
+		return;
+	}
+
+	# get our parameters
+  	my $albumId    = $request->getParam('_albumid');
+  	my $rating    = $request->getParam('_rating');
+  	if(!defined $albumId || $albumId eq '' || !defined $rating || $rating eq '') {
+		$log->warn("_albumid and _rating not defined\n");
+		$request->setStatusBadParams();
+		$log->debug("Exiting setCLIAlbumRating\n");
+		return;
+  	}
+	if($request->isCommand([['trackstat'],['setalbumratingpercent']])  && $rating !~ /.*%$/) {
+		$rating .= "%";
+	}
+  	
+	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
+
+	if($rating =~ /.*%$/) {
+		$rating =~ s/%$//;
+	}else {
+		$rating = $rating*20;
+	}
+
+	my $unratedTracks;
+	if($rating==0 || $request->getParam('_force') || $prefs->get("force_grouprating")) {
+		$unratedTracks = Plugins::TrackStat::Storage::getTracksOnAlbum($albumId);
+	}else {
+		$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($albumId);
+	}
+	foreach my $url (@$unratedTracks) {
+		rateSong($client,$url,$rating);
+	}
+
+	my $digit = floor(($rating+10)/20);
+	$request->addResult('rating', $digit);
+	$request->addResult('ratingpercentage', $rating);
+	$request->setStatusDone();
+	$log->debug("Exiting setCLIAlbumRating\n");
 }
 
 sub setCLIStatistic {

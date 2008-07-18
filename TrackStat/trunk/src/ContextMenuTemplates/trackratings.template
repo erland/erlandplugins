@@ -3,6 +3,7 @@
 	<requireplugins>TrackStat</requireplugins>
 	<database>mysql</database>
 	<menu>
+		[% IF interfaces %]<interfaces>[% interfaces %]</interfaces>[% END %]
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
 		[%- IF includedlibraries %]<includedlibraries>[% includedlibraries %]</includedlibraries>[% END %]

@@ -7,6 +7,7 @@
 		<parameter type="text" id="menuorder"><value>50</value></parameter>
 		<parameter type="text" id="menuprefix"><value>Rating</value></parameter>
 		<parameter type="text" id="roles"></parameter>
+		<parameter type="text" id="interfaces"><value>player</value><value>cli</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 		<parameter type="text" id="includedlibraries"></parameter>

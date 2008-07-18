@@ -10,6 +10,7 @@
 		<parameter type="text" id="playalltracks"><value>1</value></parameter>
 		<parameter type="text" id="library"><value></value></parameter>
 		<parameter type="text" id="activelibrary"><value>0</value></parameter>
+		<parameter type="text" id="interfaces"><value>player</value><value>cli</value></parameter>
 		<parameter type="text" id="includedclients"></parameter>
 		<parameter type="text" id="excludedclients"></parameter>
 		<parameter type="text" id="includedlibraries"></parameter>
