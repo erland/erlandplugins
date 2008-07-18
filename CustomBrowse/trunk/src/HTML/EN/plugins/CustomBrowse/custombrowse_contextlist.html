@@ -4,6 +4,14 @@
 <div id="viewSelect"></div>
 [% END %]
 
+[% IF useAJAX %][% pageHeaderScripts = BLOCK %]
+        <script TYPE="text/javascript">[% PROCESS html/vars.js %]</script>
+        <script type="text/javascript" src="[% webroot %]html/common.js?r=[% revision %]" ></script>
+        <script type="text/javascript" src="[% webroot %]html/prototype.js?r=[% revision %]" ></script>
+        <script type="text/javascript" src="[% webroot %]html/scriptaculous/scriptaculous.js?r=[% revision %]"></script>
+        <script TYPE="text/javascript" src="[% webroot %]html/global.js?r=[% revision %]"></script>
+[% END %][% END %]
+
 [%- pwd_list = BLOCK -%]/[%- PROCESS plugins/CustomBrowse/galleryselect.html -%]
 	[% IF !pluginCustomBrowseMainBrowseMenu %]
 	<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]">

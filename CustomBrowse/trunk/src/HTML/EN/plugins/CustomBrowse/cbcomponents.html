@@ -94,6 +94,8 @@
         		<a href="[% webroot %][% item.slimserverurl %]">[% PROCESS $CustomBrowseItemText %]</a><br>
 		[% ELSIF item.url %]
         		<a href="[% webroot %][% CustomBrowseUrl %]?player=[% player | uri %]&[% item.url %]">[% PROCESS $CustomBrowseItemText %]</a><br>
+		[% ELSIF item.webtemplate %]
+        		[% PROCESS $item.webtemplate %]<br>
 		[% ELSE %]
         		[% PROCESS $CustomBrowseItemText %]<br>
 		[% END %]

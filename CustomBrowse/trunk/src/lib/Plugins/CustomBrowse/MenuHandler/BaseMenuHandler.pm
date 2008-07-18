@@ -224,8 +224,13 @@ sub _getMenuItems {
 					next;
 				}
 			}
-			if(defined($interfaceType) && ($interfaceType eq 'cli' || $interfaceType eq 'player') && defined($menu->{'itemformat'}) && ($menu->{'itemformat'} =~ /image$/ || $menu->{'itemformat'} =~ /url$/)) {
+			if(defined($interfaceType) && ($interfaceType eq 'cli' || $interfaceType eq 'player') && defined($menu->{'itemformat'}) && ($menu->{'itemformat'} =~ /image$/ || $menu->{'itemformat'} =~ /url$/ || $menu->{'itemformat'} =~ /webtemplate$/)) {
 				next;
+			}
+			if(defined($menu->{'interfaces'})) {
+				if($menu->{'interfaces'} !~ /$interfaceType/) {
+					next;
+				}
 			}
 			if(!defined($menu->{'menutype'})) {
 				my %menuItem = (
@@ -1043,6 +1048,8 @@ sub getPageItemsForContext {
 					if(defined($it->{'itemformatascii'}) && defined($it->{$urlId})) {
 						$it->{$urlId} = unidecode($it->{$urlId});
 					}
+				}elsif($format =~ /webtemplate$/ && defined($it->{'itemformatdata'})) {
+					$it->{'webtemplate'} = $it->{'itemformatdata'};
 				}else {
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;
