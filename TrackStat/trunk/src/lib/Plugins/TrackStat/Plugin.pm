@@ -2778,6 +2778,7 @@ sub getPlayerStatusForClient($)
 {
 	# Parameter - Client structure
 	my $client = shift;
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 
 	# Get the friendly name for this client
 	my $clientName = Slim::Player::Client::name($client);
@@ -2786,9 +2787,7 @@ sub getPlayerStatusForClient($)
 
 	#$log->debug("Asking about client $clientName ($clientID)\n");
 	my $key = $client;
-	if(defined($client->syncgroupid)) {
-		$key = "SyncGroup".$client->syncgroupid;
-	}
+
 	# If we haven't seen this client before, create a new per-client 
 	# playState structure.
 	if (!defined($playerStatusHash{$key}))
