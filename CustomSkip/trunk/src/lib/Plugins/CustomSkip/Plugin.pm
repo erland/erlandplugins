@@ -793,12 +793,10 @@ sub setMode {
 		parentMode => 'PLUGIN.CustomSkip',
 		onPlay     => sub {
 			my ($client, $item) = @_;
+			$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 			my $key = undef;
 			if(defined($client)) {
 				$key = $client;
-				if(defined($client->syncgroupid)) {
-					$key = "SyncGroup".$client->syncgroupid;
-				}
 			}
 			if(defined($item->{'filter'}) && defined($key)) {
 				$currentFilter{$key} = $item->{'id'};
@@ -825,6 +823,7 @@ sub setMode {
 		},
 		onRight    => sub {
 			my ($client, $item) = @_;
+			$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 			if(defined($item->{'filter'})) {
 				my $filter = $filters->{$item->{'id'}};
 				my $params = getFilterItemsMenu($client, $filter);
@@ -836,9 +835,6 @@ sub setMode {
 			}elsif($item->{'id'} eq 'disable') {
 				if(defined($client)) {
 					my $key = $client;
-					if(defined($client->syncgroupid)) {
-						$key = "SyncGroup".$client->syncgroupid;
-					}
 					$currentFilter{$key} = undef;
 					$prefs->client($client)->set('filter',0);
 					$currentSecondaryFilter{$key} = undef;
@@ -1748,6 +1744,7 @@ sub setCLIFilter {
 	$log->debug("Entering setCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['setfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1780,9 +1777,6 @@ sub setCLIFilter {
 		return;
   	}
 	my $key = $client;
-	if(defined($client->syncgroupid)) {
-		$key = "SyncGroup".$client->syncgroupid;
-	}
 	$currentFilter{$key} = $filterId;
 	$prefs->client($client)->set('filter',$filterId);
 
@@ -1795,6 +1789,7 @@ sub setCLISecondaryFilter {
 	$log->debug("Entering setCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['setsecondaryfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1827,9 +1822,6 @@ sub setCLISecondaryFilter {
 		return;
   	}
 	my $key = $client;
-	if(defined($client->syncgroupid)) {
-		$key = "SyncGroup".$client->syncgroupid;
-	}
 	$currentSecondaryFilter{$key} = $filterId;
 
 	$request->addResult('filter', $filterId);
@@ -1841,6 +1833,7 @@ sub clearCLIFilter {
 	$log->debug("Entering clearCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['clearfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1856,9 +1849,7 @@ sub clearCLIFilter {
 	}
 
 	my $key = $client;
-	if(defined($client->syncgroupid)) {
-		$key = "SyncGroup".$client->syncgroupid;
-	}
+
 	$currentFilter{$key} = undef;
 	$prefs->client($client)->set('filter',0);
 	$currentSecondaryFilter{$key} = undef;
@@ -1871,6 +1862,7 @@ sub clearCLISecondaryFilter {
 	$log->debug("Entering clearCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['clearsecondaryfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1886,9 +1878,6 @@ sub clearCLISecondaryFilter {
 	}
 
 	my $key = $client;
-	if(defined($client->syncgroupid)) {
-		$key = "SyncGroup".$client->syncgroupid;
-	}
 	$currentSecondaryFilter{$key} = undef;
 
 	$request->setStatusDone();
@@ -1942,14 +1931,12 @@ sub newSongCallback
 sub getCurrentFilter {
 	my $client = shift;
 	if(defined($client)) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		if(!$filters) {
 			initFilterTypes();
 			initFilters();
 		}
 		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 		if(defined($currentFilter{$key})) {
 			return $filters->{$currentFilter{$key}};
 		}else {
@@ -1974,14 +1961,12 @@ sub getCurrentFilter {
 sub getCurrentSecondaryFilter {
 	my $client = shift;
 	if(defined($client)) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		if(!$filters) {
 			initFilterTypes();
 			initFilters();
 		}
 		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 		if(defined($currentSecondaryFilter{$key})) {
 			return $filters->{$currentSecondaryFilter{$key}};
 		}	
@@ -2013,10 +1998,8 @@ sub handleWebSelectFilter {
 	initFilters();
 
 	if(defined($client) && defined($params->{'filter'}) && defined($filters->{$params->{'filter'}})) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 		$currentFilter{$key} = $params->{'filter'};
 		$prefs->client($client)->set('filter',$params->{'filter'});
 		$currentSecondaryFilter{$key} = undef;
@@ -2027,10 +2010,8 @@ sub handleWebSelectFilter {
 sub handleWebDisableFilter {
 	my ($client, $params) = @_;
 	if(defined($client)) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 		$currentFilter{$key} = undef;
 		$currentSecondaryFilter{$key} = undef;
 		$prefs->client($client)->set('filter',0);
