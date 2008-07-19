@@ -44,6 +44,8 @@
 		<a [% IF class %]class="[% class %]"[% END %] href="[% it.interneturl %]"[% IF it.itemformaturlnewwindow %] target="_blank"[% END %]>[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
 	[% ELSIF it.url %]
 		<a [% IF class %]class="[% class %]"[% END %] href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?player=[% player | uri %]&[% it.url %]">[% IF it.itemvalue %][% it.itemvalue %][% ELSE %][% it.itemname %][% END %]</a>
+	[% ELSIF it.webtemplate %]
+       		[% PROCESS $it.webtemplate item=it %]
 	[% ELSE %]
 		[% IF it.itemvalue %][% IF it.itemformat == 'multiline' %][% it.itemvalue |html_line_break %][% ELSE %][% it.itemvalue |html %][% END %][% END %]
 	[% END %]
