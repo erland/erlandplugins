@@ -466,7 +466,8 @@ sub playRandom {
 				$request->source('PLUGIN_DYNAMICPLAYLIST');
 			}
 		}
-		Slim::Player::Playlist::shuffle($client, 0);
+		my $shuffle = Slim::Player::Playlist::shuffle($client);
+		Slim::Player::Playlist::shuffle($client,0);
 		
 		# Strings for non-track modes could be long so need some time to scroll
 		my $showTime = 5;
@@ -480,6 +481,9 @@ sub playRandom {
 					    $addOnly,
 				$continue);
 
+		if($prefs->get('remembershuffle')) {
+			Slim::Player::Playlist::shuffle($client,$shuffle);
+		}
 		$offset += $count;
 		if($count>0) {
 			# Do a show briefly the first time things are added, or every time a new album/artist/year
@@ -2644,6 +2648,11 @@ sub checkDefaults {
 	if(!defined($prefs->get("song_adding_delay"))) {
 		$log->debug("Defaulting song_adding_delay to 60");
 		$prefs->set("song_adding_delay",60);
+	}
+
+	if(!defined($prefs->get("remembershuffle"))) {
+		$log->debug("Defaulting to remembering shuffle state");
+		$prefs->set("remembershuffle",1);
 	}
 }
 

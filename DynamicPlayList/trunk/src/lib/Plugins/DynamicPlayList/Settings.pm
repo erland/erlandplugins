@@ -60,7 +60,7 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(number_of_tracks skipped_tracks_retries number_of_old_tracks includesavedplaylists randomsavedplaylists fullsavedplaylists ungrouped flatlist structured_savedplaylists rememberactiveplaylist web_show_mixerlinks enable_mixerfunction song_adding_delay));
+        return ($prefs, qw(number_of_tracks skipped_tracks_retries number_of_old_tracks includesavedplaylists randomsavedplaylists fullsavedplaylists ungrouped flatlist structured_savedplaylists rememberactiveplaylist web_show_mixerlinks enable_mixerfunction song_adding_delay remembershuffle));
 }
 
 sub handler {

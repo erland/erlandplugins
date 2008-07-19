@@ -78,4 +78,12 @@
 	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_SONG_ADDING_DELAY_DESC" %]
 		<input type="text" class="stdedit" name="song_adding_delay" id="song_adding_delay" value="[% prefs.song_adding_delay %]" size="15">
 	[% END %]
+
+	[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE_DESC" %]
+		<select name="remembershuffle">
+			<option value="1" [% IF prefs.remembershuffle %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.remembershuffle %]selected[% END %]>[% "NO" | string %]</option>
+		</select>
+	[% END %]
+
 [% PROCESS settings/footer.html %]

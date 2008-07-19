@@ -261,3 +261,8 @@ PLUGIN_DYNAMICPLAYLIST_SETTINGS_RANDOM
 PLUGIN_DYNAMICPLAYLIST_SETTINGS_ORDERED
 	EN	Ordered
 
+SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE
+	EN	Remember shuffle state
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE_DESC
+	EN	Remember shuffle state, if set to Yes this can result in strange behavior if you add tracks manually to the dynamic playlist which is currently playing.
