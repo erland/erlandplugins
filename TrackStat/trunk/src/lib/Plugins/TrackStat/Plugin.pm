@@ -2176,6 +2176,14 @@ sub initPlugin
 		# Alter mapping for functions & buttons in Now Playing mode.
 		Slim::Hardware::IR::addModeDefaultMapping('playlist',defaultMap()) if(!$prefs->{'itunesupdate'});
 
+		# Track Info handler
+		if(UNIVERSAL::can("Slim::Menu::TrackInfo","registerInfoProvider")) {
+	                Slim::Menu::TrackInfo->registerInfoProvider( trackstat => (
+	                        before    => 'artwork',
+	                        func     => \&trackInfoHandler,
+	                ) );
+		}
+
 		# this will enable DynamicPlaylist integration by default
 		if (!defined($prefs->get("dynamicplaylist"))) { 
 			$log->debug("First run - setting dynamicplaylist ON\n");
@@ -2442,6 +2450,107 @@ sub postinitPlugin {
 		}
 	}
 	use strict 'refs';
+}
+
+sub trackInfoHandler {
+        my ( $client, $url, $track, $remoteMeta, $tags ) = @_;
+        $tags ||= {};
+        
+        my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url, undef, $track);
+
+        if ( $tags->{menuMode} ) {
+		my $jive = {};
+		my $actions = {
+			go => {
+				player => 0,
+				cmd => ['trackstat', 'ratingmenu',$track->id],
+			},
+		};
+		$jive->{actions} = $actions;
+		my $text = string('PLUGIN_TRACKSTAT_RATING').string("PLUGIN_TRACKSTAT_UNRATED");
+		if(defined($trackHandle->rating && $trackHandle->rating>0)) {
+			my $ratingStars = $trackHandle->rating/20;
+			if($prefs->get("rating_10scale")) {
+				$ratingStars = $trackHandle->rating/10;
+			}
+
+			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)",;
+		}
+		return {
+			type      => 'redirect',
+			name      => $text,
+			jive      => $jive,
+		};
+	}else {
+		return;
+	}
+}
+
+sub getRatingMenu {
+	$log->debug("Entering getRatingMenu\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['trackstat'],['ratingmenu']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting getRatingMenu\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	my $track_id = $request->getParam('_trackid');
+
+	my %baseParams = ();
+	my $baseMenu = {
+		'actions' => {
+			'do' => {
+				'cmd' => ['trackstat', 'setratingpercent', $track_id],
+				'itemsParams' => 'params',
+			},
+			'play' => {
+				'cmd' => ['trackstat', 'setratingpercent', $track_id],
+				'itemsParams' => 'params',
+			},
+		}
+	};
+	$request->addResult('base',$baseMenu);
+	my $cnt = 0;
+
+	my @ratingValues = qw(100 80 60 40 20);
+	if($prefs->get("rating_10scale")) {
+		@ratingValues = qw(100 90 80 70 60 50 40 30 20 10);
+	}
+
+	foreach my $rating (@ratingValues) {
+		my %itemParams = (
+			'rating' => $rating,
+		);
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		my $ratingStars = $rating/20;
+		if($prefs->get("rating_10scale")) {
+			$ratingStars = $rating/10;
+		}
+		$request->addResultLoop('item_loop',$cnt,'text',($RATING_CHARACTER x $ratingStars)." ($rating/100)");
+		$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+		$cnt++;
+	}
+	my %itemParams = (
+		'rating' => 0,
+	);
+	$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+	$request->addResultLoop('item_loop',$cnt,'text',string("PLUGIN_TRACKSTAT_UNRATED"));
+	$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+	$cnt++;
+
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+	$request->setStatusDone();
+	$log->debug("Exiting getRatingMenu\n");
 }
 
 sub checkAndPerformScheduledBackup {
@@ -2825,6 +2934,7 @@ sub installHook()
 	Slim::Control::Request::addDispatch(['trackstat','setstatistic', '_trackid','_playcount','_lastplayed'], [1, 0, 0, \&setCLIStatistic]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedrating', '_url', '_trackid', '_rating', '_ratingpercent'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedstatistic', '_url', '_trackid', '_playcount','_lastplayed'],[0, 0, 0, undef]);
+	Slim::Control::Request::addDispatch(['trackstat','ratingmenu','_trackid'], [0, 1, 1, \&getRatingMenu]);
 	$TRACKSTAT_HOOK=1;
 }
 
@@ -3540,6 +3650,9 @@ sub setCLIRating {
 	# get our parameters
   	my $trackId    = $request->getParam('_trackid');
   	my $rating    = $request->getParam('_rating');
+	if(defined($rating) && $rating =~ /^rating:(.*)$/) {
+		$rating = $1;
+	}
   	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
 		$log->warn("_trackid and _rating not defined\n");
 		$request->setStatusBadParams();
