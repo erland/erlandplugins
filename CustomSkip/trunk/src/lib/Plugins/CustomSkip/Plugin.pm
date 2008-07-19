@@ -436,6 +436,18 @@ sub checkCustomSkipFilterType {
 				last;
 			}
 		}
+	}elsif($filter->{'id'} eq 'track') {
+		for my $parameter (@$parameters) {
+			if($parameter->{'id'} eq 'url') {
+				my $urls = $parameter->{'value'};
+				my $url = $urls->[0] if(defined($urls) && scalar(@$urls)>0);
+				
+				if($track->url eq $url) {
+					return 1;
+				}
+				last;
+			}
+		}
 	}elsif($filter->{'id'} eq 'notplaylist') {
 		for my $parameter (@$parameters) {
 			if($parameter->{'id'} eq 'name') {
@@ -946,8 +958,7 @@ sub setModeMix {
 											}
 										}
 									}else {
-										my $value = $parameter->{'value'};
-										if($value eq $client->modeParam('customskip_parameter_1')) {
+										if($itemValue eq $client->modeParam('customskip_parameter_1')) {
 											$parameterValues{'filteritem'} = $i;
 										}
 									}
@@ -1744,7 +1755,6 @@ sub setCLIFilter {
 	$log->debug("Entering setCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
-	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['setfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1758,6 +1768,8 @@ sub setCLIFilter {
 		$log->debug("Exiting setCLIFilter\n");
 		return;
 	}
+
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 
 	# get our parameters
   	my $filterId    = $request->getParam('_filterid');
@@ -1789,7 +1801,6 @@ sub setCLISecondaryFilter {
 	$log->debug("Entering setCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
-	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['setsecondaryfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1803,6 +1814,8 @@ sub setCLISecondaryFilter {
 		$log->debug("Exiting setCLISecondaryFilter\n");
 		return;
 	}
+
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 
 	# get our parameters
   	my $filterId    = $request->getParam('_filterid');
@@ -1833,7 +1846,6 @@ sub clearCLIFilter {
 	$log->debug("Entering clearCLIFilter\n");
 	my $request = shift;
 	my $client = $request->client();
-	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['clearfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1848,6 +1860,7 @@ sub clearCLIFilter {
 		return;
 	}
 
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	my $key = $client;
 
 	$currentFilter{$key} = undef;
@@ -1862,7 +1875,6 @@ sub clearCLISecondaryFilter {
 	$log->debug("Entering clearCLISecondaryFilter\n");
 	my $request = shift;
 	my $client = $request->client();
-	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 	
 	if ($request->isNotCommand([['customskip'],['clearsecondaryfilter']])) {
 		$log->warn("Incorrect command\n");
@@ -1876,6 +1888,7 @@ sub clearCLISecondaryFilter {
 		$log->debug("Exiting clearCLISecondaryFilter\n");
 		return;
 	}
+	$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 
 	my $key = $client;
 	$currentSecondaryFilter{$key} = undef;
