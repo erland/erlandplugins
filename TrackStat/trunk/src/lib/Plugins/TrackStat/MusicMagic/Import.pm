@@ -188,7 +188,7 @@ sub initScanTrack {
 		$http->close();
 
 	}else {
-		$log->debug("Failure answer from Music Magic\n");
+		$log->warn("Failure answer from Music Magic\n");
 		$isScanning = -1;
 	}
 	return undef;
@@ -214,7 +214,7 @@ sub doneScanning {
 
 		$lastMusicMagicDate = $modificationTime;
 	}else {
-		$log->debug("Failed to call MusicMagic at: $musicmagicurl\n");
+		$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 
 	if($isScanning==1) {
