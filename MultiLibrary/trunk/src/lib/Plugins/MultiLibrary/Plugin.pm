@@ -908,7 +908,7 @@ sub powerCallback($)
 			my $power = $request->getParam('_newvalue');
 			if($power) {
 				$log->debug("Asking for library\n");
-				Slim::Buttons::Common::pushMode($client,'PLUGIN.MultiLibrary::Plugin',undef);
+				Slim::Buttons::Common::pushMode($client,'Plugins::MultiLibrary::Plugin',undef);
 				$client->update();
 			}
 		}
