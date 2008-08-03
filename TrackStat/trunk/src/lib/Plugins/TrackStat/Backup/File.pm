@@ -357,8 +357,16 @@ sub restoreTrack
 	if($track) {
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			$track->set('rating' => $rating);
-			$track->update();
+			if(UNIVERSAL::can(ref($track),"persistent")) {
+				$track->persistent->set('rating' => $rating);
+				$track->persistent->set('playcount' => $playCount);
+				$track->persistent->set('lastplayed' => $lastPlayed);
+				$track->persistent->set('added' => $added);
+				$track->persistent->update();
+			}else {
+				$track->set('rating' => $rating);
+				$track->update();
+			}
 			$ds->forceCommit();
 		};
 	}
