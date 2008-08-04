@@ -1978,10 +1978,125 @@ sub postinitPlugin {
 	initPlayLists();
 	initPlayListTypes();
 	registerJiveMenu();
+	registerContextMenu();
 }
 
 sub title {
 	return 'DYNAMICPLAYLIST';
+}
+
+sub registerContextMenu {
+	if(isPluginsInstalled(undef,'ContextMenu::Plugin')) {
+		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
+		if ( defined($contextMenuApi) && ($contextMenuApi >= 0.67) ) {
+			Plugins::ContextMenu::Public::registerContextChoice( { 
+				uid => 'plugin.DynamicPlaylist.mixer',
+				coderef => sub  {
+					my $parameters = shift;
+					
+					my $client = $parameters->{'client'};
+					my $selectedItem = $parameters->{'selected'};
+					if(!$playListTypes) {
+						initPlayListTypes();
+					}
+		
+					if($selectedItem && (ref($selectedItem) eq 'Slim::Schema::Contributor' || 
+						ref($selectedItem) eq 'Slim::Schema::Album' ||
+						ref($selectedItem) eq 'Slim::Schema::Playlist' ||
+						ref($selectedItem) eq 'Slim::Schema::Year' ||
+						ref($selectedItem) eq 'Slim::Schema::Genre')) {
+
+						my $mixerType = ref($selectedItem);
+						$mixerType =~ s/^Slim::Schema:://;
+						$mixerType = lc($mixerType);
+						if($mixerType eq 'contributor') {
+							$mixerType='artist';
+						}
+						if($playListTypes->{$mixerType} && ($mixerType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $selectedItem->id)) { 
+
+							return ({
+								'label' => $client->string('PLUGIN_DYNAMICPLAYLIST'),
+								'coderef' => \&contextMenuMixer,
+								'execargs' => ({
+									'item' => $selectedItem,
+								}),
+							});
+						}
+					}
+					return undef;
+				},
+				displayname => string('PLUGIN_DYNAMICPLAYLIST'),
+				pluginname => string('PLUGIN_DYNAMICPLAYLIST'),
+			} );
+		}
+	}
+}
+
+sub contextMenuMixer {
+	my $params = shift;
+	my $client = $params->{'client'};
+	my $item = $params->{'execargs'}->{'item'};
+
+	my %p = ();
+	if($item && ref($item) eq 'Slim::Schema::Contributor') {
+		my %paramItem = (
+			'id' => $item->id,
+			'name' => $item->name
+		);
+		%p = (
+			'dynamicplaylist_parameter_1' => \%paramItem,
+			'playlisttype' => 'artist',
+			'flatlist' => 1,
+			'extrapopmode' => 1
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Album') {
+		my %paramItem = (
+			'id' => $item->id,
+			'name' => $item->title
+		);
+		%p = (
+			'dynamicplaylist_parameter_1' => \%paramItem,
+			'playlisttype' => 'album',
+			'flatlist' => 1,
+			'extrapopmode' => 1
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Playlist') {
+		my %paramItem = (
+			'id' => $item->id,
+			'name' => $item->title
+		);
+		%p = (
+			'dynamicplaylist_parameter_1' => \%paramItem,
+			'playlisttype' => 'playlist',
+			'flatlist' => 1,
+			'extrapopmode' => 1
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Genre') {
+		my %paramItem = (
+			'id' => $item->id,
+			'name' => $item->name
+		);
+		%p = (
+			'dynamicplaylist_parameter_1' => \%paramItem,
+			'playlisttype' => 'genre',
+			'flatlist' => 1,
+			'extrapopmode' => 1
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Year') {
+		my %paramItem = (
+			'id' => $item->id,
+			'name' => ($item->id?$item->id:$client->string('UNK')),
+		);
+		%p = (
+			'dynamicplaylist_parameter_1' => \%paramItem,
+			'playlisttype' => 'year',
+			'flatlist' => 1,
+			'extrapopmode' => 1
+		);
+	}
+
+	Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Mixer',\%p);
+	$client->update();
 }
 
 sub registerJiveMenu {
