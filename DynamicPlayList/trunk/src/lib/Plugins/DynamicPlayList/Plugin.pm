@@ -855,9 +855,16 @@ sub addAlarmPlaylists {
 	my $localPlayLists = shift;
 
 	if(UNIVERSAL::can("Slim::Utils::Alarm","addPlaylists")) {
-		my %alarmPlaylists = ();
+		my @alarmPlaylists = ();
 		for my $playlist (values %$localPlayLists) {
-			if(!defined($playlist->{'parameters'})) {
+			my $favs = Slim::Utils::Favorites->new();
+			my ($index,$hk) = $favs->findUrl('dynamicplaylist://'.$playlist->{'dynamicplaylistid'});
+			my $favorite = 0;
+			if(defined($index)) {
+				$favorite = 1;
+			}
+
+			if(!defined($playlist->{'parameters'}) && ($playlist->{'dynamicplaylistfavourite'} || $favorite)) {
 				if(defined($playlist->{'groups'})) {
 					my $groups = $playlist->{'groups'};
 					for my $subgroup (@$groups) {
@@ -865,15 +872,24 @@ sub addAlarmPlaylists {
 						for my $subgroup (@$subgroup) {
 							$group .= $subgroup."/";
 						}
-						$alarmPlaylists{$group.$playlist->{'name'}} = 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'};
+						my %entry = (
+							'url' => 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'},
+							'title' => $group.$playlist->{'name'},
+						);
+						push @alarmPlaylists,\%entry;
 					}
 				}else {
-					$alarmPlaylists{$playlist->{'name'}} = 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'};
+					my %entry = (
+						'url' => 'dynamicplaylist://'.$playlist->{'dynamicplaylistid'},
+						'title' => $playlist->{'name'},
+					);
+					push @alarmPlaylists,\%entry;
 				}
 			}
 		}
-		$log->debug("Adding ".scalar(keys %alarmPlaylists)." playlists to alarm handler");
-		Slim::Utils::Alarm->addPlaylists('PLUGIN_DYNAMICPLAYLIST',\%alarmPlaylists);
+		@alarmPlaylists = sort { $a->{'title'} cmp $b->{'title'} } @alarmPlaylists;
+		$log->debug("Adding ".scalar(@alarmPlaylists)." playlists to alarm handler");
+		Slim::Utils::Alarm->addPlaylists('PLUGIN_DYNAMICPLAYLIST',\@alarmPlaylists);
 	}
 }
 
