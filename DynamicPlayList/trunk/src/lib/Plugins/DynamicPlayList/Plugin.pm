@@ -1949,24 +1949,28 @@ sub initPlugin {
 		}
 		if($prefs->get("enable_mixerfunction")) {
 			$mixerMap{'mixer'} = \&mixerFunction;
+			$mixerMap{'cliBase'} = {
+				player => 0,
+				cmd => ['dynamicplaylist','mixjive'],
+				params => {},
+				itemsParams => 'params',
+			};
+			$mixerMap{'contextToken'} = 'PLUGIN_DYNAMICPLAYLIST';
 		}
-		if($prefs->get("web_show_mixerlinks") ||
-			$prefs->get("enable_mixerfunction")) {
-
-			Slim::Music::Import->addImporter($class, \%mixerMap);
-		    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
-		}
+		Slim::Music::Import->addImporter($class, \%mixerMap);
+	    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
 
 	# set up our subscription
 	Slim::Control::Request::subscribe(\&commandCallback65, 
 		[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
 	Slim::Control::Request::subscribe(\&powerCallback,[['power']]); 
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
-	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play', '_playlistid'], [1, 0, 0, \&cliPlayPlaylist]);
-	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add', '_playlistid'], [1, 0, 0, \&cliAddPlaylist]);
-	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue', '_playlistid'], [1, 0, 0, \&cliContinuePlaylist]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play'], [1, 0, 1, \&cliPlayPlaylist]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add'], [1, 0, 1, \&cliAddPlaylist]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue'], [1, 0, 1, \&cliContinuePlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','mixjive'], [1, 1, 1, \&cliMixJiveHandler]);
 
 	initFilters();
 
@@ -2952,6 +2956,97 @@ sub cliJiveHandler {
 	$log->debug("Exiting cliJiveHandler\n");
 }
 
+
+sub cliMixJiveHandler {
+	$log->debug("Entering cliMixJiveHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['dynamicplaylist'],['mixjive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliMixJiveHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliMixJiveHandler\n");
+		return;
+	}
+	if(!$playListTypes) {
+		initPlayLists($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+	}
+
+	my $playlisttype = undef;
+	my $itemId = undef;
+	if($request->getParam('album_id')) {
+		$playlisttype = 'album';
+		$itemId = $request->getParam('album_id');
+	}elsif($request->getParam('artist_id')) {
+		$playlisttype = 'artist';
+		$itemId = $request->getParam('artist_id');
+	}elsif($request->getParam('contributor_id')) {
+		$playlisttype = 'artist';
+		$itemId = $request->getParam('contributor_id');
+	}elsif($request->getParam('genre_id')) {
+		$playlisttype = 'genre';
+		$itemId = $request->getParam('genre_id');
+	}elsif($request->getParam('year')) {
+		$playlisttype = 'year';
+		$itemId = $request->getParam('year');
+	}elsif($request->getParam('playlist')) {
+		$playlisttype = 'playlist';
+		$itemId = $request->getParam('playlist');
+	}
+
+	$log->debug("Executing CLI mixjive command\n");
+
+	my $cnt = 0;
+	if(defined($playlisttype)) {
+		foreach my $flatItem (sort keys %$playLists) {
+			my $playlist = $playLists->{$flatItem};
+			if($playlist->{'dynamicplaylistenabled'}) {
+				if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && !exists($playlist->{'parameters'}->{'2'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
+	
+					my $name;
+					my $id;
+					$name = $playlist->{'name'};
+					$id = $playlist->{'dynamicplaylistid'};
+					
+					my %itemParams = (
+						'playlistid'=>$id,
+						'dynamicplaylist_parameter_1' => $itemId,
+					);
+			
+					my $actions = {
+						'do' => {
+							'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
+							'params' => \%itemParams,
+							'itemsParams' => 'params',
+						},
+					};
+					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+					$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+					$request->addResultLoop('item_loop',$cnt,'text',$name);
+					$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+					$cnt++;
+				}
+			}
+		}
+	}
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+
+	$request->setStatusDone();
+	$log->debug("Exiting cliJiveHandler\n");
+}
+
 sub cliGetPlaylists {
 	$log->debug("Entering cliGetPlaylists\n");
 	my $request = shift;
@@ -3019,9 +3114,26 @@ sub cliPlayPlaylist {
 		return;
 	}
 	
-  	my $playlistId    = $request->getParam('_playlistid');
-	if($playlistId =~ /^_playlistid:(.+)$/) {
+  	my $playlistId    = $request->getParam('playlistid');
+	if(!defined($playlistId)) {
+		$playlistId = $request->getParam('_p3');
+	}
+	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
+	}
+
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		if($k =~ /^dynamicplaylist_parameter_(.*)$/) {
+			my $parameterId = $1;
+			if(exists $playLists->{$playlistId}->{'parameters'}->{$1}) {
+				$log->debug("Using: $k=".$params->{$k}."\n");
+				$playLists->{$playlistId}->{'parameters'}->{$1}->{'value'} = $params->{$k};
+			}
+		}else {
+			$log->debug("Got: $k=".$params->{$k}."\n");
+		}
 	}
 
 	playRandom($client, $playlistId, 0, 1);
@@ -3048,9 +3160,26 @@ sub cliContinuePlaylist {
 		return;
 	}
 	
-  	my $playlistId    = $request->getParam('_playlistid');
-	if($playlistId =~ /^_playlistid:(.+)$/) {
+  	my $playlistId    = $request->getParam('playlistid');
+	if(!defined($playlistId)) {
+		$playlistId = $request->getParam('_p3');
+	}
+	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
+	}
+
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		if($k =~ /^dynamicplaylist_parameter_(.*)$/) {
+			my $parameterId = $1;
+			if(exists $playLists->{$playlistId}->{'parameters'}->{$1}) {
+				$log->debug("Using: $k=".$params->{$k}."\n");
+				$playLists->{$playlistId}->{'parameters'}->{$1}->{'value'} = $params->{$k};
+			}
+		}else {
+			$log->debug("Got: $k=".$params->{$k}."\n");
+		}
 	}
 
 	playRandom($client, $playlistId, 0, 1,undef,1);
@@ -3077,9 +3206,26 @@ sub cliAddPlaylist {
 		return;
 	}
 	
-  	my $playlistId    = $request->getParam('_playlistid');
-	if($playlistId =~ /^_playlistid:(.+)$/) {
+  	my $playlistId    = $request->getParam('playlistid');
+	if(!defined($playlistId)) {
+		$playlistId = $request->getParam('_p3');
+	}
+	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
+	}
+
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		if($k =~ /^dynamicplaylist_parameter_(.*)$/) {
+			my $parameterId = $1;
+			if(exists $playLists->{$playlistId}->{'parameters'}->{$1}) {
+				$log->debug("Using: $k=".$params->{$k}."\n");
+				$playLists->{$playlistId}->{'parameters'}->{$1}->{'value'} = $params->{$k};
+			}
+		}else {
+			$log->debug("Got: $k=".$params->{$k}."\n");
+		}
 	}
 
 	playRandom($client, $playlistId, 1, 1, 1);
