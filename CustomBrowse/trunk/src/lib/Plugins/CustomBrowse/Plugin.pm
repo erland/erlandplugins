@@ -1051,6 +1051,13 @@ sub initPlugin {
 	}
 	if($prefs->get("enable_mixerfunction")) {
 		$mixerMap{'mixer'} = \&mixerFunction;
+		$mixerMap{'cliBase'} = {
+			player => 0,
+			cmd => ['custombrowse','mixjive'],
+			params => {},
+			itemsParams => 'params',
+		};
+		$mixerMap{'contextToken'} = 'PLUGIN_CUSTOMBROWSE_CONTEXTMIXER';
 	}
 	if($prefs->get("enable_web_mixerfunction") ||
 		$prefs->get("enable_mixerfunction")) {
@@ -1058,18 +1065,20 @@ sub initPlugin {
 		Slim::Music::Import->addImporter($class, \%mixerMap);
 	    	Slim::Music::Import->useImporter('Plugins::CustomBrowse::Plugin', 1);
 	}
-	Slim::Control::Request::addDispatch(['custombrowse','browse','_start','_itemsPerResponse'], [1, 1, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','browsecontext','_start','_itemsPerResponse','_contexttype','_contextid'], [1, 1, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','play'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','playcontext','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','add'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','addcontext','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','mixes'], [1, 1, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','mixescontext','_contexttype','_contextid'], [1, 1, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','mix','_mixid'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','mixcontext','_mixid','_contexttype','_contextid'], [1, 0, 0, \&cliHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','browse'], [1, 1, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','browsecontext'], [1, 1, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','play'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','playcontext'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','add'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','addcontext'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixes'], [1, 1, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixescontext'], [1, 1, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mix'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixcontext'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','browsejive'], [1, 1, 1, \&cliJiveHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','browsejivecontext'], [1, 1, 1, \&cliJiveHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixesjive'], [1, 1, 1, \&cliJiveMixesHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixjive'], [1, 1, 1, \&cliJiveStandardMixesHandler]);
 
 	Plugins::CustomBrowse::iPeng::Reader::read("CustomBrowse","iPengConfiguration");
 }
@@ -3032,7 +3041,7 @@ sub cliJiveHandler {
 	my $request = shift;
 	my $client = $request->client();
 
-	if (!$request->isQuery([['custombrowse'],['browsejive']])) {
+	if (!$request->isQuery([['custombrowse'],['browsejive']]) && !$request->isQuery([['custombrowse'],['browsejivecontext']])) {
 		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
 		$log->debug("Exiting cliJiveHandler\n");
@@ -3044,6 +3053,23 @@ sub cliJiveHandler {
 		$log->debug("Exiting cliJiveHandler\n");
 		return;
 	}
+	my $context = undef;
+	if ($request->isQuery([['custombrowse'],['browsejivecontext']])) {
+		$context = {
+			'itemtype' => $request->getParam('contexttype'),
+			'itemid' => $request->getParam('contextid'),
+			'itemname' => $request->getParam('contextname'),
+		};
+	}else {
+	}
+
+	cliJiveHandlerImpl($client,$request,$context);
+}
+sub cliJiveHandlerImpl {
+	my $client = shift;
+	my $request = shift;
+	my $browseContext = shift;
+
 	if(!$browseMenusFlat) {
 		readBrowseConfiguration($client);
 	}
@@ -3053,20 +3079,65 @@ sub cliJiveHandler {
 		$log->debug("Got: $k=".$params->{$k}."\n");
 	}
 
-	my $start = $request->getParam('_start');
+	my $start = $request->getParam('start');
+	if(!defined($start)) {
+		$start = $request->getParam('_start');
+		if(!defined($start)) {
+			$start = $request->getParam('_p2');
+		}
+	}
 	if(!defined($start) || $start eq '') {
 		$start=0;
 	}
 	$params->{'start'}=$start;
-	my $itemsPerPage = $request->getParam('_itemsPerResponse');
+	my $itemsPerPage = $request->getParam('itemsPerResponse');
+	if(!defined($itemsPerPage)) {
+		$itemsPerPage = $request->getParam('_itemsPerResponse');
+		if(!defined($itemsPerPage)) {
+			$itemsPerPage = $request->getParam('_p3');
+		}
+	}
 	if(defined($itemsPerPage) || $itemsPerPage ne '') {
 		$params->{'itemsperpage'}=$itemsPerPage;
 	}
 
 	my $menuResult = undef;
-	$log->debug("Executing CLI browsejive command\n");
-	$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
-	my $context = getMenuHandler()->getContext($client,$params,1);
+	my $context = undef;
+	if (!defined($browseContext)) {
+		$log->debug("Executing CLI browsejive command\n");
+		$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
+		$context = getMenuHandler()->getContext($client,$params,1);
+	}else {
+		$log->debug("Executing CLI browsejivecontext command\n");
+		if(defined $browseContext->{'itemtype'}) {
+			$params->{'contexttype'} = $browseContext->{'itemtype'};
+		}
+		if(defined $browseContext->{'itemid'}) {
+			$params->{'contextid'} = $browseContext->{'itemid'};
+		}
+		if(defined $browseContext->{'itemname'}) {
+			$params->{'contextname'} = $browseContext->{'itemname'};
+		}
+		if(defined($params->{'contexttype'})) {
+			if(defined($params->{'hierarchy'})) {
+				my $regExp = "^group_".$params->{'contexttype'}.".*";
+				if($params->{'hierarchy'} !~ /$regExp/) {
+					$params->{'hierarchy'} = 'group_'.$params->{'contexttype'}.','.$params->{'hierarchy'};
+				}
+			}else {
+				$params->{'hierarchy'} = 'group_'.$params->{'contexttype'};
+			}
+		}
+		$menuResult = getContextMenuHandler()->getPageItemsForContext($client,$params,$browseContext,0,'jive');	
+		$context = getContextMenuHandler()->getContext($client,$params,1);
+		if(scalar(@$context)>0) {
+			if(defined($browseContext->{'itemname'})) {
+				$context->[0]->{'name'} = Slim::Utils::Unicode::utf8decode($browseContext->{'itemname'},'utf8');
+			}else {
+				$context->[0]->{'name'} = "Context";
+			}
+		}
+	}
 	my $currentContext = undef;
 	if(defined($context) && scalar(@$context)>0) {
 		$currentContext = $context->[scalar(@$context)-1];
@@ -3098,6 +3169,11 @@ sub cliJiveHandler {
 			},
 		}
 	};
+	if (defined($browseContext)) {
+		$baseMenu->{'actions'}->{'go'}->{'cmd'} = ['custombrowse', 'browsejivecontext'];
+		$baseMenu->{'actions'}->{'play'}->{'cmd'} = ['custombrowse', 'playcontext'];
+		$baseMenu->{'actions'}->{'add'}->{'cmd'} = ['custombrowse', 'addcontext'];
+	}
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
@@ -3182,6 +3258,9 @@ sub cliJiveHandler {
 					'itemsParams' => 'params',
 				},
 			};
+			if (defined($browseContext)) {
+				$actions->{'go'}->{'cmd'} = ['custombrowse', 'browsejivecontext'];
+			}
 			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		}else {
 			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
@@ -3344,6 +3423,79 @@ sub cliJiveMixesHandler {
 	$log->debug("Exiting cliJiveMixesHandler\n");
 }
 
+sub cliJiveStandardMixesHandler {
+	$log->debug("Entering cliJiveStandardMixesHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['custombrowse'],['mixjive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJiveStandardMixesHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveStandardMixesHandler\n");
+		return;
+	}
+
+	if(!$browseMenusFlat) {
+		readBrowseConfiguration($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+	}
+
+	my $objecttype = undef;
+	my $itemId = undef;
+	if($request->getParam('song_id')) {
+		$objecttype = 'track';
+		$itemId = $request->getParam('song_id');
+	}elsif($request->getParam('track_id')) {
+		$objecttype = 'track';
+		$itemId = $request->getParam('track_id');
+	}elsif($request->getParam('album_id')) {
+		$objecttype = 'album';
+		$itemId = $request->getParam('album_id');
+	}elsif($request->getParam('artist_id')) {
+		$objecttype = 'artist';
+		$itemId = $request->getParam('artist_id');
+	}elsif($request->getParam('contributor_id')) {
+		$objecttype = 'artist';
+		$itemId = $request->getParam('contributor_id');
+	}elsif($request->getParam('genre_id')) {
+		$objecttype = 'genre';
+		$itemId = $request->getParam('genre_id');
+	}elsif($request->getParam('year')) {
+		$objecttype = 'year';
+		$itemId = $request->getParam('year');
+	}elsif($request->getParam('playlist')) {
+		$objecttype = 'playlist';
+		$itemId = $request->getParam('playlist');
+	}
+
+	$log->debug("Executing CLI mixjive command\n");
+
+	my $cnt = 0;
+	if(defined($objecttype)) {
+		my $context = {
+			'itemtype' => $objecttype,
+			'itemid' => $itemId,
+			'itemname' => undef,
+		};
+		cliJiveHandlerImpl($client,$request,$context);
+	}else {
+		$request->addResult('offset',0);
+		$request->addResult('count',$cnt);
+		$request->setStatusDone();
+	}
+	$log->debug("Exiting cliJiveStandardMixesHandler\n");
+}
+
 sub cliHandler {
 	$log->debug("Entering cliHandler\n");
 	my $request = shift;
@@ -3387,41 +3539,65 @@ sub cliHandler {
 		readBrowseConfiguration($client);
 	}
 	my $paramNo = 2;
-	my %params = ();
+	my $params = $request->getParamsCopy();
 	if($cmd =~ /^browse/) {
-	  	my $start = $request->getParam('_start');
+	  	my $start = $request->getParam('start');
+		if(!defined($start)) {
+			$start = $request->getParam('_start');
+			if(!defined($start)) {
+				$start = $request->getParam('_p'.$paramNo);
+			}
+		}
 		if(!defined($start) || $start eq '') {
 			$log->warn("_start not defined\n");
 			$request->setStatusBadParams();
 			$log->debug("Exiting cliHandler\n");
 			return;
 		}
-		$params{'start'}=$start;
+		$params->{'start'}=$start;
 		$paramNo++;
-	  	my $itemsPerPage = $request->getParam('_itemsPerResponse');
+	  	my $itemsPerPage = $request->getParam('itemsPerResponse');
+		if(!defined($itemsPerPage)) {
+			$itemsPerPage = $request->getParam('_itemsPerResponse');
+			if(!defined($itemsPerPage)) {
+				$itemsPerPage = $request->getParam('_p'.$paramNo);
+			}
+		}
 		if(!defined($itemsPerPage) || $itemsPerPage eq '') {
 			$log->warn("_itemsPerResponse not defined\n");
 			$request->setStatusBadParams();
 			$log->debug("Exiting cliHandler\n");
 			return;
 		}
-		$params{'itemsperpage'}=$itemsPerPage;
+		$params->{'itemsperpage'}=$itemsPerPage;
 		$paramNo++;
 	}
 	my %emptyHash = ();
 	my $context = \%emptyHash;
-	if($cmd =~ /^context/) {
-		my $contexttype = $request->getParam('_contexttype');
+	if($cmd =~ /context$/) {
+		my $contexttype = $request->getParam('contexttype');
+		if(!defined($contexttype)) {
+			$contexttype = $request->getParam('_contexttype');
+			if(!defined($contexttype)) {
+				$contexttype = $request->getParam('_p'.$paramNo)
+			}
+		}
 	  	if(!defined $contexttype || $contexttype eq '') {
-			$log->warn("_contexttype not defined\n");
+			$log->warn("contexttype not defined\n");
 			$request->setStatusBadParams();
 			$log->debug("Exiting cliHandler\n");
 			return;
 	  	}
 		$paramNo++;
-		my $contextid = $request->getParam('_contextid');
+		my $contextid = $request->getParam('contextid');
+		if(!defined($contextid)) {
+			$contextid = $request->getParam('_contextid');
+			if(!defined($contextid)) {
+				$contextid = $request->getParam('_p'.$paramNo)
+			}
+		}
 	  	if(!defined $contextid || $contextid eq '') {
-			$log->warn("_contextid not defined\n");
+			$log->warn("contextid not defined\n");
 			$request->setStatusBadParams();
 			$log->debug("Exiting cliHandler\n");
 			return;
@@ -3435,28 +3611,27 @@ sub cliHandler {
 		$context = \%localContext;
 	}
 	if($cmd eq 'mix' || $cmd eq 'mixcontext') {
-		$params{'mix'} = $request->getParam('_mixid');
-		$paramNo++;
-	}
-	my $param = $request->getParam('_p'.$paramNo);
-	while($param) {
-		if($param =~ /^(.*?):(.*)$/) {
-			$params{$1}=$2;
+		$params->{'mix'} = $request->getParam('mixid');
+		if(!defined($params->{'mix'})) {
+			$params->{'mix'} = $request->getParam('_mixid');
+			if(!defined($params->{'mix'})) {
+				$params->{'mix'} = $request->getParam('_p'.$paramNo);
+			}
 		}
 		$paramNo++;
-		$param = $request->getParam('_p'.$paramNo);
 	}
-	for my $k (keys %params) {
-		$log->debug("Got: $k=".$params{$k}."\n");
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
 	}
 	if(defined($context->{'itemtype'})) {
-		if(defined($params{'hierarchy'})) {
+		if(defined($params->{'hierarchy'})) {
 			my $regExp = "^group_".$context->{'itemtype'}.".*";
-			if($params{'hierarchy'} !~ /$regExp/) {
-				$params{'hierarchy'} = 'group_'.$context->{'itemtype'}.','.$params{'hierarchy'};
+			if($params->{'hierarchy'} !~ /$regExp/) {
+				$params->{'hierarchy'} = 'group_'.$context->{'itemtype'}.','.$params->{'hierarchy'};
 			}
 		}else {
-			$params{'hierarchy'} = 'group_'.$context->{'itemtype'};
+			$params->{'hierarchy'} = 'group_'.$context->{'itemtype'};
 		}
 	}
 	if($cmd =~ /^browse/) {
@@ -3464,19 +3639,19 @@ sub cliHandler {
 		my $menuResult = undef;
 		if($cmd eq 'browse') {
 			$log->debug("Executing CLI browse command\n");
-			$menuResult = getMenuHandler()->getPageItemsForContext($client,\%params,undef,0,'cli');	
+			$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'cli');	
 		}else {
 			$log->debug("Executing CLI browsecontext command\n");
-			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,\%params,$context,0,'cli');	
+			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,$params,$context,0,'cli');	
 		}
 		prepareCLIBrowseResponse($request,$menuResult->{'items'});
 	}elsif($cmd =~ /^play/ || $cmd =~ /^add/) {
 		$log->debug("Starting to prepare CLI play/add/playcontext/addcontext command\n");
 		my $menuResult = undef;
 		if($cmd =~ /context$/) {
-			$menuResult = getContextMenuHandler()->getPageItem($client,\%params,$context,0,'cli');
+			$menuResult = getContextMenuHandler()->getPageItem($client,$params,$context,0,'cli');
 		}else {
-			$menuResult = getMenuHandler()->getPageItem($client,\%params,undef,0,'cli');	
+			$menuResult = getMenuHandler()->getPageItem($client,$params,undef,0,'cli');	
 		}
 		my $addOnly = 0;
 		if($cmd =~ /^add/) {
@@ -3491,17 +3666,17 @@ sub cliHandler {
 		}
 	}elsif($cmd =~ /^mixes/) {
 		$log->debug("Starting to prepare CLI mixes command\n");
-		$params{'hierarchy'} =~ s/^(.*)(,.+?)$/$1/;
+		$params->{'hierarchy'} =~ s/^(.*)(,.+?)$/$1/;
 		my $attr = $2;
 		$attr =~ s/^,(.*)$/$1/;
-		my $itemid = $params{$attr};
+		my $itemid = $params->{$attr};
 		my $menuResult = undef;
-		$params{'start'}=0;
-		$params{'itemsperpage'}=100000;
+		$params->{'start'}=0;
+		$params->{'itemsperpage'}=100000;
 		if($cmd =~ /context$/) {
-			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,\%params,$context,0,'cli');	
+			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,$params,$context,0,'cli');	
 		}else {
-			$menuResult = getMenuHandler()->getPageItemsForContext($client,\%params,undef,0,'cli');	
+			$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'cli');	
 		}
 		if(defined($menuResult) && defined($menuResult->{'items'})) {
 			my $items = $menuResult->{'items'};
@@ -3524,9 +3699,9 @@ sub cliHandler {
 	}elsif($cmd =~ /^mix/) {
 		$log->debug("Starting to prepare CLI mix command\n");
 		if($cmd =~ /context$/) {
-			executeMix($client,\%params,$context,'cli');
+			executeMix($client,$params,$context,'cli');
 		}else {
-			executeMix($client,\%params,undef,'cli');
+			executeMix($client,$params,undef,'cli');
 		}
 	}
 	$request->setStatusDone();
