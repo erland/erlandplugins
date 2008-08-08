@@ -42,10 +42,10 @@
 				<id>album</id>
 				<menuname>Songs</menuname>
 				<itemtype>album</itemtype>
-				<itemformat>album</itemformat>
+				<itemformat>albumconcat</itemformat>
 				<menutype>sql</menutype>
 				<menudata>
-					select albums.id,albums.title from tracks
+					select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks
 						join contributor_track on
 							tracks.id=contributor_track.track and 
 							contributor_track.contributor={artist}
