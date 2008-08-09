@@ -1053,7 +1053,7 @@ sub initPlugin {
 		$mixerMap{'mixer'} = \&mixerFunction;
 		$mixerMap{'cliBase'} = {
 			player => 0,
-			cmd => ['custombrowse','mixjive'],
+			cmd => ['custombrowse','stdmixjive'],
 			params => {},
 			itemsParams => 'params',
 		};
@@ -1078,7 +1078,10 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','browsejive'], [1, 1, 1, \&cliJiveHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','browsejivecontext'], [1, 1, 1, \&cliJiveHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixesjive'], [1, 1, 1, \&cliJiveMixesHandler]);
-	Slim::Control::Request::addDispatch(['custombrowse','mixjive'], [1, 1, 1, \&cliJiveStandardMixesHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixesjivecontext'], [1, 1, 1, \&cliJiveMixesHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixjive'], [1, 1, 1, \&cliJiveMixHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','mixjivecontext'], [1, 1, 1, \&cliJiveMixHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','stdmixjive'], [1, 1, 1, \&cliJiveStandardMixesHandler]);
 
 	Plugins::CustomBrowse::iPeng::Reader::read("CustomBrowse","iPengConfiguration");
 }
@@ -2957,15 +2960,32 @@ sub executeMix {
 		}
 		for my $mix (@$mixes) {
 			if($mix->{'id'} eq $params->{'mix'}) {
-				if($contextParams) {
-					getContextMenuHandler()->executeMix($client,$mix,0,$selecteditem,$interfaceType);
+				if($interfaceType eq 'jive' && exists $mix->{'mixjive'}) {
+					my @commandparts = split(/ /,$mix->{'mixjive'});
+					my @executableCommand = ();
+					for my $part (@commandparts) {
+						if($contextParams) {
+							$part = getContextMenuHandler()->itemParameterHandler->replaceParameters($client,$part,$selecteditem);
+						}else {
+							$part = getMenuHandler()->itemParameterHandler->replaceParameters($client,$part,$selecteditem);
+						}
+						push @executableCommand,$part;
+					}
+					$log->debug("Execute: ".join(' ',@executableCommand));
+					my $request = $client->execute(\@executableCommand);
+					return $request->getResults();
 				}else {
-					getMenuHandler()->executeMix($client,$mix,0,$selecteditem,$interfaceType);
+					if($contextParams) {
+						getContextMenuHandler()->executeMix($client,$mix,0,$selecteditem,$interfaceType);
+					}else {
+						getMenuHandler()->executeMix($client,$mix,0,$selecteditem,$interfaceType);
+					}
 				}
 				last;
 			}
 		}
 	}
+	return undef;
 }
 
 sub hideMenu {
@@ -3065,6 +3085,101 @@ sub cliJiveHandler {
 
 	cliJiveHandlerImpl($client,$request,$context);
 }
+
+sub cliJiveMixHandler {
+	$log->debug("Entering cliJiveMixHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['custombrowse'],['mixjive']]) && !$request->isQuery([['custombrowse'],['mixjivecontext']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJiveHandler\n");
+		return;
+	}
+	my $context = undef;
+	if ($request->isQuery([['custombrowse'],['mixjivecontext']])) {
+		$context = {
+			'itemtype' => $request->getParam('contexttype'),
+			'itemid' => $request->getParam('contextid'),
+			'itemname' => $request->getParam('contextname'),
+		};
+	}else {
+	}
+
+	cliJiveMixHandlerImpl($client,$request,$context);
+}
+
+sub cliJiveMixHandlerImpl {
+	my $client = shift;
+	my $request = shift;
+	my $browseContext = shift;
+	my $cmd = shift;
+
+	if(!$browseMenusFlat) {
+		readBrowseConfiguration($client);
+	}
+	my $params = $request->getParamsCopy();
+
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+	}
+
+	my $start = $request->getParam('start');
+	if(!defined($start)) {
+		$start = $request->getParam('_start');
+		if(!defined($start)) {
+			$start = $request->getParam('_p2');
+		}
+	}
+	if(!defined($start) || $start eq '') {
+		$start=0;
+	}
+	$params->{'start'}=$start;
+	my $itemsPerPage = $request->getParam('itemsPerResponse');
+	if(!defined($itemsPerPage)) {
+		$itemsPerPage = $request->getParam('_itemsPerResponse');
+		if(!defined($itemsPerPage)) {
+			$itemsPerPage = $request->getParam('_p3');
+		}
+	}
+	if(defined($itemsPerPage) || $itemsPerPage ne '') {
+		$params->{'itemsperpage'}=$itemsPerPage;
+	}
+
+	$params->{'mix'} = $request->getParam('mixid');
+
+	if(defined($browseContext) && defined($browseContext->{'itemtype'})) {
+		if(defined($params->{'hierarchy'})) {
+			my $regExp = "^group_".$browseContext->{'itemtype'}.".*";
+			if($params->{'hierarchy'} !~ /$regExp/) {
+				$params->{'hierarchy'} = 'group_'.$browseContext->{'itemtype'}.','.$params->{'hierarchy'};
+			}
+		}else {
+			$params->{'hierarchy'} = 'group_'.$browseContext->{'itemtype'};
+		}
+	}
+
+	$log->debug("Starting to prepare CLI mix command\n");
+
+	my $result = undef;
+	if(defined($browseContext)) {
+		$result = executeMix($client,$params,$browseContext,'jive');
+	}else {
+		$result = executeMix($client,$params,undef,'jive');
+	}
+	if(defined($result)) {
+		$request->setRawResults($result);
+	}
+	$request->setStatusDone();
+}
+
 sub cliJiveHandlerImpl {
 	my $client = shift;
 	my $request = shift;
@@ -3247,24 +3362,46 @@ sub cliJiveHandlerImpl {
 			$itemParams{'textkey'} = $itemkey;
 			#$request->addResultLoop('item_loop',$cnt,'textkey',$itemkey);
 		}
-		if($item->{'playtype'} eq 'none') {
+		my $actions = undef;
+		if(defined($item->{'mixes'})) {
 			foreach my $p (keys %baseParams) {
 				$itemParams{$p}=$baseParams{$p};
 			}
-			my $actions = {
-				'go' => {
-					'cmd' => ['custombrowse', 'browsejive'],
+			$actions = {
+				'play-hold' => {
+					'cmd' => ['custombrowse', 'mixesjive'],
 					'params' => \%itemParams,
 					'itemsParams' => 'params',
 				},
 			};
 			if (defined($browseContext)) {
+				$actions->{'play-hold'}->{'cmd'} = ['custombrowse', 'mixesjivecontext'];
+			}
+			$request->addResultLoop('item_loop',$cnt,'playHoldAction','go');
+		}
+		if($item->{'playtype'} eq 'none') {
+			foreach my $p (keys %baseParams) {
+				$itemParams{$p}=$baseParams{$p};
+			}
+			if(!defined($actions)) {
+				$actions = {};
+			}
+			$actions->{'go'} = {
+				'cmd' => ['custombrowse', 'browsejive'],
+				'params' => \%itemParams,
+				'itemsParams' => 'params',
+			};
+			if (defined($browseContext)) {
 				$actions->{'go'}->{'cmd'} = ['custombrowse', 'browsejivecontext'];
 			}
-			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		}else {
 			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 		}
+
+		if(defined($actions)) {
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		}
+
 		if($menuResult->{'artwork'}) {
 			$request->addResultLoop('item_loop',$cnt,'text',$name."\n");
 			$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
@@ -3323,7 +3460,7 @@ sub cliJiveMixesHandler {
 	my $request = shift;
 	my $client = $request->client();
 
-	if (!$request->isQuery([['custombrowse'],['mixesjive']])) {
+	if (!$request->isQuery([['custombrowse'],['mixesjive']]) && !$request->isQuery([['custombrowse'],['mixesjivecontext']])) {
 		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
 		$log->debug("Exiting cliJiveMixesHandler\n");
@@ -3349,7 +3486,16 @@ sub cliJiveMixesHandler {
 	my $menuResult = undef;
 	$params->{'start'}=0;
 	$params->{'itemsperpage'}=100000;
-	$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
+	if($request->isQuery([['custombrowse'],['mixesjive']])) {
+		$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
+	}else {
+		my $context = {
+			'itemtype' => $request->getParam('contexttype'),
+			'itemid' => $request->getParam('contextid'),
+			'itemname' => $request->getParam('contextname'),
+		};
+		$menuResult = getContextMenuHandler()->getPageItemsForContext($client,$params,$context,0,'jive');	
+	}
 
 	if(defined($menuResult) && defined($menuResult->{'items'})) {
 		my $items = $menuResult->{'items'};
@@ -3382,6 +3528,11 @@ sub cliJiveMixesHandler {
 							},
 						},
 					};
+					if($request->isQuery([['custombrowse'],['mixesjivecontext']])) {
+						$baseMenu->{'actions'}->{'go'}->{'cmd'} = ['custombrowse', 'mixjivecontext'];
+						$baseMenu->{'actions'}->{'add'}->{'cmd'} = ['custombrowse', 'mixjivecontext'];
+						$baseMenu->{'actions'}->{'play'}->{'cmd'} = ['custombrowse', 'mixjivecontext'];
+					}
 					$request->addResult('base',$baseMenu);
 
 

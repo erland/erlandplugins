@@ -81,6 +81,8 @@ sub isInterfaceSupported {
 		return 1;
 	}elsif($interfaceType eq 'web' && defined($mix->{'mixurl'})) {
 		return 1;	
+	}elsif($interfaceType eq 'jive' && defined($mix->{'mixjive'})) {
+		return 1;	
 	}else {
 		return 0;
 	}
