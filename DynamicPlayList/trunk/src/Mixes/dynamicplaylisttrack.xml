@@ -9,6 +9,7 @@
 		<mixcheckdata>Plugins::DynamicPlayList::Plugin::mixable</mixcheckdata>
 		<mixdata>PLUGIN.DynamicPlayList.Mixer|dynamicplaylist_parameter_1.id={itemid}|dynamicplaylist_parameter_1.name={itemname}|playlisttype=track|flatlist=1|extrapopmode=1</mixdata>
 		<mixurl>plugins/DynamicPlayList/dynamicplaylist_list.html?playlisttype=track&amp;flatlist=1&amp;dynamicplaylist_parameter_1={itemid}</mixurl>
+		<mixjive>dynamicplaylist mixjive track_id {itemid}</mixjive>
 		<miximage>html/images/dynamicplaylist_mixbutton.gif</miximage>
 	</mix>
 </custombrowse>
