@@ -1970,6 +1970,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue'], [1, 0, 1, \&cliContinuePlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','jiveplaylistparameters'], [1, 1, 1, \&cliJivePlaylistParametersHandler]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','mixjive'], [1, 1, 1, \&cliMixJiveHandler]);
 
 	initFilters();
@@ -2934,17 +2935,30 @@ sub cliJiveHandler {
 				'playlistid'=>$id,
 			);
 	
-			my $actions = {
-				'do' => {
-					'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
-					'params' => \%itemParams,
-					'itemsParams' => 'params',
-				},
-			};
-			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			if(exists $item->{'parameters'} && exists $item->{'parameters'}->{'1'}) {
+				my $actions = {
+					'go' => {
+						'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
+						'params' => \%itemParams,
+						'itemsParams' => 'params',
+					},
+					'play' => undef,
+					'add' => undef,
+				};
+				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			}else {
+				my $actions = {
+					'do' => {
+						'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+						'params' => \%itemParams,
+						'itemsParams' => 'params',
+					},
+				};
+				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+			}
 			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 			$request->addResultLoop('item_loop',$cnt,'text',$name);
-			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 			$cnt++;
 		}
 	}
@@ -2956,6 +2970,123 @@ sub cliJiveHandler {
 	$log->debug("Exiting cliJiveHandler\n");
 }
 
+
+sub cliJivePlaylistParametersHandler {
+	$log->debug("Entering cliJivePlaylistParametersHandler\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['dynamicplaylist'],['jiveplaylistparameters']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+		return;
+	}
+	if(!$playLists) {
+		initPlayLists($client);
+	}
+  	my $playlistId    = $request->getParam('playlistid');
+	if(!defined($playlistId)) {
+		$log->warn("playlistid parameter required\n");
+		$request->setStatusBadParams();
+		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+		return;		
+	}
+	my $playlist = getPlayList($client,$playlistId);
+	if(!defined($playlist)) {
+		$log->warn("Playlist $playlistId can't be found\n");
+		$request->setStatusBadParams();
+		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+		return;		
+	}
+
+	my $params = $request->getParamsCopy();
+
+	my %baseParams = (
+		'playlistid' => $playlistId,
+	);
+	for my $k (keys %$params) {
+		$log->debug("Got: $k=".$params->{$k}."\n");
+		if($k =~ /^dynamicplaylist_parameter_(.*)$/) {
+			$baseParams{$k} = $params->{$k};
+		}
+	}
+
+	my $parameters = {};
+	my $nextParameterId = 1;
+	my $parameterValue = $request->getParam('dynamicplaylist_parameter_'.$nextParameterId);
+	while(defined $parameterValue) {
+		$parameters->{$nextParameterId} = $parameterValue;
+		$nextParameterId++;
+		$parameterValue = $request->getParam('dynamicplaylist_parameter_'.$nextParameterId);
+	}
+
+	if(!exists $playlist->{'parameters'}->{$nextParameterId}) {
+		$log->warn("More parameters than requested: $nextParameterId\n");
+		$request->setStatusBadParams();
+		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+		return;		
+	}	
+
+	$log->debug("Executing CLI jiveplaylistparameters command\n");
+
+	my $parameter= $playlist->{'parameters'}->{$nextParameterId};
+
+	my @listRef = ();
+	addParameterValues($client,\@listRef, $parameter);
+
+	my $count = scalar(@listRef);
+
+	if(exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
+		my $baseMenu = {
+			'actions' => {
+				'go' => {
+					'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
+					'params' => \%baseParams,
+					'itemsParams' => 'params',
+				},
+			},
+		};
+		$request->addResult('base',$baseMenu);
+	}else {
+		my $baseMenu = {
+			'actions' => {
+				'do' => {
+					'cmd' => ['dynamicplaylist', 'playlist','play'],
+					'params' => \%baseParams,
+					'itemsParams' => 'params',
+				},
+			},
+		};
+		$request->addResult('base',$baseMenu);
+	}
+
+	my $cnt = 0;
+	foreach my $item (@listRef) {
+		my %itemParams = (
+			'dynamicplaylist_parameter_'.$nextParameterId => $item->{'id'}
+		);
+	
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'text',$item->{'name'});
+		if(!exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
+			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+		}
+		$cnt++;
+	}
+
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+
+	$request->setStatusDone();
+	$log->debug("Exiting cliJivePlaylistParametersHandler\n");
+}
 
 sub cliMixJiveHandler {
 	$log->debug("Entering cliMixJiveHandler\n");
@@ -3012,7 +3143,7 @@ sub cliMixJiveHandler {
 		foreach my $flatItem (sort keys %$playLists) {
 			my $playlist = $playLists->{$flatItem};
 			if($playlist->{'dynamicplaylistenabled'}) {
-				if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && !exists($playlist->{'parameters'}->{'2'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
+				if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(album|artist|year|genre|playlist|track)$/ && $1 eq $playlisttype))) {
 	
 					my $name;
 					my $id;
@@ -3024,17 +3155,30 @@ sub cliMixJiveHandler {
 						'dynamicplaylist_parameter_1' => $itemId,
 					);
 			
-					my $actions = {
-						'do' => {
-							'cmd' => ['dynamicplaylist', 'playlist', 'continue'],
-							'params' => \%itemParams,
-							'itemsParams' => 'params',
-						},
-					};
-					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+					
+					if(exists $playlist->{'parameters'}->{'2'}) {
+						my $actions = {
+							'go' => {
+								'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
+								'params' => \%itemParams,
+								'itemsParams' => 'params',
+							},
+						};
+						$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+					}else {
+						my $actions = {
+							'do' => {
+								'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+								'params' => \%itemParams,
+								'itemsParams' => 'params',
+							},
+						};
+						$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+						$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+						$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+					}
 					$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 					$request->addResultLoop('item_loop',$cnt,'text',$name);
-					$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
 					$cnt++;
 				}
 			}
