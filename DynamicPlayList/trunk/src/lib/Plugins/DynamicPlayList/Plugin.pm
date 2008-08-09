@@ -2931,7 +2931,7 @@ sub cliJiveHandler {
 			$id = $item->{'dynamicplaylistid'};
 			
 			my %itemParams = (
-				'_playlistid'=>$id,
+				'playlistid'=>$id,
 			);
 	
 			my $actions = {
