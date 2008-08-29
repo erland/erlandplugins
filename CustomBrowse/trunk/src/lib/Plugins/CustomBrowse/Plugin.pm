@@ -3296,7 +3296,7 @@ sub cliJiveHandlerImpl {
 		my $name;
 		my $itemkey;
 		if(defined($item->{'itemvalue'})) {
-			$name = $item->{'itemvalue'};
+			$name = $item->{'itemname'}.': '.$item->{'itemvalue'};
 		}else {
 			$name = $item->{'itemname'};
 		}
@@ -3441,10 +3441,10 @@ sub cliJiveHandlerImpl {
 				};
 				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 			}elsif($mode) {
-				$request->addResultLoop('item_loop',$cnt,'style','noItemAction');
+				$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 			}
 		}elsif(!defined($item->{'menufunction'})) {
-			$request->addResultLoop('item_loop',$cnt,'style','noItemAction');
+			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 		}
 		$cnt++;
 	}
@@ -3579,7 +3579,7 @@ sub cliJiveStandardMixesHandler {
 	my $request = shift;
 	my $client = $request->client();
 
-	if (!$request->isQuery([['custombrowse'],['mixjive']])) {
+	if (!$request->isQuery([['custombrowse'],['stdmixjive']])) {
 		$log->warn("Incorrect command\n");
 		$request->setStatusBadDispatch();
 		$log->debug("Exiting cliJiveStandardMixesHandler\n");
