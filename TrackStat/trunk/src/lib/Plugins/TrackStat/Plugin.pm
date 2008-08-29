@@ -2391,6 +2391,8 @@ sub initPlugin
 		Plugins::TrackStat::Storage::init();
 
 		initStatisticPlugins();
+
+		registerJiveMenu();
 		
 		my %mixerMap = ();
 		if($prefs->get("web_enable_mixerfunction")) {
@@ -2452,6 +2454,24 @@ sub postinitPlugin {
 	use strict 'refs';
 }
 
+sub registerJiveMenu {
+	my $client = shift;
+	my @menuItems = (
+		{
+			text => Slim::Utils::Strings::string(getDisplayName()),
+			weight => 85,
+			id => 'trackstat',
+			window => { titleStyle => 'mymusic'},
+			actions => {
+				go => {
+					cmd => ['trackstat', 'browsejive'],
+				},
+			},
+		},
+	);
+	Slim::Control::Jive::registerPluginMenu(\@menuItems,'myMusic');
+}
+
 sub trackInfoHandler {
         my ( $client, $url, $track, $remoteMeta, $tags ) = @_;
         $tags ||= {};
@@ -2484,6 +2504,372 @@ sub trackInfoHandler {
 	}else {
 		return;
 	}
+}
+
+sub jiveBrowse {
+	$log->debug("Entering jiveBrowse\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['trackstat'],['browsejive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting jiveBrowse\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting jiveBrowse\n");
+		return;
+	}
+
+	my $params = $request->getParamsCopy();
+
+	my $statisticItems = getStatisticItemsForContext($client,$params,\%statisticItems,1);
+	my $statisticGroups = getStatisticGroupsForContext($client,$params,\%statisticItems,1);
+
+	my %baseParams = ();
+	my $nextLevel = 1;
+	for my $param (keys %$params) {
+		if($param =~ /^group/) {
+			$baseParams{$param} = $params->{$param};
+			$nextLevel++;
+		}
+	}
+
+	my $cnt = 0;
+	foreach my $group (@$statisticGroups) {
+		my %itemParams = (
+			'group'.$nextLevel => escape($group->{'name'}),
+		);
+		foreach my $p (keys %baseParams) {
+			$itemParams{$p}=$baseParams{$p};
+		}
+
+		my $actions = {
+			'go' => {
+				'cmd' => ['trackstat', 'browsejive'],
+				'params' => \%itemParams,
+				'itemsParams' => 'params',
+			},
+		};
+
+		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'text',$group->{'name'});
+		$cnt++;
+	}
+
+	foreach my $item (@$statisticItems) {
+		my %itemParams = (
+			'statistics' => $item->{'item'}->{'id'},
+		);
+		foreach my $p (keys %baseParams) {
+			$itemParams{$p}=$baseParams{$p};
+		}
+
+		my $actions = {
+			'go' => {
+				'cmd' => ['trackstat', 'statisticsjive'],
+				'params' => \%itemParams,
+				'itemsParams' => 'params',
+			},
+		};
+		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'text',$item->{'name'});
+		$cnt++;
+	}
+
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+	$request->setStatusDone();
+	$log->debug("Exiting jiveBrowse\n");
+}
+
+sub _mixers {
+        my $Imports = Slim::Music::Import->importers;
+        my @mixers = ();
+        for my $import (keys %{$Imports}) {
+                next if !$Imports->{$import}->{'mixer'};
+                next if !$Imports->{$import}->{'use'};
+                next if !$Imports->{$import}->{'cliBase'};
+                next if !$Imports->{$import}->{'contextToken'};
+                push @mixers, $import;
+        }
+        return ($Imports, \@mixers);
+}
+
+sub jiveStatistics {
+	$log->debug("Entering jiveStatistics\n");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isQuery([['trackstat'],['statisticsjive']])) {
+		$log->warn("Incorrect command\n");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting jiveStatistics\n");
+		return;
+	}
+	if(!defined $client) {
+		$log->warn("Client required\n");
+		$request->setStatusNeedsClient();
+		$log->debug("Exiting jiveStatistics\n");
+		return;
+	}
+
+	my $params = $request->getParamsCopy();
+
+	my $id = $params->{'statistics'};
+	my $statistics = getStatisticPlugins();
+	if(!defined $id || !exists $statistics->{$id}) {
+		$log->warn("statistics parameter not specified or invalid: $id\n");
+		$request->setStatusBadParams();
+		$log->debug("Exiting jiveStatistics\n");
+		return;
+	}
+
+	my $listLength = $prefs->get("jive_list_length");
+	if(!defined $listLength || $listLength==0) {
+		$listLength = 20;
+	}
+
+	my $cnt = 0;
+	my $function = $statistics->{$id}->{'webfunction'};
+	$log->debug("Calling webfunction for $id\n");
+	eval {
+		&{$function}($params,$listLength);
+		if(defined($statistics->{$id}->{'namefunction'})) {
+			$params->{'songlist'} = &{$statistics->{$id}->{'namefunction'}}($params);
+		}else {
+			$params->{'songlist'} = $statistics->{$id}->{'name'};
+		}
+		$params->{'songlistid'} = $statistics->{$id}->{'id'};
+
+		my @listRef = ();
+		foreach my $it (@{$params->{'browse_items'}}) {
+			if(defined($params->{'currentstatisticitems'}) && defined($params->{'currentstatisticitems'}->{$it->{'listtype'}})) {
+				$it->{'currentstatisticitems'} = $params->{'currentstatisticitems'}->{$it->{'listtype'}};
+			}
+			$it->{'value'} = $it->{'attributes'};
+			push @listRef, $it;
+		}
+
+		my $baseActions = {
+			'actions' => {
+				'play' => {
+					'cmd' => ['playlist', 'loadtracks'],
+					'itemsParams' => 'baseparams',
+				},
+				'add' => {
+					'cmd' => ['playlist', 'addtracks'],
+					'itemsParams' => 'baseparams',
+				},
+			},
+		};
+		my ($Imports, $mixers) = _mixers();
+		if($params->{'listtype'} eq 'album' ||$params->{'listtype'} eq 'artist' ||  $params->{'listtype'} eq 'genre' || $params->{'listtype'} eq 'track') {
+
+		        # one enabled mixer available
+		        if ( scalar(@$mixers) == 1 ) {
+		                my $mixer = $mixers->[0];
+        	                $baseActions->{'actions'}->{'play-hold'} =  Storable::dclone($Imports->{$mixers->[0]}->{'cliBase'});
+				$baseActions->{'actions'}->{'play-hold'}->{'mixerparams'} = $baseActions->{'params'};
+				delete $baseActions->{'params'};
+				$baseActions->{'actions'}->{'play-hold'}->{'itemsParams'} = 'mixerparams';
+		        } elsif ( scalar(@$mixers) ) {
+				$baseActions->{'actions'}->{'play-hold'} = {
+		                        player => 0,
+		                        cmd    => ['contextmenu'],
+		                        mixerparams => {
+		                                menu => '1',
+		                        },
+		                        itemsParams => 'mixerparams',
+		                };
+       			}
+			$baseActions->{'window'}->{'titleStyle'} = 'album';
+		}
+	
+		$request->addResult('base',$baseActions);		
+
+		setDynamicPlaylistParams($client,$params);
+		if(exists $params->{'dynamicplaylist'}) {
+			my %itemParams = (
+				'playlistid' => $params->{'dynamicplaylist'},
+			);
+			my $actions = {
+				'do' => {
+					'cmd' => ['dynamicplaylist','playlist','continue'],
+					'params' => \%itemParams,
+					'itemParams' => 'params',
+				},
+				'play' => {
+					'cmd' => ['dynamicplaylist','playlist','play'],
+					'params' => \%itemParams,
+					'itemParams' => 'params',
+				},
+				'add' => {
+					'cmd' => ['dynamicplaylist','playlist','add'],
+					'params' => \%itemParams,
+					'itemParams' => 'params',
+				},
+			};
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+
+			$request->addResultLoop('item_loop',$cnt,'text',string('PLUGIN_TRACKSTAT_DYNAMICPLAYLIST'));
+			$request->addResultLoop('item_loop',$cnt,'style','itemplay');
+
+			$cnt++;
+		}
+
+		foreach my $item (@listRef) {
+			my %baseItemParams = ();
+			my %mixerItemParams = ();
+			my %itemParams = ();
+	
+			my $actions = {};
+			my $itemobj = undef;
+			if($item->{'listtype'} eq 'album') {
+				$itemParams{'album'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				$actions->{'go'} = {
+					'cmd' => ['trackstat', 'statisticsjive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'album.id'} = $item->{'itemid'};
+				$mixerItemParams{'album_id'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'album'};
+			}elsif($item->{'listtype'} eq 'artist') {
+				$itemParams{'artist'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				$actions->{'go'} = {
+					'cmd' => ['trackstat', 'statisticsjive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'contributor.id'} = $item->{'itemid'};
+				$mixerItemParams{'contributor_id'} = $item->{'itemid'};
+				$mixerItemParams{'artist_id'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'artist'};
+			}elsif($item->{'listtype'} eq 'genre') {
+				$itemParams{'genre'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				$actions->{'go'} = {
+					'cmd' => ['trackstat', 'statisticsjive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'genre.id'} = $item->{'itemid'};
+				$mixerItemParams{'genre_id'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'genre'};
+			}elsif($item->{'listtype'} eq 'year') {
+				$itemParams{'year'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				$actions->{'go'} = {
+					'cmd' => ['trackstat', 'statisticsjive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'year.id'} = $item->{'itemid'};
+				$mixerItemParams{'year'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'year'};
+			}elsif($item->{'listtype'} eq 'playlist') {
+				$itemParams{'playlist'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				$actions->{'go'} = {
+					'cmd' => ['trackstat', 'statisticsjive'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'playlist.id'} = $item->{'itemid'};
+				$mixerItemParams{'playlist'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'playlist'};
+			}elsif($item->{'listtype'} eq 'track') {
+				$itemParams{'track'} = $item->{'itemid'};
+				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};
+				$itemParams{'statistics'} = $item->{'currentstatisticitems'};
+				my $songInfoParams = {
+					track_id => $item->{'itemid'},
+					menu => 'nowhere',
+					cmd => 'load',
+				};
+				$actions->{'go'} = {
+					'cmd' => ['songinfo'],
+					'params' => $songInfoParams,
+					'itemsParams' => 'params',
+				};
+				$baseItemParams{'track.id'} = $item->{'itemid'};
+				$mixerItemParams{'track_id'} = $item->{'itemid'};
+				$itemobj = $item->{'itemobj'}->{'track'};
+			}
+
+
+			if($params->{'listtype'} eq 'album' ||$params->{'listtype'} eq 'artist' ||  $params->{'listtype'} eq 'genre' || $params->{'listtype'} eq 'track') {
+			        # one enabled mixer available
+			        if ( scalar(@$mixers) == 1 ) {
+			                my $mixer = $mixers->[0];
+			                if ($mixer->mixable($itemobj)) {
+			                        $request->addResultLoop('item_loop', $cnt, 'playHoldAction', 'go');
+			                } else {
+			                        $actions->{'play-hold'} = {
+			                                player => 0,
+			                                cmd    => ['jiveunmixable'],
+			                                params => {
+			                                        contextToken => $Imports->{$mixer}->{contextToken},
+			                                },
+			                        };
+			                }
+			        } elsif ( scalar(@$mixers) ) {
+			                $request->addResultLoop('item_loop', $cnt, 'playHoldAction', 'go');
+	        		}
+				$request->addResultLoop('item_loop',$cnt,'mixerparams',\%mixerItemParams);
+			}
+
+			if(exists $actions->{'go'}) {
+				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			}
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+			$request->addResultLoop('item_loop',$cnt,'baseparams',\%baseItemParams);
+			if(exists $item->{'coverThumb'}) {
+				$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
+			}elsif($item->{'listtype'} eq 'track') {
+				$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'itemid'});
+			}
+			my $text = $item->{'text'}."\n";
+			if($item->{'rating'}) {
+				$text .= string("PLUGIN_TRACKSTAT_RATING").($RATING_CHARACTER x $item->{'rating'})." ".$item->{'ratingnumber'}."\n";
+			}else {
+				$text .= string("PLUGIN_TRACKSTAT_UNRATED")."\n";
+			}
+			$text .= string("PLUGIN_TRACKSTAT_PLAY_COUNT").$item->{'song_count'};
+			$request->addResultLoop('item_loop',$cnt,'text',$text);
+
+			$cnt++;
+		}
+		
+	};
+	if( $@ ) {
+		$log->warn("Error in handleWebStatistics: $@\n");
+	}
+
+
+	my %menuStyle = ();
+	$menuStyle{'titleStyle'} = 'mymusic';
+	$menuStyle{'menuStyle'} = 'album';
+	$menuStyle{'text'} = $params->{'songlist'};
+	$request->addResult('window',\%menuStyle);
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+	$request->setStatusDone();
+	$log->debug("Exiting jiveStatistics\n");
 }
 
 sub getRatingMenu {
@@ -2935,6 +3321,8 @@ sub installHook()
 	Slim::Control::Request::addDispatch(['trackstat', 'changedrating', '_url', '_trackid', '_rating', '_ratingpercent'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedstatistic', '_url', '_trackid', '_playcount','_lastplayed'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat','ratingmenu','_trackid'], [0, 1, 1, \&getRatingMenu]);
+	Slim::Control::Request::addDispatch(['trackstat','browsejive'], [0, 1, 1, \&jiveBrowse]);
+	Slim::Control::Request::addDispatch(['trackstat','statisticsjive'], [0, 1, 1, \&jiveStatistics]);
 	$TRACKSTAT_HOOK=1;
 }
 

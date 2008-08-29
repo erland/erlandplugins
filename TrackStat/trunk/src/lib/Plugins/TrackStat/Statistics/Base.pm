@@ -184,6 +184,7 @@ sub getTracksWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('track').'='.$track->id;
 			$trackInfo{'itemobj'}          = $track;
 			$trackInfo{'listtype'} = 'track';
+			$trackInfo{'itemid'} = $track->id;
 			if(defined($currenttrackstatitem) && $track->id == $currenttrackstatitem) {
 				$trackInfo{'currentsong'} = 1;
 			}
@@ -194,6 +195,7 @@ sub getTracksWeb {
 			$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'track';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
@@ -310,6 +312,7 @@ sub getAlbumsWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('album').'='.$album->id;
 			$trackInfo{'itemobj'}{'album'} = $album;
 			$trackInfo{'listtype'} = 'album';
+			$trackInfo{'itemid'} = $album->id;
 		  	
 			saveMixerLinks(\%trackInfo);
 
@@ -317,6 +320,7 @@ sub getAlbumsWeb {
 		  	$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'album';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
@@ -438,6 +442,7 @@ sub getArtistsWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('artist').'='.$artist->id;
 			$trackInfo{'itemobj'}{'artist'} = $artist;
 			$trackInfo{'listtype'} = 'artist';
+			$trackInfo{'itemid'} = $artist->id;
             
 			saveMixerLinks(\%trackInfo);
             
@@ -445,6 +450,7 @@ sub getArtistsWeb {
 		  	$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'artist';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
@@ -581,6 +587,7 @@ sub getGenresWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('genre').'='.$genre->id;
 			$trackInfo{'itemobj'}{'genre'} = $genre;
 			$trackInfo{'listtype'} = 'genre';
+			$trackInfo{'itemid'} = $genre->id;
             		  	
 			saveMixerLinks(\%trackInfo);
 
@@ -588,6 +595,7 @@ sub getGenresWeb {
 		  	$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'genre';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
@@ -721,11 +729,13 @@ sub getYearsWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('year').'='.$year;
 			$trackInfo{'itemobj'}{'year'} = $year;
 			$trackInfo{'listtype'} = 'year';
+			$trackInfo{'itemid'} = $year;
             		  	
 		  	push @{$params->{'browse_items'}},\%trackInfo;
 		  	$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'year';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
@@ -861,6 +871,7 @@ sub getPlaylistsWeb {
 			$trackInfo{'attributes'}       = '&'.getLinkAttribute('playlist').'='.$playlist->id;
 			$trackInfo{'itemobj'}{'playlist'} = $playlist;
 			$trackInfo{'listtype'} = 'playlist';
+			$trackInfo{'itemid'} = $playlist->id;
             
 			saveMixerLinks(\%trackInfo);
             
@@ -868,6 +879,7 @@ sub getPlaylistsWeb {
 		  	$itemNumber++;
 		  
 		}
+		$params->{'listtype'} = 'playlist';
 		$log->debug("Returning $itemNumber items\n");
 	};
 	if( $@ ) {
