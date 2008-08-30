@@ -972,7 +972,9 @@ sub initPlugin {
 	$manageMenuHandler = Plugins::CustomBrowse::ManageMenus->new($class);
 
 	checkDefaults();
-	Slim::Utils::UPnPMediaServer::registerCallback( \&uPNPCallback );
+	if(UNIVERSAL::can("Slim::Utils::UPnPMediaServer","registerCallback")) {
+		Slim::Utils::UPnPMediaServer::registerCallback( \&uPNPCallback );
+	}
 
 	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
 	$choiceFunctions{'createmix'} = sub {callCallbackWithArg('onCreateMix', @_)};
