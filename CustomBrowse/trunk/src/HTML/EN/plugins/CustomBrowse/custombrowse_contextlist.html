@@ -87,6 +87,7 @@ END;
 					[% IF pluginCustomBrowseCurrentContext and pluginCustomBrowsePlayAddAll %]
 						[% BLOCK allsongscontrols %]
 							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplayall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
+						        [% WRAPPER insertlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextinsertall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextaddall.html?player=[% player | uri %][% pluginCustomBrowseCurrentContext.url %][% pluginCustomBrowseCurrentContext.valueUrl %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
 						[% PROCESS cbcontentitemallsongs %]
@@ -121,6 +122,7 @@ END;
 							-->
 						[% ELSIF item.url %]
 							[% WRAPPER playlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextplay.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+						        [% WRAPPER insertlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextinsert.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
 						        [% WRAPPER addlink noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_contextadd.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
 					[% END %]

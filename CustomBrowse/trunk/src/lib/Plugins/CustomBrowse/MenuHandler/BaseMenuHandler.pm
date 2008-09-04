@@ -1725,10 +1725,14 @@ sub getItemText {
 }
 
 sub playAddItem {
-	my ($self,$client,$listRef, $item, $addOnly,$context) = @_;
+	my ($self,$client,$listRef, $item, $addOnly,$insert, $context) = @_;
 
 	if($addOnly) {
-		$self->_playAddItem($client,$listRef,$item,"addtracks",undef,undef,$context);
+		if($insert) {
+			$self->_playAddItem($client,$listRef,$item,"inserttracks",undef,undef,$context);
+		}else {
+			$self->_playAddItem($client,$listRef,$item,"addtracks",undef,undef,$context);
+		}
 	}else {
 		$self->_playAddItem($client,$listRef,$item,"loadtracks",undef,undef,$context);
 	}

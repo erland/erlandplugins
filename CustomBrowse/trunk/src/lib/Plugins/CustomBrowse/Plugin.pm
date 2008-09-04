@@ -392,7 +392,7 @@ sub musicMagicMix {
 				}
 			}
 		}
-		getMenuHandler()->playAddItem($client,\@trackItems,\%playItem,$addOnly);
+		getMenuHandler()->playAddItem($client,\@trackItems,\%playItem,$addOnly,0);
 		if($interfaceType eq 'player') {
 			Slim::Buttons::Common::popModeRight($client);
 		}
@@ -1073,6 +1073,8 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','playcontext'], [1, 0, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','add'], [1, 0, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','addcontext'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','insert'], [1, 0, 1, \&cliHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','insertcontext'], [1, 0, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixes'], [1, 1, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixescontext'], [1, 1, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mix'], [1, 0, 1, \&cliHandler]);
@@ -1584,11 +1586,15 @@ sub webPages {
                 "CustomBrowse/custombrowse_mixlist\.(?:htm|xml)"     => \&handleWebMixList,
                 "CustomBrowse/custombrowse_add\.(?:htm|xml)"     => \&handleWebAdd,
                 "CustomBrowse/custombrowse_play\.(?:htm|xml)"     => \&handleWebPlay,
+                "CustomBrowse/custombrowse_insert\.(?:htm|xml)"     => \&handleWebInsert,
                 "CustomBrowse/custombrowse_addall\.(?:htm|xml)"     => \&handleWebAddAll,
+                "CustomBrowse/custombrowse_insertall\.(?:htm|xml)"     => \&handleWebInsertAll,
                 "CustomBrowse/custombrowse_playall\.(?:htm|xml)"     => \&handleWebPlayAll,
                 "CustomBrowse/custombrowse_contextadd\.(?:htm|xml)"     => \&handleWebContextAdd,
+                "CustomBrowse/custombrowse_contextinsert\.(?:htm|xml)"     => \&handleWebContextInsert,
                 "CustomBrowse/custombrowse_contextplay\.(?:htm|xml)"     => \&handleWebContextPlay,
                 "CustomBrowse/custombrowse_contextaddall\.(?:htm|xml)"     => \&handleWebContextAddAll,
+                "CustomBrowse/custombrowse_contextinsertall\.(?:htm|xml)"     => \&handleWebContextInsertAll,
                 "CustomBrowse/custombrowse_contextplayall\.(?:htm|xml)"     => \&handleWebContextPlayAll,
         );
 
@@ -2444,7 +2450,7 @@ sub handleWebSaveMenu {
 
 
 sub handleWebPlayAdd {
-	my ($client, $params,$addOnly,$gotoparent,$usecontext) = @_;
+	my ($client, $params,$addOnly,$insert, $gotoparent,$usecontext) = @_;
 	return unless $client;
 	if(!defined($params->{'hierarchy'})) {
 		readBrowseConfiguration($client);
@@ -2482,10 +2488,10 @@ sub handleWebPlayAdd {
 			$contextParams = \%c;
 		}
 		my $it = getContextMenuHandler()->getPageItem($client,$params,$contextParams,0,'web');
-		getContextMenuHandler()->playAddItem($client,undef,$it,$addOnly,$contextParams);
+		getContextMenuHandler()->playAddItem($client,undef,$it,$addOnly,$insert,$contextParams);
 	}else {
 		my $it = getMenuHandler()->getPageItem($client,$params,undef,0,'web');
-		getMenuHandler()->playAddItem($client,undef,$it,$addOnly,undef);
+		getMenuHandler()->playAddItem($client,undef,$it,$addOnly,$insert,undef);
 	}
 
 	my $hierarchy = $params->{'hierarchy'};
@@ -2530,42 +2536,62 @@ sub handleWebPlayAdd {
 }
 sub handleWebPlay {
 	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,0,1);
+	return handleWebPlayAdd($client,$params,0,0,1);
 }
 
 sub handleWebAdd {
 	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,1,1);
+	return handleWebPlayAdd($client,$params,1,0,1);
 }
 
-sub handleWebPlayAll {
-	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,0,0);
-}
-
-sub handleWebAddAll {
-	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,1,0);
-}
-
-sub handleWebContextPlay {
-	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,0,1,1);
-}
-
-sub handleWebContextAdd {
+sub handleWebInsert {
 	my ($client, $params) = @_;
 	return handleWebPlayAdd($client,$params,1,1,1);
 }
 
+sub handleWebPlayAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,0,0);
+}
+
+sub handleWebAddAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,0,0);
+}
+
+sub handleWebInsertAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,1,0);
+}
+
+sub handleWebContextPlay {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,0,0,1,1);
+}
+
+sub handleWebContextAdd {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,0,1,1);
+}
+
+sub handleWebContextInsert {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,1,1,1);
+}
+
 sub handleWebContextPlayAll {
 	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,0,0,1);
+	return handleWebPlayAdd($client,$params,0,0,0,1);
 }
 
 sub handleWebContextAddAll {
 	my ($client, $params) = @_;
-	return handleWebPlayAdd($client,$params,1,0,1);
+	return handleWebPlayAdd($client,$params,1,0,0,1);
+}
+
+sub handleWebContextInsertAll {
+	my ($client, $params) = @_;
+	return handleWebPlayAdd($client,$params,1,1,0,1);
 }
 
 sub handleWebMix {
@@ -3279,6 +3305,11 @@ sub cliJiveHandlerImpl {
 				'params' => \%baseParams,
 				'itemsParams' => 'params',
 			},
+			'add-hold' => {
+				'cmd' => ['custombrowse', 'insert'],
+				'params' => \%baseParams,
+				'itemsParams' => 'params',
+			},
 			'play' => {
 				'cmd' => ['custombrowse', 'play'],
 				'params' => \%baseParams,
@@ -3290,6 +3321,7 @@ sub cliJiveHandlerImpl {
 		$baseMenu->{'actions'}->{'go'}->{'cmd'} = ['custombrowse', 'browsejivecontext'];
 		$baseMenu->{'actions'}->{'play'}->{'cmd'} = ['custombrowse', 'playcontext'];
 		$baseMenu->{'actions'}->{'add'}->{'cmd'} = ['custombrowse', 'addcontext'];
+		$baseMenu->{'actions'}->{'add-hold'}->{'cmd'} = ['custombrowse', 'insertcontext'];
 	}
 	$request->addResult('base',$baseMenu);
 
@@ -3667,6 +3699,10 @@ sub cliHandler {
 		$cmd = 'add';
 	}elsif ($request->isCommand([['custombrowse'],['addcontext']])) {
 		$cmd = 'addcontext';
+	}elsif ($request->isCommand([['custombrowse'],['insert']])) {
+		$cmd = 'insert';
+	}elsif ($request->isCommand([['custombrowse'],['insertcontext']])) {
+		$cmd = 'insertcontext';
 	}elsif ($request->isQuery([['custombrowse'],['mixes']])) {
 		$cmd = 'mixes';
 	}elsif ($request->isQuery([['custombrowse'],['mixescontext']])) {
@@ -3798,8 +3834,8 @@ sub cliHandler {
 			$menuResult = getContextMenuHandler()->getPageItemsForContext($client,$params,$context,0,'cli');	
 		}
 		prepareCLIBrowseResponse($request,$menuResult->{'items'});
-	}elsif($cmd =~ /^play/ || $cmd =~ /^add/) {
-		$log->debug("Starting to prepare CLI play/add/playcontext/addcontext command\n");
+	}elsif($cmd =~ /^play/ || $cmd =~ /^add/ || $cmd =~ /^insert/) {
+		$log->debug("Starting to prepare CLI play/add/insert/playcontext/addcontext/insertcontext command\n");
 		my $menuResult = undef;
 		if($cmd =~ /context$/) {
 			$menuResult = getContextMenuHandler()->getPageItem($client,$params,$context,0,'cli');
@@ -3807,14 +3843,18 @@ sub cliHandler {
 			$menuResult = getMenuHandler()->getPageItem($client,$params,undef,0,'cli');	
 		}
 		my $addOnly = 0;
+		my $insert = 0;
 		if($cmd =~ /^add/) {
 			$addOnly = 1;
+		}elsif($cmd =~ /^insert/) {
+			$addOnly = 1;
+			$insert = 1;
 		}
 		if(defined($menuResult)) {
 			if($cmd =~ /context$/) {
-				getContextMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$context);
+				getContextMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$insert,$context);
 			}else {
-				getMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,undef);
+				getMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$insert,undef);
 			}
 		}
 	}elsif($cmd =~ /^mixes/) {
