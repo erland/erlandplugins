@@ -1729,9 +1729,9 @@ sub playAddItem {
 
 	if($addOnly) {
 		if($insert) {
-			$self->_playAddItem($client,$listRef,$item,"inserttracks",undef,undef,$context);
+			$self->_playAddItem($client,$listRef,$item,"inserttracks","INSERT_TO_PLAYLIST",undef,$context);
 		}else {
-			$self->_playAddItem($client,$listRef,$item,"addtracks",undef,undef,$context);
+			$self->_playAddItem($client,$listRef,$item,"addtracks","ADDING_TO_PLAYLIST",undef,$context);
 		}
 	}else {
 		$self->_playAddItem($client,$listRef,$item,"loadtracks",undef,undef,$context);
@@ -1877,7 +1877,7 @@ sub _playAddItem {
 	if (!defined($subCall) && $wasShuffled) {
         	$client->execute(["playlist", "shuffle", 1]);
         }
-	if(($playedMultiple || defined($request)) && defined($displayString)) {
+	if(($playedMultiple || defined($request)) && defined($displayString) || defined($displayString)) {
 		$self->showBrieflyPlayStatus($client,$displayString,$item);
 	}
 }
