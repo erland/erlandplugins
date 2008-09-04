@@ -115,6 +115,7 @@ $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0,                 
 my %choiceMapping = (
         'arrow_left' => 'exit_left',
         'arrow_right' => 'exit_right',
+	'knob_push' => 'exit_right',
 	'play' => 'play',
         'add' => 'add',
         'search' => 'passback',
