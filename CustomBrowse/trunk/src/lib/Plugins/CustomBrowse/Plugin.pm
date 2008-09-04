@@ -165,6 +165,7 @@ sub getDisplayName {
 my %choiceMapping = (
         'arrow_left' => 'exit_left',
         'arrow_right' => 'exit_right',
+	'knob_push' => 'exit_right',
         'play' => 'dead',
 	'play.single' => 'play_0',
 	'play.hold' => 'createmix',
