@@ -714,6 +714,102 @@ sub getSetModeDataForSubItems {
 	return \%params;
 }
 
+sub getSetModeDataForRating {
+	my $client = shift;
+	my $item = shift;
+
+	my @ratingListRef = ();
+	if($prefs->get("rating_10scale")) {
+		for( my $i=10;$i>0;$i--) {
+			my $rating = {
+				'value' => $i*10,
+				'name' => $i.'/10 '.($RATING_CHARACTER x $i),
+			};
+			push @ratingListRef,$rating;
+		}
+	}else {
+		for( my $i=5;$i>0;$i--) {
+			my $rating = {
+				'value' => $i*20,
+				'name' => $i.'/5 '.($RATING_CHARACTER x $i),
+			};
+			push @ratingListRef,$rating;
+		}
+	}
+	my $unrated = {
+		'value' => 0,
+		'name' => string('PLUGIN_TRACKSTAT_UNRATED'),
+	};
+	push @ratingListRef,$unrated;
+
+	my $title;
+	if(ref($item) eq 'Slim::Schema::Track') {
+		$title = Slim::Music::Info::standardTitle($client,$item);
+	}else {
+		$title = $item->title;
+	}
+	my $realRating;
+	if(ref($item) eq 'Slim::Schema::Track') {
+		my $trackData = Plugins::TrackStat::Storage::findTrack( $item->url,undef,$item);
+		$realRating = $trackData->rating || 0;
+		
+	}elsif(ref($item) eq 'Slim::Schema::Album') {
+		my $albumData = Plugins::TrackStat::Storage::getGroupStatistic('album',$item->id);
+		$realRating = $albumData->{'rating'} || 0;
+	}
+
+	my $prefixString ='';
+	my $index = 0;
+	my $rating = 0;
+	if($prefs->get("rating_10scale")) {
+		$rating = floor(($realRating+5) / 10);
+		$prefixString = $rating.'/10 ';
+		$index = $rating * 10;
+	}else {
+		$rating = floor(($realRating+10) / 20);
+		$prefixString = $rating.'/5 ';
+		$index = $rating * 20;
+	}
+	if($rating>0) {
+		$title .= ' ('.$prefixString.($RATING_CHARACTER x $rating).')';
+	}
+
+	my %params = (
+		initialValue => $index,
+		header     => $title,
+		listRef    => \@ratingListRef,
+		overlayRef => sub {
+			my ($client, $item) = @_;
+			return [undef, $client->symbols('rightarrow')];
+		},
+		modeName   => 'Plugins::TrackStat::Plugin.contextMenuRating',
+		onRight    => sub {
+			my ($client, $item) = @_;
+			my $selectedItem = $client->modeParam('selectedItem');
+			if(ref($selectedItem) eq 'Slim::Schema::Track') {
+				rateSong($client,$selectedItem->url,$item->{'value'});
+			}elsif(ref($selectedItem) eq 'Slim::Schema::Album') {
+				my $unratedTracks;
+				if($item->{'value'}==0 || $prefs->get("force_grouprating")) {
+					$unratedTracks = Plugins::TrackStat::Storage::getTracksOnAlbum($selectedItem->id);
+				}else {
+					$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($selectedItem->id);
+				}
+				foreach my $url (@$unratedTracks) {
+					rateSong($client,$url,$item->{'value'});
+				}			
+			}
+			Slim::Buttons::Common::popMode($client);
+			Slim::Buttons::Common::popMode($client);
+			$client->showBriefly({
+				'line' => [$client->string( 'PLUGIN_TRACKSTAT'),$client->string( 'PLUGIN_TRACKSTAT_RATING').$item->{'name'}]},
+				1);
+		},
+		selectedItem => $item,
+	);
+	return \%params;
+}
+
 sub getDetailItems {
 	my $client = shift;
 	my $currentItem = shift;
@@ -2453,6 +2549,120 @@ sub postinitPlugin {
 		}
 	}
 	use strict 'refs';
+	registerContextMenu();
+}
+
+sub registerContextMenu {
+	if(isPluginsInstalled(undef,'ContextMenu::Plugin')) {
+		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
+		if ( defined($contextMenuApi) && ($contextMenuApi >= 0.67) ) {
+			Plugins::ContextMenu::Public::registerContextChoice( { 
+				uid => 'plugin.TrackStat.menu',
+				coderef => sub  {
+					my $parameters = shift;
+					
+					my $client = $parameters->{'client'};
+					my $selectedItem = $parameters->{'selected'};
+		
+					if($selectedItem && (ref($selectedItem) eq 'Slim::Schema::Contributor' || 
+						ref($selectedItem) eq 'Slim::Schema::Album' ||
+						ref($selectedItem) eq 'Slim::Schema::Playlist' ||
+						ref($selectedItem) eq 'Slim::Schema::Year' ||
+						ref($selectedItem) eq 'Slim::Schema::Genre')) {
+
+						if(ref($selectedItem) ne 'Slim::Schema::Contributor' ||  Slim::Schema->variousArtistsObject->id ne $selectedItem->id) { 
+
+							return ({
+								'label' => $client->string('PLUGIN_TRACKSTAT_BROWSEBYSELECTED'),
+								'coderef' => \&contextMenuTrackStatMenu,
+								'execargs' => ({
+									'item' => $selectedItem,
+								}),
+							});
+						}
+					}
+					return undef;
+				},
+				displayname => string('PLUGIN_TRACKSTAT_BROWSEBYSELECTED'),
+				pluginname => string('PLUGIN_TRACKSTAT'),
+			} );
+			Plugins::ContextMenu::Public::registerContextChoice( { 
+				uid => 'plugin.TrackStat.rating',
+				coderef => sub  {
+					my $parameters = shift;
+					
+					my $client = $parameters->{'client'};
+					my $selectedItem = $parameters->{'selected'};
+		
+					if($selectedItem && (ref($selectedItem) eq 'Slim::Schema::Album' ||
+						ref($selectedItem) eq 'Slim::Schema::Track')) {
+
+						return ({
+							'label' => $client->string('PLUGIN_TRACKSTAT_CONTEXTMENU_RATING'),
+							'coderef' => \&contextMenuTrackStatRating,
+							'execargs' => ({
+								'item' => $selectedItem,
+							}),
+						});
+					}
+					return undef;
+				},
+				displayname => string('PLUGIN_TRACKSTAT_CONTEXTMENU_RATING'),
+				pluginname => string('PLUGIN_TRACKSTAT'),
+			} );
+		}
+	}
+}
+
+sub contextMenuTrackStatMenu {
+	my $params = shift;
+	my $client = $params->{'client'};
+	my $item = $params->{'execargs'}->{'item'};
+
+	my %p = ();
+	if($item && ref($item) eq 'Slim::Schema::Contributor') {
+		%p = (
+			'artist' => $item->id,
+			'statistictype' => 'artist',
+			'flatlist' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Album') {
+		%p = (
+			'album' => $item->id,
+			'statistictype' => 'album',
+			'flatlist' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Playlist') {
+		%p = (
+			'playlist' => $item->id,
+			'statistictype' => 'playlist',
+			'flatlist' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Genre') {
+		%p = (
+			'genre' => $item->id,
+			'statistictype' => 'genre',
+			'flatlist' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Year') {
+		%p = (
+			'year' => $item->id,
+			'statistictype' => 'year',
+			'flatlist' => 1,
+		);
+	}
+
+	Slim::Buttons::Common::pushModeLeft($client,'Plugins::TrackStat::Plugin',\%p);
+	$client->update();
+}
+
+sub contextMenuTrackStatRating {
+	my $params = shift;
+	my $client = $params->{'client'};
+	my $item = $params->{'execargs'}->{'item'};
+
+	Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',getSetModeDataForRating($client,$item));
+	$client->update();
 }
 
 sub registerJiveMenu {
