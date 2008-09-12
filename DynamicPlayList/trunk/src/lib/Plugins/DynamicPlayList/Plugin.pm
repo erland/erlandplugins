@@ -3262,6 +3262,9 @@ sub cliPlayPlaylist {
   	my $playlistId    = $request->getParam('playlistid');
 	if(!defined($playlistId)) {
 		$playlistId = $request->getParam('_p3');
+		if(!defined($playlistId)) {
+			$playlistId = $request->getParam('_p0');
+		}
 	}
 	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
@@ -3308,6 +3311,9 @@ sub cliContinuePlaylist {
   	my $playlistId    = $request->getParam('playlistid');
 	if(!defined($playlistId)) {
 		$playlistId = $request->getParam('_p3');
+		if(!defined($playlistId)) {
+			$playlistId = $request->getParam('_p0');
+		}
 	}
 	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
@@ -3354,6 +3360,9 @@ sub cliAddPlaylist {
   	my $playlistId    = $request->getParam('playlistid');
 	if(!defined($playlistId)) {
 		$playlistId = $request->getParam('_p3');
+		if(!defined($playlistId)) {
+			$playlistId = $request->getParam('_p0');
+		}
 	}
 	if($playlistId =~ /^?playlistid:(.+)$/) {
 		$playlistId = $1;
