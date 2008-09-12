@@ -460,10 +460,12 @@ sub playRandom {
 	my $count = 0;
 	if ($numItems) {
 		unless ($addOnly) {
-			my $request = $client->execute(['stop']);
-			$request->source('PLUGIN_DYNAMICPLAYLIST');
+			if($client->playmode ne "stop") {
+				my $request = $client->execute(['stop']);
+				$request->source('PLUGIN_DYNAMICPLAYLIST');
+			}
 			if(!$client->power()) {
-				$request = $client->execute(['power', '1']);
+				my $request = $client->execute(['power', '1']);
 				$request->source('PLUGIN_DYNAMICPLAYLIST');
 			}
 		}

@@ -25,7 +25,7 @@ sub overridePlayback {
 		return undef;
 	}
 
-	$client->execute(["dynamicplaylist", "playlist", "play", "$1"]);
+	$client->execute(["dynamicplaylist", "playlist", "play", "playlistid:$1"]);
 
 	return 1;
 }
