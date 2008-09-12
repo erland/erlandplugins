@@ -4,15 +4,15 @@
 [% PROCESS plugins/TrackStat/settings/subpage_chooser.html %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR" desc="SETUP_PLUGIN_TRACKSTAT_BACKUP_DIR_DESC" %]
-		<input type="text" class="stdedit selectFolder" name="backup_dir" id="backupd_dir" value="[% prefs.backup_dir %]" size="40">
+		<input type="text" class="stdedit selectFolder" name="pref_backup_dir" id="backupd_dir" value="[% prefs.backup_dir %]" size="40">
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME" desc="SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME_DESC" %]
-		<input type="text" class="stdedit" name="backup_time" id="backup_time" value="[% prefs.backup_time %]" size="3">
+		<input type="text" class="stdedit" name="pref_backup_time" id="backup_time" value="[% prefs.backup_time %]" size="3">
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE" desc="SETUP_PLUGIN_TRACKSTAT_BACKUP_FILE_DESC" %]
-		<input type="text" class="stdedit selectFile" name="backup_file" id="backupd_file" value="[% prefs.backup_file %]" size="40">
+		<input type="text" class="stdedit selectFile" name="pref_backup_file" id="backupd_file" value="[% prefs.backup_file %]" size="40">
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_BACKUP" desc="SETUP_PLUGIN_TRACKSTAT_BACKUP_DESC" %]
