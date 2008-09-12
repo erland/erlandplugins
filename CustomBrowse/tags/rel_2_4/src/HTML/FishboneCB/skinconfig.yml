@@ -1,0 +1,6 @@
+---
+skinparents:
+ - Fishbone
+preprocess:
+ - cmdwrappers_Fishbone
+ - cmdwrappers_FishboneCB
