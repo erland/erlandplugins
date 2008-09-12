@@ -3,21 +3,21 @@
 
 [% PROCESS plugins/CustomBrowse/settings/subpage_chooser.html %]
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS" desc="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS_DESC" %]
-		<select name="replacewebmenus">
+		<select name="pref_replacewebmenus">
 			<option value="1" [% IF prefs.replacewebmenus %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.replacewebmenus %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_PLAYER_MENUS" desc="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_PLAYER_MENUS_DESC" %]
-		<select name="replaceplayermenus">
+		<select name="pref_replaceplayermenus">
 			<option value="1" [% IF prefs.replaceplayermenus %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.replaceplayermenus %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_CONTROLLER_MENUS" desc="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_CONTROLLER_MENUS_DESC" %]
-		<select name="replacecontrollermenus">
+		<select name="pref_replacecontrollermenus">
 			<option value="1" [% IF prefs.replacecontrollermenus %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.replacecontrollermenus %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
