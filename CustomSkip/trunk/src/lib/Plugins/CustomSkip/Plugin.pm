@@ -1708,6 +1708,54 @@ sub initPlugin {
 sub postinitPlugin {
 	initFilterTypes();
 	initFilters();
+	registerContextMenus();
+}
+
+sub registerContextMenus {
+	if(UNIVERSAL::can("Plugins::ContextMenu::Public","registerContextChoice")) {
+		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
+		if ( defined($contextMenuApi) && ($contextMenuApi >= 0.65) ) {
+			Plugins::ContextMenu::Public::registerContextChoice( { 
+				uid => 'plugin.CustomSkip.createmodifyfilter',
+				coderef => sub  {
+					my $parameters = shift;
+					
+					my $client = $parameters->{'client'};
+					my $selectedItem = $parameters->{'selected'};
+					if(!$mixTypes) {
+						initFilterTypes();
+					}
+
+					if($selectedItem && (ref($selectedItem) eq 'Slim::Schema::Contributor' || 
+						ref($selectedItem) eq 'Slim::Schema::Album' ||
+						ref($selectedItem) eq 'Slim::Schema::Track' ||
+						ref($selectedItem) eq 'Slim::Schema::Playlist' ||
+						ref($selectedItem) eq 'Slim::Schema::Year' ||
+						ref($selectedItem) eq 'Slim::Schema::Genre')) {
+
+						my $mixerType = ref($selectedItem);
+						$mixerType =~ s/^Slim::Schema:://;
+						$mixerType = lc($mixerType);
+						if($mixerType eq 'contributor') {
+							$mixerType='artist';
+						}
+						if($mixTypes->{$mixerType} && ($mixerType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $selectedItem->id)) { 
+							return ({
+								'label' => $client->string('PLUGIN_CUSTOMSKIP'),
+								'coderef' => \&contextMenu,
+								'execargs' => ({
+									'item' => $selectedItem,
+								}),
+							});
+						}
+					}
+					return undef;
+				},
+				displayname => string('PLUGIN_CUSTOMSKIP'),
+				pluginname => string('PLUGIN_CUSTOMSKIP'),
+			} );
+		}
+	}
 }
 
 sub title {
@@ -2972,6 +3020,57 @@ sub getFunctions {
 	}
 }
 
+sub contextMenu {
+	my $params = shift;
+	my $client = $params->{'client'};
+	my $item = $params->{'execargs'}->{'item'};
+
+	my %p = ();
+	if($item && ref($item) eq 'Slim::Schema::Contributor') {
+		%p = (
+			'filtertype' => 'artist',
+			'item' => $item,
+			'customskip_parameter_1' => $item->id,
+			'extrapopmode' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Album') {
+		%p = (
+			'filtertype' => 'album',
+			'item' => $item,
+			'customskip_parameter_1' => $item->id,
+			'extrapopmode' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Playlist') {
+		%p = (
+			'filtertype' => 'playlist',
+			'item' => $item,
+			'customskip_parameter_1' => $item->id,
+			'extrapopmode' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Genre') {
+		%p = (
+			'filtertype' => 'genre',
+			'item' => $item,
+			'customskip_parameter_1' => $item->id,
+			'extrapopmode' => 1,
+		);
+	}elsif($item && ref($item) eq 'Slim::Schema::Year') {
+		%p = (
+			'filtertype' => 'year',
+			'item' => $item,
+			'customskip_parameter_1' => $item->id,
+			'extrapopmode' => 1,
+		);
+	}
+
+	if($item && ref($item) eq 'Slim::Schema::Track') {
+		trackMix($client,$item);
+		$client->update();
+	}else {
+		Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.CustomSkipMix',\%p);
+		$client->update();
+	}
+}
 sub checkDefaults {
 	my $prefVal = $prefs->get('global_skipping');
 	if (! defined $prefVal) {
