@@ -907,9 +907,12 @@ sub powerCallback($)
 		{
 			my $power = $request->getParam('_newvalue');
 			if($power) {
-				$log->debug("Asking for library\n");
-				Slim::Buttons::Common::pushMode($client,'Plugins::MultiLibrary::Plugin',undef);
-				$client->update();
+				#Ask for library unless the player is powered on due to an alarm
+				if(!$request->source() || $request->source() ne 'ALARM') {
+					$log->debug("Asking for library\n");
+					Slim::Buttons::Common::pushMode($client,'Plugins::MultiLibrary::Plugin',undef);
+					$client->update();
+				}
 			}
 		}
 	}
