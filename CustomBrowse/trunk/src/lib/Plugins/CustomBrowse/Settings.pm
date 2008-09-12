@@ -60,7 +60,7 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator properties));
+        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator));
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;
@@ -81,7 +81,9 @@ sub handler {
 				$properties->{$name} = $paramRef->{'property_value_new'};
 			}
 		}
-		$paramRef->{'properties'} = $properties;
+		$paramRef->{'prefs'}->{'properties'} = $properties;
+	}else {
+		$paramRef->{'prefs'}->{'properties'} = $prefs->get('properties');
 	}
 	my $result = $class->SUPER::handler($client, $paramRef);
 	if ($paramRef->{'saveSettings'}) {
