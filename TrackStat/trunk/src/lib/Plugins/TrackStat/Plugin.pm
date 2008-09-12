@@ -1358,12 +1358,12 @@ sub handlePlayAdd {
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'add') {
 			$first = 0;
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'playdynamic') {
-			my $request = $client->execute(['dynamicplaylist', 'playlist', 'play', $params->{'dynamicplaylist'}]);
+			my $request = $client->execute(['dynamicplaylist', 'playlist', 'play', 'playlistid:'.$params->{'dynamicplaylist'}]);
 			# indicate request source
 			$request->source('PLUGIN_TRACKSTAT');
 			return;
 		}elsif($params->{trackstatcmd} and $params->{trackstatcmd} eq 'adddynamic') {
-			my $request = $client->execute(['dynamicplaylist', 'playlist', 'add', $params->{'dynamicplaylist'}]);
+			my $request = $client->execute(['dynamicplaylist', 'playlist', 'add', 'playlistid:'.$params->{'dynamicplaylist'}]);
 			# indicate request source
 			$request->source('PLUGIN_TRACKSTAT');
 			return;
