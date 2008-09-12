@@ -24,30 +24,30 @@
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP" desc="SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP_DESC" %]
-		<select name="refresh_startup">
-			<option value="1" [% IF prefs.refresh_startup %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.refresh_startup %]selected[% END %]>[% "OFF" | string %]</option>
+		<select name="pref_refresh_startup">
+			<option value="1" [% IF prefs.refresh_startup %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.refresh_startup %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSCAN_REFRESH_RESCAN" desc="SETUP_PLUGIN_CUSTOMSCAN_REFRESH_RESCAN_DESC" %]
-		<select name="refresh_rescan">
-			<option value="1" [% IF prefs.refresh_rescan %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.refresh_rescan %]selected[% END %]>[% "OFF" | string %]</option>
+		<select name="pref_refresh_rescan">
+			<option value="1" [% IF prefs.refresh_rescan %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.refresh_rescan %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN" desc="SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN_DESC" %]
-		<select name="auto_rescan">
-			<option value="1" [% IF prefs.auto_rescan %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.auto_rescan %]selected[% END %]>[% "OFF" | string %]</option>
+		<select name="pref_auto_rescan">
+			<option value="1" [% IF prefs.auto_rescan %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.auto_rescan %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS" desc="SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS_DESC" %]
-		<select name="long_urls">
-			<option value="1" [% IF prefs.long_urls %]selected[% END %]>[% "ON" | string %]</option>
-			<option value="0" [% IF NOT prefs.long_urls %]selected[% END %]>[% "OFF" | string %]</option>
+		<select name="pref_long_urls">
+			<option value="1" [% IF prefs.long_urls %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.long_urls %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
 
