@@ -237,10 +237,8 @@ sub selectLibrary {
 
 	my $key = undef;
 	if(defined($client)) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		$key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 	}
 	if(defined($key) && defined($libraryId) && defined($libraries->{$libraryId})) {
 		$currentLibrary{$key} = $libraryId;
