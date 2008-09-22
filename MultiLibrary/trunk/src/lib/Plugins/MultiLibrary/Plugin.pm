@@ -1281,13 +1281,11 @@ sub webPages {
 sub getCurrentLibrary {
 	my $client = shift;
 	if(defined($client)) {
+		$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
 		if(!$libraries) {
 			initLibraries();
 		}
 		my $key = $client;
-		if(defined($client->syncgroupid)) {
-			$key = "SyncGroup".$client->syncgroupid;
-		}
 		if(defined($currentLibrary{$key}) && defined($libraries->{$currentLibrary{$key}}) && isLibraryEnabledForClient($client,$libraries->{$currentLibrary{$key}})) {
 			return $libraries->{$currentLibrary{$key}};
 		}else {
@@ -1306,8 +1304,6 @@ sub getCurrentLibrary {
 				}
 			}
 		}	
-	}
-	if(defined($client)) {
 		$prefs->client($client)->delete('activelibrary');
 	}
 	return undef;
