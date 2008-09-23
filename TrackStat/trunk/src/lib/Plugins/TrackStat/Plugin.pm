@@ -4694,24 +4694,24 @@ sub isTimeOrEmpty {
         my $name = shift;
         my $arg = shift;
         if(!$arg || $arg eq '') {
-                return $arg;
+                return 1;
         }elsif ($arg =~ m/^([0\s]?[0-9]|1[0-9]|2[0-4]):([0-5][0-9])\s*(P|PM|A|AM)?$/isg) {
-                return $arg;
+                return 1;
 
         }
-	return undef;
+	return 0;
 }
 
 sub isWritableFile {
         my $name = shift;
         my $arg = shift;
         if(!$arg || $arg eq '') {
-                return $arg;
+                return 1;
         }elsif (-e dirname($arg) && !-d $arg) {
-                return $arg;
+                return 1;
 
         }
-	return undef;
+	return 0;
 }
 
 # other people call us externally.
