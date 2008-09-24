@@ -11,7 +11,6 @@
 		<menu>
 			<id>track</id>
 			<itemtype>track</itemtype>
-			<itemformat>track</itemformat>
 			[%- IF defaultsort %]<defaultoption>[% defaultsort %]</defaultoption>[% END %]
 			<menulinks>alpha</menulinks>
 			<itemformat>track</itemformat>
