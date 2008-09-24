@@ -26,7 +26,7 @@
 				<name>Sort by last added</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select tracks.id,tracks.title from tracks[% IF includedgenres %],track_statistics,genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from tracks,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.url=track_statistics.url and
 						[%- IF library or activelibrary %]
@@ -77,7 +77,7 @@
 				<name>Sort by last played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select tracks.id,tracks.title from tracks[% IF includedgenres %],track_statistics,genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from tracks,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.url=track_statistics.url and
 						[%- IF library or activelibrary %]
@@ -128,7 +128,7 @@
 				<name>Sort by most played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select tracks.id,tracks.title from tracks[% IF includedgenres %],track_statistics,genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from tracks,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.url=track_statistics.url and
 						[%- IF library or activelibrary %]
@@ -179,7 +179,7 @@
 				<name>Sort by top rated</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					select tracks.id,tracks.title from tracks[% IF includedgenres %],track_statistics,genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+					select tracks.id,tracks.title from tracks,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.url=track_statistics.url and
 						[%- IF library or activelibrary %]
@@ -227,7 +227,7 @@
 			</option>
 			[% END %]
 			<menudata>
-				select tracks.id,tracks.title from tracks[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+				select tracks.id,tracks.title,substr(tracks.titlesort,1,1) from tracks[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 				where
 					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
