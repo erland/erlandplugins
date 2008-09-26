@@ -30,6 +30,7 @@ use Class::Struct;
 use POSIX qw(floor);
 use DBI qw(:sql_types);
 use Plugins::CustomScan::Validators;
+use LWP::UserAgent;
 
 my $lastMusicMagicFinishTime = undef;
 my $lastMusicMagicDate = 0;
@@ -110,7 +111,14 @@ sub getCustomScanFunctions {
 				'description' => 'Continously write statistics to MusicIP when ratings are changed and songs are played in SlimServer',
 				'type' => 'checkbox',
 				'value' => defined($prefs->get("musicmagic_enabled"))?$prefs->get("musicmagic_enabled"):0
-			}
+			},
+			{
+				'id' => 'musicmagictimeout',
+				'name' => 'Timeout',
+				'description' => 'Timeout in requests towards MusicIP',
+				'type' => 'text',
+				'value' => $serverPrefs->get("remotestreamtimeout")||15
+			},
 		]
 	);
 	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
@@ -188,21 +196,15 @@ sub doneScanning {
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");;
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	$prefs->debug("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-        	'url'    => "http://$hostname:$port/api/flush",
-        	'create' => 0,
-    	});
+	my $http = LWP::UserAgent->new;
     	if(defined($http)) {
-    		my $result = $http->content;
-	    	$http->close();
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+    		my $result = $http->get("http://$hostname:$port/api/flush");
 	}
-	$http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$musicmagicurl",
-		'create' => 0,
-	});
+	$http = LWP::UserAgent->new;
 	if(defined($http)) {
-		my $modificationTime = $http->content();
-		$http->close();
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $modificationTime = $http->get($musicmagicurl);
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
@@ -254,60 +256,51 @@ sub handleTrack {
 	$url = getMusicMagicURL($url);
 	if($rating && $rating>0) {
 		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
-		my $http = Slim::Player::Protocols::HTTP->new({
-	        'url'    => "$musicmagicurl",
-	        'create' => 0,
-	    });
-	    if(defined($http)) {
-	    	my $result = $http->content;
-	    	$http->close();
-	    	chomp $result;
+		my $http = LWP::UserAgent->new;
+		if(defined($http)) {
+			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+			my $result = $http->get($musicmagicurl);
+			chomp $result;
 	    	
-	    	if($result && $result>0) {
-	    		$prefs->debug("Set Rating=$rating for $url\n");
-	    	}else {
-	    		$prefs->warn("Failure setting Rating=$rating for $url\n");
-	    	}
+			if($result && $result>0) {
+				$prefs->debug("Set Rating=$rating for $url\n");
+			}else {
+				$prefs->warn("Failure setting Rating=$rating for $url\n");
+			}
 		}else {
 			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 	if($playCount) {
 		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
-		my $http = Slim::Player::Protocols::HTTP->new({
-	        'url'    => "$musicmagicurl",
-	        'create' => 0,
-	    });
-	    if(defined($http)) {
-	    	my $result = $http->content;
-	    	$http->close();
-	    	chomp $result;
+		my $http = LWP::UserAgent->new;
+		if(defined($http)) {
+			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+			my $result = $http->get($musicmagicurl);
+			chomp $result;
 	    	
-	    	if($result && $result>0) {
-	    		$prefs->debug("Set PlayCount=$playCount for $url\n");
-	    	}else {
-	    		$prefs->warn("Failure setting PlayCount=$playCount for $url\n");
-	    	}
+			if($result && $result>0) {
+				$prefs->debug("Set PlayCount=$playCount for $url\n");
+			}else {
+				$prefs->warn("Failure setting PlayCount=$playCount for $url\n");
+			}
 		}else {
 			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 	if($lastPlayed) {
 		my $musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
-		my $http = Slim::Player::Protocols::HTTP->new({
-	        'url'    => "$musicmagicurl",
-	        'create' => 0,
-	    });
-	    if(defined($http)) {
-	    	my $result = $http->content;
-	    	$http->close();
-	    	chomp $result;
-	    	
-	    	if($result && $result>0) {
-	    		$prefs->debug("Set LastPlayed=$lastPlayed for $url\n");
-	    	}else {
-	    		$prefs->warn("Failure setting LastPlayed=$lastPlayed for $url\n");
-	    	}
+		my $http = LWP::UserAgent->new;
+		if(defined($http)) {
+			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+			my $result = $http->get($musicmagicurl);
+			chomp $result;
+			
+			if($result && $result>0) {
+				$prefs->debug("Set LastPlayed=$lastPlayed for $url\n");
+			}else {
+				$prefs->warn("Failure setting LastPlayed=$lastPlayed for $url\n");
+			}
 		}else {
 			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
 		}
@@ -382,26 +375,20 @@ sub exportRating {
 			my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 			my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
 			$prefs->debug("Calling: $musicmagicurl\n");
-			my $http = Slim::Player::Protocols::HTTP->new({
-				'url'    => "$musicmagicurl",
-				'create' => 0,
-			});
+			my $http = LWP::UserAgent->new;
 			if(defined($http)) {
-				my $result = $http->content;
+				$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+				my $result = $http->get($musicmagicurl);
 				chomp $result;
 				if($result eq "1") {
 					$prefs->debug("Success setting Music Magic rating\n");
 				}else {
 					$prefs->warn("Error setting Music Magic rating, error code = $result\n");
 				}
-				$http->close();
-				$http = Slim::Player::Protocols::HTTP->new({
-					'url'    => "http://$hostname:$port/api/flush",
-					'create' => 0,
-				});
+				$http = LWP::UserAgent->new;
 				if(defined($http)) {
-					$result = $http->content;
-					$http->close();
+					$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+					$result = $http->get("http://$hostname:$port/api/flush");
 				}
 			}else {
 				$prefs->warn("Failure setting Music Magic rating\n");

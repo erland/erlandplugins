@@ -28,6 +28,7 @@ use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use DBI qw(:sql_types);
 use Plugins::CustomScan::Validators;
+use LWP::UserAgent;
 
 my $prefs = preferences('plugin.trackstat');
 my $serverPrefs = preferences('server');
@@ -99,7 +100,14 @@ sub getCustomScanFunctions {
 				'description' => 'SlimServer uses UTF-8 encoded filesystem',
 				'type' => 'checkbox',
 				'value' => (Slim::Utils::OSDetect::OS() eq 'win')?0:1
-			}
+			},
+			{
+				'id' => 'musicmagictimeout',
+				'name' => 'Timeout',
+				'description' => 'Timeout in requests towards MusicIP',
+				'type' => 'text',
+				'value' => $serverPrefs->get("remotestreamtimeout")||15
+			},
 		]
 	);
 	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
@@ -124,13 +132,10 @@ sub isMusicLibraryFileChanged {
 	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
-	my $http = Slim::Player::Protocols::HTTP->new({
-        'url'    => "$musicmagicurl",
-        'create' => 0,
-    });
-    if(defined($http)) {
-		my $modificationTime = $http->content();
-		$http->close();
+	my $http = LWP::UserAgent->new;
+	if(defined($http)) {
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $modificationTime = $http->get($musicmagicurl);
 		chomp $modificationTime;
 
 		# Set this so others can use it without going through Prefs in a tight loop.
@@ -176,16 +181,13 @@ sub initScanTrack {
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/songs?extended";
 	$log->debug("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$musicmagicurl",
-		'create' => 0,   
-        });
+	my $http = LWP::UserAgent->new;
 	if(defined($http)) {
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
 		$log->debug("Got answer from Music Magic after ".(time() - $MusicMagicScanStartTime)." seconds\n");
 		
-		@songs = split(/\n\n/, $http->content);
+		@songs = split(/\n\n/, $http->get($musicmagicurl));
 		$log->debug("Got ".scalar(@songs)." number of songs\n");
-		$http->close();
 
 	}else {
 		$log->warn("Failure answer from Music Magic\n");
@@ -203,13 +205,10 @@ sub doneScanning {
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	$log->debug("Calling: $musicmagicurl\n");
-	my $http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$musicmagicurl",
-		'create' => 0,
-	});
+	my $http = LWP::UserAgent->new;
 	if(defined($http)) {
-		my $modificationTime = $http->content();
-		$http->close();
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $modificationTime = $http->get($musicmagicurl);
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
