@@ -460,7 +460,7 @@ sub playRandom {
 	my $count = 0;
 	if ($numItems) {
 		unless ($addOnly) {
-			if($client->playmode ne "stop") {
+			if(Slim::Player::Source::playmode($client) ne "stop") {
 				my $request = $client->execute(['stop']);
 				$request->source('PLUGIN_DYNAMICPLAYLIST');
 			}
