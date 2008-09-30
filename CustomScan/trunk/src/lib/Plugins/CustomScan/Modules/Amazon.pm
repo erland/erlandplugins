@@ -30,7 +30,9 @@ use Text::Unidecode;
 use POSIX qw(ceil);
 use Slim::Utils::Prefs;
 use Plugins::CustomScan::Validators;
+use LWP::UserAgent;
 my $prefs = preferences('plugin.customscan');
+my $serverPrefs = preferences('server');
 
 my $lastCalled = undef;
 
@@ -69,7 +71,14 @@ sub getCustomScanFunctions {
 				'id' => 'writeamazonrating',
 				'type' => 'checkbox',
 				'value' => 0
-			}
+			},
+			{
+				'id' => 'amazontimeout',
+				'name' => 'Timeout',
+				'description' => 'Timeout in requests towards Amazon web services',
+				'type' => 'text',
+				'value' => $serverPrefs->get("remotestreamtimeout")||15
+			},
 		]
 	);
 	return \%functions;
@@ -83,7 +92,7 @@ sub scanAlbum {
 	my $accessKey = Plugins::CustomScan::Plugin::getCustomScanProperty("amazonaccesskey");
 	#If the user doesn't have a access key there is no use to continue
 	if(!$accessKey || $accessKey eq 'XXX') {
-		msg ("CustomScan:Amazon: The Amazon scanning module wont work unless you register your amazon access key, see README.txt for more information\n");
+		$log->warn("The Amazon scanning module wont work unless you register your amazon access key, see README.txt for more information\n");
 		return \@result;
 	}
 
@@ -104,17 +113,16 @@ sub scanAlbum {
 	$log->debug("Calling url: $url\n");
 	my $currentTime = time();
 
-	# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
+	# We need to wait for 1-2 seconds to not overload Amazon web services (this is specified in their license)
 	if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
 		sleep(1);
 	}
-	my $http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$url",
-		'create' => 0, 	 
-	});
+	my $http = LWP::UserAgent->new;
 	$lastCalled = time();
-	if(defined($http)) {
-		my $xml = eval { XMLin($http->content, forcearray => ["Item","Subject","Review"], keyattr => []) };
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("amazontimeout"));
+	my $response = $http->get($url);
+	if($response->is_success) {
+		my $xml = eval { XMLin($response->content, forcearray => ["Item","Subject","Review"], keyattr => []) };
 		if ($@) {
 			$log->debug("Got xml:\n".Dumper($xml)."\n");
 			$log->error("AmazonScan: Failed to parse XML: $@\n");
@@ -156,19 +164,31 @@ sub scanAlbum {
 					push @result,\%item;
 				}
 				#URL can be accessed as: http://www.amazon.com/o/ASIN/<asin>
+			}else {
+				if($artist) {
+					$log->info("No amazon.com data found for $title by $artist");
+				}else {
+					$log->info("No amazon.com data found for $title");
+				}
 			}
 		}
-		$http->close();
+	}else {
+		if($artist) {
+			$log->warn("Unable to retrieve amazon.com data for $title by $artist: ".$response->status_line);
+		}else {
+			$log->warn("Unable to retrieve amazon.com data for $title: ".$response->status_line);
+		}
+	}
+
+	if($response->is_success || $response->status_line =~ /^404/) {
+		# Lets just add dummy item to store that we have scanned this artist
+		my %item = (
+			'name' => 'retrieved',
+			'value' => 1
+		);
+		push @result,\%item;
 	}
 	$http = undef;
-
-
-	# Lets just add dummy item to store that we have scanned this artist
-	my %item = (
-		'name' => 'retrieved',
-		'value' => 1
-	);
-	push @result,\%item;
 
 	return \@result;
 }

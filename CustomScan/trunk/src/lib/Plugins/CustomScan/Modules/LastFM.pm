@@ -31,7 +31,9 @@ use File::Spec::Functions qw(:ALL);
 #use Data::Dumper;
 use Slim::Utils::Prefs;
 use Plugins::CustomScan::Validators;
+use LWP::UserAgent;
 my $prefs = preferences('plugin.customscan');
+my $serverPrefs = preferences('server');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.customscan',
@@ -73,7 +75,14 @@ sub getCustomScanFunctions {
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => ''
-			}
+			},
+			{
+				'id' => 'lastfmtimeout',
+				'name' => 'Timeout',
+				'description' => 'Timeout in requests towards LastFM',
+				'type' => 'text',
+				'value' => $serverPrefs->get("remotestreamtimeout")||15
+			},
 		]
 	);
 	return \%functions;
@@ -98,13 +107,12 @@ sub scanArtist {
 	if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
 		sleep(1);
 	}
-	my $http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$url",
-		'create' => 0, 	 
-	});
+	my $http = LWP::UserAgent->new;
 	$lastCalled = time();
-	if(defined($http)) {
-		my $xml = eval { XMLin($http->content, forcearray => ["artist"], keyattr => []) };
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtimeout"));
+	my $response = $http->get($url);
+	if($response->is_success) {
+		my $xml = eval { XMLin($response->content, forcearray => ["artist"], keyattr => []) };
 		#$log->debug("Got xml:\n".Dumper($xml)."\n");
 		my $similarartists = $xml->{'artist'};
 		if($similarartists) {
@@ -137,77 +145,80 @@ sub scanArtist {
 				my $url = $item{'value'};
 				if($url =~ /.*\.([^.]+$)/) {
 					my $extension = $1;
-					$http = Slim::Player::Protocols::HTTP->new({
-        					'url'    => $item{'value'},
-				        	'create' => 0,
-				    	});
-				    	if(defined($http)) {
+					$http = LWP::UserAgent->new;
+					$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtimeout"));
+					my $response = $http->get($item{'value'});
+				    	if($response->is_success) {
 						my $file = catfile($pictureDir,$artist->name.".".$extension);
 						my $fh;
 						open($fh,"> $file") or do {
-					            msg ("CustomScan:LastFM: Error saving image for ".$artist->name."\n");
+					            $log->warn("Error saving image for ".$artist->name."\n");
 						};
 						if(defined($fh)) {
-							print $fh $http->content();
+							print $fh $response->content;
 							close $fh;
 						}
-					    	$http->close();
 					}else {
-						msg ("CustomScan:LastFM: Failed to download ".$artist->name." image: ".$item{'value'}."\n");
+						$log->warn("Failed to download ".$artist->name." image: ".$item{'value'}.": ".$response->status_line);
 					}
 				}
 			}
 		}
-	    	if(defined($http)) {
-			$http->close();
+	}else {
+		if($response->status_line =~ /^404/) {
+			$log->info("No similar artists found for ".$artist->name.": ".$response->status_line);
+		}else {
+			$log->warn("Unable to retrieve similar artists for ".$artist->name.": ".$response->status_line);
 		}
 	}
-	$http = undef;
 
-	# **** Scan for top tags for artist **** 
-	my $topTagsLimit = Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtagspercent");
-	if(!defined($topTagsLimit)) {
-		$topTagsLimit = 10;
-	}
-	$url = "http://ws.audioscrobbler.com/1.0/artist/".escape($artist->name)."/toptags.xml";
-	$currentTime = time();
+	if($response->is_success) {
+		# **** Scan for top tags for artist **** 
+		my $topTagsLimit = Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtagspercent");
+		if(!defined($topTagsLimit)) {
+			$topTagsLimit = 10;
+		}
+		$url = "http://ws.audioscrobbler.com/1.0/artist/".escape($artist->name)."/toptags.xml";
+		$currentTime = time();
 
-	# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
-	if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
-		sleep(1);
-	}
-	$http = Slim::Player::Protocols::HTTP->new({
-		'url'    => "$url",
-		'create' => 0, 	 
-	});
-	$lastCalled = time();
-	if(defined($http)) {
-		my $xml = eval { XMLin($http->content, forcearray => ["tag"], keyattr => []) };
-		#$log->debug("Got xml:\n".Dumper($xml)."\n");
-		my $tags = $xml->{'tag'};
-		if($tags) {
-			for my $tag (@$tags) {
-				if($tag->{'count'}>$topTagsLimit) {
-					my %item = (
-						'name' => 'artisttag',
-						'value' => $tag->{'name'},
-						'extravalue' => $tag->{'count'}
-					);
-					push @result,\%item;
-					#$log->debug("CustomScan::LastFM: Adding tag: ".$tag->{'name'}."\n");
+		# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
+		if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
+			sleep(1);
+		}
+		$http = LWP::UserAgent->new;
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtimeout"));
+		$lastCalled = time();
+		my $response = $http->get($url);
+		if($response->is_success) {
+			my $xml = eval { XMLin($response->content, forcearray => ["tag"], keyattr => []) };
+			#$log->debug("Got xml:\n".Dumper($xml)."\n");
+			my $tags = $xml->{'tag'};
+			if($tags) {
+				for my $tag (@$tags) {
+					if($tag->{'count'}>$topTagsLimit) {
+						my %item = (
+							'name' => 'artisttag',
+							'value' => $tag->{'name'},
+							'extravalue' => $tag->{'count'}
+						);
+						push @result,\%item;
+						#$log->debug("CustomScan::LastFM: Adding tag: ".$tag->{'name'}."\n");
+					}
 				}
 			}
+		}else {
+			$log->warn("Unable to retrieve top tags for ".$artist->name.": ".$response->status_line);
 		}
-		$http->close();
+	}
+	if($response->is_success || $response->status_line =~ /^404/) {
+		# Lets just add dummy item to store that we have scanned this artist
+		my %itemEmpty = (
+			'name' => 'retrieved',
+			'value' => 1
+		);
+		push @result,\%itemEmpty;
 	}
 	$http = undef;
-
-	# Lets just add dummy item to store that we have scanned this artist
-	my %item = (
-		'name' => 'retrieved',
-		'value' => 1
-	);
-	push @result,\%item;
 
 	return \@result;
 }
