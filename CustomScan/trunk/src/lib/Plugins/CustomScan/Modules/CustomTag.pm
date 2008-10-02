@@ -239,6 +239,13 @@ sub scanTrack {
 		if ($@) {
 			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
 		}
+	}elsif($track->content_type() eq 'mov') {
+		eval {
+			getRawMOVTags($track->url,$tags);
+		};
+		if ($@) {
+			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
+		}
 	}
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
@@ -395,6 +402,20 @@ sub getRawMP3Tags {
 				$value =~ s/^\0//;
 				$tags->{$tagName} = $value;
 			}
+		}
+	}
+}
+
+sub getRawMOVTags {
+	my $url = shift;
+	my $tags = shift;
+
+	my $file = Slim::Utils::Misc::pathFromFileURL($url);
+	my $rawTags = MP4::Info::get_mp4tag($file);
+	if(exists $rawTags->{'META'}) {
+		my $metaTags = $rawTags->{'META'};
+		for my $tagEntry (@$metaTags) {
+			$tags->{$tagEntry->{'NAME'}}=$tagEntry->{'DATA'};
 		}
 	}
 }
