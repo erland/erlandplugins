@@ -1946,11 +1946,17 @@ sub checkCustomSkipFilterType {
 sub getCustomScanFunctions {
 	my @result = ();
 	eval "use Plugins::TrackStat::iTunes::Import";
+	if( $@ ) { $log->warn("Unable to load iTunes::Import: $@\n"); }
 	eval "use Plugins::TrackStat::iTunes::Export";
+	if( $@ ) { $log->warn("Unable to load iTunes::Export: $@\n"); }
 	eval "use Plugins::TrackStat::MusicMagic::Import";
+	if( $@ ) { $log->warn("Unable to load MusicMagic::Import: $@\n"); }
 	eval "use Plugins::TrackStat::MusicMagic::Export";
+	if( $@ ) { $log->warn("Unable to load MusicMagic::Export: $@\n"); }
 	eval "use Plugins::TrackStat::Amarok::Export";
+	if( $@ ) { $log->warn("Unable to load Amarok::Export: $@\n"); }
 	eval "use Plugins::TrackStat::Amarok::Import";
+	if( $@ ) { $log->warn("Unable to load Amarok::Import: $@\n"); }
 	push @result,Plugins::TrackStat::Amarok::Export::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::Amarok::Import::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::MusicMagic::Export::getCustomScanFunctions();
@@ -2705,7 +2711,7 @@ sub trackInfoHandler {
 				$ratingStars = $trackHandle->rating/10;
 			}
 
-			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)",;
+			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)";
 		}
 		return {
 			type      => 'redirect',
@@ -2713,7 +2719,29 @@ sub trackInfoHandler {
 			jive      => $jive,
 		};
 	}else {
-		return;
+		return undef;
+#		my $text = string('PLUGIN_TRACKSTAT_RATING').string("PLUGIN_TRACKSTAT_UNRATED");
+#		my $rating = 0;
+#		if(defined($trackHandle->rating && $trackHandle->rating>0)) {
+#			$rating = $trackHandle->rating;
+#			my $ratingStars = $trackHandle->rating/20;
+#			if($prefs->get("rating_10scale")) {
+#				$ratingStars = $trackHandle->rating/10;
+#			}
+#
+#			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)";
+#		}
+#		return {
+#			type => 'text',
+#			name => $text,
+#			itemvalue => $rating,
+#			itemid => $track->id,
+#			trackstat10scale => $prefs->get("rating_10scale"),
+#			web      => {
+#				'type' => 'htmltemplate',
+#				'value' => 'plugins/TrackStat/stdtrackratinginfo.html'
+#			},
+#		};
 	}
 }
 
