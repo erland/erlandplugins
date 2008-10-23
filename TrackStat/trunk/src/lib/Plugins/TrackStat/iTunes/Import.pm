@@ -131,6 +131,13 @@ sub getCustomScanFunctions {
 				'description' => 'Indicates that disabled songs in iTunes shouldn\'t be imported',
 				'type' => 'checkbox',
 				'value' => 1
+			},
+			{
+				'id' => 'itunesusealbumrating',
+				'name' => 'Use album rating',
+				'description' => 'Use album rating for unrated tracks on a rated album',
+				'type' => 'checkbox',
+				'value' => 0
 			}
 		]
 	);
@@ -460,7 +467,13 @@ sub handleTrack {
 		}
 
 
-		$cacheEntry{'RATING'}    = $curTrack->{'Rating'};
+		if(exists $curTrack->{'Rating'}) {
+			$cacheEntry{'RATING'}    = $curTrack->{'Rating'};
+		}elsif(exists $curTrack->{'Album Rating'} && Plugins::CustomScan::Plugin::getCustomScanProperty("itunesusealbumrating")) {
+			$cacheEntry{'RATING'}    = $curTrack->{'Album Rating'};
+		}elsif(exists $curTrack->{'Album Rating Computed'} && Plugins::CustomScan::Plugin::getCustomScanProperty("itunesusealbumrating")) {
+			$cacheEntry{'RATING'}    = $curTrack->{'Album Rating Computed'};
+		}
 		$cacheEntry{'PLAYCOUNT'} = $curTrack->{'Play Count'};
 		if($curTrack->{'Play Date UTC'}) {
 			$cacheEntry{'LASTPLAYED'} = str2time($curTrack->{'Play Date UTC'});
