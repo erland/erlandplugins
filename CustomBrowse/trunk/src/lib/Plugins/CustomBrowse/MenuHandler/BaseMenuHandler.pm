@@ -525,8 +525,17 @@ sub getMenu {
 						return Slim::Schema->resultset('Track')->find($item->{'itemid'});
 					}elsif($item->{'itemtype'} eq 'year') {
 						return Slim::Schema->resultset('Year')->find($item->{'itemid'});
+					}else {
+						my %result = ();
+						if(defined($item->{'customitemtype'})) {
+							$result{'type'} = $item->{'customitemtype'};
+						}elsif(defined($item->{'itemtype'})) {
+							$result{'type'} = $item->{'itemtype'};
+						}
+						$result{'id'} = $item->{'itemid'};
+						$result{'name'} = $item->{'itemname'};
+						return \%result;
 					}
-					return $item;
 				}
 				return undef;
 			},
@@ -918,7 +927,9 @@ sub getPageItemsForContext {
 					if(defined($it->{'webcontextprefix'})) {
 						$prefix = escape($it->{'webcontextprefix'});
 					}
-					if(defined($it->{'webcontext'})) {
+					if(defined($it->{'customitemtype'})) {
+						$type = escape($it->{'customitemtype'});
+					}elsif(defined($it->{'webcontext'})) {
 						$type = escape($it->{'webcontext'});
 					}elsif(defined($it->{'itemtype'})) {
 						$type = $prefix.escape($it->{'itemtype'});
@@ -1551,7 +1562,9 @@ sub _createMix {
 		$self->logHandler->debug("Got mix: ".$mix->{'mixname'}."\n");
 	}
 	my $selectedMix = undef;
-	if(defined($item->{'itemtype'}) && defined($parameters->{$item->{'itemtype'}."mix"})) {
+	if(defined($item->{'customitemtype'}) && defined($parameters->{$item->{'customitemtype'}."mix"})) {
+		$selectedMix = $parameters->{$item->{'customitemtype'}."mix"};
+	}elsif(defined($item->{'itemtype'}) && defined($parameters->{$item->{'itemtype'}."mix"})) {
 		$selectedMix = $parameters->{$item->{'itemtype'}."mix"};
 	}
 	if(defined($selectedMix)) {
@@ -1607,7 +1620,11 @@ sub executeMix {
 	my $parameters = $self->propertyHandler->getProperties();
 	$parameters->{'itemid'} = $item->{'itemid'};
 	$parameters->{'itemname'} = $item->{'itemname'};
-	$parameters->{'itemtype'} = $item->{'itemtype'};
+	if(defined($item->{'customitemtype'})) {
+		$parameters->{'itemtype'} = $item->{'customitemtype'};
+	}else {
+		$parameters->{'itemtype'} = $item->{'itemtype'};
+	}
 	my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 
 	$self->mixHandler->executeMix($client,$mixer,$keywords,$interfaceType,$addOnly);
