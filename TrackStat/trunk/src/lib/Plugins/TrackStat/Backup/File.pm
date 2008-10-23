@@ -345,7 +345,7 @@ sub restoreTrack
 	my $added = $curTrack->{'added'};
 	my $rating   = $curTrack->{'rating'};
 
-	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating);	
+	Plugins::TrackStat::Storage::saveTrack($url,$mbId,$playCount,$added,$lastPlayed,$rating,1);	
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track;
 	eval {

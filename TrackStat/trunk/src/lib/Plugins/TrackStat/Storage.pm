@@ -1,4 +1,4 @@
-#         TrackStat::iTunes module
+#         TrackStat::Storage module
 #    Copyright (c) 2006 Erland Isaksson (erland_i@hotmail.com)
 # 
 # 	 Code for Musicbrainz support partly provided by hakan.
@@ -770,19 +770,28 @@ sub addToHistory
 		return;
 	}
 
-	my $ds        = getCurrentDS();
-	my $track     = undef;
+	my $ds = getCurrentDS();
+	my $track = objectForUrl($url);
+	if (!defined $track && !defined $mbId) {
+		$log->debug("File $url doesn't exist - will try to find on alternative path.");
+		$track = findObjectForMovedUrl($url);
+		if (defined $track) {
+			$url = $track->url;
+			$log->debug("Found history song on alternative path $url");
+		}
+		else {
+			$log->warn("No matching alternative path found for $url.");
+		}
+	}
 	if(!$ignoreTrackInSlimserver) {
-		$track = objectForUrl($url);
 		return unless $track;
 	}
 
 	my $sql;
 	my $dbh = getCurrentDBH();
-	if(defined $track) {
-		$url = $track->url;
-		$mbId = getMusicBrainzId($track);
-	}
+
+	$url = $track->url if defined($track);
+	$mbId = getMusicBrainzId($track) if !defined($mbId);
 
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $mbId && $mbId !~ /.*-.*/) {
@@ -867,9 +876,76 @@ sub addToHistory
 	$log->debug("Exiting addToHistory\n");
 }
 
+# Try to find the file if it has moved to an alternative folder.
+sub findObjectForMovedUrl
+{
+	# A lot of user's music libraries are structured:
+	# <SC music library base path>\<sub-paths>\<artist>\<album>\<track>.<file-ext>
+	# Try to find a match based on the last two folder names and then just the last folder name
+	# (ignore the base part of the path and the file extension).
+
+	# This could be made more generic by the following logic:
+	# remove the SC music folder path from the URL
+	# {
+	#     take the leading folder off the front of the sub-path.
+	#     search SC library for tracks containing the url sub-string
+	# } until (match found or only one folder left in url sub-string)
+
+	my $url = shift;
+
+	if ($url =~ /.*([\\\/].*[\\\/].*[\\\/].*\.).*$/) {
+		my $findUrl = $1;
+
+		$log->debug("Find track urls ending with $findUrl");
+
+		my @matchingTracks = Slim::Schema->rs('Track')->search({'url' => { like => "%" . $findUrl . '%'}});
+
+		my $count = @matchingTracks;
+		$log->debug("Found $count matching tracks");
+
+		if ($count > 1) {
+			$log->warn("Found $count tracks matching $url, picking the first one: ".$matchingTracks[0]->url);
+		}
+		if ($count > 0) {
+			my $track = $matchingTracks[0];
+			return $track;
+		}
+	}
+
+	if ($url =~ /.*([\\\/].*[\\\/].*\.).*$/) {
+		my $findUrl = $1;
+
+		# Ignore if this is a disk directory (too risky that this connects to wrong track)
+		if(lc($findUrl) =~ /^disk[0-9]/) {
+			return undef;
+		}
+
+		$log->debug("Find track urls ending with $findUrl");
+
+		my @matchingTracks = Slim::Schema->rs('Track')->search({'url' => { like => "%" . $findUrl . '%'}});
+
+		my $count = @matchingTracks;
+		$log->debug("Found $count matching tracks");
+
+		if ($count > 2) {
+			$log->warn("Found $count tracks matching $url, ignoring track, too risky to just choose first one");
+		}else {
+			if ($count > 1) {
+				$log->warn("Found $count tracks matching $url, picking the first one: ".$matchingTracks[0]->url);
+			}
+			if ($count > 0) {
+				my $track = $matchingTracks[0];
+				return $track;
+			}
+		}
+	}
+
+	return undef;
+}
+
 sub saveTrack 
 {
-	my ($url,$mbId,$playCount,$added,$lastPlayed,$rating,$ignoreTrackInSlimserver) = @_;
+	my ($url,$mbId,$playCount,$added,$lastPlayed,$rating) = @_;
 		
 	my $maxCharacters = ($useLongUrls?511:255);
 	if(length($url)>$maxCharacters) {
@@ -878,13 +954,20 @@ sub saveTrack
 	}
 
 	my $ds        = getCurrentDS();
-	my $track     = undef;
-	if(!$ignoreTrackInSlimserver) {
-		$track = objectForUrl($url);
-		return unless $track;
+	my $track = objectForUrl($url);
+	if (!defined $track && !defined $mbId) {
+		$log->debug("File $url doesn't exist - will try to find on alternative path.");
+		$track = findObjectForMovedUrl($url);
+		if (defined $track) {
+			$url = $track->url;
+			$log->debug("Found song on alternative path $url");
+		}
+		else {
+			$log->warn("No matching alternative path found for $url.");
+		}
 	}
 
-	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId,$track,$ignoreTrackInSlimserver);
+	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId,$track,1);
 	my $sql;
 	
 	if (defined($playCount) || defined($lastPlayed) ||defined($added) ) {
@@ -936,7 +1019,7 @@ sub saveTrack
 	}
 	
 	#Lookup again since the row can have been created above
-	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url,$mbId,$track,$ignoreTrackInSlimserver);
+	$trackHandle = Plugins::TrackStat::Storage::findTrack( $url,$mbId,$track,1);
 	if ($rating && $rating ne "") {
 		$log->debug("Store rating: $rating\n");
 		#ratings are 0-5 stars, 100 = 5 stars
@@ -975,6 +1058,17 @@ sub mergeTrack
 
 	my $ds        = getCurrentDS();
 	my $track     = objectForUrl($url);
+	if (!defined $track && !defined $mbId) {
+		$log->debug("File $url doesn't exist - will try to find on alternative path.");
+		$track = findObjectForMovedUrl($url);
+		if (defined $track) {
+			$url = $track->url;
+			$log->debug("Found song on alternative path $url");
+		}
+		else {
+			$log->warn("No matching alternative path found for $url.");
+		}
+	}
 
 	return unless $track;
 
