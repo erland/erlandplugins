@@ -93,7 +93,11 @@ sub getPreparedMixes {
 			my $url = $mix->{'mixurl'};
 			if(defined($url)) {
 				my $parameters = $self->propertyHandler->getProperties();
-				$parameters->{'itemtype'} = $item->{'itemtype'};
+				if(defined($item->{'customitemtype'})) {
+					$parameters->{'itemtype'} = escape($item->{'customitemtype'});
+				}else {
+					$parameters->{'itemtype'} = $item->{'itemtype'};
+				}
 				$parameters->{'itemid'} = $item->{'itemid'};
 				$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
 				my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
@@ -156,11 +160,19 @@ sub getMixes {
 				}
 			}
 		}
-	}elsif(defined($item->{'itemtype'})) {
+	}
+	if(defined($item->{'itemtype'}) || defined($item->{'customitemtype'})) {
+		my $type;
+		if(defined($item->{'customitemtype'})) {
+			$type = escape($item->{'customitemtype'});
+		}else {
+			$type = $item->{'itemtype'};
+		}
 		my $browseMixes = $self->mixes;
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
-			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $item->{'itemtype'}) {
+
+			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $type) {
 				if($self->checkMix($client, $mix, $item,$interfaceType)) {
 					push @mixes,$mix;
 				}
@@ -183,7 +195,11 @@ sub checkMix {
 		my $mixHandler = $self->mixHandlers->{$mix->{'mixchecktype'}};
 		if(defined($mixHandler)) {
 			my $parameters = $self->propertyHandler->getProperties();
-			$parameters->{'itemtype'} = $item->{'itemtype'};
+			if(defined($item->{'customitemtype'})) {
+				$parameters->{'itemtype'} = escape($item->{'customitemtype'});
+			}else {
+				$parameters->{'itemtype'} = $item->{'itemtype'};
+			}
 			$parameters->{'itemid'} = $item->{'itemid'};
 			$parameters->{'itemname'} = $item->{'itemname'};
 			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);

@@ -90,7 +90,6 @@ sub checkMix {
 		my $class = $1;
 		my $function = $2;
 		my $itemObj = undef;
-		my $itemObj = undef;
 		if($keywords->{'itemtype'} eq "track") {
 			$itemObj = Slim::Schema->resultset('Track')->find($keywords->{'itemid'});
 		}elsif($keywords->{'itemtype'} eq "album") {
@@ -103,6 +102,11 @@ sub checkMix {
 			$itemObj = Slim::Schema->resultset('Genre')->find($keywords->{'itemid'});
 		}elsif($keywords->{'itemtype'} eq "playlist") {
 			$itemObj = Slim::Schema->resultset('Playlist')->find($keywords->{'itemid'});
+		}elsif(defined($keywords->{'itemtype'})) {
+			$itemObj = {};
+			$itemObj->{'type'} = $keywords->{'itemtype'};
+			$itemObj->{'id'} = $keywords->{'itemid'};
+			$itemObj->{'name'} = $keywords->{'itemname'};
 		}
 
 		if(defined($itemObj)) {
