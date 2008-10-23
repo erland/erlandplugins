@@ -197,14 +197,16 @@ sub doneScanning {
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	$prefs->debug("Calling: $musicmagicurl\n");
 	my $http = LWP::UserAgent->new;
-    	if(defined($http)) {
-		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-    		my $result = $http->get("http://$hostname:$port/api/flush");
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	my $response = $http->get("http://$hostname:$port/api/flush");
+    	if(!$response->is_success) {
+    		$log->warn("TrackStat::MusicMagic::Export: Failed to flush MusicMagic cache");
 	}
 	$http = LWP::UserAgent->new;
-	if(defined($http)) {
-		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-		my $modificationTime = $http->get($musicmagicurl);
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	$response = $http->get($musicmagicurl);
+	if($response->is_success) {
+		my $modificationTime = $response->content;
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
@@ -257,9 +259,10 @@ sub handleTrack {
 	if($rating && $rating>0) {
 		my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$url&rating=$rating";
 		my $http = LWP::UserAgent->new;
-		if(defined($http)) {
-			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-			my $result = $http->get($musicmagicurl);
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $response = $http->get($musicmagicurl);
+		if($response->is_success) {
+			my $result = $response->content;
 			chomp $result;
 	    	
 			if($result && $result>0) {
@@ -274,9 +277,10 @@ sub handleTrack {
 	if($playCount) {
 		my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$url&count=$playCount";
 		my $http = LWP::UserAgent->new;
-		if(defined($http)) {
-			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-			my $result = $http->get($musicmagicurl);
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $response = $http->get($musicmagicurl);
+		if($response->is_success) {
+			my $result = $response->content;
 			chomp $result;
 	    	
 			if($result && $result>0) {
@@ -291,9 +295,10 @@ sub handleTrack {
 	if($lastPlayed) {
 		my $musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$url&time=$lastPlayed";
 		my $http = LWP::UserAgent->new;
-		if(defined($http)) {
-			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-			my $result = $http->get($musicmagicurl);
+		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+		my $response = $http->get($musicmagicurl);
+		if($response->is_success) {
+			my $result = $response->content;
 			chomp $result;
 			
 			if($result && $result>0) {
@@ -376,9 +381,10 @@ sub exportRating {
 			my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
 			$prefs->debug("Calling: $musicmagicurl\n");
 			my $http = LWP::UserAgent->new;
-			if(defined($http)) {
-				$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-				my $result = $http->get($musicmagicurl);
+			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+			my $response = $http->get($musicmagicurl);
+			if($response->is_success) {
+				my $result = $response->content;
 				chomp $result;
 				if($result eq "1") {
 					$prefs->debug("Success setting Music Magic rating\n");
@@ -386,9 +392,10 @@ sub exportRating {
 					$prefs->warn("Error setting Music Magic rating, error code = $result\n");
 				}
 				$http = LWP::UserAgent->new;
-				if(defined($http)) {
-					$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-					$result = $http->get("http://$hostname:$port/api/flush");
+				$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+				$response = $http->get("http://$hostname:$port/api/flush");
+				if(!$response->is_success) {
+					$log->warn("Failed to flush MusicMagic cache"); 
 				}
 			}else {
 				$prefs->warn("Failure setting Music Magic rating\n");
