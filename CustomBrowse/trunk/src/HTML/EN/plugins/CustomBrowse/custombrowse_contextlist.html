@@ -102,11 +102,11 @@ END;
 				[% BLOCK controls %]
 					[% IF pluginCustomBrowseSingleMixButton %]
 						[% IF item.mixes and item.mixes.size>0 and item.url %]
-							[% WRAPPER cmdlink cmdimage='mixbutton.gif' cmdtitle='PLUGIN_CUSTOMBROWSE' %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
+							[% WRAPPER cmdlink cmdimage='custombrowse_mix.gif' cmdtitle='PLUGIN_CUSTOMBROWSE' noTarget=1 %]href="[% webroot %]plugins/CustomBrowse/custombrowse_mixcontext.html?player=[% player | uri %]&[% item.url %][% IF start %]&start=[% start %][% END %]"[% END %]
 						[% END %]
 					[% ELSE %]
 					[% FOREACH mix = item.mixes %]
-						[% PROCESS custombrowse_mixerlink mixurl='${webroot}.plugins/CustomBrowse/custombrowse_executemixcontext.html' %]
+						[% PROCESS custombrowse_mixerlink mixurl='custombrowse_executemixcontext.html' %]
 					[% END %]
 					[% END %]
 
