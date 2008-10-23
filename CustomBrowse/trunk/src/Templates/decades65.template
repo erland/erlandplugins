@@ -33,6 +33,7 @@
 			</mix>
 			<pathtype>sql</pathtype>
 			<pathtypedata>select {context.itemid},case when {context.itemid}&gt;0 then concat(floor({context.itemid}/10)*10,'s') else 'Unknown' end</pathtypedata>
+			<customitemtype>decade</customitemtype>
 		        <menutype>sql</menutype>
 	        	<menudata>
 				select floor(tracks.year/10)*10,case when tracks.year&gt;0 then concat(floor(tracks.year/10)*10,'s') else 'Unknown' end from tracks[% IF library or activelibrary %],multilibrary_track[% END %]
