@@ -15,6 +15,12 @@
 			<data>
 				select {library},tracks.id from tracks[% IF includedcomment %],comments[% END %]
 				where
+					[% IF playlist %]
+					exists (select track from playlist_track,tracks t where
+							playlist_track.playlist=t.id and
+							playlist_track.track=tracks.id and
+							t.title='[% playlist %]') and
+					[% END %]
 					[% IF directory1 or directory2 or directory3 or directory4 %]([% END %]
 					[%- IF directory1 %]
 					tracks.url like '[% directory1 | fileurl %]%'
