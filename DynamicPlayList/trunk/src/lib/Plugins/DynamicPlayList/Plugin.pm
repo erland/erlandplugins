@@ -317,6 +317,8 @@ sub findAndAdd {
 
 	$log->debug("Starting random selection of $limit items for type: $type\n");
 	
+	my $masterClient = masterOrSelf($client);
+
 	my $playlist = getPlayList($client,$type);
 	my $items = undef;
 	my $filteredItems = undef;
@@ -324,13 +326,13 @@ sub findAndAdd {
 	my $noOfFilteredItems = 0;
 	my $noOfRetiresDueToFilteredTracks = $prefs->get('skipped_tracks_retries')|| 20;
 	for my $i (1..$noOfRetiresDueToFilteredTracks) {
-		$items = getTracksForPlaylist($client,$playlist,$limit,$offset+$noOfItems);
+		$items = getTracksForPlaylist($masterClient,$playlist,$limit,$offset+$noOfItems);
 		return 0 if !defined $items || scalar(@$items)==0;
 
 		$noOfItems = $noOfItems + (scalar @$items);
 		$log->debug("Find returned ".(scalar @$items)." items\n");
 		
-		$filteredItems = filterTracks($client,$items);
+		$filteredItems = filterTracks($masterClient,$items);
 		if(defined($filteredItems) && scalar(@$filteredItems)>0) {
 			$noOfFilteredItems = (scalar @$filteredItems);
 			$log->debug("Find returned ".$noOfFilteredItems." items after filtering\n");
@@ -369,11 +371,21 @@ sub findAndAdd {
 	return $noOfItems;
 }
 
+sub masterOrSelf {
+	my $client = shift;
+	if($::VERSION lt "7.3") {
+		return $client->masterOrSelf;
+	}else {
+		return $client->master();
+	}
+}
 
 # Add random tracks to playlist if necessary
 sub playRandom {
 	# If addOnly, then track(s) are appended to end.  Otherwise, a new playlist is created.
 	my ($client, $type, $addOnly, $showFeedback, $forcedAdd,$continue) = @_;
+
+	my $masterClient = masterOrSelf($client);
 
 	Slim::Utils::Timers::killTimers($client, \&playRandom);
 	$log->debug("playRandom called with type $type\n");
@@ -382,8 +394,8 @@ sub playRandom {
 	my $continuousMode = $prefs->get('keep_adding_tracks');;
 	
 	my $stopactions = undef;
-	if(defined($mixInfo{$client}->{'type'})) {
-		my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	if(defined($mixInfo{$masterClient}->{'type'})) {
+		my $playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
 		if(defined($playlist)) {
 			if(defined($playlist->{'stopactions'})) {
 				$stopactions = $playlist->{'stopactions'};
@@ -391,9 +403,9 @@ sub playRandom {
 		}
 	}
 	# If this is a new mix, clear playlist history
-	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type) {
+	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$masterClient} || $mixInfo{$masterClient}->{'type'} ne $type) {
 		$continue = undef;
-		clearPlayListHistory($client);
+		clearPlayListHistory($masterClient);
 		# Executing actions related to new mix
 		
 		if(!$addOnly) {
@@ -423,8 +435,8 @@ sub playRandom {
 			}
 		}
 	}
-	my $offset = $mixInfo{$client}->{'offset'};
-	if (!$mixInfo{$client}->{'type'} || $mixInfo{$client}->{'type'} ne $type || (!$addOnly && !$continue)) {
+	my $offset = $mixInfo{$masterClient}->{'offset'};
+	if (!$mixInfo{$masterClient}->{'type'} || $mixInfo{$masterClient}->{'type'} ne $type || (!$addOnly && !$continue)) {
 		$offset = 0;
 	}
 
@@ -435,7 +447,7 @@ sub playRandom {
 	# Work out how many items need adding
 	my $numItems = 0;
 
-	if($type ne 'disable' && ($continuousMode || !$mixInfo{$client} || $mixInfo{$client}->{'type'} ne $type || $songsRemaining<1)) {
+	if($type ne 'disable' && ($continuousMode || !$mixInfo{$masterClient} || $mixInfo{$masterClient}->{'type'} ne $type || $songsRemaining<1)) {
 		# Add new tracks if there aren't enough after the current track
 		my $numRandomTracks = $prefs->get('number_of_tracks');
 		if (! $addOnly && !$continue) {
@@ -477,11 +489,11 @@ sub playRandom {
 		
 		# Add tracks 
 		$count = findAndAdd($client,
-                        $type,
-            			$offset,
-                        $numItems,
-			            # 2nd time round just add tracks to end
-					    $addOnly,
+				$type,
+				$offset,
+				$numItems,
+				# 2nd time round just add tracks to end
+				$addOnly,
 				$continue);
 
 		if($prefs->get('remembershuffle')) {
@@ -491,7 +503,7 @@ sub playRandom {
 		if($count>0) {
 			# Do a show briefly the first time things are added, or every time a new album/artist/year
 			# is added
-			if (!$addOnly || $type ne $mixInfo{$client}->{'type'}) {
+			if (!$addOnly || $type ne $mixInfo{$masterClient}->{'type'}) {
 				# Don't do showBrieflys if visualiser screensavers are running as the display messes up
 				if (Slim::Buttons::Common::mode($client) !~ /^SCREENSAVER./) {
 					$client->showBriefly({'line' => [string($addOnly ? 'ADDING_TO_PLAYLIST' : 'NOW_PLAYING'),
@@ -519,10 +531,14 @@ sub playRandom {
 		if (Slim::Buttons::Common::mode($client) !~ /^SCREENSAVER./) {
 			$client->showBriefly({'line' => [string('PLUGIN_DYNAMICPLAYLIST'), string('PLUGIN_DYNAMICPLAYLIST_DISABLED')]});
 		}
-		$mixInfo{$client} = undef;
-		$prefs->client($client)->remove('playlist');
-		$prefs->client($client)->remove('playlist_parameters');
-		$prefs->client($client)->remove('offset');
+
+		stateStop($masterClient);
+		if($::VERSION ge 7.3) {
+			my @players = Slim::Player::Sync::slaves($client);
+			foreach my $player (@players) {
+				stateStop($player);
+			}
+		}
 	} else {
 		if(!$numItems || $numItems==0 || $count>0) {
 			$log->debug(($addOnly?"Adding ":"Playing ").($continuousMode ? 'continuous' : 'static')." $type with ".Slim::Player::Playlist::count($client)." items\n");
@@ -530,24 +546,22 @@ sub playRandom {
 			if (!$addOnly) {
 				# Record current mix type and the time it was started.
 				# Do this last to prevent menu items changing too soon
-				$mixInfo{$client}->{'type'} = $type;
-				$prefs->client($client)->set('playlist',$type);
-				if(defined($playlist->{'parameters'})) {
-					$prefs->client($client)->remove('playlist_parameters');
-					my %storeParams = ();
-					for my $p (keys %{$playlist->{'parameters'}}) {
-						if(defined($playlist->{'parameters'}->{$p})) {
-							$storeParams{$p}=$playlist->{'parameters'}->{$p}->{'value'};
-						}
+				stateNew($masterClient,$type,$playlist);
+				if($::VERSION ge 7.3) {
+					my @players = Slim::Player::Sync::slaves($client);
+					foreach my $player (@players) {
+						stateNew($player,$type,$playlist);
 					}
-					$prefs->client($client)->set('playlist_parameters',\%storeParams);
-				}else {
-					$prefs->client($client)->remove('playlist_parameters');
 				}
 			}
-			if($mixInfo{$client}->{'type'} eq $type) {
-				$mixInfo{$client}->{'offset'} = $offset;
-				$prefs->client($client)->set('offset',$offset);
+			if($mixInfo{$masterClient}->{'type'} eq $type) {
+				stateOffset($masterClient,$offset);
+				if($::VERSION ge 7.3) {
+					my @players = Slim::Player::Sync::slaves($client);
+					foreach my $player (@players) {
+						stateOffset($player,$offset);
+					}
+				}
 			}
 		}else {
 			if(defined($stopactions)) {
@@ -560,17 +574,83 @@ sub playRandom {
 					}
 				}
 			}
-			$mixInfo{$client}->{'type'} = undef;
-			$prefs->client($client)->remove('playlist');
-			$prefs->client($client)->remove('playlist_parameters');
-			$prefs->client($client)->remove('offset');
+
+			stateStop($masterClient);
+			if($::VERSION ge 7.3) {
+				my @players = Slim::Player::Sync::slaves($client);
+				foreach my $player (@players) {
+					stateStop($player);
+				}
+			}
 		}
 	}
+}
+
+sub stateOffset {
+	my $client = shift;
+	my $offset = shift;
+
+	$mixInfo{$client}->{'offset'} = $offset;
+	$prefs->client($client)->set('offset',$offset);
+}
+
+sub stateNew {
+	my $client = shift;
+	my $type = shift;
+	my $playlist = shift;
+
+	$mixInfo{$client}->{'type'} = $type;
+	$prefs->client($client)->set('playlist',$type);
+	if(defined($playlist->{'parameters'})) {
+		$prefs->client($client)->remove('playlist_parameters');
+		my %storeParams = ();
+		for my $p (keys %{$playlist->{'parameters'}}) {
+			if(defined($playlist->{'parameters'}->{$p})) {
+				$storeParams{$p}=$playlist->{'parameters'}->{$p}->{'value'};
+			}
+		}
+		$prefs->client($client)->set('playlist_parameters',\%storeParams);
+	}else {
+		$prefs->client($client)->remove('playlist_parameters');
+	}
+}
+
+sub stateContinue {
+	my $client = shift;
+	my $type = shift;
+	my $offset = shift;
+	my $parameters = shift;
+
+	$mixInfo{$client}->{'type'} = $type;
+	$prefs->client($client)->set('playlist',$type);
+	if(defined($offset)) {
+		$mixInfo{$client}->{'offset'} = $offset;
+	}else {
+		$mixInfo{$client}->{'offset'} = undef;
+	}
+	if(defined($parameters)) {
+		$prefs->client($client)->remove('playlist_parameters');
+		$prefs->client($client)->set('playlist_parameters',$parameters);
+	}else {
+		$prefs->client($client)->remove('playlist_parameters');
+	}
+}
+
+sub stateStop {
+	my $client = shift;
+
+	$mixInfo{$client} = undef;
+
+	$prefs->client($client)->remove('playlist');
+	$prefs->client($client)->remove('playlist_parameters');
+	$prefs->client($client)->remove('offset');
 }
 
 # Returns the display text for the currently selected item in the menu
 sub getDisplayText {
 	my ($client, $item) = @_;
+
+	my $masterClient = masterOrSelf($client);
 
 	my $id = undef;
 	my $name = '';
@@ -582,11 +662,11 @@ sub getDisplayText {
 		}
 	}
 	# if showing the current mode, show altered string
-	if ($mixInfo{$client} && defined($mixInfo{$client}->{'type'}) && $id eq $mixInfo{$client}->{'type'}) {
+	if ($mixInfo{$masterClient} && defined($mixInfo{$masterClient}->{'type'}) && $id eq $mixInfo{$masterClient}->{'type'}) {
 		return $name." (".string('PLUGIN_DYNAMICPLAYLIST_PLAYING').")";
 		
 	# if a mode is active, handle the temporarily added disable option
-	} elsif ($id eq 'disable' && $mixInfo{$client}) {
+	} elsif ($id eq 'disable' && $mixInfo{$masterClient}) {
 		return string('PLUGIN_DYNAMICPLAYLIST_PRESS_RIGHT');
 	} else {
 		return $name;
@@ -608,12 +688,14 @@ sub getChooseParametersDisplayText {
 sub getOverlay {
 	my ($client, $item) = @_;
 
+	my $masterClient = masterOrSelf($client);
+
 	# Put the right arrow by genre filter and notesymbol by mixes
 	if (defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
 		return [undef, $client->symbols('rightarrow')];
 	}elsif(!defined($item->{'playlist'})) {
 		return [undef, $client->symbols('rightarrow')];
-	}elsif (!defined($mixInfo{$client}) || !defined($mixInfo{$client}->{'type'}) || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$client}->{'type'}) {
+	}elsif (!defined($mixInfo{$masterClient}) || !defined($mixInfo{$masterClient}->{'type'}) || $item->{'playlist'}->{'dynamicplaylistid'} ne $mixInfo{$masterClient}->{'type'}) {
 		if(defined($item->{'playlist'}->{'parameters'})) {
 			return [$client->symbols('rightarrow'), $client->symbols('notesymbol')];
 		}else {
@@ -637,28 +719,27 @@ sub handlePlayOrAdd {
 	my ($client, $item, $add) = @_;
 	$log->debug("".($add ? 'Add' : 'Play')."$item\n");
 	
-	# reconstruct the list of options, adding and removing the 'disable' option where applicable
-#	my $listRef = Slim::Buttons::Common::param($client, 'listRef');
-#		
-#	if ($item eq 'disable') {
-#		pop @$listRef;
-#		
-#	# only add disable option if starting a mode from idle state
-#	} elsif (! $mixInfo{$client}) {
-#		push @$listRef, \%disable;
-#	}
-#	Slim::Buttons::Common::param($client, 'listRef', $listRef);
+	my $masterClient = masterOrSelf($client);
 
 	# Clear any current mix type in case user is restarting an already playing mix
-	$mixInfo{$client} = undef;
+	stateStop($masterClient);
+	if($::VERSION ge 7.3) {
+		my @players = Slim::Player::Sync::slaves($client);
+		foreach my $player (@players) {
+			stateStop($player);
+		}
+	}
 
 	# Go go go!
 	playRandom($client, $item, $add, 1, 1);
 }
 sub getCurrentPlayList {
 	my $client = shift;
-	if (defined($client) && $mixInfo{$client}) {
-		return $mixInfo{$client}->{'type'};
+
+	my $masterClient = masterOrSelf($client);
+
+	if (defined($client) && $mixInfo{$masterClient}) {
+		return $mixInfo{$masterClient}->{'type'};
 	}
 	return undef;
 }
@@ -995,7 +1076,8 @@ sub addParameterValues {
 			}
 			my $activeLibrary = 0;
 			if(isPluginsInstalled($client,'MultiLibrary::Plugin')) {
-				$activeLibrary = $multiLibraryPrefs->client($client)->get('activelibraryno');
+				my $masterClient = masterOrSelf($client);
+				$activeLibrary = $multiLibraryPrefs->client($masterClient)->get('activelibraryno');
 				if(!defined($activeLibrary)) {
 					$activeLibrary = 0;
 				}
@@ -1083,6 +1165,8 @@ sub setModeMixer {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
+
+	my $masterClient = masterOrSelf($client);
 
 	my @listRef = ();
 	initFilters();
@@ -1236,7 +1320,7 @@ sub setModeMixer {
 	}
 	
 	# if we have an active mode, temporarily add the disable option to the list.
-	if ($mixInfo{$client} && $mixInfo{$client}->{'type'} ne "") {
+	if ($mixInfo{$masterClient} && $mixInfo{$masterClient}->{'type'} ne "") {
 		push @{$params{listRef}},\%disable;
 	}
 
@@ -1587,17 +1671,17 @@ sub powerCallback {
 
 	return if !defined $client;
 
+	my $masterClient = masterOrSelf($client);
+
 	if($request->getParam('_newvalue')) {
 		if($prefs->get('rememberactiveplaylist')) {
-			my $type = $prefs->client($client)->get('playlist');
+			my $type = $prefs->client($masterClient)->get('playlist');
 			if(defined($type)) {
+				my $offset = $prefs->client($masterClient)->get('offset');
 				$log->debug("Continuing playing playlist: $type\n");
-				$mixInfo{$client}->{'type'} = $type;
-				my $offset = $prefs->client($client)->get('offset');
-				if(defined($offset)) {
-					$mixInfo{$client}->{'offset'} = $offset;
-				}
-				my $parameters = $prefs->client($client)->get('playlist_parameters');
+				my $parameters = $prefs->client($masterClient)->get('playlist_parameters');
+
+
 				my $playlist = getPlayList($client,$type);
 				if(defined($playlist->{'parameters'})) {
 					foreach my $p (keys %{$playlist->{'parameters'}}) {
@@ -1606,14 +1690,24 @@ sub powerCallback {
 						}
 					}
 				}
+
+				stateContinue($masterClient,$type,$offset,$parameters);
+				if($::VERSION ge 7.3) {
+					my @players = Slim::Player::Sync::slaves($client);
+					foreach my $player (@players) {
+						stateContinue($player,$type,$offset,$parameters);
+					}
+				}
 			}
 		}
 	}
 }
+
 sub commandCallback65 {
 	my $request = shift;
 	
 	my $client = $request->client();
+	my $masterClient = masterOrSelf($client);
 
 	if (defined($request->source()) && $request->source() eq 'PLUGIN_DYNAMICPLAYLIST') {
 		return;
@@ -1633,24 +1727,26 @@ sub commandCallback65 {
 	# because of the filter this should never happen
 	# in addition there are valid commands (rescan f.e.) that have no
 	# client so the bt() is strange here
-	if (!defined $client || !defined $mixInfo{$client}->{'type'}) {
+	if (!defined $masterClient || !defined $mixInfo{$masterClient}->{'type'}) {
 
 		return;
 	}
 	
-	$log->debug("while in mode: ".($mixInfo{$client}->{'type'}).", from ".($client->name)."\n");
+	$log->debug("while in mode: ".($mixInfo{$masterClient}->{'type'}).", from ".($client->name)."\n");
 
 	my $songIndex = Slim::Player::Source::streamingSongIndex($client);
 
 	if ($request->isCommand([['playlist'], ['newsong']])
 		|| $request->isCommand([['playlist'], ['delete']]) && $request->getParam('_index') > $songIndex) {
 
-		if ($::d_plugins) {
-			if ($request->isCommand([['playlist'], ['newsong']])) {
-				$log->debug("new song detected ($songIndex)\n");
-			} else {
-				$log->debug("deletion detected (".($request->getParam('_index')).")\n");
+		if ($request->isCommand([['playlist'], ['newsong']])) {
+			if($masterClient->id ne $client->id) {
+				$log->debug("Ignoring event, this is a slave player\n");
+				return;
 			}
+			$log->debug("new song detected ($songIndex)\n");
+		} else {
+			$log->debug("deletion detected (".($request->getParam('_index')).")\n");
 		}
 		
 		my $songsToKeep = $prefs->get('number_of_old_tracks');
@@ -1669,9 +1765,9 @@ sub commandCallback65 {
 		my $songsRemaining = Slim::Player::Playlist::count($client) - $songIndex - 1;
 		if($songAddingDelay && $songsRemaining>0) {
 			$log->debug("Adding new tracks in $songAddingDelay seconds");
-			Slim::Utils::Timers::setTimer($client, Time::HiRes::time()+$songAddingDelay, \&playRandom, $mixInfo{$client}->{'type'}, 1, 0);
+			Slim::Utils::Timers::setTimer($client, Time::HiRes::time()+$songAddingDelay, \&playRandom, $mixInfo{$masterClient}->{'type'}, 1, 0);
 		}else {
-			playRandom($client, $mixInfo{$client}->{'type'}, 1, 0);
+			playRandom($client, $mixInfo{$masterClient}->{'type'}, 1, 0);
 		}
 	} elsif ($request->isCommand([['playlist'], [keys %stopcommands]])) {
 
@@ -2190,14 +2286,16 @@ sub webPages {
 sub handleWebList {
 	my ($client, $params) = @_;
 
+	my $masterClient = masterOrSelf($client);
+
 	# Pass on the current pref values and now playing info
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
 	registerJiveMenu();
 	my $playlist = undef;
-	if(defined($client) && defined($mixInfo{$client}) && defined($mixInfo{$client}->{'type'})) {
-		$playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	if(defined($client) && defined($mixInfo{$masterClient}) && defined($mixInfo{$masterClient}->{'type'})) {
+		$playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
 	}
 	my $name = undef;
 	if($playlist) {
@@ -2340,10 +2438,12 @@ sub handleWebSettings {
 sub handleWebSelectPlaylists {
 	my ($client, $params) = @_;
 
+	my $masterClient = masterOrSelf($client);
+
 	# Pass on the current pref values and now playing info
 	initPlayLists($client);
 	initPlayListTypes();
-	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	my $playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
 	my $name = undef;
 	if($playlist) {
 		$name = $playlist->{'name'};
@@ -2360,11 +2460,13 @@ sub handleWebSelectPlaylists {
 sub handleWebSelectFilters {
 	my ($client, $params) = @_;
 
+	my $masterClient = masterOrSelf($client);
+
 	# Pass on the current pref values and now playing info
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
-	my $playlist = getPlayList($client,$mixInfo{$client}->{'type'});
+	my $playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
 	my $name = undef;
 	if($playlist) {
 		$name = $playlist->{'name'};
