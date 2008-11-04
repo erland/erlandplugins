@@ -828,6 +828,34 @@ sub initPlugin {
 	}
 }
 
+sub getMusicInfoSCRCustomItems {
+	my $customFormats = {
+		'MULTILIBRARY' => {
+			'cb' => \&getTitleFormat,
+			'cache' => 5,
+		},
+	};
+	return $customFormats;
+}
+
+sub getTitleFormat
+{
+	my $client = shift;
+	my $song = shift;
+	my $tag = shift;
+
+	$log->debug("Entering getTitleFormat");
+	my $library = getCurrentLibrary($client);
+
+	if($library) {
+		$log->debug("Exiting getTitleFormat with ".$library->{'name'});
+		return $library->{'name'};
+	}
+
+	$log->debug("Exiting getTitleFormat with undef");
+	return undef;
+}
+
 sub getConfigManager {
 	if(!defined($configManager)) {
 		my %parameters = (
