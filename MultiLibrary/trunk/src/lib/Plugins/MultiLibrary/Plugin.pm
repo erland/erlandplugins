@@ -904,7 +904,7 @@ sub powerCallback($)
 		if ( defined($client) && $request->isCommand([['power']]) )
 		{
 			my $power = $request->getParam('_newvalue');
-			if($power) {
+			if($power && scalar(keys %$libraries)>0) {
 				#Ask for library unless the player is powered on due to an alarm
 				if(!$request->source() || $request->source() ne 'ALARM') {
 					$log->debug("Asking for library\n");
