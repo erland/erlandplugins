@@ -2093,6 +2093,45 @@ sub title {
 	return 'DYNAMICPLAYLIST';
 }
 
+sub getMusicInfoSCRCustomItems {
+	my $customFormats = {
+		'DYNAMICPL' => {
+			'cb' => \&getTitleFormatDynamicPlaylist,
+		},
+		'DYNAMICORSAVEDPL' => {
+			'cb' => \&getTitleFormatDynamicPlaylist,
+		},
+	};
+	return $customFormats;
+}
+
+sub getTitleFormatDynamicPlaylist
+{
+	my $client = shift;
+	my $song = shift;
+	my $tag = shift;
+
+	$log->debug("Entering getTitleFormatDynamicPlaylist with $client and $tag");
+	my $masterClient = masterOrSelf($client);
+
+	my $playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
+
+	if($playlist) {
+		$log->debug("Exiting getTitleFormatDynamicPlaylist with ".$playlist->{'name'});
+		return $playlist->{'name'};
+	}
+
+	if($tag =~ 'DYNAMICORSAVEDPL') {
+		my $playlist = Slim::Music::Info::playlistForClient($client);
+		if($playlist && $playlist->content_type ne 'cpl') {
+			$log->debug("Exiting getTitleFormatDynamicPlaylist with ".$playlist->title);
+			return $playlist->title;
+		}
+	}
+	$log->debug("Exiting getTitleFormatDynamicPlaylist with undef");
+	return undef;
+}
+
 sub registerContextMenu {
 	if(isPluginsInstalled(undef,'ContextMenu::Plugin')) {
 		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
