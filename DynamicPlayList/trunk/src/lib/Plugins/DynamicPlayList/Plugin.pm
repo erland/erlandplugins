@@ -533,11 +533,14 @@ sub playRandom {
 		}
 
 		stateStop($masterClient);
+		my @players = undef;
 		if($::VERSION ge 7.3) {
-			my @players = Slim::Player::Sync::slaves($client);
-			foreach my $player (@players) {
-				stateStop($player);
-			}
+			@players = Slim::Player::Sync::slaves($client);
+		}else {
+			@players = @{$masterClient->slaves()};
+		}
+		foreach my $player (@players) {
+			stateStop($player);
 		}
 	} else {
 		if(!$numItems || $numItems==0 || $count>0) {
@@ -547,20 +550,26 @@ sub playRandom {
 				# Record current mix type and the time it was started.
 				# Do this last to prevent menu items changing too soon
 				stateNew($masterClient,$type,$playlist);
+				my @players = undef;
 				if($::VERSION ge 7.3) {
-					my @players = Slim::Player::Sync::slaves($client);
-					foreach my $player (@players) {
-						stateNew($player,$type,$playlist);
-					}
+					@players = Slim::Player::Sync::slaves($client);
+				}else {
+					@players = @{$masterClient->slaves()};
+				}
+				foreach my $player (@players) {
+					stateNew($player,$type,$playlist);
 				}
 			}
 			if($mixInfo{$masterClient}->{'type'} eq $type) {
 				stateOffset($masterClient,$offset);
+				my @players = undef;
 				if($::VERSION ge 7.3) {
-					my @players = Slim::Player::Sync::slaves($client);
-					foreach my $player (@players) {
-						stateOffset($player,$offset);
-					}
+					@players = Slim::Player::Sync::slaves($client);
+				}else {
+					@players = @{$masterClient->slaves()};
+				}
+				foreach my $player (@players) {
+					stateOffset($player,$offset);
 				}
 			}
 		}else {
@@ -576,11 +585,14 @@ sub playRandom {
 			}
 
 			stateStop($masterClient);
+			my @players = undef;
 			if($::VERSION ge 7.3) {
-				my @players = Slim::Player::Sync::slaves($client);
-				foreach my $player (@players) {
-					stateStop($player);
-				}
+				@players = Slim::Player::Sync::slaves($client);
+			}else {
+				@players = @{$masterClient->slaves()};
+			}
+			foreach my $player (@players) {
+				stateStop($player);
 			}
 		}
 	}
@@ -723,11 +735,14 @@ sub handlePlayOrAdd {
 
 	# Clear any current mix type in case user is restarting an already playing mix
 	stateStop($masterClient);
+	my @players = undef;
 	if($::VERSION ge 7.3) {
-		my @players = Slim::Player::Sync::slaves($client);
-		foreach my $player (@players) {
-			stateStop($player);
-		}
+		@players = Slim::Player::Sync::slaves($client);
+	}else {
+		@players = @{$masterClient->slaves()};
+	}
+	foreach my $player (@players) {
+		stateStop($player);
 	}
 
 	# Go go go!
@@ -1692,11 +1707,14 @@ sub powerCallback {
 				}
 
 				stateContinue($masterClient,$type,$offset,$parameters);
+				my @players = undef;
 				if($::VERSION ge 7.3) {
-					my @players = Slim::Player::Sync::slaves($client);
-					foreach my $player (@players) {
-						stateContinue($player,$type,$offset,$parameters);
-					}
+					@players = Slim::Player::Sync::slaves($client);
+				}else {
+					@players = @{$masterClient->slaves()};
+				}
+				foreach my $player (@players) {
+					stateContinue($player,$type,$offset,$parameters);
 				}
 			}
 		}
