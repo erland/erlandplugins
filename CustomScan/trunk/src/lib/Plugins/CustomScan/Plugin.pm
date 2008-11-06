@@ -198,6 +198,10 @@ sub getPluginModules {
 	return Plugins::CustomScan::Scanner::getPluginModules();
 }
 
+sub getMultiLibraryTemplates {
+	my $client = shift;
+	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan',$PLUGINVERSION,'FileCache/MultiLibrary','LibraryTemplates','xml');
+}
 sub getSQLPlayListTemplates {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan',$PLUGINVERSION,'FileCache/SQLPlayList','PlaylistTemplates','xml');
@@ -364,6 +368,14 @@ sub getCustomBrowseContextMenus {
 sub getCustomBrowseMixes {
 	my $client = shift;
 	return Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan',$PLUGINVERSION,'FileCache/CustomBrowse','Mixes','xml','mix');
+}
+sub getMultiLibraryTemplateData {
+	my $client = shift;
+	my $templateItem = shift;
+	my $parameterValues = shift;
+	
+	my $data = Plugins::CustomScan::Template::Reader::readTemplateData('CustomScan','LibraryTemplates',$templateItem->{'id'});
+	return $data;
 }
 sub getSQLPlayListTemplateData {
 	my $client = shift;
