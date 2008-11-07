@@ -969,7 +969,8 @@ sub getRated1AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated1albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -991,7 +992,8 @@ sub getRated2AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated2albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1013,7 +1015,8 @@ sub getRated3AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated3albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1035,7 +1038,8 @@ sub getRated4AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated4albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1057,7 +1061,8 @@ sub getRated5AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated5albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1079,7 +1084,8 @@ sub getRated6AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated6albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1100,7 +1106,8 @@ sub getRated7AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated7albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1121,7 +1128,8 @@ sub getRated8AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated8albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1142,7 +1150,8 @@ sub getRated9AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated9albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -1163,7 +1172,8 @@ sub getRated10AlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'rated10albums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

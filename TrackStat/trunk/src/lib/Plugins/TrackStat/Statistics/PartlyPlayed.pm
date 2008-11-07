@@ -139,7 +139,8 @@ sub getPartlyPlayedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'notplayed'
+    	'album' => 'notplayed',
+    	'artist' => 'partlyplayedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

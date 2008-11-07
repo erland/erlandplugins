@@ -264,7 +264,8 @@ sub getAllAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'all'
+    	'album' => 'all',
+    	'artist' => 'allalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
