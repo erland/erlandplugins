@@ -538,6 +538,9 @@ sub getDataDisplayText {
 			if($item->{'song_count'}) {
 				$name .= ' ('.$item->{'song_count'}.')';
 			}
+			if(defined($item->{'artist'})) {
+				$name .= ' ('.$item->{'artist'}->name.')';
+			}
 		}elsif($item->{'listtype'} eq 'artist') {
 			$name=$item->{'itemobj'}->{'artist'}->name;
 			if($item->{'rating'}) {
@@ -2982,6 +2985,9 @@ sub jiveStatistics {
 				$baseItemParams{'album.id'} = $item->{'itemid'};
 				$mixerItemParams{'album_id'} = $item->{'itemid'};
 				$itemobj = $item->{'itemobj'}->{'album'};
+				if(defined($item->{'artist'})) {
+					$item->{'text'} .= ' ('.$item->{'artist'}->name.')';
+				}
 			}elsif($item->{'listtype'} eq 'artist') {
 				$itemParams{'artist'} = $item->{'itemid'};
 				$itemParams{'dynamicplaylist_parameter_1'} = $item->{'itemid'};

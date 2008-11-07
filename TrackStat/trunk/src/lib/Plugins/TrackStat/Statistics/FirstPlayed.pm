@@ -221,7 +221,8 @@ sub getFirstPlayedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'firstplayed'
+    	'album' => 'firstplayed',
+    	'artist' => 'firstplayedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

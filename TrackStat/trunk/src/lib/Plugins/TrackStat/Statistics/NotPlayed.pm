@@ -216,7 +216,8 @@ sub getNotPlayedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'notplayed'
+    	'album' => 'notplayed',
+    	'artist' => 'notplayedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

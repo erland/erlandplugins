@@ -174,6 +174,7 @@ sub getNotCompletelyRatedRecentAlbumsWeb {
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
     	'album' => 'topratedrecent',
+    	'artist' => 'notcompletelyratedrecentalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
@@ -273,7 +274,8 @@ sub getNotCompletelyRatedNotRecentAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'topratednotrecent'
+    	'album' => 'topratednotrecent',
+    	'artist' => 'notcompletelyratednotrecentalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

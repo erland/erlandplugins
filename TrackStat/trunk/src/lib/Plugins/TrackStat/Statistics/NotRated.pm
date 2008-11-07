@@ -237,7 +237,8 @@ sub getNotRatedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'notrated'
+    	'album' => 'notrated',
+    	'artist' => 'notratedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

@@ -235,7 +235,8 @@ sub getLastPlayedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'lastplayed'
+    	'album' => 'lastplayed',
+    	'artist' => 'lastplayedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

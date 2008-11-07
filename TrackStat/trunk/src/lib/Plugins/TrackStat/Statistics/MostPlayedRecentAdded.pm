@@ -287,7 +287,8 @@ sub getMostPlayedRecentAddedAlbumsWeb {
 	    };
 	    $params->{'substatisticitems'} = \@statisticlinks;
 	    my %currentstatisticlinks = (
-	    	'album' => 'mostplayedrecentadded'
+	    	'album' => 'mostplayedrecentadded',
+	    	'artist' => 'mostplayedrecentaddedalbums',
 	    );
 	    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 	}else {
@@ -298,7 +299,8 @@ sub getMostPlayedRecentAddedAlbumsWeb {
 	    };
 	    $params->{'substatisticitems'} = \@statisticlinks;
 	    my %currentstatisticlinks = (
-	    	'album' => 'mostplayednotrecentadded'
+	    	'album' => 'mostplayednotrecentadded',
+	    	'artist' => 'mostplayednotrecentaddedalbums',
 	    );
 	    $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 	}

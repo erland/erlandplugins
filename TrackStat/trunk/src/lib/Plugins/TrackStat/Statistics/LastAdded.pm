@@ -218,7 +218,8 @@ sub getLastAddedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'lastadded'
+    	'album' => 'lastadded',
+    	'artist' => 'lastaddedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }

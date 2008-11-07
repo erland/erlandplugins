@@ -266,7 +266,8 @@ sub getTopRatedAlbumsWeb {
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated'
+    	'album' => 'toprated',
+    	'artist' => 'topratedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
 }
