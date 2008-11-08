@@ -2115,11 +2115,9 @@ sub getMusicInfoSCRCustomItems {
 	my $customFormats = {
 		'DYNAMICPLAYLIST' => {
 			'cb' => \&getTitleFormatDynamicPlaylist,
-			'cache' => 1,
 		},
 		'DYNAMICORSAVEDPLAYLIST' => {
 			'cb' => \&getTitleFormatDynamicPlaylist,
-			'cache' => 1,
 		},
 	};
 	return $customFormats;
