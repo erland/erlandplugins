@@ -826,30 +826,83 @@ sub initPlugin {
 	if ( !$MULTILIBRARY_HOOK ) {
 		installHook();
 	}
+	addTitleFormat('TRACKNUM. ARTIST - TITLE (MULTILIBRARIES)');
+	addTitleFormat('TRACKNUM. TITLE (MULTILIBRARIES)');
+	addTitleFormat('PLAYING (X_OF_Y) MULTILIBRARIES');
+	addTitleFormat('MULTILIBRARIES');
+	Slim::Music::TitleFormatter::addFormat('MULTILIBRARIES',\&getTitleFormat);
+}
+
+sub addTitleFormat
+{
+	my $titleformat = shift;
+	my $titleFormats = $serverPrefs->get('titleFormat');
+	foreach my $format ( @$titleFormats ) {
+		if($titleformat eq $format) {
+			return;
+		}
+	}
+	$log->debug("Adding: $titleformat");
+	push @$titleFormats,$titleformat;
+	$serverPrefs->set('titleFormat',$titleFormats);
 }
 
 sub getMusicInfoSCRCustomItems {
 	my $customFormats = {
-		'MULTILIBRARY' => {
-			'cb' => \&getTitleFormat,
+		'ACTIVEMULTILIBRARY' => {
+			'cb' => \&getTitleFormatActive,
 			'cache' => 5,
 		},
 	};
 	return $customFormats;
 }
 
-sub getTitleFormat
+sub getTitleFormatActive
 {
 	my $client = shift;
 	my $song = shift;
 	my $tag = shift;
 
-	$log->debug("Entering getTitleFormat");
+	$log->debug("Entering getTitleFormatActive");
 	my $library = getCurrentLibrary($client);
 
 	if($library) {
-		$log->debug("Exiting getTitleFormat with ".$library->{'name'});
+		$log->debug("Exiting getTitleFormatActive with ".$library->{'name'});
 		return $library->{'name'};
+	}
+
+	$log->debug("Exiting getTitleFormatActive with undef");
+	return undef;
+}
+
+sub getTitleFormat
+{
+	my $song = shift;
+
+	$log->debug("Entering getTitleFormat");
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("select libraryid from multilibrary_libraries,multilibrary_track where multilibrary_track.track=? and multilibrary_track.library=multilibrary_libraries.id order by multilibrary_libraries.name");
+	$sth->bind_param(1,$song->id,SQL_INTEGER);
+	$sth->execute();
+		
+	my $type;
+	$sth->bind_col(1, \$type);
+	my $libraries = undef;
+	while($sth->fetch()) {
+		my $library = getLibrary(undef,$type);
+		if(defined $library) {
+			if(defined $libraries) {
+				$libraries.=',';
+			}else {
+				$libraries ='';
+			}
+			$libraries .= $library->{'name'};
+	}	}
+	$sth->finish();
+	if(defined $libraries) {
+		$log->debug("Exiting getTitleFormat with ".$libraries);
+		return $libraries;
 	}
 
 	$log->debug("Exiting getTitleFormat with undef");
