@@ -2113,11 +2113,13 @@ sub title {
 
 sub getMusicInfoSCRCustomItems {
 	my $customFormats = {
-		'DYNAMICPL' => {
+		'DYNAMICPLAYLIST' => {
 			'cb' => \&getTitleFormatDynamicPlaylist,
+			'cache' => 1,
 		},
-		'DYNAMICORSAVEDPL' => {
+		'DYNAMICORSAVEDPLAYLIST' => {
 			'cb' => \&getTitleFormatDynamicPlaylist,
+			'cache' => 1,
 		},
 	};
 	return $customFormats;
@@ -2139,7 +2141,7 @@ sub getTitleFormatDynamicPlaylist
 		return $playlist->{'name'};
 	}
 
-	if($tag =~ 'DYNAMICORSAVEDPL') {
+	if($tag =~ 'DYNAMICORSAVEDPLAYLIST') {
 		my $playlist = Slim::Music::Info::playlistForClient($client);
 		if($playlist && $playlist->content_type ne 'cpl') {
 			$log->debug("Exiting getTitleFormatDynamicPlaylist with ".$playlist->title);
