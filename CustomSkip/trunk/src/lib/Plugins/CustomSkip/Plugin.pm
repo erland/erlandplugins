@@ -1711,6 +1711,59 @@ sub postinitPlugin {
 	registerContextMenus();
 }
 
+sub getMusicInfoSCRCustomItems {
+	my $customFormats = {
+		'CUSTOMSKIPFILTERS' => {
+			'cb' => \&getTitleFormatActive,
+			'cache' => 5,
+		},
+		'CUSTOMSKIPFILTER' => {
+			'cb' => \&getTitleFormatActive,
+			'cache' => 5,
+		},
+		'CUSTOMSKIPSECONDARYFILTER' => {
+			'cb' => \&getTitleFormatActive,
+			'cache' => 5,
+		},
+	};
+	return $customFormats;
+}
+
+sub getTitleFormatActive
+{
+	my $client = shift;
+	my $song = shift;
+	my $tag = shift;
+
+	$log->debug("Entering getTitleFormatActive");
+	my @activeFilters = ();
+	if($tag =~ /^CUSTOMSKIPFILTER/) {
+		my $filter = getCurrentFilter($client);
+		if(defined($filter)) {
+			push @activeFilters,$filter;
+		}
+	}
+	if($tag =~ /^CUSTOMSKIPSECONDARYFILTER/ || $tag =~ /^CUSTOMSKIPFILTERS/) {
+		my $filter = getCurrentSecondaryFilter($client);
+		if(defined($filter)) {
+			push @activeFilters,$filter;
+		}	
+	}
+
+	my $filterString = undef;
+	foreach my $filter (@activeFilters) {
+		if(defined $filterString) {
+			$filterString .= ',';
+		}else {
+			$filterString = '';
+		}
+		$filterString .= $filter->{'name'};
+	}
+
+	$log->debug("Exiting getTitleFormatActive with $filterString");
+	return $filterString;
+}
+
 sub registerContextMenus {
 	if(UNIVERSAL::can("Plugins::ContextMenu::Public","registerContextChoice")) {
 		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
