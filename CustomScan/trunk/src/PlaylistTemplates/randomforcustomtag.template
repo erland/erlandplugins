@@ -12,7 +12,7 @@ select tracks.url from tracks
 		tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag' and customscan_track_attributes.attr='[% customtagname %]' and customscan_track_attributes.value=''PlaylistParameter1''
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
-		tracks.id=dynamicplaylist_history.id
+		tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 	[%- END %]
 	where
 		audio=1

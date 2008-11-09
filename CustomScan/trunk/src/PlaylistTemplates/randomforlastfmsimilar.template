@@ -18,7 +18,7 @@
 	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
-		tracks.id=dynamicplaylist_history.id
+		tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 	[%- END %]
 	left join customscan_contributor_attributes as attr1 on 
 		attr1.contributor=contributors.id and
@@ -51,7 +51,7 @@ order by track_statistics.rating desc
 	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
-		tracks.id=dynamicplaylist_history.id
+		tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 	[%- END %]
 	left join customscan_contributor_attributes as attr2 on 
 		attr2.value=contributors.name and
@@ -82,7 +82,7 @@ order by track_statistics.rating desc
 	[%- END %]
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
-		tracks.id=dynamicplaylist_history.id
+		tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 	[%- END %]
 	where
 		audio=1
