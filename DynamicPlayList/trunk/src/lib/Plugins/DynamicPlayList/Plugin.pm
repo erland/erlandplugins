@@ -176,7 +176,7 @@ sub getNoOfItemsInHistory {
 	my $result = 0;
 	my $dbh = getCurrentDBH();
 	eval {
-		my $clientid = $dbh->quote($client->macaddress());
+		my $clientid = $dbh->quote($client->id);
 		my $sql = "select count(position) from dynamicplaylist_history where dynamicplaylist_history.client=$clientid and skipped=0";
 		my $sth = $dbh->prepare( $sql );
 		$log->debug("Executing history count SQL: $sql\n");
@@ -217,7 +217,7 @@ sub checkCustomSkipFilterType {
 				my $artist = $track->artist();
 				if(defined($artist) && defined($client) && defined($nooftracks)) {
 					my $artistid = $artist->id;
-					my $clientid = $dbh->quote($client->macaddress());
+					my $clientid = $dbh->quote($client->id);
 					my $noOfItems = getNoOfItemsInHistory($client);
 					if($noOfItems<=$nooftracks) {
 						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join contributor_track on contributor_track.track=dynamicplaylist_history.id where contributor_track.contributor=$artistid and dynamicplaylist_history.client=$clientid";
@@ -238,7 +238,7 @@ sub checkCustomSkipFilterType {
 
 				if(defined($album) && defined($client) && defined($nooftracks)) {
 					my $albumid = $album->id;
-					my $clientid = $dbh->quote($client->macaddress());
+					my $clientid = $dbh->quote($client->id);
 					my $noOfItems = getNoOfItemsInHistory($client);
 					if($noOfItems<=$nooftracks) {
 						$sql = "select dynamicplaylist_history.position from dynamicplaylist_history join tracks on tracks.id=dynamicplaylist_history.id where tracks.album=$albumid and dynamicplaylist_history.client=$clientid";
@@ -305,7 +305,17 @@ sub filterTracks {
 			push @resultItems,$item;
 		}
 		if(!defined($result) || $result != -1) {
-			addToPlayListHistory($client,$item,$skipped);
+			my $addedTime = time();
+			addToPlayListHistory($client,$item,$skipped,$addedTime);
+			my @players = undef;
+			if($::VERSION ge 7.3) {
+				@players = Slim::Player::Sync::slaves($client);
+			}else {
+				@players = @{$client->slaves()};
+			}
+			foreach my $player (@players) {
+				addToPlayListHistory($player,$item,$skipped,$addedTime);
+			}
 		}
 	}
 	return \@resultItems;
@@ -405,7 +415,14 @@ sub playRandom {
 	# If this is a new mix, clear playlist history
 	if (($continuousMode && (!$addOnly && !$continue)) || !$mixInfo{$masterClient} || $mixInfo{$masterClient}->{'type'} ne $type) {
 		$continue = undef;
-		clearPlayListHistory($masterClient);
+		my @players = undef;
+		if($::VERSION ge 7.3) {
+			@players = Slim::Player::Sync::slaves($masterClient);
+		}else {
+			@players = @{$masterClient->slaves()};
+		}
+		push @players,$masterClient;	
+		clearPlayListHistory(\@players);
 		# Executing actions related to new mix
 		
 		if(!$addOnly) {
@@ -1686,41 +1703,58 @@ sub powerCallback {
 
 	return if !defined $client;
 
-	my $masterClient = masterOrSelf($client);
-
 	if($request->getParam('_newvalue')) {
 		if($prefs->get('rememberactiveplaylist')) {
-			my $type = $prefs->client($masterClient)->get('playlist');
-			if(defined($type)) {
-				my $offset = $prefs->client($masterClient)->get('offset');
-				$log->debug("Continuing playing playlist: $type\n");
-				my $parameters = $prefs->client($masterClient)->get('playlist_parameters');
-
-
-				my $playlist = getPlayList($client,$type);
-				if(defined($playlist->{'parameters'})) {
-					foreach my $p (keys %{$playlist->{'parameters'}}) {
-						if(defined($playlist->{'parameters'}->{$p})) {
-							$playlist->{'parameters'}->{$p}->{'value'} = $parameters->{$p};
-						}
-					}
-				}
-
-				stateContinue($masterClient,$type,$offset,$parameters);
-				my @players = undef;
-				if($::VERSION ge 7.3) {
-					@players = Slim::Player::Sync::slaves($client);
-				}else {
-					@players = @{$masterClient->slaves()};
-				}
-				foreach my $player (@players) {
-					stateContinue($player,$type,$offset,$parameters);
-				}
-			}
+			continuePreviousPlaylist($client);
 		}
 	}
 }
 
+sub clientNewCallback {
+	my $request = shift;
+	my $client = $request->client();
+
+	return if !defined $client;
+
+	if($prefs->get('rememberactiveplaylist')) {
+		continuePreviousPlaylist($client);
+	}
+}
+
+sub continuePreviousPlaylist {
+	my $client = shift;
+	my $masterClient = masterOrSelf($client);
+
+	my $type = $prefs->client($masterClient)->get('playlist');
+	if(defined($type)) {
+		my $offset = $prefs->client($masterClient)->get('offset');
+		$log->debug("Continuing playing playlist: $type on ".$client->name);
+		my $parameters = $prefs->client($masterClient)->get('playlist_parameters');
+
+
+		my $playlist = getPlayList($client,$type);
+		if(defined($playlist->{'parameters'})) {
+			foreach my $p (keys %{$playlist->{'parameters'}}) {
+				if(defined($playlist->{'parameters'}->{$p})) {
+					$playlist->{'parameters'}->{$p}->{'value'} = $parameters->{$p};
+				}
+			}
+		}
+
+		stateContinue($masterClient,$type,$offset,$parameters);
+		my @players = undef;
+		if($::VERSION ge 7.3) {
+			@players = Slim::Player::Sync::slaves($client);
+		}else {
+			@players = @{$masterClient->slaves()};
+		}
+		foreach my $player (@players) {
+			stateContinue($player,$type,$offset,$parameters);
+		}
+	}else {
+		$log->debug("No previously playing playlist");
+	}
+}
 sub commandCallback65 {
 	my $request = shift;
 	
@@ -2085,6 +2119,7 @@ sub initPlugin {
 	Slim::Control::Request::subscribe(\&commandCallback65, 
 		[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
 	Slim::Control::Request::subscribe(\&powerCallback,[['power']]); 
+	Slim::Control::Request::subscribe(\&clientNewCallback,[['client'],['new']]); 
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play'], [1, 0, 1, \&cliPlayPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add'], [1, 0, 1, \&cliAddPlaylist]);
@@ -2293,6 +2328,7 @@ sub initDatabase {
 			$tblexists=1;
 		}
 	}
+	$st->finish();
 	unless ($tblexists) {
 		$log->info("Create database table\n");
 		executeSQLFile("dbcreate.sql");
@@ -2302,7 +2338,45 @@ sub initDatabase {
 		$log->info("Create database table column skipped in dynamicplaylist_history\n");
 		executeSQLFile("dbupgrade_skipped.sql");
 	}
+	$st = $dbh->prepare("show create table dynamicplaylist_history");
+	eval {
+		$log->debug("Checking datatype on dynamicplaylist_history\n");
+		$st->execute();
+		my $line = undef;
+		$st->bind_col( 2, \$line);
+		if( $st->fetch() ) {
+			if(defined($line) && (lc($line) =~ /client.*(varchar\(100\))/m)) {
+				$log->warn("Upgrading database changing type of client column, please wait...\n");
+				executeSQLFile("dbupgrade_client_type.sql");
+			}
+		}
+	};
+	$st->finish();
 
+	$st = $dbh->prepare("show index from dynamicplaylist_history;");
+	eval {
+		$log->debug("Checking if indexes is needed for dynamicplaylist_history\n");
+		$st->execute();
+		my $keyname;
+		$st->bind_col( 3, \$keyname );
+		my $foundIdClient = 0;
+		while( $st->fetch() ) {
+			if($keyname eq "idClientIndex") {
+				$foundIdClient = 1;
+			}
+		}
+		if(!$foundIdClient) {
+			$log->warn("No idClientIndex index found in dynamicplaylist_history, creating index...\n");
+			eval { $dbh->do("create index idClientIndex on dynamicplaylist_history (id,client);") };
+			if ($@) {
+				$log->warn("Couldn't add index: $@\n");
+			}
+		}
+	};
+	if( $@ ) {
+	    $log->warn("Database error: $DBI::errstr\n");
+	}
+	$st->finish();
 }
 
 sub shutdownPlugin {
@@ -3655,7 +3729,8 @@ sub getNextDynamicPlayListTracks {
 		if($driver eq 'mysql') {
 			$rand = "rand()";
 		}
-		my $sql = "select playlist_track.track from playlist_track left join dynamicplaylist_history on playlist_track.track=dynamicplaylist_history.id where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
+		my $clientid=$dbh->quote($client->id);
+		my $sql = "select playlist_track.track from playlist_track left join dynamicplaylist_history on playlist_track.track=dynamicplaylist_history.id and dynamicplaylist_history.client=$clientid where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
 		if(defined($limit)) {
 			$sql .= " limit $limit";
 		}
@@ -3712,15 +3787,15 @@ sub fisher_yates_shuffle {
 
 sub addToPlayListHistory
 {
-	my ($client,$track,$skipped) = @_;
+	my ($client,$track,$skipped,$addedTime) = @_;
 
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
 
-	my $sth = $dbh->prepare( "INSERT INTO dynamicplaylist_history (client,id,url,added,skipped) values (?,".$track->id.", ?, ".time().",".$skipped.")" );
+	my $sth = $dbh->prepare( "INSERT INTO dynamicplaylist_history (client,id,url,added,skipped) values (?,".$track->id.", ?, ".$addedTime.",".$skipped.")" );
 	eval {
-		$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
+		$sth->bind_param(1, $client->id , SQL_VARCHAR);
 		$sth->bind_param(2, $track->url , SQL_VARCHAR);
 		$sth->execute();
 		commit($dbh);
@@ -3734,28 +3809,38 @@ sub addToPlayListHistory
 	$sth->finish();
 }
 sub clearPlayListHistory {
-	my $client = shift;
+	my $clients = shift;
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
 
 	my $sth = undef;
-	if(defined($client)) {
-		my $sql = "DELETE FROM dynamicplaylist_history where client=?";
-		$sth = $dbh->prepare($sql);
-		eval {
-			$sth->bind_param(1, $client->macaddress() , SQL_VARCHAR);
-			$sth->execute();
-			commit($dbh);
-		};
-		if( $@ ) {
-			warn "Database error: $DBI::errstr\n";
-			eval {
-				rollback($dbh); #just die if rollback is failing
-			};
+	if(defined($clients)) {
+		my $clientIds = '';
+		foreach my $client (@$clients) {
+			$log->debug("Deleteting playlist history for player: ".$client->name);
+			if($clientIds ne '') {
+				$clientIds .= ',';
+			}
+			$clientIds .= $dbh->quote($client->id);
 		}
-		$sth->finish();
+		my $sql = "DELETE FROM dynamicplaylist_history where client in ($clientIds)";
+		$sth = $dbh->prepare($sql);
+	}else {
+		$sth = $dbh->prepare("DELETE FROM dynamicplaylist_history");
 	}
+	eval {
+		$sth->execute();
+		commit($dbh);
+	};
+	if( $@ ) {
+		warn "Database error: $DBI::errstr\n";
+		eval {
+			rollback($dbh); #just die if rollback is failing
+		};
+	}
+	$sth->finish();
+
 	if($driver eq 'mysql') {
 		eval { 
 			$dbh->do("ALTER TABLE dynamicplaylist_history AUTO_INCREMENT=1");
