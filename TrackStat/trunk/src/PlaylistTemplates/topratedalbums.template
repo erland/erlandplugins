@@ -25,7 +25,7 @@ select id from
 			tracks.album=albums.id 
 		[%- IF notrepeat %]
 		left join dynamicplaylist_history on 
-			tracks.id=dynamicplaylist_history.id 
+			tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 		[%- END %]
 		where 
 			audio=1

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <trackstat>
 	<database>mysql</database>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.2</minpluginversion>
 	<requireplugins>TrackStat</requireplugins>
 	<template>
 		<downloadidentifier>69</downloadidentifier>

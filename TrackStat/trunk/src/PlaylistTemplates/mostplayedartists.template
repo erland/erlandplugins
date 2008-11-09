@@ -25,7 +25,7 @@ select contributor from
 			tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6)
 		[%- IF notrepeat %]
 		left join dynamicplaylist_history on 
-			tracks.id=dynamicplaylist_history.id 
+			tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 		[%- END %]
 		where 
 			audio=1
