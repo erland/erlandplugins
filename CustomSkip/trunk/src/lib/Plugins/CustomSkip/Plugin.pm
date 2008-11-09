@@ -2006,7 +2006,8 @@ sub newSongCallback
 	
 	return unless $prefs->get('global_skipping');
 	$client = $request->client();	
-	if (defined($client) && !defined($client->master) && $request->getRequest(0) eq 'playlist') {
+	my $masterClient = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
+	if (defined($client) && $client->id eq $masterClient->id && $request->getRequest(0) eq 'playlist') {
 		$command = $request->getRequest(1);
 		my $track  = Slim::Player::Playlist::song($client);
 		if (defined $track) {
