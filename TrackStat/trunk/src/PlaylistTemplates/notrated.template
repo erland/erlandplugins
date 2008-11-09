@@ -38,7 +38,7 @@ select tracks.url from tracks
 		tracks.url=t2.url and t2.rating>0 
 	[%- IF notrepeat %]
 	left join dynamicplaylist_history on
-		tracks.id=dynamicplaylist_history.id
+		tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='PlaylistPlayer'
 	[%- END %]
 	where 
 		tracks.audio=1 
