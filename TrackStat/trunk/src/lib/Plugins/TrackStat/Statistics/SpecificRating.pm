@@ -607,9 +607,10 @@ sub getRated1TracksWeb {
 }
 
 sub getRated1Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2TracksWeb {
@@ -624,9 +625,10 @@ sub getRated2TracksWeb {
 }
 
 sub getRated2Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3TracksWeb {
@@ -641,9 +643,10 @@ sub getRated3TracksWeb {
 }
 
 sub getRated3Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4TracksWeb {
@@ -658,9 +661,10 @@ sub getRated4TracksWeb {
 }
 
 sub getRated4Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5TracksWeb {
@@ -675,9 +679,10 @@ sub getRated5TracksWeb {
 }
 
 sub getRated5Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
 sub getRated6TracksWeb {
@@ -692,9 +697,10 @@ sub getRated6TracksWeb {
 }
 
 sub getRated6Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(6),getMaxRating(6));
 }
 sub getRated7TracksWeb {
 	my $params = shift;
@@ -708,9 +714,10 @@ sub getRated7TracksWeb {
 }
 
 sub getRated7Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(7),getMaxRating(7));
 }
 sub getRated8TracksWeb {
 	my $params = shift;
@@ -724,9 +731,10 @@ sub getRated8TracksWeb {
 }
 
 sub getRated8Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(8),getMaxRating(8));
 }
 sub getRated9TracksWeb {
 	my $params = shift;
@@ -740,9 +748,10 @@ sub getRated9TracksWeb {
 }
 
 sub getRated9Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(9),getMaxRating(9));
 }
 sub getRated10TracksWeb {
 	my $params = shift;
@@ -756,9 +765,10 @@ sub getRated10TracksWeb {
 }
 
 sub getRated10Tracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+	return getMostPlayedTracks($client,$listLength,$limit,getMinRating(10),getMaxRating(10));
 }
 
 sub isRatedAlbumsValidInContext {
@@ -976,9 +986,10 @@ sub getRated1AlbumsWeb {
 }
 
 sub getRated1AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2AlbumsWeb {
@@ -999,9 +1010,10 @@ sub getRated2AlbumsWeb {
 }
 
 sub getRated2AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3AlbumsWeb {
@@ -1022,9 +1034,10 @@ sub getRated3AlbumsWeb {
 }
 
 sub getRated3AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4AlbumsWeb {
@@ -1045,9 +1058,10 @@ sub getRated4AlbumsWeb {
 }
 
 sub getRated4AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5AlbumsWeb {
@@ -1068,9 +1082,10 @@ sub getRated5AlbumsWeb {
 }
 
 sub getRated5AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
 sub getRated6AlbumsWeb {
@@ -1091,9 +1106,10 @@ sub getRated6AlbumsWeb {
 }
 
 sub getRated6AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(6),getMaxRating(6));
 }
 sub getRated7AlbumsWeb {
 	my $params = shift;
@@ -1113,9 +1129,10 @@ sub getRated7AlbumsWeb {
 }
 
 sub getRated7AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(7),getMaxRating(7));
 }
 sub getRated8AlbumsWeb {
 	my $params = shift;
@@ -1135,9 +1152,10 @@ sub getRated8AlbumsWeb {
 }
 
 sub getRated8AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(8),getMaxRating(8));
 }
 sub getRated9AlbumsWeb {
 	my $params = shift;
@@ -1157,9 +1175,10 @@ sub getRated9AlbumsWeb {
 }
 
 sub getRated9AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(9),getMaxRating(9));
 }
 sub getRated10AlbumsWeb {
 	my $params = shift;
@@ -1179,9 +1198,10 @@ sub getRated10AlbumsWeb {
 }
 
 sub getRated10AlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedAlbumTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+	return getMostPlayedAlbumTracks($client,$listLength,$limit,getMinRating(10),getMaxRating(10));
 }
 sub isRatedArtistsValidInContext {
 	my $params = shift;
@@ -1373,9 +1393,10 @@ sub getRated1ArtistsWeb {
 }
 
 sub getRated1ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(1),getMaxRating(1));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(1),getMaxRating(1));
 }
 
 sub getRated2ArtistsWeb {
@@ -1399,9 +1420,10 @@ sub getRated2ArtistsWeb {
 }
 
 sub getRated2ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(2),getMaxRating(2));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(2),getMaxRating(2));
 }
 
 sub getRated3ArtistsWeb {
@@ -1425,9 +1447,10 @@ sub getRated3ArtistsWeb {
 }
 
 sub getRated3ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(3),getMaxRating(3));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(3),getMaxRating(3));
 }
 
 sub getRated4ArtistsWeb {
@@ -1451,9 +1474,10 @@ sub getRated4ArtistsWeb {
 }
 
 sub getRated4ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(4),getMaxRating(4));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(4),getMaxRating(4));
 }
 
 sub getRated5ArtistsWeb {
@@ -1477,9 +1501,10 @@ sub getRated5ArtistsWeb {
 }
 
 sub getRated5ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(5),getMaxRating(5));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(5),getMaxRating(5));
 }
 
 
@@ -1504,9 +1529,10 @@ sub getRated6ArtistsWeb {
 }
 
 sub getRated6ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(6),getMaxRating(6));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(6),getMaxRating(6));
 }
 
 sub getRated7ArtistsWeb {
@@ -1530,9 +1556,10 @@ sub getRated7ArtistsWeb {
 }
 
 sub getRated7ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(7),getMaxRating(7));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(7),getMaxRating(7));
 }
 
 sub getRated8ArtistsWeb {
@@ -1556,9 +1583,10 @@ sub getRated8ArtistsWeb {
 }
 
 sub getRated8ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(8),getMaxRating(8));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(8),getMaxRating(8));
 }
 
 sub getRated9ArtistsWeb {
@@ -1582,9 +1610,10 @@ sub getRated9ArtistsWeb {
 }
 
 sub getRated9ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(9),getMaxRating(9));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(9),getMaxRating(9));
 }
 
 sub getRated10ArtistsWeb {
@@ -1608,9 +1637,10 @@ sub getRated10ArtistsWeb {
 }
 
 sub getRated10ArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedArtistTracks($listLength,$limit,getMinRating(10),getMaxRating(10));
+	return getMostPlayedArtistTracks($client,$listLength,$limit,getMinRating(10),getMaxRating(10));
 }
 
 sub getMostPlayedTracksWeb {
@@ -1647,6 +1677,7 @@ sub getMostPlayedTracksWeb {
 }
 
 sub getMostPlayedTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	my $minrating = shift;
@@ -1654,7 +1685,8 @@ sub getMostPlayedTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-		$sql = "select tracks.id from tracks left join track_statistics on tracks.url = track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,$orderBy limit $listLength;";
+		my $clientid = $client->id;
+		$sql = "select tracks.id from tracks left join track_statistics on tracks.url = track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where tracks.audio=1 and dynamicplaylist_history.id is null and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,$orderBy limit $listLength;";
 	}else {
 		$sql = "select tracks.id from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.audio=1 and track_statistics.rating>$minrating and track_statistics.rating<=$maxrating order by track_statistics.rating desc, track_statistics.playCount desc,$orderBy limit $listLength;";
 	}
@@ -1691,6 +1723,7 @@ sub getMostPlayedAlbumsWeb {
 }
 
 sub getMostPlayedAlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	$limit = undef;
@@ -1699,11 +1732,12 @@ sub getMostPlayedAlbumTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
+		my $clientid = $client->id;
+		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
 	}else {
 		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,avgcount desc,$orderBy limit $listLength";
 	}
-    return Plugins::TrackStat::Statistics::Base::getAlbumTracks($sql,$limit);
+    return Plugins::TrackStat::Statistics::Base::getAlbumTracks($client,$sql,$limit);
 }
 
 sub getMostPlayedArtistsWeb {
@@ -1732,6 +1766,7 @@ sub getMostPlayedArtistsWeb {
 }
 
 sub getMostPlayedArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	$limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
@@ -1740,11 +1775,12 @@ sub getMostPlayedArtistTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
+		my $clientid = $client->id;
+		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
 	}else {
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor group by contributors.id having avgrating>$minrating and avgrating<=$maxrating order by avgrating desc,sumcount desc,$orderBy limit $listLength";
 	}
-    return Plugins::TrackStat::Statistics::Base::getArtistTracks($sql,$limit);
+    return Plugins::TrackStat::Statistics::Base::getArtistTracks($client,$sql,$limit);
 }
 
 
