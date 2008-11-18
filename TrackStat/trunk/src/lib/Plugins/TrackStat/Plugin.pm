@@ -4689,7 +4689,7 @@ sub getNextDynamicPlayListTracks {
 		if($dynamicplaylist->{'id'} eq $id) {
 			$log->debug("Calling playlistfunction for ".$dynamicplaylist->{'id'}."\n");
 			eval {
-				$result = &{$statistics->{$item}->{'playlistfunction'}}($listLength,$limit);
+				$result = &{$statistics->{$item}->{'playlistfunction'}}($client,$listLength,$limit);
 			};
 			if ($@) {
 			    	$log->warn("Failure calling playlistfunction for ".$dynamicplaylist->{'id'}.": $@\n");

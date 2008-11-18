@@ -202,9 +202,10 @@ sub getMostPlayedRecentTracksWeb {
 }
 
 sub getMostPlayedRecentTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedHistoryTracks($listLength,$limit,">",getRecentTime());
+	return getMostPlayedHistoryTracks($client,$listLength,$limit,">",getRecentTime());
 }
 
 sub getMostPlayedRecentAlbumsName {
@@ -287,9 +288,10 @@ sub getMostPlayedRecentAlbumsWeb {
 }
 
 sub getMostPlayedRecentAlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = undef;
-	return getMostPlayedHistoryAlbumTracks($listLength,$limit,">",getRecentTime());
+	return getMostPlayedHistoryAlbumTracks($client,$listLength,$limit,">",getRecentTime());
 }
 
 sub getMostPlayedRecentArtistsName {
@@ -365,9 +367,10 @@ sub getMostPlayedRecentArtistsWeb {
 }
 
 sub getMostPlayedRecentArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
-	return getMostPlayedHistoryArtistTracks($listLength,$limit,">",getRecentTime());
+	return getMostPlayedHistoryArtistTracks($client,$listLength,$limit,">",getRecentTime());
 }
 
 sub getMostPlayedNotRecentTracksWeb {
@@ -382,9 +385,10 @@ sub getMostPlayedNotRecentTracksWeb {
 }
 
 sub getMostPlayedNotRecentTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getMostPlayedHistoryTracks($listLength,$limit,"<",getRecentTime());
+	return getMostPlayedHistoryTracks($client,$listLength,$limit,"<",getRecentTime());
 }
 
 sub getMostPlayedNotRecentAlbumsWeb {
@@ -405,9 +409,10 @@ sub getMostPlayedNotRecentAlbumsWeb {
 }
 
 sub getMostPlayedNotRecentAlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = undef;
-	return getMostPlayedHistoryAlbumTracks($listLength,$limit,"<",getRecentTime());
+	return getMostPlayedHistoryAlbumTracks($client,$listLength,$limit,"<",getRecentTime());
 }
 
 sub getMostPlayedNotRecentArtistsWeb {
@@ -431,9 +436,10 @@ sub getMostPlayedNotRecentArtistsWeb {
 }
 
 sub getMostPlayedNotRecentArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
-	return getMostPlayedHistoryArtistTracks($listLength,$limit,"<",getRecentTime());
+	return getMostPlayedHistoryArtistTracks($client,$listLength,$limit,"<",getRecentTime());
 }
 
 sub getMostPlayedHistoryTracksWeb {
@@ -488,6 +494,7 @@ sub getMostPlayedHistoryTracksWeb {
 }
 
 sub getMostPlayedHistoryTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	my $beforeAfter = shift;
@@ -495,9 +502,10 @@ sub getMostPlayedHistoryTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-    		$sql = "select tracks.id,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks join track_history on tracks.url=track_history.url join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
+		my $clientid = $client->id;
+    		$sql = "select tracks.id,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks join track_history on tracks.url=track_history.url join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where tracks.audio=1 and dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
 		if($beforeAfter eq "<") {
-			$sql = "select tracks.id from tracks left join track_statistics on tracks.url = track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where tracks.audio=1 and dynamicplaylist_history.id is null and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,$orderBy limit $listLength;";
+			$sql = "select tracks.id from tracks left join track_statistics on tracks.url = track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where tracks.audio=1 and dynamicplaylist_history.id is null and (track_statistics.lastPlayed is null or track_statistics.lastPlayed<$beforeAfterTime) order by track_statistics.playCount desc,$orderBy limit $listLength;";
 		}
 	}else {
     		$sql = "select tracks.id,count(track_history.url) as recentPlayCount,0 as added,max(track_history.played) as lastPlayed,avg(track_statistics.rating) as avgrating from tracks,track_history,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.audio=1 and played$beforeAfter$beforeAfterTime group by track_history.url order by recentPlayCount desc,avgrating desc,$orderBy limit $listLength;";
@@ -553,6 +561,7 @@ sub getMostPlayedHistoryAlbumsWeb {
 }
 
 sub getMostPlayedHistoryAlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	my $beforeAfter = shift;
@@ -560,9 +569,10 @@ sub getMostPlayedHistoryAlbumTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks join track_history on tracks.url=track_history.url join albums on tracks.album=albums.id join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+		my $clientid = $client->id;
+		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks join track_history on tracks.url=track_history.url join albums on tracks.album=albums.id join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 		if($beforeAfter eq "<") {
-			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
+			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 		}
 	}else {
 		$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url)/count($distinct track_history.url) as avgcount,max(track_history.played) as lastplayed, 0 as maxadded  from tracks,track_history, albums,track_statistics where tracks.url=track_history.url and tracks.url=track_statistics.url and tracks.album=albums.id and played$beforeAfter$beforeAfterTime group by tracks.album order by avgcount desc,avgrating desc,$orderBy limit $listLength";
@@ -570,7 +580,7 @@ sub getMostPlayedHistoryAlbumTracks {
 			$sql = "select albums.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,avg(ifnull(track_statistics.playCount,0)) as avgcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded  from tracks left join track_statistics on tracks.url = track_statistics.url join albums on tracks.album=albums.id group by tracks.album having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by avgcount desc,avgrating desc,$orderBy limit $listLength";
 		}
 	}
-    return Plugins::TrackStat::Statistics::Base::getAlbumTracks($sql,$limit);
+    return Plugins::TrackStat::Statistics::Base::getAlbumTracks($client,$sql,$limit);
 }
 
 sub getMostPlayedHistoryArtistsWeb {
@@ -611,6 +621,7 @@ sub getMostPlayedHistoryArtistsWeb {
 }
 
 sub getMostPlayedHistoryArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
 	my $beforeAfter = shift;
@@ -618,9 +629,10 @@ sub getMostPlayedHistoryArtistTracks {
 	my $orderBy = Plugins::TrackStat::Statistics::Base::getRandomString();
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
-		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks join track_history on tracks.url=track_history.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributor_track.contributor=contributors.id join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
+		my $clientid = $client->id;
+		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks join track_history on tracks.url=track_history.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributor_track.contributor=contributors.id join track_statistics on tracks.url=track_statistics.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
 		if($beforeAfter eq "<") {
-			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
+			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 		}
 	}else {
 		$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,count(track_history.url) as sumcount,max(track_history.played) as lastplayed, 0 as maxadded from tracks,track_history,contributor_track,contributors,track_statistics where tracks.url = track_history.url and tracks.url=track_statistics.url and tracks.id=contributor_track.track and contributors.id = contributor_track.contributor and contributor_track.role in (1,4,5,6) and played$beforeAfter$beforeAfterTime group by contributors.id order by sumcount desc,avgrating desc,$orderBy limit $listLength";
@@ -628,7 +640,7 @@ sub getMostPlayedHistoryArtistTracks {
 			$sql = "select contributors.id,avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating,sum(ifnull(track_statistics.playCount,0)) as sumcount,max(track_statistics.lastPlayed) as lastplayed, max(track_statistics.added) as maxadded from tracks left join track_statistics on tracks.url = track_statistics.url join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) join contributors on contributors.id = contributor_track.contributor group by contributors.id having max(track_statistics.lastPlayed) is null or max(track_statistics.lastPlayed)<$beforeAfterTime order by sumcount desc,avgrating desc,$orderBy limit $listLength";    
 		}
 	}
-    return Plugins::TrackStat::Statistics::Base::getArtistTracks($sql,$limit);
+    return Plugins::TrackStat::Statistics::Base::getArtistTracks($client,$sql,$limit);
 }
 
 

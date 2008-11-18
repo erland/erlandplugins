@@ -334,6 +334,7 @@ sub getAlbumsWeb {
 }
 
 sub getAlbumTracks {
+	my $client = shift;
 	my $sql = shift;
 	my $limit = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -464,6 +465,7 @@ sub getArtistsWeb {
 }
 
 sub getArtistTracks {
+	my $client = shift;
 	my $sql = shift;
 	my $limit = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -485,12 +487,13 @@ sub getArtistTracks {
 				$id = shift @artists;
 				my $artist = Plugins::TrackStat::Storage::objectForId('artist',$id);
 
-				$log->debug("Getting tracks for artist: ".$artist->name."\n");
+				$log->debug("Getting tracks for artist($id)".$artist->name."\n");
 
 				my $items;
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+					my $clientid = $client->id;
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
 				}else {
 					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
 				}
@@ -508,6 +511,7 @@ sub getArtistTracks {
 				for my $item (@$items) {
 					push @result, $item;
 				}
+				fisher_yates_shuffle(\@result);
 				$log->debug("Got ".scalar(@result)." tracks for ".$artist->name."\n");
 			}
 		}
@@ -609,6 +613,7 @@ sub getGenresWeb {
 }
 
 sub getGenreTracks {
+	my $client = shift;
 	my $sql = shift;
 	my $limit = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -634,7 +639,8 @@ sub getGenreTracks {
 				my $items;
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by rand() limit $limit");
+					my $clientid = $client->id;
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by rand() limit $limit");
 				}else {
 					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track where genre_track.genre=$id group by tracks.id order by rand() limit $limit");
 				}
@@ -652,6 +658,7 @@ sub getGenreTracks {
 				for my $item (@$items) {
 					push @result, $item;
 				}
+				fisher_yates_shuffle(\@result);
 				$log->debug("Got ".scalar(@result)." tracks for ".$genre->name."\n");
 			}
 		}
@@ -749,6 +756,7 @@ sub getYearsWeb {
 }
 
 sub getYearTracks {
+	my $client = shift;
 	my $sql = shift;
 	my $limit = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -774,7 +782,8 @@ sub getYearTracks {
 				my $items;
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by rand() limit $limit");
+					my $clientid = $client->id;
+					$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by rand() limit $limit");
 				}else {
 					$sthtracks = $dbh->prepare("select tracks.id from tracks where tracks.year=$id order by rand() limit $limit");
 				}
@@ -792,6 +801,7 @@ sub getYearTracks {
 				for my $item (@$items) {
 					push @result, $item;
 				}
+				fisher_yates_shuffle(\@result);
 				$log->debug("Got ".scalar(@result)." tracks for ".$year."\n");
 			}
 		}
@@ -893,6 +903,7 @@ sub getPlaylistsWeb {
 }
 
 sub getPlaylistTracks {
+	my $client = shift;
 	my $sql = shift;
 	my $limit = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -919,7 +930,8 @@ sub getPlaylistTracks {
 				my $items;
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
+					my $clientid = $client->id;
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
 				}else {
 					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
 				}
@@ -937,6 +949,7 @@ sub getPlaylistTracks {
 				for my $item (@$items) {
 					push @result, $item;
 				}
+				fisher_yates_shuffle(\@result);
 				$log->debug("Got ".scalar(@result)." tracks for ".$playlist->title."\n");
 			}
 		}
