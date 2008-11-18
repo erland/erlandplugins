@@ -46,7 +46,7 @@
 <p>[% PROCESS scanwarning %]
 [% END -%]
 [% END %]
-[% PROCESS pageheader.html dontscroll=1 %]
+[% PROCESS pageheader.html dontscroll=1 useSpecialExt="-browse" %]
 [% END %]
 [% PROCESS plugins/CustomBrowse/iteminfo.html %]
 [%- IF artwork == 1 && (pluginCustomBrowseArtworkSupported);
