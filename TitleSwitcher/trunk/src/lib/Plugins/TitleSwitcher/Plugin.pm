@@ -23,17 +23,12 @@ use strict;
 use base qw(Slim::Plugin::Base);
 
 use Slim::Utils::Prefs;
-use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
-use File::Spec::Functions qw(:ALL);
-use DBI qw(:sql_types);
-use FindBin qw($Bin);
 use Plugins::TitleSwitcher::Settings;
 use Storable;
 
-my @pluginDirs = ();
 our $PLUGINVERSION =  undef;
 
 my $prefs = preferences('plugin.titleswitcher');
@@ -45,7 +40,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 my $customFormats = {};
-my $clientFormats = {};
+my $reloadVersion = 0;
 
 sub getDisplayName {
 	return 'PLUGIN_TITLESWITCHER';
@@ -82,7 +77,7 @@ sub reloadFormats {
 			'parts' => \@formatParts,
 		}
 	}
-	$clientFormats = {};
+	$reloadVersion++;
 }
 
 sub getMusicInfoSCRCustomItems {
@@ -109,36 +104,42 @@ sub getTitleFormat
 	$log->debug("Requesting format $tag");
 	if($tag =~ /^TITLESWITCHER(.*)$/) {
 		my $format = $1;
+
+		if($reloadVersion != $client->pluginData('reloadVersion') || !defined($client->pluginData('format')) ) {
+			$client->pluginData('format' => {});
+			$client->pluginData('reloadVersion' => $reloadVersion);
+			$log->debug("Reloading formats for player: ".$client->name);
+		}
 		$log->debug("Parsing format $format");
 
-		if(!exists($clientFormats->{$client->id}->{$format}) && exists($customFormats->{$format})) {
-			$clientFormats->{$client->id}->{$format} = Storable::dclone($customFormats->{$format});
+		if(!$client->pluginData('format')->{$format} && exists($customFormats->{$format})) {
+			$client->pluginData('format')->{$format} = Storable::dclone($customFormats->{$format});
 		}
 
-		if(exists($clientFormats->{$client->id}->{$format})) {
+		if(exists($client->pluginData('format')->{$format})) {
 			my $currentTime = time();
-			if(!exists($clientFormats->{$client->id}->{$format}->{'time'}) || $clientFormats->{$client->id}->{$format}->{'time'}>$currentTime) {
-				$clientFormats->{$client->id}->{$format}->{'time'}=$currentTime;
-				$clientFormats->{$client->id}->{$format}->{'current'}=0;
+			if(!exists($client->pluginData('format')->{$format}->{'time'}) || $client->pluginData('format')->{$format}->{'time'}>$currentTime) {
+				$client->pluginData('format')->{$format}->{'time'}=$currentTime;
+				$client->pluginData('format')->{$format}->{'current'}=0;
 			}
-			my $currentIndex = $clientFormats->{$client->id}->{$format}->{'current'};
+			my $currentIndex = $client->pluginData('format')->{$format}->{'current'};
 			my $currentPartTime = 5;
-			if(exists($clientFormats->{$client->id}->{$format}->{'parts'}->[$clientFormats->{$client->id}->{$format}->{'current'}]->{'time'})) {
-				$currentPartTime = $clientFormats->{$client->id}->{$format}->{'parts'}->[$clientFormats->{$client->id}->{$format}->{'current'}]->{'time'};
+			if(exists($client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'})) {
+				$currentPartTime = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'};
 			}
 
-			if($currentTime-$clientFormats->{$client->id}->{$format}->{'time'}>$currentPartTime) {
-				my $parts = $clientFormats->{$client->id}->{$format}->{'parts'};
-				if(scalar(@$parts)>$clientFormats->{$client->id}->{$format}->{'current'}+1) {
-					$clientFormats->{$client->id}->{$format}->{'current'}++;
-					$clientFormats->{$client->id}->{$format}->{'time'}=$currentTime;
+			if($currentTime-$client->pluginData('format')->{$format}->{'time'}>$currentPartTime) {
+				my $parts = $client->pluginData('format')->{$format}->{'parts'};
+				if(scalar(@$parts)>$client->pluginData('format')->{$format}->{'current'}+1) {
+					$client->pluginData('format')->{$format}->{'current'}++;
+					$client->pluginData('format')->{$format}->{'time'}=$currentTime;
 				}else {
-					$clientFormats->{$client->id}->{$format}->{'current'}=0;
-					$clientFormats->{$client->id}->{$format}->{'time'}=$currentTime;
+					$client->pluginData('format')->{$format}->{'current'}=0;
+					$client->pluginData('format')->{$format}->{'time'}=$currentTime;
 				}
-				$log->debug("Switching to next format, part ".$clientFormats->{$client->id}->{$format}->{'current'});
+				$log->debug("Switching to next format, part ".$client->pluginData('format')->{$format}->{'current'});
 			}
-			my $currentFormat = $clientFormats->{$client->id}->{$format}->{'parts'}->[$clientFormats->{$client->id}->{$format}->{'current'}]->{'format'};
+			my $currentFormat = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'format'};
 			$log->debug("Getting strig for $currentFormat");
 			my $result = Plugins::MusicInfoSCR::Info::getFormatString($client,$currentFormat);
 			$log->debug("Returning $result");
