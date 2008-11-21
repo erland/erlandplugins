@@ -34,9 +34,7 @@ my $log   = logger('plugin.titleswitcher');
 my $plugin; # reference to main plugin
 
 $prefs->migrate(1, sub {
-	$log->error("GOT here");
 	if(!defined($prefs->get('formats'))) {
-	$log->error("GOT here TOO");
 		$prefs->set('formats', {'ALBUMARTIST' => 'ALBUM:5,ARTIST:10'});
 	}
 	1;
@@ -134,6 +132,9 @@ sub validateFormat {
 	my $formats = Plugins::MusicInfoSCR::Settings::getFormatStrings($client);
 	my @parts = split(/,/,$format);
 	foreach my $part (@parts) {
+		if($part =~ /^(\".*\")(.*)$/) {
+			$part = $2;
+		}
 		my ($name,$time) = split(/:/,$part);
 		if(!exists $formats->{$name}) {
 			return undef;

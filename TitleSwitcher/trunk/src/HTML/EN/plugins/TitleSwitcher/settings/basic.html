@@ -7,7 +7,7 @@
                 [% FOR format = prefs.formats.keys.sort %]
                         <input type="text" class="stdedit" name="format_name_[% format %]" id="format_name_[% format %]" value="[% format %]" size="20" readonly>
                         &nbsp;&nbsp;
-                        <input type="text" class="stdedit" name="format_value_[% format %]" id="format_value_[% format %]" value="[% prefs.formats.$format %]" size="40">
+                        <input type="text" class="stdedit" name="format_value_[% format %]" id="format_value_[% format %]" value="[% prefs.formats.$format |html%]" size="40">
                         <br>
                 [% END %]
                 <input type="text" class="stdedit" name="format_name_new" id="format_name_new" value="" size="20">
