@@ -61,12 +61,18 @@ sub reloadFormats {
 		my @formatParts = ();
 		my @parts = split(/,/,$formats->{$format});
 		foreach my $part (@parts) {
+			my $preText = '';
+			if($part =~ /^\"(.*)\"(.*)$/) {
+				$preText = $1;
+				$part = $2;
+			}
 			my ($name,$time,$size) = split(/:/,$part);
 			if(!$time) {
 				$time = 5;
 			}
 
 			my %entry = (
+				'pretext' => $preText,
 				'format' => $name,
 				'time' => $time,
 				'size' => $size,
@@ -168,10 +174,10 @@ sub getTitleFormat
 				my $currentFormat = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'format'};
 				$log->debug("Getting string for $currentFormat");
 				$result = Plugins::MusicInfoSCR::Info::getFormatString($client,$currentFormat);
-				$client->pluginData('format')->{$format}->{'currentValue'} = $result;
+				$client->pluginData('format')->{$format}->{'currentValue'} = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'pretext'}.$result;
 				$noOfChecked++;
 			}while((!defined($result) || $result eq '') && $noOfChecked<scalar(@$parts));
-
+			$result = $client->pluginData('format')->{$format}->{'currentValue'};
 			$log->debug("Returning $result");
 			return $result;
 		}
