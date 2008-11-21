@@ -61,14 +61,15 @@ sub reloadFormats {
 		my @formatParts = ();
 		my @parts = split(/,/,$formats->{$format});
 		foreach my $part (@parts) {
-			my ($name,$time) = split(/:/,$part);
-			if(!defined($time)) {
+			my ($name,$time,$size) = split(/:/,$part);
+			if(!$time) {
 				$time = 5;
 			}
 
 			my %entry = (
 				'format' => $name,
 				'time' => $time,
+				'size' => $size,
 			);
 			push @formatParts,\%entry;
 		}
@@ -126,22 +127,51 @@ sub getTitleFormat
 			my $currentPartTime = 5;
 			if(exists($client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'})) {
 				$currentPartTime = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'};
+				if(exists $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'size'} &&
+					exists $client->pluginData('format')->{$format}->{'currentValue'}) {
+
+					my $size = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'size'}||0;
+					my $currentValue = $client->pluginData('format')->{$format}->{'currentValue'};
+					if($size>0 && length($currentValue)>$size) {
+						my $scrollTimePerCharacter; 
+						my $scrollPause = $serverPrefs->client($client)->get($client->display->linesPerScreen() == 1 ? 'scrollPause' : 'scrollPauseDouble');
+						my $scrollRate = $serverPrefs->client($client)->get($client->display->linesPerScreen() == 1 ? 'scrollRate' : 'scrollRateDouble');
+						my $scrollPixels = $serverPrefs->client($client)->get($client->display->linesPerScreen() == 1 ? 'scrollPixels' : 'scrollPixelsDouble');
+						my $pixelsPerCharacter = 13;
+						my $scrollTimePerCharacter = $pixelsPerCharacter/$scrollPixels*$scrollRate;
+						if($currentPartTime<$scrollPause + length($currentValue)*$scrollTimePerCharacter) {
+							$currentPartTime = $scrollPause + length($currentValue)*$scrollTimePerCharacter;
+							$log->debug("Waiting extra due to scroll: ".$currentPartTime);
+						}else {
+							$log->debug("Wating: $currentPartTime");
+						}
+					}else {
+						$log->debug("Waiting: $currentPartTime");
+					}
+				}
 			}
 
-			if($currentTime-$client->pluginData('format')->{$format}->{'time'}>$currentPartTime) {
-				my $parts = $client->pluginData('format')->{$format}->{'parts'};
-				if(scalar(@$parts)>$client->pluginData('format')->{$format}->{'current'}+1) {
-					$client->pluginData('format')->{$format}->{'current'}++;
-					$client->pluginData('format')->{$format}->{'time'}=$currentTime;
-				}else {
-					$client->pluginData('format')->{$format}->{'current'}=0;
-					$client->pluginData('format')->{$format}->{'time'}=$currentTime;
+			my $parts = $client->pluginData('format')->{$format}->{'parts'};
+			my $noOfChecked = 0;
+			my $result;
+			do {
+				if($currentTime-$client->pluginData('format')->{$format}->{'time'}>$currentPartTime || $noOfChecked>0) {
+					if(scalar(@$parts)>$client->pluginData('format')->{$format}->{'current'}+1) {
+						$client->pluginData('format')->{$format}->{'current'}++;
+						$client->pluginData('format')->{$format}->{'time'}=$currentTime;
+					}else {
+						$client->pluginData('format')->{$format}->{'current'}=0;
+						$client->pluginData('format')->{$format}->{'time'}=$currentTime;
+					}
+					$log->debug("Switching to next format, part ".$client->pluginData('format')->{$format}->{'current'});
 				}
-				$log->debug("Switching to next format, part ".$client->pluginData('format')->{$format}->{'current'});
-			}
-			my $currentFormat = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'format'};
-			$log->debug("Getting strig for $currentFormat");
-			my $result = Plugins::MusicInfoSCR::Info::getFormatString($client,$currentFormat);
+				my $currentFormat = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'format'};
+				$log->debug("Getting string for $currentFormat");
+				$result = Plugins::MusicInfoSCR::Info::getFormatString($client,$currentFormat);
+				$client->pluginData('format')->{$format}->{'currentValue'} = $result;
+				$noOfChecked++;
+			}while((!defined($result) || $result eq '') && $noOfChecked<scalar(@$parts));
+
 			$log->debug("Returning $result");
 			return $result;
 		}
