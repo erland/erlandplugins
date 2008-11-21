@@ -39,6 +39,17 @@ $prefs->migrate(1, sub {
 	}
 	1;
 });
+$prefs->migrate(2, sub {
+	if(!defined($prefs->get('defaultscrollsize'))) {
+		$prefs->set('defaultscrollsize', 30);
+	}
+	if(!defined($prefs->get('defaulttimeout'))) {
+		$prefs->set('defaulttimeout', 5);
+	}
+	1;
+});
+
+$prefs->setValidate('num',qw(defaultscrollsize defaulttimeout));
 
 sub new {
 	my $class = shift;
@@ -66,6 +77,10 @@ sub pages {
 	);
 	my @pages = (\%page);
 	return \@pages;
+}
+
+sub prefs {
+	return ($prefs, qw(defaulttimeout defaultscrollsize));
 }
 
 sub handler {

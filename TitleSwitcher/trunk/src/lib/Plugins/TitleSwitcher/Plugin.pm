@@ -68,9 +68,11 @@ sub reloadFormats {
 			}
 			my ($name,$time,$size) = split(/:/,$part);
 			if(!$time) {
-				$time = 5;
+				$time = $prefs->get('defaulttimeout');
 			}
-
+			if(!$size) {
+				$size = $prefs->get('defaultscrollsize');
+			}
 			my %entry = (
 				'pretext' => $preText,
 				'format' => $name,
@@ -130,7 +132,7 @@ sub getTitleFormat
 				$client->pluginData('format')->{$format}->{'current'}=0;
 			}
 			my $currentIndex = $client->pluginData('format')->{$format}->{'current'};
-			my $currentPartTime = 5;
+			my $currentPartTime = $prefs->get('defaulttimeout');
 			if(exists($client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'})) {
 				$currentPartTime = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'time'};
 				if(exists $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'size'} &&
