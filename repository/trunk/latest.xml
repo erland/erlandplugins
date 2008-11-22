@@ -145,17 +145,21 @@
                         <sha>b10367cf5b7ad13368956a2755d125af6cab73e3</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="TitleSwitcher" version="1.0" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="TitleSwitcher" version="1.1" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Title Switcher</title>
                         <desc lang="EN">
                         Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin can only be used together with the MusicInfoSCR plugin. 
                         &lt;br/&gt;
                         &lt;br/&gt;
                         News in this version&lt;br/&gt;
-			- Initial version&lt;br/&gt;
+			- Added support for skipping blank formats&lt;br/&gt;
+			- Added support for waiting longer for long texts that needs to scroll&lt;br/&gt;
+			- Added support for adding static texts before format string&lt;br/&gt;
+			- Added configurable default switching time and default length that needs to scroll&lt;br/&gt;
+			- Made it compatible with 7.1&lt;br/&gt;
                         </desc>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.0.zip</url>
-                        <sha>ff044ef712a8993b6d93b2ebeb20ebb8ecddd05c</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.zip</url>
+                        <sha>6da948f0d2a1a6334ab95b7f39629cf37acafb79</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
                 </plugin>
 	</plugins>
