@@ -2126,7 +2126,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue'], [1, 0, 1, \&cliContinuePlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','stop'], [1, 0, 0, \&cliStopPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','browsejive','_start','_itemsPerResponse'], [1, 1, 1, \&cliJiveHandler]);
-	Slim::Control::Request::addDispatch(['dynamicplaylist','jiveplaylistparameters'], [1, 1, 1, \&cliJivePlaylistParametersHandler]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','jiveplaylistparameters','_start','_itemsPerResponse'], [1, 1, 1, \&cliJivePlaylistParametersHandler]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','mixjive'], [1, 1, 1, \&cliMixJiveHandler]);
 
 	initFilters();
@@ -3274,6 +3274,7 @@ sub cliJivePlaylistParametersHandler {
 		return;		
 	}	
 
+	my $start = $request->getParam('_start') || 0;
 	$log->debug("Executing CLI jiveplaylistparameters command\n");
 
 	my $parameter= $playlist->{'parameters'}->{$nextParameterId};
@@ -3308,20 +3309,24 @@ sub cliJivePlaylistParametersHandler {
 	}
 
 	my $cnt = 0;
+	my $offsetCount = 0;
 	foreach my $item (@listRef) {
-		my %itemParams = (
-			'dynamicplaylist_parameter_'.$nextParameterId => $item->{'id'}
-		);
-	
-		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-		$request->addResultLoop('item_loop',$cnt,'text',$item->{'name'});
-		if(!exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
-			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+		if($cnt>=$start) {
+			my %itemParams = (
+				'dynamicplaylist_parameter_'.$nextParameterId => $item->{'id'}
+			);
+		
+			$request->addResultLoop('item_loop',$offsetCount,'params',\%itemParams);
+			$request->addResultLoop('item_loop',$offsetCount,'text',$item->{'name'});
+			if(!exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
+				$request->addResultLoop('item_loop',$offsetCount,'style','itemNoAction');
+			}
+			$offsetCount++;
 		}
 		$cnt++;
 	}
 
-	$request->addResult('offset',0);
+	$request->addResult('offset',$start);
 	$request->addResult('count',$cnt);
 
 	$request->setStatusDone();
