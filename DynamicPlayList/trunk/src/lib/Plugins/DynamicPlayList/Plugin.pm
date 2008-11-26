@@ -3283,6 +3283,7 @@ sub cliJivePlaylistParametersHandler {
 	addParameterValues($client,\@listRef, $parameter);
 
 	my $count = scalar(@listRef);
+	my $itemsPerResponse = $request->getParam('_itemsPerResponse') || $count;
 
 	if(exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
 		my $baseMenu = {
@@ -3311,7 +3312,7 @@ sub cliJivePlaylistParametersHandler {
 	my $cnt = 0;
 	my $offsetCount = 0;
 	foreach my $item (@listRef) {
-		if($cnt>=$start) {
+		if($cnt>=$start && $offsetCount<$itemsPerResponse) {
 			my %itemParams = (
 				'dynamicplaylist_parameter_'.$nextParameterId => $item->{'id'}
 			);
