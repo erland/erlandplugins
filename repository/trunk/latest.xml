@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <extensions>
+	<details>
+		<title lang="EN">Erland's plugins</title>
+	</details>
 	<plugins>
 		<plugin name="TrackStat" version="2.5" minTarget="7.1.0" maxTarget="7.3+">
 			<title lang="EN">TrackStat</title>
