@@ -52,7 +52,7 @@ sub getCustomScanFunctions {
 		'order' => '70',
 		'defaultenabled' => 0,
 		'name' => 'MusicIP Statistics Import',
-		'description' => "This module imports statistic information in SlimServer from MusicIP Mixer. The information imported are ratings, playcounts, last played time<br>Information is imported from the MusicIP service running at the specified host and port, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in MusicIP and SlimServer, for example the MusicIP library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running MusicIP and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module imports statistic information in SqueezeCenter from MusicIP Mixer. The information imported are ratings, playcounts, last played time<br>Information is imported from the MusicIP service running at the specified host and port, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in MusicIP and SqueezeCenter, for example the MusicIP library can be on a Windows computer in mp3 format and the SqueezeCenter library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SqueezeCenter. If you are running MusicIP and SqueezeCenter on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
 		'initScanTrack' => \&initScanTrack,
@@ -74,30 +74,30 @@ sub getCustomScanFunctions {
 			},
 			{
 				'id' => 'musicmagicslimserverextension',
-				'name' => 'File extension in SlimServer',
-				'description' => 'File extension in SlimServer (for example .flac), empty means same file extension as in MusicIP',
+				'name' => 'File extension in SqueezeCenter',
+				'description' => 'File extension in SqueezeCenter (for example .flac), empty means same file extension as in MusicIP',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_slimserver_replace_extension")
 			},
 			{
 				'id' => 'musicmagicmusicpath',
 				'name' => 'Music path in MusicIP',
-				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SlimServer',
+				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SqueezeCenter',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_export_library_music_path")
 			},
 			{
 				'id' => 'musicmagicslimservermusicpath',
-				'name' => 'Music path in SlimServer',
-				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'name' => 'Music path in SqueezeCenter',
+				'description' => 'Path to main music directory in SqueezeCenter, empty means same music path as in SqueezeCenter',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("musicmagic_library_music_path")
 			},
 			{
 				'id' => 'musicmagicslimserverutf8',
-				'name' => 'SlimServer uses UTF-8 encoded filesystem',
-				'description' => 'SlimServer uses UTF-8 encoded filesystem',
+				'name' => 'SqueezeCenter uses UTF-8 encoded filesystem',
+				'description' => 'SqueezeCenter uses UTF-8 encoded filesystem',
 				'type' => 'checkbox',
 				'value' => (Slim::Utils::OSDetect::OS() eq 'win')?0:1
 			},
@@ -107,6 +107,13 @@ sub getCustomScanFunctions {
 				'description' => 'Timeout in requests towards MusicIP',
 				'type' => 'text',
 				'value' => $serverPrefs->get("remotestreamtimeout")||15
+			},
+			{
+				'id' => 'musicmagicforcedimport',
+				'name' => 'Force import',
+				'description' => 'Do an import even if MusicIP data hasn\'t changed',
+				'type' => 'checkbox',
+				'value' => 1
 			},
 		]
 	);
@@ -133,9 +140,10 @@ sub isMusicLibraryFileChanged {
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	my $http = LWP::UserAgent->new;
-	if(defined($http)) {
-		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-		my $modificationTime = $http->get($musicmagicurl);
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	my $response = $http->get($musicmagicurl);
+	if($response->is_success) {
+		my $modificationTime = $response->content;
 		chomp $modificationTime;
 
 		# Set this so others can use it without going through Prefs in a tight loop.
@@ -151,12 +159,18 @@ sub isMusicLibraryFileChanged {
 			return 1 if (!$lastMusicMagicFinishTime);
 
 			return 1;
+		}else {
+			$log->debug("MusicIP library has not changed since last import, ignoring...");
 		}
 	}else {
 		$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 		return -1;
 	}
-	return 0;
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicforcedimport")) {
+		return 1;
+	}else {
+		return 0;
+	}
 }
 
 sub initScanTrack {
@@ -182,11 +196,12 @@ sub initScanTrack {
 	my $musicmagicurl = "http://$hostname:$port/api/songs?extended";
 	$log->debug("Calling: $musicmagicurl\n");
 	my $http = LWP::UserAgent->new;
-	if(defined($http)) {
-		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	my $response = $http->get($musicmagicurl);
+	if($response->is_success) {
 		$log->debug("Got answer from Music Magic after ".(time() - $MusicMagicScanStartTime)." seconds\n");
 		
-		@songs = split(/\n\n/, $http->get($musicmagicurl));
+		@songs = split(/\n\n/, $response->content);
 		$log->debug("Got ".scalar(@songs)." number of songs\n");
 
 	}else {
@@ -206,9 +221,10 @@ sub doneScanning {
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
 	$log->debug("Calling: $musicmagicurl\n");
 	my $http = LWP::UserAgent->new;
-	if(defined($http)) {
-		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
-		my $modificationTime = $http->get($musicmagicurl);
+	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
+	my $response = $http->get($musicmagicurl);
+	if($response->is_success) {
+		my $modificationTime = $response->content;
 		chomp $modificationTime;
 
 		$lastMusicMagicDate = $modificationTime;
