@@ -62,7 +62,7 @@ sub getCustomScanFunctions {
 		'order' => '75',
 		'defaultenabled' => 0,
 		'name' => 'MusicIP Statistics Export',
-		'description' => "This module exports statistic information in SlimServer to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and SlimServer, for example the MusicIP library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module exports statistic information in SqueezeCenter to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and SqueezeCenter, for example the MusicIP library can be on a Windows computer in mp3 format and the SqueezeCenter library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and SqueezeCenter on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
 		'initScanTrack' => \&initScanTrack,
@@ -86,21 +86,21 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'musicmagicextension',
 				'name' => 'File extension in MusicIP',
-				'description' => 'File extension in MusicIP (for example .mp3), empty means same file extension as in SlimServer',
+				'description' => 'File extension in MusicIP (for example .mp3), empty means same file extension as in SqueezeCenter',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_replace_extension")
 			},
 			{
 				'id' => 'musicmagicmusicpath',
 				'name' => 'Music path in MusicIP',
-				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SlimServer',
+				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SqueezeCenter',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_export_library_music_path")
 			},
 			{
 				'id' => 'musicmagicslimservermusicpath',
-				'name' => 'Music path in SlimServer',
-				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'name' => 'Music path in SqueezeCenter',
+				'description' => 'Path to main music directory in SqueezeCenter, empty means same music path as in SqueezeCenter',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("musicmagic_library_music_path")
@@ -108,7 +108,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'musicmagicdynamicupdate',
 				'name' => 'Dynamically update statistics',
-				'description' => 'Continously write statistics to MusicIP when ratings are changed and songs are played in SlimServer',
+				'description' => 'Continously write statistics to MusicIP when ratings are changed and songs are played in SqueezeCenter',
 				'type' => 'checkbox',
 				'value' => defined($prefs->get("musicmagic_enabled"))?$prefs->get("musicmagic_enabled"):0
 			},
@@ -180,27 +180,29 @@ sub initScanTrack {
 		$sth->finish();
 	};
 	if ($@) {
-		$log->warn("TrackStat::MusicMagic::Export: SQL error: $DBI::errstr, $@\n");
+		$log->warn("SQL error: $DBI::errstr, $@\n");
 		$isScanning = -1;
+	}else {
+		$log->debug("Got ".scalar(@songs)." number of tracks with statistics");
 	}
 	$isScanning = 1;
 	return undef;
 }
 
 sub doneScanning {
-	$prefs->debug("done Scanning: unlocking and closing\n");
+	$log->debug("done Scanning: unlocking and closing\n");
 
 	$lastMusicMagicFinishTime = time();
 
 	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");;
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");;
 	my $musicmagicurl = "http://$hostname:$port/api/cacheid";
-	$prefs->debug("Calling: $musicmagicurl\n");
+	$log->debug("Calling: $musicmagicurl\n");
 	my $http = LWP::UserAgent->new;
 	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
 	my $response = $http->get("http://$hostname:$port/api/flush");
     	if(!$response->is_success) {
-    		$log->warn("TrackStat::MusicMagic::Export: Failed to flush MusicMagic cache");
+    		$log->warn("Failed to flush MusicMagic cache");
 	}
 	$http = LWP::UserAgent->new;
 	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
@@ -212,7 +214,7 @@ sub doneScanning {
 		$lastMusicMagicDate = $modificationTime;
 	}else {
 		$isScanning = -1;
-		$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
+		$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 	}
 
 	if($isScanning==1) {
@@ -251,8 +253,6 @@ sub handleTrack {
 	my $playCount = $track->playCount();
 	my $lastPlayed = $track->lastPlayed();
 
-	$track = escape($track);
-	
 	my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");;
 	my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 	$url = getMusicMagicURL($url);
@@ -266,12 +266,12 @@ sub handleTrack {
 			chomp $result;
 	    	
 			if($result && $result>0) {
-				$prefs->debug("Set Rating=$rating for $url\n");
+				$log->debug("Set Rating=$rating for $url\n");
 			}else {
-				$prefs->warn("Failure setting Rating=$rating for $url\n");
+				$log->warn("Failure setting Rating=$rating for $url\n");
 			}
 		}else {
-			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
+			$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 	if($playCount) {
@@ -284,12 +284,12 @@ sub handleTrack {
 			chomp $result;
 	    	
 			if($result && $result>0) {
-				$prefs->debug("Set PlayCount=$playCount for $url\n");
+				$log->debug("Set PlayCount=$playCount for $url\n");
 			}else {
-				$prefs->warn("Failure setting PlayCount=$playCount for $url\n");
+				$log->warn("Failure setting PlayCount=$playCount for $url\n");
 			}
 		}else {
-			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
+			$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 	if($lastPlayed) {
@@ -302,12 +302,12 @@ sub handleTrack {
 			chomp $result;
 			
 			if($result && $result>0) {
-				$prefs->debug("Set LastPlayed=$lastPlayed for $url\n");
+				$log->debug("Set LastPlayed=$lastPlayed for $url\n");
 			}else {
-				$prefs->warn("Failure setting LastPlayed=$lastPlayed for $url\n");
+				$log->warn("Failure setting LastPlayed=$lastPlayed for $url\n");
 			}
 		}else {
-			$log->warn("TrackStat::MusicMagic::Export: Failed to call MusicMagic at: $musicmagicurl\n");
+			$log->warn("Failed to call MusicMagic at: $musicmagicurl\n");
 		}
 	}
 }
@@ -379,7 +379,7 @@ sub exportRating {
 			my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
 			my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 			my $musicmagicurl = "http://$hostname:$port/api/setRating?song=$mmurl&rating=$lowrating";
-			$prefs->debug("Calling: $musicmagicurl\n");
+			$log->debug("Calling: $musicmagicurl\n");
 			my $http = LWP::UserAgent->new;
 			$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
 			my $response = $http->get($musicmagicurl);
@@ -387,9 +387,9 @@ sub exportRating {
 				my $result = $response->content;
 				chomp $result;
 				if($result eq "1") {
-					$prefs->debug("Success setting Music Magic rating\n");
+					$log->debug("Success setting Music Magic rating\n");
 				}else {
-					$prefs->warn("Error setting Music Magic rating, error code = $result\n");
+					$log->warn("Error setting Music Magic rating, error code = $result\n");
 				}
 				$http = LWP::UserAgent->new;
 				$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagictimeout"));
@@ -398,9 +398,13 @@ sub exportRating {
 					$log->warn("Failed to flush MusicMagic cache"); 
 				}
 			}else {
-				$prefs->warn("Failure setting Music Magic rating\n");
+				$log->warn("Failure setting Music Magic rating\n");
 			}
+		}else {
+			$log->debug("Not setting rating, dynamic export isn't enabled for this track");
 		}
+	}else {
+		$log->debug("Not setting rating, dynamic export isn't enabled");
 	}
 }
 sub exportStatistic {
@@ -416,16 +420,20 @@ sub exportStatistic {
 			my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
 			my $port = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicport");
 			my $musicmagicurl = "http://$hostname:$port/api/setPlayCount?song=$mmurl&count=$playCount";
-			$prefs->debug("Calling: $musicmagicurl\n");
+			$log->debug("Calling: $musicmagicurl\n");
 			my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'playCount' });
 			$http->get($musicmagicurl);
 			$musicmagicurl = "http://$hostname:$port/api/setLastPlayed?song=$mmurl&time=$lastPlayed";
-			$prefs->debug("Calling: $musicmagicurl\n");
+			$log->debug("Calling: $musicmagicurl\n");
 			$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'lastPlayed' });
 			$http->get($musicmagicurl);
 			$http = Slim::Networking::SimpleAsyncHTTP->new(\&gotViaHTTP, \&gotErrorViaHTTP, {'command' => 'flush' });
 			$http->get("http://$hostname:$port/api/flush");
+		}else {
+			$log->debug("Not setting statistic, dynamic export isn't enabled for this track");
 		}
+	}else {
+		$log->debug("Not setting statistic, dynamic export isn't enabled");
 	}
 }
 
@@ -437,14 +445,14 @@ sub isAllowedToExport {
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicexportlibrariesdynamicupdate") && $libraries && Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
 		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.url=? and multilibrary_track.library in ($libraries)";
 		my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
-		$prefs->debug("Executing: $sql\n");
+		$log->debug("Executing: $sql\n");
 		eval {
 			my $sth = $dbh->prepare( $sql );
 			$sth->bind_param(1,$url,SQL_VARCHAR);
 			$sth->execute();
 			$sth->bind_columns( undef, \$include);
 			if( !$sth->fetch() ) {
-				$prefs->debug("Ignoring track, not part of selected libraries: ".$url."\n");
+				$log->debug("Ignoring track, not part of selected libraries: ".$url."\n");
 				$include = 0;
 			}
 			$sth->finish();
@@ -462,9 +470,9 @@ sub gotViaHTTP {
 	my $result = $http->content;
 	chomp $result;
 	if($result eq "1") {
-		$prefs->debug("Success setting Music Magic ".$params->{'command'}."\n");
+		$log->debug("Success setting Music Magic ".$params->{'command'}."\n");
 	}else {
-		$prefs->warn("Error setting Music Magic ".$params->{'command'}.", error code = $result\n");
+		$log->warn("Error setting Music Magic ".$params->{'command'}.", error code = $result\n");
 	}
 	$http->close();
 }
@@ -472,7 +480,7 @@ sub gotViaHTTP {
 sub gotErrorViaHTTP {
 	my $http  = shift;
 	my $params = $http->params;
-	$prefs->warn("Failure setting Music Magic ".$params->{'command'}."\n");
+	$log->warn("Failure setting Music Magic ".$params->{'command'}."\n");
 }
 
 
