@@ -1,0 +1,19 @@
+<?xml version='1.0' standalone='yes'?>
+<extension>
+  <name>PLUGIN_IPOD</name>
+  <creator>Erland Isaksson</creator>
+  <defaultState>enabled</defaultState>
+  <description>SETUP_PLUGIN_IPOD_GROUP_DESC</description>
+  <email>erland_i@hotmail.com</email>
+  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <id>1936C5B8-F3E7-11DC-A788-90792DAD7856</id>
+  <module>Plugins::iPod::Plugin</module>
+  <optionsURL>plugins/iPod/settings/basic.html</optionsURL>
+  <targetApplication>
+    <id>SlimServer</id>
+    <maxVersion>7.0+</maxVersion>
+    <minVersion>7.0a</minVersion>
+  </targetApplication>
+  <type>2</type>
+  <version>1.0</version>
+</extension>
