@@ -5,21 +5,15 @@
 		<title lang="EN">Erland's plugins</title>
 	</details>
 	<plugins>
-		<plugin name="TrackStat" version="2.5" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="TrackStat" version="2.5.1" minTarget="7.1.0" maxTarget="7.3+">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics.</desc>
-			<changes lang="EN">- Corrected so MusicIP integration works correctly with 7.3
-			- Updated so iTunes import uses album ratings from iTunes if no track rating exists in iTunes
-			- Added support for reconnecting statistics on moved music files as long as the end of the path is the same as before (Thanks to Philip Meyer for patch)
-			- Added support for showing artists with albums in all interfaces if enabled in SqueezeCenter settings
-			- Improved handling of synchronized players in dynamic playlists (Only avoid repeating tracks played on the same player)
-			- Corrected so dynamic playlists based on artists, genres, years and playlists are more random.
-			- Corrected some various bugs
-			- Added official support for 7.3</changes>
+			<changes lang="EN">- Corrected so MusicIP integration works correctly.
+			- Corrected so Not Completely Rated statistics works correctly.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.5.zip</url>
-			<sha>08eed899e8feb9e9b632d88f90a7b5d9e90e457e</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.5.1.zip</url>
+			<sha>ed833d66cddc59f5515d4fc4430775abc327203c</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.5" minTarget="7.1.0" maxTarget="7.3+">
