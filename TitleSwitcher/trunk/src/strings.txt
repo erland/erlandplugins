@@ -5,7 +5,7 @@ SETUP_PLUGIN_TITLESWITCHER_GROUP
 	EN	Title Switcher
 
 SETUP_PLUGIN_TITLESWITCHER_GROUP_DESC
-	EN	Title Switcher is a plugin which makes it possible to switch between different information to show on the Now Playing screen when used together with the MusicInfoSCR plugin
+	EN	Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed.	
 
 PLUGIN_TITLESWITCHER_SETTINGS
 	EN	Settings
