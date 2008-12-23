@@ -176,7 +176,11 @@ sub getTitleFormat
 				my $currentFormat = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'format'};
 				$log->debug("Getting string for $currentFormat");
 				$result = Plugins::MusicInfoSCR::Info::getFormatString($client,$currentFormat);
-				$client->pluginData('format')->{$format}->{'currentValue'} = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'pretext'}.$result;
+				if(defined($result) && $result ne '') {
+					$client->pluginData('format')->{$format}->{'currentValue'} = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'pretext'}.$result;
+				}else {
+					$client->pluginData('format')->{$format}->{'currentValue'} = undef;
+				}
 				$noOfChecked++;
 			}while((!defined($result) || $result eq '') && $noOfChecked<scalar(@$parts));
 			$result = $client->pluginData('format')->{$format}->{'currentValue'};
