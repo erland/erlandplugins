@@ -32,6 +32,8 @@
 [%- END %]
 [%- ELSIF requestfromuser =='nooftracks' %]
 -- PlaylistParameter1:list:Select number of songs:5:5 songs,10:10 songs,15:15 songs,20:20 songs,30:30 songs,50:50 songs,100:100 songs,150:150 songs,200:200 songs,300:300 songs,500:500 songs
+[%- ELSIF requestfromuser =='addedtime' %]
+-- PlaylistParameter1:list:Select last added time:86400:1 day ago,432000:5 days ago,604800:1 week ago,1209600:2 weeks ago,2592000:1 month ago,5270400:2 months ago,7948800:3 months ago,10540800:4 months ago,15811200:6 months ago,31536000:1 year ago,63072000:2 years ago
 [%- END %]
 [%- IF customskipfilter %]
 -- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
@@ -69,6 +71,8 @@ select url from
 			and tracks.album='PlaylistParameter1'
 		[%- ELSIF requestfromuser == 'year' %]
 			and tracks.year='PlaylistParameter1'
+		[%- ELSIF requestfromuser == 'addedtime' %]
+			and track_statistics.added > (UNIX_TIMESTAMP() -'PlaylistParameter1')
 		[%- END %]
 		[%- IF notrepeat %]
 			and dynamicplaylist_history.id is null
