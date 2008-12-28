@@ -26,6 +26,8 @@
 [%- END %]
 [%- ELSIF requestfromuser =='noofalbums' %]
 -- PlaylistParameter1:list:Select number of albums:1:1 album,2:2 albums,3:3 albums,4:4 albums,5:5 albums,10:10 albums,15:15 albums,20:20 albums,30:30 albums,50:50 albums
+[%- ELSIF requestfromuser =='addedtime' %]
+-- PlaylistParameter1:list:Select last added time:86400:1 day ago,432000:5 days ago,604800:1 week ago,1209600:2 weeks ago,2592000:1 month ago,5270400:2 months ago,7948800:3 months ago,10540800:4 months ago,15811200:6 months ago,31536000:1 year ago,63072000:2 years ago
 [%- END %]
 -- PlaylistOptionContentType:album
 [%- IF notrepeat %]
@@ -71,6 +73,8 @@ select id from
 			audio=1
 		[%- IF requestfromuser == 'year' %]
 			and tracks.year='PlaylistParameter1'
+		[%- ELSIF requestfromuser == 'addedtime' %]
+			and track_statistics.added > (UNIX_TIMESTAMP() -'PlaylistParameter1')
 		[%- END %]
 		[%- IF notrepeat %]
 			and dynamicplaylist_history.id is null 
@@ -86,7 +90,7 @@ select id from
 		order by maxadded desc,rand() 
 		[% IF requestfromuser =='noofalbums' %]
 		limit 'PlaylistParameter1'
-		[% ELSE %]
+		[% ELSIF requestfromuser != 'addedtime' %]
 		[% IF noofalbums %]limit [% noofalbums %][% ELSE %]limit 1[%END %]
 		[% END %]
 		) as toprated
