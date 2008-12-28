@@ -87,7 +87,7 @@ select url from
 		[% IF !notrepeat %]offset 'PlaylistOffset'[% END %]
 		[% IF requestfromuser == 'nooftracks' %]
 		limit 'PlaylistParameter1'
-		[% ELSE %]
+		[% ELSIF requestfromuser != 'addedtime' %]
 		[% IF nooftracks %]limit [% nooftracks %][% ELSE %]limit 1[%END %]
 		[% END %]) as lastadded
 	order by rand()
