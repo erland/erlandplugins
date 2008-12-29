@@ -20,7 +20,7 @@ PLUGIN_CUSTOMSCAN_MODULESETTINGS
 	EN	Module Settings
 
 SETUP_PLUGIN_CUSTOMSCAN_GROUP_DESC
-	EN	Custom Scan is a plugin which makes it possible to retreive additional information about albums, artists and tracks
+	EN	Custom Scan is a plugin which makes it possible to retreive additional information about albums, artists and tracks<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
 
 SETUP_PLUGIN_CUSTOMSCAN_SHOWMESSAGES_DESC
 	EN	Show debug messages
