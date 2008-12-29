@@ -47,7 +47,7 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'csamazon',
 		'name' => 'Amazon',
-		'description' => "This module scans amazon.com for all your albums, the scanned information is average customer ratings and amazon subjects/genres related to each album. <br><br><b>Note!</b><br>The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and select the \"Amazon Web Services\" link currently available in the bottom left menu under \"Amazon Services\"<br><br>Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.<br><br>The Amazon module is quite slow, the reason for this is that Amazon restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that slimserver will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each album, so the next time it will only scan new albums and will be a lot faster due to this. Approximately scanning time are 1-2 seconds per album in your library",
+		'description' => "This module scans amazon.com for all your albums, the scanned information is average customer ratings and amazon subjects/genres related to each album. <br><br><b>Note!</b><br>The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and select the \"Amazon Web Services\" link currently available in the bottom left menu under \"Amazon Services\"<br><br>Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.<br><br>The Amazon module is quite slow, the reason for this is that Amazon restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that SqueezeCenter will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each album, so the next time it will only scan new albums and will be a lot faster due to this. Approximately scanning time are 1-2 seconds per album in your library",
 		'dataproviderlink' => 'http://www.amazon.com',
 		'dataprovidername' => 'Amazon.com',
 		'scanAlbum' => \&scanAlbum,
@@ -67,7 +67,7 @@ sub getCustomScanFunctions {
 				'value' => 40
 			},
 			{
-				'name' => 'Update slimserver ratings',
+				'name' => 'Update SqueezeCenter ratings',
 				'id' => 'writeamazonrating',
 				'type' => 'checkbox',
 				'value' => 0
@@ -204,12 +204,7 @@ sub rateUnratedTracksOnAlbum {
 	return unless $album;
 	
 	my $sql = undef;
-	my $trackStat;
-	if ($::VERSION ge '6.5') {
-		$trackStat = Slim::Utils::PluginManager::enabledPlugin("TrackStat",undef);
-	}else {
-		$trackStat = grep(/TrackStat/,Slim::Buttons::Plugins::enabledPlugins(undef));
-	}
+	my $trackStat = grep(/TrackStat/, Slim::Utils::PluginManager->enabledPlugins(undef));
 	if($trackStat) {
 		$sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=".$album->id." and (track_statistics.rating is null or track_statistics.rating=0)";
 	}else {
@@ -240,11 +235,16 @@ sub rateUnratedTracksOnAlbum {
 				my $request = $client->execute(['trackstat', 'setrating', $track->id, sprintf('%d%', $rating)]);
 				$request->source('PLUGIN_CUSTOMSCAN');
 			}else {
-				$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");
+				$log->debug("Setting SqueezeCenter rating on ".$track->title." to $rating\n");
 				# Run this within eval for now so it hides all errors until this is standard
 				eval {
-					$track->set('rating' => $rating);
-					$track->update();
+					if(UNIVERSAL::can(ref($track),"persistent")) {
+						$track->persistent->set('rating' => $rating);
+						$track->persistent->update();
+					}else {
+						$track->set('rating' => $rating);
+						$track->update();
+					}
 					Slim::Schema->forceCommit();
 				};
 			}
