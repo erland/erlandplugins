@@ -11,7 +11,7 @@ SETUP_PLUGIN_DATABASEQUERY_GROUP
 	EN	Database Query
 
 SETUP_PLUGIN_DATABASEQUERY_GROUP_DESC
-	EN	Database Query is a plugin to make it easier to retrive data from the SlimServer database without using a SQL client application
+	EN	Database Query is a plugin to make it easier to retrive data from the SlimServer database without using a SQL client application<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
 
 SETUP_PLUGIN_DATABASEQUERY_DATAQUERIES_DIRECTORY
 	EN	Data queries directory
