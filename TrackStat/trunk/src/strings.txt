@@ -56,7 +56,7 @@ SETUP_PLUGIN_TRACKSTAT_GROUP
 	EN	TrackStat
 
 SETUP_PLUGIN_TRACKSTAT_GROUP_DESC
-	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes, MusicIP and Amarok.
+	EN	The TrackStat plugin provides a possiblilty to keep the statistic information in a safe place which survives rescans of the music library. It also makes it possible to give each track a rating.<br>Statistic information about rating, play counts and last played time can also be imported from iTunes, MusicIP and Amarok.<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
 
 PLUGIN_TRACKSTAT_SHOW_MESSAGES
 	EN	Write messages to log
