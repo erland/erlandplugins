@@ -44,6 +44,7 @@ use Plugins::DynamicPlayList::PlaylistSettings;
 use Plugins::DynamicPlayList::FavouriteSettings;
 use Plugins::DynamicPlayList::iPeng::Reader;
 use Plugins::DynamicPlayList::ProtocolHandler;
+use Digest::SHA1 qw(sha1_base64);
 
 our $PLUGINVERSION =  undef;
 
@@ -3681,7 +3682,7 @@ sub getDynamicPlayLists {
 			$playlistDir = Slim::Utils::Misc::fileURLFromPath($playlistDir);
 		}
 		foreach my $playlist (@$playLists) {
-			my $playlistid = "dynamicplaylist_standard_".$playlist->id;
+			my $playlistid = "dynamicplaylist_standard_".sha1_base64($playlist->url);
 			my $id = $playlist->id;
 			my $name = $playlist->title;
 			my $playlisturl;
