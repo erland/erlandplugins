@@ -53,8 +53,7 @@ use Plugins::CustomBrowse::MenuHandler::Main;
 use Plugins::CustomBrowse::MenuHandler::ParameterHandler;
 
 use Plugins::CustomBrowse::iPeng::Reader;
-use Plugins::CustomBrowse::SQLPlayListHandler;
-use Plugins::CustomBrowse::Template::Reader;
+
 my $manageMenuHandler = undef;
 
 my $driver;
@@ -1100,10 +1099,6 @@ sub postinitPlugin {
 		readContextBrowseConfiguration();
 		registerJiveMenu();
 		registerContextMenus();
-		my %parameters = ();
-		my $mixHandler = Plugins::CustomBrowse::SQLPlayListHandler->new(\%parameters);
-		Plugins::CustomBrowse::Plugin::registerMixHandler('custombrowse_sqlplaylist',$mixHandler);
-
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
@@ -1575,7 +1570,6 @@ sub webPages {
 	my $class = shift;
 	my %pages = (
                 "CustomBrowse/custombrowse_list\.(?:htm|xml)"     => \&handleWebList,
-		"CustomBrowse/newsqlplaylist_redirect\.(?:htm|xml)"	=> \&handleWebNewSQLPlayList,
                 "CustomBrowse/custombrowse_header\.(?:htm|xml)"     => \&handleWebHeader,
                 "CustomBrowse/custombrowse_contextheader\.(?:htm|xml)"     => \&handleWebHeader,
                 "CustomBrowse/custombrowse_contextlist\.(?:htm|xml)"     => \&handleWebContextList,
@@ -1656,45 +1650,6 @@ sub webPages {
 	        Slim::Web::Pages->addPageLinks("pluginsiPeng", { 'PLUGIN_CUSTOMBROWSE' => $value });
 		Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_CUSTOMBROWSE' => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 	}
-}
-
-sub handleWebNewSQLPlayList {
-	my ($client, $params) = @_;
-
-	my $url = 'plugins/SQLPlayList/webadminmethods_newitemparameters.html?';
-	if($params->{'type'} eq 'standard') {
-		$url .= 'itemtemplate=custombrowse_randomfrommixer';
-
-		if($params->{'album'}) {
-			my $album = Slim::Schema->resultset('Album')->find($params->{'album'});
-			$url .= '&overrideparameter_album='.$album->title if defined $album;
-		}
-
-		if($params->{'artist'}) {
-			my $contributor = Slim::Schema->resultset('Contributor')->find($params->{'artist'});
-			$url .= '&overrideparameter_artist='.$contributor->name if defined $contributor;
-		}
-
-		if($params->{'year'}) {
-			$url .= '&overrideparameter_year='.$params->{'year'};
-			$url .= '&overrideparameter_yearmin='.$params->{'year'};
-			$url .= '&overrideparameter_yearmax='.$params->{'year'};
-		}
-
-		if($params->{'genre'}) {
-			my $genre = Slim::Schema->resultset('Genre')->find($params->{'genre'});
-			$url .= '&overrideparameter_genre='.$genre->name if defined $genre;
-		}
-
-		if($params->{'playlist'}) {
-			my $playlist = Slim::Schema->resultset('Playlist')->find($params->{'playlist'});
-			$url .= '&overrideparameter_playlist='.$playlist->name if defined $playlist;
-		}
-	}else {
-		$url .= 'itemtemplate=sqlplaylist_randomtracks';
-	}
-	$params->{'pluginCustomBrowseRedirect'} = $url;
-	return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_redirect.html', $params);
 }
 
 sub delSlimserverWebMenus {
@@ -4062,20 +4017,6 @@ sub itemFormatPath {
 	}else {
 		return $item->{'itemname'};
 	}
-}
-
-sub getSQLPlayListTemplates {
-	my $client = shift;
-	return Plugins::CustomBrowse::Template::Reader::getTemplates($client,'CustomBrowse',$PLUGINVERSION,'FileCache/SQLPlayList','PlaylistTemplates','xml');
-}
-
-sub getSQLPlayListTemplateData {
-	my $client = shift;
-	my $templateItem = shift;
-	my $parameterValues = shift;
-	
-	my $data = Plugins::CustomBrowse::Template::Reader::readTemplateData('CustomBrowse','PlaylistTemplates',$templateItem->{'id'});
-	return $data;
 }
 
 sub getMultiLibraryMenus {
