@@ -29,6 +29,7 @@ use Text::Unidecode;
 use HTML::Entities;
 use Slim::Utils::Prefs;
 use Slim::Utils::Strings;
+use Plugins::CustomBrowse::MenuHandler::WrappedMix;
 
 __PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
 
@@ -71,6 +72,33 @@ sub new {
 	$self->{'items'} = undef;
 	bless $self,$class;
 	return $self;
+}
+
+sub registerMixHandler {
+	my $self = shift;
+	my $id = shift;
+	my $mixer = shift;
+
+	my %parameters = (
+		'logHandler' => $self->logHandler,
+		'pluginId' => $self->pluginId,
+		'pluginVersion' => $self->pluginVersion,
+		'sqlHandler' => $self->sqlHandler,
+		'propertyHandler' => $self->propertyHandler,
+		'itemParameterHandler' => $self->itemParameterHandler,
+		'playHandler' => $self,
+		'menuHandler' => $self,
+		'mixHandler' => $mixer,
+	);
+	my $wrappedMix = Plugins::CustomBrowse::MenuHandler::WrappedMix->new(\%parameters);
+	$self->mixHandler->registerMixHandler($id,$wrappedMix);
+}
+
+sub unregisterMixHandler {
+	my $self = shift;
+	my $id = shift;
+
+	$self->mixHandler->unregisterMixHandler($id);
 }
 
 sub getMenuItems {

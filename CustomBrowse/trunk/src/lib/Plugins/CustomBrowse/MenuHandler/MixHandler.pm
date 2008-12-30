@@ -45,6 +45,21 @@ sub new {
 	return $self;
 }
 
+sub registerMixHandler {
+	my $self = shift;
+	my $id = shift;
+	my $mixer = shift;
+
+	$self->mixHandlers->{$id}=$mixer;
+}
+
+sub unregisterMixHandler {
+	my $self = shift;
+	my $id = shift;
+
+	delete $self->mixHandlers->{$id};
+}
+
 sub setGlobalMixes {
 	my $self = shift;
 	my $mixes = shift;
@@ -69,6 +84,36 @@ sub isInterfaceSupported {
 	}
 	return 0;
 }
+
+sub prepareMix {
+	my $self = shift;
+	my $client = shift;
+	my $mix = shift;
+	my $item = shift;
+	my $interfaceType = shift;
+
+	my $mixHandler = $self->mixHandlers->{$mix->{'mixtype'}};
+	if($mixHandler) {
+		return $mixHandler->prepareMix($client,$mix,$item,$interfaceType);
+	}
+	return $mix;
+}
+
+sub getMixData {
+	my $self = shift;
+	my $client = shift;
+	my $mix = shift;
+	my $item = shift;
+	my $interfaceType = shift;
+	my $parameter = shift;
+
+	my $mixHandler = $self->mixHandlers->{$mix->{'mixtype'}};
+	if($mixHandler) {
+		return $mixHandler->getMixData($client,$mix,$item,$interfaceType,$parameter);
+	}
+	return undef;
+}
+
 sub getPreparedMixes {
 	my $self = shift;
 	my $client = shift;
@@ -90,17 +135,19 @@ sub getPreparedMixes {
 			if(defined($image)) {
 				$webMix{'image'} = $image;
 			}
-			my $url = $mix->{'mixurl'};
+
+			my $parameters = $self->propertyHandler->getProperties();
+			if(defined($item->{'customitemtype'})) {
+				$parameters->{'itemtype'} = escape($item->{'customitemtype'});
+			}else {
+				$parameters->{'itemtype'} = $item->{'itemtype'};
+			}
+			$parameters->{'itemid'} = $item->{'itemid'};
+			$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
+			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
+
+			my $url = $self->getMixData($client, $mix, $keywords, $interfaceType, 'mixurl');
 			if(defined($url)) {
-				my $parameters = $self->propertyHandler->getProperties();
-				if(defined($item->{'customitemtype'})) {
-					$parameters->{'itemtype'} = escape($item->{'customitemtype'});
-				}else {
-					$parameters->{'itemtype'} = $item->{'itemtype'};
-				}
-				$parameters->{'itemid'} = $item->{'itemid'};
-				$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
-				my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 				$url = $self->itemParameterHandler->replaceParameters($client,$url,$keywords);
 				$webMix{'url'} = $url;
 				$webMix{'urlcontext'} = $mix->{'mixurlcontext'};
@@ -127,14 +174,16 @@ sub getMixes {
 						my $browseMixes = $self->mixes;
 						foreach my $key (keys %$browseMixes) {
 							my $globalMix = $browseMixes->{$key};
-							if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+							if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $globalMix->{'mixcategory'} eq $mix->{'mixdata'})) {
 								if($self->checkMix($client, $globalMix, $item, $interfaceType)) {
+									$globalMix = $self->prepareMix($client, $globalMix, $item, $interfaceType);
 									push @mixes,$globalMix;
 								}
 							}
 						}
 					}elsif(defined($mix->{'mixname'}))  {
 						if($self->checkMix($client, $mix, $item,$interfaceType)) {
+							$mix = $self->prepareMix($client, $mix, $item, $interfaceType);
 							push @mixes,$mix;
 						}
 					}
@@ -147,14 +196,16 @@ sub getMixes {
 					my $browseMixes = $self->mixes;
 					foreach my $key (keys %$browseMixes) {
 						my $globalMix = $browseMixes->{$key};
-						if($globalMix->{'enabled'} && $globalMix->{'mixcategory'} eq $mix->{'mixdata'}) {
+						if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $globalMix->{'mixcategory'} eq $mix->{'mixdata'})) {
 							if($self->checkMix($client, $globalMix, $item,$interfaceType)) {
+								$globalMix = $self->prepareMix($client, $globalMix, $item, $interfaceType);
 								push @mixes,$globalMix;
 							}
 						}
 					}
 				}elsif(defined($mix->{'mixname'}))  {
 					if($self->checkMix($client, $mix, $item,$interfaceType)) {
+						$mix = $self->prepareMix($client, $mix, $item, $interfaceType);
 						push @mixes,$mix;
 					}
 				}
@@ -172,8 +223,9 @@ sub getMixes {
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
 
-			if($mix->{'enabled'} && $mix->{'mixcategory'} eq $type) {
+			if($mix->{'enabled'} && (!exists $mix->{'mixcategory'} || $mix->{'mixcategory'} eq $type)) {
 				if($self->checkMix($client, $mix, $item,$interfaceType)) {
+					$mix = $self->prepareMix($client, $mix, $item, $interfaceType);
 					push @mixes,$mix;
 				}
 			}
