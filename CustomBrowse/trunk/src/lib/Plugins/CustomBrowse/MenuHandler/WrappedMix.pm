@@ -1,4 +1,4 @@
-# 			MenuHandler::BaseMix module
+# 			MenuHandler::SQLMix module
 #
 #    Copyright (c) 2006 Erland Isaksson (erland_i@hotmail.com)
 #
@@ -16,23 +16,30 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-package Plugins::CustomBrowse::MenuHandler::BaseMix;
+package Plugins::CustomBrowse::MenuHandler::WrappedMix;
 
 use strict;
 
 use base 'Class::Data::Accessor';
+use Plugins::CustomBrowse::MenuHandler::BaseMix;
+our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMix);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion) );
+use File::Spec::Functions qw(:ALL);
+
+__PACKAGE__->mk_classaccessors( qw(propertyHandler sqlHandler playHandler menuHandler itemParameterHandler mixHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'}
-	};
+	my $self = $class->SUPER::new($parameters);
+	$self->{'propertyHandler'} = $parameters->{'propertyHandler'};
+	$self->{'sqlHandler'} = $parameters->{'sqlHandler'};
+	$self->{'menuHandler'} = $parameters->{'menuHandler'};
+	$self->{'playHandler'} = $parameters->{'playHandler'};
+	$self->{'mixHandler'} = $parameters->{'mixHandler'};
+	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
+
 	bless $self,$class;
 	return $self;
 }
@@ -43,12 +50,19 @@ sub isInterfaceSupported {
 	my $mix = shift;
 	my $interfaceType = shift;
 
-	#Override in your own implementation
-	return 1;
+	return $self->mixHandler->isInterfaceSupported($self, $client, $mix, $interfaceType);
 }
 
 sub executeMix {
-	#Override in your own implementation
+	my $self = shift;
+	my $client = shift;
+	my $mix = shift;
+	my $keywords = shift;
+	my $addOnly = shift;
+	my $interfaceType = shift;
+
+	$self->mixHandler->executeMix($self, $client, $mix, $keywords, $addOnly, $interfaceType);
+
 }
 sub checkMix {
 	my $self = shift;
@@ -56,29 +70,20 @@ sub checkMix {
 	my $mix = shift;
 	my $keywords = shift;
 
-	#Override in your own implementation
-	return 1;
+
+	return $self->mixHandler->checkMix($self, $client, $mix, $keywords);
 }
 
 sub getMixData {
 	my $self = shift;
 	my $client = shift;
 	my $mix = shift;
-	my $item = shift;
+	my $keywords = shift;
 	my $interfaceType = shift;
 	my $parameter = shift;
 
-	return $mix->{$parameter};
-}
+	my $result = $self->mixHandler->getMixData($self, $client, $mix, $keywords, $interfaceType, $parameter);
 
-sub prepareMix {
-	my $self = shift;
-	my $client = shift;
-	my $mix = shift;
-	my $item = shift;
-	my $interfaceType = shift;
-
-	return $mix;
 }
 
 1;
