@@ -44,6 +44,7 @@ use Plugins::CustomScan::ModuleSettings;
 use Plugins::CustomScan::Settings;
 use Plugins::CustomScan::Manage;
 use Plugins::CustomScan::Scanner;
+use Plugins::CustomScan::MixedTagSQLPlayListHandler;
 
 my $useLongUrls = 1;
 
@@ -104,6 +105,12 @@ sub initPlugin {
 
 sub postinitPlugin {
 	Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION);
+	if (UNIVERSAL::can("Plugins::CustomBrowse::Plugin","registerMixHandler")) {
+		my %parameters = ();
+		my $mixHandler = Plugins::CustomScan::MixedTagSQLPlayListHandler->new(\%parameters);
+		Plugins::CustomBrowse::Plugin::registerMixHandler('customscan_mixedtag_sqlplaylist',$mixHandler);
+	}
+
 }
 
 sub shutdownPlugin {
@@ -112,6 +119,9 @@ sub shutdownPlugin {
                 uninstallHook();
         }
 	Plugins::CustomScan::Scanner::shutdownScanner();
+	if (UNIVERSAL::can("Plugins::CustomBrowse::Plugin","unregisterMixHandler")) {
+		Plugins::CustomBrowse::Plugin::unregisterMixHandler('customscan_mixedtag_sqlplaylist');
+	}
 }
 
 # Hook the plugin to the play events.
@@ -241,6 +251,62 @@ sub getSQLPlayListPlaylists {
 		}
 	}
 	return \@filteredResult;
+}
+
+sub webPages {
+
+	my %pages = (
+		"CustomScan/newsqlplaylist_redirect\.(?:htm|xml)"     => \&handleWebNewSQLPlayList,
+	);
+
+	for my $page (keys %pages) {
+		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+	}
+}
+
+sub handleWebNewSQLPlayList {
+	my ($client, $params) = @_;
+
+	my $url = 'plugins/SQLPlayList/webadminmethods_newitemparameters.html?';
+	if($params->{'type'} eq 'mixedtag') {
+		$url .= 'itemtemplate=customscan_randommixedtagsfrommixer';
+		for my $param (keys %$params) {
+			if($param =~ /^mixedtag(\d+)name$/) {
+				my $tagno = $1;
+				my $tagname= $params->{'mixedtag'.$tagno.'name'};
+				my $tagvalue= $params->{'mixedtag'.$tagno.'value'};
+
+				my $sql = "SELECT valuetype,value from customscan_track_attributes where module='mixedtag' and attr=? and extravalue=? limit 1";
+
+				my $sth = Slim::Schema->storage->dbh->prepare($sql);
+				$sth->bind_param(1,$tagname,SQL_VARCHAR);
+				$sth->bind_param(2,$tagvalue,SQL_VARCHAR);
+				eval {
+					my $value;
+					my $valuetype;
+					$sth->execute();
+					$sth->bind_col( 1, \$valuetype);
+		                        $sth->bind_col( 2, \$value);
+					if($sth->fetch()) {
+						if($valuetype) {
+							$tagvalue=Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8'));
+						}
+					}
+					$sth->finish();
+				};
+				if( $@ ) {
+				    $log->error("Database error: $DBI::errstr\n$@");
+				}		
+
+				$url .= '&overrideparameter_mixedtag'.($tagno).'name='.$tagname;
+				$url .= '&overrideparameter_mixedtag'.($tagno).'value='.$tagvalue;
+			}
+		}
+	}else {
+		$url .= 'itemtemplate=sqlplaylist_randomtracks';
+	}
+	$params->{'pluginCustomScanRedirect'} = $url;
+	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_redirect.html', $params);
 }
 
 sub getDatabaseQueryDataQueries {
