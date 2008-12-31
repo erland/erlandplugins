@@ -303,7 +303,7 @@ sub handleWebNewSQLPlayList {
 			}
 		}
 	}else {
-		$url .= 'itemtemplate=sqlplaylist_randomtracks';
+		$url .= 'itemtemplate=randomtracks.sql.xml';
 	}
 	$params->{'pluginCustomScanRedirect'} = $url;
 	return Slim::Web::HTTP::filltemplatefile('plugins/CustomScan/customscan_redirect.html', $params);
