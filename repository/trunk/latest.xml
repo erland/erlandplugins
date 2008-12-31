@@ -5,47 +5,40 @@
 		<title lang="EN">Erland's plugins</title>
 	</details>
 	<plugins>
-		<plugin name="TrackStat" version="2.5.1" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="TrackStat" version="2.6" minTarget="7.1.0" maxTarget="7.3+">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics.</desc>
-			<changes lang="EN">- Corrected so MusicIP integration works correctly.
-			- Corrected so Not Completely Rated statistics works correctly.</changes>
+			<changes lang="EN">- Added playlist templates for use with SQL Playlist:
+			-- TrackStat last added songs
+			-- TrackStat last played songs
+			-- TrackStat last added albums</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.5.1.zip</url>
-			<sha>ed833d66cddc59f5515d4fc4430775abc327203c</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.6.zip</url>
+			<sha>d0aa77d99716e79a4436051c6ba132b53a2cb32b</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="CustomBrowse" version="2.5" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="CustomBrowse" version="2.6" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements.</desc>
-			<changes lang="EN">- Added "Filtered Songs" menu type
-			- Added support for only showing never played songs in Filtered Artists/Albums/Genres/Songs menu type
-			- Added support for mixers on non standard objects, for example Decades
-			- Corrected so sort/gallery view menu is shown in default skin in web interface
-			- Corrected so selection highlighting works in default skin in web interface
-			- Corrected some various bugs
-			- Added official 7.3 support</changes>
+			<changes lang="EN">- Added support for Various Artists in Genres/SubGenres menu
+			- Added support for dynamic third party plugin mixers, used by new SQL Playlist mixers provided by Custom Scan and SQL Playlist plugin.
+			- Optimized Controller communication a bit to improve performance a bit.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.5.zip</url>
-                        <sha>6d5b8cba949ddd8c008616c73f45ff995dab37e2</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.6.zip</url>
+                        <sha>7459525d5f3c7800c533637a00d5c353b95176cf</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.2" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="CustomScan" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag.</desc>
-			<changes lang="EN">- Added timeout parameter to scanning modules to make it possible to avoid network timeouts
-			- Improved errorhandling so LastFM/Amazon data that can't be retreived is retreived during the next scan
-			- Added support for custom tags in AAC files
-			- Added library template for Multi Library to make it possible to create a library based on a custom tag
-			- Added support for not playing songs already played on a specific player through Dynamic Playlist plugin
-			- Corrected some various bugs
-			- Added official support for 7.3</changes>
+			<changes lang="EN">- Corrected so Amazon scanning module can write SqueezeCenter ratings
+			- Added support for SQL Playlist mixer to create SQL Playlists from selections in Custom Browse Tags(Dynamic Tags) menu.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.2.zip</url>
-                        <sha>4462367c5b84747eb1ecbe77870076676aea8cfc</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.3.zip</url>
+                        <sha>2cac5e2c96c73b8e20dd8e31d176a2c8c9d9c5ee</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
@@ -59,19 +52,16 @@
                         <sha>5d92f2e4ac20ec81283579afd24ad303707e24dc</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.6" minTarget="7.2.0" maxTarget="7.3+">
+		<plugin name="DynamicPlayList" version="2.6.1" minTarget="7.2.0" maxTarget="7.3+">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists</desc>
-			<changes lang="EN">- Added support for playlist mixers on non standard objects, for example Decades provided by Custom Browse plugin
-			- Improved handling of synchronized players, correct number of tracks added and improved handling when player is moved out/into sync group
-			- Added support for title formats for usage with MusicInfoSCR plugin (DYNAMICPLAYLIST, DYNAMICORSAVEDPLAYLIST)
-			- Corrected so dynamic playlists are restarted after a SqueezeCenter restart
-			- Added official support for 7.3
-			- This version requires at least SqueezeCenter 7.2.0</changes>
+			<changes lang="EN">- Corrected so parametrizied playlists with more than 200 items works on Controller
+			- Corrected so alarm playlists and saved playlsits survives a full rescan.
+			- Added support for start and numberOfItems parameters to dynamicplaylist playlists CLI command.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.6.zip</url>
-                        <sha>49f2eb4a371aa95d7c1ccf5a9ec9172647a4557a</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.6.1.zip</url>
+                        <sha>aa61bf34eb6416e8df979096b242df570a232d15</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.1" minTarget="7.1.0" maxTarget="7.3+">
@@ -99,37 +89,24 @@
                         <sha>0a5763f1b7536a08ce23fa7ae992a1c8e3789e3f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.2" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="SQLPlayList" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin</desc>
-			<changes lang="EN">- Added "Only never played songs" parameter to advanced playlist types
-			- Added support for requesting decade as parameter in Random songs playlist type
-			- Added "Random playlist songs" template
-			- Added "Top rated for decade" playlist template
-			- Added support for launching custom selectable parameters through mixers (Decade menu from Custom Browse is an example)
-			- Added "Request from user" support to advanced playlist templates
-			- Added support for including only unrated tracks in advanced with rating template
-			- Improved handling of synchronized players (only avoid repeating tracks played on the same player)
-			- Corrected some small bugs
-			- Added official support for 7.3</changes>
+			<changes lang="EN">- Added support for SQL Playlist mixer to create SQL Playlists based on selections in browse menus</changes> 
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.2.zip</url>
-                        <sha>b10367cf5b7ad13368956a2755d125af6cab73e3</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.3.zip</url>
+                        <sha>ea09e189d94cdfdb9f15f4ec77df4b8ef6079606</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="TitleSwitcher" version="1.1" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="TitleSwitcher" version="1.1.1" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Title Switcher</title>
                         <desc lang="EN">Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed.</desc>
-			<changes lang="EN">- Added support for skipping blank formats
-			- Added support for waiting longer for long texts that needs to scroll
-			- Added support for adding static texts before format string
-			- Added configurable default switching time and default length that needs to scroll
-			- Made it compatible with 7.1</changes>
+			<changes lang="EN">- Corrected so empty static texts aren't displayed unless the dynamic part contains any information</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.zip</url>
-                        <sha>6da948f0d2a1a6334ab95b7f39629cf37acafb79</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.1.zip</url>
+                        <sha>8e004f230a4a9f7c0375ecda00ae1c0548abbf76</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
                 </plugin>
 	</plugins>
