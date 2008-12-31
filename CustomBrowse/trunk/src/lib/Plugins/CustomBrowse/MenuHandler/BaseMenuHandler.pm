@@ -899,7 +899,7 @@ sub getPageItemsForContext {
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
 				$count = $count + 1;
 				if($count>$itemsPerPage) {
-					if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
+					if($interfaceType eq 'web' && defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 						if($prevLetter ne $it->{'itemlink'}) {
 							last;
 						}else {
