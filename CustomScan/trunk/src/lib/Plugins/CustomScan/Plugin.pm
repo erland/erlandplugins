@@ -298,8 +298,8 @@ sub handleWebNewSQLPlayList {
 				    $log->error("Database error: $DBI::errstr\n$@");
 				}		
 
-				$url .= '&overrideparameter_mixedtag'.($tagno).'name='.$tagname;
-				$url .= '&overrideparameter_mixedtag'.($tagno).'value='.$tagvalue;
+				$url .= '&overrideparameter_mixedtag'.($tagno).'name='.escape($tagname);
+				$url .= '&overrideparameter_mixedtag'.($tagno).'value='.escape($tagvalue);
 			}
 		}
 	}else {
@@ -849,6 +849,9 @@ sub rollback {
 		$dbh->rollback();
 	}
 }
+
+# other people call us externally.
+*escape   = \&URI::Escape::uri_escape_utf8;
 
 1;
 
