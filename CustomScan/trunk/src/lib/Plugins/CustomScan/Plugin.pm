@@ -270,8 +270,7 @@ sub handleWebNewSQLPlayList {
 	my $url = 'plugins/SQLPlayList/webadminmethods_newitemparameters.html?';
 	if($params->{'type'} eq 'mixedtag') {
 		$url .= 'itemtemplate=customscan_randommixedtagsfrommixer';
-		my $maxTagNo = 0;
-		my $playlistName = 'selection';
+		my %values = ();
 		for my $param (keys %$params) {
 			if($param =~ /^mixedtag(\d+)name$/) {
 				my $tagno = $1;
@@ -302,13 +301,15 @@ sub handleWebNewSQLPlayList {
 
 				$url .= '&overrideparameter_mixedtag'.($tagno).'name='.escape($tagname);
 				$url .= '&overrideparameter_mixedtag'.($tagno).'value='.escape($tagvalue);
-				if($tagno>$maxTagNo) {
-					$maxTagNo = $tagno;
-					$playlistName = $tagvalue;
-				}
+				$values{$tagno} = $tagvalue;
 			}
 		}
-		$url .= '&overrideparameter_playlistname='.escape('Random for '.$playlistName);
+		my $i=1;
+		my $playlistName = '';
+		while(exists $values{$i}) {
+			$playlistName .= ' '.$values{$i++};
+		}
+		$url .= '&overrideparameter_playlistname='.escape('Random for'.$playlistName);
 	}else {
 		$url .= 'itemtemplate=randomtracks.sql.xml';
 	}
