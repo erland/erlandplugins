@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>2.2</minpluginversion>
 	<template>
-		<name>Random for mixed tags from mixer</name>
-		<description>Random songs for specified tags from the Mixed Tag scanning module in Custom Scan, requires Custom Scan plugin</description>
+		<downloadidentifier>226</downloadidentifier>
+		<name>Random for mixed tags from selection</name>
+		<description>Random songs for specified tags from the Mixed Tag scanning module in Custom Scan with values from specified selection, requires Custom Scan plugin</description>
 		<parameter type="text" id="playlistname" name="Playlist name" value="Random for mixed tags from mixer"/>
 		<parameter type="text" id="playlistgroups" name="Groups" value=""/>
 		<parameter type="checkbox" id="notrepeat" name="Do not repeat tracks within same playlist" value="1"/>
