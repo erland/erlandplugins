@@ -30,15 +30,15 @@
                         <sha>7459525d5f3c7800c533637a00d5c353b95176cf</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="CustomScan" version="2.3.1" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag.</desc>
-			<changes lang="EN">- Corrected so Amazon scanning module can write SqueezeCenter ratings
-			- Added support for SQL Playlist mixer to create SQL Playlists from selections in Custom Browse Tags(Dynamic Tags) menu.</changes>
+			<changes lang="EN">- Corrected so repeat option works in Random for mixed tag from selection playlist template works.
+			- Corrected so all values are part of playlist name in SQL Playlist created through mixers</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.3.zip</url>
-                        <sha>2cac5e2c96c73b8e20dd8e31d176a2c8c9d9c5ee</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.3.1.zip</url>
+                        <sha>54d7ed8f2397a52ff10606f81701da723bf83b68</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
@@ -89,14 +89,15 @@
                         <sha>0a5763f1b7536a08ce23fa7ae992a1c8e3789e3f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="SQLPlayList" version="2.3.1" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin</desc>
-			<changes lang="EN">- Added support for SQL Playlist mixer to create SQL Playlists based on selections in browse menus</changes> 
+			<changes lang="EN">- Corrected problem with browse menus in classic player interface
+			- Corrected so track repeating option works in Random from selection playlist template</changes> 
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.3.zip</url>
-                        <sha>ea09e189d94cdfdb9f15f4ec77df4b8ef6079606</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.3.1.zip</url>
+                        <sha>8eff445b779e709244945d70c4edb10fc95a6daa</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.1" minTarget="7.1.0" maxTarget="7.3+">
