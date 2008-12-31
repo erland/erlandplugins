@@ -31,5 +31,5 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 3. INSTALLATION AND USAGE
 =========================
 See the official Wiki for more information at:
-http://wiki.erland.homeip.net/index.php/Category:SlimServer
+http://wiki.erland.isaksson.info/index.php/Category:SlimServer
 
