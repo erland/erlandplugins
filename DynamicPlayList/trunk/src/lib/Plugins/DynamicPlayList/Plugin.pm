@@ -2121,7 +2121,7 @@ sub initPlugin {
 		[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
 	Slim::Control::Request::subscribe(\&powerCallback,[['power']]); 
 	Slim::Control::Request::subscribe(\&clientNewCallback,[['client'],['new']]); 
-	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all'], [1, 1, 0, \&cliGetPlaylists]);
+	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all','_start','_itemsPerResponse'], [1, 1, 0, \&cliGetPlaylists]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play'], [1, 0, 1, \&cliPlayPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add'], [1, 0, 1, \&cliAddPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','continue'], [1, 0, 1, \&cliContinuePlaylist]);
@@ -3468,16 +3468,27 @@ sub cliGetPlaylists {
 			$count++;
 		}
 	}
+	my $start = $request->getParam('_start') || 0;
+	my $itemsPerResponse = $request->getParam('_itemsPerResponse') || $count;
+
   	$request->addResult('count',$count);
+  	$request->addResult('offset',$start);
   	$count = 0;
+  	my $offsetCount = 0;
 	foreach my $playlist (sort keys %$playLists) {
 		if(!defined($playLists->{$playlist}->{'parameters'}) && ($playLists->{$playlist}->{'dynamicplaylistenabled'} || defined $all)) {
-			$request->addResultLoop('playlists_loop', $count,'playlistid', $playlist);
-			my $p = $playLists->{$playlist};
-			my $name = $p->{'name'};
-			$request->addResultLoop('playlists_loop', $count,'playlistname', $name);
-			if(defined $all) {
-				$request->addResultLoop('playlists_loop', $count,'playlistenabled', $playLists->{$playlist}->{'dynamicplaylistenabled'});
+			if($count>=$start+$itemsPerResponse) {
+				last;
+			}
+			if($count>=$start) {
+				$request->addResultLoop('playlists_loop', $offsetCount,'playlistid', $playlist);
+				my $p = $playLists->{$playlist};
+				my $name = $p->{'name'};
+				$request->addResultLoop('playlists_loop', $offsetCount,'playlistname', $name);
+				if(defined $all) {
+					$request->addResultLoop('playlists_loop', $offsetCount,'playlistenabled', $playLists->{$playlist}->{'dynamicplaylistenabled'});
+				}
+				$offsetCount++
 			}
 			$count++;
 		}
