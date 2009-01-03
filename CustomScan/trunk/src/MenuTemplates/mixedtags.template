@@ -23,6 +23,7 @@
 			<menulinks>alpha</menulinks>
 			[% IF customtagtype1 %]
 			<itemtype>[% customtagtype1 %]</itemtype>
+			<itemformat>[% customtagtype1 %]</itemformat>
 			[% ELSE %]
 			<itemtype>sql</itemtype>
 			[% END %]
@@ -101,6 +102,7 @@
 				<menulinks>alpha</menulinks>
 				[% IF customtagtype2 %]
 				<itemtype>[% customtagtype2 %]</itemtype>
+				<itemformat>[% customtagtype2 %]</itemformat>
 				[% ELSE %]
 				<itemtype>sql</itemtype>
 				[% END %]
@@ -179,6 +181,7 @@
 					<menulinks>alpha</menulinks>
 					[% IF customtagtype3 %]
 					<itemtype>[% customtagtype3 %]</itemtype>
+					<itemformat>[% customtagtype3 %]</itemformat>
 					[% ELSE %]
 					<itemtype>sql</itemtype>
 					[% END %]
@@ -256,6 +259,7 @@
 						<menulinks>alpha</menulinks>
 						[% IF customtagtype4 %]
 						<itemtype>[% customtagtype4 %]</itemtype>
+						<itemformat>[% customtagtype4 %]</itemformat>
 						[% ELSE %]
 						<itemtype>sql</itemtype>
 						[% END %]
@@ -332,6 +336,7 @@
 							<menulinks>alpha</menulinks>
 							[% IF customtagtype5 %]
 							<itemtype>[% customtagtype5 %]</itemtype>
+							<itemformat>[% customtagtype5 %]</itemformat>
 							[% ELSE %]
 							<itemtype>sql</itemtype>
 							[% END %]
