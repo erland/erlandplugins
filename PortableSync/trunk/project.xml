@@ -9,7 +9,7 @@
   <id>iPod</id>
   
   <!-- a short but descriptive name for the project -->
-  <name>Slimserver iPod plugin</name>
+  <name>Slimserver Portable Sync plugin</name>
   
   <!-- The version of the project under development, e.g.
        1.1, 1.2, 2.0-SNAPSHOT -->
@@ -23,13 +23,13 @@
   <!-- the year the project started -->
   <inceptionYear>2007</inceptionYear>
   <description>This plugin for slimserver makes it possible to synchronize your SlimServer library with
-  an iPod using the GNUpod library/tools
+  an external portable device.
   See README.txt file provided with this plugin for more details.
   </description>
   <!-- a short description of what the project does -->
-  <shortDescription>A plugin for iPod synchronization</shortDescription>
+  <shortDescription>A plugin for synchronization with portable devices</shortDescription>
 
-  <siteDirectory>\\xp2500\erland/public_html/slimserver/erland-slimserver-ipod</siteDirectory>
+  <siteDirectory>\\xp2500\erland/public_html/slimserver/erland-slimserver-portablesync</siteDirectory>
   <!-- any mailing lists for the project -->
   <mailingLists/>
   
