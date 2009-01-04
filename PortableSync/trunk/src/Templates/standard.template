@@ -111,11 +111,8 @@
 			[%- IF slimserverpath %]
 			<slimserverpath>[% slimserverpath %]</slimserverpath>
 			[%- END %]
-			[%- IF ipodpath %]
-			<ipodpath>[% ipodpath %]</ipodpath>
-			[%- END %]
 			[%- IF ipodextension %]
-			<ipodextension>[% ipodextension %]</ipodextension>
+			<portableextension>[% ipodextension %]</portableextension>
 			[%- END %]
 		</track>
 	</library>

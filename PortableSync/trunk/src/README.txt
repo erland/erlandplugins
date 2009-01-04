@@ -1,6 +1,6 @@
 1. LICENSE
 ==========
-Copyright (C) 2007 Erland Isaksson (erland_i@hotmail.com)
+Copyright (C) 2008 Erland Isaksson (erland_i@hotmail.com)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 2. PREREQUISITES
 ================
-- A slimserver 6.5 installed and configured
+- A SqueezeCenter 7.1.0 or later installed and configured
 
 3. FILES
 ========
@@ -30,5 +30,5 @@ This archive should contain the following files:
 4. INSTALLATION AND USAGE
 =========================
 See the official Wiki for more information at:
-http://wiki.erland.homeip.net/index.php/Category:SlimServer
+http://wiki.erland.isaksson.info/index.php/Category:SlimServer
 
