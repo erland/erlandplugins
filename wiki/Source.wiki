@@ -81,9 +81,6 @@ Use this command to anonymously check out the latest project source code:
 *{{{Multi Library}}}* ([http://code.google.com/p/erlandplugins/source/browse/MultiLibrary/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary}}}
 
-*{{{iPod}}}* ([http://code.google.com/p/erlandplugins/source/browse/iPod/trunk/src browse]) *Unfinished*
- {{{svn checkout http://erlandplugins.googlecode.com/svn/iPod/trunk iPod}}}
-
 *{{{Portable Sync}}}* ([http://code.google.com/p/erlandplugins/source/browse/PortableSync/trunk/src browse]) *Unfinished*
  {{{svn checkout http://erlandplugins.googlecode.com/svn/PortableSync/trunk PortableSync}}}
 
