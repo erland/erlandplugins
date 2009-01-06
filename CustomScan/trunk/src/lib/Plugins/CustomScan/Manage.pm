@@ -75,6 +75,7 @@ sub handler {
 			'enabled' => $module->{'enabled'},
 			'status' => statusToString(Plugins::CustomScan::Scanner::isScanning($key)),
 			'scanText' => $module->{'scanText'},
+			'scanWarning' => $module->{'scanWarning'},
 			'clearEnabled' => (defined($module->{'clearEnabled'})?$module->{'clearEnabled'}:1),
 			'scanEnabled' => (defined($module->{'scanEnabled'})?$module->{'scanEnabled'}:1),
 			'dataprovidername' => $module->{'dataprovidername'},

@@ -31,7 +31,7 @@
 								 onclick='return confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR_QUESTION" | string %]")' title="[% module.name %]">[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR" | string %]</a>
 					[% END %]
 					</<td><td style="padding:3px;">
-					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/settings/manage.html?module=[% module.id %]&scantype=scan&player=[% player | uri %]" title="[% module.name %]">[% IF module.scanText %][% module.scanText %][% ELSE %][% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %][% END %]</a>
+					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/settings/manage.html?module=[% module.id %]&scantype=scan&player=[% player | uri %]" title="[% module.name %]" [% IF module.scanWarning %]onclick='return confirm("[% module.scanWarning %]")'[% END %]>[% IF module.scanText %][% module.scanText %][% ELSE %][% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %][% END %]</a>
 				</td><td style="padding:3px;">[% IF module.dataprovidername %]<a href="[% module.dataproviderlink %]" target="_blank">[% module.dataprovidername %]</a>[% END %]</td>
 				[% END %]
 				[% odd = (not odd) %]
