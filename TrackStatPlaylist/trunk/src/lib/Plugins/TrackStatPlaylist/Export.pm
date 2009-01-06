@@ -34,6 +34,7 @@ use DBI qw(:sql_types);
 use Slim::Utils::Misc;
 use Plugins::CustomScan::Validators;
 use Slim::Player::Playlist;
+use Time::Stopwatch;
 
 my $prefs = preferences('plugin.trackstatplaylist');
 my $serverPrefs = preferences('server');
@@ -42,6 +43,10 @@ my $log = Slim::Utils::Log->addLogCategory({
 	'defaultLevel' => 'WARN',
 	'description'  => 'PLUGIN_TRACKSTATPLAYLIST',
 });
+
+my %playlistTracksCache = ();
+my $ratingSth = undef;
+my $ratingSthCount = undef;
 
 sub getCustomScanFunctions {
 	my %functions = (
@@ -52,6 +57,8 @@ sub getCustomScanFunctions {
 		'description' => "This module exports statistic information in SqueezeCenter to static playlists. When a user changes a rating on a song the song is moved into one of the rating playlists and when a song is played the song is moved into the played playlist. If you do a export the rating playlists will be filled with all rated tracks in the SqueezeCenter database",
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
+		'requiresRefresh' => 0,
+		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&exitScanTrack,
 		'scanText' => 'Export',
 		'properties' => [
@@ -113,11 +120,18 @@ sub getCustomScanFunctions {
 			},
 			{
 				'id' => 'trackstatplaylistplayedlength',
-				'name' => 'Length of played polaylist',
+				'name' => 'Length of played playlist',
 				'description' => 'Maximum length of played playlist',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isInt,
 				'value' => '100'
+			},
+			{
+				'id' => 'trackstatplaylistincludeautoratings',
+				'name' => 'Include automatic ratings',
+				'description' => 'Ratings automatically set by TrackStat updates the rating playlists',
+				'type' => 'checkbox',
+				'value' => 0
 			},
 		]
 	);
@@ -145,82 +159,202 @@ sub getCustomScanFunctions {
 	return \%functions;
 		
 }
+sub initScanTrack {
+	$ratingSth = undef;
+	$log->info("Start exporting ratings to playlist at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime())));
+	return undef;
+}
 
 sub exitScanTrack
 {
 	my $libraries = Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistexportlibraries");
 	$log->debug("Exporting ratings to playlist");
 
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating0name"));
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating1name"));
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating2name"));
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating3name"));
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating4name"));
-	deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating5name"));
+	my $timeMeasure = Time::Stopwatch->new();
+	$timeMeasure->clear();
+	$timeMeasure->start();
 
-	my $sql = undef;
-	if($libraries && Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
-		if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
-			$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and track_statistics.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
-		}else {
-			$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.track=tracks.id and tracks_persistent.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+	my @ratingDigits = qw(0 1 2 3 4 5);
+
+	if(!defined($ratingSth)) {
+		for my $ratingDigit (@ratingDigits) {
+			deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$ratingDigit."name"));
+
+			$log->info("Finished deleting old rating ".$ratingDigit." playlist : It took ".$timeMeasure->getElapsedTime()." seconds");
+			$timeMeasure->stop();
+			$timeMeasure->clear();
+			$timeMeasure->start();
+
+			# Lets make sure streaming gets it time
+			main::idleStreams();
 		}
-	}else {
-		if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
-			$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and track_statistics.rating>0";
+
+
+		my $sql = undef;
+		if($libraries && Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
+			if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
+				$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and track_statistics.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+			}else {
+				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.track=tracks.id and tracks_persistent.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+			}
 		}else {
-			$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks where tracks_persistent.track=tracks.id and tracks_persistent.rating>0";
-		}
-	}
-
-	my $dbh = Slim::Schema->storage->dbh();
-	$log->debug("Retreiving tracks with: $sql\n");
-	my $sth = $dbh->prepare( $sql );
-
-	my $count = 0;
-	my( $url, $rating );
-	eval {
-		$sth->execute();
-		$sth->bind_columns( undef, \$url, \$rating );
-		my $result;
-		while( $sth->fetch() ) {
-			if($url) {
-				if(!defined($rating) || !$rating) {
-					next;
-				}
-				my $track = Slim::Schema->objectForUrl({
-					'url' => $url
-				});
-				addRatingToPlaylist($track,$rating);
-				$count++;
+			if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
+				$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and track_statistics.rating>0";
+			}else {
+				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks where tracks_persistent.track=tracks.id and tracks_persistent.rating>0";
 			}
 		}
-	};
-	if( $@ ) {
-	    $log->warn("Database error: $DBI::errstr,$@\n");
-	}
-	$sth->finish();
 
-	$log->info("Exporting ratings to playlist completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime())).", exported $count songs\n");
-	return undef;
+		my $dbh = Slim::Schema->storage->dbh();
+		$log->debug("Retreiving tracks with: $sql");
+		$ratingSth = $dbh->prepare( $sql );
+
+		%playlistTracksCache = ();
+		$ratingSthCount = 0;
+
+		eval {
+			$ratingSth->execute();
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr,$@");
+		}
+		$log->info("Finished getting ratings from database : It took ".$timeMeasure->getElapsedTime()." seconds");
+		$log->info("Fetching songs, this might take a while...");
+		$timeMeasure->stop();
+		$timeMeasure->clear();
+		return 1;
+	}else {
+		my $lastEntry = 1;
+		my( $url, $rating );
+		eval {
+			$ratingSth->bind_columns( undef, \$url, \$rating );
+
+			my $result;
+			if( $ratingSth->fetch() ) {
+				$lastEntry = 0;
+				if($url) {
+					my $track = Slim::Schema->objectForUrl({
+						'url' => $url
+					});
+					addBulkRatingToPlaylist(undef,$track,$rating);
+					$ratingSthCount++;
+				}
+			}
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr,$@");
+		}
+		if($lastEntry) {
+			$ratingSth->finish();
+			$ratingSth = undef;
+
+			my $playlistDir = $serverPrefs->get('playlistdir');
+			for my $playlist (keys %playlistTracksCache) {
+				my $tracks = $playlistTracksCache{$playlist};
+				my $playlistObj = getPlaylist($playlistDir, $playlist);
+				$playlistObj->setTracks($tracks);
+				$playlistObj->update;
+
+				$log->info("Finished updating playlist: ".$playlist." : It took ".$timeMeasure->getElapsedTime()." seconds");
+				$timeMeasure->stop();
+				$timeMeasure->clear();
+
+				# Lets make sure streaming gets it time
+				main::idleStreams();
+
+				$timeMeasure->start();
+			}
+			Slim::Schema->forceCommit;
+
+			for my $ratingDigit (@ratingDigits) {
+				my $playlistObj = getPlaylist($playlistDir, Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$ratingDigit."name"));
+				if($playlistObj && scalar($playlistObj->tracks())>0) {
+					Slim::Player::Playlist::scheduleWriteOfPlaylist(undef,$playlistObj);
+					$log->info("Finished writing rating playlist ".$ratingDigit." : It took ".$timeMeasure->getElapsedTime()." seconds");
+					$timeMeasure->stop();
+					$timeMeasure->clear();
+
+					# Lets make sure streaming gets it time
+					main::idleStreams();
+
+					$timeMeasure->start();
+				}else {
+					deletePlaylist(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$ratingDigit."name"));
+					$log->info("Finished deleting playlist ".$ratingDigit." : It took ".$timeMeasure->getElapsedTime()." seconds");
+					$timeMeasure->stop();
+					$timeMeasure->clear();
+
+					# Lets make sure streaming gets it time
+					main::idleStreams();
+
+					$timeMeasure->start();
+				}
+			}
+
+			$timeMeasure->stop();
+			$timeMeasure->clear();
+
+			%playlistTracksCache = ();
+
+			$log->info("Exporting ratings to playlist completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime())).", exported $ratingSthCount songs");
+			return undef;
+		}
+
+		$timeMeasure->stop();
+		$timeMeasure->clear();
+		return 1;
+	}
 }
 
-sub addRatingToPlaylist {
+sub addBulkRatingToPlaylist {
+	my $client = shift;
 	my $track = shift;
 	my $rating = shift;
-	my $deleteFromOther = shift;
 
 	my $playlistDir = $serverPrefs->get('playlistdir');
 
-	if($deleteFromOther) {
-		my @removeFrom = qw(0 1 2 3 4 5);
-		for my $i (@removeFrom) {
-			my $title = Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$i."name");
-			if($title) {
-				deleteRatingFromPlaylist($track,$title);
-			}
+	my $ratingDigit;
+	if($rating<10) {
+		$ratingDigit = 0;
+	}elsif($rating<30) {
+		$ratingDigit = 1;
+	}elsif($rating<50) {
+		$ratingDigit = 2;
+	}elsif($rating<70) {
+		$ratingDigit = 3;
+	}elsif($rating<90) {
+		$ratingDigit = 4;
+	}else {
+		$ratingDigit = 5;
+	}				
+	my $title = Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$ratingDigit."name");
+
+	if($title && $playlistDir) {
+		my $tracks = $playlistTracksCache{$title};
+		if(!defined($tracks)) {
+			my @empty = ();
+			$playlistTracksCache{$title} = \@empty;
+			$tracks = $playlistTracksCache{$title};
+		}
+		push @$tracks,$track;
+	}
+}
+
+sub addRatingToPlaylist {
+	my $client = shift;
+	my $track = shift;
+	my $rating = shift;
+
+	my $playlistDir = $serverPrefs->get('playlistdir');
+
+	my @removeFrom = qw(0 1 2 3 4 5);
+	for my $i (@removeFrom) {
+		my $title = Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistrating".$i."name");
+		if($title) {
+			deleteRatingFromPlaylist($client,$track,$title);
 		}
 	}
+
 	my $ratingDigit;
 	if($rating<10) {
 		$ratingDigit = 0;
@@ -242,11 +376,15 @@ sub addRatingToPlaylist {
 		my @tracks = ($track);
 		$playlistObj->appendTracks(\@tracks);
 		$playlistObj->update;
+		Slim::Schema->forceCommit;
+		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
+	}else {
+		Slim::Schema->forceCommit;
 	}
-	Slim::Schema->forceCommit;
 }
 
 sub deleteRatingFromPlaylist {
+	my $client = shift;
 	my $track = shift;
 	my $title = shift;
 
@@ -263,10 +401,14 @@ sub deleteRatingFromPlaylist {
 			$i++;
 		}
 		$playlistObj->setTracks(\@existingTracks);
+		$playlistObj->update;
+		Slim::Schema->forceCommit;
+		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
 	}
 }
 
 sub addPlayedToPlaylist {
+	my $client = shift;
 	my $track = shift;
 	my $lastPlayed = shift;
 
@@ -288,6 +430,7 @@ sub addPlayedToPlaylist {
 		my @tracks = ($track);
 		$playlistObj->appendTracks(\@tracks);
 		Slim::Schema->forceCommit;
+		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
 	}
 }
 
@@ -317,6 +460,7 @@ sub deletePlaylist {
 
 	if($title && $playlistDir) {
 		my $playlistObj = getPlaylist($playlistDir, $title);
+
 		Slim::Player::Playlist::removePlaylistFromDisk($playlistObj);
 		my @tracks = ();
 		$playlistObj->setTracks(\@tracks);
@@ -327,9 +471,19 @@ sub deletePlaylist {
 }
 
 sub exportRating {
+	my $client = shift;
 	my $url = shift;
 	my $rating = shift;
 	my $track = shift;
+	my $type = shift;
+
+	if(defined($type) && $type eq 'auto' && !Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistincludeautoratings")) {
+		$log->debug("Automatic rating, ignoring");
+		return;
+	}elsif(defined($type) && ($type ne 'user' && $type ne 'auto')) {
+		$log->debug("Non user rating, ignoring");
+		return;
+	}
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistdynamicupdate")) {
 		if(!defined($rating) || !$rating) {
@@ -343,7 +497,7 @@ sub exportRating {
 		}
 		
 		if(isAllowedToExport($track)) {
-			addRatingToPlaylist($track,$rating,1);
+			addRatingToPlaylist($client,$track,$rating);
 		}
 	}
 }
@@ -356,24 +510,25 @@ sub isAllowedToExport {
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("trackstatplaylistexportlibrariesdynamicupdate") && $libraries  && Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
 		my $sql = "SELECT tracks.id FROM tracks,multilibrary_track where tracks.id=multilibrary_track.track and tracks.id=".$track->id." and multilibrary_track.library in ($libraries)";
 		my $dbh = Slim::Schema->storage->dbh();
-		$log->debug("Executing: $sql\n");
+		$log->debug("Executing: $sql");
 		eval {
 			my $sth = $dbh->prepare( $sql );
 			$sth->execute();
 			$sth->bind_columns( undef, \$include);
 			if( !$sth->fetch() ) {
-				$log->debug("Ignoring track, not part of selected libraries: ".$track->url."\n");
+				$log->debug("Ignoring track, not part of selected libraries: ".$track->url);
 				$include = 0;
 			}
 			$sth->finish();
 		};
 		if($@) {
-			$log->debug("Database error: $DBI::errstr, $@\n");
+			$log->debug("Database error: $DBI::errstr, $@");
 		}
 	}
 	return $include;
 }
 sub exportStatistic {
+	my $client = shift;
 	my $url = shift;
 	my $rating = shift;
 	my $playCount = shift;
@@ -385,7 +540,7 @@ sub exportStatistic {
 			});
 		if(isAllowedToExport($track)) {
 			if(defined($lastPlayed)) {
-				addPlayedToPlaylist($track,$lastPlayed);
+				addPlayedToPlaylist($client,$track,$lastPlayed);
 			}
 		}
 	}
@@ -401,14 +556,14 @@ sub getSQLPropertyValues {
 			$sql =~ s/^\s+//g;
 			$sql =~ s/\s+$//g;
 			my $sth = $dbh->prepare( $sql );
-			$log->debug("Executing: $sql\n");
+			$log->debug("Executing: $sql");
 			$sth->execute() or do {
-				$log->warn("Error executing: $sql\n");
+				$log->warn("Error executing: $sql");
 				$sql = undef;
 			};
 	
 			if ($sql =~ /^SELECT+/oi) {
-				$log->debug("Executing and collecting: $sql\n");
+				$log->debug("Executing and collecting: $sql");
 				my $id;
 				my $name;
 				$sth->bind_col( 1, \$id);
@@ -424,7 +579,7 @@ sub getSQLPropertyValues {
 			$sth->finish();
 		};
 		if( $@ ) {
-			$log->warn("Database error: $DBI::errstr\n");
+			$log->warn("Database error: ".$DBI::errstr);
 		}		
 	}
 	return \@result;
