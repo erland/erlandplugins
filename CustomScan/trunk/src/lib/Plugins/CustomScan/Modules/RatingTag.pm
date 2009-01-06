@@ -173,7 +173,7 @@ sub rateTrack {
 	if($trackStat && defined($client)) {
 		$log->debug("Setting TrackStat rating on ".$track->title." to $rating\n");
 		my $ratingPercent = $rating."%";
-		my $request = $client->execute(['trackstat', 'setrating', $track->id, $ratingPercent]);
+		my $request = $client->execute(['trackstat', 'setrating', $track->id, $ratingPercent,"type:scan"]);
 		$request->source('PLUGIN_CUSTOMSCAN');
 	}else {
 		$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");

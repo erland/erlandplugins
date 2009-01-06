@@ -696,9 +696,10 @@ sub moduleRescan {
 	if(defined($module) && defined($module->{'id'})) {
 		$scanningModulesInProgress{$moduleKey} = 1;
 		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
+		if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
+			refreshData();
+		}
 	}
-
-	refreshData();
 
 	if(defined($module) && defined($module->{'id'})) {
 		if(defined($module->{'scanInit'})) {
@@ -1305,13 +1306,15 @@ sub initScanTrack {
 	}
 	if(defined($result)) {
 		unshift @$moduleKeys,$key;
+		if(!$scanningAborted) {
+			return 1;
+		}
+	}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
 		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey,$scanningContext);
-		return 0;
 	}
+
+	Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey,$scanningContext);
+	return 0;
 }
 
 sub scanArtist {
@@ -1698,13 +1701,15 @@ sub exitScanTrack {
 	}
 	if(defined($result)) {
 		unshift @$moduleKeys,$key;
+		if(!$scanningAborted) {
+			return 1;
+		}
+	}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
 		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		exitScan($moduleKey,$scanningContext);
-		return 0;
 	}
+
+	exitScan($moduleKey,$scanningContext);
+	return 0;
 }
 
 sub refreshData 

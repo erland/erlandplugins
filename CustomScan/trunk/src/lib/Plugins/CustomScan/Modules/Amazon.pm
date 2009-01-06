@@ -232,7 +232,7 @@ sub rateUnratedTracksOnAlbum {
 		for my $track (@tracks) {
 			if($trackStat && defined($client)) {
 				$log->debug("Setting TrackStat rating on ".$track->title." to $rating\n");
-				my $request = $client->execute(['trackstat', 'setrating', $track->id, sprintf('%d%', $rating)]);
+				my $request = $client->execute(['trackstat', 'setrating', $track->id, sprintf('%d%', $rating)],"type:scan");
 				$request->source('PLUGIN_CUSTOMSCAN');
 			}else {
 				$log->debug("Setting SqueezeCenter rating on ".$track->title." to $rating\n");
