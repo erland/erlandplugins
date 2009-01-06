@@ -491,8 +491,16 @@ sub playRandom {
 	if ($numItems) {
 		unless ($addOnly) {
 			if(Slim::Player::Source::playmode($client) ne "stop") {
-				my $request = $client->execute(['stop']);
-				$request->source('PLUGIN_DYNAMICPLAYLIST');
+				if(UNIVERSAL::can("Slim::Utils::Alarm","getCurrentAlarm")) {
+					my $alarm = Slim::Utils::Alarm->getCurrentAlarm($client);
+					if(!defined($alarm) || !$alarm->active()) {
+						my $request = $client->execute(['stop']);
+						$request->source('PLUGIN_DYNAMICPLAYLIST');
+					}
+				}else {
+					my $request = $client->execute(['stop']);
+					$request->source('PLUGIN_DYNAMICPLAYLIST');
+				}
 			}
 			if(!$client->power()) {
 				my $request = $client->execute(['power', '1']);
