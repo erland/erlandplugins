@@ -65,6 +65,7 @@ sub getCustomScanFunctions {
 		'description' => "This module exports statistic information in SqueezeCenter to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and SqueezeCenter, for example the MusicIP library can be on a Windows computer in mp3 format and the SqueezeCenter library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and SqueezeCenter on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
+		'requiresRefresh' => 0,
 		'initScanTrack' => \&initScanTrack,
 		'exitScanTrack' => \&scanFunction,
 		'scanText' => 'Export',
