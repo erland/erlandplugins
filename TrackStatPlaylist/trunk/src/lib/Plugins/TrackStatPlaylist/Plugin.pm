@@ -80,7 +80,9 @@ sub postinitPlugin {
 }
 
 sub setTrackStatRating {
-	my ($client,$url,$rating)=@_;
+	my ($client,$url,$rating,$type)=@_;
+	$log->debug("Entering setTrackStatRating\n");
+
 	my $track = undef;
 	eval {
 		$track = Slim::Schema->objectForUrl({
@@ -90,9 +92,8 @@ sub setTrackStatRating {
 	if ($@) {
 		$log->warn("Error retrieving track: $url\n");
 	}
-	$log->debug("Entering setTrackStatRating\n");
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
-		Plugins::TrackStatPlaylist::Export::exportRating($url,$rating,$track);
+		Plugins::TrackStatPlaylist::Export::exportRating($client,$url,$rating,$track,$type);
 	}
 	$log->debug("Exiting setTrackStatRating\n");
 }
@@ -106,7 +107,7 @@ sub setTrackStatStatistic {
 	my $rating = $statistic->{'rating'};
 
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
-		Plugins::TrackStatPlaylist::Export::exportStatistic($url,$rating,$playCount,$lastPlayed);
+		Plugins::TrackStatPlaylist::Export::exportStatistic($client,$url,$rating,$playCount,$lastPlayed);
 	}
 	$log->debug("Exiting setTrackStatStatistic\n");
 }
