@@ -633,7 +633,7 @@ sub saveRating {
 	my $queryAttribute = "";
 	my $sql;
 	
-	$mbId = getMusicBrainzId($track) if (!(defined($mbId)));
+	$mbId = getMusicBrainzId($track) if (!defined($mbId) && defined($track));
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $mbId && $mbId !~ /.*-.*/) {
 		$mbId = undef;
@@ -791,7 +791,7 @@ sub addToHistory
 	my $dbh = getCurrentDBH();
 
 	$url = $track->url if defined($track);
-	$mbId = getMusicBrainzId($track) if !defined($mbId);
+	$mbId = getMusicBrainzId($track) if !defined($mbId) && defined($track);
 
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
 	if(defined $mbId && $mbId !~ /.*-.*/) {
@@ -1075,7 +1075,7 @@ sub mergeTrack
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url,undef,$track);
 	my $sql;
 	
-	if(!defined($mbId)) {
+	if(!defined($mbId) && defined($track)) {
 		$mbId = getMusicBrainzId($track);
 	}
 	#Fix to make sure only real musicbrainz id's is used, slimserver can put text in this field instead in some situations
