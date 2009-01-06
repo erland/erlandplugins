@@ -1960,12 +1960,15 @@ sub getCustomScanFunctions {
 	if( $@ ) { $log->warn("Unable to load Amarok::Export: $@\n"); }
 	eval "use Plugins::TrackStat::Amarok::Import";
 	if( $@ ) { $log->warn("Unable to load Amarok::Import: $@\n"); }
+	eval "use Plugins::TrackStat::Backup::RestoreModule";
+	if( $@ ) { $log->warn("Unable to load Backup::RestoreModule: $@\n"); }
 	push @result,Plugins::TrackStat::Amarok::Export::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::Amarok::Import::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::MusicMagic::Export::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::MusicMagic::Import::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::iTunes::Export::getCustomScanFunctions();
 	push @result,Plugins::TrackStat::iTunes::Import::getCustomScanFunctions();
+	push @result,Plugins::TrackStat::Backup::RestoreModule::getCustomScanFunctions();
 	return \@result;
 }
 
@@ -3558,10 +3561,10 @@ sub installHook()
 	$log->debug("Hook activated.\n");
 	Slim::Control::Request::subscribe(\&Plugins::TrackStat::Plugin::commandCallback65,[['mode', 'play', 'stop', 'pause', 'playlist','rescan']]);
 	Slim::Control::Request::addDispatch(['trackstat','getrating', '_trackid'], [0, 1, 0, \&getCLIRating]);
-	Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
-	Slim::Control::Request::addDispatch(['trackstat','setratingpercent', '_trackid', '_rating'], [1, 0, 0, \&setCLIRating]);
-	Slim::Control::Request::addDispatch(['trackstat','setalbumrating', '_albumid', '_rating', '_force'], [1, 0, 0, \&setCLIAlbumRating]);
-	Slim::Control::Request::addDispatch(['trackstat','setalbumratingpercent', '_albumid', '_rating', '_force'], [1, 0, 0, \&setCLIAlbumRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setrating', '_trackid', '_rating'], [1, 0, 1, \&setCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setratingpercent', '_trackid', '_rating'], [1, 0, 1, \&setCLIRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setalbumrating', '_albumid', '_rating', '_force'], [1, 0, 1, \&setCLIAlbumRating]);
+	Slim::Control::Request::addDispatch(['trackstat','setalbumratingpercent', '_albumid', '_rating', '_force'], [1, 0, 1, \&setCLIAlbumRating]);
 	Slim::Control::Request::addDispatch(['trackstat','setstatistic', '_trackid','_playcount','_lastplayed'], [1, 0, 0, \&setCLIStatistic]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedrating', '_url', '_trackid', '_rating', '_ratingpercent'],[0, 0, 0, undef]);
 	Slim::Control::Request::addDispatch(['trackstat', 'changedstatistic', '_url', '_trackid', '_playcount','_lastplayed'],[0, 0, 0, undef]);
@@ -3953,7 +3956,7 @@ sub stopTimingSong($$)
 						if($rating>100) {
 							$rating = 100;
 						}
-						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
+						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating,"auto");
 					}elsif($totalElapsedTimeDuringPlay<$decrease && $rating>0) {
 						$delta = floor( $delta / 4 );
 						if (!$prefs->get("rating_auto_smart") || $delta < 1) { 
@@ -3964,7 +3967,7 @@ sub stopTimingSong($$)
 						if($rating<1) {
 							$rating = 1;
 						}
-						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating);
+						rateSong($client,$playStatus->currentTrackOriginalFilename,$rating,"auto");
 					}else {
 						$log->debug("Do not adjust rating, only played $totalElapsedTimeDuringPlay of required $increase seconds\n");
 					}
@@ -4141,8 +4144,12 @@ sub trackWasPlayedEnoughToCountAsAListen($$)
 
 
 
-sub rateSong($$$) {
-	my ($client,$url,$rating)=@_;
+sub rateSong {
+	my ($client,$url,$rating,$type)=@_;
+
+	if(!defined($type) || $type eq '') {
+		$type = 'user';
+	}
 
 	$log->debug("Changing song rating to: $rating\n");
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
@@ -4155,14 +4162,14 @@ sub rateSong($$$) {
 	no strict 'refs';
 	for my $item (keys %ratingPlugins) {
 		$log->debug("Calling $item\n");
-		eval { &{$ratingPlugins{$item}}($client,$url,$rating) };
+		eval { &{$ratingPlugins{$item}}($client,$url,$rating,$type) };
 		if( $@ ) {
 			$log->warn("Error calling changedrating plugin: $@\n");
 		}
 	}
 	my $digit = floor(($rating+10)/20);
 	use strict 'refs';
-	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating]);
+	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating, $type]);
 	Slim::Music::Info::clearFormatDisplayCache();
 	$ratingStaticLastUrl = undef;
 	$ratingDynamicLastUrl = undef;
@@ -4330,7 +4337,8 @@ sub setCLIRating {
 	}else {
 		$rating = $rating*20;
 	}
-	rateSong($client,$track->url,$rating);
+	my $type = request->getParam('type') || 'user';
+	rateSong($client,$track->url,$rating,$type);
 	
 	my $digit = floor(($rating+10)/20);
 	$request->addResult('rating', $digit);
@@ -4384,8 +4392,9 @@ sub setCLIAlbumRating {
 	}else {
 		$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($albumId);
 	}
+	my $type = request->getParam('type') || 'user';
 	foreach my $url (@$unratedTracks) {
-		rateSong($client,$url,$rating);
+		rateSong($client,$url,$rating,$type);
 	}
 
 	my $digit = floor(($rating+10)/20);
