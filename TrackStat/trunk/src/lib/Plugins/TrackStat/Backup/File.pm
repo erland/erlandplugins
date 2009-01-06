@@ -134,6 +134,8 @@ sub backupToFile
 				}
 				print $output "	</historyentry>\n";
 			}
+			# Lets allow streaming to execute during backup
+			main::idleStreams();
 		}
 	};
 	if( $@ ) {
@@ -144,14 +146,29 @@ sub backupToFile
 
 	print $output "</TrackStat>\n";
 	close $output;
-	$log->info("TrackStat:Backup: Backup completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
+	$log->info("Backup completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
 }
 
 sub restoreFromFile
 {
+	my $backupFile = shift;
+	if(stillScanning()) {
+		$log->warning("Restore is already in progress, please wait for the previous restore to finish");
+		return;
+	}
+	initRestore($backupFile);
+	Slim::Utils::Scheduler::add_task(\&scanFunction);
+}
+
+sub initRestore {
 	$backupFile = shift;
 	$log->warn("Restore from: $backupFile\n");
 	$isScanning = 1;
+	if(defined($backupParserNB)) {
+		# This spews, but it's harmless.
+		eval { $backupParserNB->parse_done };
+		$backupParserNB = undef;
+	}
 	$backupParser = XML::Parser->new(
 		'ErrorContext'     => 2,
 		'ProtocolEncoding' => 'UTF-8',
@@ -164,8 +181,10 @@ sub restoreFromFile
 			'End'   => \&handleEndElement,
 		},
 	);
+}
 
-	Slim::Utils::Scheduler::add_task(\&scanFunction);
+sub stillScanning {
+	return $isScanning;
 }
 
 sub stopScan {
@@ -179,13 +198,14 @@ sub stopScan {
 		$opened = 0;
 		
 		close(BACKUPFILE);
+		if (defined $backupParserNB) {
+	
+			# This spews, but it's harmless.
+			eval { $backupParserNB->parse_done };
+		}
 		$backupParser = undef;
 		resetScanState();
 	}
-}
-
-sub stillScanning {
-	return $isScanning;
 }
 
 sub doneScanning {
@@ -207,7 +227,7 @@ sub doneScanning {
 	# Don't leak filehandles.
 	close(BACKUPFILE);
 
-	$log->warn("TrackStat:Backup: Restore completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
+	$log->warn("Restore completed at ".(strftime ("%Y-%m-%d %H:%M:%S",localtime()))."\n");
 
 	# Take the scanner off the scheduler.
 	Slim::Utils::Scheduler::remove_task(\&scanFunction);
@@ -225,7 +245,7 @@ sub resetScanState {
 }
 
 sub scanFunction {
-	# this assumes that iTunes uses file locking when writing the xml file out.
+
 	if (!$opened) {
 		open(BACKUPFILE, $backupFile) || do {
 			$log->warn("Couldn't open backup file: $backupFile");
@@ -253,13 +273,20 @@ sub scanFunction {
 
 		$log->debug("Parsing next bit of XML..\n");
 
-		local $/ = '</track>';
+		local $/ = '>';
 		my $line;
 
-		for (my $i = 0; $i < 25; $i++) {
-			$line .= <BACKUPFILE>;
+		for (my $i = 0; $i < 25; ) {
+			my $singleLine = <BACKUPFILE>;
+			if(defined($singleLine)) {
+				$line .= $singleLine;
+				if($singleLine =~ /(<\/track>|<\/historyentry>)$/) {
+					$i++;
+				}
+			}else {
+				last;
+			}
 		}
-
 		$line =~ s/&#(\d*);/escape(chr($1))/ge;
 
 		$backupParserNB->parse_more($line);
@@ -326,7 +353,7 @@ sub handleEndElement {
 
 	# Finish up
 	if ($element eq 'TrackStat') {
-		$log->debug("iTunes: Finished scanning iTunes XML\n");
+		$log->debug("Finished restoring TrackStat XML file\n");
 
 		doneScanning();
 
