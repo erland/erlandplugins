@@ -5,17 +5,17 @@
 		<title lang="EN">Erland's plugins</title>
 	</details>
 	<plugins>
-		<plugin name="TrackStat" version="2.6" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="TrackStat" version="2.7" minTarget="7.1.0" maxTarget="7.3+">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics.</desc>
-			<changes lang="EN">- Added playlist templates for use with SQL Playlist:
-			-- TrackStat last added songs
-			-- TrackStat last played songs
-			-- TrackStat last added albums</changes>
+			<changes lang="EN">- Improved performance of full import/export from Amarok, iTunes and MusicIP
+			- Added restore module which can be called from Custom Scan which makes it possible to abort a restore and see when it's finished in the web interface.
+			- Optimized restore and backup operation so they cause less playback disturbances.
+			- Added new "type" parameter to rating CLI/JSON commands</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.6.zip</url>
-			<sha>d0aa77d99716e79a4436051c6ba132b53a2cb32b</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.7.zip</url>
+			<sha>27e2967fe9667846c05ef32032f23051374cd02c</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.6" minTarget="7.1.0" maxTarget="7.3+">
@@ -30,15 +30,17 @@
                         <sha>7459525d5f3c7800c533637a00d5c353b95176cf</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.3.1" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="CustomScan" version="2.4" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag.</desc>
-			<changes lang="EN">- Corrected so repeat option works in Random for mixed tag from selection playlist template works.
-			- Corrected so all values are part of playlist name in SQL Playlist created through mixers</changes>
+			<changes lang="EN">- Corrected "Mixed Tag" menu template so tag type parameters affect presentation on albums so "Disc 1" is shown at the end when relevant.
+			- Improved performance of scanning module that don't use Custom Scan tables, for example all TrackStat Statistics modules.
+			- Changed Rating Tag and Amazon scanning module so they change TrackStat ratings as type:scan instead of type:user. (To make sure they don't affect the rating playlists in TrackStat Playlist plugin)
+			- Improved possibilities to abort scanning operations.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.3.1.zip</url>
-                        <sha>54d7ed8f2397a52ff10606f81701da723bf83b68</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.4.zip</url>
+                        <sha>76d14cc8378837b286cdac80902cae9ebae33232</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
@@ -52,16 +54,14 @@
                         <sha>5d92f2e4ac20ec81283579afd24ad303707e24dc</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.6.1" minTarget="7.2.0" maxTarget="7.3+">
+		<plugin name="DynamicPlayList" version="2.6.2" minTarget="7.2.0" maxTarget="7.3+">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists</desc>
-			<changes lang="EN">- Corrected so parametrizied playlists with more than 200 items works on Controller
-			- Corrected so alarm playlists and saved playlsits survives a full rescan.
-			- Added support for start and numberOfItems parameters to dynamicplaylist playlists CLI command.</changes>
+			<changes lang="EN">- Corrected so dynamic playlists works as alarm playlists without interrupting the alarm.</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.6.1.zip</url>
-                        <sha>aa61bf34eb6416e8df979096b242df570a232d15</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.6.2.zip</url>
+                        <sha>1b71821d48354d3b74f6587d740f5730a9f19a7f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.1" minTarget="7.1.0" maxTarget="7.3+">
@@ -109,6 +109,16 @@
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.1.zip</url>
                         <sha>8e004f230a4a9f7c0375ecda00ae1c0548abbf76</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
+                </plugin>
+                <plugin name="TrackStatPlaylist" version="1.0" minTarget="7.1.0" maxTarget="7.3+">
+                        <title lang="EN">TrackStat Playlist</title>
+                        <desc lang="EN">Makes it possible to export the TrackStat statistics such as ratings and played tracks to static playlists. This is useful when you like to manually update ratings in for example J River Media Center based on a playlist that contains all 4 rated tracks. Please note that this plugin requires you to install both TrackStat and Custom Scan plugin.</desc>
+                        <changes lang="EN">- Initial release</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.0.zip</url>
+                        <sha>dd9caedafc6ff9b160699b21d6efd2c5fdfb9992</sha>
+                        <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
 	</plugins>
 </extensions>
