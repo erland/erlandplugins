@@ -401,9 +401,15 @@ sub deleteRatingFromPlaylist {
 			$i++;
 		}
 		$playlistObj->setTracks(\@existingTracks);
-		$playlistObj->update;
+		if(scalar(@existingTracks)>0) {
+			$playlistObj->update;
+			Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
+		}else {
+			Slim::Player::Playlist::removePlaylistFromDisk($playlistObj);
+			$playlistObj->delete;
+		}
+		$playlistObj = undef;
 		Slim::Schema->forceCommit;
-		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
 	}
 }
 
