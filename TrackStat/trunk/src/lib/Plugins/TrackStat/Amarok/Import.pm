@@ -45,6 +45,8 @@ sub getCustomScanFunctions {
 		'defaultenabled' => 0,
 		'name' => 'Amarok Statistics Import',
 		'description' => "This module imports statistic information to SlimServer from Amarok media player. The information imported are ratings, playcounts and last played time. The import module only supports Amarok running towards a MySQL database, by default Amarok runs with a SQLite database and then this scanning module doesn\'t work. The imported information is read directly from the Amarok database.<br><br>The import module is prepared for having separate libraries in Amarok and SlimServer, for example the Amarok library in mp3 format and the SlimServer library in flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running Amarok and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
 		'requiresRefresh' => 0,
