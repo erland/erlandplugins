@@ -59,8 +59,11 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_GROUP
 	DA	Dynamiske spillelister
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_GROUP_DESC
-	EN	DynamicPlayList is a plugin which makes it easy to write your own dynamic playlist plugin and it below the same menu as the other playlists<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
-	DA	Dynamiske spillelister er et plugin, som gør det nemt at skrive dit eget dynamisk spilleliste plugin, og placere dem under den samme menu som de andre spillelister.<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
+	EN	DynamicPlayList is a plugin which makes it easy to write your own dynamic playlist plugin and it below the same menu as the other playlists.
+	DA	Dynamiske spillelister er et plugin, som gør det nemt at skrive dit eget dynamisk spilleliste plugin, og placere dem under den samme menu som de andre spillelister.
+
+SETUP_PLUGIN_DYNAMICPLAYLIST_DONATE_LINK
+	EN	Click here to donate
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FAVOURITESNAME
 	EN	Favourites group name
