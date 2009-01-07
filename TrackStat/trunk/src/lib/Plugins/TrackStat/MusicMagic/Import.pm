@@ -53,6 +53,8 @@ sub getCustomScanFunctions {
 		'defaultenabled' => 0,
 		'name' => 'MusicIP Statistics Import',
 		'description' => "This module imports statistic information in SqueezeCenter from MusicIP Mixer. The information imported are ratings, playcounts, last played time<br>Information is imported from the MusicIP service running at the specified host and port, if there are any existing ratings, play counts or last played information in TrackStat these might be overwritten. There is some logic to avoid overwrite when it isn\'t needed but this shouldn\'t be trusted.<br><br>The import module is prepared for having separate libraries in MusicIP and SqueezeCenter, for example the MusicIP library can be on a Windows computer in mp3 format and the SqueezeCenter library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SqueezeCenter. If you are running MusicIP and SqueezeCenter on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
 		'requiresRefresh' => 0,
