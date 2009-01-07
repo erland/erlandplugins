@@ -4337,7 +4337,7 @@ sub setCLIRating {
 	}else {
 		$rating = $rating*20;
 	}
-	my $type = request->getParam('type') || 'user';
+	my $type = $request->getParam('type') || 'user';
 	rateSong($client,$track->url,$rating,$type);
 	
 	my $digit = floor(($rating+10)/20);
