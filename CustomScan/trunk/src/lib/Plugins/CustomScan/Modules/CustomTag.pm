@@ -197,6 +197,8 @@ sub getCustomScanFunctions {
 		'defaultenabled' => 1,
 		'name' => 'Custom Tag',
 		'description' => "This module scans information from custom tags in your music files<br><br>The mapping between MP3 ID3 standard frame names to tag names can be found in the Modules/CustomTag.pm file, the names shall in most cases be the same as shown in your tagging software",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
 		'scanTrack' => \&scanTrack,
 		'properties' => [

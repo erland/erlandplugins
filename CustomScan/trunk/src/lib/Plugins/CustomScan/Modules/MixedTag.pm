@@ -43,6 +43,8 @@ sub getCustomScanFunctions {
 		'defaultenabled' => 1,
 		'name' => 'Mixed Tag',
 		'description' => "This module scans information from both SlimServer and Custom Tag scanning module and stores it in a common place. If you leave one of the tag fields empty in the settings it means that that information isnt scanned. Multiple value can be specified with a comma character as separator. To use custom tags these must first have been scanned with the Custom Tag scanning module, this is done automatically if both scanning modules are included in automatic scanning and you perform a Scan All operation, but if not you will have to make sure to run the Custom Tag scanning module first, before you run this scaning module",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
 		'exitScanTrack' => \&exitScanTrack,
 		'properties' => [

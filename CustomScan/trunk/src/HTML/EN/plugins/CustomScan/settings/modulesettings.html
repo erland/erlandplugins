@@ -7,6 +7,10 @@
 	<table border="0">
 		<tr><td colspan="4"><strong>[% pluginCustomScanModuleName %] [% "PLUGIN_CUSTOMSCAN_SETTINGS_TITLE" | string %]</strong></td></tr>
 		<tr><td colspan="4">[% pluginCustomScanModuleDescription %]</td></tr>
+		[% IF pluginCustomScanModuleDevelopedBy %]
+		<tr><td>&nbsp;</td></tr>
+		<tr><td colspan="4"><b>[% "SETUP_PLUGIN_CUSTOMSCAN_DEVELOPEDBY" | string %]:</b> [% IF pluginCustomScanModuleDevelopedByLink %]<a href="[% pluginCustomScanModuleDevelopedByLink %]" target="_blank">[% pluginCustomScanModuleDevelopedBy %]</a>[% ELSE %][% pluginCustomScanModuleDevelopedBy %][% END %]</td>
+		[% END %]
 		<tr><td>&nbsp;</td></tr>
 		<tr><td colspan="3">[% "PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED" | string %]</td><td><input type="checkbox" name="moduleenabled" id="moduleenabled" value="1" [% pluginCustomScanModuleEnabled ? "checked" : "" %]></td></tr>
 		<tr><td colspan="3">[% "PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ORDER" | string %]</td><td><input type="text" name="moduleorder" id="moduleorder" value="[% pluginCustomScanModuleOrder %]"></td></tr>

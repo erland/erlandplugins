@@ -42,6 +42,8 @@ sub getCustomScanFunctions {
 		'name' => 'Rating Tag',
 		'description' => "This module reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
             MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files. The POPM tag available in the MP3 standard will always be read if available, but if the file also have a rating tag as specified below this will be used instead",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
 		'scanInit' => \&scanInit,
 		'scanTrack' => \&scanTrack,
