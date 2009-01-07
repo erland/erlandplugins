@@ -55,6 +55,8 @@ sub getCustomScanFunctions {
 		'defaultenabled' => 0,
 		'name' => 'TrackStat Playlist Export',
 		'description' => "This module exports statistic information in SqueezeCenter to static playlists. When a user changes a rating on a song the song is moved into one of the rating playlists and when a song is played the song is moved into the played playlist. If you do a export the rating playlists will be filled with all rated tracks in the SqueezeCenter database",
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate', 
 		'alwaysRescanTrack' => 1,
 		'clearEnabled' => 0,
 		'requiresRefresh' => 0,
