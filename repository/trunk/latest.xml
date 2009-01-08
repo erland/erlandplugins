@@ -7,7 +7,7 @@
 	<plugins>
 		<plugin name="TrackStat" version="2.7" minTarget="7.1.0" maxTarget="7.3+">
 			<title lang="EN">TrackStat</title>
-			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics.</desc>
+			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
 			<changes lang="EN">- Improved performance of full import/export from Amarok, iTunes and MusicIP
 			- Added restore module which can be called from Custom Scan which makes it possible to abort a restore and see when it's finished in the web interface.
 			- Optimized restore and backup operation so they cause less playback disturbances.
@@ -20,7 +20,7 @@
 		</plugin>
 		<plugin name="CustomBrowse" version="2.6" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Browse</title>
-                        <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements.</desc>
+                        <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
 			<changes lang="EN">- Added support for Various Artists in Genres/SubGenres menu
 			- Added support for dynamic third party plugin mixers, used by new SQL Playlist mixers provided by Custom Scan and SQL Playlist plugin.
 			- Optimized Controller communication a bit to improve performance a bit.</changes>
@@ -77,7 +77,7 @@
                 </plugin>
 		<plugin name="MultiLibrary" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Multi Library</title>
-                        <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries</desc>
+                        <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
 			<changes lang="EN">- Corrected problem with synchronized players in 7.3
 			- Added support for limiting a library to a saved playlist
 			- Added support for title format for usage with MusicInfoSCR plugin (ACTIVEMULTILIBRARY,MULTILIBRARIES)
