@@ -43,15 +43,15 @@
                         <sha>76d14cc8378837b286cdac80902cae9ebae33232</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomSkip" version="2.3" minTarget="7.1.0" maxTarget="7.3+">
+		<plugin name="CustomSkip" version="2.3.1" minTarget="7.1.0" maxTarget="7.3+">
                         <title lang="EN">Custom Skip</title>
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more</desc>
-			<changes lang="EN">- Added support for title formats through MusicInfoSCR plugin (CUSTOMSKIPFILTERS,CUSTOMSKIPFILTER,CUSTOMSKIPSECONDARYFILTER)
-			- Added official support for 7.3</changes>
+			<changes lang="EN">- Corrected so it works with filter values which contain non ascii values.
+			- Corrected so valid time is shown as Forever when you have set it to Forever</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.zip</url>
-                        <sha>5d92f2e4ac20ec81283579afd24ad303707e24dc</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.1.zip</url>
+                        <sha>0606cb70bde338e27cc4ca6de4d66da3b5f71465</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
 		<plugin name="DynamicPlayList" version="2.6.2" minTarget="7.2.0" maxTarget="7.3+">
