@@ -11,7 +11,10 @@ SETUP_PLUGIN_MULTILIBRARY_GROUP
 	EN	Multi Library
 
 SETUP_PLUGIN_MULTILIBRARY_GROUP_DESC
-	EN	Multi Library is a sub library plugin based on SQL queries<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
+	EN	Multi Library is a sub library plugin based on SQL queries
+
+SETUP_PLUGIN_MULTILIBRARY_DONATE_LINK
+	EN	Click here to donate
 
 PLUGIN_MULTILIBRARY_SETTINGS
 	EN	Various Settings
