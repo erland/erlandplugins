@@ -5,7 +5,10 @@ SETUP_PLUGIN_TITLESWITCHER_GROUP
 	EN	Title Switcher
 
 SETUP_PLUGIN_TITLESWITCHER_GROUP_DESC
-	EN	Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed.<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
+	EN	Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed.
+
+SETUP_PLUGIN_TITLESWITCHER_DONATE_LINK
+	EN	Click here to donate
 
 PLUGIN_TITLESWITCHER_SETTINGS
 	EN	Settings
