@@ -11,7 +11,10 @@ SETUP_PLUGIN_IPOD_GROUP
 	EN	iPod
 
 SETUP_PLUGIN_IPOD_GROUP_DESC
-	EN	iPod is a plugin for synchronizing SlimServer with iPod
+	EN	iPod is a plugin for synchronizing SlimServer with iPod.
+
+SETUP_PLUGIN_IPOD_DONATE_LINK
+	EN	Click here to donate
 
 PLUGIN_IPOD_SETTINGS
 	EN	Various Settings
