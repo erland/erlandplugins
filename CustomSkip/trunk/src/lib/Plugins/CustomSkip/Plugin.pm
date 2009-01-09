@@ -2984,14 +2984,17 @@ sub parseFilterContent {
 							if($value ne '') {
 								$value .= ',';
 							}
-							my $encoding = Slim::Utils::Unicode::encodingFromString($v);
-							if($encoding ne 'utf8') {
-								$v = Slim::Utils::Unicode::latin1toUTF8($v);
-								$v = Slim::Utils::Unicode::utf8on($v);
-								$log->debug("Loading ".$p->{'id'}." and converting from latin1\n");
-							}else {
-								$v = Slim::Utils::Unicode::utf8decode($v,'utf8');
-								$log->debug("Loading ".$p->{'id'}." without conversion with encoding ".$encoding."\n");
+							if($v ne '0') {
+								# We don't want to enter here with '0' because then it will incorrectly be converted to ''
+								my $encoding = Slim::Utils::Unicode::encodingFromString($v);
+								if($encoding ne 'utf8') {
+									$v = Slim::Utils::Unicode::latin1toUTF8($v);
+									$v = Slim::Utils::Unicode::utf8on($v);
+									$log->debug("Loading ".$p->{'id'}." and converting from latin1\n");
+								}else {
+									$v = Slim::Utils::Unicode::utf8decode($v,'utf8');
+									$log->debug("Loading ".$p->{'id'}." without conversion with encoding ".$encoding."\n");
+								}
 							}
 
 							if($p->{'quotevalue'}) {
