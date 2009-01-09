@@ -11,7 +11,10 @@ SETUP_PLUGIN_PORTABLESYNC_GROUP
 	EN	Portable Sync
 
 SETUP_PLUGIN_PORTABLESYNC_GROUP_DESC
-	EN	Portable Sync is a plugin for synchronizing SqueezeCenter with extenal portable devices<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
+	EN	Portable Sync is a plugin for synchronizing SqueezeCenter with extenal portable devices.
+
+SETUP_PLUGIN_PORTABLESYNC_DONATE_LINK
+	EN	Click here to donate
 
 PLUGIN_PORTABLESYNC_SETTINGS
 	EN	Various Settings
