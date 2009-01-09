@@ -41,7 +41,10 @@ SETUP_PLUGIN_CUSTOMBROWSE_SECTION_DESC
 	EN	Select a settings section
 
 SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC
-	EN	Custom Browse is a plugin which makes it possible to create your own menus<br><br><b><a href="http://erland.isaksson.info/donate" target="_blank">Click here to donate</a></b>
+	EN	Custom Browse is a plugin which makes it possible to create your own menus.
+
+SETUP_PLUGIN_CUSTOMBROWSE_DONATE_LINK
+	EN	Click here to donate
 
 SETUP_PLUGIN_CUSTOMBROWSE_HEADER_VALUE_SEPARATOR
 	EN	Default separator characters for header
