@@ -2478,7 +2478,7 @@ sub saveFilter {
 				my $values = $parameter->{'value'};
 				if(scalar(@$values)>0) {
 					for my $value  (@$values) {
-						$data .= "\t\t\t<value>".encode_entities($value)."</value>\n";
+						$data .= "\t\t\t<value>".encode_entities($value,"&<>\'\"")."</value>\n";
 					}
 				}
 				$data .= "\t\t</parameter>\n";
@@ -2984,6 +2984,16 @@ sub parseFilterContent {
 							if($value ne '') {
 								$value .= ',';
 							}
+							my $encoding = Slim::Utils::Unicode::encodingFromString($v);
+							if($encoding ne 'utf8') {
+								$v = Slim::Utils::Unicode::latin1toUTF8($v);
+								$v = Slim::Utils::Unicode::utf8on($v);
+								$log->debug("Loading ".$p->{'id'}." and converting from latin1\n");
+							}else {
+								$v = Slim::Utils::Unicode::utf8decode($v,'utf8');
+								$log->debug("Loading ".$p->{'id'}." without conversion with encoding ".$encoding."\n");
+							}
+
 							if($p->{'quotevalue'}) {
 								$value .= $dbh->quote(encode_entities($v));
 							}else {
