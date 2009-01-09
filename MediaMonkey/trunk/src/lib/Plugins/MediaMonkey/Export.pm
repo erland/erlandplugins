@@ -57,6 +57,8 @@ sub getCustomScanFunctions {
 		'clearEnabled' => 0,
 		'exitScanTrack' => \&exitScanTrack,
 		'scanText' => 'Export',
+		'developedBy' => 'Erland Isaksson',
+		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'properties' => [
 			{
 				'id' => 'mediamonkeyoutputdir',
