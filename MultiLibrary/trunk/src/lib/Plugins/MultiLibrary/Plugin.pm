@@ -878,6 +878,9 @@ sub getTitleFormatActive
 sub getTitleFormat
 {
 	my $song = shift;
+	if(ref($song) eq 'HASH') {
+		return undef;
+	}
 
 	$log->debug("Entering getTitleFormat");
 
