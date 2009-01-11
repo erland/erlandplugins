@@ -4549,6 +4549,9 @@ sub ratingStringFormat {
 sub getRatingDynamicCustomItem
 {
 	my $track = shift;
+	if(ref($track) eq 'HASH') {
+		return undef;
+	}
 	my $string = '';
 	if(defined($ratingDynamicLastUrl) && $track->url eq $ratingDynamicLastUrl) {
 		$string = $ratingDynamicCache;
@@ -4574,6 +4577,9 @@ sub getRatingDynamicCustomItem
 sub getRatingStaticCustomItem
 {
 	my $track = shift;
+	if(ref($track) eq 'HASH') {
+		return undef;
+	}
 	my $string = $NO_RATING_CHARACTER x 5;
 	if(defined($ratingStaticLastUrl) && $track->url eq $ratingStaticLastUrl) {
 		$string = $ratingStaticCache;
@@ -4604,6 +4610,9 @@ sub getRatingStaticCustomItem
 sub getRatingNumberCustomItem
 {
 	my $track = shift;
+	if(ref($track) eq 'HASH') {
+		return undef;
+	}
 	my $string = '';
 	if(defined($ratingNumberLastUrl) && $track->url eq $ratingNumberLastUrl) {
 		$string = $ratingNumberCache;
