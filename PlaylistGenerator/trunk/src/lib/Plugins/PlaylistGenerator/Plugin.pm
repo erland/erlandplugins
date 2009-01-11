@@ -52,7 +52,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 $prefs->migrate(1, sub {
 	$prefs->set('playlistdefinitions_directory', $serverPrefs->get('playlistdir')  );
 	$prefs->set('template_directory',  ''  );
-	$prefs->set('download_url',  'http://erland.isaksson.info/datacollection/services/PlaylistGenerator'  );
+	$prefs->set('download_url',  'http://erland.isaksson.info/datacollection/services/DataCollection'  );
 	1;
 });
 $prefs->setValidate('dir','playlistdefinitions_directory');
