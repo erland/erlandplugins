@@ -120,6 +120,16 @@
                         <sha>dd9caedafc6ff9b160699b21d6efd2c5fdfb9992</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
+		 <plugin name="PlaylistGenerator" version="1.0" minTarget="7.1.0" maxTarget="7.3+">
+                        <title lang="EN">Playlist Generator</title>
+                        <desc lang="EN">Makes it possible to generate static playlists based on information in SqueezeCenter database, such as ratings and played tracks. This is useful when you like to have a playlist as a .m3u file which you can export to other tools. This plugin works by itself but if you also install Custom Scan you will be able to re-generate all playlists automatically when you perform a rescan in SqueezeCenter.</desc>
+                        <changes lang="EN">- Initial release</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.0.zip</url>
+                        <sha>2269e5b6204bc21a34c3271a961e2e3ce2ba90b1</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
+                </plugin>
 	</plugins>
 </extensions>
 
