@@ -30,6 +30,9 @@ If you plan to make changes, use this command to check out the code as yourself 
 *{{{Multi Library}}}* ([http://code.google.com/p/erlandplugins/source/browse/MultiLibrary/trunk/src browse])
  {{{svn checkout https://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary --username yourgooglecodeid}}}
 
+*{{{Playlist Generator}}}* ([http://code.google.com/p/erlandplugins/source/browse/PlaylistGenerator/trunk/src browse])
+ {{{svn checkout https://erlandplugins.googlecode.com/svn/PlaylistGenerator/trunk PlaylistGenerator --username yourgooglecodeid}}}
+
 *{{{Portable Sync}}}* ([http://code.google.com/p/erlandplugins/source/browse/PortableSync/trunk/src browse]) *Unfinished*
  {{{svn checkout https://erlandplugins.googlecode.com/svn/PortableSync/trunk PortableSync --username yourgooglecodeid}}}
 
@@ -80,6 +83,9 @@ Use this command to anonymously check out the latest project source code:
 
 *{{{Multi Library}}}* ([http://code.google.com/p/erlandplugins/source/browse/MultiLibrary/trunk/src browse])
  {{{svn checkout http://erlandplugins.googlecode.com/svn/MultiLibrary/trunk MultiLibrary}}}
+
+*{{{Playlist Generator}}}* ([http://code.google.com/p/erlandplugins/source/browse/PlaylistGenerator/trunk/src browse])
+ {{{svn checkout http://erlandplugins.googlecode.com/svn/PlaylistGenerator/trunk PlaylistGenerator}}}
 
 *{{{Portable Sync}}}* ([http://code.google.com/p/erlandplugins/source/browse/PortableSync/trunk/src browse]) *Unfinished*
  {{{svn checkout http://erlandplugins.googlecode.com/svn/PortableSync/trunk PortableSync}}}
