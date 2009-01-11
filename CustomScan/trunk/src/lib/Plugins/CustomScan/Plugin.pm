@@ -541,6 +541,9 @@ sub refreshTitleFormats() {
 				sub {
 					$log->debug("Retreiving title format: $format\n");
 					my $track = shift;
+					if(ref($track) eq 'HASH') {
+						return undef;
+					}
 					my $result = '';
 					if($format =~ /^([^_]+)_(.+)$/) {
 						my $module = $1;
