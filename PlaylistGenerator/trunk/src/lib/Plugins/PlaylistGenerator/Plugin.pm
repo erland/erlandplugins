@@ -123,7 +123,7 @@ sub getConfigManager {
 			'pluginVersion' => $PLUGINVERSION,
 			'downloadApplicationId' => 'PlaylistGenerator',
 			'addSqlErrorCallback' => \&addSQLError,
-			'downloadVersion' => 2,
+			'downloadVersion' => 1,
 		);
 		$configManager = Plugins::PlaylistGenerator::ConfigManager::Main->new(\%parameters);
 	}
