@@ -2,7 +2,7 @@
 <sqlplaylist>
 	<template>
 		<id>trackstat_topratedalbums</id>
-		<parameter type="text" id="playlistname"><value>TrackStat rated albums by artist</value></parameter>
+		<parameter type="text" id="playlistname"><value>Top rated albums by artist</value></parameter>
 		<parameter type="text" id="playlistgroups"><value>Random/For selected</value></parameter>
 		<parameter type="text" id="requestfromuser"><value>artist</value></parameter>
 		<parameter type="text" id="minalbumtracks"><value>3</value></parameter>
