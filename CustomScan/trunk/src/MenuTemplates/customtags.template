@@ -19,6 +19,7 @@
 							attr='[% customtag %]' and
 							value='{context.itemid}'
 			</pathtypedata>
+			<customitemtype>[% datasource %][% customtag %]</customitemtype>
 			<menutype>sql</menutype>
 			<menudata>
 				select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 

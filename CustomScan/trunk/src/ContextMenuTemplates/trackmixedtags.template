@@ -25,7 +25,7 @@
 		<menulinks>alpha</menulinks>
 		<pathtype>sql</pathtype>
 		<pathtypedata>
-			select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+			select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag1 %]') from customscan_track_attributes 
 					where 
 						module='mixedtag' and
 						attr='[% customtag1 %]' and
@@ -37,7 +37,7 @@
 		<itemtype>sql</itemtype>
 		[% END %]
 		<menudata>
-			select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+			select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag1 %]') from customscan_track_attributes 
 			[%- IF library or activelibrary %]
 			join multilibrary_track on
 				customscan_track_attributes.track=multilibrary_track.track and
@@ -76,7 +76,7 @@
 			<menuname>[% IF level3name %][% level3name %][% ELSE %][% IF customtag3 %][% customtag3 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
 			<pathtype>sql</pathtype>
 			<pathtypedata>
-				select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+				select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag2 %]') from customscan_track_attributes 
 						where 
 							module='mixedtag' and
 							attr='[% customtag2 %]' and
@@ -90,7 +90,7 @@
 			<itemtype>sql</itemtype>
 			[% END %]
 			<menudata>
-				select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes
+				select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag2 %]') from customscan_track_attributes
 				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
@@ -134,7 +134,7 @@
 				<menuname>[% IF level4name %][% level4name %][% ELSE %][% IF customtag4 %][% customtag4 %]s[% ELSE %]Songs[% END %][% END %]</menuname>
 				<pathtype>sql</pathtype>
 				<pathtypedata>
-					select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+					select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag3 %]') from customscan_track_attributes 
 							where 
 								module='mixedtag' and
 								attr='[% customtag3 %]' and
@@ -148,7 +148,7 @@
 				<itemtype>sql</itemtype>
 				[% END %]
 				<menudata>
-					select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes
+					select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag3 %]') from customscan_track_attributes
 					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						customscan_track_attributes.track=multilibrary_track.track and
@@ -197,7 +197,7 @@
 					<menuname>Songs</menuname>
 					<pathtype>sql</pathtype>
 					<pathtypedata>
-						select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+						select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag4 %]') from customscan_track_attributes 
 								where 
 									module='mixedtag' and
 									attr='[% customtag4 %]' and
@@ -211,7 +211,7 @@
 					<itemtype>sql</itemtype>
 					[% END %]
 					<menudata>
-						select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes
+						select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag4 %]') from customscan_track_attributes
 						[%- IF library or activelibrary %]
 						join multilibrary_track on
 							customscan_track_attributes.track=multilibrary_track.track and
@@ -265,7 +265,7 @@
 						<menuname>Songs</menuname>
 						<pathtype>sql</pathtype>
 						<pathtypedata>
-							select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes 
+							select distinct customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag5 %]') from customscan_track_attributes 
 									where 
 										module='mixedtag' and
 										attr='[% customtag5 %]' and
@@ -279,7 +279,7 @@
 						<itemtype>sql</itemtype>
 						[% END %]
 						<menudata>
-							select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),customscan_track_attributes.valuetype from customscan_track_attributes
+							select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag5 %]') from customscan_track_attributes
 							[%- IF library or activelibrary %]
 							join multilibrary_track on
 								customscan_track_attributes.track=multilibrary_track.track and

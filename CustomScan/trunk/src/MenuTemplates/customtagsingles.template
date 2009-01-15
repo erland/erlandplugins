@@ -127,6 +127,7 @@
 					group by tracks.id
 					order by rand()
 	                        </playdata>
+				<customitemtype>customtag[% customtag %]</customitemtype>
 		        	<menudata>
 					select distinct customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from contributors,contributor_track,tracks,customscan_track_attributes[% IF library or activelibrary %],multilibrary_track[% END %] 
 					[%- IF singlecomment %]
