@@ -97,6 +97,7 @@
 								value='{context.itemid}'
 				</pathtypedata>
 				<menutype>sql</menutype>
+				<customitemtype>customtag[% customtag %]</customitemtype>
 				<menudata>
 					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
 					join tracks on

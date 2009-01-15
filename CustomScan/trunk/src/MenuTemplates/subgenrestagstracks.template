@@ -204,6 +204,7 @@
 											attr='[% customtag1 %]' and
 											value='{context.itemid}'
 							</pathtypedata>
+							<customitemtype>[% datasource %][% customtag1 %]</customitemtype>
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
@@ -286,6 +287,7 @@
 												attr='[% customtag2 %]' and
 												value='{context.itemid}'
 								</pathtypedata>
+								<customitemtype>[% datasource %][% customtag2 %]</customitemtype>
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
@@ -368,6 +370,7 @@
 													attr='[% customtag3 %]' and
 													value='{context.itemid}'
 									</pathtypedata>
+									<customitemtype>[% datasource %][% customtag3 %]</customitemtype>
 									<menutype>sql</menutype>
 									<menulinks>alpha</menulinks>
 									<menudata>
@@ -449,6 +452,7 @@
 														attr='[% customtag4 %]' and
 														value='{context.itemid}'
 										</pathtypedata>
+										<customitemtype>[% datasource %][% customtag4 %]</customitemtype>
 										<menutype>sql</menutype>
 										<menulinks>alpha</menulinks>
 										<menudata>
@@ -626,6 +630,7 @@
 										attr='[% customtag1 %]' and
 										value='{context.itemid}'
 						</pathtypedata>
+						<customitemtype>[% datasource %][% customtag1 %]</customitemtype>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
@@ -704,6 +709,7 @@
 											attr='[% customtag2 %]' and
 											value='{context.itemid}'
 							</pathtypedata>
+							<customitemtype>[% datasource %][% customtag2 %]</customitemtype>
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
@@ -782,6 +788,7 @@
 												attr='[% customtag3 %]' and
 												value='{context.itemid}'
 								</pathtypedata>
+								<customitemtype>[% datasource %][% customtag3 %]</customitemtype>
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
@@ -859,6 +866,7 @@
 													attr='[% customtag4 %]' and
 													value='{context.itemid}'
 									</pathtypedata>
+									<customitemtype>[% datasource %][% customtag4 %]</customitemtype>
 									<menutype>sql</menutype>
 									<menulinks>alpha</menulinks>
 									<menudata>
@@ -1028,6 +1036,7 @@
 									attr='[% customtag1 %]' and
 									value='{context.itemid}'
 					</pathtypedata>
+					<customitemtype>[% datasource %][% customtag1 %]</customitemtype>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
@@ -1102,6 +1111,7 @@
 										attr='[% customtag2 %]' and
 										value='{context.itemid}'
 						</pathtypedata>
+						<customitemtype>[% datasource %][% customtag2 %]</customitemtype>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
@@ -1176,6 +1186,7 @@
 											attr='[% customtag3 %]' and
 											value='{context.itemid}'
 							</pathtypedata>
+							<customitemtype>[% datasource %][% customtag3 %]</customitemtype>
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
@@ -1249,6 +1260,7 @@
 												attr='[% customtag4 %]' and
 												value='{context.itemid}'
 								</pathtypedata>
+								<customitemtype>[% datasource %][% customtag4 %]</customitemtype>
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
@@ -1410,6 +1422,7 @@
 								attr='[% customtag1 %]' and
 								value='{context.itemid}'
 				</pathtypedata>
+				<customitemtype>[% datasource %][% customtag1 %]</customitemtype>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
@@ -1480,6 +1493,7 @@
 									attr='[% customtag2 %]' and
 									value='{context.itemid}'
 					</pathtypedata>
+					<customitemtype>[% datasource %][% customtag2 %]</customitemtype>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
@@ -1550,6 +1564,7 @@
 										attr='[% customtag3 %]' and
 										value='{context.itemid}'
 						</pathtypedata>
+						<customitemtype>[% datasource %][% customtag3 %]</customitemtype>
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
@@ -1619,6 +1634,7 @@
 											attr='[% customtag4 %]' and
 											value='{context.itemid}'
 							</pathtypedata>
+							<customitemtype>[% datasource %][% customtag4 %]</customitemtype>
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
