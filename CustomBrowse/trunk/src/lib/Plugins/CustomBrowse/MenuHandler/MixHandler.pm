@@ -174,7 +174,8 @@ sub getMixes {
 						my $browseMixes = $self->mixes;
 						foreach my $key (keys %$browseMixes) {
 							my $globalMix = $browseMixes->{$key};
-							if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $globalMix->{'mixcategory'} eq $mix->{'mixdata'})) {
+							my $globalMixCategory = $globalMix->{'mixcategory'} if exists $globalMix->{'mixcategory'};
+							if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $mix->{'mixdata'} =~ /^$globalMixCategory$/ )) {
 								if($self->checkMix($client, $globalMix, $item, $interfaceType)) {
 									$globalMix = $self->prepareMix($client, $globalMix, $item, $interfaceType);
 									push @mixes,$globalMix;
@@ -196,7 +197,8 @@ sub getMixes {
 					my $browseMixes = $self->mixes;
 					foreach my $key (keys %$browseMixes) {
 						my $globalMix = $browseMixes->{$key};
-						if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $globalMix->{'mixcategory'} eq $mix->{'mixdata'})) {
+						my $globalMixCategory = $globalMix->{'mixcategory'} if exists $globalMix->{'mixcategory'};
+						if($globalMix->{'enabled'} && (!exists $globalMix->{'mixcategory'} || $mix->{'mixdata'}  =~ /^$globalMixCategory$/)) {
 							if($self->checkMix($client, $globalMix, $item,$interfaceType)) {
 								$globalMix = $self->prepareMix($client, $globalMix, $item, $interfaceType);
 								push @mixes,$globalMix;
@@ -223,7 +225,8 @@ sub getMixes {
 		foreach my $key (keys %$browseMixes) {
 			my $mix = $browseMixes->{$key};
 
-			if($mix->{'enabled'} && (!exists $mix->{'mixcategory'} || $mix->{'mixcategory'} eq $type)) {
+			my $mixCategory = $mix->{'mixcategory'} if exists $mix->{'mixcategory'};
+			if($mix->{'enabled'} && (!exists $mix->{'mixcategory'} || $type =~ /^$mixCategory$/)) {
 				if($self->checkMix($client, $mix, $item,$interfaceType)) {
 					$mix = $self->prepareMix($client, $mix, $item, $interfaceType);
 					push @mixes,$mix;
