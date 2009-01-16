@@ -3343,6 +3343,22 @@ sub cliJiveHandlerImpl {
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
+	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'}) {
+		my %itemParams = ();
+		%itemParams = %{$currentContext->{'parameters'}};
+		$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
+		my $actions = {
+			'go' => undef,
+			'add-hold' => undef,
+		};
+		$request->addResultLoop('item_loop',$cnt,'playAction','play');
+		$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');
+		$request->addResultLoop('item_loop',$cnt,'style','itemplay');
+		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
+		$cnt++;
+	}
 	foreach my $item (@$menuItems) {
 		my $name;
 		my $itemkey;

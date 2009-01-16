@@ -1293,9 +1293,12 @@ sub _getSubContext {
 					$name = $item->{'id'};
 				}
 			}
+			my $currentPath = $currentUrl;
+			$currentPath =~ s/^&hierarchy=//;
 			my %resultItem = (
 				'url' => $currentUrl,
 				'valueUrl' => '&'.$currentUrl.'='.$currentValue,
+				'valuePath' => $currentPath,
 				'parameters' => \%parameters,
 				'name' => $name,
 				'item' => $item,
@@ -1373,6 +1376,7 @@ sub _getSubContext {
 						$child->{'url'} = $currentUrl.','.$child->{'url'};
 					}
 					$child->{'valueUrl'} = '&'.$currentUrl.'='.$currentValue.$child->{'valueUrl'};
+					$child->{'valuePath'} = $currentPath.','.$child->{'valuePath'};
 					$child->{'parameters'}->{$currentUrl} = $currentValueUnescaped if defined($currentValueUnescaped);
 					push @result,$child;
 				}
