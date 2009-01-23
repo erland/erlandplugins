@@ -915,9 +915,10 @@ sub findObjectForMovedUrl
 	if ($url =~ /.*([\\\/].*[\\\/].*\.).*$/) {
 		my $findUrl = $1;
 
+		my $diskUrl = 0;
 		# Ignore if this is a disk directory (too risky that this connects to wrong track)
-		if(lc($findUrl) =~ /^disk[0-9]/) {
-			return undef;
+		if(lc($findUrl) =~ /^[\\\/]dis[ck][0-9]/ || lc($findUrl) =~ /^[\\\/]dis[ck]%20[0-9]/) {
+			$diskUrl = 1;
 		}
 
 		$log->debug("Find track urls ending with $findUrl");
@@ -928,7 +929,9 @@ sub findObjectForMovedUrl
 		$log->debug("Found $count matching tracks");
 
 		if ($count > 2) {
-			$log->warn("Found $count tracks matching $url, ignoring track, too risky to just choose first one");
+			$log->warn("Found $count tracks matching $url using $findUrl, ignoring track, too risky to just choose first one");
+		}elsif ($count>1 && $diskUrl) {
+			$log->warn("Found $count tracks matching $url using $findUrl, ignoring track, too risky to just choose first one");
 		}else {
 			if ($count > 1) {
 				$log->warn("Found $count tracks matching $url, picking the first one: ".$matchingTracks[0]->url);
