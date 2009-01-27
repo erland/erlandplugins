@@ -11,9 +11,9 @@
   <optionsURL>plugins/PlaylistGenerator/settings/basic.html</optionsURL>
   <targetApplication>
     <id>SqueezeCenter</id>
-    <maxVersion>7.3+</maxVersion>
+    <maxVersion>*</maxVersion>
     <minVersion>7.1.0</minVersion>
   </targetApplication>
   <type>2</type>
-  <version>1.0</version>
+  <version>1.0.1</version>
 </extension>
