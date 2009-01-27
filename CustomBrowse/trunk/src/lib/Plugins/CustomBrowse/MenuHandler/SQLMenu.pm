@@ -114,7 +114,7 @@ sub prepareMenu {
 			'itemname' => $dataItem->{'name'}
 		);
 		if(defined($dataItem->{'link'})) {
-			$menuItem{'itemlink'} = $dataItem->{'link'};
+			$menuItem{'itemlink'} = uc($dataItem->{'link'});
 		}
 		if(defined($item->{'value'})) {
 			$menuItem{'value'} = $item->{'value'}."_".$dataItem->{'name'};
