@@ -27,14 +27,27 @@
 				<pathtypedata>
 					select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
 							where 
-								module='customtag' and
+								module='[% datasource %]' and
 								attr='[% customtag %]' and
 								value='{context.itemid}'
 				</pathtypedata>
 				<customitemtype>customtag[% customtag %]</customitemtype>
 				<menutype>sql</menutype>
+				<menulinks>alpha</menulinks>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
+					select customscan_track_attributes.value,customscan_track_attributes.value,
+						[%- IF customsorttag %]
+						[%- IF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+						[%- ELSE %]
+						substr(ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- END %]
+						[%- ELSIF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- ELSE %]
+						substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+						[%- END %]
+						from customscan_track_attributes
 					join tracks on 
 						tracks.id=customscan_track_attributes.track
 					[%- IF library or activelibrary %]
@@ -47,7 +60,7 @@
 					[%- IF customsorttag %]
 					left join customscan_track_attributes as attr2 on
 						tracks.id=attr2.track and
-						attr2.module='customtag' and
+						attr2.module='[% datasource %]' and
 						attr2.attr='[% customsorttag %]'
 					[%- END %]
 					[%- IF customtagartistsort %]
@@ -57,7 +70,7 @@
 					where
 						tracks.audio=1 and
 						albums.compilation = 1 and
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag %]'
 					group by customscan_track_attributes.value
 					[%- IF customsorttag %]
@@ -100,7 +113,7 @@
 							albums.compilation = 1 and
 							tracks.album=albums.id and
 							tracks.id=customscan_track_attributes.track and
-							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.module='[% datasource %]' and
 							customscan_track_attributes.attr='[% customtag %]' and
 							customscan_track_attributes.value='{customtag}' 
 						group by albums.id
@@ -124,7 +137,7 @@
 								tracks.audio=1 and
 								tracks.album={album} and
 								tracks.id=customscan_track_attributes.track and
-								customscan_track_attributes.module='customtag' and
+								customscan_track_attributes.module='[% datasource %]' and
 								customscan_track_attributes.attr='[% customtag %]' and
 								customscan_track_attributes.value='{customtag}' 
 							group by tracks.id
@@ -166,7 +179,7 @@
 					) and
 					[%- END %]
 					tracks.id=customscan_track_attributes.track and
-					customscan_track_attributes.module='customtag' and
+					customscan_track_attributes.module='[% datasource %]' and
 					customscan_track_attributes.attr='[% customtag %]' 
 				group by contributors.id 
 				order by contributors.namesort asc
@@ -178,13 +191,25 @@
 				<pathtypedata>
 					select distinct customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
 							where 
-								module='customtag' and
+								module='[% datasource %]' and
 								attr='[% customtag %]' and
 								value='{context.itemid}'
 				</pathtypedata>
 				<menutype>sql</menutype>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes
+					select customscan_track_attributes.value,customscan_track_attributes.value,
+						[%- IF customsorttag %]
+						[%- IF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+						[%- ELSE %]
+						substr(ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- END %]
+						[%- ELSIF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- ELSE %]
+						substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+						[%- END %]
+						from customscan_track_attributes
 					join contributor_track on
 						contributor_track.track=customscan_track_attributes.track and
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
@@ -196,7 +221,7 @@
 					[%- IF customsorttag %]
 					left join customscan_track_attributes as attr2 on
 						customscan_track_attributes.track=attr2.track and
-						attr2.module='customtag' and
+						attr2.module='[% datasource %]' and
 						attr2.attr='[% customsorttag %]'
 					[%- END %]
 					[%- IF customtagartistsort %]
@@ -205,7 +230,7 @@
 					[%- END %]
 					where
 						contributor_track.contributor={artist} and
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag %]'
 					group by customscan_track_attributes.value
 					[%- IF customsorttag %]
@@ -251,7 +276,7 @@
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							contributor_track.contributor={artist} and
 							tracks.id=customscan_track_attributes.track and
-							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.module='[% datasource %]' and
 							customscan_track_attributes.attr='[% customtag %]' and
 							customscan_track_attributes.value='{customtag}' 
 						group by albums.id 
@@ -278,7 +303,7 @@
 								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 								contributor_track.contributor={artist} and
 								tracks.id=customscan_track_attributes.track and
-								customscan_track_attributes.module='customtag' and
+								customscan_track_attributes.module='[% datasource %]' and
 								customscan_track_attributes.attr='[% customtag %]' and
 								customscan_track_attributes.value='{customtag}' 
 							group by tracks.id 
