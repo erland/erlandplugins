@@ -42,7 +42,7 @@ sub getCustomScanFunctions {
 		'order' => '60',
 		'defaultenabled' => 1,
 		'name' => 'Mixed Tag',
-		'description' => "This module scans information from both SlimServer and Custom Tag scanning module and stores it in a common place. If you leave one of the tag fields empty in the settings it means that that information isnt scanned. Multiple value can be specified with a comma character as separator. To use custom tags these must first have been scanned with the Custom Tag scanning module, this is done automatically if both scanning modules are included in automatic scanning and you perform a Scan All operation, but if not you will have to make sure to run the Custom Tag scanning module first, before you run this scaning module",
+		'description' => "This module scans information from both SqueezeCenter and Custom Tag scanning module and stores it in a common place. If you leave one of the tag fields empty in the settings it means that that information isnt scanned. Multiple value can be specified with a comma character as separator. To use custom tags these must first have been scanned with the Custom Tag scanning module, this is done automatically if both scanning modules are included in automatic scanning and you perform a Scan All operation, but if not you will have to make sure to run the Custom Tag scanning module first, before you run this scaning module",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -51,63 +51,63 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'mixedtagartisttags',
 				'name' => 'Artist tags',
-				'description' => 'Tag names to store SlimServer artists as',
+				'description' => 'Tag names to store SqueezeCenter artists as',
 				'type' => 'text',
 				'value' => 'ARTIST'
 			},
 			{
 				'id' => 'mixedtagalbumartisttags',
 				'name' => 'Album Artist tags',
-				'description' => 'Tag names to store SlimServer album artists as',
+				'description' => 'Tag names to store SqueezeCenter album artists as',
 				'type' => 'text',
 				'value' => 'ARTIST,ALBUMARTIST'
 			},
 			{
 				'id' => 'mixedtagtrackartisttags',
 				'name' => 'Track Artist tags',
-				'description' => 'Tag names to store SlimServer track artists as',
+				'description' => 'Tag names to store SqueezeCenter track artists as',
 				'type' => 'text',
 				'value' => 'TRACKARTIST'
 			},
 			{
 				'id' => 'mixedtagconductortags',
 				'name' => 'Conductor tags',
-				'description' => 'Tag names to store SlimServer conductors as',
+				'description' => 'Tag names to store SqueezeCenter conductors as',
 				'type' => 'text',
 				'value' => 'CONDUCTOR'
 			},
 			{
 				'id' => 'mixedtagcomposertags',
 				'name' => 'Composer tags',
-				'description' => 'Tag names to store SlimServer composers as',
+				'description' => 'Tag names to store SqueezeCenter composers as',
 				'type' => 'text',
 				'value' => 'COMPOSER'
 			},
 			{
 				'id' => 'mixedtagbandtags',
 				'name' => 'Band tags',
-				'description' => 'Tag names to store SlimServer bands as',
+				'description' => 'Tag names to store SqueezeCenter bands as',
 				'type' => 'text',
 				'value' => 'BAND'
 			},
 			{
 				'id' => 'mixedtagalbumtags',
 				'name' => 'Album tags',
-				'description' => 'Tag names to store SlimServer albums as',
+				'description' => 'Tag names to store SqueezeCenter albums as',
 				'type' => 'text',
 				'value' => 'ALBUM'
 			},
 			{
 				'id' => 'mixedtaggenretags',
 				'name' => 'Genre tags',
-				'description' => 'Tag name to store SlimServer genres as',
+				'description' => 'Tag name to store SqueezeCenter genres as',
 				'type' => 'text',
 				'value' => 'GENRE'
 			},
 			{
 				'id' => 'mixedtagyeartags',
 				'name' => 'Year tags',
-				'description' => 'Tag name to store SlimServer years as',
+				'description' => 'Tag name to store SqueezeCenter years as',
 				'type' => 'text',
 				'value' => 'YEAR'
 			},
@@ -117,6 +117,13 @@ sub getCustomScanFunctions {
 				'description' => 'Include the custom tags scanned with the Custom Tag scanning module',
 				'type' => 'checkbox',
 				'value' => '1'
+			},
+			{
+				'id' => 'mixedtagexcludedcustomtags',
+				'name' => 'Excluded custom tags',
+				'description' => 'A comma separated list of custom tags to not include as mixed tags',
+				'type' => 'text',
+				'value' => ''
 			},
 			{
 				'id' => 'mixedtagfriendlynames',
@@ -235,13 +242,29 @@ sub exitScanTrack {
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagcustomtags");
 	if($tags) {
 		eval {
+			my @tagArray = split(/\s*,\s*/,Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagexcludedcustomtags"));
+			my $excludedTags = undef;
+			for my $tag (@tagArray) {
+				if(defined($excludedTags)) {
+					$excludedTags.= ',';
+				}else {
+					$excludedTags='';
+				}
+				$excludedTags.= "'".uc($tag)."'";
+			}
 			$log->debug("Writing custom tags\n");
 			my $dbh = Slim::Schema->storage->dbh();
-			my $sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag'");
+			my $sth;
+			if(defined($excludedTags)) {
+				$log->debug("Excluding tags $excludedTags\n");
+				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag' and customscan_track_attributes.attr not in ($excludedTags)");
+			}else {
+				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag'");
+			}
 			$sth->execute();
 		};
 		if ($@) {
-			$log->error("CustomScan: Failed to scan SlimServer Custom Scan custom tags: $@\n");
+			$log->error("CustomScan: Failed to scan SqueezeCenter Custom Scan custom tags: $@\n");
 		}	
 	}
 	parseTag(Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagfriendlynames"));
@@ -280,7 +303,7 @@ sub updateTags {
 			$sth->execute();
 		};
 		if ($@) {
-			$log->error("CustomScan: Failed to scan SlimServer tags: $@\n");
+			$log->error("CustomScan: Failed to scan SqueezeCenter tags: $@\n");
 		}	
 	}
 }
