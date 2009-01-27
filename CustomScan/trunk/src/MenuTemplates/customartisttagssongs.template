@@ -49,7 +49,7 @@
 						albums.compilation = 1 and
 						tracks.album=albums.id and
 						tracks.id=customscan_track_attributes.track and
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag %]'
 					group by albums.id
 					order by {orderby}
@@ -75,7 +75,7 @@
 							tracks.album={album} and
 							[%- END %]
 							tracks.id=customscan_track_attributes.track and
-							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.module='[% datasource %]' and
 							customscan_track_attributes.attr='[% customtag %]'
 						group by tracks.id
 						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
@@ -117,7 +117,7 @@
 					) and
 					[%- END %]
 					tracks.id=customscan_track_attributes.track and
-					customscan_track_attributes.module='customtag' and
+					customscan_track_attributes.module='[% datasource %]' and
 					customscan_track_attributes.attr='[% customtag %]' 
 				group by contributors.id 
 				order by contributors.namesort asc
@@ -154,7 +154,7 @@
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 						contributor_track.contributor={artist} and
 						tracks.id=customscan_track_attributes.track and
-						customscan_track_attributes.module='customtag' and
+						customscan_track_attributes.module='[% datasource %]' and
 						customscan_track_attributes.attr='[% customtag %]' 
 					group by albums.id 
 					order by {orderby}
@@ -183,7 +183,7 @@
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							contributor_track.contributor={artist} and
 							tracks.id=customscan_track_attributes.track and
-							customscan_track_attributes.module='customtag' and
+							customscan_track_attributes.module='[% datasource %]' and
 							customscan_track_attributes.attr='[% customtag %]'
 						group by tracks.id 
 						order by tracks.disc asc,tracks.tracknum asc,tracks.titlesort asc

@@ -28,7 +28,19 @@
 			<itemtype>sql</itemtype>
 			[% END %]
 			<menudata>
-				select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag1 %]') from customscan_track_attributes 
+				select customscan_track_attributes.extravalue,customscan_track_attributes.value,
+					[%- IF customsorttag1 %]
+					[%- IF customtag1artistsort %]
+					substr(ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+					[%- ELSE %]
+					substr(ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+					[%- END %]
+					[%- ELSIF customtag1artistsort %]
+					substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+					[%- ELSE %]
+					substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+					[%- END %],
+					ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag1 %]') from customscan_track_attributes 
 				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
@@ -107,7 +119,19 @@
 				<itemtype>sql</itemtype>
 				[% END %]
 				<menudata>
-					select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag2 %]') from customscan_track_attributes
+					select customscan_track_attributes.extravalue,customscan_track_attributes.value,
+						[%- IF customsorttag2 %]
+						[%- IF customtag2artistsort %]
+						substr(ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+						[%- ELSE %]
+						substr(ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- END %]
+						[%- ELSIF customtag2artistsort %]
+						substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- ELSE %]
+						substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+						[%- END %],
+						ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag2 %]') from customscan_track_attributes
 					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						customscan_track_attributes.track=multilibrary_track.track and
@@ -186,7 +210,19 @@
 					<itemtype>sql</itemtype>
 					[% END %]
 					<menudata>
-						select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag3 %]') from customscan_track_attributes
+						select customscan_track_attributes.extravalue,customscan_track_attributes.value,
+							[%- IF customsorttag3 %]
+							[%- IF customtag3artistsort %]
+							substr(ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+							[%- ELSE %]
+							substr(ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+							[%- END %]
+							[%- ELSIF customtag3artistsort %]
+							substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+							[%- ELSE %]
+							substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+							[%- END %],
+							ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag3 %]') from customscan_track_attributes
 						[%- IF library or activelibrary %]
 						join multilibrary_track on
 							customscan_track_attributes.track=multilibrary_track.track and
@@ -264,7 +300,19 @@
 						<itemtype>sql</itemtype>
 						[% END %]
 						<menudata>
-							select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag4 %]') from customscan_track_attributes
+							select customscan_track_attributes.extravalue,customscan_track_attributes.value,
+								[%- IF customsorttag4 %]
+								[%- IF customtag4artistsort %]
+								substr(ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+								[%- ELSE %]
+								substr(ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+								[%- END %]
+								[%- ELSIF customtag4artistsort %]
+								substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+								[%- ELSE %]
+								substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+								[%- END %],
+								ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag4 %]') from customscan_track_attributes
 							[%- IF library or activelibrary %]
 							join multilibrary_track on
 								customscan_track_attributes.track=multilibrary_track.track and
@@ -341,7 +389,19 @@
 							<itemtype>sql</itemtype>
 							[% END %]
 							<menudata>
-								select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag5 %]') from customscan_track_attributes
+								select customscan_track_attributes.extravalue,customscan_track_attributes.value,
+									[%- IF customsorttag5 %]
+									[%- IF customtag5artistsort %]
+									substr(ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+									[%- ELSE %]
+									substr(ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+									[%- END %]
+									[%- ELSIF customtag5artistsort %]
+									substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+									[%- ELSE %]
+									substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+									[%- END %],
+									ifnull(customscan_track_attributes.valuetype,'mixedtag[% customtag5 %]') from customscan_track_attributes
 								[%- IF library or activelibrary %]
 								join multilibrary_track on
 									customscan_track_attributes.track=multilibrary_track.track and

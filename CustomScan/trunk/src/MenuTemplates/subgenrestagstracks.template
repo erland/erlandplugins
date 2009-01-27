@@ -185,7 +185,7 @@
 								exists(select * from genre_track
 									where
 										genre_track.track=tracks.id and
-										genre_track.genre={subgenre})
+										genre_track.genre={subgenre}) and
 								exists(select * from genre_track
 									where
 										genre_track.track=tracks.id and
@@ -208,7 +208,7 @@
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
-								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes 
 								join genre_track on
 									genre_track.track=customscan_track_attributes.track and
 									genre_track.genre={genre}
@@ -291,7 +291,7 @@
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
-									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 									join genre_track on
 										genre_track.track=customscan_track_attributes.track and
 										genre_track.genre={genre}
@@ -374,7 +374,7 @@
 									<menutype>sql</menutype>
 									<menulinks>alpha</menulinks>
 									<menudata>
-										select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+										select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 										join genre_track on
 											genre_track.track=customscan_track_attributes.track and
 											genre_track.genre={genre}
@@ -456,7 +456,7 @@
 										<menutype>sql</menutype>
 										<menulinks>alpha</menulinks>
 										<menudata>
-											select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+											select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 											join genre_track on
 												genre_track.track=customscan_track_attributes.track and
 												genre_track.genre={genre}
@@ -634,7 +634,7 @@
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes 
 							join genre_track on
 								genre_track.track=customscan_track_attributes.track and
 								genre_track.genre={genre}
@@ -713,7 +713,7 @@
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
-								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 								join genre_track on
 									genre_track.track=customscan_track_attributes.track and
 									genre_track.genre={genre}
@@ -792,7 +792,7 @@
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
-									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 									join genre_track on
 										genre_track.track=customscan_track_attributes.track and
 										genre_track.genre={genre}
@@ -870,7 +870,7 @@
 									<menutype>sql</menutype>
 									<menulinks>alpha</menulinks>
 									<menudata>
-										select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+										select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 										join genre_track on
 											genre_track.track=customscan_track_attributes.track and
 											genre_track.genre={genre}
@@ -1040,7 +1040,7 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes 
 						join genre_track on
 							genre_track.track=customscan_track_attributes.track and
 							genre_track.genre={genre}
@@ -1115,7 +1115,7 @@
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 							join genre_track on
 								genre_track.track=customscan_track_attributes.track and
 								genre_track.genre={genre}
@@ -1190,7 +1190,7 @@
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
-								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 								join genre_track on
 									genre_track.track=customscan_track_attributes.track and
 									genre_track.genre={genre}
@@ -1264,7 +1264,7 @@
 								<menutype>sql</menutype>
 								<menulinks>alpha</menulinks>
 								<menudata>
-									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+									select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 									join genre_track on
 										genre_track.track=customscan_track_attributes.track and
 										genre_track.genre={genre}
@@ -1426,7 +1426,7 @@
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 				<menudata>
-					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes 
+					select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes 
 					join genre_track on
 						genre_track.track=customscan_track_attributes.track and
 						genre_track.genre={genre}
@@ -1497,7 +1497,7 @@
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 					<menudata>
-						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+						select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 						join genre_track on
 							genre_track.track=customscan_track_attributes.track and
 							genre_track.genre={genre}
@@ -1568,7 +1568,7 @@
 						<menutype>sql</menutype>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+							select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 							join genre_track on
 								genre_track.track=customscan_track_attributes.track and
 								genre_track.genre={genre}
@@ -1638,7 +1638,7 @@
 							<menutype>sql</menutype>
 							<menulinks>alpha</menulinks>
 							<menudata>
-								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes
+								select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1) from customscan_track_attributes
 								join genre_track on
 									genre_track.track=customscan_track_attributes.track and
 									genre_track.genre={genre}

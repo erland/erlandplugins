@@ -21,8 +21,21 @@
 			</pathtypedata>
 			<customitemtype>[% datasource %][% customtag %]</customitemtype>
 			<menutype>sql</menutype>
+			<menulinks>alpha</menulinks>
 			<menudata>
-				select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes 
+				select customscan_track_attributes.value,customscan_track_attributes.value,
+					[%- IF customsorttag %]
+					[%- IF customtagartistsort %]
+					substr(ifnull(contributors.namesort,ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+					[%- ELSE %]
+					substr(ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+					[%- END %]
+					[%- ELSIF customtagartistsort %]
+					substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+					[%- ELSE %]
+					substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+					[%- END %]
+					from customscan_track_attributes 
 				[%- IF library or activelibrary %]
 				join multilibrary_track on
 					customscan_track_attributes.track=multilibrary_track.track and
@@ -67,8 +80,21 @@
 				</pathtypedata>
 				<customitemtype>[% datasource %][% customtag %]</customitemtype>
 				<menutype>sql</menutype>
+				<menulinks>alpha</menulinks>
 				<menudata>
-					select customscan_track_attributes.value,concat(customscan_track_attributes.value,'/') from customscan_track_attributes 
+					select customscan_track_attributes.value,concat(customscan_track_attributes.value,'/'),
+						[%- IF customsorttag %]
+						[%- IF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))),1,1)
+						[%- ELSE %]
+						substr(ifnull(attr2.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- END %]
+						[%- ELSIF customtagartistsort %]
+						substr(ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)),1,1)
+						[%- ELSE %]
+						substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1)
+						[%- END %]
+						from customscan_track_attributes 
 					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						customscan_track_attributes.track=multilibrary_track.track and
