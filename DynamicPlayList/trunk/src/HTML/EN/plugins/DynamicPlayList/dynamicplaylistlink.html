@@ -8,7 +8,7 @@
 		[% END %]
 	[% ELSE %]
 		[% WRAPPER $link %]
-			href="[% webroot %][% statusroot %]?p0=dynamicplaylist&p1=playlist&p2=[% IF addOnly %]add[% ELSE %]play[% END %]&p3=[% type %]&player=[% player |uri%]" onClick="setTimeout('document.location.reload(true)',500)"
+			href="[% webroot %][% statusroot %]?p0=dynamicplaylist&p1=playlist&p2=[% IF addOnly %]add[% ELSE %]play[% END %]&p3=[% type |uri%]&player=[% player |uri%]" onClick="setTimeout('document.location.reload(true)',500)"
 		[% END %]
 	[% END %]
 [% END %]
