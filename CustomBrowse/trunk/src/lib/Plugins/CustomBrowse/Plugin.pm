@@ -3358,6 +3358,7 @@ sub cliJiveHandlerImpl {
 		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
 		$cnt++;
+		$count++;
 	}
 	foreach my $item (@$menuItems) {
 		my $name;
