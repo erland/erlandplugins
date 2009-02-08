@@ -3343,7 +3343,7 @@ sub cliJiveHandlerImpl {
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
-	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'}) {
+	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext)) {
 		my %itemParams = ();
 		%itemParams = %{$currentContext->{'parameters'}};
 		$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
