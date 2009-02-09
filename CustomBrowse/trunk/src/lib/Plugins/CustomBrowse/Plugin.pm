@@ -3470,11 +3470,9 @@ sub cliJiveHandlerImpl {
 			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		}
 
+		$request->addResultLoop('item_loop',$cnt,'text',$name);
 		if($menuResult->{'artwork'}) {
-			$request->addResultLoop('item_loop',$cnt,'text',$name."\n");
 			$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
-		}else {
-			$request->addResultLoop('item_loop',$cnt,'text',$name);
 		}
 		if(defined($item->{'menu'})) {
 			my @submenus = ();
