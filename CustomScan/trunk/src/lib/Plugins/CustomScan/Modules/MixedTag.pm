@@ -344,6 +344,17 @@ sub getMixedTagMenuItems {
 			$supportedTags .= "'".quoteValue($tag)."'";
 		}
 	}
+	
+	$tags = $parameters->{'numbertags'};
+	my %numberTags = ();
+	if(defined($tags)) {
+		my @tagArray = split(/\,/,$tags);
+		for my $tag (@tagArray) {
+			$tag = uc($tag);
+			$numberTags{$tag}=1;
+		}
+	}
+	
 	my @items = ();
 	my $currentTag = undef;
 	my $currentValue = undef;
@@ -420,7 +431,11 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'track'}) && !defined($selectedTags)) {
 			$tagssql .=" and customscan_track_attributes.track=".$parameters->{'track'};
 		}
-		$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)";
+		if($numberTags{$currentTag}) {
+			$tagssql .=" group by customscan_track_attributes.extravalue order by floor(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))";
+		}else {
+			$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)";
+		}
 	}
 	my $customtagpathsql=undef;
 	if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
@@ -561,7 +576,11 @@ sub getMixedTagMenuItems {
 				$customtagsql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'};		
 			}
 			$customtagsql .= " where tracks.audio=1";
-			$customtagsql .=" group by customscan_track_attributes.extravalue order by customscan_track_attributes.valuesort";
+			if($numberTags{$parameters->{'findcustomtag'}}) {
+				$customtagsql .=" group by customscan_track_attributes.extravalue order by floor(customscan_track_attributes.valuesort)";
+			}else {
+				$customtagsql .=" group by customscan_track_attributes.extravalue order by customscan_track_attributes.valuesort";
+			}
 		}
 	}
 	
@@ -630,6 +649,9 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'defaultalbumsort'})) {
 			$menu{'menufunction'} .= "|defaultalbumsort=".$parameters->{'defaultalbumsort'};
 		}		
+		if(defined($parameters->{'numbertags'})) {
+			$menu{'menufunction'} .= "|numbertags=".$parameters->{'numbertags'};
+		}
 
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
@@ -706,6 +728,9 @@ sub getMixedTagMenuItems {
 		if(defined($parameters->{'defaultalbumsort'})) {
 			$menu{'menufunction'} .= "|defaultalbumsort=".$parameters->{'defaultalbumsort'};
 		}		
+		if(defined($parameters->{'numbertags'})) {
+			$menu{'menufunction'} .= "|numbertags=".$parameters->{'numbertags'};
+		}
 		
 		if(defined($parameters->{'activelibrary'})) {
 			$menu{'menufunction'} .= "|activelibrary=1";
