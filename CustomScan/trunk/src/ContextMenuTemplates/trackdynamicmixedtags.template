@@ -14,6 +14,6 @@
 		[% END %]
 		<playtype>none</playtype>
 		<menuheader>{context.itemname} {count}</menuheader>
-		<menufunction>Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems|track={trackid}[% IF usedtags %]|usedtags=[% usedtags %][% END %]|findalbums=[% findalbums %]|findtracks=[% findtracks %]|playalltracks=[% playalltracks %][% IF activelibrary %]|activelibrary=1[% END %][% IF library %]|library=[% library %][% END %]</menufunction>
+		<menufunction>Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems|track={trackid}[% IF usedtags %]|usedtags=[% usedtags %][% END %]|findalbums=[% findalbums %]|findtracks=[% findtracks %]|playalltracks=[% playalltracks %][% IF numbertags %]|numbertags=[% numbertags %][% END %][% IF activelibrary %]|activelibrary=1[% END %][% IF library %]|library=[% library %][% END %]</menufunction>
 	</menu>
 </custombrowse>

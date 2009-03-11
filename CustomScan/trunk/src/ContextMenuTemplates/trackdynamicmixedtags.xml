@@ -10,6 +10,7 @@
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="text" id="usedtags" name="Limit to these tags (comma separated list)" value=""/>
+		<parameter type="text" id="numbertags" name="Order these tags numeric instead of by letter (comma separated list)" value=""/>
 		<parameter type="checkbox" id="findalbums" name="Show matching albums" value="1"/>
 		<parameter type="checkbox" id="findtracks" name="Show matching songs" value="1"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in bottom level" value="1"/>
