@@ -25,6 +25,7 @@ use Slim::Utils::Misc;
 use Slim::Utils::Unicode;
 use MP3::Info;
 use Slim::Utils::Prefs;
+use Data::Dumper;
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
@@ -117,6 +118,7 @@ my %rawTagNames = (
 	'TDTG' => 'TAGGINGTIME',
 	'TSOA' => 'ALBUMSORTORDER',
 	'TSOP' => 'PERFORMERSORTORDER',
+	'XSOP' => 'ARTISTSORT', 
 	'TSOT' => 'TITLESORTORDER',
 	'TXX' => 'USERTEXT',
 	'TXXX' => 'USERTEXT',
@@ -217,6 +219,13 @@ sub getCustomScanFunctions {
 				'value' => 'ORIGIN'
 			},
 			{
+				'id' => 'customtagsmapping',
+				'name' => 'Tag mapping',
+				'description' => 'Comma separated list with the tags that shall be mapped into another tag, for example RELEASESTATUS=RELEASESTATUS|MUSICBRAINZ_ALBUM_STAT US|MUSICBRAINZ_ALBUMSTATUS',
+				'type' => 'text',
+				'value' => ''
+			},
+			{
 				'id' => 'customsorttags',
 				'name' => 'Sort tag mapping',
 				'description' => 'Comma separated list with the tags and their corresponding sort tag, for example: "ORIGARTIST=ORIGARTISTSORT,OWNER=OWNERSORT". If the scanned tag shall be used for sorting the tag does not have to be listed here.',
@@ -232,6 +241,7 @@ sub getCustomScanFunctions {
 sub scanTrack {
 	my $track = shift;
 	my @result = ();
+	my @resultVirtual = ();
 	$log->debug("Scanning track: ".$track->title."\n");
 	my $tags = Slim::Formats->readTags($track->url);
 	if($track->content_type() eq 'mp3') {
@@ -251,6 +261,10 @@ sub scanTrack {
 	}
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
+		my $customTagMappingProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtagsmapping");
+		if(defined($customTagMappingProperty)) {
+			$customTagMappingProperty =~ s/\\,/\\COMMA/;
+		}
 		my $customSortTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customsorttags");
 		my $singleValueTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("singlecustomtags");
 		if($customTagProperty) {
@@ -282,10 +296,24 @@ sub scanTrack {
 					}
 				}
 			}
-
+			my %virtualTagsHash = ();
+			my @customTagsMappings = split(/,/,$customTagMappingProperty);
+			for my $customTagMapping (@customTagsMappings) {
+				$customTagMapping =~ s/\\COMMA/,/;
+				if($customTagMapping =~ /^\s*.*?\s*=\s*(oneof|combine|as)\s+(.+)\s*$/) {
+					my @parts = split(/\|/,$2);
+					for my $part (@parts) {
+						if($part =~ /^\s*([A-Z0-9_]+)\(.*$/) {
+							$virtualTagsHash{$1} = 1;
+						}elsif($part =~ /^\s*([A-Z0-9_]+)\s*$/) {
+							$virtualTagsHash{$1} = 1;
+						}
+					}
+				}
+			}
 			for my $tag (keys %$tags) {
 				$tag = uc($tag);
-				if($customTagsHash{$tag}) {
+				if($customTagsHash{$tag} || $virtualTagsHash{$tag}) {
 					my $values = $tags->{$tag};
 					if(!defined($singleValueTagsHash{$tag})) {
 						my @arrayValues = splitTag($tags->{$tag});
@@ -293,18 +321,6 @@ sub scanTrack {
 					}
 					my $sortValues = undef;
 					my $sortTag = $customSortTagsHash{$tag};
-					if(defined($sortTag)) {
-						for my $key (keys %$tags) {
-							if(uc($sortTag) eq uc($key)) {
-								$sortValues = $tags->{$key};
-								if(!defined($singleValueTagsHash{$tag})) {
-									my @arrayValues = splitTag($tags->{$key});
-									$sortValues = \@arrayValues;
-								}
-								last;
-							}
-						}
-					}
 					if(ref($values) eq 'ARRAY') {
 						my $valueArray = $values;
 						my $index = 0;
@@ -316,20 +332,16 @@ sub scanTrack {
 									'name' => $tag,
 									'value' => $value
 								);
-								if(defined($sortValues)) {
-									my $sortValue = undef;
-									if(ref($sortValues) eq 'ARRAY') {
-										if(scalar(@$sortValues)>$index) {
-											$sortValue = $sortValues->[$index];
-										}
-									}elsif($index==0) {
-										$sortValue = $sortValues;
-									}
-									if(defined($sortValue)) {
-										$item{'valuesort'} = $sortValue;
-									}
+								if(defined($sortTag)) {
+									$item{'sorttag'} = $sortTag;
+									$item{'sorttagindex'} = $index;
 								}
-								push @result,\%item;
+
+								if($customTagsHash{$tag}) {
+									push @result,\%item;
+								}else {
+									push @resultVirtual,\%item;
+								}
 							}
 							$index = $index + 1;
 						}
@@ -341,13 +353,194 @@ sub scanTrack {
 								'name' => $tag,
 								'value' => $values
 							);
-							if(defined($sortValues)) {
-								if(ref($sortValues) eq 'ARRAY') {
-									$sortValues = $sortValues->[0];
-								}
-								$item{'valuesort'} = $sortValues;
+							if(defined($sortTag)) {
+								$item{'sorttag'} = $sortTag;
+								$item{'sorttagindex'} = 0;
 							}
-							push @result,\%item;
+							if($customTagsHash{$tag}) {
+								push @result,\%item;
+							}else {
+								push @resultVirtual,\%item;
+							}
+						}
+					}
+				}
+			}
+			
+			my $resultHash = createTagHash(\@result,\@resultVirtual);
+
+			if(defined($customTagMappingProperty) && $customTagMappingProperty) {
+
+				my @customTagsMapping = split(/,/,$customTagMappingProperty);
+				for my $customTagMapping (@customTagsMapping) {
+					$customTagMapping =~ s/\\COMMA/,/;
+					# handle TAG=oneof ONETAG|ANOTHERTAG|ATHIRDTAG mappings
+					# handle TAG=combine ONETAG|ANOTHERTAG|ATHIRDTAG mappings
+					# handle YEAR=as DATE(exp=^\d\d\d\d)
+					# handle MONTH=combine DATE(exp=^(\d\d\d\d))|DATE(exp=^\d\d\d\d-(\d\d))
+					# handle DECADE=combine YEAR(exp=^\d\d\d)|YEAR(text=0)					
+					# handle ARTISTSORT=combine ARTIST(exp=^.*\s(.*)$)|ARTIST(text= )|ARTIST(exp=^(.*)\s) 
+					if($customTagMapping =~ /^\s*(.*)\s*=\s*(oneof|combine|as)\s+(.+)\s*$/) {
+						$log->debug("Handling custom mapping: $customTagMapping");
+						my $mappingType = $2;
+						my @values = ();
+						my $tag = $1;
+						my @parts = split(/\|/,$3);
+						#$log->debug("GOT: ".Dumper(\@parts));
+						my $lastPart = 0;
+						for my $part (@parts) {
+							$log->debug("Handling custom mapping part $part");
+							if($part =~ /^\s*([A-Z0-9_]+)\(exp=(.*)\)\s*$/) {
+								if(exists $resultHash->{$1}) {
+									my $partTag = $1;
+									my $partExp = $2;
+									$log->debug("Handling custom mapping exp part $partTag, $partExp");
+									my $partTagValues = $resultHash->{$partTag};
+									if(ref($partTagValues) eq 'ARRAY') {
+										my $orgValue = undef;
+										if(scalar(@values)==1) {
+											if($mappingType eq "combine") {
+												$orgValue = shift @values;
+											}else {
+												$orgValue = $values[0];
+											}
+										}
+										my $i = 0;
+										for my $partTagValue (@$partTagValues) {
+											$log->debug("Checking $partTagValue against $partExp");
+											if($partTagValue =~ /$partExp/) {
+												my $currentValue = $1;
+												$log->debug("Checking $partTagValue against $partExp matched! ($currentValue)");
+												if($mappingType eq "oneof" || $mappingType eq "as") {
+													push @values,$currentValue;
+													$lastPart = 1;
+												}elsif($mappingType eq "combine") {
+													if(defined($orgValue)) {
+														push @values,$orgValue.$currentValue;
+													}elsif(scalar(@$partTagValue)!=scalar(@values)) {
+														map { $_ = $orgValue.$currentValue } @values;
+														last;
+													}else {
+														$values[$i] = $values[$i].$currentValue;
+													}
+												}
+											}
+											$i++;
+										}
+									}else {
+										$log->debug("Checking $partTagValues against $partExp");
+										if($partTagValues =~ /$partExp/) {
+											my $currentValue = $1;
+											$log->debug("Checking $partTagValues against $partExp matched! ($currentValue)");
+											if($mappingType eq "oneof" || $mappingType eq "as") {
+												push @values,$currentValue;
+												last;
+											}elsif($mappingType eq "combine") {
+												if(scalar(@values)>0) {
+													map { $_ = $_.$currentValue } @values;
+												}else {
+													push @values,$currentValue;
+												}
+											}
+										}
+									}
+								}
+							}elsif($part =~ /^\s*([A-Z0-9_]+)\(text=(.*)\)\s*$/) {
+								if(exists $resultHash->{$1}) {
+									my $currentValue = $2;
+									if($mappingType eq "oneof" || $mappingType eq "as") {
+										push @values,$currentValue;
+										last;
+									}elsif($mappingType eq "combine") {
+										if(scalar(@values)>0) {
+											map { $_ = $_.$currentValue } @values;
+										}else {
+											push @values,$currentValue;
+										}
+									}
+								}
+							}elsif($part =~ /^\s*([A-Z0-9_]+)\s*$/) {
+								if(exists $resultHash->{$1}) {
+									my $partTag = $1;
+									my $partTagValues = $resultHash->{$partTag};
+									if(ref($partTagValues) eq 'ARRAY') {
+										my $orgValue = undef;
+										if(scalar(@values)==1) {
+											if($mappingType eq "combine") {
+												$orgValue = shift @values;
+											}else {
+												$orgValue = $values[0];
+											}
+										}
+										my $i = 0;
+										for my $partTagValue (@$partTagValues) {
+											my $currentValue = $partTagValue;
+											if($mappingType eq "oneof" || $mappingType eq "as") {
+												push @values,$currentValue;
+												$lastPart = 1;
+											}elsif($mappingType eq "combine") {
+												if(defined($orgValue)) {
+													push @values,$orgValue.$currentValue;
+												}elsif(scalar(@$partTagValue)!=scalar(@values)) {
+													map { $_ = $orgValue.$currentValue } @values;
+													last;
+												}else {
+													$values[$i] = $values[$i].$currentValue;
+												}
+											}
+											$i++;
+										}
+									}else {
+										my $currentValue = $partTagValues;
+										if($mappingType eq "oneof" || $mappingType eq "as") {
+											push @values,$currentValue;
+											last;
+										}elsif($mappingType eq "combine") {
+											if(scalar(@values)>0) {
+												map { $_ = $_.$currentValue } @values;
+											}else {
+												push @values,$currentValue;
+											}
+										}
+									}
+								}
+							}
+							if($lastPart) {
+								last;
+							}
+						}
+						#$log->debug("Got mapping tags: ".Dumper(\@values));
+						if(scalar(@values)>0) {
+							my $sortTag = $customSortTagsHash{$tag};
+							my $index = 0;
+							for my $value (@values) {
+								my %item = (
+									'name' => $tag,
+									'value' => $value
+								);
+								if(defined($sortTag)) {
+									$item{'sorttag'} = $sortTag;
+									$item{'sorttagindex'} = $index;
+								}
+								push @result,\%item;
+								$index++;
+							}
+						}
+					}
+				}
+			}
+			$resultHash = createTagHash(\@result,\@resultVirtual);
+
+			for my $item (@result) {
+				if(exists $item->{'sorttag'}) {
+					if(exists $resultHash->{$item->{'sorttag'}}) {
+						my $values = $resultHash->{$item->{'sorttag'}};
+						if(ref($values) eq 'ARRAY') {
+							if(scalar(@$values)>$item->{'sorttagindex'}) {
+								$item->{'valuesort'}=$values->[$item->{'sorttagindex'}];
+							}
+						}else {
+							$item->{'valuesort'} = $values;
 						}
 					}
 				}
@@ -355,6 +548,31 @@ sub scanTrack {
 		}
 	}
 	return \@result;
+}
+
+sub createTagHash {
+	my $array1 = shift;
+	my $array2 = shift;
+
+	my %resultHash = ();
+	my @items = @$array1;
+	push @items,@$array2;
+	for my $item (@items) {
+		if(exists $resultHash{$item->{'name'}}) {
+			my $values = undef;
+			if(ref($resultHash{$item->{'name'}}) eq 'ARRAY') {
+				$values = $resultHash{$item->{'name'}};
+			}else {
+				my @newArray = ($resultHash{$item->{'name'}});
+				$values = \@newArray;
+				$resultHash{$item->{'name'}} = $values;
+			}
+			push @$values,$item->{'value'} if defined($item->{'value'}) && $item->{'value'} ne "";
+		}else {
+			$resultHash{$item->{'name'}} = $item->{'value'} if defined($item->{'value'}) && $item->{'value'} ne "";
+		}
+	}
+	return \%resultHash;
 }
 
 sub splitTag {
