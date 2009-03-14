@@ -73,6 +73,7 @@ sub handler {
 			'id' => $key,
 			'name' => $module->{'name'},
 			'enabled' => $module->{'enabled'},
+			'active' => $module->{'active'},
 			'status' => statusToString(Plugins::CustomScan::Scanner::isScanning($key)),
 			'scanText' => $module->{'scanText'},
 			'scanWarning' => $module->{'scanWarning'},
