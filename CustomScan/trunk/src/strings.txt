@@ -106,6 +106,9 @@ PLUGIN_CUSTOMSCAN_REFRESH
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ENABLED
 	EN	Include in automatic scans and "Scan All"
 
+PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ACTIVE
+	EN	Module is enabled and possible to use
+
 PLUGIN_CUSTOMSCAN_SETTINGS_MODULE_ORDER
 	EN	Scanning order in automatic and "Scan All" (1-100)
 

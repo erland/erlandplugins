@@ -71,6 +71,9 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
+	if($prefs->get("refresh_startup")) {
+		refreshData();
+	}
 }
 
 sub initDatabase {
@@ -425,10 +428,6 @@ sub initDatabase {
 	    $log->error("Database error: $DBI::errstr\n$@\n");
 	}
 	$sth->finish();
-
-	if($prefs->get("refresh_startup")) {
-		refreshData();
-	}
 }
 
 sub updateCharSet {
@@ -567,6 +566,12 @@ sub getPluginModules {
 						}else {
 							$plugins{$fullname}->{'enabled'} = 0;
 						}
+						my $active = $prefs->get('module_'.$data->{'id'}.'_active');
+						if((!defined($active))|| $active) {
+							$plugins{$fullname}->{'active'} = 1;
+						}else {
+							$plugins{$fullname}->{'active'} = 0;
+						}
 						my $order = $prefs->get('module_'.$data->{'id'}.'_order');
 						if((!defined($order) && $data->{'order'})) {
 							$plugins{$fullname}->{'order'} = $data->{'order'};
@@ -605,6 +610,12 @@ sub getPluginModules {
 							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 1;
 						}else {
 							$plugins{$fullname."->".$function->{'id'}}->{'enabled'} = 0;
+						}
+						my $active = $prefs->get('module_'.$function->{'id'}.'_active');
+						if((!defined($active))|| $active) {
+							$plugins{$fullname."->".$function->{'id'}}->{'active'} = 1;
+						}else {
+							$plugins{$fullname."->".$function->{'id'}}->{'active'} = 0;
 						}
 						my $order = $prefs->get('module_'.$function->{'id'}.'_order');
 						if((!defined($order) && $function->{'order'})) {
@@ -653,7 +664,7 @@ sub fullRescan {
 	push @moduleKeys,@$array;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'}) {
+		if($module->{'enabled'} && $module->{'active'}) {
 			$scanningModulesInProgress{$key}=1;
 			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, 1]);
 		}
@@ -666,7 +677,7 @@ sub fullRescan {
 
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'} && defined($module->{'scanInit'})) {
+		if($module->{'enabled'} && $module->{'active'} && defined($module->{'scanInit'})) {
 			no strict 'refs';
 			$log->debug("Calling: scanInit on $key\n");
 			eval { &{$module->{'scanInit'}}(); };
@@ -693,7 +704,7 @@ sub moduleRescan {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$moduleKey};
-	if(defined($module) && defined($module->{'id'})) {
+	if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
 		$scanningModulesInProgress{$moduleKey} = 1;
 		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
 		if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
@@ -1050,7 +1061,7 @@ sub initScanArtist {
 sub getSortedModuleKeys {
 	my @moduleArray = ();
 	for my $key (keys %$modules) {
-		if($modules->{$key}->{'enabled'}) {
+		if($modules->{$key}->{'enabled'} && $modules->{$key}->{'active'}) {
 			my %tmp = (
 				'key' => $key,
 				'module' => $modules
@@ -1722,8 +1733,27 @@ sub refreshData
 	my $count;
 	my $timeMeasure = Time::Stopwatch->new();
 	$timeMeasure->clear();
-	$log->warn("CustomScan: Synchronizing Custom Scan data, please wait...\n");
 
+	my $performRefresh = 0;
+	if(!$modules) {
+		$modules = getPluginModules();
+	}
+	for my $moduleKey (keys %$modules) {
+		my $module = $modules->{$moduleKey};
+		if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
+			if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
+				$log->info("Rescan triggered by module: ".$module->{'name'});				
+				$performRefresh=1;
+				last;
+			}
+		}
+	}
+	if(!$performRefresh) {
+		$log->info("CustomScan: No refresh needed\n");
+		return;
+	}
+
+	$log->warn("CustomScan: Synchronizing Custom Scan data, please wait...\n");
 	$timeMeasure->start();
 	$log->info("Starting to update musicbrainz id's in custom scan artist data based on names\n");
 	# Now lets set all musicbrainz id's not already set

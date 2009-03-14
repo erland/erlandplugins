@@ -80,6 +80,7 @@ sub handler {
 
 	$params->{'pluginCustomScanModule'} = $module;
 	$params->{'pluginCustomScanModuleId'} = $params->{'module'};
+	$params->{'pluginCustomScanModuleActive'} = $module->{'active'};
 	$params->{'pluginCustomScanModuleEnabled'} = $module->{'enabled'};
 	$params->{'pluginCustomScanModuleOrder'} = $module->{'order'};
 	$params->{'pluginCustomScanModuleName'} = $module->{'name'};
@@ -180,6 +181,13 @@ sub saveHandler {
 	}else {
 		$module->{'enabled'} = 0;
 		$prefs->set('module_'.$module->{'id'}.'_enabled',0);
+	}
+	if($params->{'moduleactive'}) {
+		$module->{'active'} = 1;
+		$prefs->set('module_'.$module->{'id'}.'_active',1);
+	}else {
+		$module->{'active'} = 0;
+		$prefs->set('module_'.$module->{'id'}.'_active',0);
 	}
 	if($params->{'moduleorder'}) {
 		$module->{'order'} = $params->{'moduleorder'};

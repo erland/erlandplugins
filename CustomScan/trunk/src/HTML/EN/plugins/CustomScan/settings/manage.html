@@ -25,13 +25,13 @@
 		[% odd = 1 %]
 		[% FOREACH module IN pluginCustomScanModules %]
 				[% WRAPPER CustomScanModuleRow %]<td style="padding:3px;">
-					<a href="[% webroot %]plugins/CustomScan/settings/modulesettings.html?module=[% module.id %]&player=[% player | uri %]">[% module.name %]</a>[% IF !module.enabled %]&nbsp;&nbsp;&nbsp;(manual)[% END %]</td><td style="padding:3px;">[% IF module.status  %][% module.status | string%][% END %]</td><td style="padding:3px;">
+					<a href="[% webroot %]plugins/CustomScan/settings/modulesettings.html?module=[% module.id %]&player=[% player | uri %]">[% module.name %]</a>[% IF !module.active %]&nbsp;&nbsp;&nbsp;(disabled)[% ELSIF !module.enabled %]&nbsp;&nbsp;&nbsp;(manual)[% END %]</td><td style="padding:3px;">[% IF module.status  %][% module.status | string%][% END %]</td><td style="padding:3px;">
 					[% IF module.clearEnabled %]
 					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/settings/manage.html?module=[% module.id %]&scantype=clear&player=[% player | uri %]"
 								 onclick='return confirm("[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR_QUESTION" | string %]")' title="[% module.name %]">[% "PLUGIN_CUSTOMSCAN_SCAN_CLEAR" | string %]</a>
 					[% END %]
 					</<td><td style="padding:3px;">
-					&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/CustomScan/settings/manage.html?module=[% module.id %]&scantype=scan&player=[% player | uri %]" title="[% module.name %]" [% IF module.scanWarning %]onclick='return confirm("[% module.scanWarning %]")'[% END %]>[% IF module.scanText %][% module.scanText %][% ELSE %][% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %][% END %]</a>
+					&nbsp;&nbsp;&nbsp;[% IF module.active %]<a href="[% webroot %]plugins/CustomScan/settings/manage.html?module=[% module.id %]&scantype=scan&player=[% player | uri %]" title="[% module.name %]" [% IF module.scanWarning %]onclick='return confirm("[% module.scanWarning %]")'[% END %]>[% IF module.scanText %][% module.scanText %][% ELSE %][% "PLUGIN_CUSTOMSCAN_SCAN_RESCAN" | string %][% END %]</a>[% END %]
 				</td><td style="padding:3px;">[% IF module.dataprovidername %]<a href="[% module.dataproviderlink %]" target="_blank">[% module.dataprovidername %]</a>[% END %]</td>
 				[% END %]
 				[% odd = (not odd) %]
