@@ -62,12 +62,12 @@
 			[%- IF customtag1artistsort %]
 			order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 			[%- ELSE %]
-			order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+			order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))[% IF customtag1numbersort %]+0[% END %] asc
 			[%- END %]
 			[%- ELSIF customtag1artistsort %]
 			order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
 			[%- ELSE %]
-			order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
+			order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)[% IF customtag1numbersort %]+0[% END %] asc
 			[%- END %]
 		</menudata>
 		[%- IF customtag2 %]
@@ -119,12 +119,12 @@
 				[%- IF customtag2artistsort %]
 				order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 				[%- ELSE %]
-				order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+				order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))[% IF customtag2numbersort %]+0[% END %] asc
 				[%- END %]
 				[%- ELSIF customtag2artistsort %]
 				order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
 				[%- ELSE %]
-				order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
+				order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)[% IF customtag2numbersort %]+0[% END %] asc
 				[%- END %]
 			</menudata>
 		[%- END %]
@@ -182,12 +182,12 @@
 					[%- IF customtag3artistsort %]
 					order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 					[%- ELSE %]
-					order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+					order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))[% IF customtag3numbersort %]+0[% END %] asc
 					[%- END %]
 					[%- ELSIF customtag3artistsort %]
 					order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
 					[%- ELSE %]
-					order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
+					order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)[% IF customtag3numbersort %]+0[% END %] asc
 					[%- END %]
 				</menudata>
 			[%- END %]
@@ -250,12 +250,12 @@
 						[%- IF customtag4artistsort %]
 						order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 						[%- ELSE %]
-						order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+						order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))[% IF customtag4numbersort %]+0[% END %] asc
 						[%- END %]
 						[%- ELSIF customtag4artistsort %]
 						order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
 						[%- ELSE %]
-						order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
+						order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)[% IF customtag4numbersort %]+0[% END %] asc
 						[%- END %]
 					</menudata>
 				[%- END %]
@@ -323,12 +323,12 @@
 							[%- IF customtag5artistsort %]
 							order by ifnull(contributors.namesort,ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))) asc
 							[%- ELSE %]
-							order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
+							order by ifnull(sortattr.value,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))[% IF customtag5numbersort %]+0[% END %] asc
 							[%- END %]
 							[%- ELSIF customtag5artistsort %]
 							order by ifnull(contributors.namesort,ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)) asc
 							[%- ELSE %]
-							order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value) asc
+							order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)[% IF customtag5numbersort %]+0[% END %] asc
 							[%- END %]
 						</menudata>
 					[%- END %]
