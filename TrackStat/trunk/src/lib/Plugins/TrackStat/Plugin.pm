@@ -4178,7 +4178,7 @@ sub rateSong {
 
 sub setTrackStatRating {
 	$log->debug("Entering setTrackStatRating\n");
-	my ($client,$url,$rating)=@_;
+	my ($client,$url,$rating,$type)=@_;
 	my $track = undef;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	eval {
@@ -4201,9 +4201,9 @@ sub setTrackStatRating {
 		};
 	}
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
-		Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track);
-		Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track);
-		Plugins::TrackStat::Amarok::Export::exportRating($url,$rating,$track);
+		Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track,$type);
+		Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track,$type);
+		Plugins::TrackStat::Amarok::Export::exportRating($url,$rating,$track,$type);
 	}
 	$log->debug("Exiting setTrackStatRating\n");
 }

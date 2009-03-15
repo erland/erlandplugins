@@ -102,7 +102,21 @@ sub getCustomScanFunctions {
 				'description' => 'Continously write statistics to Amarok when ratings are changed and songs are played in SlimServer',
 				'type' => 'checkbox',
 				'value' => 0
-			}
+			},
+			{
+				'id' => 'amarokincludeautoratings',
+				'name' => 'Include automatic ratings',
+				'description' => 'Ratings automatically set by TrackStat is exported when continously writing statistics',
+				'type' => 'checkbox',
+				'value' => 1
+			},
+			{
+				'id' => 'amarokincludescanratings',
+				'name' => 'Include scanned ratings',
+				'description' => 'Ratings scanned is exported when continously writing statistics',
+				'type' => 'checkbox',
+				'value' => 0
+			},
 		]
 	);
 	if(Plugins::TrackStat::Plugin::isPluginsInstalled(undef,"MultiLibrary::Plugin")) {
@@ -232,8 +246,16 @@ sub exportRating {
 	my $url = shift;
 	my $rating = shift;
 	my $track = shift;
+	my $type = shift;
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("amarokdynamicupdate") && isAllowedToExport($track)) {
+		if(defined($type) && $type eq 'auto' && !Plugins::CustomScan::Plugin::getCustomScanProperty("amarokincludeautoratings")) {
+			$log->debug("Automatic rating, ignoring");
+			return;
+		}elsif(defined($type) && ($type ne 'user' && $type ne 'auto') && !Plugins::CustomScan::Plugin::getCustomScanProperty("amarokincludescanratings")) {
+			$log->debug("Non user rating, ignoring");
+			return;
+		}
 		connectToAmarokDB();
 		writeTrack($track,$rating);
 	}

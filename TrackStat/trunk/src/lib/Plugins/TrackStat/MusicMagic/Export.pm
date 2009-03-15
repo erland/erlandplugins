@@ -116,6 +116,20 @@ sub getCustomScanFunctions {
 				'value' => defined($prefs->get("musicmagic_enabled"))?$prefs->get("musicmagic_enabled"):0
 			},
 			{
+				'id' => 'musicmagicincludeautoratings',
+				'name' => 'Include automatic ratings',
+				'description' => 'Ratings automatically set by TrackStat is exported when continously writing statistics',
+				'type' => 'checkbox',
+				'value' => 1
+			},
+			{
+				'id' => 'musicmagicincludescanratings',
+				'name' => 'Include scanned ratings',
+				'description' => 'Ratings scanned is exported when continously writing statistics',
+				'type' => 'checkbox',
+				'value' => 0
+			},
+			{
 				'id' => 'musicmagictimeout',
 				'name' => 'Timeout',
 				'description' => 'Timeout in requests towards MusicIP',
@@ -373,10 +387,19 @@ sub exportRating {
 	my $url = shift;
 	my $rating = shift;
 	my $track = shift;
+	my $type = shift;
 	my $lowrating = floor(($rating+10) / 20);
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicdynamicupdate")) {
 		if(isAllowedToExport($url)) {
+			if(defined($type) && $type eq 'auto' && !Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicincludeautoratings")) {
+				$log->debug("Automatic rating, ignoring");
+				return;
+			}elsif(defined($type) && ($type ne 'user' && $type ne 'auto') && !Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagicincludescanratings")) {
+				$log->debug("Non user rating, ignoring");
+				return;
+			}
+
 			my $mmurl = getMusicMagicURL($url);
 		
 			my $hostname = Plugins::CustomScan::Plugin::getCustomScanProperty("musicmagichost");
