@@ -36,6 +36,7 @@
 			<menulinks>number</menulinks>
 			<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 		</option>
+		[% IF menugroup %]<jivepattern>^(.*)\s\((.*)\)$</jivepattern>[% END %]
 		<menudata>
 			select albums.id,concat(albums.title, ' (', contributors.name ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_contributor_attributes[% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %] 
 			where 

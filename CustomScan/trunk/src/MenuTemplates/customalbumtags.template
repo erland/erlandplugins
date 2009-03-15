@@ -53,7 +53,8 @@
 					order by contributors.namesort asc,albums.year desc,albums.disc asc
 				</menudata>
 			</option>
-	        	<menudata>
+	        	<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
+			<menudata>
 				[%- IF showartistwithalbum %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
 				where
