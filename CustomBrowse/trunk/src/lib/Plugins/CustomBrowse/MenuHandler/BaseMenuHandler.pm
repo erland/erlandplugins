@@ -484,7 +484,7 @@ sub getMenu {
     	my $menuTitle = $self->menuTitle;
 	if(defined($item)) {
 		$modeNamePostFix = $item->{'value'};
-		$menuTitle = $self->getItemText($client,$item,$context);
+		$menuTitle = $self->getItemText($client,$item,$context,$interfaceType);
 	}
 
 	my $sorted = '0';
@@ -917,7 +917,7 @@ sub getPageItemsForContext {
 				$it->{'valueseparator'} =~ s/\\\\/\\/;
 				$it->{'valueseparator'} =~ s/\\n/\n/;
 			}
-			$it->{'itemname'} = $self->getItemText($client,$it);
+			$it->{'itemname'} = $self->getItemText($client,$it,undef,$interfaceType);
 			if(defined($it->{'itemseparator'})) {
 				my $separator = $it->{'itemseparator'};
 				if($it->{'itemname'} =~ /^(.*?)$separator(.*)$/ms) {
@@ -1722,6 +1722,7 @@ sub getItemText {
 	my $client = shift;
 	my $item = shift;
 	my $context = shift;
+	my $interfaceType = shift;
 
 	if(!defined($item)) {
 		return '';
@@ -1749,6 +1750,22 @@ sub getItemText {
 		}elsif($format eq 'album') {
 			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
 			$name = $album->title;
+			if(defined($item->{'jivepattern'}) && $interfaceType eq 'jive') {
+				my @artists = $album->artists;
+				if(@artists) {
+					$name.=" (";
+					my $first = 1;
+					for my $artist (@artists) {
+						if(!$first) {
+							$name.=", ".$artist->name;
+						}else {
+							$name.=$artist->name;
+						}
+						$first = 0;
+					}
+					$name.=")";
+				}
+			}
                 }elsif($format eq 'albumconcat') {
 			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
 			$prefix = $album->title." ";
@@ -1944,7 +1961,7 @@ sub showBrieflyPlayStatus {
 		$line2 = $client->doubleString($displayString);
 	} else {
 		$line1 = $client->string($displayString);
-		$line2 = $self->getItemText($client,$item);
+		$line2 = $self->getItemText($client,$item,undef,undef);
 	}
 	$client->showBriefly({
 		'line'    => [ $line1, $line2 ],

@@ -91,6 +91,7 @@
 	                                        order by contributors.namesort asc,albums.year desc
         	                        </menudata>
 	                        </option>
+				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					[%- IF showartistwithalbum %]
                                         select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]

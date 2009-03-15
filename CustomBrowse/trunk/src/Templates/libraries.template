@@ -47,6 +47,7 @@
 							<menulinks>alpha</menulinks>
 							<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 						</option>
+						<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 						<menudata>
 							select albums.id,albums.title from albums,tracks
 							where
@@ -196,7 +197,8 @@
 		                                        order by contributors.namesort asc,albums.year desc
 		                                </menudata>
 		                        </option>
-		                        <menudata>
+		                        <jivepattern>^(.*)\s\((.*)\)$</jivepattern>
+					<menudata>
 		                                select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums
 		                                where
 		                                        tracks.audio=1 and
@@ -362,6 +364,7 @@
 			                                        <menulinks>alpha</menulinks>
 			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
+							<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,genre_track 
 								where 

@@ -56,6 +56,7 @@
 						order by contributors.namesort asc
 					</menudata>
 				</option>
+				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 					where 

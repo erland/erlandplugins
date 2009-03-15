@@ -44,6 +44,7 @@
 				<itemtype>album</itemtype>
 				<itemformat>albumconcat</itemformat>
 				<menutype>sql</menutype>
+				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks
 						join contributor_track on
