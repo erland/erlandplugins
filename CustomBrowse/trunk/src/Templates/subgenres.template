@@ -73,6 +73,7 @@
 							order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 						</menudata>
 					</option>
+					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 						where
@@ -187,6 +188,7 @@
 								order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 							</menudata>
 						</option>
+						<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 						<menudata>
 							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 							where
@@ -318,6 +320,7 @@
 									order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 								</menudata>
 							</option>
+							<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 								where
@@ -466,6 +469,7 @@
 										order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 									</menudata>
 								</option>
+								<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 								<menudata>
 									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 									where
@@ -693,6 +697,7 @@
 				                                        <menulinks>alpha</menulinks>
 				                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				                                </option>
+								<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 								<menudata>
 									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 									where
@@ -915,6 +920,7 @@
 			                                        <menulinks>alpha</menulinks>
 			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
+							<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 								where
@@ -1117,6 +1123,7 @@
 		                                        <menulinks>alpha</menulinks>
 		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
+						<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 						<menudata>
 							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 							where
@@ -1299,6 +1306,7 @@
 	                                        <menulinks>alpha</menulinks>
 	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
+					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
 						where

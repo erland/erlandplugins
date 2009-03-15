@@ -28,6 +28,7 @@
 		[% END %]
                 <menutype>sql</menutype>
 		<contextid>album</contextid>
+		[% IF menugroup %]<jivepattern>^(.*)\s\((.*)\)$</jivepattern>[% END %]
 		<menudata>
 			[%- IF showartistwithalbum %]
 			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks,playlist_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]

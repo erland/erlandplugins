@@ -378,6 +378,7 @@
 				</menudata>
 			</option>
 			[% END %]
+			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
                         <menudata>
 				[%- IF showartistwithalbum %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]

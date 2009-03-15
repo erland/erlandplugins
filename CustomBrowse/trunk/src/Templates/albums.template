@@ -202,6 +202,7 @@
 				</menudata>
 			</option>
 			[% END %]
+			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 			<menudata>
 				[%- IF showartistwithalbum %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]

@@ -149,6 +149,7 @@
                                         <menulinks>alpha</menulinks>
                                         <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
                                 </option>
+				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from contributor_album,albums[% IF library or activelibrary %],multilibrary_album[% END %] 
 					where 

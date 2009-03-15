@@ -32,6 +32,7 @@
 				<itemtype>album</itemtype>
 				<itemformat>album</itemformat>
 				<menutype>sql</menutype>
+				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title from contributor_album,albums[% IF library or activelibrary %],multilibrary_album[% END %] 
 					where 

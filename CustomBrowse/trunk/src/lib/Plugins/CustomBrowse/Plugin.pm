@@ -3368,6 +3368,20 @@ sub cliJiveHandlerImpl {
 		}else {
 			$name = $item->{'itemname'};
 		}
+		if(defined($item->{'jivepattern'})) {
+			my $jivePattern = $item->{'jivepattern'};
+			if($name =~ /$jivePattern/) {
+				if(defined($1)) {
+					$name = $1; 
+					if(defined($2)) {
+						$name .= "\n".$2; 
+					}
+					if(defined($3)) {
+						$name .= "\n".$3; 
+					}
+				}
+			}
+		}
 		if(defined($item->{'itemlink'})) {
 			$itemkey = $item->{'itemlink'};
 		}

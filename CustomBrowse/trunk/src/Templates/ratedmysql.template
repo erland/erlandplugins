@@ -130,6 +130,7 @@
 					</playdata>
 					<menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
+					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,contributor_track,albums,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %] 
 						where 

@@ -155,6 +155,7 @@
 	                                        <menulinks>alpha</menulinks>
 	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
+					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track[% IF includedgenres %],genre_track,genres[% END %]
 						where
@@ -262,7 +263,8 @@
 						order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 	                                </menudata>
 	                        </option>
-	                        <menudata>
+	                        <jivepattern>^(.*)\s\((.*)\)$</jivepattern>
+				<menudata>
 					[%- IF showartistwithalbum %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
 					where
@@ -497,6 +499,7 @@
 		                                        <menulinks>alpha</menulinks>
 		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
+						<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 						<menudata>
 							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track
 							where

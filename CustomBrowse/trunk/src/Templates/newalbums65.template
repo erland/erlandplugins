@@ -15,6 +15,7 @@
 			<itemtype>album</itemtype>
 			<itemformat>albumconcat</itemformat>
 	                <menutype>sql</menutype>
+			<jivepattern>^(.*)\s\(([^,]+),?(.*)\)$</jivepattern>
 	                <menudata>
 				[%- IF showartistwithalbum %]
 				select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')) from tracks

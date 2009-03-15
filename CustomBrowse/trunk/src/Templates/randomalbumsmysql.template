@@ -19,6 +19,7 @@
 			<itemformat>album</itemformat>
 			[%- END %]
 	                <menutype>sql</menutype>
+			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 	                <menudata>
 				[%- IF showartistwithalbum %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_album,contributors[% IF includedgenres or excludedgenres %],tracks[% END %][% IF includedgenres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_album[% END %]
