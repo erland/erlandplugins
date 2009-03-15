@@ -3249,6 +3249,10 @@ sub cliJiveHandlerImpl {
 	if(!defined($start) || $start eq '') {
 		$start=0;
 	}
+	if($start>0) {
+		# Decrease to compensate for "Play All" item on first chunk
+		$start--;
+	}
 	$params->{'start'}=$start;
 	my $itemsPerPage = $request->getParam('itemsPerResponse');
 	if(!defined($itemsPerPage)) {
@@ -3343,7 +3347,7 @@ sub cliJiveHandlerImpl {
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
-	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext)) {
+	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext) && $start==0) {
 		my %itemParams = ();
 		%itemParams = %{$currentContext->{'parameters'}};
 		$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
@@ -3358,7 +3362,9 @@ sub cliJiveHandlerImpl {
 		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
 		$cnt++;
-		$count++;
+
+		# Remove last menu item
+		pop @$menuItems
 	}
 	foreach my $item (@$menuItems) {
 		my $name;
