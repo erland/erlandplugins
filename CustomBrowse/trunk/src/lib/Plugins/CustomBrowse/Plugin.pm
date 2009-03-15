@@ -3433,7 +3433,9 @@ sub cliJiveHandlerImpl {
 		my $actions = undef;
 		if(defined($item->{'mixes'})) {
 			foreach my $p (keys %baseParams) {
-				$itemParams{$p}=$baseParams{$p};
+				if(!exists $itemParams{$p}) {
+					$itemParams{$p}=$baseParams{$p};
+				}
 			}
 			$actions = {
 				'play-hold' => {
