@@ -3496,18 +3496,32 @@ sub cliJiveHandlerImpl {
 				}
 			}
 			if($songInfo) {
-				my $songInfoParams = {
-					track_id => $item->{'itemid'},
-					menu => 'nowhere',
-					cmd => 'load',
-				};
-				my $actions = {
-					'go' => {
-						'cmd' => ['songinfo'],
-						'params' => $songInfoParams,
-					},
-				};
-				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				if($::VERSION ge '7.4') {
+					my $songInfoParams = {
+						track_id => $item->{'itemid'},
+						menu => 'nowhere',
+					};
+					my $actions = {
+						'go' => {
+							'cmd' => ['trackinfo','items'],
+							'params' => $songInfoParams,
+						},
+					};
+					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				}else {
+					my $songInfoParams = {
+						track_id => $item->{'itemid'},
+						menu => 'nowhere',
+						cmd => 'load',
+					};
+					my $actions = {
+						'go' => {
+							'cmd' => ['songinfo'],
+							'params' => $songInfoParams,
+						},
+					};
+					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				}
 			}elsif($mode) {
 				$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 			}
