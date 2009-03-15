@@ -327,6 +327,7 @@
 								<menulinks>number</menulinks>
 								<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
 							</option>
+							<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 							<menudata>
 								[%- IF showartistwithalbum %]
 								select albums.id,concat(albums.title, ' (', contributors.name ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][%- IF customtag5 %],customscan_track_attributes attr5[% END %][% IF library or activelibrary or contextlibrary %],multilibrary_track[% END %] 
