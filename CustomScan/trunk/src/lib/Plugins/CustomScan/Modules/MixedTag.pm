@@ -432,7 +432,7 @@ sub getMixedTagMenuItems {
 			$tagssql .=" and customscan_track_attributes.track=".$parameters->{'track'};
 		}
 		if($numberTags{$currentTag}) {
-			$tagssql .=" group by customscan_track_attributes.extravalue order by floor(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value))";
+			$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)+0";
 		}else {
 			$tagssql .=" group by customscan_track_attributes.extravalue order by ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value)";
 		}
@@ -577,7 +577,7 @@ sub getMixedTagMenuItems {
 			}
 			$customtagsql .= " where tracks.audio=1";
 			if($numberTags{$parameters->{'findcustomtag'}}) {
-				$customtagsql .=" group by customscan_track_attributes.extravalue order by floor(customscan_track_attributes.valuesort)";
+				$customtagsql .=" group by customscan_track_attributes.extravalue order by customscan_track_attributes.valuesort+0";
 			}else {
 				$customtagsql .=" group by customscan_track_attributes.extravalue order by customscan_track_attributes.valuesort";
 			}
