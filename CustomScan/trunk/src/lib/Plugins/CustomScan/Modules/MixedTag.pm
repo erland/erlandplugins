@@ -321,6 +321,7 @@ sub getMixedTagMenuItems {
 	my $self = shift;
 	my $client = shift;
 	my $parameters = shift;
+	my $interfaceType = shift;
 
 	%friendlyNames = ();
 	%friendlyNamesList = ();
@@ -410,7 +411,7 @@ sub getMixedTagMenuItems {
 	my $tagssql = undef;
 	my $pathsql = undef;
 	if(defined($currentTag)) {
-		$tagssql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag$currentTag') from customscan_track_attributes ";
+		$tagssql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(ifnull(customscan_track_attributes.valuesort,customscan_track_attributes.value),1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag$currentTag'),customscan_track_attributes.valuetype from customscan_track_attributes ";
 		for my $it (@items) {
 			if(defined($it->{'value'})) {
 				my $attr = "attr".$it->{'id'};
@@ -449,7 +450,7 @@ sub getMixedTagMenuItems {
 	my $albumssqlbyyear = undef;
 	my $customtagsql = undef;
 	if(!defined($currentTag)) {
-		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1) from customscan_track_attributes ";
+		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1),customscan_track_attributes.valuetype from customscan_track_attributes ";
 		if(scalar(@items)==0 && !defined($currentItem)) {
 			$taggroupssql .= "use index (attr_module_idx) "; 
 		}
@@ -560,7 +561,7 @@ sub getMixedTagMenuItems {
 
 		if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
 			# Create All customtag SQL
-			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag".$parameters->{'findcustomtag'}."') from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
+			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag".$parameters->{'findcustomtag'}."'),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
 					my $attr = "attr".$it->{'id'};
@@ -679,9 +680,14 @@ sub getMixedTagMenuItems {
 			'menutype' => 'sql',
 			'menudata' => $tagssql,
 			'itemtype' => 'sql',
+			'itemformat' => 'sql',
+			'albumjivepattern' => "^(.*)\\s\\((.*)\\)\$",
 			'playtypeall' => 'none',
 			'menufunction' => 'Plugins::CustomScan::Modules::MixedTag::getMixedTagMenuItems'
 		);
+		if(defined($parameters->{'showalbumsafterlevel'}) && $parameters->{'showalbumsafterlevel'} ne '' && $parameters->{'showalbumsafterlevel'}<=$currentLevel+1) {
+			$menu{'itemsubtype'} = 'album';
+		}
 		if(defined($trackssql)) {
 			$menu{'playtype'} = 'sql';
 			$menu{'playdata'} = $trackssql;
@@ -776,6 +782,7 @@ sub getMixedTagMenuItems {
 			'menulinks' => 'alpha',
 			'itemformat' => "album",
 			'itemtype' => "album",
+			'jivepattern' => "^(.*)\\s\\((.*)\\)\$",
 			'menutype' => 'sql',
 			'menudata' => $albumssql,
 			'menu' => \%menutracks
@@ -820,6 +827,7 @@ sub getMixedTagMenuItems {
 			'menu' => \%menualbums
 		);
 		if(defined($parameters->{'showalbumsafterlevel'}) && $parameters->{'showalbumsafterlevel'} ne '' && $parameters->{'showalbumsafterlevel'}<=$currentLevel) {
+			#delete $menualbums{'jivepattern'};
 			$directalbums = \%menualbums;
 		}else {
 			push @menus,\%allalbums;
