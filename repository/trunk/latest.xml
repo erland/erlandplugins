@@ -19,30 +19,35 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="CustomBrowse" version="2.7.1" minTarget="7.1.0" maxTarget="*">
+		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
-			<changes lang="EN">- Corrected so last item is shown in Controller menus
-			- Added Track Artists to track detail pages and menus
-			- Corrected bug in Controller interface</changes>
+			<changes lang="EN">- Added support for filtering "Random Albums" menu by genre
+			- Corrected so accelerated scrolling works in Tags menu on the Controller
+			- Corrected so track details menu works on the Controller if latest SqueezeCenter 7.4 is used
+			- Added support for showing duplicate text rows in album lists on the Controller (for example showing artists for an album)
+			- Corrected so "Play all" items isn't repeated and doesn't overwrite real items in long lists on Controller
+			- Added support for showing album arts in Tags menu
+			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.7.1.zip</url>
-                        <sha>4e657a61750241b63c6706fbaf6fb36b96402e38</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.8.zip</url>
+                        <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.5" minTarget="7.1.0" maxTarget="*">
+		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag.</desc>
-			<changes lang="EN">- Added support for SqueezeCenter 7.4
-			- Corrected so internet meta data is shown correctly on Now Playing screen if Custom Scan title formats are used
-			- Added support for Dynamic Playlist mixers in custom tag based menus
-			- Corrected so alpha bar works in web interface in custom tag based menus
-			- Added possibility to exclude some custom tags from the Mixed Tag scanning module (useful to avoid duplicates)</changes>
+			<changes lang="EN">- Added support for numeric sorted tags in Dynamic Tags menu
+			- Added support for completely disable scanning modules to avoid refresh operation if only import/export modules are used
+			- Added support for virtual tags using regular expressions in Custom Tag scanning module (Tag mapping parameter)
+			- Added support for selecting to sort by number instead alphabetically in some custom tag menus
+			- Added support for showing duplicate text lines in album lists on Controller (for examples showing the artist for an album), requires Custom Browse 2.8 or later.
+			- Added support for showing album arts in Dyanmic Tags menu, requires Custom Browse 2.8 or later</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.5.zip</url>
-                        <sha>99e410660b08d22e5e7fbccc351947b7355e67bd</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.6.zip</url>
+                        <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.2" minTarget="7.1.0" maxTarget="*">
