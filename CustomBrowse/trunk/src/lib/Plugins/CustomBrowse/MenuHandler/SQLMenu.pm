@@ -127,6 +127,11 @@ sub prepareMenu {
 		}
 		if(defined($dataItem->{'type'}) && $menu->{'itemtype'} eq 'sql') {
 			$menuItem{'itemtype'} = $dataItem->{'type'};
+		}elsif(defined($dataItem->{'type'}) && $menu->{'itemtype'} ne $dataItem->{'type'}) {
+			$menuItem{'itemsubtype'} = $dataItem->{'type'};
+		}
+		if(defined($dataItem->{'format'}) && $menu->{'itemformat'} eq 'sql') {
+			$menuItem{'itemformat'} = $dataItem->{'format'};
 		}
 		my %parameters = ();
 		$menuItem{'parameters'} = \%parameters;
@@ -140,10 +145,10 @@ sub prepareMenu {
 		}elsif(defined($menu->{'id'})) {
 			$menuItem{'parameters'}->{$menu->{'id'}} = $dataItem->{'id'};
 		}
-		if(defined($itemformat)) {
+		if(defined($itemformat) && $itemformat ne 'sql') {
 			$menuItem{'itemformat'} = $itemformat;
 		}
-		if(defined($itemformatdata)) {
+		if(defined($itemformatdata) && $itemformat ne 'sql') {
 			$menuItem{'itemformatdata'} = $itemformatdata;
 		}
 		push @$result, \%menuItem;
