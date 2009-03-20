@@ -120,6 +120,7 @@ sub _getFunctionMenu {
 	my $item = shift;
 	my $context = shift;
 	my $parameters = shift;
+	my $interfaceType = shift;
 
 	my $result = undef;
 	my @functions = split(/\|/,$item->{'menufunction'});
@@ -140,7 +141,7 @@ sub _getFunctionMenu {
 			if(UNIVERSAL::can("$class","$function")) {
 				$self->logHandler->debug("Calling ${class}->${function}\n");
 				no strict 'refs';
-				$result = eval { $class->$function($client,$keywords) };
+				$result = eval { $class->$function($client,$keywords,$interfaceType) };
 				if ($@) {
 					$self->logHandler->warn("Error calling ${class}->${function}: $@\n");
 				}
@@ -218,7 +219,7 @@ sub _getMenuItems {
 	# Else, if sub menu
 	}
 	if(defined($item->{'menufunction'})) {
-		my $functionData = $self->_getFunctionMenu($client,$item,$context,$item->{'parameters'});
+		my $functionData = $self->_getFunctionMenu($client,$item,$context,$item->{'parameters'},$interfaceType);
 		if(defined($functionData)) {
 			$item->{'menu'} = $functionData;
 		}
@@ -1744,13 +1745,13 @@ sub getItemText {
 			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
 			$prefix = Slim::Music::Info::displayText($client,$track,$item->{'itemformatdata'})." "
 		}elsif($format eq 'function' && defined($item->{'itemformatdata'})) {
-			$name = $self->_getFunctionItemFormat($client,$item);
+			$name = $self->_getFunctionItemFormat($client,$item,$interfaceType);
 		}elsif($format eq 'functionconcat' && defined($item->{'itemformatdata'})) {
-			$prefix = $self->_getFunctionItemFormat($client,$item)." ";
+			$prefix = $self->_getFunctionItemFormat($client,$item,$interfaceType)." ";
 		}elsif($format eq 'album') {
 			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
 			$name = $album->title;
-			if(defined($item->{'jivepattern'}) && $interfaceType eq 'jive') {
+			if((defined($item->{'jivepattern'}) || defined($item->{'albumjivepattern'}))&& $interfaceType eq 'jive') {
 				my @artists = $album->artists;
 				if(@artists) {
 					$name.=" (";

@@ -79,6 +79,7 @@ sub _execute {
                                 my $name;
                                 my $link;
                                 my $valuetype;
+                                my $valueformat;
 				$sth->bind_col( 1, \$id);
                                 $sth->bind_col( 2, \$name);
 				# bind optional column
@@ -88,6 +89,10 @@ sub _execute {
 				# bind optional column
 				eval {
 	                                $sth->bind_col( 4, \$valuetype);
+				};
+				# bind optional column
+				eval {
+	                                $sth->bind_col( 5, \$valueformat);
 				};
 				while( $sth->fetch() ) {
                                     my %item = (
@@ -99,6 +104,9 @@ sub _execute {
                                     }
 				    if(defined($valuetype)) {
 					$item{'type'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valuetype,'utf8'));
+                                    }
+				    if(defined($valueformat)) {
+					$item{'format'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valueformat,'utf8'));
                                     }
                                     push @result, \%item;
 				}

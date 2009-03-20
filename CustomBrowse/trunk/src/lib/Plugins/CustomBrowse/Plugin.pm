@@ -3363,8 +3363,13 @@ sub cliJiveHandlerImpl {
 		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
 		$cnt++;
 
-		# Remove last menu item
-		pop @$menuItems
+		if(defined($itemsPerPage) && scalar(@$menuItems)>=$itemsPerPage) {
+			$log->debug("Removing item to make space for play all item, requested $itemsPerPage and got ".(scalar(@$menuItems))." items");
+			# Remove last menu item
+			my $popped = pop @$menuItems;
+		}else {
+			$count++;
+		}
 	}
 	foreach my $item (@$menuItems) {
 		my $name;
@@ -3374,8 +3379,13 @@ sub cliJiveHandlerImpl {
 		}else {
 			$name = $item->{'itemname'};
 		}
-		if(defined($item->{'jivepattern'})) {
-			my $jivePattern = $item->{'jivepattern'};
+		my $jivePattern = undef;
+		if(defined($item->{'itemtype'}) && defined($item->{$item->{'itemtype'}.'jivepattern'})) {
+			$jivePattern = $item->{$item->{'itemtype'}.'jivepattern'};
+		}elsif(defined($item->{'jivepattern'})) {
+			$jivePattern = $item->{'jivepattern'};
+		}
+		if(defined($jivePattern)) {
 			if($name =~ /$jivePattern/) {
 				if(defined($1)) {
 					$name = $1; 
@@ -3387,6 +3397,10 @@ sub cliJiveHandlerImpl {
 					}
 				}
 			}
+		}
+		my $firstRowName = $name;
+		if($firstRowName =~ /^(.*?)\n/) {
+			$firstRowName = $1;
 		}
 		if(defined($item->{'itemlink'})) {
 			$itemkey = $item->{'itemlink'};
@@ -3420,13 +3434,30 @@ sub cliJiveHandlerImpl {
 				next;
 			}
 		}
-		if(defined($itemtype) && $itemtype eq 'album') {
+		if((defined($itemtype) && $itemtype eq 'album')) {
 			if($menuResult->{'artwork'}) {
 				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'menuStyle' => 'album'});
+			}elsif($item->{'coverThumb'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
 			}else {
 				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album'});
 			}
-		}elsif($menuResult->{'artwork'}) {
+
+		}elsif($menuResult->{'artwork'} && defined($item->{'coverThumb'})) {
+			if(defined($item->{'itemsubtype'}) && $item->{'itemsubtype'} eq 'album') {
+				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album','text'=>$firstRowName,'icon-id'=>''});
+			}else {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album'});
+			}
+		}elsif($item->{'coverThumb'}) {
+			if(defined($item->{'itemsubtype'}) && $item->{'itemsubtype'} eq 'album') {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
+			}else {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
+			}
+		}elsif(defined($item->{'itemsubtype'}) && $item->{'itemsubtype'} eq 'album') {
+			$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album'});
+		}elsif(defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'album') {
 			$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album'});
 		}
 
@@ -3493,7 +3524,7 @@ sub cliJiveHandlerImpl {
 		}
 
 		$request->addResultLoop('item_loop',$cnt,'text',$name);
-		if($menuResult->{'artwork'}) {
+		if($menuResult->{'artwork'} || (defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'album')) {
 			$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
 		}
 		if(defined($item->{'menu'})) {
