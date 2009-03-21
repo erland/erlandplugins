@@ -221,7 +221,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'customtagsmapping',
 				'name' => 'Tag mapping',
-				'description' => "Comma separated list with the tags that shall be mapped into another tag, for example:\nRELEASESTATUS=oneof RELEASESTATUS|MUSICBRAINZ_ALBUM_STATUS|MUSICBRAINZ_ALBUMSTATUS,\nARTISTYEAR=combine ARTIST|YEAR, YEAR=as DATE(exp=^\\d\\d\\d\\d),\nMONTH=combine DATE(exp=^(\\d\\d\\d\\d))|DATE(exp=^\\d\\d\\d\\d-(\\d\\d)),\nDECADE=combine YEAR(exp=^\\d\\d\\d)|YEAR(text=0),\nARTISTSORT=combine ARTIST(exp=^.*\\s(.*)\$)|ARTIST(text= )|ARTIST(exp=^(.*)\\s)",
+				'description' => "Comma separated list with the tags that shall be mapped into another tag, for example:\nRELEASESTATUS=oneof RELEASESTATUS|MUSICBRAINZ_ALBUM_STATUS|MUSICBRAINZ_ALBUMSTATUS,\nARTISTYEAR=combine ARTIST|YEAR, YEAR=as DATE(exp=^\\d\\d\\d\\d),\nMONTH=combine DATE(exp=^(\\d\\d\\d\\d))|DATE(exp=^\\d\\d\\d\\d-(\\d\\d)),\nDECADE=combine YEAR(exp=^(\\d\\d\\d))|YEAR(text=0),\nARTISTSORT=combine ARTIST(exp=^.*\\s(.*)\$)|ARTIST(text= )|ARTIST(exp=^(.*)\\s)",
 				'type' => 'text',
 				'value' => ''
 			},
