@@ -3581,6 +3581,9 @@ sub cliJiveHandlerImpl {
 		}
 		$cnt++;
 	}
+	if($start>0) {
+		$start++;
+	}
 	$request->addResult('offset',$start);
 	$request->addResult('count',$count);
 
