@@ -897,6 +897,9 @@ sub getPageItemsForContext {
 		my $anchorText;
 		my $lastAnchor = '';
 		for my $it (@$items) {
+			if($menulinks ne 'alpha') {
+				delete $it->{'itemlink'};
+			}
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
 				$count = $count + 1;
 				if($count>$itemsPerPage) {
