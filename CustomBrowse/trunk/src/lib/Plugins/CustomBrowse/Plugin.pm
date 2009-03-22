@@ -3449,7 +3449,7 @@ sub cliJiveHandlerImpl {
 			}else {
 				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album'});
 			}
-		}elsif($item->{'coverThumb'}) {
+		}elsif(defined($item->{'coverThumb'})) {
 			if(defined($item->{'itemsubtype'}) && $item->{'itemsubtype'} eq 'album') {
 				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
 			}else {
@@ -3525,7 +3525,9 @@ sub cliJiveHandlerImpl {
 
 		$request->addResultLoop('item_loop',$cnt,'text',$name);
 		if($menuResult->{'artwork'} || (defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'album')) {
-			$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
+			if(defined($item->{'coverThumb'})) {
+				$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
+			}
 		}
 		if(defined($item->{'menu'})) {
 			my @submenus = ();
