@@ -27,6 +27,7 @@
 			[% ELSE %]
 			<itemtype>sql</itemtype>
 			[% END %]
+	        	<albumjivepattern>^(.*)\s\((.*)\)$</albumjivepattern>
 			<menudata>
 				select customscan_track_attributes.extravalue,customscan_track_attributes.value,
 					[%- IF customsorttag1 %]
@@ -118,6 +119,7 @@
 				[% ELSE %]
 				<itemtype>sql</itemtype>
 				[% END %]
+		        	<albumjivepattern>^(.*)\s\((.*)\)$</albumjivepattern>
 				<menudata>
 					select customscan_track_attributes.extravalue,customscan_track_attributes.value,
 						[%- IF customsorttag2 %]
@@ -209,6 +211,7 @@
 					[% ELSE %]
 					<itemtype>sql</itemtype>
 					[% END %]
+			        	<albumjivepattern>^(.*)\s\((.*)\)$</albumjivepattern>
 					<menudata>
 						select customscan_track_attributes.extravalue,customscan_track_attributes.value,
 							[%- IF customsorttag3 %]
@@ -299,6 +302,7 @@
 						[% ELSE %]
 						<itemtype>sql</itemtype>
 						[% END %]
+				        	<albumjivepattern>^(.*)\s\((.*)\)$</albumjivepattern>
 						<menudata>
 							select customscan_track_attributes.extravalue,customscan_track_attributes.value,
 								[%- IF customsorttag4 %]
@@ -388,6 +392,7 @@
 							[% ELSE %]
 							<itemtype>sql</itemtype>
 							[% END %]
+					        	<albumjivepattern>^(.*)\s\((.*)\)$</albumjivepattern>
 							<menudata>
 								select customscan_track_attributes.extravalue,customscan_track_attributes.value,
 									[%- IF customsorttag5 %]
