@@ -12,7 +12,7 @@
 			<id>bitrate</id>
 			<menuname>Artists</menuname>
 			<pathtype>sql</pathtype>
-			<pathtypedata>select '{context.itemid}',case when '{context.itemid}'='Lossless' then 'Lossless' else concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps') end</pathtypedata>
+			<pathtypedata>select '{context.itemid}',case when '{context.itemid}'=9999999 then 'Lossless' else concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps') end</pathtypedata>
 			<playtype>sql</playtype>
 			<playdata>
 				select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -24,7 +24,7 @@
 					tracks.audio=1 and 
 					(
 						(
-							'{bitrate}'='Lossless' and
+							'{bitrate}'=9999999 and
 							tracks.lossless=1
 						)
 						or
@@ -37,7 +37,7 @@
 			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
-				select case when lossless=1 then 'Lossless' else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select case when lossless=1 then 9999999 else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
@@ -64,7 +64,7 @@
 						contributor_track.contributor={artist} and 
 						(
 							(
-								'{bitrate}'='Lossless' and
+								'{bitrate}'=9999999 and
 								tracks.lossless=1
 							)
 							or
@@ -91,7 +91,7 @@
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 						(
 							(
-								'{bitrate}'='Lossless' and
+								'{bitrate}'=9999999 and
 								tracks.lossless=1
 							)
 							or
@@ -123,7 +123,7 @@
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							(
 								(
-									'{bitrate}'='Lossless' and
+									'{bitrate}'=9999999 and
 									tracks.lossless=1
 								)
 								or
@@ -164,7 +164,7 @@
 							contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							(
 								(
-									'{bitrate}'='Lossless' and
+									'{bitrate}'=9999999 and
 									tracks.lossless=1
 								)
 								or
@@ -198,7 +198,7 @@
 								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 								(
 									(
-										'{bitrate}'='Lossless' and
+										'{bitrate}'=9999999 and
 										tracks.lossless=1
 									)
 									or
