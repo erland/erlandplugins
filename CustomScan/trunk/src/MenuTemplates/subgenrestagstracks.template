@@ -43,7 +43,7 @@
 					[%- IF library or activelibrary %]
 					join multilibrary_track on
 						tracks.id=multilibrary_track.track and
-						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 					[%- END %] 
 					[%- IF limituppertags %]
 					join customscan_track_attributes as attr1 on
@@ -93,7 +93,7 @@
 						[%- IF library or activelibrary %]
 						join multilibrary_track on
 							tracks.id=multilibrary_track.track and
-							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 						[%- END %] 
 						[%- IF limituppertags %]
 						join customscan_track_attributes as attr1 on
@@ -148,7 +148,7 @@
 							[%- IF library or activelibrary %]
 							join multilibrary_track on
 								tracks.id=multilibrary_track.track and
-								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %]
 							[%- END %] 
 							[%- IF limituppertags %]
 							join customscan_track_attributes as attr1 on
