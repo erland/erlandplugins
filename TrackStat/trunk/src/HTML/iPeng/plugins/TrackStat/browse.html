@@ -75,6 +75,9 @@
 				</span>
 				[% END %]
 			[% ELSIF pluginTrackStatShowGroupRatingView or (player=='' and pluginTrackStatShowGroupRatingControls) %]
+				[% BLOCK unrategroupcontrol %]
+<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=0[% statisticparameters %][% pluginTrackStatStatisticContextPath %]" onClick="return confirm('[% "PLUGIN_TRACKSTAT_REMOVE_ALBUM_RATINGS_WARNING" | string %]')"><img src="[% webroot %]html/images/remove.png" alt="Unrate" title="Unrate" width=27 height=27></a>
+				[% END %]
 				[% WRAPPER contentitem controls='unrategroupcontrol'%]
 				<span>[% 'PLUGIN_TRACKSTAT_AVGRATING' | string %]</span>
 				<span style="float:right;">
