@@ -193,6 +193,7 @@
 						<img src="[% webroot %]plugins/TrackStat/html/images/star_noborder.gif" width=13 height=13 alt="[% loop %]" title="[% pluginTrackStatGroupRatingNumber %]">
 					[% END %]
 				[% END %]
+				<a href="[% webroot %][% path %]?player=[% player | uri %]&trackstatcmd=albumrating&trackstatrating=0[% statisticparameters %][% pluginTrackStatStatisticContextPath %][% IF pluginTrackStatFlatlist %]&flatlist=1[% END %]" onClick="return confirm('[% "PLUGIN_TRACKSTAT_REMOVE_ALBUM_RATINGS_WARNING" | string %]')"><img src="[% webroot %]plugins/TrackStat/html/images/b_delete.gif" alt="Unrate" title="Unrate"></a>
 				&nbsp;
 			[% END %]
 			[% WRAPPER playlink noTarget=1 %]href="[% webroot %][% path %]?player=[% player | uri %][% statisticparameters %]&amp;trackstatcmd=play"[% END %]
