@@ -63,6 +63,9 @@ select url from
 		[%- END %]
 		where
 			audio=1
+		[%- IF minrating %]
+			and track_statistics.rating>=[% minrating %]
+		[% END %]
 		[%- IF requestfromuser == 'album' %]
 			and tracks.album='PlaylistParameter1'
 		[%- ELSIF requestfromuser == 'year' %]
