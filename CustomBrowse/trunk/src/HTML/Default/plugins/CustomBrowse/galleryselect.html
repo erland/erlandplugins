@@ -16,8 +16,11 @@
 	                var orderByList;
 			[% IF pluginCustomBrowseOptions %]
 				orderByList = {
+					[% first = 1 %]
 				        [% FOREACH option IN pluginCustomBrowseOptions %]
-				                '[% option.name %]' : '[% option.id %]',
+						[% IF !first %],[% END %]
+						[% first = 0 %]
+				                '[% option.name %]' : '[% option.id %]'
 		        		[% END %]
 	                        };
 			[% END %]
