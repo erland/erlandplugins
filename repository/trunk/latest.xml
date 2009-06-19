@@ -5,13 +5,13 @@
 		<title lang="EN">Erland's plugins</title>
 	</details>
 	<plugins>
-		<plugin name="AutoRepo" version="1.0" minTarget="7.3.0" maxTarget="*">
+		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="*">
                         <title lang="EN">Auto Repositories</title>
                         <desc lang="EN">Automatically makes all third party plugin repositories that are listed on the Logitech wiki site available through Extension Downloader. The plugin doesn't actually read the wiki page directly since that would open up a security hole, instead it reads the repositories from a list available on the erlandplugins Google Code project. New repostories added to the wiki page will be added after they have been checked so they provide serious plugins and not spam urls.</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-autorepo&amp;filename=AutoRepo-1.0.zip</url>
-                        <sha>49b9837c681ca4d9339224f086fa68c7ccb9ccff</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-autorepo&amp;filename=AutoRepo-1.0.1.zip</url>
+                        <sha>365ce0aed62bd73f6f6dc5a717fd30338c292311</sha>
                         <link>http://wiki.slimdevices.com/index.php/Auto_Repositories_plugin</link>
                 </plugin>
 		<plugin name="TrackStat" version="2.8" minTarget="7.1.0" maxTarget="*">
