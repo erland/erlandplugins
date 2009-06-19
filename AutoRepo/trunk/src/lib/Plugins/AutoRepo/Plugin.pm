@@ -26,9 +26,7 @@ use Slim::Utils::Strings qw(string);
 
 use XML::Simple;
 
-if(!$::noweb) {
-	require Plugins::AutoRepo::Settings;
-}
+require Plugins::AutoRepo::Settings;
 my $prefs = preferences('plugin.autorepo');
 my $extensionPrefs = preferences('plugin.extensions');
 my $serverPrefs = preferences('server');
@@ -52,9 +50,7 @@ sub initPlugin {
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 
-	if(!$::noweb) {
 		Plugins::AutoRepo::Settings->new($class);
-	}
 }
 
 sub postinitPlugin {
