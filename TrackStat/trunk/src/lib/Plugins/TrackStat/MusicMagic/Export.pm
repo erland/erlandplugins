@@ -62,7 +62,7 @@ sub getCustomScanFunctions {
 		'order' => '75',
 		'defaultenabled' => 0,
 		'name' => 'MusicIP Statistics Export',
-		'description' => "This module exports statistic information in SqueezeCenter to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and SqueezeCenter, for example the MusicIP library can be on a Windows computer in mp3 format and the SqueezeCenter library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and SqueezeCenter on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module exports statistic information in Squeezebox Server to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and Squeezebox Server, for example the MusicIP library can be on a Windows computer in mp3 format and the Squeezebox Server library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and Squeezebox Server on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -89,21 +89,21 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'musicmagicextension',
 				'name' => 'File extension in MusicIP',
-				'description' => 'File extension in MusicIP (for example .mp3), empty means same file extension as in SqueezeCenter',
+				'description' => 'File extension in MusicIP (for example .mp3), empty means same file extension as in Squeezebox Server',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_replace_extension")
 			},
 			{
 				'id' => 'musicmagicmusicpath',
 				'name' => 'Music path in MusicIP',
-				'description' => 'Path to main music directory in MusicIP, empty means same music path as in SqueezeCenter',
+				'description' => 'Path to main music directory in MusicIP, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'value' => $prefs->get("musicmagic_export_library_music_path")
 			},
 			{
 				'id' => 'musicmagicslimservermusicpath',
-				'name' => 'Music path in SqueezeCenter',
-				'description' => 'Path to main music directory in SqueezeCenter, empty means same music path as in SqueezeCenter',
+				'name' => 'Music path in Squeezebox Server',
+				'description' => 'Path to main music directory in Squeezebox Server, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("musicmagic_library_music_path")
@@ -111,7 +111,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'musicmagicdynamicupdate',
 				'name' => 'Dynamically update statistics',
-				'description' => 'Continously write statistics to MusicIP when ratings are changed and songs are played in SqueezeCenter',
+				'description' => 'Continously write statistics to MusicIP when ratings are changed and songs are played in Squeezebox Server',
 				'type' => 'checkbox',
 				'value' => defined($prefs->get("musicmagic_enabled"))?$prefs->get("musicmagic_enabled"):0
 			},

@@ -12,7 +12,7 @@
   <module>Plugins::TrackStat::Plugin</module>
   <optionsURL>plugins/TrackStat/settings/basic.html</optionsURL>
   <targetApplication>
-    <id>SqueezeCenter</id>
+    <id>Squeezebox Server</id>
     <maxVersion>*</maxVersion>
     <minVersion>7.1.0</minVersion>
   </targetApplication>

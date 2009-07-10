@@ -36,7 +36,7 @@ This archive should contain the following files:
 - readme.txt (this file)
 - license.txt (the license)
 - *.pm (The application itself)
-- TrackStatiTunesUpdateWin.pl (Perl script to update ratings in iTunes based on history files from TrackStat)
+- TrackStatiTunesUpdate.pl (Perl script to update ratings in iTunes based on history files from TrackStat)
 
 4. INSTALLATION AND USAGE
 =========================
