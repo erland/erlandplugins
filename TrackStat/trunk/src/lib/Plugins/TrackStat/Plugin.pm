@@ -1141,7 +1141,11 @@ sub webPages {
 	}
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 
 	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
@@ -2219,7 +2223,11 @@ sub setDynamicPlaylistParams {
 	my ($client, $params) = @_;
 
 	my $dynamicPlaylist;
-	$dynamicPlaylist = grep(/DynamicPlayList/, Slim::Utils::PluginManager->enabledPlugins($client));
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+		$dynamicPlaylist = Slim::Utils::PluginManager->isEnabled("Plugin::DynamicPlayList::Plugin");
+	}else {
+		$dynamicPlaylist = grep(/DynamicPlayList/, Slim::Utils::PluginManager->enabledPlugins($client));
+	}
 	if($dynamicPlaylist && $prefs->get("dynamicplaylist")) {
 		if(!defined($params->{'artist'}) && !defined($params->{'album'}) && !defined($params->{'genre'}) && !defined($params->{'year'}) && !defined($params->{'playlist'})) {
 			$params->{'dynamicplaylist'} = "trackstat_".$params->{'songlistid'};
@@ -2549,7 +2557,16 @@ sub postinitPlugin {
 
 	no strict 'refs';
 	my @enabledplugins;
-	@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","enabledPlugins")) {
+		@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
+	}else {
+		my $allPlugins = Slim::Utils::PluginManager->allPlugins;
+		for my $plugin (keys %$allPlugins) {
+			if(Slim::Utils::PluginManager->isEnabled($allPlugins->{$plugin}->{'module'})) {
+				push @enabledplugins,$allPlugins->{$plugin}->{'module'};
+			}
+		}
+	}
 	for my $plugin (@enabledplugins) {
 		if(UNIVERSAL::can("$plugin","setTrackStatRating")) {
 			$log->debug("Added rating support for $plugin\n");
@@ -3797,7 +3814,7 @@ sub startTimingNewSong($$$$)
 
 	if (Slim::Music::Info::isFile($playStatus->currentTrackOriginalFilename)) {
 		# Get new song data
-		$playStatus->currentTrackLength($track->durationSeconds);
+		$playStatus->currentTrackLength($track->secs);
 
 		my $artistName = $track->artist();
 		#put this in because I'm getting crashes on missing artists
@@ -4190,7 +4207,9 @@ sub setTrackStatRating {
 	if($track) {
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			if(UNIVERSAL::can(ref($track),"persistent")) {
+			if(UNIVERSAL::can(ref($track),"retrievePersistent")) {
+				$track->rating($rating);
+			}elsif(UNIVERSAL::can(ref($track),"persistent")) {
 				$track->persistent->set('rating' => $rating);
 				$track->persistent->update();
 			}else {
@@ -4493,7 +4512,10 @@ sub setSqueezeCenterStatistics {
 	if($track) {
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			if(UNIVERSAL::can(ref($track),"persistent")) {
+			if(UNIVERSAL::can(ref($track),"retrievePersistent")) {
+				$track->playcount($playCount) if defined($playCount);
+				$track->lastplayed($lastPlayed) if defined($lastPlayed);
+			}elsif(UNIVERSAL::can(ref($track),"persistent")) {
 				$track->persistent->set('playcount' => $playCount) if defined($playCount);
 				$track->persistent->set('lastplayed' => $lastPlayed) if defined($lastPlayed);
 				$track->persistent->update();
@@ -4728,7 +4750,11 @@ sub isPluginsInstalled {
 	my $enabledPlugin = 1;
 	foreach my $plugin (split /,/, $pluginList) {
 		if($enabledPlugin) {
-			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+			if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+				$enabledPlugin = Slim::Utils::PluginManager->isEnabled($plugin);
+			}else {
+				$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+			}
 		}
 	}
 	return $enabledPlugin;

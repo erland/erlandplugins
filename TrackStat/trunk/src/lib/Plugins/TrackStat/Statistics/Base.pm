@@ -53,6 +53,11 @@ sub init {
 	$driver = $serverPrefs->get('dbsource');
     $driver =~ s/dbi:(.*?):(.*)$/$1/;
     
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
     if($driver eq 'mysql') {
     	$distinct = 'distinct';
     }
@@ -493,9 +498,9 @@ sub getArtistTracks {
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
 					my $clientid = $client->id;
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and contributor_track.contributor=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) where contributor_track.contributor=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) where contributor_track.contributor=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
@@ -640,9 +645,9 @@ sub getGenreTracks {
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
 					my $clientid = $client->id;
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and genre_track.genre=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track where genre_track.genre=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join genre_track on tracks.id=genre_track.track where genre_track.genre=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
@@ -783,9 +788,9 @@ sub getYearTracks {
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
 					my $clientid = $client->id;
-					$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and tracks.year=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks where tracks.year=$id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks where tracks.year=$id order by ".getRandomString()." limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
@@ -931,9 +936,9 @@ sub getPlaylistTracks {
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
 					my $clientid = $client->id;
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by rand() limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
