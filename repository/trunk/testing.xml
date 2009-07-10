@@ -2,11 +2,11 @@
 
 <extensions>
 	<details>
-		<title lang="EN">Erland's plugins</title>
+		<title lang="EN">Erland's plugins (BETA testing versions)</title>
 	</details>
 	<plugins>
 		<plugin name="TrackStat" version="2.9pre1" minTarget="7.4.0" maxTarget="*">
-			<title lang="EN">TrackStat</title>
+			<title lang="EN">TrackStat *** Beta version ***</title>
 			<desc lang="EN">*** BETA VERSION ****. Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
 			<changes lang="EN">- THIS IS A BETA VERSION
 			- Added support for SQLite version of Squeezebox Server 7.4
