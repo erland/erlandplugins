@@ -384,7 +384,14 @@ sub restoreTrack
 	if($track) {
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			if(UNIVERSAL::can(ref($track),"persistent")) {
+			if(UNIVERSAL::can(ref($track),"retrievePersistent")) {
+				$track->rating($rating);
+				$track->playcount($playCount);
+				$track->lastplayed($lastPlayed);
+				my $persistent = $track->retrievePersistent;
+				$persistent->set('added' => $added);
+				$persistent->update();
+			}elsif(UNIVERSAL::can(ref($track),"persistent")) {
 				$track->persistent->set('rating' => $rating);
 				$track->persistent->set('playcount' => $playCount);
 				$track->persistent->set('lastplayed' => $lastPlayed);
