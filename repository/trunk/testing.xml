@@ -11,6 +11,7 @@
 			<changes lang="EN">- THIS IS A BETA VERSION
 			- Added support for SQLite version of Squeezebox Server 7.4
 			- Added support for OSX in TrackStatiTunesUpdate.pl script
+			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
 			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9pre1.zip</url>
