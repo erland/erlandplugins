@@ -52,7 +52,7 @@ sub getCustomScanFunctions {
 		'order' => '75',
 		'defaultenabled' => 0,
 		'name' => 'iTunes Statistics Export',
-		'description' => "This module exports statistic information in SlimServer to iTunes. The information exported are ratings, playcounts, last played time and added time.<br><br>Information is exported from TrackStat to an export file which will be placed in the specified output directory. Note that the generated iTunes history file must be run with the TrackStatiTunesUpdateWin.pl script which only supports iTunes on Windows to actually export the data to iTunes. A complete export will generate a TrackStat_iTunes_Complete.txt file, the continously written history file when playing and changing ratings will generate a TrackStat_iTunes_Hist.txt file.<br><br>The export module is prepared for having separate libraries in iTunes and SlimServer, for example the iTunes library can be on a Windows computer in mp3 format and the SlimServer library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in iTunes. If you are running iTunes and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module exports statistic information in Squeezebox Server to iTunes. The information exported are ratings, playcounts, last played time and added time.<br><br>Information is exported from TrackStat to an export file which will be placed in the specified output directory. Note that the generated iTunes history file must be run with the TrackStatiTunesUpdateWin.pl script which only supports iTunes on Windows to actually export the data to iTunes. A complete export will generate a TrackStat_iTunes_Complete.txt file, the continously written history file when playing and changing ratings will generate a TrackStat_iTunes_Hist.txt file.<br><br>The export module is prepared for having separate libraries in iTunes and Squeezebox Server, for example the iTunes library can be on a Windows computer in mp3 format and the Squeezebox Server library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in iTunes. If you are running iTunes and Squeezebox Server on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -72,21 +72,21 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'itunesextension',
 				'name' => 'File extension in iTunes',
-				'description' => 'File extension in iTunes (for example .mp3), empty means same file extension as in SlimServer',
+				'description' => 'File extension in iTunes (for example .mp3), empty means same file extension as in Squeezebox Server',
 				'type' => 'text',
 				'value' => $prefs->get("itunes_export_replace_extension")
 			},
 			{
 				'id' => 'itunesmusicpath',
 				'name' => 'Music path in iTunes',
-				'description' => 'Path to main music directory in iTunes, empty means same music path as in SlimServer',
+				'description' => 'Path to main music directory in iTunes, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'value' => $prefs->get("itunes_export_library_music_path")
 			},
 			{
 				'id' => 'itunesslimservermusicpath',
-				'name' => 'Music path in SlimServer',
-				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'name' => 'Music path in Squeezebox Server',
+				'description' => 'Path to main music directory in Squeezebox Server, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => $prefs->get("itunes_library_music_path")
@@ -94,7 +94,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'itunesdynamicupdate',
 				'name' => 'Continously write history file',
-				'description' => 'Continously write a history file when ratings are changed and songs are played in SlimServer',
+				'description' => 'Continously write a history file when ratings are changed and songs are played in Squeezebox Server',
 				'type' => 'checkbox',
 				'value' => defined($prefs->get("itunes_enabled"))?$prefs->get("itunes_enabled"):0
 			},			

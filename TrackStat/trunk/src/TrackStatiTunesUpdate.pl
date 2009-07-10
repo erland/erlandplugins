@@ -232,7 +232,7 @@ sub _searchiTunesWin {
 	my $IITrackKindFile = 1;
 	my $ITPlaylistSearchFieldVisible = 1;
 	
-	# reverse the slashes in case SlimServer was running on UNIX
+	# reverse the slashes in case Squeezebox Server was running on UNIX
 	$fileLocation =~ s/\//\\/g;
 	
 	#replace \\ with \ - not consistent within iTunes (not in my library at least)
@@ -268,7 +268,7 @@ sub _searchiTunesMac {
         my $searchString = shift;
         my $fileLocation = shift;
 
-	# reverse the slashes in case SlimServer was running on Windows
+	# reverse the slashes in case Squeezebox Server was running on Windows
 	$fileLocation =~ s/\\/\//g;
 
 	#remove leading drive letter 
