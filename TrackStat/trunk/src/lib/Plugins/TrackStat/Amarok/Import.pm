@@ -44,7 +44,7 @@ sub getCustomScanFunctions {
 		'order' => '70',
 		'defaultenabled' => 0,
 		'name' => 'Amarok Statistics Import',
-		'description' => "This module imports statistic information to SlimServer from Amarok media player. The information imported are ratings, playcounts and last played time. The import module only supports Amarok running towards a MySQL database, by default Amarok runs with a SQLite database and then this scanning module doesn\'t work. The imported information is read directly from the Amarok database.<br><br>The import module is prepared for having separate libraries in Amarok and SlimServer, for example the Amarok library in mp3 format and the SlimServer library in flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in SlimServer. If you are running Amarok and SlimServer on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module imports statistic information to Squeezebox Server from Amarok media player. The information imported are ratings, playcounts and last played time. The import module only supports Amarok running towards a MySQL database, by default Amarok runs with a SQLite database and then this scanning module doesn\'t work. The imported information is read directly from the Amarok database.<br><br>The import module is prepared for having separate libraries in Amarok and Squeezebox Server, for example the Amarok library in mp3 format and the Squeezebox Server library in flac format. The music path and file extension parameters will in this case be used to convert the imported data so it corresponds to the paths and files used in Squeezebox Server. If you are running Amarok and Squeezebox Server on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -78,21 +78,21 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'amarokextension',
 				'name' => 'File extension in Amarok',
-				'description' => 'File extension in Amarok (for example .mp3), empty means same file extension as in SlimServer',
+				'description' => 'File extension in Amarok (for example .mp3), empty means same file extension as in Squeezebox Server',
 				'type' => 'text',
 				'value' => ''
 			},
 			{
 				'id' => 'amarokmusicpath',
 				'name' => 'Music path in Amarok',
-				'description' => 'Path to main music directory in Amarok, empty means same music path as in SlimServer',
+				'description' => 'Path to main music directory in Amarok, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'value' => ''
 			},
 			{
 				'id' => 'amarokslimservermusicpath',
-				'name' => 'Music path in SlimServer',
-				'description' => 'Path to main music directory in SlimServer, empty means same music path as in SlimServer',
+				'name' => 'Music path in Squeezebox Server',
+				'description' => 'Path to main music directory in Squeezebox Server, empty means same music path as in Squeezebox Server',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isDirOrEmpty,
 				'value' => ''
