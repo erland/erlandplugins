@@ -21,8 +21,26 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 use strict;
-use Win32::OLE;
-Win32::OLE->Option(Warn => \&OLEError);
+use POSIX qw(strftime);
+
+my $os;
+if ($^O =~/darwin/i) {
+	$os = 'mac';
+	require Mac::AppleScript::Glue;
+    	import Mac::AppleScript::Glue;
+	$Mac::AppleScript::Glue::Debug{SCRIPT} = 1;
+	$Mac::AppleScript::Glue::Debug{RESULT} = 1;
+#	require Slim::Utils::Unicode;
+#	import Slim::Utils::Unicode;
+} elsif ($^O =~ /^m?s?win/i) {
+	$os = 'win';
+	require Win32::OLE;
+	import Win32::OLE;
+	Win32::OLE->Option(Warn => \&OLEError);
+	Win32::OLE->Option(CP => Win32::OLE::CP_UTF8());
+} else {
+	die ("Unsupported operating system $os!\n");
+}
 
 ##################################################
 ### Set the variables here                     ###
@@ -34,10 +52,12 @@ my $ITUNES_DEBUG = 0;
 
 # handle for iTunes app
 my $iTunesHandle=();
+my $iTunesFullVersion;
+my $iTunesVersion;
 
 my $filename = shift;
 my $looptime = shift;
-die "usage: iTunesUpdateWin.pl <iTunes Update history file> [loop seconds]\n" unless ($filename);
+die "usage: TrackStatiTunesUpdate.pl <iTunes Update history file> [loop seconds]\n" unless ($filename);
 die "$filename does not exist\n" unless (-f $filename or $looptime);
 
 do {
@@ -60,7 +80,7 @@ do {
 				$added = $2;
 			}
 			if ($played eq 'played' or $rating ne '' or $added ne '') {
-				_logTrackToiTunesWin($played,title => $title, 
+				_logTrackToiTunes($played,title => $title, 
 						artist => $artist, 
 						album => $album, 
 						location => $location, 
@@ -105,16 +125,16 @@ sub iTunesUpdateMsg
    }
 }
 
-sub _logTrackToiTunesWin($%)
+sub _logTrackToiTunes($%)
 {
 	my $action = shift;
 	my %data = @_;
-	my $status;
-	#my %monthHash = qw/01 Jan 02 Feb 03 Mar 04 Apr 05 May 06 Jun 07 Jul 08 Aug 09 Sep 10 Oct 11 Nov 12 Dec/;
+	my %monthHash = qw/01 January 02 February 03 March 04 April 05 May 06 June 07 July 08 August 09 September 10 October 11 November 12 December/;
+	my ($year,$month,$day,$hr,$min,$sec) = $data{playedDate} =~ /(....)(..)(..)(..)(..)(..)/ ;
 
-	iTunesUpdateMsg("==logTrackToiTunesWin()\n");
+	iTunesUpdateMsg("==logTrackToiTunes()\n");
 
-	my $trackHandle = _searchiTunesWin( title => $data{title}, 
+	my $trackHandle = _searchiTunes( title => $data{title}, 
 							artist => $data{artist},
 							location => $data{location}
 							);
@@ -122,35 +142,54 @@ sub _logTrackToiTunesWin($%)
 		if ($action eq 'played') {
 			iTunesUpdateMsg("Marking as played in iTunes\n");
 
-			if($data{playCount} ne "") {
-				if($data{playCount}>$trackHandle->{playedCount}) {
-					$status = $trackHandle->{playedCount} = $data{playCount};
+			if ($os eq 'win') {
+				if($data{playCount} ne "") {
+					if($data{playCount}>$trackHandle->{playedCount}) {
+						$trackHandle->{playedCount} = $data{playCount};
+					}
+				}else {
+					# If no play count was supplied we will just increase the current play count
+					$trackHandle->{playedCount}++;
 				}
-			}else {
-				# If no play count was supplied we will just increase the current play count
-				$status = $trackHandle->{playedCount}++;
-		    	#iTunesUpdateMsg("Incremented playedCount: was $status\n");
-		    }
 		    
-		    my $playedDate = $trackHandle->{playedDate};
-		    #iTunesUpdateMsg "$data{playedDate} vs ".$playedDate->Date("yyyyMMdd").$playedDate->Time("HHmmss")."\n";
-		    # check that the new playedDate is later than that in iTunes
-			if ($data{playedDate} gt $playedDate->Date("yyyyMMdd").$playedDate->Time("HHmmss")) {
-				# convert to nice unambiguous format
-				my ($year,$month,$day,$hr,$min,$sec) = $data{playedDate} =~ /(....)(..)(..)(..)(..)(..)/ ;
-				#iTunesUpdateMsg "$year-$month-$day update: $hr:$min:$sec\n";
-				$status = $trackHandle->{playedDate} = "$year-$month-$day $hr:$min:$sec";
-				#iTunesUpdateMsg("Modified playedDate\n");
+				my $playedDate = $trackHandle->{playedDate};
+				#iTunesUpdateMsg "$data{playedDate} vs ".$playedDate->Date("yyyyMMdd").$playedDate->Time("HHmmss")."\n";
+				# check that the new playedDate is later than that in iTunes
+				if ($data{playedDate} gt $playedDate->Date("yyyyMMdd").$playedDate->Time("HHmmss")) {
+					# convert to nice unambiguous format
+					my ($year,$month,$day,$hr,$min,$sec) = $data{playedDate} =~ /(....)(..)(..)(..)(..)(..)/ ;
+					#iTunesUpdateMsg "$year-$month-$day update: $hr:$min:$sec\n";
+					$trackHandle->{playedDate} = "$year-$month-$day $hr:$min:$sec";
+					#iTunesUpdateMsg("Modified playedDate\n");
+				}
+			} elsif ($os eq 'mac') {
+				if($data{playCount} ne "") {
+					if($data{playCount}>$trackHandle->played_count()) {
+						$trackHandle->set(played_count => $data{playCount});
+					}
+				}else {
+					# If no play count was supplied we will just increase the current play count
+					$trackHandle->set(played_count => $trackHandle->played_count() + 1);
+				}
+
+				my $playedDate = $trackHandle->played_date->{_ref};
+				#iTunesUpdateMsg "$data{playedDate} vs ".$playedDate->Date("yyyyMMdd").$playedDate->Time("HHmmss")."\n";
+				# check that the new playedDate is later than that in iTunes
+				if ($data{playedDate}) {
+					# convert date to nice unambiguous format
+					my $newPlayedDate = "$day $monthHash{$month} $year $hr:$min:$sec";
+					$trackHandle->set(played_date => \"date \"$newPlayedDate\""); 
+				}
 			}
 		}
 		if ($data{rating} ne "") {
 			iTunesUpdateMsg("Updating rating in iTunes\n");
-			$status = $trackHandle->{rating} = $data{rating};
+			if ($os eq 'win') {
+				$trackHandle->{rating} = $data{rating};
+			} elsif ($os eq 'mac') {
+				$trackHandle->set(rating => $data{rating} );
+			}
 		}
-		#iTunes doesn't support to write to the dateAdded field so this will not work
-		#if($data{added} ne "") {
-		#	$status = $trackHandle->{dateAdded} = $data{added};
-		#}
 	} else {
 		iTunesUpdateMsg("Track not found in iTunes\n");
 	}
@@ -158,28 +197,13 @@ sub _logTrackToiTunesWin($%)
 	return 0;
 }
 
-
-
-sub _searchiTunesWin {
+sub _searchiTunes {
 	my %searchTerms=@_;
-	my $IITrackKindFile = 1;
-	my $ITPlaylistSearchFieldVisible = 1;
-	my $status;
-	
+
 	# don't bother unless we have a location and at least one of title/artist/album
 	return 0 unless $searchTerms{location} and ($searchTerms{title} or $searchTerms{artist} or $searchTerms{album});
-	
-	_openiTunesWin() or return 0;
-	
-	# reverse the slashes in case SlimServer is running on UNIX
-	$searchTerms{location} =~ s/\//\\/g; 
-	#replace \\ with \ - not consistent within iTunes (not in my library at least)
-	$searchTerms{location} =~ s/\\\\/\\/;
 
-	my $mainLibrary = $iTunesHandle->LibraryPlaylist;	
-	my $tracks = $mainLibrary->Tracks;
-
-	#now find it
+	# create searchString and remove duplicate/trailing whitespace as well.
 	my $searchString = "";
 	if ($searchTerms{title}) {
 		$searchString .= "$searchTerms{artist} ";
@@ -190,33 +214,87 @@ sub _searchiTunesWin {
 	if ($searchTerms{title}) {
 		$searchString .= "$searchTerms{title}";
 	}
-	iTunesUpdateMsg( "Searching iTunes for *$searchString*\n");
-	my $trackCollection = $mainLibrary->Search($searchString,
-							$ITPlaylistSearchFieldVisible);
+	iTunesUpdateMsg( "Searching iTunes for \"$searchString\"\n");
 
+	_openiTunes() or return 0;
+
+	if ($os eq 'win') {
+		return _searchiTunesWin($searchString, $searchTerms{location});
+	} elsif ($os eq 'mac') {
+		return _searchiTunesMac($searchString, $searchTerms{location});
+	}
+	return 0;
+}
+
+sub _searchiTunesWin {
+    my $searchString = shift;
+    my $fileLocation = shift;
+	my $IITrackKindFile = 1;
+	my $ITPlaylistSearchFieldVisible = 1;
+	
+	# reverse the slashes in case SlimServer was running on UNIX
+	$fileLocation =~ s/\//\\/g;
+	
+	#replace \\ with \ - not consistent within iTunes (not in my library at least)
+	$fileLocation =~ s/\\\\/\\/;
+
+	my $mainLibrary = $iTunesHandle->LibraryPlaylist;	
+	my $trackCollection = $mainLibrary->Search($searchString, $ITPlaylistSearchFieldVisible);
 	if ($trackCollection)
 	{
 		iTunesUpdateMsg("Found ",$trackCollection->Count," track(s) in iTunes\n");
-		iTunesUpdateMsg("Checking for: *$searchTerms{location}*\n");
 		for (my $j = 1; $j <= $trackCollection->Count ; $j++) {
+			my $iTunesLoc = $trackCollection->Item($j)->Location;
 			#change double \\ to \ 
-			my $iTunesLoc = lc $trackCollection->Item($j)->Location;
 			$iTunesLoc =~ s/\\\\/\\/;
-			# escape all problem characters for search coming up
-			my $searchLocation = lc $searchTerms{location};
-			$searchLocation =~ s/(\W)/\\$1/g;
-			
-			#check the location
+
+			#check the location and type
 			if ($trackCollection->Item($j)->Kind == $IITrackKindFile
-				and  $iTunesLoc =~ m|$searchLocation$|i)
+				and lc($fileLocation) eq lc($iTunesLoc))
 			{
 				#we have the file (hopefully)
 				iTunesUpdateMsg("Found track in iTunes\n");
 				return $trackCollection->Item($j);
-			} 
-			else {
-				iTunesUpdateMsg("$j - False match: *$iTunesLoc*\n");
+			} else {
+				iTunesUpdateMsg("Checking for: $fileLocation\n");
+				iTunesUpdateMsg("False match:  $iTunesLoc\n");
 			}
+		}
+	}
+	return 0;
+}
+
+sub _searchiTunesMac {
+        my $searchString = shift;
+        my $fileLocation = shift;
+
+	# reverse the slashes in case SlimServer was running on Windows
+	$fileLocation =~ s/\\/\//g;
+
+	#remove leading drive letter 
+	$fileLocation =~ s/^\w\://i; 
+	
+	#OSX iTunes seems to store some accented characters as 2 characters
+	#this function should recombine them
+	#$fileLocation = Slim::Utils::Unicode::recomposeUnicode($fileLocation);
+
+	my $trax = $iTunesHandle->search_library_playlist_1_for($searchString);
+	for my $track (@{$trax}) {
+		my $iTunesLoc = $track->location->{_ref};
+		# modify iTunesLoc to match the location string
+		$iTunesLoc =~ s/^alias "[^:]*:(.*)"$/$1/;
+		$iTunesLoc =~ tr/:/\//;
+
+		# have to do a substring match as the begining of the two
+		# strings is different
+		my $xpect = length($fileLocation) - length($iTunesLoc);
+		my $found = index(lc($fileLocation), lc($iTunesLoc));
+		if ($xpect >= 0 and $found == $xpect) {
+			iTunesUpdateMsg("Found track in iTunes: $iTunesLoc\n");
+			return $track;
+		} else {
+			iTunesUpdateMsg("Checking for: $fileLocation\n");
+			iTunesUpdateMsg("False Match:  $iTunesLoc\n");
 		}
 	}
 	return 0;
@@ -224,30 +302,36 @@ sub _searchiTunesWin {
 
 
 
-
-sub _openiTunesWin {
+sub _openiTunes {
 	my $failure;
-	
+
 	unless ($iTunesHandle) {
 		iTunesUpdateMsg ("Attempting to make connection to iTunes...\n");
-		$iTunesHandle = Win32::OLE->GetActiveObject('iTunes.Application');
-		unless ($iTunesHandle) {
-			$iTunesHandle = new Win32::OLE( "iTunes.Application") 
-				or	$failure = 1;
- 			if ($failure) {
-				warn "Failed to launch iTunes through OLE!!!\n";
-				return 0;
+		if ($os eq 'win') {
+			$iTunesHandle = Win32::OLE->GetActiveObject('iTunes.Application');
+			unless ($iTunesHandle) {
+				$iTunesHandle = new Win32::OLE( "iTunes.Application") 
 			}
-		my $iTunesVersion = $iTunesHandle->Version;
-		iTunesUpdateMsg ("OLE connection established to iTunes: $iTunesVersion\n");
+		} elsif ($os eq 'mac') {
+			$iTunesHandle = new Mac::AppleScript::Glue::Application('iTunes');
+		} else {
+			iTunesUpdateMsg("iTunes not supported on plattform\n");
+			return 0;
 		}
+		unless ($iTunesHandle) {
+			iTunesUpdateMsg( "Failed to launch iTunes!!!\n");
+			return 0;
+		}
+		$iTunesFullVersion = $iTunesHandle->Version;
+		iTunesUpdateMsg ("Connection established to iTunes: $iTunesFullVersion\n");
+		($iTunesVersion) = split /\./,$iTunesFullVersion;
 	} else {
 		#iTunesUpdateMsg ("iTunes already open: testing connection\n");
 		$iTunesHandle->Version or $failure = 1;	
 		if ($failure) {
 			iTunesUpdateMsg ("iTunes dead: reopening...\n");
 			undef $iTunesHandle;
-			return _openiTunesWin();
+			return _openiTunes();
 		}
 	}
 	return 1;
