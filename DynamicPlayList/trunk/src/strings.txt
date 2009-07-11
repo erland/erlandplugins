@@ -82,8 +82,8 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST
 	DA	Husk aktive spillelister
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBERACTIVEPLAYLIST_DESC
-	EN	Remember active playlist after SqueezeCenter restart
-	DA	Husk aktive spillelister efter SqueezeCenter er genstartet
+	EN	Remember active playlist after Squeezebox Server restart
+	DA	Husk aktive spillelister efter Squeezebox Server er genstartet
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_INCLUDESAVEDPLAYLISTS
 	EN	Saved playlists
@@ -154,16 +154,16 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS
 	DA	Knapper på gennemse sider
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS_DESC
-	EN	Show DynamicPlayList button in browse pages. May require SqueezeCenter restart.
-	DA	Vis Dynamisk SpilleListe knap på gennemse sider. Kræver måske SqueezeCenter genstartes.
+	EN	Show DynamicPlayList button in browse pages. May require Squeezebox Server restart.
+	DA	Vis Dynamisk SpilleListe knap på gennemse sider. Kræver måske Squeezebox Server genstartes.
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION
 	EN	Play+Hold mixer action
 	DA	Play+Hold mixer funktion
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_ENABLE_MIXERFUNCTION_DESC
-	EN	Enable DynamicPlayList play+hold action. May require SqueezeCenter restart.
-	DA	Aktiver Dynamisk Spillelist play+hold funktion. Kræver måske SqueezeCenter genstart.
+	EN	Enable DynamicPlayList play+hold action. May require Squeezebox Server restart.
+	DA	Aktiver Dynamisk Spillelist play+hold funktion. Kræver måske Squeezebox Server genstart.
 
 SETUP_PLUGIN_DYNAMICPLAYLIST_FLATLIST
 	EN	Show all playlists on top

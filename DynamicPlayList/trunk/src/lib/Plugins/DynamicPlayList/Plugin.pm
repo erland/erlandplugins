@@ -1175,7 +1175,11 @@ sub isPluginsInstalled {
 	my $enabledPlugin = 1;
 	foreach my $plugin (split /,/, $pluginList) {
 		if($enabledPlugin) {
-			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+			if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+				$enabledPlugin = Slim::Utils::PluginManager->isEnabled($plugin);
+			}else {
+				$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+			}
 		}
 	}
 	return $enabledPlugin;
@@ -2328,7 +2332,13 @@ sub registerJiveMenu {
 
 sub initDatabase {
 	$driver = $serverPrefs->get('dbsource');
-    $driver =~ s/dbi:(.*?):(.*)$/$1/;
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
 	my $dbh = getCurrentDBH();
 	my $st = $dbh->table_info();
 	my $tblexists;
@@ -2342,50 +2352,56 @@ sub initDatabase {
 		$log->info("Create database table\n");
 		executeSQLFile("dbcreate.sql");
 	}
-	eval { $dbh->do("select skipped from dynamicplaylist_history limit 1;") };
-	if ($@) {
-		$log->info("Create database table column skipped in dynamicplaylist_history\n");
-		executeSQLFile("dbupgrade_skipped.sql");
+	if($driver eq 'mysql') {
+		eval { $dbh->do("select skipped from dynamicplaylist_history limit 1;") };
+		if ($@) {
+			$log->info("Create database table column skipped in dynamicplaylist_history\n");
+			executeSQLFile("dbupgrade_skipped.sql");
+		}
+		$st = $dbh->prepare("show create table dynamicplaylist_history");
+		eval {
+			$log->debug("Checking datatype on dynamicplaylist_history\n");
+			$st->execute();
+			my $line = undef;
+			$st->bind_col( 2, \$line);
+			if( $st->fetch() ) {
+				if(defined($line) && (lc($line) =~ /client.*(varchar\(100\))/m)) {
+					$log->warn("Upgrading database changing type of client column, please wait...\n");
+					executeSQLFile("dbupgrade_client_type.sql");
+				}
+			}
+		};
+		$st->finish();
 	}
-	$st = $dbh->prepare("show create table dynamicplaylist_history");
-	eval {
-		$log->debug("Checking datatype on dynamicplaylist_history\n");
-		$st->execute();
-		my $line = undef;
-		$st->bind_col( 2, \$line);
-		if( $st->fetch() ) {
-			if(defined($line) && (lc($line) =~ /client.*(varchar\(100\))/m)) {
-				$log->warn("Upgrading database changing type of client column, please wait...\n");
-				executeSQLFile("dbupgrade_client_type.sql");
+	if($driver eq 'mysql') {
+		$st = $dbh->prepare("show index from dynamicplaylist_history;");
+		eval {
+			$log->debug("Checking if indexes is needed for dynamicplaylist_history\n");
+			$st->execute();
+			my $keyname;
+			$st->bind_col( 3, \$keyname );
+			my $foundIdClient = 0;
+			while( $st->fetch() ) {
+				if($keyname eq "idClientIndex") {
+					$foundIdClient = 1;
+				}
 			}
-		}
-	};
-	$st->finish();
-
-	$st = $dbh->prepare("show index from dynamicplaylist_history;");
-	eval {
-		$log->debug("Checking if indexes is needed for dynamicplaylist_history\n");
-		$st->execute();
-		my $keyname;
-		$st->bind_col( 3, \$keyname );
-		my $foundIdClient = 0;
-		while( $st->fetch() ) {
-			if($keyname eq "idClientIndex") {
-				$foundIdClient = 1;
+			if(!$foundIdClient) {
+				$log->warn("No idClientIndex index found in dynamicplaylist_history, creating index...\n");
+				eval { $dbh->do("create index idClientIndex on dynamicplaylist_history (id,client);") };
+				if ($@) {
+					$log->warn("Couldn't add index: $@\n");
+				}
 			}
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr\n");
 		}
-		if(!$foundIdClient) {
-			$log->warn("No idClientIndex index found in dynamicplaylist_history, creating index...\n");
-			eval { $dbh->do("create index idClientIndex on dynamicplaylist_history (id,client);") };
-			if ($@) {
-				$log->warn("Couldn't add index: $@\n");
-			}
-		}
-	};
-	if( $@ ) {
-	    $log->warn("Database error: $DBI::errstr\n");
+		$st->finish();
+	}else {
+		$log->debug("Create database indexes\n");
+		executeSQLFile("dbindex.sql");
 	}
-	$st->finish();
 }
 
 sub shutdownPlugin {
@@ -2414,7 +2430,11 @@ sub webPages {
 	my $value = $htmlTemplate;
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 
 	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_DYNAMICPLAYLIST' => $value });
