@@ -49,6 +49,11 @@ sub init {
 	$driver = $serverPrefs->get('dbsource');
     $driver =~ s/dbi:(.*?):(.*)$/$1/;
     
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
     if($driver eq 'mysql') {
     	$distinct = 'distinct';
     }
