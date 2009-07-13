@@ -2556,17 +2556,7 @@ sub postinitPlugin {
 	$functref->{'saveRating'} = \&saveRatingsForCurrentlyPlaying if(!$prefs->get("itunesupdate") || !exists $functref->{'saveRating'});
 
 	no strict 'refs';
-	my @enabledplugins;
-	if(UNIVERSAL::can("Slim::Utils::PluginManager","enabledPlugins")) {
-		@enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
-	}else {
-		my $allPlugins = Slim::Utils::PluginManager->allPlugins;
-		for my $plugin (keys %$allPlugins) {
-			if(Slim::Utils::PluginManager->isEnabled($allPlugins->{$plugin}->{'module'})) {
-				push @enabledplugins,$allPlugins->{$plugin}->{'module'};
-			}
-		}
-	}
+	my @enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
 	for my $plugin (@enabledplugins) {
 		if(UNIVERSAL::can("$plugin","setTrackStatRating")) {
 			$log->debug("Added rating support for $plugin\n");
