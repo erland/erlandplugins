@@ -87,13 +87,13 @@ select id from
 		[%- ELSIF minalbumtracks %]
 		having count(tracks.id)>=[% minalbumtracks %]
 		[%- END %]
-		order by maxadded desc,rand() 
+		order by maxadded desc,[% RANDOMFUNCTION %] 
 		[% IF requestfromuser =='noofalbums' %]
 		limit 'PlaylistParameter1'
 		[% ELSIF requestfromuser != 'addedtime' %]
 		[% IF noofalbums %]limit [% noofalbums %][% ELSE %]limit 1[%END %]
 		[% END %]
 		) as toprated
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	limit 1;
 

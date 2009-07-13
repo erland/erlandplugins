@@ -79,7 +79,7 @@ select url from
 			and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
 		[%- END %]
 		group by tracks.id 
-		order by avgcount [% IF leastplayed %]asc[% ELSE %]desc[% END %],rand()
+		order by avgcount [% IF leastplayed %]asc[% ELSE %]desc[% END %],[% RANDOMFUNCTION %]
 		[% IF nooftracks %]limit [% nooftracks %][% END %]) as recentlyadded
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	limit 10;

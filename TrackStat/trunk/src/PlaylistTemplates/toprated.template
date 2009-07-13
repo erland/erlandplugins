@@ -80,7 +80,7 @@ select url from
 		[%- IF notrepeat or requestfromuser %]
 		group by tracks.id
 		[%- END %]
-		order by track_statistics.rating desc,rand()
+		order by track_statistics.rating desc,[% RANDOMFUNCTION %]
 		[% IF !notrepeat %]offset 'PlaylistOffset'[% END %]
 		[% IF nooftracks %]limit [% nooftracks %][% ELSE %]limit 1[%END %]) as toprated
-	order by rand();
+	order by [% RANDOMFUNCTION %];

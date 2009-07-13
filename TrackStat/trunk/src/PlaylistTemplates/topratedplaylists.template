@@ -34,7 +34,7 @@ select playlist from
 		[%- END %]
 		group by playlist_track.playlist
 		[% IF minplaylisttracks %]having count(tracks.id)>=[% minplaylisttracks %][% END %]
-		order by avgrating desc,rand() 
+		order by avgrating desc,[% RANDOMFUNCTION %] 
 		[% IF noofplaylists %]limit [% noofplaylists %][% ELSE %]limit 1[%END %]) as toprated
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	limit 1;

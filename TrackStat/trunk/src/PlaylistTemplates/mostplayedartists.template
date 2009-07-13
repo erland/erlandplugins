@@ -40,7 +40,7 @@ select contributor from
 		[%- ELSIF minartisttracks %]
 		having count(tracks.id)>=[% minartisttracks %]
 		[%- END %]
-		order by sumcount desc,rand() 
+		order by sumcount desc,[% RANDOMFUNCTION %] 
 		[% IF noofartists %]limit [% noofartists %][% ELSE %]limit 1[%END %]) as toprated
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	limit 1;

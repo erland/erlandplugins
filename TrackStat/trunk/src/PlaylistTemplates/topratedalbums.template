@@ -81,8 +81,8 @@ select id from
 		[%- ELSIF minalbumtracks %]
 		having count(tracks.id)>=[% minalbumtracks %]
 		[%- END %]
-		order by avgrating desc,rand() 
+		order by avgrating desc,[% RANDOMFUNCTION %] 
 		[% IF noofalbums %]limit [% noofalbums %][% ELSE %]limit 1[%END %]) as toprated
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	limit 1;
 

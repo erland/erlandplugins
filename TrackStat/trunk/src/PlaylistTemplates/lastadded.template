@@ -83,12 +83,12 @@ select url from
 		[%- IF notrepeat or requestfromuser %]
 		group by tracks.id
 		[%- END %]
-		order by track_statistics.added desc,rand()
+		order by track_statistics.added desc,[% RANDOMFUNCTION %]
 		[% IF !notrepeat %]offset 'PlaylistOffset'[% END %]
 		[% IF requestfromuser == 'nooftracks' %]
 		limit 'PlaylistParameter1'
 		[% ELSIF requestfromuser != 'addedtime' %]
 		[% IF nooftracks %]limit [% nooftracks %][% ELSE %]limit 1[%END %]
 		[% END %]) as lastadded
-	order by rand()
+	order by [% RANDOMFUNCTION %]
 	[% IF nooftrackspertime %]limit [% nooftrackspertime %][%END %];

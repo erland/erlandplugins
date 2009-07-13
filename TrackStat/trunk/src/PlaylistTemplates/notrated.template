@@ -52,5 +52,5 @@ select tracks.url from tracks
 	[%- IF notrepeat or requestfromuser %]
 	group by tracks.id
 	[%- END %]
-	order by rand() 
+	order by [% RANDOMFUNCTION %] 
 	limit 10;
