@@ -35,25 +35,25 @@ SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP
 	EN	Startup refresh
 
 SETUP_PLUGIN_CUSTOMSCAN_REFRESH_STARTUP_DESC
-	EN	This will activate/deactivate the refresh data operation at slimserver startup, the only reason to turn this if is if you get performance issues with refresh data
+	EN	This will activate/deactivate the refresh data operation at Squeezebox Server startup, the only reason to turn this if is if you get performance issues with refresh data
 
 SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS
 	EN	Long paths support
 
 SETUP_PLUGIN_CUSTOMSCAN_LONG_URLS_DESC
-	EN	 This will activate support for longer paths, if not enabled only urls up to 255 characters is supported, with this option is supports urls with 511 characters. <br>Note! You will have to restart SlimServer for this option to take effect.
+	EN	 This will activate support for longer paths, if not enabled only urls up to 255 characters is supported, with this option is supports urls with 511 characters. <br>Note! You will have to restart Squeezebox Server for this option to take effect.
 
 SETUP_PLUGIN_CUSTOMSCAN_REFRESH_RESCAN
 	EN	Rescan refresh
 
 SETUP_PLUGIN_CUSTOMSCAN_REFRESH_RESCAN_DESC
-	EN	This will activate/deactivate the refresh data operation after a slimserver rescan, the only reason to turn this if is if you get performance issues with refresh data. This option does not have any effect if automatic rescan is turned on.
+	EN	This will activate/deactivate the refresh data operation after a Squeezebox Server rescan, the only reason to turn this if is if you get performance issues with refresh data. This option does not have any effect if automatic rescan is turned on.
 
 SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN
 	EN	Automatic rescan
 
 SETUP_PLUGIN_CUSTOMSCAN_AUTO_RESCAN_DESC
-	EN	This will activate/deactivate the automatic rescan after a slimserver rescan has been performed
+	EN	This will activate/deactivate the automatic rescan after a Squeezebox Server rescan has been performed
 
 PLUGIN_CUSTOMSCAN_SETTINGS_TITLE
 	EN	Settings

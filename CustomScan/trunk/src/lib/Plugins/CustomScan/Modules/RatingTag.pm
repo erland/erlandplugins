@@ -40,7 +40,7 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'ratingtag',
 		'name' => 'Rating Tag',
-		'description' => "This module reads rating tags from the music files and stores them in the SlimServer database. This is for example used by
+		'description' => "This module reads rating tags from the music files and stores them in the Squeezebox Server database. This is for example used by
             MediaMonkey and optionally also by Windows Media Player if you have choosed to store the rating information in the music files. The POPM tag available in the MP3 standard will always be read if available, but if the file also have a rating tag as specified below this will be used instead",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
@@ -50,7 +50,7 @@ sub getCustomScanFunctions {
 		'properties' => [
 			{
 				'id' => 'writeratingtag',
-				'name' => 'Write ratings to slimserver',
+				'name' => 'Write ratings to Squeezebox Server',
 				'type' => 'checkbox',
 				'value' => 1
 			},
@@ -64,7 +64,7 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'ratingtagmax',
 				'name' => 'Max rating value',
-				'description' => 'The value of maximum rating in the scanned tag, this is used to convert the rating to a value between 0-100 to be stored in SlimServer',
+				'description' => 'The value of maximum rating in the scanned tag, this is used to convert the rating to a value between 0-100 to be stored in Squeezebox Server',
 				'type' => 'text',
 				'validate' => \&Plugins::CustomScan::Validators::isInt,
 				'value' => 100
@@ -178,10 +178,12 @@ sub rateTrack {
 		my $request = $client->execute(['trackstat', 'setrating', $track->id, $ratingPercent,"type:scan"]);
 		$request->source('PLUGIN_CUSTOMSCAN');
 	}else {
-		$log->debug("Setting slimserver rating on ".$track->title." to $rating\n");
+		$log->debug("Setting Squeezebox Server rating on ".$track->title." to $rating\n");
 		# Run this within eval for now so it hides all errors until this is standard
 		eval {
-			if(UNIVERSAL::can(ref($track),"persistent")) {
+			if(UNIVERSAL::can(ref($track),"retrievePersistent")) {
+				$track->rating($rating);
+			}elsif(UNIVERSAL::can(ref($track),"persistent")) {
 				$track->persistent->set('rating' => $rating);
 				$track->persistent->update();
 			}else {
