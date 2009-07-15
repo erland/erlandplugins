@@ -47,7 +47,7 @@ sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'csamazon',
 		'name' => 'Amazon',
-		'description' => "This module scans amazon.com for all your albums, the scanned information is average customer ratings and amazon subjects/genres related to each album. <br><br><b>Note!</b><br>The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and select the \"Amazon Web Services\" link currently available in the bottom left menu under \"Amazon Services\"<br><br>Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.<br><br>The Amazon module is quite slow, the reason for this is that Amazon restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that SqueezeCenter will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each album, so the next time it will only scan new albums and will be a lot faster due to this. Approximately scanning time are 1-2 seconds per album in your library",
+		'description' => "This module scans amazon.com for all your albums, the scanned information is average customer ratings and amazon subjects/genres related to each album. <br><br><b>Note!</b><br>The Amazon module requires you to register for a access key to use Amazon web services, you can do this by go to amazon.com and select the \"Amazon Web Services\" link currently available in the bottom left menu under \"Amazon Services\"<br><br>Please note that the information read is free but the web service usage is restricted according to Amazon Web Services Licensing Agreement.<br><br>The Amazon module is quite slow, the reason for this is that Amazon restricts the number of calls per second towards their services in the licenses. Please respect these licensing rules. This also results in that Squeezebox Server will perform quite bad during scanning when this scanning module is active. The information will only be scanned once for each album, so the next time it will only scan new albums and will be a lot faster due to this. Approximately scanning time are 1-2 seconds per album in your library",
 		'dataproviderlink' => 'http://www.amazon.com',
 		'dataprovidername' => 'Amazon.com',
 		'developedBy' => 'Erland Isaksson',
@@ -69,7 +69,7 @@ sub getCustomScanFunctions {
 				'value' => 40
 			},
 			{
-				'name' => 'Update SqueezeCenter ratings',
+				'name' => 'Update Squeezebox Server ratings',
 				'id' => 'writeamazonrating',
 				'type' => 'checkbox',
 				'value' => 0
@@ -237,10 +237,12 @@ sub rateUnratedTracksOnAlbum {
 				my $request = $client->execute(['trackstat', 'setrating', $track->id, sprintf('%d%', $rating)],"type:scan");
 				$request->source('PLUGIN_CUSTOMSCAN');
 			}else {
-				$log->debug("Setting SqueezeCenter rating on ".$track->title." to $rating\n");
+				$log->debug("Setting Squeezebox Server rating on ".$track->title." to $rating\n");
 				# Run this within eval for now so it hides all errors until this is standard
 				eval {
-					if(UNIVERSAL::can(ref($track),"persistent")) {
+					if(UNIVERSAL::can(ref($track),"retrievePersistent")) {
+						$track->rating($rating);
+					}elsif(UNIVERSAL::can(ref($track),"persistent")) {
 						$track->persistent->set('rating' => $rating);
 						$track->persistent->update();
 					}else {

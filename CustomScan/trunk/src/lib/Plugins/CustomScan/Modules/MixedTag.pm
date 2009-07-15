@@ -42,7 +42,7 @@ sub getCustomScanFunctions {
 		'order' => '60',
 		'defaultenabled' => 1,
 		'name' => 'Mixed Tag',
-		'description' => "This module scans information from both SqueezeCenter and Custom Tag scanning module and stores it in a common place. If you leave one of the tag fields empty in the settings it means that that information isnt scanned. Multiple value can be specified with a comma character as separator. To use custom tags these must first have been scanned with the Custom Tag scanning module, this is done automatically if both scanning modules are included in automatic scanning and you perform a Scan All operation, but if not you will have to make sure to run the Custom Tag scanning module first, before you run this scaning module",
+		'description' => "This module scans information from both Squeezebox Server and Custom Tag scanning module and stores it in a common place. If you leave one of the tag fields empty in the settings it means that that information isnt scanned. Multiple value can be specified with a comma character as separator. To use custom tags these must first have been scanned with the Custom Tag scanning module, this is done automatically if both scanning modules are included in automatic scanning and you perform a Scan All operation, but if not you will have to make sure to run the Custom Tag scanning module first, before you run this scaning module",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -51,63 +51,63 @@ sub getCustomScanFunctions {
 			{
 				'id' => 'mixedtagartisttags',
 				'name' => 'Artist tags',
-				'description' => 'Tag names to store SqueezeCenter artists as',
+				'description' => 'Tag names to store Squeezebox Server artists as',
 				'type' => 'text',
 				'value' => 'ARTIST'
 			},
 			{
 				'id' => 'mixedtagalbumartisttags',
 				'name' => 'Album Artist tags',
-				'description' => 'Tag names to store SqueezeCenter album artists as',
+				'description' => 'Tag names to store Squeezebox Server album artists as',
 				'type' => 'text',
 				'value' => 'ARTIST,ALBUMARTIST'
 			},
 			{
 				'id' => 'mixedtagtrackartisttags',
 				'name' => 'Track Artist tags',
-				'description' => 'Tag names to store SqueezeCenter track artists as',
+				'description' => 'Tag names to store Squeezebox Server track artists as',
 				'type' => 'text',
 				'value' => 'TRACKARTIST'
 			},
 			{
 				'id' => 'mixedtagconductortags',
 				'name' => 'Conductor tags',
-				'description' => 'Tag names to store SqueezeCenter conductors as',
+				'description' => 'Tag names to store Squeezebox Server conductors as',
 				'type' => 'text',
 				'value' => 'CONDUCTOR'
 			},
 			{
 				'id' => 'mixedtagcomposertags',
 				'name' => 'Composer tags',
-				'description' => 'Tag names to store SqueezeCenter composers as',
+				'description' => 'Tag names to store Squeezebox Server composers as',
 				'type' => 'text',
 				'value' => 'COMPOSER'
 			},
 			{
 				'id' => 'mixedtagbandtags',
 				'name' => 'Band tags',
-				'description' => 'Tag names to store SqueezeCenter bands as',
+				'description' => 'Tag names to store Squeezebox Server bands as',
 				'type' => 'text',
 				'value' => 'BAND'
 			},
 			{
 				'id' => 'mixedtagalbumtags',
 				'name' => 'Album tags',
-				'description' => 'Tag names to store SqueezeCenter albums as',
+				'description' => 'Tag names to store Squeezebox Server albums as',
 				'type' => 'text',
 				'value' => 'ALBUM'
 			},
 			{
 				'id' => 'mixedtaggenretags',
 				'name' => 'Genre tags',
-				'description' => 'Tag name to store SqueezeCenter genres as',
+				'description' => 'Tag name to store Squeezebox Server genres as',
 				'type' => 'text',
 				'value' => 'GENRE'
 			},
 			{
 				'id' => 'mixedtagyeartags',
 				'name' => 'Year tags',
-				'description' => 'Tag name to store SqueezeCenter years as',
+				'description' => 'Tag name to store Squeezebox Server years as',
 				'type' => 'text',
 				'value' => 'YEAR'
 			},
@@ -264,7 +264,7 @@ sub exitScanTrack {
 			$sth->execute();
 		};
 		if ($@) {
-			$log->error("CustomScan: Failed to scan SqueezeCenter Custom Scan custom tags: $@\n");
+			$log->error("CustomScan: Failed to scan Squeezebox Server Custom Scan custom tags: $@\n");
 		}	
 	}
 	parseTag(Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagfriendlynames"));
@@ -303,7 +303,7 @@ sub updateTags {
 			$sth->execute();
 		};
 		if ($@) {
-			$log->error("CustomScan: Failed to scan SqueezeCenter tags: $@\n");
+			$log->error("CustomScan: Failed to scan Squeezebox Server tags: $@\n");
 		}	
 	}
 }
