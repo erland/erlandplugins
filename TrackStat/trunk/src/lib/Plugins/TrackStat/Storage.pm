@@ -416,7 +416,7 @@ sub init {
 	}
     
 	# Only perform refresh at startup if this has been activated
-	return unless $prefs->get("refresh_startup");
+	return unless $prefs->get("refresh_startup") && $driver eq 'mysql';
 	refreshTracks();
 }
 
@@ -1238,23 +1238,66 @@ sub refreshTracks
 	# First lets refresh all urls with musicbrainz id's
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
-	}else {
-		$sql = "UPDATE track_statistics SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256).") where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256).")";
-	}
-	$sth = $dbh->prepare( $sql );
-	$count = 0;
-	eval {
-		$count = $sth->execute();
-		if($count eq '0E0') {
-			$count = 0;
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
+			}
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
 		}
-		commit($dbh);
-	};
-	if( $@ ) {
-	    $log->warn("Database error: $DBI::errstr\n");
-	    eval {
-	    	rollback($dbh); #just die if rollback is failing
-	    };
+	}else {
+		$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.musicbrainz_id from tracks,track_statistics where track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url";
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
+			}
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
+		}else {
+			$sql = "UPDATE track_statistics SET url=(select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id) where exists (select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id)";
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->warn("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}		
+			$sql = "drop table temp_track_statistics";
+			$sth = $dbh->prepare( $sql );
+			eval {
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->warn("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}		
+		}
 	}
 	$sth->finish();
 	$log->debug("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
