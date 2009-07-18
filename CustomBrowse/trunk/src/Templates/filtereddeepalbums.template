@@ -77,6 +77,7 @@
                                         <name>Sort by title</name>
                                         <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
                                 </option>
+				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
@@ -130,6 +131,7 @@
 						order by contributors.namesort asc,albums.titlesort desc
 					</menudata>
 				</option>
+				[%- END %]
 				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]

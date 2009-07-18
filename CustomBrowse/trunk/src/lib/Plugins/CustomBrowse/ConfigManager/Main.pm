@@ -20,7 +20,7 @@ package Plugins::CustomBrowse::ConfigManager::Main;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use Slim::Utils::Prefs;
 use Plugins::CustomBrowse::ConfigManager::TemplateParser;
@@ -34,7 +34,7 @@ use Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.custombrowse');
 
@@ -42,38 +42,17 @@ sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginPrefs' => $parameters->{'pluginPrefs'},
-		'pluginId' => $parameters->{'pluginId'},
-		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
-		'pluginVersion' => $parameters->{'pluginVersion'},
-		'supportDownloadError' => $parameters->{'supportDownloadError'},
-		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'},
-		'downloadVersion' => $parameters->{'downloadVersion'},
-	};
+	my $self = $class->SUPER::new();
 
-	$self->{'contentDirectoryHandler'} = undef;
-	$self->{'templateContentDirectoryHandler'} = undef;
-	$self->{'mixDirectoryHandler'} = undef;
-	$self->{'templateDirectoryHandler'} = undef;
-	$self->{'templateDataDirectoryHandler'} = undef;
-	$self->{'contentPluginHandler'} = undef;
-	$self->{'mixPluginHandler'} = undef;
-	$self->{'templatePluginHandler'} = undef;
-	$self->{'parameterHandler'} = undef;
-	
-	$self->{'templateParser'} = undef;
-	$self->{'contentParser'} = undef;
-	$self->{'mixParser'} = undef;
-	$self->{'templateContentParser'} = undef;
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginPrefs($parameters->{'pluginPrefs'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->downloadApplicationId($parameters->{'downloadApplicationId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+	$self->supportDownloadError($parameters->{'supportDownloadError'});
+	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
+	$self->downloadVersion($parameters->{'downloadVersion'});
 
-	$self->{'webAdminMethods'} = undef;
-
-	$self->{'templates'} = undef;
-	$self->{'items'} = undef;
-
-	bless $self,$class;
 	$self->init();
 	return $self;
 }

@@ -20,27 +20,26 @@ package Plugins::CustomBrowse::MenuHandler::WrappedMix;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMix;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMix);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(propertyHandler sqlHandler playHandler menuHandler itemParameterHandler mixHandler) );
+__PACKAGE__->mk_accessor( rw => qw(propertyHandler sqlHandler playHandler menuHandler itemParameterHandler mixHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'propertyHandler'} = $parameters->{'propertyHandler'};
-	$self->{'sqlHandler'} = $parameters->{'sqlHandler'};
-	$self->{'menuHandler'} = $parameters->{'menuHandler'};
-	$self->{'playHandler'} = $parameters->{'playHandler'};
-	$self->{'mixHandler'} = $parameters->{'mixHandler'};
-	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
+	$self->propertyHandler($parameters->{'propertyHandler'});
+	$self->sqlHandler($parameters->{'sqlHandler'});
+	$self->menuHandler($parameters->{'menuHandler'});
+	$self->playHandler($parameters->{'playHandler'});
+	$self->mixHandler($parameters->{'mixHandler'});
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
 
-	bless $self,$class;
 	return $self;
 }
 

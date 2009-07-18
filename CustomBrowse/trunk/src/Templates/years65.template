@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -35,6 +34,7 @@
 					<name>Sort by title</name>
 					<menulinks>alpha</menulinks>
 				</option>
+				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
@@ -56,6 +56,7 @@
 						order by contributors.namesort asc
 					</menudata>
 				</option>
+				[%- END %]
 				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 

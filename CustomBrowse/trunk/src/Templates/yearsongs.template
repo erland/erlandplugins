@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -57,6 +56,7 @@
 					<menulinks>alpha</menulinks>
 					<keyword name="orderby" value="tracks.titlesort asc"/>
 				</option>
+				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
@@ -83,9 +83,10 @@
 						order by contributors.namesort asc, tracks.titlesort asc
 					</menudata>
 				</option>
+				[%- END %]
 				<menutype>sql</menutype>
 				<menudata>
-					[%- IF showartistwithsong %]
+					[%- IF showartistwithsong AND MySQL %]
 					select tracks.id,concat('(', group_concat(distinct contributors.name separator ',') ,')') from contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]

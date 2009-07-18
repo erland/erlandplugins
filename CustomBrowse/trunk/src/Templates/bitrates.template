@@ -33,7 +33,7 @@
 							tracks.bitrate&lt;{bitrate}+16000
 						)
 					)
-				order by rand()
+				order by [% RANDOM_FUNCTION %]
 			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
@@ -74,7 +74,7 @@
 							)
 						)
 					group by tracks.id 
-					order by rand()
+					order by [% RANDOM_FUNCTION %]
 				</playdata>
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
@@ -133,7 +133,7 @@
 								)
 							)
 						group by tracks.id 
-						order by rand()
+						order by [% RANDOM_FUNCTION %]
 					</playdata>
 					<menutype>sql</menutype>
 					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]

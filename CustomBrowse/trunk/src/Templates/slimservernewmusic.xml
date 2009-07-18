@@ -3,8 +3,8 @@
 	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>50</downloadidentifier>
-		<name>SlimServer New Music</name>
-		<description>Standard SlimServer New Music menu</description>
+		<name>Squeezebox Server New Music</name>
+		<description>Standard Squeezebox Server New Music menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="New Music"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

@@ -20,7 +20,7 @@ PLUGIN_CUSTOMBROWSE_SETTINGS_ENABLEDMIXERS
 	EN	Enabled mixers
 
 PLUGIN_CUSTOMBROWSE_SETTINGS_SLIMSERVERMENUS
-	EN	SqueezeCenter menus
+	EN	Squeezebox Server menus
 
 PLUGIN_CUSTOMBROWSE_SETTINGS_MANAGEMENUS
 	EN	Manage menus
@@ -56,13 +56,13 @@ SETUP_PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO
 	EN	Override standard track details
 
 SETUP_PLUGIN_CUSTOMBROWSE_OVERRIDE_TRACKINFO_DESC
-	EN	Override standard track details. May require SqueezeCenter restart.
+	EN	Override standard track details. May require Squeezebox Server restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION
 	EN	Play+Hold browse by action
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION_DESC
-	EN	Enable Custom Browse play+hold browse by action. May require SqueezeCenter restart.
+	EN	Enable Custom Browse play+hold browse by action. May require Squeezebox Server restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON
 	EN	Single mixer button in web interface
@@ -74,13 +74,13 @@ SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION
 	EN	Mixer browse by icons
 
 SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_WEB_MIXERFUNCTION_DESC
-	EN	Enable Custom Browse mixer browse by selected in web interface. May require SqueezeCenter restart.
+	EN	Enable Custom Browse mixer browse by selected in web interface. May require Squeezebox Server restart.
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE
 	EN	Menu position
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUINSIDEBROWSE_DESC
-	EN	Show Custom Browse menu inside Browse menu (requires SqueezeCenter restart)
+	EN	Show Custom Browse menu inside Browse menu (requires Squeezebox Server restart)
 
 SETUP_PLUGIN_CUSTOMBROWSE_PROPERTIES
 	EN	Properties to use in queries and menus
@@ -122,7 +122,7 @@ SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME
 	EN	Menu name
 
 SETUP_PLUGIN_CUSTOMBROWSE_MENUNAME_DESC
-	EN	Menu name (Requires SqueezeCenter restart)
+	EN	Menu name (Requires Squeezebox Server restart)
 
 PLUGIN_CUSTOMBROWSE_SELECT_MENUS
 	EN	Enable/Disable menus/mixers
@@ -158,10 +158,9 @@ SETUP_PLUGIN_CUSTOMBROWSE_ENABLED_MIXERS_DESC
 	EN	Select enabled mixers
 
 SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS
-	EN	Select replacements of standard SqueezeCenter menus
+	EN	Select replacements of standard Squeezebox Server menus
 
 SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS_DESC
-	EN	Select replacements of standard SqueezeCenter menus (changes requires SqueezeCenter restart)
 
 SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS
 	EN	Replace in web interface

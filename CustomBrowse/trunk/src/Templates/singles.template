@@ -29,7 +29,7 @@
 					albums.title='[% IF noalbumtext %][% noalbumtext %][% ELSE %]No Album[% END %]' and
 					tracks.audio=1
 				group by tracks.id
-				order by rand()
+				order by [% RANDOM_FUNCTION %]
 			</playdata>
 	        	<menudata>
 				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks,albums[% IF library or activelibrary %],multilibrary_track[% END %]

@@ -20,7 +20,7 @@ package Plugins::CustomBrowse::MenuHandler::FunctionMix;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMix;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMix);
 
@@ -32,7 +32,6 @@ sub new {
 
 	my $self = $class->SUPER::new($parameters);
 
-	bless $self,$class;
 	return $self;
 }
 

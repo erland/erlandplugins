@@ -20,28 +20,35 @@ package Plugins::CustomBrowse::MenuHandler::MixHandler;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use File::Spec::Functions qw(:ALL);
+use Slim::Utils::Prefs;
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion propertyHandler itemParameterHandler mixHandlers mixes) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion propertyHandler itemParameterHandler mixHandlers mixes) );
+my $serverPrefs = preferences('server');
+my $driver;
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'},
-		'propertyHandler' => $parameters->{'propertyHandler'},
-		'itemParameterHandler' => $parameters->{'itemParameterHandler'},
-		'mixHandlers' => $parameters->{'mixHandlers'}
-	};
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+	$self->propertyHandler($parameters->{'propertyHandler'});
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+	$self->mixHandlers($parameters->{'mixHandlers'});
 
-	$self->{'mixes'} = undef;
+	$driver = $serverPrefs->get('dbsource');
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
 
-	bless $self,$class;
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
 	return $self;
 }
 
@@ -144,6 +151,7 @@ sub getPreparedMixes {
 			}
 			$parameters->{'itemid'} = $item->{'itemid'};
 			$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
+			addStandardParameters($parameters);
 			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 
 			my $url = $self->getMixData($client, $mix, $keywords, $interfaceType, 'mixurl');
@@ -156,6 +164,16 @@ sub getPreparedMixes {
 		}
 	}
 	return \@webMixes;
+}
+
+sub addStandardParameters {
+	my $params = shift;
+
+	if($driver eq 'mysql') {
+		$params->{'RANDOMFUNCTION'} = "rand()";
+	}else {
+		$params->{'RANDOMFUNCTION'} = "random()";
+	}
 }
 
 sub getMixes {
@@ -257,6 +275,7 @@ sub checkMix {
 			}
 			$parameters->{'itemid'} = $item->{'itemid'};
 			$parameters->{'itemname'} = $item->{'itemname'};
+			addStandardParameters($parameters);
 			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 			
 			return $mixHandler->checkMix($client,$mix,$keywords);

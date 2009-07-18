@@ -20,25 +20,23 @@ package Plugins::CustomBrowse::MenuHandler::SQLHandler;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion itemParameterHandler addSqlErrorCallback) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion itemParameterHandler addSqlErrorCallback) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'},
-		'itemParameterHandler' => $parameters->{'itemParameterHandler'},
-		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'}
-	};
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
 
-	bless $self,$class;
 	return $self;
 }
 
@@ -96,9 +94,13 @@ sub _execute {
 				};
 				while( $sth->fetch() ) {
                                     my %item = (
-                                        'id' => $id?Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')):$id,
-                                        'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
-                                    );
+                                        'id' => $id?Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')):$id
+				    );
+				    if(defined($name)) {
+                                        $item{'name'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'));
+                                    }else {
+					$item{'name'} = '';
+				    }
 				    if(defined($link)) {
 					$item{'link'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($link,'utf8'));
                                     }

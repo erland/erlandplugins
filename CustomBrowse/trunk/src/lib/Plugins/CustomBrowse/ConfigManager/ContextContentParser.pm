@@ -19,7 +19,7 @@
 package Plugins::CustomBrowse::ConfigManager::ContextContentParser;
 
 use strict;
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::CustomBrowse::ConfigManager::BaseParser);
 
@@ -36,7 +36,6 @@ sub new {
 
 	$parameters->{'contentType'} = 'menu';
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
 	return $self;
 }
 

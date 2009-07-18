@@ -12,7 +12,7 @@
                         <id>album</id>
 			<menuname>Songs</menuname>
                         <itemtype>album</itemtype>
-			[%- IF showartistwithalbum %]
+			[%- IF showartistwithalbum AND MySQL %]
 			<itemformat>albumconcat</itemformat>
 			[%- ELSE %]
 			<itemformat>album</itemformat>
@@ -30,7 +30,7 @@
                                 <menulinks>number</menulinks>
 				<itemformat>albumconcat</itemformat>
                                 <menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.id=contributor_track.track and
@@ -83,6 +83,7 @@
 					order by albums.year desc,albums.titlesort asc,albums.disc asc
 				</menudata>
 			</option>
+			[%- IF MySQL %]
                         <option>
                                 <id>byartist</id>
                                 <name>Sort by artist</name>
@@ -140,13 +141,14 @@
 					order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
                                 </menudata>
                         </option>
+			[%- END %]
 			[% IF trackstat %]
                         <option>
                                 <id>byadded</id>
                                 <name>Sort by last added</name>
                                 <menulinks>number</menulinks>
                                 <menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.id=contributor_track.track and
@@ -205,7 +207,7 @@
                                 <name>Sort by last played</name>
                                 <menulinks>number</menulinks>
                                 <menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.id=contributor_track.track and
@@ -264,7 +266,7 @@
                                 <name>Sort by most played</name>
                                 <menulinks>number</menulinks>
                                 <menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.id=contributor_track.track and
@@ -323,7 +325,7 @@
                                 <name>Sort by top rated</name>
                                 <menulinks>number</menulinks>
                                 <menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors,track_statistics[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						tracks.id=contributor_track.track and
@@ -380,7 +382,7 @@
 			[% END %]
 			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
                         <menudata>
-				[%- IF showartistwithalbum %]
+				[%- IF showartistwithalbum AND MySQL %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
 				where
 					tracks.id=contributor_track.track and

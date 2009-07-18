@@ -3,8 +3,8 @@
 	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>47</downloadidentifier>
-		<name>SlimServer Albums</name>
-		<description>Standard SlimServer Albums menu</description>
+		<name>Squeezebox Server Albums</name>
+		<description>Standard Squeezebox Server Albums menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Albums"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

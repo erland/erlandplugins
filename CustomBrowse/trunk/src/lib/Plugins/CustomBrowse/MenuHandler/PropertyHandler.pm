@@ -20,12 +20,12 @@ package Plugins::CustomBrowse::MenuHandler::PropertyHandler;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use File::Spec::Functions qw(:ALL);
 use Slim::Utils::Prefs;
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion) );
 
 my $prefs = preferences('plugin.custombrowse');
 
@@ -33,13 +33,11 @@ sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'}
-	};
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
 
-	bless $self,$class;
 	return $self;
 }
 

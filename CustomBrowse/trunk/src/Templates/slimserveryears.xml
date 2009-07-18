@@ -3,8 +3,8 @@
 	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>52</downloadidentifier>
-		<name>SlimServer Years</name>
-		<description>Standard SlimServer Years menu</description>
+		<name>Squeezebox Server Years</name>
+		<description>Standard Squeezebox Server Years menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Years"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

@@ -38,6 +38,7 @@ use Text::Unidecode;
 use SOAP::Lite;
 use Slim::Utils::PluginManager;
 use Slim::Control::Jive;
+use POSIX qw(floor);
 
 use Plugins::CustomBrowse::Settings;
 use Plugins::CustomBrowse::EnabledMixers;
@@ -972,6 +973,74 @@ sub initPlugin {
 	Plugins::CustomBrowse::EnabledContextMenus->new($class);
 	$manageMenuHandler = Plugins::CustomBrowse::ManageMenus->new($class);
 
+	$driver = $serverPrefs->get('dbsource');
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
+	my $dbh = Slim::Schema->storage->dbh();
+	if($driver eq 'SQLite') {
+		$dbh->func('from_unixtime', 1, sub {
+			my ($seconds) = @_;
+			return Slim::Utils::DateTime::shortDateF($seconds).' '.Slim::Utils::DateTime::timeF($seconds);
+		    }, 'create_function');
+		$dbh->func('time_format', 2, sub {
+			my ($str,$format) = @_;
+			return $str;
+		    }, 'create_function');
+		$dbh->func('date_format', 2, sub {
+			my ($str,$format) = @_;
+			return $str;
+		    }, 'create_function');
+		$dbh->func('repeat', 2, sub {
+			my ($str,$repititions) = @_;
+			return $str x $repititions;
+		    }, 'create_function');
+		$dbh->func('floor', 1, sub {
+			my ($number) = @_;
+			if(!defined($number)) {
+				$number = 0;
+			}
+			$number = floor($number); 
+			return $number;
+		    }, 'create_function');
+		$dbh->func('floor', 2, sub {
+			my ($number,$decimals) = @_;
+			if(!defined($number)) {
+				$number = 0;
+			}
+			if($decimals>0) {
+				$number =~s/(^\d{1,}\.\d{$decimals})(.*$)/$1/; 
+			}else {
+				$number =~s/(^\d{1,})(.*$)/$1/; 
+			}
+			return $number;
+		    }, 'create_function');
+		$dbh->func('concat', 2, sub {
+			my ($str1, $str2) = @_;
+			return $str1.$str2;
+		    }, 'create_function');
+		$dbh->func('concat', 3, sub {
+			my ($str1, $str2, $str3) = @_;
+			return $str1.$str2.$str3;
+		    }, 'create_function');
+		$dbh->func('concat', 4, sub {
+			my ($str1, $str2, $str3,$str4) = @_;
+			return $str1.$str2.$str3.$str4;
+		    }, 'create_function');
+		$dbh->func('sec_to_time', 1, sub {
+			my ($sec) = @_;
+			if($sec/(60)>=60) {
+				return int($sec/(60*60)%24).":".(($sec/60)%60).":".($sec%60);
+			}else {
+				return int(($sec/60)).":".($sec%60);
+			}
+		    }, 'create_function');
+	}
+
 	checkDefaults();
 	if(UNIVERSAL::can("Slim::Utils::UPnPMediaServer","registerCallback")) {
 		Slim::Utils::UPnPMediaServer::registerCallback( \&uPNPCallback );
@@ -1619,7 +1688,11 @@ sub webPages {
 
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 
 	if(defined($value)) {
@@ -3264,6 +3337,11 @@ sub cliJiveHandlerImpl {
 	if(defined($itemsPerPage) || $itemsPerPage ne '') {
 		$params->{'itemsperpage'}=$itemsPerPage;
 	}
+	if(defined($params->{'hierarchy'})) {
+		#I am not sure why this is needed, but it solves the case where menu id is non ascii characters
+		$params->{'hierarchy'} = unescape($params->{'hierarchy'});
+		$params->{'hierarchy'} = Slim::Utils::Unicode::utf8on($params->{'hierarchy'});
+	}
 
 	my $menuResult = undef;
 	my $context = undef;
@@ -3500,7 +3578,7 @@ sub cliJiveHandlerImpl {
 			}
 			$request->addResultLoop('item_loop',$cnt,'playHoldAction','go');
 		}
-		if($item->{'playtype'} eq 'none') {
+		if(defined($item->{'playtype'}) && $item->{'playtype'} eq 'none') {
 			foreach my $p (keys %baseParams) {
 				$itemParams{$p}=$baseParams{$p};
 			}

@@ -20,24 +20,23 @@ package Plugins::CustomBrowse::MenuHandler::SQLMix;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMix;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMix);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(propertyHandler sqlHandler playHandler) );
+__PACKAGE__->mk_accessor( rw => qw(propertyHandler sqlHandler playHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'propertyHandler'} = $parameters->{'propertyHandler'};
-	$self->{'sqlHandler'} = $parameters->{'sqlHandler'};
-	$self->{'playHandler'} = $parameters->{'playHandler'};
+	$self->propertyHandler($parameters->{'propertyHandler'});
+	$self->sqlHandler($parameters->{'sqlHandler'});
+	$self->playHandler($parameters->{'playHandler'});
 
-	bless $self,$class;
 	return $self;
 }
 
