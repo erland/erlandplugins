@@ -47,7 +47,7 @@
 				[%- IF includedplaylists or trackstat %]
 				group by tracks.id
 				[%- END %]
-				order by  [% IF orderby == 'random' %]rand()[% ELSIF trackstat %][% IF orderby == 'lastadded' %]track_statistics.added desc[% ELSIF orderby == 'toprated' %]track_statistics.rating desc[% ELSIF orderby == 'mostplayed' %]track_statistics.playcount desc[% END %][% ELSE %][% IF orderby == 'lastadded' %]tracks_persistent.added desc[% ELSIF orderby=='toprated' %]tracks_persistent.rating desc[% ELSIF orderby=='mostplayed' %]tracks_persistent.playcount desc[% END %][% END %]
+				order by  [% IF orderby == 'random' %][% RANDOMFUNCTION %][% ELSIF trackstat %][% IF orderby == 'lastadded' %]track_statistics.added desc[% ELSIF orderby == 'toprated' %]track_statistics.rating desc[% ELSIF orderby == 'mostplayed' %]track_statistics.playcount desc[% END %][% ELSE %][% IF orderby == 'lastadded' %]tracks_persistent.added desc[% ELSIF orderby=='toprated' %]tracks_persistent.rating desc[% ELSIF orderby=='mostplayed' %]tracks_persistent.playcount desc[% END %][% END %]
 				[% IF nooftracks %]limit [% nooftracks %][% END %]
 		</statement>
 		[% IF customskipfilter %]

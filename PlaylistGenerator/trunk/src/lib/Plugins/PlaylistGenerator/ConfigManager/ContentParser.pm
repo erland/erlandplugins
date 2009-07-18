@@ -19,7 +19,7 @@
 package Plugins::PlaylistGenerator::ConfigManager::ContentParser;
 
 use strict;
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::PlaylistGenerator::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::PlaylistGenerator::ConfigManager::BaseParser);
 
@@ -33,7 +33,6 @@ sub new {
 
 	$parameters->{'contentType'} = 'playlistdefinition';
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
 	return $self;
 }
 

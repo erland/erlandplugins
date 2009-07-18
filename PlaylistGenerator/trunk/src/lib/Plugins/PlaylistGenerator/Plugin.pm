@@ -154,7 +154,11 @@ sub webPages {
 	);
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 
 	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_PLAYLISTGENERATOR' => 'plugins/PlaylistGenerator/playlistgenerator_list.html' });

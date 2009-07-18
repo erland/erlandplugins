@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <playlistgenerator>
+	<minpluginversion>1.1</minpluginversion>
 	<template>
 		<downloadidentifier>228</downloadidentifier>
 		<name>Dependent playlist</name>
