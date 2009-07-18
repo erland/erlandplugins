@@ -416,7 +416,7 @@ sub init {
 	}
     
 	# Only perform refresh at startup if this has been activated
-	return unless $prefs->get("refresh_startup") && $driver eq 'mysql';
+	return unless ($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan'));
 	refreshTracks();
 }
 
