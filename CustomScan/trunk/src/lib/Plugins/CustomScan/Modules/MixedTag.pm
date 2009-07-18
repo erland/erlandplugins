@@ -27,6 +27,7 @@ use DBI qw(:sql_types);
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Prefs;
 my $prefs = preferences('plugin.customscan');
+my $serverPrefs = preferences('server');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.customscan',
@@ -36,6 +37,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my %friendlyNames = ();
 my %friendlyNamesList = ();
+my $driver;
 sub getCustomScanFunctions {
 	my %functions = (
 		'id' => 'mixedtag',
@@ -326,6 +328,14 @@ sub getMixedTagMenuItems {
 	%friendlyNames = ();
 	%friendlyNamesList = ();
 
+	$driver = $serverPrefs->get('dbsource');
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+
 	my $tags = $parameters->{'usedtags'};
 	my $supportedTags = undef;
 	if(defined($tags)) {
@@ -451,7 +461,7 @@ sub getMixedTagMenuItems {
 	my $customtagsql = undef;
 	if(!defined($currentTag)) {
 		$taggroupssql = "select customscan_track_attributes.attr,customscan_track_attributes.attr,substr(customscan_track_attributes.attr,1,1),customscan_track_attributes.valuetype from customscan_track_attributes ";
-		if(scalar(@items)==0 && !defined($currentItem)) {
+		if(scalar(@items)==0 && !defined($currentItem) && $driver eq 'mysql') {
 			$taggroupssql .= "use index (attr_module_idx) "; 
 		}
 		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
@@ -523,7 +533,7 @@ sub getMixedTagMenuItems {
 			$albumssqlbyartists .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 			$albumssqlbyartists .= "left join contributors on contributor_track.contributor=contributors.id ";
 
-			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'}) {
+			if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} && $driver eq 'mysql') {
 				$albumssql = "select albums.id,ifnull(if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),' '),substr(albums.titlesort,1,1),'album' from albums join tracks on tracks.album=albums.id ";
 				$albumssql .= "left join contributor_track on contributor_track.track=tracks.id and contributor_track.role in ($roles) ";
 				$albumssql .= "left join contributors on contributor_track.contributor=contributors.id ";
@@ -787,7 +797,7 @@ sub getMixedTagMenuItems {
 			'menudata' => $albumssql,
 			'menu' => \%menutracks
 		);
-		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'}) {
+		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} && $driver eq 'mysql') {
 			$menualbums{'itemformat'} = 'albumconcat';
 		}
 		if(defined($parameters->{'defaultalbumsort'}) && $parameters->{'defaultalbumsort'}) {
@@ -815,7 +825,9 @@ sub getMixedTagMenuItems {
 		my @options = ();
 		push @options, \%menualbumsbytitle;
 		push @options, \%menualbumsbyyear;
-		push @options, \%menualbumsbyartists;
+		if($driver eq 'mysql') {
+			push @options, \%menualbumsbyartists;
+		}
 		$menualbums{'option'} = \@options;
 
 		my %allalbums = (
