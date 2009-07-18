@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<database>mysql</database>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -86,7 +85,7 @@
 				[%- END %]
 				group by albums.id
 				[%- END %]
-				order by [% RANDOM_FUNCTION %]
+				order by [% RANDOMFUNCTION %]
 				[% IF noofalbums %]
 				limit [% noofalbums %]
 				[% END %]

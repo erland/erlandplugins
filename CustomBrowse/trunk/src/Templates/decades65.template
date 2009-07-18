@@ -27,7 +27,7 @@
 						tracks.audio=1 and
 						tracks.year&gt;={year} and
 						tracks.year&lt;{year}+10
-					order by [% RANDOM_FUNCTION %]
+					order by [% RANDOMFUNCTION %]
 					limit {custombrowse.mixsize}
 				</mixdata>
 			</mix>
