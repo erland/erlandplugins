@@ -19,7 +19,7 @@
 package Plugins::PlaylistGenerator::ConfigManager::TemplateContentParser;
 
 use strict;
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::PlaylistGenerator::ConfigManager::ContentParser;
 our @ISA = qw(Plugins::PlaylistGenerator::ConfigManager::ContentParser);
 
@@ -31,7 +31,7 @@ use File::Spec::Functions qw(:ALL);
 use File::Slurp;
 use FindBin qw($Bin);
 
-__PACKAGE__->mk_classaccessors( qw(templatePluginHandler) );
+__PACKAGE__->mk_accessor( rw => qw(templatePluginHandler) );
 
 my $prefs = preferences('plugin.playlistgenerator');
 
@@ -41,8 +41,8 @@ sub new {
 
 	$parameters->{'contentType'} = 'playlistdefinition';
 	my $self = $class->SUPER::new($parameters);
-	$self->{'templatePluginHandler'} = $parameters->{'templatePluginHandler'};
-	bless $self,$class;
+	$self->templatePluginHandler($parameters->{'templatePluginHandler'});
+
 	return $self;
 }
 

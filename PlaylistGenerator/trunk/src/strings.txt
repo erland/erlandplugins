@@ -11,7 +11,7 @@ SETUP_PLUGIN_PLAYLISTGENERATOR_GROUP
 	EN	Playlist Generator
 
 SETUP_PLUGIN_PLAYLISTGENERATOR_GROUP_DESC
-	EN	Playlist Generator is a plugin to make it easier to create static playlists based on the information in SqueezeCenter database
+	EN	Playlist Generator is a plugin to make it easier to create static playlists based on the information in Squeezebox Server database
 
 SETUP_PLUGIN_PLAYLISTGENERATOR_DONATE_LINK
 	EN	Click here to donate
