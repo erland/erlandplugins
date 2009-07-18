@@ -19,7 +19,7 @@
 package Plugins::DatabaseQuery::ConfigManager::ContentParser;
 
 use strict;
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::DatabaseQuery::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::DatabaseQuery::ConfigManager::BaseParser);
 
@@ -33,7 +33,6 @@ sub new {
 
 	$parameters->{'contentType'} = 'dataquery';
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
 	return $self;
 }
 

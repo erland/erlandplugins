@@ -15,7 +15,7 @@
 		<parameter type="checkbox" id="withalbums" name="With albums" value=""/>
 		<parameter type="checkbox" id="withoutalbums" name="Without albums" value=""/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
-		<parameter type="checkbox" id="showroles" name="Show roles" value="0"/>
+		<parameter type="checkbox" id="showroles" name="Show roles (Only MySQL)" value="0"/>
 		<parameter type="checkbox" id="showartistsort" name="Show sort column" value="0"/>
 		<parameter type="checkbox" id="showmusicbrainz" name="Show musicbrainz tag" value="0"/>
 	</template>

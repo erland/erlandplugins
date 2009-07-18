@@ -55,20 +55,20 @@
 		</query>
 		[% IF SqueezeCenterVersion >= 7.1 %]
 		<query>
-			select 'Number of played unique songs' as parameter,count(*) from tracks,tracks_persistent where tracks.id=tracks_persistent.track and audio=1 and playcount>0
+			select 'Number of played unique songs' as parameter,count(*) from tracks,tracks_persistent where tracks.url=tracks_persistent.url and audio=1 and playcount>0
 		</query>
 		<query>
-			select 'Number of totally played songs' as parameter,sum(tracks_persistent.playcount) from tracks,tracks_persistent where tracks.id=tracks_persistent.track and audio=1 and playcount>0
+			select 'Number of totally played songs' as parameter,sum(tracks_persistent.playcount) from tracks,tracks_persistent where tracks.url=tracks_persistent.url and audio=1 and playcount>0
 		</query>
 		<query>
-			select 'Number of unplayed songs' as parameter,count(*) from tracks,tracks_persistent where tracks.id=tracks_persistent.track and audio=1 and (playcount=0 or playcount is null)
+			select 'Number of unplayed songs' as parameter,count(*) from tracks,tracks_persistent where tracks.url=tracks_persistent.url and audio=1 and (playcount=0 or playcount is null)
 		</query>
 		<query>
 			select 'Number of unplayed albums' as parameter,count(distinct albums.id) from albums
 				left join tracks on
 					tracks.album=albums.id
 				join tracks_persistent on
-					tracks.id=tracks_persistent.track
+					tracks.url=tracks_persistent.url
 			where 
 				(tracks.id is null or tracks.audio=1) and 
 				(tracks_persistent.playcount=0 or tracks_persistent.playcount is null)
@@ -80,16 +80,16 @@
 				left join tracks on
 					contributor_track.track=tracks.id
 				join tracks_persistent on
-					tracks.id=tracks_persistent.track
+					tracks.url=tracks_persistent.url
 			where 
 				(tracks.id is null or tracks.audio=1) and 
 				(tracks_persistent.playcount=0 or tracks_persistent.playcount is null)
 		</query>
 		<query>
-			select 'Number of rated songs' as parameter,count(*) from tracks,tracks_persistent where tracks.id=tracks_persistent.track and audio=1 and rating>0
+			select 'Number of rated songs' as parameter,count(*) from tracks,tracks_persistent where tracks.url=tracks_persistent.url and audio=1 and rating>0
 		</query>
 		<query>
-			select 'Number of unrated songs' as parameter,count(*) from tracks,tracks_persistent where tracks.id=tracks_persistent.track and audio=1 and (rating is null or rating=0)
+			select 'Number of unrated songs' as parameter,count(*) from tracks,tracks_persistent where tracks.url=tracks_persistent.url and audio=1 and (rating is null or rating=0)
 		</query>
 		[% ELSE %]
 		<query>

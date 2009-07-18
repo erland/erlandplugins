@@ -2,6 +2,6 @@
 <databasequery>
 	<template>
 		<id>slimserverstatistics.xml</id>
-		<parameter type="text" id="queryname"><value>SlimServer Statistics</value></parameter>
+		<parameter type="text" id="queryname"><value>Squeezebox Server Statistics</value></parameter>
 	</template>
 </databasequery>

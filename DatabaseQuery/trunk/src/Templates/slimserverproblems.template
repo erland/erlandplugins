@@ -281,11 +281,13 @@
 				</query>
 			</querytree>
 		</querytree>
+		[% IF MySQL %]
 		<querytree>
 			<query>
 				select distinct 'Unsupported old MySQL version' as 'Problem type',if(substring_index(version(),'.',1)&lt;5,'Yes','No') as 'Possible problem', version() as 'Number of'
 			</query>
 		</querytree>
+		[% END %]
 	</dataquery>
 </databasequery>
 
