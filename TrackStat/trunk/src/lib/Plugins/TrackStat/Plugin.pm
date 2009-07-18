@@ -2224,7 +2224,7 @@ sub setDynamicPlaylistParams {
 
 	my $dynamicPlaylist;
 	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
-		$dynamicPlaylist = Slim::Utils::PluginManager->isEnabled("Plugin::DynamicPlayList::Plugin");
+		$dynamicPlaylist = Slim::Utils::PluginManager->isEnabled("Plugins::DynamicPlayList::Plugin");
 	}else {
 		$dynamicPlaylist = grep(/DynamicPlayList/, Slim::Utils::PluginManager->enabledPlugins($client));
 	}
@@ -4401,7 +4401,7 @@ sub setCLIAlbumRating {
 	}else {
 		$unratedTracks = Plugins::TrackStat::Storage::getUnratedTracksOnAlbum($albumId);
 	}
-	my $type = request->getParam('type') || 'user';
+	my $type = $request->getParam('type') || 'user';
 	foreach my $url (@$unratedTracks) {
 		rateSong($client,$url,$rating,$type);
 	}
