@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 2. PREREQUISITES
 ================
-- A slimserver 6.5 installed and configured (6.3 might work but it has not been tested)
+- A Squeezebox Server 7.4 or later installed and configured
 
 3. FILES
 ========
