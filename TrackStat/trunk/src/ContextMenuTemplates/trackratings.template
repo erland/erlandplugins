@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>TrackStat</requireplugins>
-	<database>mysql</database>
 	<menu>
 		[% IF interfaces %]<interfaces>[% interfaces %]</interfaces>[% END %]
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
@@ -33,7 +32,7 @@
 				[%- ELSE %]
 				ifnull(track_statistics.rating,0)&gt;={rating}-10 and ifnull(track_statistics.rating,0)&lt;{rating}+10
 				[%- END %]
-			order by [% RANDOM_FUNCTION %]
+			order by [% RANDOMFUNCTION %]
 		</playdata>
 		<menutype>sql</menutype>
 		<menudata>
@@ -78,7 +77,7 @@
 					ifnull(track_statistics.rating,0)&gt;={rating}-10 and ifnull(track_statistics.rating,0)&lt;{rating}+10
 					[%- END %]
 				group by tracks.id
-				order by [% RANDOM_FUNCTION %]
+				order by [% RANDOMFUNCTION %]
 			</playdata>
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
@@ -126,7 +125,7 @@
 						ifnull(track_statistics.rating,0)&gt;={rating}-10 and ifnull(track_statistics.rating,0)&lt;{rating}+10
 						[%- END %]
 					group by tracks.id
-					order by [% RANDOM_FUNCTION %]
+					order by [% RANDOMFUNCTION %]
 				</playdata>
 				<menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
