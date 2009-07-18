@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
-	<minslimserverversion>6.5</minslimserverversion>
+	<minpluginversion>2.9</minpluginversion>
 	<mix>
 		<mixname>LastFM Similar Artists</mixname>
 		<mixcategory>track</mixcategory>
@@ -60,7 +60,7 @@
 					where
 						audio=1
 					)
-					order by rand()
+					order by {RANDOM_FUNCTION}
 					limit {custombrowse.mixsize}
 				</playdata>
 				<menu>

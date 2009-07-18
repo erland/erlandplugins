@@ -73,7 +73,7 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
-	if($prefs->get("refresh_startup")) {
+	if($prefs->get("refresh_startup") && $driver eq 'mysql') {
 		refreshData();
 	}
 }
@@ -1000,18 +1000,6 @@ sub initArtistScan {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my @joins = ();
-	push @joins, 'contributorTracks';
-	my $artists = Slim::Schema->resultset('Contributor')->search(
-		{'contributorTracks.role' => {'in' => [1,5]}},
-		{
-			'group_by' => 'me.id',
-			'join' => \@joins
-		}
-	);
-	$scanningContext->{'artists'} = $artists;
-
-	$log->info("Got ".$artists->count." artists\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
@@ -1020,6 +1008,7 @@ sub initArtistScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $needToScanArtists = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $key;
@@ -1057,6 +1046,22 @@ sub initArtistScan {
 			}
 			$timeMeasure->stop();
 		}
+		if(defined($module->{'scanArtist'})) {
+			$needToScanArtists = 1;
+		}
+	}
+	if($needToScanArtists) {
+		my @joins = ();
+		push @joins, 'contributorTracks';
+		my $artists = Slim::Schema->resultset('Contributor')->search(
+			{'contributorTracks.role' => {'in' => [1,5]}},
+			{
+				'group_by' => 'me.id',
+				'join' => \@joins
+			}
+		);
+		$scanningContext->{'artists'} = $artists;
+		$log->info("Got ".$artists->count." artists\n");
 	}
 	my %context = ();
 	Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
@@ -1141,9 +1146,6 @@ sub initAlbumScan {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my $albums = Slim::Schema->resultset('Album');
-	$scanningContext->{'albums'} = $albums;
-	$log->info("Got ".$albums->count." albums\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
@@ -1152,6 +1154,7 @@ sub initAlbumScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $needToScanAlbums = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
@@ -1198,6 +1201,14 @@ sub initAlbumScan {
 			}
 			use strict 'refs';
 		}
+		if(defined($module->{'scanAlbum'})) {
+			$needToScanAlbums = 1;
+		}
+	}
+	if($needToScanAlbums) {
+		my $albums = Slim::Schema->resultset('Album');
+		$scanningContext->{'albums'} = $albums;
+		$log->info("Got ".$albums->count." albums\n");
 	}
 	my %context = ();
 	Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
@@ -1243,9 +1254,6 @@ sub initTrackScan {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my $tracks = Slim::Schema->resultset('Track');
-	$scanningContext->{'tracks'} = $tracks;
-	$log->info("Got ".$tracks->count." tracks\n");
 	my $dbh = getCurrentDBH();
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
@@ -1254,6 +1262,7 @@ sub initTrackScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $needToScanTracks = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
 		my $moduleId = $module->{'id'};
@@ -1332,6 +1341,14 @@ sub initTrackScan {
 				$log->info("Deleted track data after ".$timeMeasure->getElapsedTime()." seconds\n");
 			}
 		}
+		if(defined($module->{'scanTrack'})) {
+			$needToScanTracks = 1;
+		}
+	}
+	if($needToScanTracks) {
+		my $tracks = Slim::Schema->resultset('Track');
+		$scanningContext->{'tracks'} = $tracks;
+		$log->info("Got ".$tracks->count." tracks\n");
 	}
 	my %context = ();
 	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
@@ -1647,7 +1664,7 @@ sub scanTrack {
 		$track = $scanningContext->{'tracks'}->next;
 		my $maxCharacters = ($useLongUrls?511:255);
 		# Skip non audio tracks and tracks with url longer than max number of characters
-		while(defined($track) && (!$track->audio || length($track->url)>$maxCharacters)) {
+		while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
 			$track = $scanningContext->{'tracks'}->next;
 		}
 	}
@@ -1789,7 +1806,7 @@ sub refreshData
 		my $module = $modules->{$moduleKey};
 		if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
 			if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
-				$log->info("Rescan triggered by module: ".$module->{'name'});				
+				$log->info("Refresh triggered by module: ".$module->{'name'});				
 				$performRefresh=1;
 				last;
 			}
@@ -2014,23 +2031,67 @@ sub refreshData
 	# First lets refresh all urls with musicbrainz id's
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks,customscan_track_attributes SET customscan_track_attributes.url=tracks.url, customscan_track_attributes.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<512";
-	}else {
-		$sql = "UPDATE customscan_track_attributes SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<512), track=(select tracks.id from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<512) where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=customscan_track_attributes.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id) and length(tracks.url)<512)";
-	}
-	$sth = $dbh->prepare( $sql );
-	$count = 0;
-	eval {
-		$count = $sth->execute();
-		if($count eq '0E0') {
-			$count = 0;
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
+			}
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->error("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
 		}
-		commit($dbh);
-	};
-	if( $@ ) {
-	    $log->error("Database error: $DBI::errstr\n");
-	    eval {
-	    	rollback($dbh); #just die if rollback is failing
-	    };
+	}else {
+		$sql = "create temp table temp_customscan_track_attributes as select tracks.id,tracks.url,tracks.musicbrainz_id from tracks,customscan_track_attributes where customscan_track_attributes.musicbrainz_id is not null and customscan_track_attributes.musicbrainz_id=tracks.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
+		$sth = $dbh->prepare( $sql );
+		$count = 0;
+		eval {
+			$count = $sth->execute();
+			if($count eq '0E0') {
+				$count = 0;
+			}
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->error("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
+		}else {
+			$sql = "UPDATE customscan_track_attributes SET url=(select url from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id),track=(select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id) where exists (select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id)";
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->error("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}
+			$sql = "drop table temp_customscan_track_attributes";
+			$sth = $dbh->prepare( $sql );
+			eval {
+				$sth->execute();
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->error("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}
+		}
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan track data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");

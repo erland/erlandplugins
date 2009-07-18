@@ -133,5 +133,5 @@ select tracks.url from tracks
 		and excludedstyle.track is null
 		[%- END %]
 	group by tracks.id
-	order by rand()
+	order by [% RANDOM_FUNCTION %]
 	[% IF nooftracks %]limit [% nooftracks %][% END %];

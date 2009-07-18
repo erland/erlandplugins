@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>64</downloadidentifier>
 		<name>Custom Tags Albums</name>
@@ -9,7 +9,7 @@
 		<parameter type="text" id="menuname" name="Menu name" value="Custom Tags Albums"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
-		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album" value=""/>
+		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album (Only MySQL)" value=""/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="singlelist" id="datasource" name="Scanning module" value="customtag" data="customtag=Custom Tag,mixedtag=Mixed Tag"/>
 		<parameter type="text" id="customtag" name="Tag name" value="OWNER"/>

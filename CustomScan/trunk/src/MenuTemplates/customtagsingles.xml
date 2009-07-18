@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<database>mysql</database>
 	<requireplugins>CustomScan</requireplugins>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>62</downloadidentifier>
 		<name>Custom Tag Singles</name>

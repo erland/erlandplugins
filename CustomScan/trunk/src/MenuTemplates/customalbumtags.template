@@ -12,7 +12,7 @@
 			<id>album</id>
 			<menuname>[% IF customtagtext %][% customtagtext %][% ELSE %]Tags[% END %]</menuname>
 			<itemtype>album</itemtype>
-			[%- IF showartistwithalbum %]
+			[%- IF showartistwithalbum AND MySQL %]
 			<itemformat>albumconcat</itemformat>
 			[% ELSE %]
 			<itemformat>album</itemformat>
@@ -31,6 +31,7 @@
 				<menulinks>alpha</menulinks>
 				<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			</option>
+			[%- IF MySQL %]
 			<option>
 				<id>byartist</id>
 				<name>Sort by artist</name>
@@ -53,9 +54,10 @@
 					order by contributors.namesort asc,albums.year desc,albums.disc asc
 				</menudata>
 			</option>
+			[%- END %]
 	        	<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 			<menudata>
-				[%- IF showartistwithalbum %]
+				[%- IF showartistwithalbum AND MySQL %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,tracks,customscan_track_attributes,contributor_track,contributors[% IF library or activelibrary %],multilibrary_track[% END %]
 				where
 					[%- IF library or activelibrary %]
