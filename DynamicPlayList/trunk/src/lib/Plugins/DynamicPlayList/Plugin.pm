@@ -2056,7 +2056,7 @@ sub mixerlink {
 		}
 	
 		if(defined($form->{'albumid'}) || defined($form->{'trackid'}) || defined($form->{'playlist'})) {
-			if($playListTypes->{$form->{'dynamicplaylist_playlisttype'}}) {
+			if(defined($form->{'dynamicplaylist_playlisttype'}) && exists $playListTypes->{$form->{'dynamicplaylist_playlisttype'}}) {
 	    			$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 			}
 		}
