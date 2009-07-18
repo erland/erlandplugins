@@ -73,7 +73,7 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
-	if($prefs->get("refresh_startup") && $driver eq 'mysql') {
+	if($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan')) {
 		refreshData();
 	}
 }

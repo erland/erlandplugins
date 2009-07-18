@@ -44,7 +44,7 @@
 					[% IF customtagvalue %]and customscan_track_attributes.value='[% customtagvalue %]'[% END %]
 					[%- END %]
 				group by tracks.id
-				order by [% RANDOM_FUNCTION %]
+				order by [% RANDOMFUNCTION %]
                         </playdata>
 	        	<menudata>
 				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
@@ -125,7 +125,7 @@
 						customscan_track_attributes.attr='[% customtag %]' and
 						customscan_track_attributes.value='{album}'
 					group by tracks.id
-					order by [% RANDOM_FUNCTION %]
+					order by [% RANDOMFUNCTION %]
 	                        </playdata>
 				<customitemtype>customtag[% customtag %]</customitemtype>
 		        	<menudata>

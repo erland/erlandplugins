@@ -60,7 +60,7 @@
 					where
 						audio=1
 					)
-					order by {RANDOM_FUNCTION}
+					order by {RANDOMFUNCTION}
 					limit {custombrowse.mixsize}
 				</playdata>
 				<menu>
