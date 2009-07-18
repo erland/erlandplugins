@@ -224,7 +224,7 @@ SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP
 	EN	Startup refresh
 
 SETUP_PLUGIN_MULTILIBRARY_REFRESH_STARTUP_DESC
-	EN	Refresh libraries at slimserver startup
+	EN	Refresh libraries at Squeezebox Server startup
 
 SETUP_PLUGIN_MULTILIBRARY_CUSTOMBROWSE_MENUS
 	EN	Custom Browse menus
@@ -236,7 +236,7 @@ SETUP_PLUGIN_MULTILIBRARY_UTF8FILENAMES
 	EN	Filename encoding
 
 SETUP_PLUGIN_MULTILIBRARY_UTF8FILENAMES_DESC
-	EN	UTF-8 encoded filenames (requires slimserver restart)
+	EN	UTF-8 encoded filenames (requires Squeezebox Server restart)
 
 SETUP_PLUGIN_MULTILIBRARY_QUESTION_STARTUP
 	EN	Ask for library

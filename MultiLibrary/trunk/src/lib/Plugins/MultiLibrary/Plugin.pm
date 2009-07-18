@@ -48,6 +48,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 	'defaultLevel' => 'WARN',
 	'description'  => 'PLUGIN_MULTILIBRARY',
 });
+my $driver;
 
 $prefs->migrate(1, sub {
 	$prefs->set('library_directory', Slim::Utils::Prefs::OldPrefs->get('plugin_multilibrary_library_directory') || $serverPrefs->get('playlistdir')  );
@@ -820,7 +821,7 @@ sub initPlugin {
 	    	$log->error("Startup error: $@\n");
 	}		
 
-	if($prefs->get("refresh_startup")) {
+	if($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan')) {
 		refreshLibraries();
 	}
 	if ( !$MULTILIBRARY_HOOK ) {
@@ -1158,8 +1159,8 @@ sub replaceParameters {
     if(defined($parameters)) {
         for my $param (keys %$parameters) {
             my $value = encode_entities($parameters->{$param},"&<>\'\"");
-	    $value = Slim::Utils::Unicode::utf8on($value);
-	    $value = Slim::Utils::Unicode::utf8encode_locale($value);
+#	    $value = Slim::Utils::Unicode::utf8on($value);
+#	    $value = Slim::Utils::Unicode::utf8encode_locale($value);
             $originalValue =~ s/\{$param\}/$value/g;
         }
     }
@@ -1178,8 +1179,13 @@ sub replaceParameters {
 }
 
 sub initDatabase {
-	my $driver = $serverPrefs->get('dbsource');
+	$driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
     
 	#Check if tables exists and create them if not
 	$log->debug("Checking if multilibrary_track database table exists\n");
@@ -1196,39 +1202,41 @@ sub initDatabase {
 		executeSQLFile("dbcreate.sql");
 	}
 
-	my $sth = $dbh->prepare("show create table tracks");
-	my $charset;
-	eval {
-		$log->debug("Checking charsets on tables\n");
-		$sth->execute();
-		my $line = undef;
-		$sth->bind_col( 2, \$line);
-		if( $sth->fetch() ) {
-			if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
-				$charset = $1;
-				my $collate = '';
-				if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
-					$collate = $1;
-				}elsif($line =~ /.*collate\s+([^\s\r\n]+).*/) {
-					$collate = $1;
-				}
-				$log->debug("Got tracks charset = $charset and collate = $collate\n");
+	if($driver eq 'mysql') {
+		my $sth = $dbh->prepare("show create table tracks");
+		my $charset;
+		eval {
+			$log->debug("Checking charsets on tables\n");
+			$sth->execute();
+			my $line = undef;
+			$sth->bind_col( 2, \$line);
+			if( $sth->fetch() ) {
+				if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+					$charset = $1;
+					my $collate = '';
+					if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+						$collate = $1;
+					}elsif($line =~ /.*collate\s+([^\s\r\n]+).*/) {
+						$collate = $1;
+					}
+					$log->debug("Got tracks charset = $charset and collate = $collate\n");
 				
-				if(defined($charset)) {
+					if(defined($charset)) {
 					
-					$sth->finish();
-					updateCharSet("multilibrary_track",$charset,$collate);
-					updateCharSet("multilibrary_album",$charset,$collate);
-					updateCharSet("multilibrary_contributor",$charset,$collate);
-					updateCharSet("multilibrary_libraries",$charset,$collate);
+						$sth->finish();
+						updateCharSet("multilibrary_track",$charset,$collate);
+						updateCharSet("multilibrary_album",$charset,$collate);
+						updateCharSet("multilibrary_contributor",$charset,$collate);
+						updateCharSet("multilibrary_libraries",$charset,$collate);
+					}
 				}
 			}
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr\n");
 		}
-	};
-	if( $@ ) {
-	    $log->warn("Database error: $DBI::errstr\n");
+		$sth->finish();
 	}
-	$sth->finish();
 }
 
 sub updateCharSet {
@@ -1267,8 +1275,6 @@ sub updateCharSet {
 
 sub executeSQLFile {
         my $file  = shift;
-	my $driver = $serverPrefs->get('dbsource');
-	$driver =~ s/dbi:(.*?):(.*)$/$1/;
 
         my $sqlFile;
 	for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
@@ -1355,7 +1361,11 @@ sub webPages {
 	);
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_MULTILIBRARY' => 'plugins/MultiLibrary/multilibrary_list.html' });
 }
