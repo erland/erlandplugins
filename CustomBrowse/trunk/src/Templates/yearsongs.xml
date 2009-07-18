@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minslimserverversion>6.5</minslimserverversion>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>182</downloadidentifier>
 		<name>Year Songs</name>
@@ -10,7 +9,7 @@
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="functionoptionalsinglelist" id="usetitleformat" name="Use custom title" value="" data="Plugins::CustomBrowse::Plugin,getAvailableTitleFormats"/>
-		<parameter type="checkbox" id="showartistwithsong" name="Show artist with song" value=""/>
+		<parameter type="checkbox" id="showartistwithsong" name="Show artist with song (Only MySQL)" value=""/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="singlelist" id="defaultsongsort" name="Default song sorting" value="bytitle" data="bytrackno=By song no,bytitle=By title,byartist=By artist"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected year" value="1"/>

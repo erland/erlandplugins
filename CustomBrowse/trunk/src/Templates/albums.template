@@ -12,7 +12,7 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
-			[%- IF showartistwithalbum %]
+			[%- IF showartistwithalbum AND MySQL %]
 			<itemformat>albumconcat</itemformat>
 			[%- ELSE %]
 			<itemformat>album</itemformat>
@@ -31,7 +31,7 @@
 				<itemformat>albumconcat</itemformat>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 					where
 						[%- IF library or activelibrary %]
@@ -53,6 +53,7 @@
 					order by albums.year desc, albums.titlesort asc,albums.disc asc
 				</menudata>
 			</option>
+			[%- IF MySQL  %]
 			<option>
 				<id>byartist</id>
 				<name>Sort by artist</name>
@@ -72,13 +73,14 @@
 					order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 				</menudata>
 			</option>
+			[%- END %]
 			[% IF trackstat %]
 			<option>
 				<id>byadded</id>
 				<name>Sort by last added</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
@@ -110,7 +112,7 @@
 				<name>Sort by last played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
@@ -142,7 +144,7 @@
 				<name>Sort by most played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
@@ -174,7 +176,7 @@
 				<name>Sort by top rated</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum %]
+					[%- IF showartistwithalbum AND MySQL %]
 					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
@@ -204,7 +206,7 @@
 			[% END %]
 			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 			<menudata>
-				[%- IF showartistwithalbum %]
+				[%- IF showartistwithalbum AND MySQL %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 				where
 					[%- IF library or activelibrary %]

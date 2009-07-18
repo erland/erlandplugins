@@ -20,20 +20,19 @@ package Plugins::CustomBrowse::MenuHandler::BaseMix;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'}
-	};
-	bless $self,$class;
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+
 	return $self;
 }
 

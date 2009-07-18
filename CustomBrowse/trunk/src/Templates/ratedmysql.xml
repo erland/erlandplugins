@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<database>mysql</database>
 	<requireplugins>TrackStat</requireplugins>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>44</downloadidentifier>
 		<name>Ratings</name>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minpluginversion>2.0</minpluginversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>18</downloadidentifier>
 		<name>Albums</name>
@@ -10,7 +10,7 @@
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>
 		<parameter type="checkbox" id="trackstat" requireplugins="TrackStat::Plugin" name="Show TrackStat statistics sorting options" value="1"/>
 		<parameter type="singlelist" id="defaultalbumsort" name="Default album sorting" value="bytitle" data="bytitle=By title,byyear=By year,byartist=By artist,byadded=By last added,bylastplayed=By last played,bymostplayed=By most played,bytoprated=By top rated"/>
-		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album" value=""/>
+		<parameter type="checkbox" id="showartistwithalbum" name="Show artist with album (Only MySQL)" value=""/>
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>

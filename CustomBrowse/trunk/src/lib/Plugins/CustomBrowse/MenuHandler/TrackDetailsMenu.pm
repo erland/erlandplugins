@@ -24,15 +24,15 @@ our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenu);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(itemParameterHandler) );
+__PACKAGE__->mk_accessor( rw => qw(itemParameterHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
-	bless $self,$class;
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+
 	return $self;
 }
 
@@ -96,7 +96,7 @@ sub getCustomUrl {
 		return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
 	}else {
 		my $track = Slim::Schema->resultset('Track')->find($id);
-		return 'plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&contextid='.escape($id).'&contexttype=track&contextname='.escape($track->title).'&player='.$params->{'player'};
+		return 'plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&contextid='.escape($id).'&contexttype=track&contextname='.escape($track->title).(defined($params->{'player'})?'&player='.$params->{'player'}:'');
 	}
 }
 

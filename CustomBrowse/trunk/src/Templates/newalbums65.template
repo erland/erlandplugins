@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minslimserverversion>6.5</minslimserverversion>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -17,7 +16,7 @@
 	                <menutype>sql</menutype>
 			<jivepattern>^(.*)\s\(([^,]+),?(.*)\)$</jivepattern>
 	                <menudata>
-				[%- IF showartistwithalbum %]
+				[%- IF showartistwithalbum AND MySQL %]
 				select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')) from tracks
 					join contributor_track on
 						tracks.id=contributor_track.track and

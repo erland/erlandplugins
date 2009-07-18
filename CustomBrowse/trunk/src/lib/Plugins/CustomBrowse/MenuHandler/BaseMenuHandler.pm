@@ -20,7 +20,7 @@ package Plugins::CustomBrowse::MenuHandler::BaseMenuHandler;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use Plugins::CustomBrowse::MenuHandler::MixHandler;
 use File::Spec::Functions qw(:ALL);
@@ -31,7 +31,7 @@ use Slim::Utils::Prefs;
 use Slim::Utils::Strings;
 use Plugins::CustomBrowse::MenuHandler::WrappedMix;
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
 
 use Data::Dumper;
 
@@ -42,22 +42,21 @@ sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'},
-		'propertyHandler' => $parameters->{'propertyHandler'},
-		'itemParameterHandler' => $parameters->{'itemParameterHandler'},
-		'menuTitle' => $parameters->{'menuTitle'},
-		'menuMode' => $parameters->{'menuMode'},
-		'menuHandlers' => $parameters->{'menuHandlers'},
-		'overlayCallback' => $parameters->{'overlayCallback'},
-		'displayTextCallback' => $parameters->{'displayTextCallback'},
-		'playHandlers' => $parameters->{'playHandlers'},
-		'requestSource' => $parameters->{'requestSource'},
-		'showMixBeforeExecuting' => $parameters->{'showMixBeforeExecuting'},
-		'sqlHandler' => $parameters->{'sqlHandler'},
-	};
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+	$self->propertyHandler($parameters->{'propertyHandler'});
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+	$self->menuTitle($parameters->{'menuTitle'});
+	$self->menuMode($parameters->{'menuMode'});
+	$self->menuHandlers($parameters->{'menuHandlers'});
+	$self->overlayCallback($parameters->{'overlayCallback'});
+	$self->displayTextCallback($parameters->{'displayTextCallback'});
+	$self->playHandlers($parameters->{'playHandlers'});
+	$self->requestSource($parameters->{'requestSource'});
+	$self->showMixBeforeExecuting($parameters->{'showMixBeforeExecuting'});
+	$self->sqlHandler($parameters->{'sqlHandler'});
 
 	my %parameters = (
 		'logHandler' => $parameters->{'logHandler'},
@@ -67,10 +66,8 @@ sub new {
 		'itemParameterHandler' => $parameters->{'itemParameterHandler'},
 		'mixHandlers' => $parameters->{'mixHandlers'}
 	);
-	$self->{'mixHandler'} = Plugins::CustomBrowse::MenuHandler::MixHandler->new(\%parameters);
+	$self->mixHandler(Plugins::CustomBrowse::MenuHandler::MixHandler->new(\%parameters));
 
-	$self->{'items'} = undef;
-	bless $self,$class;
 	return $self;
 }
 
@@ -897,7 +894,7 @@ sub getPageItemsForContext {
 		my $anchorText;
 		my $lastAnchor = '';
 		for my $it (@$items) {
-			if($menulinks ne 'alpha') {
+			if(!defined $menulinks || $menulinks ne 'alpha') {
 				delete $it->{'itemlink'};
 			}
 			if(defined($itemsPerPage) && $itemsPerPage>0) {
@@ -1138,7 +1135,7 @@ sub getPageItemsForContext {
 			}
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$anchorText = $it->{'itemlink'};
-				if($anchorText ne $lastAnchor) {
+				if(defined($anchorText) && (!defined($lastAnchor) || $anchorText ne $lastAnchor)) {
 					$it->{'anchor'} = $anchorText;
 					$lastAnchor = $anchorText;
 				}

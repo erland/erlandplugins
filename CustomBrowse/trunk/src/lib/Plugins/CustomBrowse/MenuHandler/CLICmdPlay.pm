@@ -20,22 +20,22 @@ package Plugins::CustomBrowse::MenuHandler::CLICmdPlay;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BasePlay;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BasePlay);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(itemParameterHandler requestSource) );
+__PACKAGE__->mk_accessor( rw => qw(itemParameterHandler requestSource) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
-	$self->{'requestSource'} = $parameters->{'requestSource'};
-	bless $self,$class;
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+	$self->requestSource($parameters->{'requestSource'});
+
 	return $self;
 }
 

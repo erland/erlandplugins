@@ -3,8 +3,8 @@
 	<minpluginversion>2.0</minpluginversion>
 	<template>
 		<downloadidentifier>49</downloadidentifier>
-		<name>SlimServer Genres</name>
-		<description>Standard SlimServer Genres menu</description>
+		<name>Squeezebox Server Genres</name>
+		<description>Standard Squeezebox Server Genres menu</description>
 		<parameter type="text" id="menuname" name="Menu name" value="Genres"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="menuorder" name="Menu sort order (1-100)" value="50"/>

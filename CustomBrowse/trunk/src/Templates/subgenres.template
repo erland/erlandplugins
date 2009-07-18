@@ -51,6 +51,7 @@
 	                                        <menulinks>alpha</menulinks>
 	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
+					[%- IF MySQL %]
 					<option>
 						<id>byartist</id>
 						<name>Sort by artist</name>
@@ -73,6 +74,7 @@
 							order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 						</menudata>
 					</option>
+					[%- END %]
 					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -162,6 +164,7 @@
 		                                        <menulinks>alpha</menulinks>
 		                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 		                                </option>
+						[%- IF MySQL %]
 						<option>
 							<id>byartist</id>
 							<name>Sort by artist</name>
@@ -188,6 +191,7 @@
 								order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 							</menudata>
 						</option>
+						[%- END %]
 						<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 						<menudata>
 							select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -290,6 +294,7 @@
 			                                        <menulinks>alpha</menulinks>
 			                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 			                                </option>
+							[%- IF MySQL %]
 							<option>
 								<id>byartist</id>
 								<name>Sort by artist</name>
@@ -320,6 +325,7 @@
 									order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 								</menudata>
 							</option>
+							[%- END %]
 							<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 							<menudata>
 								select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -435,6 +441,7 @@
 				                                        <menulinks>alpha</menulinks>
 				                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 				                                </option>
+								[%- IF MySQL %]
 								<option>
 									<id>byartist</id>
 									<name>Sort by artist</name>
@@ -469,6 +476,7 @@
 										order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 									</menudata>
 								</option>
+								[%- END %]
 								<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 								<menudata>
 									select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %]

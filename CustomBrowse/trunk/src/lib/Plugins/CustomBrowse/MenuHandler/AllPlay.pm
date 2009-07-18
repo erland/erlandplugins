@@ -20,7 +20,7 @@ package Plugins::CustomBrowse::MenuHandler::AllPlay;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BasePlay;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BasePlay);
 
@@ -32,7 +32,6 @@ sub new {
 
 	my $self = $class->SUPER::new($parameters);
 
-	bless $self,$class;
 	return $self;
 }
 

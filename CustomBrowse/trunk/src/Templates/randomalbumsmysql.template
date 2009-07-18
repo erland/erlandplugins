@@ -13,7 +13,7 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
-			[%- IF showartistwithalbum %]
+			[%- IF showartistwithalbum AND MySQL %]
 			<itemformat>albumconcat</itemformat>
 			[% ELSE %]
 			<itemformat>album</itemformat>
@@ -21,7 +21,7 @@
 	                <menutype>sql</menutype>
 			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 	                <menudata>
-				[%- IF showartistwithalbum %]
+				[%- IF showartistwithalbum AND MySQL %]
 				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_album,contributors[% IF includedgenres or excludedgenres %],tracks[% END %][% IF includedgenres %],genre_track,genres[% END %][% IF library or activelibrary %],multilibrary_album[% END %]
 				where 
 					[%- IF library or activelibrary %]
@@ -86,7 +86,7 @@
 				[%- END %]
 				group by albums.id
 				[%- END %]
-				order by rand()
+				order by [% RANDOM_FUNCTION %]
 				[% IF noofalbums %]
 				limit [% noofalbums %]
 				[% END %]

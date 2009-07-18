@@ -20,21 +20,21 @@ package Plugins::CustomBrowse::MenuHandler::SQLMenu;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMenu;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenu);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(sqlHandler) );
+__PACKAGE__->mk_accessor( rw => qw(sqlHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'sqlHandler'} = $parameters->{'sqlHandler'};
-	bless $self,$class;
+	$self->sqlHandler($parameters->{'sqlHandler'});
+
 	return $self;
 }
 
@@ -125,12 +125,12 @@ sub prepareMenu {
 		for my $menuKey (keys %{$menu}) {
 			$menuItem{$menuKey} = $menu->{$menuKey};
 		}
-		if(defined($dataItem->{'type'}) && $menu->{'itemtype'} eq 'sql') {
+		if(defined($dataItem->{'type'}) && defined($menu->{'itemtype'}) && $menu->{'itemtype'} eq 'sql') {
 			$menuItem{'itemtype'} = $dataItem->{'type'};
-		}elsif(defined($dataItem->{'type'}) && $menu->{'itemtype'} ne $dataItem->{'type'}) {
+		}elsif(defined($dataItem->{'type'}) && defined($menu->{'itemtype'}) && $menu->{'itemtype'} ne $dataItem->{'type'}) {
 			$menuItem{'itemsubtype'} = $dataItem->{'type'};
 		}
-		if(defined($dataItem->{'format'}) && $menu->{'itemformat'} eq 'sql') {
+		if(defined($dataItem->{'format'}) && defined($menu->{'itemformat'}) && $menu->{'itemformat'} eq 'sql') {
 			$menuItem{'itemformat'} = $dataItem->{'format'};
 		}
 		my %parameters = ();

@@ -20,24 +20,23 @@ package Plugins::CustomBrowse::MenuHandler::MenuMix;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMix;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMix);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(itemParameterHandler menuHandler menuMode) );
+__PACKAGE__->mk_accessor( rw => qw(itemParameterHandler menuHandler menuMode) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'itemParameterHandler'} = $parameters->{'itemParameterHandler'};
-	$self->{'menuMode'} = $parameters->{'menuMode'};
-	$self->{'menuHandler'} = $parameters->{'menuHandler'};
+	$self->itemParameterHandler($parameters->{'itemParameterHandler'});
+	$self->menuMode($parameters->{'menuMode'});
+	$self->menuHandler($parameters->{'menuHandler'});
 
-	bless $self,$class;
 	return $self;
 }
 

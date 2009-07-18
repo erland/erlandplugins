@@ -20,22 +20,21 @@ package Plugins::CustomBrowse::MenuHandler::SQLPlay;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BasePlay;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BasePlay);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(sqlHandler) );
+__PACKAGE__->mk_accessor( rw => qw(sqlHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	$self->{'sqlHandler'} = $parameters->{'sqlHandler'};
+	$self->sqlHandler($parameters->{'sqlHandler'});
 
-	bless $self,$class;
 	return $self;
 }
 

@@ -20,20 +20,20 @@ package Plugins::CustomBrowse::MenuHandler::FunctionMenu;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::SQLMenu;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::SQLMenu);
 
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(sqlHandler) );
+__PACKAGE__->mk_accessor( rw => qw(sqlHandler) );
 
 sub new {
 	my $class = shift;
 	my $parameters = shift;
 
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
+
 	return $self;
 }
 

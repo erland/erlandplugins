@@ -20,7 +20,7 @@ package Plugins::CustomBrowse::MenuHandler::Main;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::CustomBrowse::MenuHandler::BaseMenuHandler;
 our @ISA = qw(Plugins::CustomBrowse::MenuHandler::BaseMenuHandler);
 
@@ -77,9 +77,8 @@ sub new {
 	$parameters->{'menuHandlers'} = \%menuHandlers;
 	$parameters->{'mixHandlers'} = \%mixHandlers;
 	$parameters->{'playHandlers'} = \%playHandlers;
-
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
+
 	$mixHandlers{'menu'}->menuHandler($self);
 	$mixHandlers{'sql'}->playHandler($self);
 	return $self;
