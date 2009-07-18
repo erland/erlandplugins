@@ -5,65 +5,93 @@
 		<title lang="EN">Erland's plugins (BETA testing versions)</title>
 	</details>
 	<plugins>
-		<plugin name="TrackStat" version="2.9pre3" minTarget="7.4.0" maxTarget="*">
+		<plugin name="TrackStat" version="2.9pre4" minTarget="7.4.0" maxTarget="*">
 			<title lang="EN">TrackStat *Beta*</title>
 			<desc lang="EN">*** BETA VERSION ***. Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
-			<changes lang="EN">- THIS IS A BETA VERSION
-			- Optimized startup sequence with SQLite
-			- Corrected Dynamic Playlist integration so they can be launched from TrackStat pages
-			- Corrected database indices
+			<changes lang="EN">- Corrected some menu templates with random sorting
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9pre3.zip</url>
-			<sha>d4a23e7c356c38f83abaa82d76f8d86f2e1ecad4</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9pre4.zip</url>
+			<sha>ab420babf6f17d0db74dacd01ad0204c42fbfd0d</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-                <plugin name="DynamicPlayList" version="2.8pre1" minTarget="7.4.0" maxTarget="*">
+                <plugin name="DynamicPlayList" version="2.8pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Dynamic Playlist *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists</desc>
-                        <changes lang="EN">- THIS IS A BETA VERSION
-			- Added support for SQLite version of Squeezebox Server 7.4
+                        <changes lang="EN">- Corrected an unitialized debug log message
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8pre1.zip</url>
-                        <sha>d205c565ef631c9131a6997c218ff9d32383a443</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8pre2.zip</url>
+                        <sha>712c326b51b123779b4cbfa3342b202f292065a8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
-                <plugin name="SQLPlayList" version="2.5pre1" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SQLPlayList" version="2.5pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">SQL Playlist *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin</desc>
-                        <changes lang="EN">- THIS IS A BETA VERSION
-                        - Added support for SQLite version of Squeezebox Server 7.4
+                        <changes lang="EN">- Corrected some playlist templates with random sorting
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5pre1.zip</url>
-                        <sha>7c0dd49909bba26976602d15a86bed8c873ad287</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5pre2.zip</url>
+                        <sha>7eca5df36364f97f7ae3eb9a396b7d8c33ee04c3</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-                <plugin name="CustomScan" version="2.7pre1" minTarget="7.4.0" maxTarget="*">
+                <plugin name="CustomScan" version="2.7pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag.</desc>
-                        <changes lang="EN">- Added support for SQLite version of Squeezebox Server 7.4
+                        <changes lang="EN">- Corrected some menu templates with random sorting
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7pre1.zip</url>
-                        <sha>3bc6463417daea7fb6b49e43bd9793a12189d7fb</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7pre2.zip</url>
+                        <sha>a8fce4784160fb5f64be287c4aa11f384611a06e</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-                <plugin name="CustomBrowse" version="2.9pre1" minTarget="7.4.0" maxTarget="*">
+                <plugin name="CustomBrowse" version="2.9pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Browse *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
+                        <changes lang="EN">- Corrected some menu templates with random sorting
+			</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.9pre2.zip</url>
+                        <sha>829ba2890560ca8d6f1e7a3360fa38f6da034327</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
+                </plugin>
+                <plugin name="DatabaseQuery" version="2.2pre1" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Database Query *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to define and execute custom SQL statements towards SqueezeCenter database. The result can be displayed in the browser or exported as CSV or XML files.</desc>
+                        <changes lang="EN">- Added support for SQLite version of Squeezebox Server 7.4
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.2pre1.zip</url>
+                        <sha>a93c64150c05dfe2101e6c886b11c68712dee8a5</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
+                </plugin>
+                <plugin name="MultiLibrary" version="2.4pre1" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Multi Library *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware.</desc>
                         <changes lang="EN">- Added support for SQLite version of Squeezebox Server 7.4
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.9pre1.zip</url>
-                        <sha>beddba2ce9000db4522a4ee48e8b6a6bf9091c2c</sha>
-                        <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.4pre1.zip</url>
+                        <sha>c1a54c5c0cc7e6ecbbc9c52c2dcc20af47e6bc74</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
+                </plugin>
+                 <plugin name="PlaylistGenerator" version="1.1pre1" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Playlist Generator *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to generate static playlists based on information in SqueezeCenter database, such as ratings and played tracks. This is useful when you like to have a playlist as a .m3u file which you can export to other tools. This plugin works by itself but if you also install Custom Scan you will be able to re-generate all playlists automatically when you perform a rescan in SqueezeCenter.</desc>
+                        <changes lang="EN">- Added support for SQLite version of Squeezebox Server 7.4
+			</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.1pre1.zip</url>
+                        <sha>f35f2f3091891b4bec564e359654392ea454fa90</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
 	</plugins>
 </extensions>
