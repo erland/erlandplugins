@@ -96,5 +96,5 @@ order by track_statistics.rating desc
 [%- IF toprated %]
 order by track_statistics.rating desc
 [%- END %]
-) order by [%- IF toprated %]rating desc,[% END %][% RANDOM_FUNCTION %]
+) order by [%- IF toprated %]rating desc,[% END %][% RANDOMFUNCTION %]
   limit [% IF nooftracks %][% nooftracks %][% ELSE %]10[% END %][% IF toprated %]) as similartracks[% END -%];

@@ -56,7 +56,7 @@
 						audio=1 and
 						contributors.id={baseartist}
 					)
-					order by {RANDOM_FUNCTION}
+					order by {RANDOMFUNCTION}
 					limit {custombrowse.mixsize}
 				</playdata>
 				<menu>
