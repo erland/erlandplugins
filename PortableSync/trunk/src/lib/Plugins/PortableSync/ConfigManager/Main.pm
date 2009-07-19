@@ -20,7 +20,7 @@ package Plugins::PortableSync::ConfigManager::Main;
 
 use strict;
 
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 
 use Slim::Utils::Prefs;
 use Plugins::PortableSync::ConfigManager::TemplateParser;
@@ -33,7 +33,7 @@ use Plugins::PortableSync::ConfigManager::LibraryWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
 
-__PACKAGE__->mk_classaccessors( qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.portablesync');
 
@@ -41,35 +41,16 @@ sub new {
 	my $class = shift;
 	my $parameters = shift;
 
-	my $self = {
-		'logHandler' => $parameters->{'logHandler'},
-		'pluginPrefs' => $parameters->{'pluginPrefs'},
-		'pluginId' => $parameters->{'pluginId'},
-		'pluginVersion' => $parameters->{'pluginVersion'},
-		'downloadApplicationId' => $parameters->{'downloadApplicationId'},
-		'supportDownloadError' => $parameters->{'supportDownloadError'},
-		'addSqlErrorCallback' => $parameters->{'addSqlErrorCallback'},
-		'downloadVersion' => $parameters->{'downloadVersion'},
-	};
+	my $self = $class->SUPER::new();
+	$self->logHandler($parameters->{'logHandler'});
+	$self->pluginPrefs($parameters->{'pluginPrefs'});
+	$self->pluginId($parameters->{'pluginId'});
+	$self->pluginVersion($parameters->{'pluginVersion'});
+	$self->downloadApplicationId($parameters->{'downloadApplicationId'});
+	$self->supportDownloadError($parameters->{'supportDownloadError'});
+	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
+	$self->downloadVersion($parameters->{'downloadVersion'});
 
-	$self->{'contentDirectoryHandler'} = undef;
-	$self->{'templateContentDirectoryHandler'} = undef;
-	$self->{'templateDirectoryHandler'} = undef;
-	$self->{'templateDataDirectoryHandler'} = undef;
-	$self->{'contentPluginHandler'} = undef;
-	$self->{'templatePluginHandler'} = undef;
-	$self->{'parameterHandler'} = undef;
-	
-	$self->{'templateParser'} = undef;
-	$self->{'contentParser'} = undef;
-	$self->{'templateContentParser'} = undef;
-
-	$self->{'webAdminMethods'} = undef;
-
-	$self->{'templates'} = undef;
-	$self->{'items'} = undef;
-
-	bless $self,$class;
 	$self->init();
 	return $self;
 }

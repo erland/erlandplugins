@@ -19,7 +19,7 @@
 package Plugins::PortableSync::ConfigManager::ContentParser;
 
 use strict;
-use base 'Class::Data::Accessor';
+use base qw(Slim::Utils::Accessor);
 use Plugins::PortableSync::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::PortableSync::ConfigManager::BaseParser);
 
@@ -36,7 +36,6 @@ sub new {
 
 	$parameters->{'contentType'} = 'library';
 	my $self = $class->SUPER::new($parameters);
-	bless $self,$class;
 	return $self;
 }
 
