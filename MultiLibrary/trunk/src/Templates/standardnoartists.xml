@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <multilibrary>
 	<template>
-		<downloadidentifier>95</downloadidentifier>
+		<downloadidentifier>231</downloadidentifier>
 		<name>Standard library without artist selection</name>
 		<description>Standard library with some different options</description>
 		<parameter type="text" id="libraryname" name="Library name" value="Standard library"/>
