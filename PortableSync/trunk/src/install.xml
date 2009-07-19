@@ -9,9 +9,9 @@
   <module>Plugins::PortableSync::Plugin</module>
   <optionsURL>plugins/PortableSync/settings/basic.html</optionsURL>
   <targetApplication>
-    <id>SlimServer</id>
-    <maxVersion>7.3+</maxVersion>
-    <minVersion>7.1.0</minVersion>
+    <id>Squeezebox Server</id>
+    <maxVersion>*</maxVersion>
+    <minVersion>7.4.0</minVersion>
   </targetApplication>
   <type>2</type>
   <version>0.1</version>

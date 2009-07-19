@@ -47,8 +47,9 @@ sub getCustomScanFunctions {
 		'order' => '75',
 		'defaultenabled' => 1,
 		'name' => 'Portable Synchronization',
-		'description' => "This module scans the SlimServer library and generates the contents of the portable libraries as defined in the Portable Sync plugin.",
+		'description' => "This module scans the Squeezebox Server library and generates the contents of the portable libraries as defined in the Portable Sync plugin.",
 		'alwaysRescanTrack' => 1,
+		'requiresRefresh' => 0,
 		'clearEnabled' => 0,
 		'scanText' => 'Sync',
 		'initScanTrack' => \&initScanTrack,
@@ -257,7 +258,7 @@ sub initScanTrack {
 
 			my $track = Slim::Schema->resultset('Track')->find($trackId);
 			if(!$track) {
-				$log->debug("File not found in SlimServer database, skipping: $path\n");
+				$log->debug("File not found in Squeezebox Server database, skipping: $path\n");
 				return 1;
 			}
 
@@ -380,7 +381,7 @@ sub prepareSong {
 
 	my $track = Slim::Schema->resultset('Track')->find($trackId);
 	if(!$track) {
-		$log->debug("File not found in SlimServer database, skipping: $path\n");
+		$log->debug("File not found in Squeezebox Server database, skipping: $path\n");
 		return;
 	}
 

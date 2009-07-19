@@ -11,7 +11,7 @@ SETUP_PLUGIN_PORTABLESYNC_GROUP
 	EN	Portable Sync
 
 SETUP_PLUGIN_PORTABLESYNC_GROUP_DESC
-	EN	Portable Sync is a plugin for synchronizing SqueezeCenter with extenal portable devices.
+	EN	Portable Sync is a plugin for synchronizing Squeezebox Server with extenal portable devices.
 
 SETUP_PLUGIN_PORTABLESYNC_DONATE_LINK
 	EN	Click here to donate
@@ -224,7 +224,7 @@ SETUP_PLUGIN_PORTABLESYNC_REFRESH_STARTUP
 	EN	Startup refresh
 
 SETUP_PLUGIN_PORTABLESYNC_REFRESH_STARTUP_DESC
-	EN	Refresh libraries at slimserver startup
+	EN	Refresh libraries at Squeezebox Server startup
 
 SETUP_PLUGIN_PORTABLESYNC_CUSTOMBROWSE_MENUS
 	EN	Custom Browse menus
@@ -236,7 +236,7 @@ SETUP_PLUGIN_PORTABLESYNC_UTF8FILENAMES
 	EN	Filename encoding
 
 SETUP_PLUGIN_PORTABLESYNC_UTF8FILENAMES_DESC
-	EN	UTF-8 encoded filenames (requires slimserver restart)
+	EN	UTF-8 encoded filenames (requires Squeezebox Server restart)
 
 SETUP_PLUGIN_PORTABLESYNC_QUESTION_STARTUP
 	EN	Ask for library
