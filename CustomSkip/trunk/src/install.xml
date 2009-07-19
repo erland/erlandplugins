@@ -10,7 +10,7 @@
   <module>Plugins::CustomSkip::Plugin</module>
   <optionsURL>plugins/CustomSkip/settings/basic.html</optionsURL>
   <targetApplication>
-    <id>SqueezeCenter</id>
+    <id>Squeezebox Server</id>
     <maxVersion>*</maxVersion>
     <minVersion>7.1.0</minVersion>
   </targetApplication>

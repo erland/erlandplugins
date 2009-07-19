@@ -101,13 +101,13 @@ SETUP_PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS
 	EN	Buttons in browse pages
 
 SETUP_PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS_DESC
-	EN	Show Custom Skip button in browse pages. May require slimserver restart.
+	EN	Show Custom Skip button in browse pages. May require Squeezebox Server restart.
 
 SETUP_PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION
 	EN	Play+Hold mixer action
 
 SETUP_PLUGIN_CUSTOMSKIP_ENABLE_MIXERFUNCTION_DESC
-	EN	Enable Custom Skip play+hold action. May require slimserver restart.
+	EN	Enable Custom Skip play+hold action. May require Squeezebox Server restart.
 
 PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE
 	EN	Select type of skip filter
