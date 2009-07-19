@@ -11,7 +11,7 @@ SETUP_PLUGIN_IPOD_GROUP
 	EN	iPod
 
 SETUP_PLUGIN_IPOD_GROUP_DESC
-	EN	iPod is a plugin for synchronizing SlimServer with iPod.
+	EN	iPod is a plugin for synchronizing Squeezebox Server with iPod.
 
 SETUP_PLUGIN_IPOD_DONATE_LINK
 	EN	Click here to donate
@@ -224,7 +224,7 @@ SETUP_PLUGIN_IPOD_REFRESH_STARTUP
 	EN	Startup refresh
 
 SETUP_PLUGIN_IPOD_REFRESH_STARTUP_DESC
-	EN	Refresh libraries at slimserver startup
+	EN	Refresh libraries at Squeezebox Server startup
 
 SETUP_PLUGIN_IPOD_CUSTOMBROWSE_MENUS
 	EN	Custom Browse menus
@@ -236,7 +236,7 @@ SETUP_PLUGIN_IPOD_UTF8FILENAMES
 	EN	Filename encoding
 
 SETUP_PLUGIN_IPOD_UTF8FILENAMES_DESC
-	EN	UTF-8 encoded filenames (requires slimserver restart)
+	EN	UTF-8 encoded filenames (requires Squeezebox Server restart)
 
 SETUP_PLUGIN_IPOD_QUESTION_STARTUP
 	EN	Ask for library
