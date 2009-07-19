@@ -4,7 +4,7 @@
 		<downloadidentifier>231</downloadidentifier>
 		<name>Standard library without artist selection</name>
 		<description>Standard library with some different options</description>
-		<parameter type="text" id="libraryname" name="Library name" value="Standard library"/>
+		<parameter type="text" id="libraryname" name="Library name" value="Standard library without artist selection"/>
 		<parameter type="text" id="libraryorder" name="Library order" value="50"/>
 		<parameter type="text" id="menugroup" name="Menu group" value=""/>
 		<parameter type="text" id="directory1" name="Included Directory 1" value=""/>
