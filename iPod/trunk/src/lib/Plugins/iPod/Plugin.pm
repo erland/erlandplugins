@@ -47,6 +47,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 	'defaultLevel' => 'WARN',
 	'description'  => 'PLUGIN_IPOD',
 });
+my $driver;
 
 $prefs->migrate(1, sub {
 	$prefs->set('library_directory', Slim::Utils::Prefs::OldPrefs->get('plugin_ipod_library_directory') || $serverPrefs->get('playlistdir')  );
@@ -171,7 +172,7 @@ sub initPlugin {
 	    	$log->error("Startup error: $@\n");
 	}		
 
-	if($prefs->get("refresh_startup")) {
+	if($prefs->get("refresh_startup") && !$serverPrefs->get("autorescan")) {
 		refreshLibraries();
 	}
 	if ( !$IPOD_HOOK ) {
@@ -283,7 +284,11 @@ sub refreshLibraries {
 		$timeMeasure->start();
 		$log->debug("Starting to update musicbrainz id's in iPod data based on urls\n");
 		# Now lets set all musicbrainz id's not already set
-		$sql = "UPDATE tracks,ipod_track SET ipod_track.musicbrainz_id=tracks.musicbrainz_id where tracks.url=ipod_track.slimserverurl and tracks.musicbrainz_id like '%-%' and ipod_track.musicbrainz_id is null";
+		if($driver eq 'mysql') {
+			$sql = "UPDATE tracks,ipod_track SET ipod_track.musicbrainz_id=tracks.musicbrainz_id where tracks.url=ipod_track.slimserverurl and tracks.musicbrainz_id like '%-%' and ipod_track.musicbrainz_id is null";
+		}else {
+			$sql = "UPDATE ipod_track SET musicbrainz_id=(select musicbrainz_id from tracks where tracks.url=ipod_track.slimserverurl and tracks.musicbrainz_id like '%-%' and ipod_track.musicbrainz_id is null) where exists (select musicbrainz_id from tracks where tracks.url=ipod_track.slimserverurl and tracks.musicbrainz_id like '%-%' and ipod_track.musicbrainz_id is null)";
+		}
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -309,23 +314,75 @@ sub refreshLibraries {
 		$timeMeasure->start();
 		$log->debug("Starting to update iPod data based on musicbrainz ids\n");
 		# First lets refresh all urls with musicbrainz id's
-		$sql = "UPDATE tracks,ipod_track SET ipod_track.slimserverurl=tracks.url, ipod_track.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=ipod_track.musicbrainz_id and (ipod_track.slimserverurl!=tracks.url or ipod_track.track!=tracks.id) and length(tracks.url)<512";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
+		if($driver eq 'mysql') {
+			$sql = "UPDATE tracks,ipod_track SET ipod_track.slimserverurl=tracks.url, ipod_track.track=tracks.id where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=ipod_track.musicbrainz_id and (ipod_track.slimserverurl!=tracks.url or ipod_track.track!=tracks.id) and length(tracks.url)<512";
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr\n";
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
 			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    warn "Database error: $DBI::errstr\n";
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
+			$sth->finish();
+		}else {
+			$sql = "CREATE temp table temp_ipod_track as select tracks.id,tracks.url,tracks.musicbrainz_id from tracks,ipod_track where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=ipod_track.musicbrainz_id and (ipod_track.slimserverurl!=tracks.url or ipod_track.track!=tracks.id)";
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    warn "Database error: $DBI::errstr\n";
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}else {
+				$sth->finish();
+				$sql = "UPDATE ipod_track SET slimserverurl=(select url from temp_ipod_track where temp_ipod_track.musicbrainz_id=ipod_track.musicbrainz_id), track=(select id from temp_ipod_track where temp_ipod_track.musicbrainz_id=ipod_track.musicbrainz_id) where (select id from temp_ipod_track where temp_ipod_track.musicbrainz_id=ipod_track.musicbrainz_id)";
+				$sth = $dbh->prepare( $sql );
+				$count = 0;
+				eval {
+					$count = $sth->execute();
+					if($count eq '0E0') {
+						$count = 0;
+					}
+					commit($dbh);
+				};
+				if( $@ ) {
+				    warn "Database error: $DBI::errstr\n";
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}
+				$sth->finish();
+				$sql = "DROP table temp_ipod_track";
+				$sth = $dbh->prepare( $sql );
+				$count = 0;
+				eval {
+					$sth->execute();
+					commit($dbh);
+				};
+				if( $@ ) {
+				    warn "Database error: $DBI::errstr\n";
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}
+			}
+			$sth->finish();
 		}
-		$sth->finish();
 		$log->debug("Finished updating iPod data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		main::idleStreams();
 		$timeMeasure->stop();
@@ -334,7 +391,11 @@ sub refreshLibraries {
 		$timeMeasure->start();
 		$log->debug("Starting to update iPod data based on urls\n");
 		# First lets refresh all urls with musicbrainz id's
-		$sql = "UPDATE ipod_track JOIN tracks on tracks.url=ipod_track.slimserverurl and ipod_track.musicbrainz_id is null set ipod_track.track=tracks.id where ipod_track.track!=tracks.id";
+		if($driver eq 'mysql') {
+			$sql = "UPDATE ipod_track JOIN tracks on tracks.url=ipod_track.slimserverurl and ipod_track.musicbrainz_id is null set ipod_track.track=tracks.id where ipod_track.track!=tracks.id";
+		}else {
+			$sql = "UPDATE ipod_track set track=(select id from tracks where tracks.url=ipod_track.slimserverurl and ipod_track.musicbrainz_id is null and ipod_track.track!=tracks.id) where (select id from tracks where tracks.url=ipod_track.slimserverurl and ipod_track.musicbrainz_id is null and ipod_track.track!=tracks.id)";
+		}
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -392,8 +453,13 @@ sub replaceParameters {
 }
 
 sub initDatabase {
-	my $driver = $serverPrefs->get('dbsource');
+	$driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
     
 	#Check if tables exists and create them if not
 	$log->debug("Checking if ipod_track database table exists\n");
@@ -410,37 +476,39 @@ sub initDatabase {
 		executeSQLFile("dbcreate.sql");
 	}
 
-	my $sth = $dbh->prepare("show create table tracks");
-	my $charset;
-	eval {
-		$log->debug("Checking charsets on tables\n");
-		$sth->execute();
-		my $line = undef;
-		$sth->bind_col( 2, \$line);
-		if( $sth->fetch() ) {
-			if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
-				$charset = $1;
-				my $collate = '';
-				if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
-					$collate = $1;
-				}elsif($line =~ /.*collate\s+([^\s\r\n]+).*/) {
-					$collate = $1;
-				}
-				$log->debug("Got tracks charset = $charset and collate = $collate\n");
+	if($driver eq 'mysql') {
+		my $sth = $dbh->prepare("show create table tracks");
+		my $charset;
+		eval {
+			$log->debug("Checking charsets on tables\n");
+			$sth->execute();
+			my $line = undef;
+			$sth->bind_col( 2, \$line);
+			if( $sth->fetch() ) {
+				if(defined($line) && ($line =~ /.*CHARSET\s*=\s*([^\s\r\n]+).*/)) {
+					$charset = $1;
+					my $collate = '';
+					if($line =~ /.*COLLATE\s*=\s*([^\s\r\n]+).*/) {
+						$collate = $1;
+					}elsif($line =~ /.*collate\s+([^\s\r\n]+).*/) {
+						$collate = $1;
+					}
+					$log->debug("Got tracks charset = $charset and collate = $collate\n");
 				
-				if(defined($charset)) {
+					if(defined($charset)) {
 					
-					$sth->finish();
-					updateCharSet("ipod_track",$charset,$collate);
-					updateCharSet("ipod_libraries",$charset,$collate);
+						$sth->finish();
+						updateCharSet("ipod_track",$charset,$collate);
+						updateCharSet("ipod_libraries",$charset,$collate);
+					}
 				}
 			}
+		};
+		if( $@ ) {
+		    warn "Database error: $DBI::errstr\n";
 		}
-	};
-	if( $@ ) {
-	    warn "Database error: $DBI::errstr\n";
+		$sth->finish();
 	}
-	$sth->finish();
 }
 
 sub updateCharSet {
@@ -479,8 +547,6 @@ sub updateCharSet {
 
 sub executeSQLFile {
         my $file  = shift;
-	my $driver = $serverPrefs->get('dbsource');
-	$driver =~ s/dbi:(.*?):(.*)$/$1/;
 
         my $sqlFile;
 	for my $plugindir (Slim::Utils::OSDetect::dirsFor('Plugins')) {
@@ -566,7 +632,11 @@ sub webPages {
 	);
 
 	for my $page (keys %pages) {
-		Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
 	}
 	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_IPOD' => 'plugins/iPod/ipod_list.html' });
 }

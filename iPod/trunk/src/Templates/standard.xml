@@ -25,7 +25,7 @@
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="checkbox" id="lossy" name="Only lossy format" value="0"/>
 		<parameter type="sqlcheckboxes" id="includedcontenttypes" name="Include file types" value="0" data="select content_type,content_type,content_type from tracks where audio=1 group by content_type order by content_type asc" quotevalue="1"/>
-		<parameter type="text" id="slimserverpath" name="SlimServer music path" value=""/>
+		<parameter type="text" id="slimserverpath" name="Squeezebox Server music path" value=""/>
 		<parameter type="text" id="ipodpath" name="iPod music path" value=""/>
 		<parameter type="text" id="ipodextension" name="iPod music extension" value=""/>
 		<parameter type="checkbox" id="trackstat" requireplugins="TrackStat::Plugin" name="Use TrackStat statistics" value="1"/>
