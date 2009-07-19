@@ -5,7 +5,7 @@
 		<title lang="EN">Erland's plugins</title>
 	</details>
 	<plugins>
-		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="*">
+		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="7.3.*">
                         <title lang="EN">Auto Repositories</title>
                         <desc lang="EN">Automatically makes all third party plugin repositories that are listed on the Logitech wiki site available through Extension Downloader. The plugin doesn't actually read the wiki page directly since that would open up a security hole, instead it reads the repositories from a list available on the erlandplugins Google Code project. New repostories added to the wiki page will be added after they have been checked so they provide serious plugins and not spam urls.</desc>
                         <creator>Erland Isaksson</creator>
