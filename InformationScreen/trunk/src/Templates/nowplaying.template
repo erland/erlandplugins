@@ -1,0 +1,58 @@
+<informationscreen>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibiltytime %]</time>
+		<items>
+			<item>
+				<align>topleft</align>
+				<type>text</type>
+				<data>Left</data>
+			</item>
+			<item>
+				<align>topcenter</align>
+				<type>text</type>
+				<data>[% screenname %]</data>
+			</item>
+			<item>
+				<align>topright</align>
+				<type>text</type>
+				<data>Right</data>
+			</item>
+			<item>
+				<align>left</align>
+				<type>icon</type>
+				<data>42</data>
+			</item>
+			<item>
+				<align>rightlist</align>
+				<type>titleformat</type>
+				<data>TITLE</data>
+			</item>
+			<item>
+				<align>rightlist</align>
+				<type>titleformat</type>
+				<data>ALBUM</data>
+			</item>
+			<item>
+				<align>rightlist</align>
+				<type>titleformat</type>
+				<data>ARTIST</data>
+			</item>
+			<item>
+				<align>bottomleft</align>
+				<type>text</type>
+				<data>Left</data>
+			</item>
+			<item>
+				<align>bottomcenter</align>
+				<type>text</type>
+				<data>[% screenname %]</data>
+			</item>
+			<item>
+				<align>bottomright</align>
+				<type>text</type>
+				<data>Right</data>
+			</item>
+		</items>
+	</screen>
+</informationscreen>
