@@ -1,0 +1,10 @@
+[% page = "PLUGIN_MYTHTV" %]
+[% PROCESS settings/header.html %]
+
+[% PROCESS plugins/MythTV/settings/subpage_chooser.html %]
+
+	[% WRAPPER setting title="SETUP_PLUGIN_MYTHTV_BACKEND_HOST" desc="SETUP_PLUGIN_MYTHTV_BACKEND_HOST_DESC" %]
+		<input type="text" class="stdedit" name="backend_host" id="backend_host" value="[% prefs.backend_host %]" size="40">
+	[% END %]
+
+[% PROCESS settings/footer.html %]

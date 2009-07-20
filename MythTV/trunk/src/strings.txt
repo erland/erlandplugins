@@ -1,0 +1,27 @@
+PLUGIN_MYTHTV
+	EN	MythTV
+
+SETUP_PLUGIN_MYTHTV_SECTION
+	EN	Settings Section
+
+SETUP_PLUGIN_MYTHTV_SECTION_DESC
+	EN	Select a settings section
+
+SETUP_PLUGIN_MYTHTV_GROUP
+	EN	MythTV
+
+SETUP_PLUGIN_MYTHTV_GROUP_DESC
+	EN	MythTV is a plugin for browsing and controlling your MythTV backend.
+
+SETUP_PLUGIN_MYTHTV_DONATE_LINK
+	EN	Click here to donate
+
+PLUGIN_MYTHTV_SETTINGS
+	EN	Various Settings
+
+SETUP_PLUGIN_MYTHTV_BACKEND_HOST
+	EN	MythTV Backend host
+
+SETUP_PLUGIN_MYTHTV_BACKEND_HOST_DESC
+	EN	Hostname or IP address to the MythTV backend
+
