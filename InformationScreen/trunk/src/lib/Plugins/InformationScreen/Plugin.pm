@@ -158,6 +158,7 @@ sub jiveItemsHandler {
 
 	$request->addResult('offset',$start);
 	$request->addResult('count',$cnt);
+	$request->addResult('layout',$currentScreen->{'items'}->{'layout'});
 
 	$request->setStatusDone();
 	$log->debug("Exiting jiveItemsHandler");

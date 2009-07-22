@@ -59,22 +59,14 @@ function openScreensaver(self, style, transition)
 	log:info("transition=", transition)
 	log:info("player=", self.player, " status=", playerStatus)
 
-	self.window = _createUI(self)
-
-	-- if we have data, then update and display it
-	if _currentInformation then
-		self:_updateInformation(_currentInformation)
-
-		self:_getInformation()
-
-	-- otherwise punt
-	else
-		self:_getInformation()
-		self:_updateInformation()
+	if not self.window then
+		self.window = _createUI(self)
+		self.window:show(Window.transitionFadeIn)
 	end
 
-	self.window:show(Window.transitionFadeIn)
+	self:_getInformation()
 	self.window:addTimer(5000, function() self:_getInformation() end)
+
 	return window
 end
 
@@ -111,32 +103,24 @@ function _getInformationResponse(self, result)
 	-- itterate though response - handle leaves as well as branches
 	if result.item_loop then
 		log:info("update based on received information")
-		self:_updateInformation(result.item_loop)
+		self:_updateInformation(result.layout,result.item_loop)
 	end
 end
 
-function _updateInformation(self, items)
+function _updateInformation(self, layout, items)
 	if not items then
+		log:info("Got no items!")
 		return
 	end
 
-	local itemtext
-	for _,entry in ipairs(items) do
-		if entry.text then
-			log:info("Handling",entry.text)
-			if itemtext then
-				itemtext = itemtext .. "\n"
-			else
-				itemtext = ""
-			end
-			itemtext = itemtext .. entry.text
-		end
+	if self.layout != layout then
+		log:info("Re-creating widgets")
+		self:_createUIItems(layout,items)
+	else
+		log:info("Updating widgets")
+		self:_updateUIItems(layout,items)
 	end
-
-	if self.trackGroup then
-		log:info("Setting value to ",itemtext)
-		self.trackGroup:setWidgetValue("text", itemtext)
-	end
+	
 end
 
 ----------------------------------------------------------------------------------------
@@ -146,36 +130,64 @@ end
 function _createUI(self)
 	local window = Window("window")
 
-	self.titleGroup = Group("title", {
-		text = Label("text", self:string("SCREENSAVER_INFORMATIONSCREEN")),
-	})
-
-	self.trackGroup = Group("multilineitem", {
-		text = Label("text", ""),
-	})
-	self.trackGroup2 = Group("multilineitem", {
-		text = Label("text", "A\nB\nC"),
-	})
-	self.trackGroup3 = Group("multilineitem", {
-		text = Label("text", "D\nE\nF"),
-	})
-	self.trackGroup4 = Group("multilineitem", {
-		text = Label("text", "G\nH\nI"),
-	})
-	
-	-- window:addWidget(self.titleGroup)
-	window:addWidget(self.trackGroup)
-	window:addWidget(self.trackGroup2)
-	window:addWidget(self.trackGroup3)
-	window:addWidget(self.trackGroup4)
-
-	window:focusWidget(self.trackGroup)
 
 	-- register window as a screensaver, unless we are explicitly not in that mode
 	local manager = appletManager:getAppletInstance("ScreenSavers")
 	manager:screensaverWindow(window)
 
 	return window
+end
+
+function _createUIItems(self,layout,items)
+	local window = Window("window")
+	self.items = {}
+	for index,item in ipairs(items) do
+		log:info("Handling item " .. index .. ": " .. item.align)
+		local style = "title"
+		if item.align == "rightlist" or item.align == "leftlist" then
+			style = "multilineitem"
+		end
+		if item.text then
+			self.items[index] = Group(style, {
+				text = Label("text",item.text)
+			})
+			log:info("Creating text item with style=" .. style .. " and data: " .. item.text)
+		elseif item.icon then
+			self.items[index] = Group(style, {
+				text = Label("text",item.icon)
+			})		
+			log:info("Creating icon item with style=" .. style .. " and data: " .. item.icon)
+		end
+	end
+	for index,item in ipairs(self.items) do
+		if item then
+			window:addWidget(item)
+			log:info("adding widget " .. index)
+		end
+	end
+
+	window:focusWidget(self.items[1])
+
+	log:info("Replacing window and returning")
+	window:replace(self.window)
+	self.layout = layout
+	self.window = window
+end
+
+local _counter = 0
+function _updateUIItems(self,layout,items)
+	for index,item in ipairs(items) do
+		if item.text then
+			log:info("Updating item " .. index .." with previous data:" .. self.items[index]:getWidgetValue("text"))
+			self.items[index]:setWidgetValue("text",item.text .. _counter)
+			log:info("Updating item " .. index .." with data:" .. item.text)
+		elseif item.icon then
+			log:info("Updating item " .. index .." with previous data:" .. self.items[index]:getWidgetValue("text"))
+			self.items[index]:setWidgetValue("text",item.icon .. _counter)
+			log:info("Updating item " .. index .." with data:" .. item.icon)
+		end
+	end
+	_counter = _counter +1
 end
 
 --[[

@@ -3,6 +3,7 @@
 		<name>[% screenname %]</name>
 		<time>[% visibiltytime %]</time>
 		<items>
+			<layout>nowplaying</layout>
 			<item>
 				<align>topleft</align>
 				<type>text</type>
