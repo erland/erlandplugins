@@ -4,7 +4,8 @@
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
 		<layout>clock</layout>
-		<style>Clock</style>
+		<style>InformationScreenClock</style>
+		<skin>getClockStyles</skin>
 		<items>
 			<group>
 				<id>time</id>

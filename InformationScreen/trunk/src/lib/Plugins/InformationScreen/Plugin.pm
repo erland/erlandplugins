@@ -211,6 +211,7 @@ sub jiveItemsHandler {
 	$request->addResult('count',$cnt);
 	$request->addResult('layout',$currentScreen->{'layout'});
 	$request->addResult('style',$currentScreen->{'style'}) if exists $currentScreen->{'style'};
+	$request->addResult('skin',$currentScreen->{'skin'}) if exists $currentScreen->{'skin'};
 	$request->addResult('layoutChangedTime',$lastLayoutChange);
 
 	$request->setStatusDone();
