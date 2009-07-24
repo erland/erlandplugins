@@ -407,6 +407,41 @@ function _getClockStyles(self, skinName)
 			},
 		}
 	}
+	s.InformationScreenClockAndNowPlaying = {
+		bgImg = Tile:fillColor(0x000000ff),
+		playingtitle = {
+			position = LAYOUT_NORTH,
+			border = {0,15,0,0},
+			playingtitle = {
+				font = _font(width/20),
+				lineHeight = width/20,
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		time = {
+			position = LAYOUT_CENTER,
+			border = {0,20,0,20},
+			time = {
+				font = _font(width*3/8-10),
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		date = {
+			position = LAYOUT_SOUTH,
+			border = {0,30,0,20},
+			date = {
+				font = _font(width/10),
+				align = 'center',
+				w = WH_FILL,
+				h = 70,
+				fg = { 0xcc, 0xcc, 0xcc },
+			},
+		}
+	}
 	return s;		
 end
 
