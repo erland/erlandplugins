@@ -4,9 +4,20 @@
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
 		<layout>clock</layout>
-		<style>InformationScreenClock</style>
+		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %]</style>
 		<skin>getClockStyles</skin>
 		<items>
+			[% IF title1 %]
+			<group>
+				<id>playingtitle</id>
+				<item>
+					<id>playingtitle</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% title1 %][% IF title2 %]\n[% title2 %][% END %]</preprocessingData>
+				</item>
+			</group>
+			[% END %]
 			<group>
 				<id>time</id>
 				<item>

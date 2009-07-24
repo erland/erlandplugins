@@ -6,7 +6,8 @@
 		<parameter type="text" id="screenname" name="Screen name" value="Digital Clock"/>
 		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
 		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value=""/>
-		<parameter type="text" id="title" name="Title" value="PLAYING"/>
+		<parameter type="text" id="title1" name="Title row 1" value="ARTIST - ALBUM"/>
+		<parameter type="text" id="title2" name="Title row 2" value="TITLE"/>
 		<parameter type="text" id="timeformat" name="Time format" value="hh:mm"/>
 		<parameter type="text" id="dateformat" name="Date format" value="yyyy-MM-dd"/>
 	</template>
