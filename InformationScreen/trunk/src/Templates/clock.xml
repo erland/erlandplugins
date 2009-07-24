@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<informationscreen>
+	<template>
+		<name>Digital Clock (7.4 and later)</name>
+		<description>Digital Clock with some different options</description>
+		<parameter type="text" id="screenname" name="Screen name" value="Digital Clock"/>
+		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
+		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value=""/>
+		<parameter type="text" id="title" name="Title" value="PLAYING"/>
+		<parameter type="text" id="timeformat" name="Time format" value="hh:mm"/>
+		<parameter type="text" id="dateformat" name="Date format" value="yyyy-MM-dd"/>
+	</template>
+</informationscreen>
+

@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <informationscreen>
 	<template>
-		<name>Now Playing (7.4 and later)</name>
+		<name>Now Playing (7.3 and earlier)</name>
 		<description>Now Playing screen with some different options</description>
 		<parameter type="text" id="screenname" name="Screen name" value="Now Playing"/>
 		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
 		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value=""/>
 		<parameter type="text" id="title" name="Title" value="PLAYING"/>
-		<parameter type="text" id="currenttrackrow1" name="Current track row 1" value="TITLE"/>
-		<parameter type="text" id="currenttrackrow2" name="Current track row 2" value="ALBUM"/>
-		<parameter type="text" id="currenttrackrow3" name="Current track row 3" value="ARTIST"/>
-		<parameter type="text" id="currenttrackrow4" name="Current track row 4" value="ALBUMARTIST"/>
+		<parameter type="text" id="currenttrackrow1" name="Current track upper row" value="ARTIST - ALBUM"/>
+		<parameter type="text" id="currenttrackrow2" name="Current track lower row" value="TITLE"/>
 		<parameter type="checkbox" id="showprogress" name="Show progress" value="1"/>
 		<parameter type="checkbox" id="showcontrols" name="Show controls" value="1"/>
 	</template>

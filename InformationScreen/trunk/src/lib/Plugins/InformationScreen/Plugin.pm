@@ -26,6 +26,7 @@ use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+use POSIX qw(strftime);
 
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
@@ -49,6 +50,7 @@ my $PLUGINVERSION = undef;
 my $configManager = undef;
 my $screens = undef;
 my $manageScreenHandler = undef;
+my $lastLayoutChange = time();
 
 sub getDisplayName {
 	return 'PLUGIN_INFORMATIONSCREEN';
@@ -76,7 +78,7 @@ sub initPlugin {
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::InformationScreen::Settings->new($class);
 	$manageScreenHandler = Plugins::InformationScreen::ManageScreens->new($class);
-	Slim::Control::Request::addDispatch(['informationscreen','items','_start','_itemsPerResponse'], [1, 1, 1, \&jiveItemsHandler]);
+	Slim::Control::Request::addDispatch(['informationscreen','items'], [1, 1, 1, \&jiveItemsHandler]);
 
 	checkDefaults();
 }
@@ -95,16 +97,67 @@ sub checkDefaults {
 		$prefs->set('screen_directory', $dir);
 	}
 }
+sub getSortedScreenKeys {
+	my $screens = shift;
+	my @keys = keys %$screens;
 
+	@keys = sort { 
+		if(defined($screens->{$a}->{'order'}) && defined($screens->{$a}->{'order'})) {
+			return $screens->{$a}->{'order'} <=> $screens->{$b}->{'order'};
+		}
+		if(defined($screens->{$a}->{'order'}) && !defined($screens->{$b}->{'order'})) {
+			return $screens->{$a}->{'order'} <=> 50;
+		}
+		if(!defined($screens->{$a}->{'order'}) && defined($screens->{$b}->{'order'})) {
+			return 50 <=> $screens->{$b}->{'order'};
+		}
+		return 50 <=> 50 
+	} @keys;
+	return @keys;
+}
 sub getCurrentScreen {
 	my $client = shift;
 	if(! defined $screens) {
 		initScreens($client);
 	}
 
-	for my $key (keys %$screens) {
-		return $screens->{$key};
+	my $screen = undef;
+	if(defined($client->pluginData('screen'))) {
+		$screen = $client->pluginData('screen');
 	}
+
+	my @sortedScreenKeys = getSortedScreenKeys($screens);
+
+	my $lastScreen = undef;
+	for my $key (@sortedScreenKeys) {
+		$lastScreen = $key;
+	}
+
+	my $currentTime = time();
+	if(defined($screen) && defined($lastScreen) && $screen eq $lastScreen) {
+		if($currentTime-$client->pluginData('lastSwitchTime') >= $screens->{$screen}->{'time'}) {
+			$log->debug("This is the last screen, let's start from the beginning");
+			$screen = undef;
+		}
+	}
+
+	for my $key (@sortedScreenKeys) {
+		if(!defined($screen)) {
+			$client->pluginData('screen' => $key);
+			$client->pluginData('lastSwitchTime'=> $currentTime);
+			$screen = $key;
+			$log->debug("Selecting screen $key");
+		}
+		if($key eq $screen) {
+			if($currentTime-$client->pluginData('lastSwitchTime') >= $screens->{$key}->{'time'}) {
+				$screen = undef;
+			}else {
+				$log->debug("Still time left $currentTime, ".$client->pluginData('lastSwitchTime')." of ".$screens->{$key}->{'time'}." seconds");
+				return $screens->{$key};
+			}
+		}
+	}
+	return undef;
 }
 
 sub jiveItemsHandler {
@@ -129,47 +182,292 @@ sub jiveItemsHandler {
 
 	my $currentScreen = getCurrentScreen($client);
 
-	my $listRef = $currentScreen->{'items'}->{'item'};
+	my $listRef = ();
+	if(defined($currentScreen)) {
+		$listRef = $currentScreen->{'items'}->{'group'};
+	}
 
   	my $start = $request->getParam('_start') || 0;
 	my $itemsPerResponse = $request->getParam('_itemsPerResponse') || scalar(@$listRef);
 
 	my $cnt = 0;
 	my $offsetCount = 0;
-	foreach my $item (@$listRef) {
-		if($cnt>=$start && $offsetCount<$itemsPerResponse) {
-			$request->addResultLoop('item_loop',$offsetCount,'align',$item->{'align'});
-			if($item->{'type'} eq 'titleformat') {
-				my $song = Slim::Player::Playlist::song($client);
-				my $text = Slim::Music::Info::displayText($client,$song,$item->{'data'});
-				$request->addResultLoop('item_loop',$offsetCount,'text',$text);
-			}elsif($item->{'type'} eq 'text') {
-				$request->addResultLoop('item_loop',$offsetCount,'text',$item->{'data'});
-			}elsif($item->{'type'} eq 'image') {
-				$request->addResultLoop('item_loop',$offsetCount,'icon',$item->{'data'});
-			}elsif($item->{'type'} eq 'icon') {
-				$request->addResultLoop('item_loop',$offsetCount,'icon',$item->{'data'});
+	my @itemLoop = ();
+	foreach my $group (@$listRef) {
+		if(!exists $group->{'includedskins'} || isSkinIncluded($group->{'includedskins'},$request->getParam('skin'))) {
+			if(!exists $group->{'excludedskins'} || !isSkinExcluded($group->{'excludedskins'},$request->getParam('skin'))) {
+				if($cnt>=$start && $offsetCount<$itemsPerResponse) {
+					preprocessItems($client,$group);
+					push @itemLoop,$group;
+					$offsetCount++;
+				}
 			}
-
-			$offsetCount++;
 		}
 		$cnt++;
 	}
+	$request->addResult('item_loop',\@itemLoop);
 
 	$request->addResult('offset',$start);
 	$request->addResult('count',$cnt);
-	$request->addResult('layout',$currentScreen->{'items'}->{'layout'});
+	$request->addResult('layout',$currentScreen->{'layout'});
+	$request->addResult('style',$currentScreen->{'style'}) if exists $currentScreen->{'style'};
+	$request->addResult('layoutChangedTime',$lastLayoutChange);
 
 	$request->setStatusDone();
 	$log->debug("Exiting jiveItemsHandler");
 }
 
+sub isSkinIncluded {
+	my $allowedSkins = shift;
+	my $currentSkin = shift;
+
+	my @allowedSkinsArray = split(/,/,$allowedSkins);
+	foreach my $skin (@allowedSkinsArray) {
+		if($skin eq $currentSkin) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub isSkinExcluded {
+	my $allowedSkins = shift;
+	my $currentSkin = shift;
+
+	my @allowedSkinsArray = split(/,/,$allowedSkins);
+	foreach my $skin (@allowedSkinsArray) {
+		if($skin eq $currentSkin) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+sub preprocessItems {
+	my $client = shift;
+	my $group = shift;
+
+	my $items = $group->{'item'};
+	my @itemArray = ();
+	if(ref($items) eq 'ARRAY') {
+		@itemArray = @$items;
+	}else {
+		push @itemArray,$items;
+	}
+
+	foreach my $item (@itemArray) {
+		if(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'titleformat') {
+			my @formatParts = split(/\\n/,$item->{'preprocessingData'});
+			$item->{'value'} = "";
+			foreach my $part (@formatParts) {
+				if($item->{'value'} ne "") {
+					$item->{'value'} .= "\n";
+				}
+				$item->{'value'} .= getKeywordValues($client,$part);
+			}
+
+		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'datetime') {
+			$item->{'value'} = strftime($item->{'preprocessingData'},localtime(time()));
+
+		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'function') {
+			no strict 'refs';
+			$log->debug("Calling: ".$item->{'preprocessingData'});
+			eval { &{$item->{'preprocessingData'}}($client,$item) };
+			if ($@) {
+				$log->warn("Error preprocessing $item->{'id'} with ".$item->{'preprocessingData'}.": $@");
+			}
+			use strict 'refs';
+
+		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'artwork') {
+			my $song = Slim::Player::Playlist::song($client);
+			if(defined($song)) {
+				if ( $song->isRemoteURL ) {
+					my $handler = Slim::Player::ProtocolHandlers->handlerForURL($song->url);
+
+					if ( $handler && $handler->can('getMetadataFor') ) {
+
+						my $meta = $handler->getMetadataFor( $client, $song->url );
+
+						if ( $meta->{cover} ) {
+							$item->{'icon'} = $meta->{cover};
+						}
+						elsif ( $meta->{icon} ) {
+							$item->{'icon-id'} = $meta->{icon};
+						}
+					}
+				        
+					# If that didn't return anything, use default cover
+					if ( !$item->{'icon-id'} && !$item->{'icon'} ) {
+						$item->{'icon-id'} = '/html/images/radio.png';
+					}
+				}else {
+					if ( my $album = $song->album ) {
+						$item->{'icon-id'} = ( $album->artwork || 0 ) + 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+sub preprocessingShuffleMode {
+	my $client = shift;
+	my $item = shift;
+
+	my $shuffle = Slim::Player::Playlist::shuffle($client);
+	if($shuffle == 1) {
+		$item->{'style'} = "shuffleSong";
+	}elsif($shuffle == 2) {
+		$item->{'style'} = "shuffleAlbum";
+	}else {
+		$item->{'style'} = "shuffleOff";
+	}
+}
+
+sub preprocessingRepeatMode {
+	my $client = shift;
+	my $item = shift;
+
+	my $repeat = Slim::Player::Playlist::repeat($client);
+	if($repeat == 1) {
+		$item->{'style'} = "repeatSong";
+	}elsif($repeat == 2) {
+		$item->{'style'} = "repeatPlaylist";
+	}else {
+		$item->{'style'} = "repeatOff";
+	}
+}
+
+sub preprocessingPlayMode {
+	my $client = shift;
+	my $item = shift;
+
+	my $playMode = Slim::Player::Source::playmode($client);
+	if($playMode eq 'play') {
+		$item->{'style'} = "pause";
+	}else {
+		$item->{'style'} = "play";
+	}
+}
+
+sub getKeywordValues {
+	my $client = shift;
+	my $keyword = shift;
+
+	if($keyword =~ /\bPLAYING\b/) {
+		my $mode = Slim::Player::Source::playmode($client);
+		my $string = $client->string('PLAYING');
+		if($mode eq 'pause') {
+			$string = $client->string('PAUSED');
+		}elsif($mode eq 'stop') {
+			$string = $client->string('STOPPED');
+		}
+		$keyword =~ s/\bPLAYING\b/$string/;
+	}
+	if($keyword =~ /\bPLAYLIST\b/) {
+                if (my $string = $client->currentPlaylist()) {
+                        my $string = Slim::Music::Info::standardTitle($client, $string);
+			$keyword =~ s/\bPLAYLIST\b/$string/;
+                }else {
+			$keyword =~ s/\bPLAYLIST\b//;
+		}
+	}
+	if($keyword =~ /\bX_OF_Y\b/) {
+                my $songIndex = Slim::Player::Source::playingSongIndex($client);
+                
+                my $string = sprintf("%d %s %d", 
+                                (Slim::Player::Source::playingSongIndex($client) + 1), 
+                                $client->string('OUT_OF'), Slim::Player::Playlist::count($client));
+		$keyword =~ s/\bX_OF_Y\b/$string/;
+	}
+	if($keyword =~ /\bX_Y\b/) {
+                my $songIndex = Slim::Player::Source::playingSongIndex($client);
+                
+                my $string = sprintf("%d/%d", 
+                                (Slim::Player::Source::playingSongIndex($client) + 1), 
+                                Slim::Player::Playlist::count($client));
+		$keyword =~ s/\bX_Y\b/$string/;
+	}
+	if($keyword =~ /\bALARM\b/) {
+                my $currentAlarm = Slim::Utils::Alarm->getCurrentAlarm($client);
+                my $nextAlarm = Slim::Utils::Alarm->getNextAlarm($client);
+
+		my $string = "";
+                # Include the next alarm time in the overlay if there's room
+                if (defined $currentAlarm || ( defined $nextAlarm && ($nextAlarm->nextDue - time < 86400) )) {
+                        # Remove seconds from alarm time
+                        my $timeStr = Slim::Utils::DateTime::timeF($nextAlarm->time % 86400, undef, 1);
+                        $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+                        $string = $timeStr;
+                }
+
+		$keyword =~ s/\bALARM\b/$string/;
+	}
+	if($keyword =~ /\bPLAYTIME\b/) {
+		my $songTime = Slim::Player::Source::songTime($client);
+		if(defined($songTime)) {
+			my $hrs = int($songTime / (60 * 60));
+			my $min = int(($songTime - $hrs * 60 * 60) / 60);
+			my $sec = $songTime - ($hrs * 60 * 60 + $min * 60);
+		
+			if ($hrs) {
+			        $songTime = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
+			} else {
+			        $songTime = sprintf("%02d:%02d", $min, $sec);
+			}
+			$keyword =~ s/\bPLAYTIME\b/$songTime/;
+		}else {
+			$keyword =~ s/\bPLAYTIME\b//;
+		}
+	}
+	if($keyword =~ /\bDURATION\b/) {
+		my $songDuration = Slim::Player::Source::playingSongDuration($client);
+		if(defined $songDuration && $songDuration>0) {
+			my $hrs = int($songDuration / (60 * 60));
+			my $min = int(($songDuration - $hrs * 60 * 60) / 60);
+			my $sec = $songDuration - ($hrs * 60 * 60 + $min * 60);
+		
+			if ($hrs) {
+			        $songDuration = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
+			} else {
+			        $songDuration = sprintf("%02d:%02d", $min, $sec);
+			}
+			$keyword =~ s/\bDURATION\b/$songDuration/;
+		}else {
+			$keyword =~ s/\bDURATION\b//;
+		}
+	}
+	if($keyword =~ /\bPLAYTIME_PROGRESS\b/) {
+		my $songTime = Slim::Player::Source::songTime($client);
+		my $songDuration = Slim::Player::Source::playingSongDuration($client);
+		if(defined $songTime && defined $songDuration && $songDuration>0) {
+			my $progress = int(100*$songTime/$songDuration);
+			$keyword =~ s/\bPLAYTIME_PROGRESS\b/$progress/;
+		}else {
+			$keyword =~ s/\bPLAYTIME_PROGRESS\b//;
+		}
+	}
+	if($keyword =~ /\bVOLUME\b/) {
+		if($client->hasVolumeControl()) {
+			my $minVolume = $client->minVolume();
+			my $maxVolume = $client->maxVolume();
+			my $volume = $client->volume()-$client->minVolume();
+			$volume = int(100*(($volume-$minVolume)/($maxVolume-$minVolume)));
+			$keyword =~ s/\bVOLUME\b/$volume/;
+		}else {
+			$keyword =~ s/\bVOLUME\b//;
+		}
+	}
+	my $song = Slim::Player::Playlist::song($client);
+	return Slim::Music::Info::displayText($client,$song,$keyword);
+}
 sub initScreens {
 	my $client = shift;
 
 	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,1);
 
 	my $localScreens = $itemConfiguration->{'screens'};
+	$lastLayoutChange = time();
 
 	$screens = $localScreens;
 }

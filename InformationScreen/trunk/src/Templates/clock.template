@@ -1,0 +1,29 @@
+<informationscreen>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibilitytime %]</time>
+		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
+		<layout>clock</layout>
+		<style>Clock</style>
+		<items>
+			<group>
+				<id>time</id>
+				<item>
+					<id>time</id>
+					<type>label</type>
+					<preprocessing>datetime</preprocessing>
+					<preprocessingData>[% timeformat %]</preprocessingData>
+				</item>
+			</group>
+			<group>
+				<id>date</id>
+				<item>
+					<id>date</id>
+					<type>label</type>
+					<preprocessing>datetime</preprocessing>
+					<preprocessingData>[% dateformat %]</preprocessingData>
+				</item>
+			</group>
+		</items>
+	</screen>
+</informationscreen>
