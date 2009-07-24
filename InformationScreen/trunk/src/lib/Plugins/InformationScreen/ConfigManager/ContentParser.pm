@@ -23,9 +23,12 @@ use base qw(Slim::Utils::Accessor);
 use Plugins::InformationScreen::ConfigManager::BaseParser;
 our @ISA = qw(Plugins::InformationScreen::ConfigManager::BaseParser);
 
+use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+
+my $prefs = preferences('plugin.informationscreen');
 
 sub new {
 	my $class = shift;
@@ -54,17 +57,38 @@ sub checkContent {
 	my $globalcontext = shift;
 	my $localcontext = shift;
 
+	my $disabled = 0;
+	if(defined($xml->{'screen'}) && defined($xml->{'screen'}->{'id'})) {
+		my $enabled = $prefs->get('screen_'.escape($xml->{'screen'}->{'id'}).'_enabled');
+		if(defined($enabled) && !$enabled) {
+			$disabled = 1;
+		}elsif(!defined($enabled)) {
+			if(defined($xml->{'defaultdisabled'}) && $xml->{'defaultdisabled'}) {
+				$disabled = 1;
+			}
+		}
+	}
+
 	if(defined($localcontext) && defined($localcontext->{'simple'})) {
 		$xml->{'screen'}->{'simple'} = 1;
 	}
 	if(defined($localcontext) && defined($localcontext->{'downloadidentifier'})) {
 		$xml->{'screen'}->{'downloadeditem'} = 1;
 	}
-	$xml->{'screen'}->{'enabled'}=1;
-	if($globalcontext->{'source'} eq 'plugin' || $globalcontext->{'source'} eq 'builtin') {
-		$xml->{'screen'}->{'defaultitem'} = 1;
+	if(!$disabled) {
+		$xml->{'screen'}->{'enabled'}=1;
+		if($globalcontext->{'source'} eq 'plugin' || $globalcontext->{'source'} eq 'builtin') {
+			$xml->{'screen'}->{'defaultitem'} = 1;
+		}else {
+			$xml->{'screen'}->{'customitem'} = 1;
+		}
 	}else {
-		$xml->{'screen'}->{'customitem'} = 1;
+		$xml->{'screen'}->{'enabled'}=0;
+		if($globalcontext->{'source'} eq 'plugin' || $globalcontext->{'source'} eq 'builtin') {
+			$xml->{'screen'}->{'defaultitem'} = 1;
+		}else {
+			$xml->{'screen'}->{'customitem'} = 1;
+		}
 	}
 	return 1;
 }
