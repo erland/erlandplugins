@@ -318,7 +318,6 @@ sub webEditItems {
 		for my $key (keys %$item) {
 			$webitem{$key} = $item->{$key};
 		} 
-use Data::Dumper;$self->logHandler->error("GOT: ".Dumper(\%webitem)."\n and \n".Dumper($items->{$key}));
 		push @webitems,\%webitem;
 	}
 	@webitems = sort { $a->{'screenname'} cmp $b->{'screenname'} } @webitems;

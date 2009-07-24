@@ -1,0 +1,102 @@
+<informationscreen>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibilitytime %]</time>
+		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
+		<layout>nowplaying</layout>
+		<items>
+			<group>
+				<id>browsenptitle</id>
+				<item>
+					<id>back</id>
+					<type>button</type>
+					<icon>back</icon>
+					<action>back</action>
+					<holdAction>go_home</holdAction>
+				</item>
+				<item>
+					<id>text</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% title %]</preprocessingData>
+				</item>
+				<item>
+					<id>playlist</id>
+					<type>button</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>X_OF_Y</preprocessingData>
+					<service>showPlaylist</service>
+				</item>
+			</group>
+			<group>
+				<id>browsenptrack</id>
+				<item>
+					<id>text</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% currenttrackrow1 %]\n[% currenttrackrow2 %]</preprocessingData>
+				</item>
+			</group>
+			<group>
+				<id>browsenpartwork</id>
+				<item>
+					<id>artwork</id>
+					<type>icon</type>
+					<preprocessing>artwork</preprocessing>
+				</item>
+			</group>
+			[% IF showprogress %]
+			<group>
+				<id>browseprogress</id>
+				<item>
+					<id>elapsed</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>PLAYTIME</preprocessingData>
+				</item>
+				<item>
+					<id>slider</id>
+					<style>browseprogressB</style>
+					<type>slider</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>PLAYTIME_PROGRESS</preprocessingData>
+					<min>0</min>
+					<max>100</max>
+				</item>
+				<item>
+					<id>remain</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>DURATION</preprocessingData>
+				</item>
+			</group>
+			[% END %]
+			[% IF showcontrols %]
+			<group>
+				<id>browsenpcontrols</id>
+				<item>
+					<id>rew</id>
+					<type>button</type>
+					<icon>rew</icon>
+					<action>jump_rew</action>
+				</item>
+				<item>
+					<id>play</id>
+					<type>button</type>
+					<icon>play</icon>
+					<preprocessing>function</preprocessing>
+					<preprocessingData>Plugins::InformationScreen::Plugin::preprocessingPlayMode</preprocessingData>
+					<action>pause</action>
+					<holdAction>stop</holdAction>
+				</item>
+				<item>
+					<id>fwd</id>
+					<type>button</type>
+					<icon>fwd</icon>
+					<action>jump_fwd</action>
+				</item>
+			</group>
+			[% END %]
+		</items>
+	</screen>
+</informationscreen>
