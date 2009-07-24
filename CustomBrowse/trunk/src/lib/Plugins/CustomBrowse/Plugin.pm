@@ -1161,12 +1161,13 @@ sub initPlugin {
 }
 
 sub postinitPlugin {
+	my $class = shift;
 	eval {
 		getConfigManager();
 		getMenuHandler();
 		readBrowseConfiguration();
 		readContextBrowseConfiguration();
-		registerJiveMenu();
+		registerJiveMenu($class);
 		registerContextMenus();
 	};
 	if ($@) {
@@ -1258,13 +1259,14 @@ sub contextMenuBrowseBy {
 	$client->update();
 }
 sub registerJiveMenu {
+	my $class = shift;
 	my $client = shift;
 	my @menuItems = (
 		{
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 80,
 			id => 'custombrowse',
-			window => { titleStyle => 'mymusic'},
+			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
 					cmd => ['custombrowse', 'browsejive'],
@@ -1483,6 +1485,7 @@ sub addJivePlayerMenus {
 		if(defined($itemtype) && $itemtype eq 'album') {
 			$menuStyle{'menuStyle'} = 'album';
 		}
+		$menuStyle{'icon-id'} = Plugins::CustomBrowse::Plugin->_pluginDataFor('icon');
 		my @menuItems = (
 			{
 				text => $name,
