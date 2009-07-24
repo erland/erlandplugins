@@ -129,8 +129,12 @@ sub getCurrentScreen {
 	my @sortedScreenKeys = getSortedScreenKeys($screens);
 
 	my $lastScreen = undef;
+	my @enabledScreenKeys = ();
 	for my $key (@sortedScreenKeys) {
-		$lastScreen = $key;
+		if($screens->{$key}->{'enabled'}) {
+			push @enabledScreenKeys,$key;
+			$lastScreen = $key;
+		}
 	}
 
 	my $currentTime = time();
@@ -141,7 +145,7 @@ sub getCurrentScreen {
 		}
 	}
 
-	for my $key (@sortedScreenKeys) {
+	for my $key (@enabledScreenKeys) {
 		if(!defined($screen)) {
 			$client->pluginData('screen' => $key);
 			$client->pluginData('lastSwitchTime'=> $currentTime);
@@ -182,7 +186,8 @@ sub jiveItemsHandler {
 
 	my $currentScreen = getCurrentScreen($client);
 
-	my $listRef = ();
+	my @empty = ();
+	my $listRef = \@empty;
 	if(defined($currentScreen)) {
 		$listRef = $currentScreen->{'items'}->{'group'};
 	}
@@ -478,6 +483,8 @@ sub webPages {
 		"InformationScreen/informationscreen_list\.(?:htm|xml)"     => \&handleWebList,
 		"InformationScreen/informationscreen_refreshscreens\.(?:htm|xml)"     => \&handleWebRefreshScreens,
                 "InformationScreen/webadminmethods_edititem\.(?:htm|xml)"     => \&handleWebEditScreen,
+                "InformationScreen/webadminmethods_hideitem\.(?:htm|xml)"     => \&handleWebHideMenu,
+                "InformationScreen/webadminmethods_showitem\.(?:htm|xml)"     => \&handleWebShowMenu,
                 "InformationScreen/webadminmethods_saveitem\.(?:htm|xml)"     => \&handleWebSaveScreen,
                 "InformationScreen/webadminmethods_savesimpleitem\.(?:htm|xml)"     => \&handleWebSaveSimpleScreen,
                 "InformationScreen/webadminmethods_savenewitem\.(?:htm|xml)"     => \&handleWebSaveNewScreen,
@@ -502,7 +509,7 @@ sub webPages {
 			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
 		}
 	}
-	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_INFORMATIONSCREEN' => 'plugins/InformationScreen/informationscreen_list.html' });
+	#Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_INFORMATIONSCREEN' => 'plugins/InformationScreen/informationscreen_list.html' });
 }
 
 
@@ -539,6 +546,8 @@ sub handleWebList {
 	if(!defined($templateDir) || !-d $templateDir) {
 		$params->{'pluginInformationScreenDownloadMessage'} = 'You have to specify a template directory before you can download screens';
 	}
+	$params->{'pluginInformationScreenDownloadMessage'} = 'Download not supported in this version';
+
 	$params->{'pluginInformationScreenVersion'} = $PLUGINVERSION;
 	if(defined($params->{'redirect'})) {
 		return Slim::Web::HTTP::filltemplatefile('plugins/InformationScreen/informationscreen_redirect.html', $params);
@@ -592,6 +601,38 @@ sub handleWebEditScreens {
 sub handleWebEditScreen {
         my ($client, $params) = @_;
 	return getConfigManager()->webEditItem($client,$params);	
+}
+
+sub handleWebHideMenu {
+        my ($client, $params) = @_;
+	hideMenu($client,$params,getConfigManager(),1,'screen_');	
+	return handleWebEditScreens($client,$params);
+}
+
+sub handleWebShowMenu {
+        my ($client, $params) = @_;
+	hideMenu($client,$params,getConfigManager(),0,'screen_');	
+	return handleWebEditScreens($client,$params);
+}
+
+sub hideMenu {
+	my $client = shift;
+	my $params = shift;
+	my $cfgMgr = shift;
+	my $hide = shift;
+	my $prefix = shift;
+
+	my $items = $cfgMgr->items();
+	my $itemId = escape($params->{'item'});
+	if(defined($items->{$itemId})) {
+		if($hide) {
+			$prefs->set($prefix.$itemId.'_enabled',0);
+			$items->{$itemId}->{'enabled'}=0;
+		}else {
+			$prefs->set($prefix.$itemId.'_enabled',1);
+			$items->{$itemId}->{'enabled'}=1;
+		}
+	}
 }
 
 sub handleWebDeleteScreenType {

@@ -24,6 +24,10 @@
 					[% END %]
 					[% IF !item.defaultitem %]
 					        <a href="[% webroot %]plugins/InformationScreen/webadminmethods_removeitem.html?player=[% player | uri %]&item=[% item.id %][% IF pluginWebAdminMethodsRedirect %]&redirect=[% pluginWebAdminMethodsRedirect %][% END %][% IF pluginWebAdminMethodsHandler %]&webadminmethodshandler=[% pluginWebAdminMethodsHandler %][% END %]" onClick="return confirm('[% "PLUGIN_INFORMATIONSCREEN_REMOVE_ITEM_QUESTION" | string %]');" title="[% item.name %]">[% "PLUGIN_INFORMATIONSCREEN_REMOVE_ITEM" | string %]</a>
+					[% ELSIF item.enabled %]
+						<a href="[% webroot %]plugins/InformationScreen/webadminmethods_hideitem.html?player=[% player | uri %]&item=[% item.id %][% IF pluginWebAdminMethodsRedirect %]&redirect=[% pluginWebAdminMethodsRedirect %][% END %][% IF pluginWebAdminMethodsHandler %]&webadminmethodshandler=[% pluginWebAdminMethodsHandler %][% END %]" title="[% item.name %]">[% "PLUGIN_INFORMATIONSCREEN_HIDE_ITEM" | string %]</a>					
+					[% ELSE %]
+						<a href="[% webroot %]plugins/InformationScreen/webadminmethods_showitem.html?player=[% player | uri %]&item=[% item.id %][% IF pluginWebAdminMethodsRedirect %]&redirect=[% pluginWebAdminMethodsRedirect %][% END %][% IF pluginWebAdminMethodsHandler %]&webadminmethodshandler=[% pluginWebAdminMethodsHandler %][% END %]" title="[% item.name %]">[% "PLUGIN_INFORMATIONSCREEN_SHOW_ITEM" | string %]</a>
 					[% END %]
 				[% END %]
 				[%- WRAPPER contentitem  controls='controls' %]
