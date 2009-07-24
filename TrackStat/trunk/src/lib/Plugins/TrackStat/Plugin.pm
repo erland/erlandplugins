@@ -2509,7 +2509,7 @@ sub initPlugin
 
 		initStatisticPlugins();
 
-		registerJiveMenu();
+		registerJiveMenu($class);
 		
 		my %mixerMap = ();
 		if($prefs->get("web_enable_mixerfunction")) {
@@ -2685,13 +2685,14 @@ sub contextMenuTrackStatRating {
 }
 
 sub registerJiveMenu {
+	my $class = shift;
 	my $client = shift;
 	my @menuItems = (
 		{
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 85,
 			id => 'trackstat',
-			window => { titleStyle => 'mymusic'},
+			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
 					cmd => ['trackstat', 'browsejive'],
