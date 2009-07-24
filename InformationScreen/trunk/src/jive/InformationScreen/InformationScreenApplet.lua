@@ -31,12 +31,21 @@ local Icon             = require("jive.ui.Icon")
 local Group            = require("jive.ui.Group")
 local Slider           = require("jive.ui.Slider")
 local Framework        = require("jive.ui.Framework")
+local Tile             = require("jive.ui.Tile")
+local Font             = require("jive.ui.Font")
 
 local log              = require("jive.utils.log").logger("applets.screensavers")
 
 local appletManager    = appletManager
 local jiveMain         = jiveMain
 local JIVE_VERSION      = jive.JIVE_VERSION
+local WH_FILL		= jive.ui.WH_FILL
+local LAYOUT_NORTH	= jive.ui.LAYOUT_NORTH
+local LAYOUT_SOUTH	= jive.ui.LAYOUT_SOUTH
+
+local fontpath = "fonts/"
+local FONT_NAME = "FreeSans"
+local BOLD_PREFIX = "Bold"
 
 module(...)
 oo.class(_M, Applet)
@@ -97,9 +106,13 @@ function _getInformationResponse(self, result)
 		if result.style then
 			style = result.style
 		end
+		local skin = nil
+		if result.skin then
+			skin = result.skin
+		end
 		if self.layout != result.layout or self.layoutChangedTime != result.layoutChangedTime then
 			log:info("Re-creating widgets")
-			self:_createUIItems(style,result.item_loop)
+			self:_createUIItems(skin,style,result.item_loop)
 			self.layoutChangedTime = result.layoutChangedTime;
 			self.layout = result.layout
 		else 
@@ -128,7 +141,7 @@ function _createUI(self)
 	return window
 end
 
-function _createUIItems(self,style,groups)
+function _createUIItems(self,skin,style,groups)
 	local window = nil
 	if style then
 		log:info("Creating window with style: " .. style)
@@ -136,6 +149,11 @@ function _createUIItems(self,style,groups)
 	else
 		log:info("Creating window with default style")
 		window = Window("window")
+	end
+	if skin and skin == "getClockStyles" then
+		log:info("Creating window with skin styles: " .. skin)
+		window:setSkin(self:_getClockStyles(jiveMain:getSelectedSkin()))
+		window:reSkin()
 	end
 	self.groups = {}
 	for index,group in ipairs(groups) do
@@ -352,6 +370,44 @@ function _getIcon(self, item, icon)
 		log:info("Disable image");
 		icon:setValue(nil)
 	end
+end
+
+local function _boldfont(fontSize)
+        return Font:load(fontpath .. FONT_NAME .. BOLD_PREFIX .. ".ttf", fontSize)
+end
+
+local function _font(fontSize)
+        return Font:load(fontpath .. FONT_NAME .. ".ttf", fontSize)
+end
+
+function _getClockStyles(self, skinName)
+	local s = {}
+	local width,height = Framework.getScreenSize()
+	s.InformationScreenClock = {
+		bgImg = Tile:fillColor(0x000000ff),
+		time = {
+			position = LAYOUT_NORTH,
+			border = {0,40,0,40},
+			time = {
+				font = _font(width*3/8),
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		date = {
+			position = LAYOUT_SOUTH,
+			border = {0,0,0,15},
+			date = {
+				font = _font(40),
+				align = 'center',
+				w = WH_FILL,
+				h = 70,
+				fg = { 0xcc, 0xcc, 0xcc },
+			},
+		}
+	}
+	return s;		
 end
 
 --[[
