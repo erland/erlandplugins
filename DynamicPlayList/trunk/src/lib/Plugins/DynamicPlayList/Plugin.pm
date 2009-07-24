@@ -2149,9 +2149,10 @@ sub initPlugin {
 }
 
 sub postinitPlugin {
+	my $class = shift;
 	initPlayLists();
 	initPlayListTypes();
-	registerJiveMenu();
+	registerJiveMenu($class);
 	registerContextMenu();
 }
 
@@ -2313,13 +2314,14 @@ sub contextMenuMixer {
 }
 
 sub registerJiveMenu {
+	my $class = shift;
 	my $client = shift;
 	my @menuItems = (
 		{
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 85,
 			id => 'dynamicplaylist',
-			window => { titleStyle => 'mymusic'},
+			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
 					cmd => ['dynamicplaylist', 'browsejive'],
@@ -2452,7 +2454,7 @@ sub handleWebList {
 	initFilters();
 	initPlayLists($client);
 	initPlayListTypes();
-	registerJiveMenu();
+	registerJiveMenu("Plugins::DynamicPlayList::Plugin");
 	my $playlist = undef;
 	if(defined($client) && defined($mixInfo{$masterClient}) && defined($mixInfo{$masterClient}->{'type'})) {
 		$playlist = getPlayList($client,$mixInfo{$masterClient}->{'type'});
@@ -2522,7 +2524,7 @@ sub handleWebMixParameters {
 		$client->modeParam('dynamicplaylist_parameter_'.$i,\%value);
 		$log->debug("Storing parameter $i=".$value{'id'}."\n");
 
-		if($params->{'dynamicplaylist_parameter_changed'} eq $i) {
+		if(defined($params->{'dynamicplaylist_parameter_changed'}) && $params->{'dynamicplaylist_parameter_changed'} eq $i) {
 			last;
 		}
 		$i++;
