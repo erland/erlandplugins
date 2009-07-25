@@ -143,12 +143,15 @@ end
 
 function _createUIItems(self,skin,style,groups)
 	local window = nil
+	local path = nil
 	if style then
 		log:info("Creating window with style: " .. style)
 		window = Window(style)
+		path = style
 	else
 		log:info("Creating window with default style")
 		window = Window("window")
+		path = "window"
 	end
 	if skin and skin == "getClockStyles" then
 		log:info("Creating window with skin styles: " .. skin)
@@ -158,129 +161,20 @@ function _createUIItems(self,skin,style,groups)
 	self.groups = {}
 	for index,group in ipairs(groups) do
 		log:info("Handling group " .. index .. ": " .. group.id)
-		local items = {}
-		for itemIndex,item in ipairs(group.item) do
-			local itemObj = nil
-			local itemStyle = item.id
-			if item.style then
-				itemStyle = item.style
-			end
-			if item.type == "label" and item.value then
-				log:info("Creating Label(" .. item.id .. "," .. item.value .. ")")
-				itemObj = Label(itemStyle,item.value)
-			elseif item.type == "slider" and item.value then
-				if not item.min then
-					item.min = 0
-				end
-				if not item.max then
-					item.max = 100
-				end
-				log:info("Creating Slider(" .. itemStyle .. "," .. item.min .. "," .. item.max .. "," .. item.value .. ")")
-				itemObj = Slider(itemStyle,tonumber(item.min),tonumber(item.max),tonumber(item.value))
-			elseif item.type == "defaultleftbutton" then
-				log:info("Creating default left button")
-				itemObj = window:createDefaultLeftButton()
-			elseif item.type == "defaultrightbutton" then
-				log:info("Creating default left button")
-				itemObj = window:createDefaultRightButton()
-			elseif item.type == "button" and (item.action or item.service) then
-				local action = nil
-				if item.action then
-					log:info("Configuring action ".. item.action);
-					action = function()
-						Framework:pushAction(item.action)
-						return EVENT_CONSUME
-					end
-				elseif item.service then
-					log:info("Configuring service ".. item.service);
-					action = function()
-						appletManager:callService(item.service)
-						return EVENT_CONSUME
-					end
-				end
-				local holdAction = nil
-				if item.holdAction then
-					log:info("Configuring holdAction ".. item.holdAction);
-					holdAction = function()
-						Framework:pushAction(item.holdAction)
-						return EVENT_CONSUME
-					end
-				elseif item.holdService then
-					log:info("Configuring holdService ".. item.holdService);
-					holdAction = function()
-						appletManager:callService(item.holdService)
-						return EVENT_CONSUME
-					end
-				end
-				local longHoldAction = nil
-				if item.longHoldAction then
-					log:info("Configuring longHoldAction ".. item.longHoldAction);
-					longHoldAction = function()
-						Framework:pushAction(item.longHoldAction)
-						return EVENT_CONSUME
-					end
-				elseif item.longHoldService then
-					log:info("Configuring longHoldService ".. item.longHoldService);
-					longHoldAction = function()
-						appletManager:callService(item.longHoldService)
-						return EVENT_CONSUME
-					end
-				end
-				local buttonWidget = nil
-				if item.icon or item.groupIcon then
-					local buttonIcon = nil
-					if item.groupIcon and item.style then
-						log:info("Creating Button Group("..item.style..", Icon(" .. item.groupIcon .. "))")
-						buttonWidget = Group(item.style,{Icon(item.groupIcon)})
-					else
-						log:info("Creating Button Icon(" .. item.icon .. ")")
-						buttonWidget = Icon(item.icon)
-					end
-				elseif item.value then
-					log:info("Creating Button Label(" .. itemStyle .. "," .. item.value .. ")")
-					buttonWidget = Label(itemStyle, item.value)
-				end
-				if buttonWidget then
-					itemObj = Button(
-						buttonWidget,
-						action,
-						holdAction,
-						longHoldAction
-					)
-				end
-			elseif item.type == "icon" and item.icon then
-				log:info("Creating Icon(" .. item.icon .. ")")
-				itemObj = Icon(item.icon)
-			elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
-				log:info("Creating artwork Icon(artwork)");
-				itemObj = Icon("artwork")
-				self:_getIcon(item,itemObj)
-			elseif item.type == "button" then
-				if item.icon then
-					log:info("Creating Icon(" .. item.icon .. ")")
-					itemObj = Icon(item.icon)
-				elseif item.value then
-					log:info("Creating Label(" .. item.id .. "," .. item.value .. ")")
-					itemObj = Label(item.id,item.value)
-				end
-			end
-			if itemObj then
-				if item.style then
-					log:info("Set style of ".. item.id .. " to " .. item.style)
-					itemObj:setStyle(item.style)
-				end
-				items[item.id] = itemObj
-			end
+		if not group.flatten then
+			path = path .. "." .. group.id
 		end
-		self.groups[group.id] = Group(group.id,items)
+		local groupItems = self:_createGroupItems(window,group,path)
+		self.groups[group.id] = Group(group.id,groupItems)
 		if group.flatten then
 			log:info("Flatten group " .. group.id)
-			for itemIndex,item in pairs(items) do
-				log:info("Adding widget " .. itemIndex)
+			for itemIndex,item in pairs(groupItems) do
+				log:info("Adding item widget "..itemIndex)
 				window:addWidget(item)
 			end
 		else 
-			log:info("Adding group widget " .. group.id)
+			log:info("Creating Group("..group.id..", ... ) with path " .. path)
+			log:info("Adding group widget")
 			window:addWidget(self.groups[group.id])
 		end
 	end
@@ -298,6 +192,129 @@ function _createUIItems(self,skin,style,groups)
 	window:show(Window.transitionFadeIn)
 	self.window:hide()
 	self.window = window
+end
+
+function _createGroupItems(self,window,group,path)
+	local items = {}
+	for itemIndex,item in ipairs(group.item) do
+		local itemObj = nil
+		local itemStyle = item.id
+		if item.style then
+			itemStyle = item.style
+		end
+		log:info("Handling item " .. item.id)
+		if item.type == "label" and item.value then
+			log:info("Creating Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+			itemObj = Label(itemStyle,item.value)
+		elseif item.type == "slider" and item.value then
+			if not item.min then
+				item.min = 0
+			end
+			if not item.max then
+				item.max = 100
+			end
+			log:info("Creating Slider(" .. itemStyle .. "," .. item.min .. "," .. item.max .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+			itemObj = Slider(itemStyle,tonumber(item.min),tonumber(item.max),tonumber(item.value))
+		elseif item.type == "defaultleftbutton" then
+			log:info("Creating default left button")
+			itemObj = window:createDefaultLeftButton()
+		elseif item.type == "defaultrightbutton" then
+			log:info("Creating default left button")
+			itemObj = window:createDefaultRightButton()
+		elseif item.type == "button" and (item.action or item.service) then
+			local action = nil
+			if item.action then
+				log:info("Configuring action ".. item.action);
+				action = function()
+					Framework:pushAction(item.action)
+					return EVENT_CONSUME
+				end
+			elseif item.service then
+				log:info("Configuring service ".. item.service);
+				action = function()
+					appletManager:callService(item.service)
+					return EVENT_CONSUME
+				end
+			end
+			local holdAction = nil
+			if item.holdAction then
+				log:info("Configuring holdAction ".. item.holdAction);
+				holdAction = function()
+					Framework:pushAction(item.holdAction)
+					return EVENT_CONSUME
+				end
+			elseif item.holdService then
+				log:info("Configuring holdService ".. item.holdService);
+				holdAction = function()
+					appletManager:callService(item.holdService)
+					return EVENT_CONSUME
+				end
+			end
+			local longHoldAction = nil
+			if item.longHoldAction then
+				log:info("Configuring longHoldAction ".. item.longHoldAction);
+				longHoldAction = function()
+					Framework:pushAction(item.longHoldAction)
+					return EVENT_CONSUME
+				end
+			elseif item.longHoldService then
+				log:info("Configuring longHoldService ".. item.longHoldService);
+				longHoldAction = function()
+					appletManager:callService(item.longHoldService)
+					return EVENT_CONSUME
+				end
+			end
+			local buttonWidget = nil
+			if item.icon or item.groupIcon then
+				local buttonIcon = nil
+				if item.groupIcon and item.style then
+					log:info("Creating Button Group("..item.style..", Icon(" .. item.groupIcon .. ")) with path "..path.."."..item.style)
+					buttonWidget = Group(item.style,{Icon(item.groupIcon)})
+				else
+					log:info("Creating Button Icon(" .. item.icon .. ") with path "..path)
+					buttonWidget = Icon(item.icon)
+				end
+			elseif item.value then
+				log:info("Creating Button Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+				buttonWidget = Label(itemStyle, item.value)
+			end
+			if buttonWidget then
+				itemObj = Button(
+					buttonWidget,
+					action,
+					holdAction,
+					longHoldAction
+				)
+			end
+		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
+			log:info("Creating artwork Icon(artwork) with path "..path..".artwork");
+			itemObj = Icon("artwork")
+			self:_getIcon(item,itemObj)
+		elseif item.type == "icon" and item.icon then
+			log:info("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
+			itemObj = Icon(item.icon)
+		elseif item.type == "button" then
+			if item.icon then
+				log:info("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
+				itemObj = Icon(item.icon)
+			elseif item.value then
+				log:info("Creating Label(" .. item.id .. "," .. item.value .. ") with path "..path.."."..item.id)
+				itemObj = Label(item.id,item.value)
+			end
+		elseif item.type == "group" then
+			local groupItems = self:_createGroupItems(window,item,path.."."..item.id)
+			log:info("Creating Group(" .. item.id..") with path "..path.."."..item.id)
+			itemObj = Group(item.id,groupItems)
+		end
+		if itemObj then
+			if item.style then
+				log:info("Set style of ".. item.id .. " to " .. item.style)
+				itemObj:setStyle(item.style)
+			end
+			items[item.id] = itemObj
+		end
+	end
+	return items
 end
 
 function _updateUIItems(self,style,groups)
