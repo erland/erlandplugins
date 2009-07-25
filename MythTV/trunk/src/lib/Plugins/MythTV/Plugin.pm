@@ -30,6 +30,7 @@ use Slim::Utils::Unicode;
 use File::Spec::Functions qw(:ALL);
 use File::Slurp;
 use HTTP::Date qw(time2str);
+use Plugins::MythTV::Template::Reader;
 
 use MythTV;
 
@@ -51,6 +52,7 @@ my $htmlTemplate = 'plugins/MythTV/index.html';
 my $PLUGINVERSION = undef;
 
 my $ICONS = {};
+my $driver;
 
 sub getDisplayName {
 	return 'PLUGIN_MYTHTV';
@@ -66,6 +68,20 @@ sub initPlugin {
 	my $cachedir = $serverPrefs->get('cachedir');
 	my $icondir  = catdir( $cachedir, 'MythTVIcons' );
 	mkdir $icondir;
+
+	$driver = $serverPrefs->get('dbsource');
+	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+    
+	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
+		my ($source,$username,$password);
+		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	}
+	if($driver ne 'mysql') {
+		eval "require DBIx::Class::Storage::DBI::mysql;";
+		if($@) {
+			$log->error("Unable to load MySQL driver: $@");
+		}
+	}
 }
 
 
@@ -76,7 +92,7 @@ sub webPages {
 		"MythTV/previousrecordings\.(?:htm|xml)"     => \&handleWebPreviousRecordings,
 		"MythTV/pendingrecordings\.(?:htm|xml)"     => \&handleWebPendingRecordings,
 		"MythTV/activerecordings\.(?:htm|xml)"     => \&handleWebActiveRecordings,
-		"MythTV/geticon\.(?:jpg|png)"     => \&handleWebGetIcon,
+		"MythTV/geticon.*\.(?:jpg|png)"     => \&handleWebGetIcon,
 	);
 
 	for my $page (keys %pages) {
@@ -436,6 +452,118 @@ sub getRecording {
 		delete $entry{'description'};
 	}
 	return \%entry;
+}
+
+sub checkInformationScreenActiveRecordings {
+	my $client = shift;
+	my $screen = shift;
+
+	my $lines = getActiveRecordings();
+	if(scalar(@$lines)>0) {
+		return 1;
+	}else {
+		return 0;
+	}
+}
+
+sub preprocessInformationScreenActiveRecordings {
+	my $client = shift;
+	my $group = shift;
+
+
+	my $lines = getActiveRecordings();
+	$log->error("GOT: ".Dumper($lines));
+	return 1;
+}
+
+sub preprocessInformationScreenPendingRecordings {
+	my $client = shift;
+	my $screen = shift;
+
+	my $lines = getPendingRecordings();
+	if(scalar(@$lines)==0) {
+		return 0;
+	}
+
+	my @empty = ();
+	my $groups = \@empty;
+	if(exists $screen->{'items'}->{'group'}) {
+		$groups = $screen->{'items'}->{'group'};
+		if(ref($groups) ne 'ARRAY') {
+			push @empty,$groups;
+			$groups = \@empty;
+		}
+	}
+	my $menuGroup = {
+		'id' => 'menu',
+		'type' => 'group',
+	};
+	my @menuItems = ();
+	my $index = 1;
+	foreach my $recording (@$lines) {
+		my $group = {
+			'id' => 'item'.$index++,
+			'type' => 'group',
+			'style' => 'item_no_arrow',
+		};
+		my @items = ();
+		my $text = {
+			'id' => 'text',
+			'type' => 'label',
+			'value' => $recording->{'title'}."\n".$recording->{'startdate'}." ".$recording->{'starttime'},
+		};
+		push @items,$text;
+		my $icon = {
+			'id' => 'icon',
+			'type' => 'icon',
+			'icon' => 'icon',#plugins/CustomBrowse/html/images/custombrowse.png',
+			'preprocessing' => 'artwork',
+		};
+		push @items,$icon;
+#		my $arrow = {
+#			'id' => 'arrow',
+#			'type' => 'icon',
+#			'icon' => 'arrow',
+#		};
+#		push @items,$arrow;
+		$group->{'item'} = \@items;
+		push @menuItems, $group;
+		$index++;
+		if($index>5) {
+			last;
+		}
+	}
+	$menuGroup->{'item'} = \@menuItems;
+	$screen->{'items'}->{'group'} = $menuGroup;
+	$log->error("GOT: ".Dumper($screen));
+	return 1;
+}
+
+sub getInformationScreenScreens {
+	my $client = shift;
+	return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$PLUGINVERSION,'FileCache/InformationScreen','Screens','xml','template','screen','simple',1);
+}
+
+sub getInformationScreenTemplates {
+        my $client = shift;
+        return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$PLUGINVERSION,'FileCache/InformationScreen','ScreenTemplates','xml');
+}
+
+sub getInformationScreenTemplateData {
+        my $client = shift;
+        my $templateItem = shift;
+        my $parameterValues = shift;
+        my $data = Plugins::MythTV::Template::Reader::readTemplateData('MythTV','ScreenTemplates',$templateItem->{'id'});
+        return $data;
+}
+
+
+sub getInformationScreenScreenData {
+        my $client = shift;
+        my $templateItem = shift;
+        my $parameterValues = shift;
+        my $data = Plugins::MythTV::Template::Reader::readTemplateData('MythTV','Screens',$templateItem->{'id'},"xml");
+        return $data;
 }
 
 sub checkDefaults {
