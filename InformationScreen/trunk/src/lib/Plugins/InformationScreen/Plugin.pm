@@ -27,6 +27,7 @@ use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
 use POSIX qw(strftime);
+use Storable;
 
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
@@ -145,20 +146,31 @@ sub getCurrentScreen {
 		}
 	}
 
-	for my $key (@enabledScreenKeys) {
-		if(!defined($screen)) {
-			$client->pluginData('screen' => $key);
-			$client->pluginData('lastSwitchTime'=> $currentTime);
-			$screen = $key;
-			$log->debug("Selecting screen $key");
-		}
-		if($key eq $screen) {
-			if($currentTime-$client->pluginData('lastSwitchTime') >= $screens->{$key}->{'time'}) {
-				$screen = undef;
-			}else {
-				$log->debug("Still time left $currentTime, ".$client->pluginData('lastSwitchTime')." of ".$screens->{$key}->{'time'}." seconds");
-				return $screens->{$key};
+	my $affected = 0;
+	for (my $iteration=0; $iteration<2; $iteration++) {
+		for my $key (@enabledScreenKeys) {
+			if(!defined($screen)) {
+				$client->pluginData('screen' => $key);
+				$client->pluginData('lastSwitchTime'=> $currentTime);
+				$screen = $key;
+				$log->debug("Selecting screen $key");
 			}
+			if($key eq $screen) {
+				if($currentTime-$client->pluginData('lastSwitchTime') >= $screens->{$key}->{'time'}) {
+					$screen = undef;
+				}else {
+					$log->debug("Still time left $currentTime, ".$client->pluginData('lastSwitchTime')." of ".$screens->{$key}->{'time'}." seconds");
+					my $currentScreen = Storable::dclone($screens->{$key});
+					if(preprocessScreen($client,$currentScreen)) {
+						return $currentScreen;
+					}else {
+						$affected = 1;
+					}
+				}
+			}
+		}
+		if(!$affected) {
+			last;
 		}
 	}
 	return undef;
@@ -190,6 +202,11 @@ sub jiveItemsHandler {
 	my $listRef = \@empty;
 	if(defined($currentScreen)) {
 		$listRef = $currentScreen->{'items'}->{'group'};
+		if(ref($listRef) ne 'ARRAY') {
+			my @empty = ();
+			push @empty,$listRef;
+			$listRef = \@empty;
+		}
 	}
 
   	my $start = $request->getParam('_start') || 0;
@@ -199,12 +216,17 @@ sub jiveItemsHandler {
 	my $offsetCount = 0;
 	my @itemLoop = ();
 	foreach my $group (@$listRef) {
-		if(!exists $group->{'includedskins'} || isSkinIncluded($group->{'includedskins'},$request->getParam('skin'))) {
-			if(!exists $group->{'excludedskins'} || !isSkinExcluded($group->{'excludedskins'},$request->getParam('skin'))) {
-				if($cnt>=$start && $offsetCount<$itemsPerResponse) {
-					preprocessItems($client,$group);
-					push @itemLoop,$group;
-					$offsetCount++;
+		if(preprocessGroup($client,$group)) {
+			if(!exists $group->{'includedskins'} || isSkinIncluded($group->{'includedskins'},$request->getParam('skin'))) {
+				if(!exists $group->{'excludedskins'} || !isSkinExcluded($group->{'excludedskins'},$request->getParam('skin'))) {
+					if($cnt>=$start && $offsetCount<$itemsPerResponse) {
+						my $itemArray = $group->{'item'};
+						foreach my $item (@$itemArray) {
+							preprocessItem($client,$item);
+						}
+						push @itemLoop,$group;
+						$offsetCount++;
+					}
 				}
 			}
 		}
@@ -249,67 +271,91 @@ sub isSkinExcluded {
 	return 1;
 }
 
-sub preprocessItems {
+sub preprocessScreen {
+	my $client = shift;
+	my $screen = shift;
+
+	if(exists $screen->{'preprocessing'} && $screen->{'preprocessing'} eq 'function') {
+		no strict 'refs';
+		$log->debug("Calling: ".$screen->{'preprocessingData'});
+		my $result = eval { &{$screen->{'preprocessingData'}}($client,$screen) };
+		if ($@) {
+			$log->warn("Error preprocessing ".$screen->{'id'}." with ".$screen->{'preprocessingData'}.": $@");
+		}
+		use strict 'refs';
+		return $result;
+	}
+	return 1;
+}
+
+sub preprocessGroup {
 	my $client = shift;
 	my $group = shift;
 
-	my $items = $group->{'item'};
-	my @itemArray = ();
-	if(ref($items) eq 'ARRAY') {
-		@itemArray = @$items;
-	}else {
-		push @itemArray,$items;
+	if(exists $group->{'preprocessing'} && $group->{'preprocessing'} eq 'function') {
+		no strict 'refs';
+		$log->debug("Calling: ".$group->{'preprocessingData'});
+		my $result = eval { &{$group->{'preprocessingData'}}($client,$group) };
+		if ($@) {
+			$log->warn("Error preprocessing ".$group->{'id'}." with ".$group->{'preprocessingData'}.": $@");
+		}
+		use strict 'refs';
+		return $result;
 	}
+	return 1;
+}
 
-	foreach my $item (@itemArray) {
-		if(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'titleformat') {
-			my @formatParts = split(/\\n/,$item->{'preprocessingData'});
-			$item->{'value'} = "";
-			foreach my $part (@formatParts) {
-				if($item->{'value'} ne "") {
-					$item->{'value'} .= "\n";
+sub preprocessItem {
+	my $client = shift;
+	my $item = shift;
+
+	if(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'titleformat') {
+		my @formatParts = split(/\\n/,$item->{'preprocessingData'});
+		$item->{'value'} = "";
+		foreach my $part (@formatParts) {
+			if($item->{'value'} ne "") {
+				$item->{'value'} .= "\n";
+			}
+			$item->{'value'} .= getKeywordValues($client,$part);
+		}
+
+	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'datetime') {
+		$item->{'value'} = strftime($item->{'preprocessingData'},localtime(time()));
+
+	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'function') {
+		no strict 'refs';
+		$log->debug("Calling: ".$item->{'preprocessingData'});
+		eval { &{$item->{'preprocessingData'}}($client,$item) };
+		if ($@) {
+			$log->warn("Error preprocessing ".$item->{'id'}." with ".$item->{'preprocessingData'}.": $@");
+		}
+		use strict 'refs';
+
+	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'artwork') {
+		my $song = Slim::Player::Playlist::song($client);
+		if(defined($song)) {
+			if ( $song->isRemoteURL ) {
+				my $handler = Slim::Player::ProtocolHandlers->handlerForURL($song->url);
+
+				if ( $handler && $handler->can('getMetadataFor') ) {
+
+					my $meta = $handler->getMetadataFor( $client, $song->url );
+
+					if ( $meta->{cover} ) {
+						$item->{'icon'} = $meta->{cover};
+					}
+					elsif ( $meta->{icon} ) {
+						$item->{'icon-id'} = $meta->{icon};
+					}
 				}
-				$item->{'value'} .= getKeywordValues($client,$part);
-			}
-
-		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'datetime') {
-			$item->{'value'} = strftime($item->{'preprocessingData'},localtime(time()));
-
-		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'function') {
-			no strict 'refs';
-			$log->debug("Calling: ".$item->{'preprocessingData'});
-			eval { &{$item->{'preprocessingData'}}($client,$item) };
-			if ($@) {
-				$log->warn("Error preprocessing $item->{'id'} with ".$item->{'preprocessingData'}.": $@");
-			}
-			use strict 'refs';
-
-		}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'artwork') {
-			my $song = Slim::Player::Playlist::song($client);
-			if(defined($song)) {
-				if ( $song->isRemoteURL ) {
-					my $handler = Slim::Player::ProtocolHandlers->handlerForURL($song->url);
-
-					if ( $handler && $handler->can('getMetadataFor') ) {
-
-						my $meta = $handler->getMetadataFor( $client, $song->url );
-
-						if ( $meta->{cover} ) {
-							$item->{'icon'} = $meta->{cover};
-						}
-						elsif ( $meta->{icon} ) {
-							$item->{'icon-id'} = $meta->{icon};
-						}
-					}
-				        
-					# If that didn't return anything, use default cover
-					if ( !$item->{'icon-id'} && !$item->{'icon'} ) {
-						$item->{'icon-id'} = '/html/images/radio.png';
-					}
-				}else {
-					if ( my $album = $song->album ) {
-						$item->{'icon-id'} = ( $album->artwork || 0 ) + 0;
-					}
+			        
+				# If that didn't return anything, use default cover
+				if ( !$item->{'icon-id'} && !$item->{'icon'} ) {
+					$item->{'icon-id'} = '/html/images/radio.png';
+				}
+			}else {
+				if ( my $album = $song->album ) {
+					$item->{'icon-id'} = ( $album->artwork || 0 ) + 0;
 				}
 			}
 		}
@@ -318,42 +364,48 @@ sub preprocessItems {
 
 sub preprocessingShuffleMode {
 	my $client = shift;
-	my $item = shift;
+	my $group = shift;
 
 	my $shuffle = Slim::Player::Playlist::shuffle($client);
 	if($shuffle == 1) {
-		$item->{'style'} = "shuffleSong";
+		$group->{'style'} = "shuffleSong";
 	}elsif($shuffle == 2) {
-		$item->{'style'} = "shuffleAlbum";
+		$group->{'style'} = "shuffleAlbum";
 	}else {
-		$item->{'style'} = "shuffleOff";
+		$group->{'style'} = "shuffleOff";
 	}
+	my @empty = ();
+	return \@empty;
 }
 
 sub preprocessingRepeatMode {
 	my $client = shift;
-	my $item = shift;
+	my $group = shift;
 
 	my $repeat = Slim::Player::Playlist::repeat($client);
 	if($repeat == 1) {
-		$item->{'style'} = "repeatSong";
+		$group->{'style'} = "repeatSong";
 	}elsif($repeat == 2) {
-		$item->{'style'} = "repeatPlaylist";
+		$group->{'style'} = "repeatPlaylist";
 	}else {
-		$item->{'style'} = "repeatOff";
+		$group->{'style'} = "repeatOff";
 	}
+	my @empty = ();
+	return \@empty;
 }
 
 sub preprocessingPlayMode {
 	my $client = shift;
-	my $item = shift;
+	my $group = shift;
 
 	my $playMode = Slim::Player::Source::playmode($client);
 	if($playMode eq 'play') {
-		$item->{'style'} = "pause";
+		$group->{'style'} = "pause";
 	}else {
-		$item->{'style'} = "play";
+		$group->{'style'} = "play";
 	}
+	my @empty = ();
+	return \@empty;
 }
 
 sub getKeywordValues {
