@@ -1,0 +1,25 @@
+<informationscreen>
+	<minpluginversion>0.2</minpluginversion>
+	<requiresplugin>MythTV</requiresplugin>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibilitytime %]</time>
+		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
+		<layout>pendingrecordings</layout>
+		<style>icon_list</style>
+		<preprocessing>function</preprocessing>
+		<preprocessingData>Plugins::MythTV::Plugin::preprocessInformationScreenPendingRecordings</preprocessingData>
+		<items>
+			[% IF screentitle %]
+			<group>
+				<id>title</id>
+				<item>
+					<id>text</id>
+					<type>label</type>
+					<value>[% screentitle %]</value>
+				</item>
+			</group>
+			[% END %]
+		</items>
+	</screen>
+</informationscreen>

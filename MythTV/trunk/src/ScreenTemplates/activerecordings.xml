@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<informationscreen>
+	<minpluginversion>0.2</minpluginversion>
+	<requiresplugin>MythTV</requiresplugin>
+	<template>
+		<name>MythTV active recordings</name>
+		<description>Shows MythTV active recordings</description>
+		<parameter type="text" id="screenname" name="Screen name" value="MythTV Active Recordings"/>
+		<parameter type="text" id="screentitle" name="Screen title" value="Currently Recording"/>
+		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
+		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+	</template>
+</informationscreen>
+
