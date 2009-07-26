@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<multilibrary>
+	<template>
+		<id>mail_newmail</id>
+		<parameter type="text" id="screenname"><value>New Mail</value></parameter>
+		<parameter type="text" id="screentitle"><value>You have got mail</value></parameter>
+		<parameter type="text" id="screenorder"><value>50</value></parameter>
+		<parameter type="text" id="visibilitytime"><value>5</value></parameter>
+	</template>
+</multilibrary>
+

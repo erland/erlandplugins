@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<informationscreen>
+	<minpluginversion>0.2</minpluginversion>
+	<requiresplugin>Mail</requiresplugin>
+	<template>
+		<name>New Mail</name>
+		<description>Shows new mails</description>
+		<parameter type="text" id="screenname" name="Screen name" value="New Mail"/>
+		<parameter type="text" id="screentitle" name="Screen title" value="You have got mail!"/>
+		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
+		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+	</template>
+</informationscreen>
+
