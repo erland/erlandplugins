@@ -26,6 +26,7 @@ use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
+use Slim::Utils::DateTime;
 use POSIX qw(strftime);
 use Storable;
 
@@ -164,6 +165,8 @@ sub getCurrentScreen {
 					if(preprocessScreen($client,$currentScreen)) {
 						return $currentScreen;
 					}else {
+						$log->debug("Skipping screen (removed during preprocessing): $key");
+						$screen = undef;
 						$affected = 1;
 					}
 				}
@@ -201,7 +204,7 @@ sub jiveItemsHandler {
 	my @empty = ();
 	my $listRef = \@empty;
 	if(defined($currentScreen)) {
-		$listRef = $currentScreen->{'items'}->{'group'};
+		$listRef = $currentScreen->{'items'}->{'item'};
 		if(ref($listRef) ne 'ARRAY') {
 			my @empty = ();
 			push @empty,$listRef;
@@ -229,6 +232,8 @@ sub jiveItemsHandler {
 					}
 				}
 			}
+		}else {
+			$log->debug("Skipping top item (removed during preprocessing): ".$group->{'id'});
 		}
 		$cnt++;
 	}
@@ -236,7 +241,7 @@ sub jiveItemsHandler {
 
 	$request->addResult('offset',$start);
 	$request->addResult('count',$cnt);
-	$request->addResult('layout',$currentScreen->{'layout'});
+	$request->addResult('layout',$currentScreen->{'id'});
 	$request->addResult('style',$currentScreen->{'style'}) if exists $currentScreen->{'style'};
 	$request->addResult('skin',$currentScreen->{'skin'}) if exists $currentScreen->{'skin'};
 	$request->addResult('layoutChangedTime',$lastLayoutChange);
@@ -515,6 +520,36 @@ sub getKeywordValues {
 		}else {
 			$keyword =~ s/\bVOLUME\b//;
 		}
+	}
+	if($keyword =~ /\bSHORTTIME\b/) {
+		my $time = time();
+		my $timeStr = Slim::Utils::DateTime::timeF($time);
+                $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+		$keyword =~ s/\bSHORTTIME\b/$timeStr/;
+	}
+	if($keyword =~ /\bTIME\b/) {
+		my $time = time();
+		my $timeStr = Slim::Utils::DateTime::timeF($time);
+
+		$keyword =~ s/\bTIME\b/$timeStr/;
+	}
+	if($keyword =~ /\bDATE\b/) {
+		my $time = time();
+		my $timeStr = Slim::Utils::DateTime::shortDateF($time);
+
+		$keyword =~ s/\bDATE\b/$timeStr/;
+	}
+	if($keyword =~ /\bWEEKDAY\b/) {
+		my $time = time();
+		my $timeStr = Slim::Utils::DateTime::timeF($time, "%A");
+
+		$keyword =~ s/\bWEEKDAY\b/$timeStr/;
+	}
+	if($keyword =~ /\bSHORTWEEKDAY\b/) {
+		my $time = time();
+		my $timeStr = Slim::Utils::DateTime::timeF($time, "%a");
+
+		$keyword =~ s/\bSHORTWEEKDAY\b/$timeStr/;
 	}
 	my $song = Slim::Player::Playlist::song($client);
 	return Slim::Music::Info::displayText($client,$song,$keyword);
