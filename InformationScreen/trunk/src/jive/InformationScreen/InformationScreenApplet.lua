@@ -33,6 +33,7 @@ local Slider           = require("jive.ui.Slider")
 local Framework        = require("jive.ui.Framework")
 local Tile             = require("jive.ui.Tile")
 local Font             = require("jive.ui.Font")
+local SimpleMenu       = require("jive.ui.SimpleMenu")
 
 local log              = require("jive.utils.log").logger("applets.screensavers")
 
@@ -80,7 +81,7 @@ end
 function _getInformation(self)
 	local server = self.player:getSlimServer()
 
-	log:info("requesting information")
+	log:debug("requesting information")
 	server:userRequest(
 		function(chunk, err)
 			if err then
@@ -96,11 +97,11 @@ function _getInformation(self)
 end
 
 function _getInformationResponse(self, result)
-	log:info("received information")
+	log:debug("received information")
 
 	-- Update screen with new information
 	if not result.item_loop then
-		log:info("Got no items!")
+		log:debug("Got no items!")
 	else
 		local style = nil
 		if result.style then
@@ -111,12 +112,12 @@ function _getInformationResponse(self, result)
 			skin = result.skin
 		end
 		if self.layout != result.layout or self.layoutChangedTime != result.layoutChangedTime then
-			log:info("Re-creating widgets")
+			log:debug("Re-creating widgets")
 			self:_createUIItems(skin,style,result.item_loop)
 			self.layoutChangedTime = result.layoutChangedTime;
 			self.layout = result.layout
 		else 
-			log:info("Updating widgets")
+			log:debug("Updating widgets")
 			self:_updateUIItems(style,result.item_loop)
 		end
 	end
@@ -145,36 +146,42 @@ function _createUIItems(self,skin,style,groups)
 	local window = nil
 	local path = nil
 	if style then
-		log:info("Creating window with style: " .. style)
+		log:debug("Creating window with style: " .. style)
 		window = Window(style)
 		path = style
 	else
-		log:info("Creating window with default style")
+		log:debug("Creating window with default style")
 		window = Window("window")
 		path = "window"
 	end
 	if skin and skin == "getClockStyles" then
-		log:info("Creating window with skin styles: " .. skin)
+		log:debug("Creating window with skin styles: " .. skin)
 		window:setSkin(self:_getClockStyles(jiveMain:getSelectedSkin()))
 		window:reSkin()
 	end
 	self.groups = {}
 	for index,group in ipairs(groups) do
-		log:info("Handling group " .. index .. ": " .. group.id)
+		log:debug("Handling group " .. index .. ": " .. group.id)
 		if not group.flatten then
 			path = path .. "." .. group.id
 		end
 		local groupItems = self:_createGroupItems(window,group,path)
 		self.groups[group.id] = Group(group.id,groupItems)
-		if group.flatten then
-			log:info("Flatten group " .. group.id)
+		if group.type == "simplemenu" then
+			log:debug("Creating SimpleMenu(" .. group.id..") with path "..path.."."..group.id)
+			self.groups[group.id] = SimpleMenu(group.id)
+			log:debug("Setting menu items")
+			self.groups[group.id]:setItems(self:_createMenuItemsArray(groupItems))
+			window:addWidget(self.groups[group.id])
+		elseif group.flatten then
+			log:debug("Flatten group " .. group.id)
 			for itemIndex,item in pairs(groupItems) do
-				log:info("Adding item widget "..itemIndex)
+				log:debug("Adding item widget "..itemIndex)
 				window:addWidget(item)
 			end
 		else 
-			log:info("Creating Group("..group.id..", ... ) with path " .. path)
-			log:info("Adding group widget")
+			log:debug("Creating Group("..group.id..", ... ) with path " .. path)
+			log:debug("Adding group widget")
 			window:addWidget(self.groups[group.id])
 		end
 	end
@@ -182,16 +189,24 @@ function _createUIItems(self,skin,style,groups)
 	local first = 1
 	for index,group in ipairs(self.groups) do
 		if first then
-			log:info("Setting focus to " .. group.id)
+			log:debug("Setting focus to " .. group.id)
 			window:focusWidget(self.groups[group.id])
 		end
 		first = nil
 	end
 
-	log:info("Replacing window and returning")
+	log:debug("Replacing window and returning")
 	window:show(Window.transitionFadeIn)
 	self.window:hide()
 	self.window = window
+end
+
+function _createMenuItemsArray(self,items)
+	local itemArray = {}
+	for index,item in pairs(items) do
+		itemArray[#itemArray +1] = item
+	end
+	return itemArray
 end
 
 function _createGroupItems(self,window,group,path)
@@ -202,10 +217,16 @@ function _createGroupItems(self,window,group,path)
 		if item.style then
 			itemStyle = item.style
 		end
-		log:info("Handling item " .. item.id)
+		log:debug("Handling item " .. item.id)
 		if item.type == "label" and item.value then
-			log:info("Creating Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+			log:debug("Creating Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
 			itemObj = Label(itemStyle,item.value)
+		elseif item.type == "text" then
+			log:debug("Creating text item")
+			if not item.value then
+				item.value = ""
+			end
+			itemObj = item.value
 		elseif item.type == "slider" and item.value then
 			if not item.min then
 				item.min = 0
@@ -213,24 +234,24 @@ function _createGroupItems(self,window,group,path)
 			if not item.max then
 				item.max = 100
 			end
-			log:info("Creating Slider(" .. itemStyle .. "," .. item.min .. "," .. item.max .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+			log:debug("Creating Slider(" .. itemStyle .. "," .. item.min .. "," .. item.max .. "," .. item.value .. ") with path "..path.."."..itemStyle)
 			itemObj = Slider(itemStyle,tonumber(item.min),tonumber(item.max),tonumber(item.value))
 		elseif item.type == "defaultleftbutton" then
-			log:info("Creating default left button")
+			log:debug("Creating default left button")
 			itemObj = window:createDefaultLeftButton()
 		elseif item.type == "defaultrightbutton" then
-			log:info("Creating default left button")
+			log:debug("Creating default left button")
 			itemObj = window:createDefaultRightButton()
 		elseif item.type == "button" and (item.action or item.service) then
 			local action = nil
 			if item.action then
-				log:info("Configuring action ".. item.action);
+				log:debug("Configuring action ".. item.action);
 				action = function()
 					Framework:pushAction(item.action)
 					return EVENT_CONSUME
 				end
 			elseif item.service then
-				log:info("Configuring service ".. item.service);
+				log:debug("Configuring service ".. item.service);
 				action = function()
 					appletManager:callService(item.service)
 					return EVENT_CONSUME
@@ -238,13 +259,13 @@ function _createGroupItems(self,window,group,path)
 			end
 			local holdAction = nil
 			if item.holdAction then
-				log:info("Configuring holdAction ".. item.holdAction);
+				log:debug("Configuring holdAction ".. item.holdAction);
 				holdAction = function()
 					Framework:pushAction(item.holdAction)
 					return EVENT_CONSUME
 				end
 			elseif item.holdService then
-				log:info("Configuring holdService ".. item.holdService);
+				log:debug("Configuring holdService ".. item.holdService);
 				holdAction = function()
 					appletManager:callService(item.holdService)
 					return EVENT_CONSUME
@@ -252,13 +273,13 @@ function _createGroupItems(self,window,group,path)
 			end
 			local longHoldAction = nil
 			if item.longHoldAction then
-				log:info("Configuring longHoldAction ".. item.longHoldAction);
+				log:debug("Configuring longHoldAction ".. item.longHoldAction);
 				longHoldAction = function()
 					Framework:pushAction(item.longHoldAction)
 					return EVENT_CONSUME
 				end
 			elseif item.longHoldService then
-				log:info("Configuring longHoldService ".. item.longHoldService);
+				log:debug("Configuring longHoldService ".. item.longHoldService);
 				longHoldAction = function()
 					appletManager:callService(item.longHoldService)
 					return EVENT_CONSUME
@@ -268,14 +289,14 @@ function _createGroupItems(self,window,group,path)
 			if item.icon or item.groupIcon then
 				local buttonIcon = nil
 				if item.groupIcon and item.style then
-					log:info("Creating Button Group("..item.style..", Icon(" .. item.groupIcon .. ")) with path "..path.."."..item.style)
+					log:debug("Creating Button Group("..item.style..", Icon(" .. item.groupIcon .. ")) with path "..path.."."..item.style)
 					buttonWidget = Group(item.style,{Icon(item.groupIcon)})
 				else
-					log:info("Creating Button Icon(" .. item.icon .. ") with path "..path)
+					log:debug("Creating Button Icon(" .. item.icon .. ") with path "..path)
 					buttonWidget = Icon(item.icon)
 				end
 			elseif item.value then
-				log:info("Creating Button Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
+				log:debug("Creating Button Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
 				buttonWidget = Label(itemStyle, item.value)
 			end
 			if buttonWidget then
@@ -287,30 +308,45 @@ function _createGroupItems(self,window,group,path)
 				)
 			end
 		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
-			log:info("Creating artwork Icon(artwork) with path "..path..".artwork");
+			log:debug("Creating artwork Icon(artwork) with path "..path..".artwork");
 			itemObj = Icon("artwork")
 			self:_getIcon(item,itemObj)
 		elseif item.type == "icon" and item.icon then
-			log:info("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
+			log:debug("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
 			itemObj = Icon(item.icon)
 		elseif item.type == "button" then
 			if item.icon then
-				log:info("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
+				log:debug("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
 				itemObj = Icon(item.icon)
 			elseif item.value then
-				log:info("Creating Label(" .. item.id .. "," .. item.value .. ") with path "..path.."."..item.id)
+				log:debug("Creating Label(" .. item.id .. "," .. item.value .. ") with path "..path.."."..item.id)
 				itemObj = Label(item.id,item.value)
 			end
-		elseif item.type == "group" then
+		elseif item.type == "group" or not item.type then
+			log:debug("Reading group items")
 			local groupItems = self:_createGroupItems(window,item,path.."."..item.id)
-			log:info("Creating Group(" .. item.id..") with path "..path.."."..item.id)
+			log:debug("Creating Group(" .. item.id..") with path "..path.."."..item.id)
 			itemObj = Group(item.id,groupItems)
+		elseif item.type == "menuitem" then
+			log:debug("Creating menu item ".. item.id.." for path "..path.."."..item.id)
+			itemObj = self:_createGroupItems(window,item,path.."."..item.id)
+		elseif item.type == "simplemenu" then
+			log:debug("Reading menu items")
+			local menuItems = self:_createGroupItems(window,item,path.."."..item.id)
+			log:debug("Creating SimpleMenu(" .. item.id..") with path "..path.."."..item.id)
+			itemObj = SimpleMenu(item.id)
+			log:debug("Setting menu items")
+			itemObj:setItems(self:_createMenuItemsArray(menuItems))
 		end
 		if itemObj then
-			if item.style then
-				log:info("Set style of ".. item.id .. " to " .. item.style)
+			if item.style and item.type != "menuitem" then
+				log:debug("Set style of ".. item.id .. " to " .. item.style)
 				itemObj:setStyle(item.style)
+			elseif item.style and item.type == "menuitem" then
+				log:debug("Set style of ".. item.id .. " to " .. item.style)
+				itemObj['style'] = item.style
 			end
+			log:debug("*** Adding item ".. item.id)
 			items[item.id] = itemObj
 		end
 	end
@@ -319,36 +355,58 @@ end
 
 function _updateUIItems(self,style,groups)
 	if style and style != self.window:getStyle() then
-		log:info("Setting window style to: " .. style)
+		log:debug("Setting window style to: " .. style)
 		self.window:setStyle(style)
 	end
 	for index,group in ipairs(groups) do
-		for itemIndex,item in ipairs(group.item) do
-			if item.type == "label" then
-				log:info("Updating item " .. item.id .." with value:" .. item.value)
-				self.groups[group.id]:setWidgetValue(item.id,item.value)
-			elseif item.type == "icon" and item.value then
-				log:info("Updating item " .. item.id .." with value:" .. item.value)
-				self.groups[group.id]:setWidgetValue(item.id,item.value)
-			elseif item.type == "slider" and item.value then
-				log:info("Updating item " .. item.id .." with value:" .. item.value)
-				if not item.min then
-					item.min = 0
-				end
-				if not item.max then
-					item.max = 100
-				end
-				self.groups[group.id]:getWidget(item.id):setRange(tonumber(item.min),tonumber(item.max),tonumber(item.value))
-			elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
-				log:info("Updating artwork Icon(artwork)");
-				self:_getIcon(item,self.groups[group.id]:getWidget(item.id))
-			elseif item.type == "button" and item.value then
-				log:info("Updating item " .. item.id .." with value:" .. item.value)
-				self.groups[group.id]:setWidgetValue(item.id,item.value)
+		if not group.type or group.type != "simplemenu" then
+			log:debug("Updating group items for "..group.id)
+			self:_updateGroupItems(group)
+		elseif group.type and group.type == "simplemenu" then
+			log:debug("Updating menu items for menu "..group.id)
+			local menuItems = self:_createGroupItems(self.window,group,group.id)
+			local itemObj = self.groups[group.id]
+			if itemObj then
+				log:debug("Setting menuItems for " .. group.id)
+				itemObj:setItems(self:_createMenuItemsArray(menuItems))
 			end
+		else
+			log:debug("*** Invalid item on top "..group.id)
+		end
+	end
+end
+
+function _updateGroupItems(self,group)
+	for itemIndex,item in ipairs(group.item) do
+		if item.type == "label" then
+			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+			self.groups[group.id]:setWidgetValue(item.id,item.value)
+		elseif item.type == "icon" and item.value then
+			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+			self.groups[group.id]:setWidgetValue(item.id,item.value)
+		elseif item.type == "slider" and item.value then
+			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+			if not item.min then
+				item.min = 0
+			end
+			if not item.max then
+				item.max = 100
+			end
+			self.groups[group.id]:getWidget(item.id):setRange(tonumber(item.min),tonumber(item.max),tonumber(item.value))
+		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
+			log:debug("Updating artwork Icon(artwork)");
+			self:_getIcon(item,self.groups[group.id]:getWidget(item.id))
+		elseif item.type == "button" and item.value then
+			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+			self.groups[group.id]:setWidgetValue(item.id,item.value)
+		elseif item.type == "group" or not item.type then
+			log:debug("Handling sub groups under " .. item.id)
+			self:_updateGroupItems(item)
+		end
+		if item.type and item.type != "group" and item.type != "menuitem" then
 			local widget = self.groups[group.id]:getWidget(item.id)
-			if item.style and item.style != widget:getStyle() then
-				log:info("Updating item style " .. item.id ..":" .. item.style)
+			if item.style and item.type != "menuitem" and item.style != widget:getStyle() then
+				log:debug("Updating item style " .. item.id ..":" .. item.style)
 				widget:setStyle(item.style)
 			end
 		end
@@ -361,7 +419,7 @@ function _getIcon(self, item, icon)
 	local ARTWORK_SIZE = jiveMain:getSkinParam("nowPlayingBrowseArtworkSize")
 	if item and item["icon-id"] then
 		-- Fetch an image from Squeezebox Server
-		log:info("Fetch image from server");
+		log:debug("Fetch image from server");
 		if JIVE_VERSION < "7.4 r6069" then
 			server:fetchArtworkThumb(item["icon-id"], icon, ARTWORK_SIZE) 
 		else
@@ -373,18 +431,18 @@ function _getIcon(self, item, icon)
 			local remoteContent = string.find(item['icon'], 'http://')
 			-- sometimes this is static content
 			if remoteContent then
-				log:info("Fetch remote image from url");
+				log:debug("Fetch remote image from url");
 				server:fetchArtworkURL(item["icon"], icon, ARTWORK_SIZE)
 			else
-				log:info("Fetch remote image from server");
+				log:debug("Fetch remote image from server");
 				server:fetchArtworkThumb(item["icon"], icon, ARTWORK_SIZE)
 			end
 		else 
-				log:info("Fetch image from server");
+				log:debug("Fetch image from server");
 				server:fetchArtwork(item["icon"], icon, ARTWORK_SIZE)
 		end
 	elseif icon then
-		log:info("Disable image");
+		log:debug("Disable image");
 		icon:setValue(nil)
 	end
 end
