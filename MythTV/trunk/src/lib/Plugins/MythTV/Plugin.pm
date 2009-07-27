@@ -53,6 +53,7 @@ my $PLUGINVERSION = undef;
 
 my $ICONS = {};
 my $driver;
+my $cache = undef;
 
 sub getDisplayName {
 	return 'PLUGIN_MYTHTV';
@@ -71,6 +72,8 @@ sub initPlugin {
 
 	$driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
+
+	$cache = Slim::Utils::Cache->new();
     
 	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
 		my ($source,$username,$password);
@@ -246,6 +249,7 @@ sub getActiveRecordings {
 
 	my @lines = ();
 	my $i=0;
+	my $last = undef;
 	foreach my $row (@{$rows{'rows'}}) {
 		if($i>$maxEntries) {
 			last;
@@ -256,14 +260,17 @@ sub getActiveRecordings {
 			# comparision.
 			local($^W) = undef;
 			my $program = getProgram($mythtv,$row);
-			if(defined $program) {
+			if(defined $program && $program && (!defined $last || $last->{'channel'} ne $program->{'channel'} || $last->{'startdate'} != $program->{'startdate'} || $last->{'starttime'} != $program->{'starttime'})) {
+				$last = $program;
 				push @lines,$program;
 				$i++;
-
+				
 				if($program->{'icon'}) {
 					my $url = "http://$host:$port/Myth/GetChannelIcon?ChanId=".$program->{'icon'};
 					cacheIcon($url,$program->{'icon'});
 				}
+			}else {
+				last;
 			}
 		}
 	}
@@ -454,41 +461,61 @@ sub getRecording {
 	return \%entry;
 }
 
-sub checkInformationScreenActiveRecordings {
+sub preprocessInformationScreenActiveRecordings {
 	my $client = shift;
 	my $screen = shift;
 
-	my $lines = getActiveRecordings();
-	if(scalar(@$lines)>0) {
-		return 1;
-	}else {
-		return 0;
+	my $cachedData = undef;
+	my $timestamp = $cache->get("MythTV-ActiveRecordings-timestamp");
+	my $pollingInterval = $prefs->get('pollinginterval')||1;
+	if(!defined($timestamp) || $timestamp>(time()-($pollingInterval*60))) {
+		$cachedData = $cache->get("MythTV-ActiveRecordings-data");
 	}
-}
-
-sub preprocessInformationScreenActiveRecordings {
-	my $client = shift;
-	my $group = shift;
-
-
-	my $lines = getActiveRecordings();
-	$log->error("GOT: ".Dumper($lines));
-	return 1;
+	my $lines = undef;
+	if(defined($cachedData)) {
+		$lines = $cachedData;
+	}else {
+		$lines = getActiveRecordings();
+		$cache->set("MythTV-ActiveRecordings-timestamp",time());
+		$cache->set("MythTV-ActiveRecordings-data",$lines);
+	}
+	return prepareInformationScreenData($client,$screen,$lines);
 }
 
 sub preprocessInformationScreenPendingRecordings {
 	my $client = shift;
 	my $screen = shift;
 
-	my $lines = getPendingRecordings();
+	my $cachedData = undef;
+	my $timestamp = $cache->get("MythTV-PendingRecordings-timestamp");
+	my $pollingInterval = $prefs->get('pollinginterval')||1;
+	if(!defined($timestamp) || $timestamp>(time()-($pollingInterval*60))) {
+		$cachedData = $cache->get("MythTV-PendingRecordings-data");
+	}
+	my $lines = undef;
+	if(defined($cachedData)) {
+		$lines = $cachedData;
+	}else {
+		$lines = getPendingRecordings();
+		$cache->set("MythTV-PendingRecordings-timestamp",time());
+		$cache->set("MythTV-PendingRecordings-data",$lines);
+	}
+	return prepareInformationScreenData($client,$screen,$lines);
+}
+
+sub prepareInformationScreenData {
+	my $client = shift;
+	my $screen = shift;
+	my $lines = shift;
+
 	if(scalar(@$lines)==0) {
 		return 0;
 	}
 
 	my @empty = ();
 	my $groups = \@empty;
-	if(exists $screen->{'items'}->{'group'}) {
-		$groups = $screen->{'items'}->{'group'};
+	if(exists $screen->{'items'}->{'item'}) {
+		$groups = $screen->{'items'}->{'item'};
 		if(ref($groups) ne 'ARRAY') {
 			push @empty,$groups;
 			$groups = \@empty;
@@ -496,46 +523,37 @@ sub preprocessInformationScreenPendingRecordings {
 	}
 	my $menuGroup = {
 		'id' => 'menu',
-		'type' => 'group',
+		'type' => 'simplemenu',
 	};
 	my @menuItems = ();
 	my $index = 1;
 	foreach my $recording (@$lines) {
 		my $group = {
-			'id' => 'item'.$index++,
-			'type' => 'group',
+			'id' => $index,
+			'type' => 'menuitem',
 			'style' => 'item_no_arrow',
 		};
 		my @items = ();
 		my $text = {
 			'id' => 'text',
-			'type' => 'label',
-			'value' => $recording->{'title'}."\n".$recording->{'startdate'}." ".$recording->{'starttime'},
+			'type' => 'text',
+			'value' => $recording->{'title'}." (".$recording->{'channel'}.")".((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq 'Recording')?' (Rec)':'')."\n".$recording->{'startdate'}." ".$recording->{'starttime'}." - ".$recording->{'endtime'},
 		};
 		push @items,$text;
-		my $icon = {
-			'id' => 'icon',
-			'type' => 'icon',
-			'icon' => 'icon',#plugins/CustomBrowse/html/images/custombrowse.png',
-			'preprocessing' => 'artwork',
-		};
-		push @items,$icon;
-#		my $arrow = {
-#			'id' => 'arrow',
+#		my $icon = {
+#			'id' => 'icon',
 #			'type' => 'icon',
-#			'icon' => 'arrow',
+#			'icon' => 'icon',#plugins/CustomBrowse/html/images/custombrowse.png',
+#			'preprocessing' => 'artwork',
 #		};
-#		push @items,$arrow;
+#		push @items,$icon;
 		$group->{'item'} = \@items;
 		push @menuItems, $group;
 		$index++;
-		if($index>5) {
-			last;
-		}
 	}
 	$menuGroup->{'item'} = \@menuItems;
-	$screen->{'items'}->{'group'} = $menuGroup;
-	$log->error("GOT: ".Dumper($screen));
+	push @$groups,$menuGroup;
+	$screen->{'items'}->{'item'} = $groups;
 	return 1;
 }
 
