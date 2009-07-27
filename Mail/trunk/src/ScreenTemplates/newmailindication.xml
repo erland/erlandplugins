@@ -3,8 +3,8 @@
 	<minpluginversion>0.2</minpluginversion>
 	<requiresplugin>Mail</requiresplugin>
 	<template>
-		<name>New Mail</name>
-		<description>Shows new mails</description>
+		<name>You have got mail</name>
+		<description>Shows indication when there are new mails</description>
 		<parameter type="text" id="screenname" name="Screen name" value="You've Got Mail!"/>
 		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
 		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
