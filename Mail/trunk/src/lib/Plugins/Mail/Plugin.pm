@@ -231,7 +231,9 @@ sub getMailMessages {
 
 			my $nm = $pop3->Count();
 			$log->debug("Totally $nm messages");
-	
+			if($nm<0) {
+				$log->error("Some error when retreiving mails");
+			}
 			for(my $i = $nm;$i > 0; $i--) {
 				my $header = $pop3->Head($i);
 				my $es = Email::Simple->new($header);
@@ -280,19 +282,32 @@ sub handleMusicInfoSCRNewMail
 	return undef;
 }
 
+sub preprocessInformationScreenNewMailsIndication {
+	my $client = shift;
+	my $screen = shift;
+
+	my $mails = getMailMessagesWithDefaultCredentials(1);
+	if(scalar(@$mails)==0) {
+		$log->debug("Exit preprocessInformationScreenNewMails with no mails found");
+		return 0;
+	}
+	return 1;
+}
+
 sub preprocessInformationScreenNewMails {
 	my $client = shift;
 	my $screen = shift;
 
 	my $mails = getMailMessagesWithDefaultCredentials(1);
 	if(scalar(@$mails)==0) {
+		$log->debug("Exit preprocessInformationScreenNewMails with no mails found");
 		return 0;
 	}
 
 	my @empty = ();
 	my $groups = \@empty;
-	if(exists $screen->{'items'}->{'group'}) {
-		$groups = $screen->{'items'}->{'group'};
+	if(exists $screen->{'items'}->{'item'}) {
+		$groups = $screen->{'items'}->{'item'};
 		if(ref($groups) ne 'ARRAY') {
 			push @empty,$groups;
 			$groups = \@empty;
@@ -300,40 +315,32 @@ sub preprocessInformationScreenNewMails {
 	}
 	my $menuGroup = {
 		'id' => 'menu',
-		'type' => 'group',
+		'type' => 'simplemenu',
 	};
 	my @menuItems = ();
 	my $index = 1;
 	foreach my $mail (@$mails) {
 		my $group = {
-			'id' => 'item'.$index++,
-			'type' => 'group',
+			'id' => 'item'.$index,
+			'type' => 'menuitem',
 			'style' => 'item_no_arrow',
 		};
 		my @items = ();
 		my $text = {
 			'id' => 'text',
-			'type' => 'label',
-			'value' => $mail->{'Subject'}."\n".$mail->{'From'}." ".$mail->{'Date'},
+			'type' => 'text',
+			'value' => $mail->{'Subject'}."\n".$mail->{'Date'}." ".$client->string("PLUGIN_MAIL_FROM").": ".$mail->{'From'},
 		};
 		push @items,$text;
-		my $icon = {
-			'id' => 'icon',
-			'type' => 'icon',
-			'icon' => 'icon',
-			'preprocessing' => 'artwork',
-		};
-		push @items,$icon;
 
 		$group->{'item'} = \@items;
 		push @menuItems, $group;
 		$index++;
-		if($index>5) {
-			last;
-		}
 	}
 	$menuGroup->{'item'} = \@menuItems;
-	$screen->{'items'}->{'group'} = $menuGroup;
+	push @$groups,$menuGroup;
+	$screen->{'items'}->{'item'} = $groups;
+	$log->debug("Exit preprocessInformationScreenNewMails with ".(scalar(@$mails))." mails found");
 	return 1;
 }
 

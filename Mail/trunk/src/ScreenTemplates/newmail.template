@@ -5,20 +5,19 @@
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<layout>mail</layout>
 		<style>icon_list</style>
 		<preprocessing>function</preprocessing>
 		<preprocessingData>Plugins::Mail::Plugin::preprocessInformationScreenNewMails</preprocessingData>
 		<items>
 			[% IF screentitle %]
-			<group>
+			<item>
 				<id>title</id>
 				<item>
 					<id>text</id>
 					<type>label</type>
 					<value>[% screentitle %]</value>
 				</item>
-			</group>
+			</item>
 			[% END %]
 		</items>
 	</screen>
