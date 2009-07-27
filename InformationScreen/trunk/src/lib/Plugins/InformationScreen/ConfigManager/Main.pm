@@ -283,18 +283,22 @@ sub postProcessItem {
 	
 	if(ref($item) eq 'HASH') {
 		foreach my $key (keys %$item) {
-			if(ref($item->{$key}) eq 'HASH') {
+			if($key eq 'value' || $key eq 'icon' || $key eq 'name' || $key eq 'preprocessingData') {
+				$self->logHandler->debug("Postprocessing $key to replace \\, \" and \'");
+				$item->{$key} =~ s/\\\\/\\/g;
+				$item->{$key} =~ s/\\\"/\"/g;
+				$item->{$key} =~ s/\\\'/\'/g;
+				my $thisItem = $item->{$key};
+				if($key eq 'value' && ref($thisItem) eq 'HASH' && scalar(keys %$thisItem)==0) {
+					$item->{$key} = '';
+				}
+			}elsif(ref($item->{$key}) eq 'HASH') {
 				$self->postProcessItem($item->{$key});
 			}elsif(ref($item->{$key}) eq 'ARRAY') {
 				my $items = $item->{$key};
 				foreach my $it (@$items) {
 					$self->postProcessItem($it);
 				}
-			}elsif($key eq 'value' || $key eq 'icon' || $key eq 'name') {
-				$self->logHandler->debug("Postprocessing $key to replace \\, \" and \'");
-				$item->{$key} =~ s/\\\\/\\/g;
-				$item->{$key} =~ s/\\\"/\"/g;
-				$item->{$key} =~ s/\\\'/\'/g;
 			}
 		}
 	}
