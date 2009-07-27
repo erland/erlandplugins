@@ -1,0 +1,31 @@
+<informationscreen>
+	<minpluginversion>0.2</minpluginversion>
+	<requiresplugin>Mail</requiresplugin>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibilitytime %]</time>
+		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
+		<style>InformationScreenThreeLineText[% IF blackbackground %]Black[% END %]</style>
+		<skin>getStandardStyles</skin>
+		<preprocessing>function</preprocessing>
+		<preprocessingData>Plugins::Mail::Plugin::preprocessInformationScreenNewMailsIndication</preprocessingData>
+		<items>
+			<item>
+				<id>top</id>
+				<item>
+					<id>screenInformationMediumText</id>
+					<type>label</type>
+					<value></value>
+				</item>
+			</item>
+			<item>
+				<id>center</id>
+				<item>
+					<id>screenInformation[% fontsize %]Text</id>
+					<type>label</type>
+					<value>[% screenname %]</value>
+				</item>
+			</item>
+		</items>
+	</screen>
+</informationscreen>
