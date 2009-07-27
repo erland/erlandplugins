@@ -33,7 +33,7 @@ use Storable;
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
 use Plugins::InformationScreen::ManageScreens;
-
+use Data::Dumper;
 use Slim::Schema;
 
 my $prefs = preferences('plugin.informationscreen');
@@ -237,6 +237,7 @@ sub jiveItemsHandler {
 		}
 		$cnt++;
 	}
+
 	$request->addResult('item_loop',\@itemLoop);
 
 	$request->addResult('offset',$start);
@@ -365,6 +366,35 @@ sub preprocessItem {
 			}
 		}
 	}
+}
+
+sub albumArtExists {
+	my $client = shift;
+	my $screen = shift;
+
+	my $song = Slim::Player::Playlist::song($client);
+	if(defined($song)) {
+		if ( $song->isRemoteURL ) {
+			my $handler = Slim::Player::ProtocolHandlers->handlerForURL($song->url);
+
+			if ( $handler && $handler->can('getMetadataFor') ) {
+
+				my $meta = $handler->getMetadataFor( $client, $song->url );
+
+				if ( $meta->{cover} ) {
+					return 1;
+				}
+				elsif ( $meta->{icon} ) {
+					return 1;
+				}
+			}
+		}else {
+			if ( my $album = $song->album ) {
+				return 1 if $album->artwork;
+			}
+		}
+	}
+	return 0;
 }
 
 sub preprocessingShuffleMode {
