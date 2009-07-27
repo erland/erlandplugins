@@ -35,14 +35,15 @@ local Tile             = require("jive.ui.Tile")
 local Font             = require("jive.ui.Font")
 local SimpleMenu       = require("jive.ui.SimpleMenu")
 
-local log              = require("jive.utils.log").logger("applets.screensavers")
-
 local appletManager    = appletManager
 local jiveMain         = jiveMain
 local JIVE_VERSION      = jive.JIVE_VERSION
 local WH_FILL		= jive.ui.WH_FILL
 local LAYOUT_NORTH	= jive.ui.LAYOUT_NORTH
 local LAYOUT_SOUTH	= jive.ui.LAYOUT_SOUTH
+local LAYOUT_CENTER	= jive.ui.LAYOUT_CENTER
+local LAYOUT_WEST	= jive.ui.LAYOUT_WEST
+local LAYOUT_EAST	= jive.ui.LAYOUT_EAST
 
 local fontpath = "fonts/"
 local FONT_NAME = "FreeSans"
@@ -111,11 +112,12 @@ function _getInformationResponse(self, result)
 		if result.skin then
 			skin = result.skin
 		end
-		if self.layout != result.layout or self.layoutChangedTime != result.layoutChangedTime then
+		if self.layout != result.layout or self.layoutChangedTime != result.layoutChangedTime or self.layoutSkin != jiveMain:getSelectedSkin() then
 			log:debug("Re-creating widgets")
 			self:_createUIItems(skin,style,result.item_loop)
 			self.layoutChangedTime = result.layoutChangedTime;
 			self.layout = result.layout
+			self.layoutSkin = jiveMain:getSelectedSkin()
 		else 
 			log:debug("Updating widgets")
 			self:_updateUIItems(style,result.item_loop)
@@ -158,14 +160,15 @@ function _createUIItems(self,skin,style,groups)
 		log:debug("Creating window with skin styles: " .. skin)
 		window:setSkin(self:_getClockStyles(jiveMain:getSelectedSkin()))
 		window:reSkin()
+	elseif skin and skin == "getStandardStyles" then
+		log:debug("Creating window with skin styles: " .. skin)
+		window:setSkin(self:_getStandardStyles(jiveMain:getSelectedSkin()))
+		window:reSkin()
 	end
 	self.groups = {}
 	for index,group in ipairs(groups) do
 		log:debug("Handling group " .. index .. ": " .. group.id)
-		if not group.flatten then
-			path = path .. "." .. group.id
-		end
-		local groupItems = self:_createGroupItems(window,group,path)
+		local groupItems = self:_createGroupItems(window,group,path.."."..group.id)
 		self.groups[group.id] = Group(group.id,groupItems)
 		if group.type == "simplemenu" then
 			log:debug("Creating SimpleMenu(" .. group.id..") with path "..path.."."..group.id)
@@ -180,7 +183,7 @@ function _createUIItems(self,skin,style,groups)
 				window:addWidget(item)
 			end
 		else 
-			log:debug("Creating Group("..group.id..", ... ) with path " .. path)
+			log:debug("Creating Group("..group.id..", ... ) with path " .. path .. "." .. group.id)
 			log:debug("Adding group widget")
 			window:addWidget(self.groups[group.id])
 		end
@@ -286,14 +289,28 @@ function _createGroupItems(self,window,group,path)
 				end
 			end
 			local buttonWidget = nil
-			if item.icon or item.groupIcon then
+			if item.icon or item["icon-id"] or item.groupIcon then
 				local buttonIcon = nil
 				if item.groupIcon and item.style then
 					log:debug("Creating Button Group("..item.style..", Icon(" .. item.groupIcon .. ")) with path "..path.."."..item.style)
-					buttonWidget = Group(item.style,{Icon(item.groupIcon)})
+					if item.preprocessing and item.preprocessing == "artwork" then
+						buttonWidget = Group(item.style,{self:_getArtwork(item,Icon(item.groupIcon))})
+					else
+						buttonWidget = Group(item.style,{Icon(item.groupIcon)})
+					end
 				else
-					log:debug("Creating Button Icon(" .. item.icon .. ") with path "..path)
-					buttonWidget = Icon(item.icon)
+					local iconId = nil
+					if item.icon then
+						iconId = item.icon
+					else
+						iconId = item["icon-id"]
+					end
+					log:debug("Creating Button Icon(" .. iconId .. ") with path "..path)
+					if item.preprocessing and item.preprocessing == "artwork" then
+						buttonWidget = self:_getArtwork(item,Icon(iconId))
+					else
+						buttonWidget = Icon(iconId)
+					end
 				end
 			elseif item.value then
 				log:debug("Creating Button Label(" .. itemStyle .. "," .. item.value .. ") with path "..path.."."..itemStyle)
@@ -309,8 +326,7 @@ function _createGroupItems(self,window,group,path)
 			end
 		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
 			log:debug("Creating artwork Icon(artwork) with path "..path..".artwork");
-			itemObj = Icon("artwork")
-			self:_getIcon(item,itemObj)
+			itemObj = self:_getArtwork(item,Icon("artwork"))
 		elseif item.type == "icon" and item.icon then
 			log:debug("Creating Icon(" .. item.icon .. ") with path "..path.."."..item.icon)
 			itemObj = Icon(item.icon)
@@ -346,13 +362,31 @@ function _createGroupItems(self,window,group,path)
 				log:debug("Set style of ".. item.id .. " to " .. item.style)
 				itemObj['style'] = item.style
 			end
-			log:debug("*** Adding item ".. item.id)
+			log:debug("Adding item ".. item.id)
 			items[item.id] = itemObj
 		end
 	end
 	return items
 end
 
+function _getArtwork(self,item,icon)
+	if item.preprocessingData and item.preprocessingData == "fullscreen" then
+		local width,height = Framework.getScreenSize()
+		local usableHeight = height
+		local skinName = jiveMain:getSelectedSkin()
+		if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+			usableHeight = usableHeight-24
+		end
+		if width<usableHeight then 
+			self:_getIcon(item,icon,width)
+		else
+			self:_getIcon(item,icon,usableHeight)
+		end
+	else
+		self:_getIcon(item,icon)
+	end
+	return icon
+end
 function _updateUIItems(self,style,groups)
 	if style and style != self.window:getStyle() then
 		log:debug("Setting window style to: " .. style)
@@ -371,7 +405,7 @@ function _updateUIItems(self,style,groups)
 				itemObj:setItems(self:_createMenuItemsArray(menuItems))
 			end
 		else
-			log:debug("*** Invalid item on top "..group.id)
+			log:debug("Invalid item on top "..group.id)
 		end
 	end
 end
@@ -395,9 +429,16 @@ function _updateGroupItems(self,group)
 			self.groups[group.id]:getWidget(item.id):setRange(tonumber(item.min),tonumber(item.max),tonumber(item.value))
 		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
 			log:debug("Updating artwork Icon(artwork)");
-			self:_getIcon(item,self.groups[group.id]:getWidget(item.id))
+			self:_getArtwork(item,self.groups[group.id]:getWidget(item.id))
 		elseif item.type == "button" and item.value then
 			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+			if item.preprocessing and item.preprocessing == "artwork" then
+				if item.groupIcon then
+					self:_getArtwork(item,self.groups[group.id]:getWidget(item.id):getWidget(0))
+				elseif item.icon or item["icon-id"] then
+					self:_getArtwork(item,self.groups[group.id]:getWidget(item.id))
+				end
+			end
 			self.groups[group.id]:setWidgetValue(item.id,item.value)
 		elseif item.type == "group" or not item.type then
 			log:debug("Handling sub groups under " .. item.id)
@@ -413,10 +454,16 @@ function _updateGroupItems(self,group)
 	end
 end
 
-function _getIcon(self, item, icon)
+function _getIcon(self, item, icon, size)
 	local server = self.player:getSlimServer()
 
-	local ARTWORK_SIZE = jiveMain:getSkinParam("nowPlayingBrowseArtworkSize")
+	local ARTWORK_SIZE = nil
+	if size then
+		ARTWORK_SIZE = size
+	else
+		ARTWORK_SIZE = jiveMain:getSkinParam("nowPlayingBrowseArtworkSize")
+	end
+
 	if item and item["icon-id"] then
 		-- Fetch an image from Squeezebox Server
 		log:debug("Fetch image from server");
@@ -515,6 +562,130 @@ function _getClockStyles(self, skinName)
 				h = 70,
 				fg = { 0xcc, 0xcc, 0xcc },
 			},
+		}
+	}
+	return s;		
+end
+
+function _getStandardStyles(self, skinName)
+	local s = {}
+	local width,height = Framework.getScreenSize()
+	local threeRowFont = width/14;
+
+	local screenInformationHugeText = {
+		font = _boldfont(threeRowFont*3),
+		align = 'center',
+		w = WH_FILL,
+		h = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+		lineHeight = threeRowFont*3 + threeRowFont*3/10
+	}
+	local screenInformationLargeText = {
+		font = _boldfont(threeRowFont*2),
+		align = 'center',
+		w = WH_FILL,
+		h = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+		lineHeight = threeRowFont*2 + threeRowFont*2/10
+	}
+	local screenInformationMediumText = {
+		font = _font(threeRowFont),
+		align = 'center',
+		w = WH_FILL,
+		h = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+		lineHeight = threeRowFont + threeRowFont/10
+	}
+	local screenInformationSmallText = {
+		font = _font(threeRowFont*2/3),
+		align = 'center',
+		w = WH_FILL,
+		h = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+		lineHeight = threeRowFont*2/3 + (threeRowFont*2/3)/10
+	}
+
+	local usableHeight = height-height*0.2-20
+	if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+		usableHeight = usableHeight-24
+	end
+	local threeRowHeight = (usableHeight)/3
+	log:debug("Using row height of: "..threeRowHeight)
+	-- Three lines with equally sized text
+	s.InformationScreenThreeLineText = {
+		bgImg = Tile:fillColor(0x00000055),
+		top = {
+			h = threeRowHeight,
+			border = {10,height*0.1,10,5},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		},
+		center = {
+			h = threeRowHeight,
+			border = {10,5,10,5},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		},
+		bottom = {
+			h = threeRowHeight,
+			border = {10,5,10,height*0.1},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		}
+	}
+	s.InformationScreenThreeLineTextBlack = {
+		bgImg = Tile:fillColor(0x000000ff),
+		top = {
+			h = threeRowHeight,
+			border = {10,height*0.1,10,5},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		},
+		center = {
+			h = threeRowHeight,
+			border = {10,5,10,5},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		},
+		bottom = {
+			h = threeRowHeight,
+			border = {10,5,10,height*0.1},
+			screenInformationHugeText = screenInformationHugeText,
+			screenInformationLargeText = screenInformationLargeText,
+			screenInformationMediumText = screenInformationMediumText,
+			screenInformationSmallText = screenInformationSmallText
+		}
+	}
+
+	local leftImageBorder = 0
+	local usableImageHeight = height
+
+	if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+		usableImageHeight = height-24
+	end
+	if width > usableImageHeight then
+		leftImageBorder = ((width-usableImageHeight)/2)
+	end
+
+	s.InformationScreenImage = {
+		image = {
+			border = {leftImageBorder,0,leftImageBorder,0},
+		}
+	}
+	s.InformationScreenImageBlack = {
+		bgImg = Tile:fillColor(0x000000ff),
+		image = {
+			border = {leftImageBorder,0,leftImageBorder,0},
 		}
 	}
 	return s;		
