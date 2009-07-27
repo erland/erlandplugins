@@ -307,7 +307,7 @@ function _createGroupItems(self,window,group,path)
 					end
 					log:debug("Creating Button Icon(" .. iconId .. ") with path "..path)
 					if item.preprocessing and item.preprocessing == "artwork" then
-						buttonWidget = self:_getArtwork(item,Icon(iconId))
+						buttonWidget = self:_getArtwork(item,Icon(tostring(iconId)))
 					else
 						buttonWidget = Icon(iconId)
 					end
