@@ -1,0 +1,50 @@
+<informationscreen>
+	<screen>
+		<name>[% screenname %]</name>
+		<time>[% visibilitytime %]</time>
+		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
+		<style>InformationScreenThreeLineText[% IF blackbackground %]Black[% END %]</style>
+		<skin>getStandardStyles</skin>
+		<items>
+			<item>
+				<id>top</id>
+				<item>
+					<id>screenInformation[% topfontsize %]Text</id>
+					<type>label</type>
+					[% IF top %]
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% top %]</preprocessingData>
+					[% ELSE %]
+					<value/>
+					[% END %]
+				</item>
+			</item>
+			[% IF center or bottom %]
+			<item>
+				<id>center</id>
+				<item>
+					<id>screenInformation[% centerfontsize %]Text</id>
+					<type>label</type>
+					[% IF center %]
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% center %]</preprocessingData>
+					[% ELSE %]
+					<value/>
+					[% END %]
+				</item>
+			</item>
+			[% END %]
+			[% IF bottom %]
+			<item>
+				<id>bottom</id>
+				<item>
+					<id>screenInformation[% bottomfontsize %]Text</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% bottom %]</preprocessingData>
+				</item>
+			</item>
+			[% END %]
+		</items>
+	</screen>
+</informationscreen>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<informationscreen>
+	<template>
+		<name>Three lines</name>
+		<description>Three lines with title formats</description>
+		<parameter type="text" id="screenname" name="Screen name" value="Three lines"/>
+		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
+		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+		<parameter type="checkbox" id="blackbackground" name="Use black background" value="0"/>
+		<parameter type="text" id="top" name="Top row" value="ARTIST"/>
+		<parameter type="singlelist" id="topfontsize" name="Top row font size" value="Medium" data="Huge=Huge,Large=Large,Medium=Medium,Small=Small"/>
+		<parameter type="text" id="center" name="Center row" value="ALBUM"/>
+		<parameter type="singlelist" id="centerfontsize" name="Center row font size" value="Medium" data="Huge=Huge,Large=Large,Medium=Medium,Small=Small"/>
+		<parameter type="text" id="bottom" name="Bottom row" value="TITLE"/>
+		<parameter type="singlelist" id="bottomfontsize" name="Bottom row font size" value="Medium" data="Huge=Huge,Large=Large,Medium=Medium,Small=Small"/>
+	</template>
+</informationscreen>
+

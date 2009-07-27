@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<informationscreen>
+	<template>
+		<name>Album cover</name>
+		<description>Fullscreen album cover</description>
+		<parameter type="text" id="screenname" name="Screen name" value="Album cover"/>
+		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
+		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+		<parameter type="checkbox" id="blackbackground" name="Use black background" value="0"/>
+	</template>
+</informationscreen>
+
