@@ -3,10 +3,9 @@
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<layout>nowplaying</layout>
 		<style>nowplaying</style>
 		<items>
-			<group>
+			<item>
 				<id>title</id>
 				<item>
 					<id>lbutton</id>
@@ -27,8 +26,8 @@
 					<holdAction>title_right_hold</holdAction>
 					<longHoldAction>soft_reset</longHoldAction>
 				</item>
-			</group>
-			<group>
+			</item>
+			<item>
 				<id>nptrack</id>
 				<flatten>1</flatten>
 				<item>
@@ -55,17 +54,17 @@
 					<preprocessing>titleformat</preprocessing>
 					<preprocessingData>[% currenttrackrow4 %]</preprocessingData>
 				</item>
-			</group>
-			<group>
+			</item>
+			<item>
 				<id>npartwork</id>
 				<item>
 					<id>artwork</id>
 					<type>icon</type>
 					<preprocessing>artwork</preprocessing>
 				</item>
-			</group>
+			</item>
 			[% IF showcontrols %]
-			<group>
+			<item>
 				<id>npcontrols</id>
 				<item>
 					<id>div1</id>
@@ -162,10 +161,10 @@
 					<preprocessingData>VOLUME</preprocessingData>
 				</item>
 				-->
-			</group>
+			</item>
 			[% END %]
 			[% IF showprogress %]
-			<group>
+			<item>
 				<id>npprogress</id>
 				<item>
 					<id>elapsed</id>
@@ -188,7 +187,7 @@
 					<preprocessing>titleformat</preprocessing>
 					<preprocessingData>DURATION</preprocessingData>
 				</item>
-			</group>
+			</item>
 			[% END %]
 		</items>
 	</screen>
