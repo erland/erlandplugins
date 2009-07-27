@@ -5,20 +5,30 @@
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<layout>activerecordings</layout>
 		<style>icon_list</style>
 		<preprocessing>function</preprocessing>
 		<preprocessingData>Plugins::MythTV::Plugin::preprocessInformationScreenActiveRecordings</preprocessingData>
 		<items>
 			[% IF screentitle %]
-			<group>
+			<item>
 				<id>title</id>
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<value>[% screentitle %]</value>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>[% screentitle %] (SHORTWEEKDAY TIME)</preprocessingData>
 				</item>
-			</group>
+			</item>
+			[% ELSE %]
+			<item>
+				<id>title</id>
+				<item>
+					<id>text</id>
+					<type>label</type>
+					<preprocessing>titleformat</preprocessing>
+					<preprocessingData>(SHORTWEEKDAY TIME)</preprocessingData>
+				</item>
+			</item>
 			[% END %]
 		</items>
 	</screen>
