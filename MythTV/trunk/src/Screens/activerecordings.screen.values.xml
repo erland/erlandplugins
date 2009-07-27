@@ -3,7 +3,7 @@
 	<template>
 		<id>mythtv_activerecordings</id>
 		<parameter type="text" id="screenname"><value>MythTV Active Recordings</value></parameter>
-		<parameter type="text" id="screentitle"><value>Currently Recordinging</value></parameter>
+		<parameter type="text" id="screentitle"><value>Currently Recording</value></parameter>
 		<parameter type="text" id="screenorder"><value>50</value></parameter>
 		<parameter type="text" id="visibilitytime"><value>5</value></parameter>
 	</template>
