@@ -120,7 +120,9 @@ sub handleWebList {
 }
 
 sub getMailMessagesWithDefaultCredentials {
-	my $onlyHeaders = shift;
+	my $onlyHeaders = shift || 1;
+	my $onlyIndication = shift || 0;
+
 
 	my $mailHost = $prefs->get('mailhost');
 	my $mailAccount = $prefs->get('mailaccount');
@@ -144,7 +146,8 @@ sub getMailMessages {
 	my $mailAccount = shift;
 	my $mailPassword = shift;
 	my $mailFolder = shift;
-	my $onlyHeaders = shift;
+	my $onlyHeaders = shift || 1;
+	my $onlyIndication = shift || 0;
 
 	if(!defined($mailFolder) || $mailFolder eq '') {
 		$mailFolder = 'INBOX';
@@ -197,26 +200,34 @@ sub getMailMessages {
 				my ($unseen, $recent, $num_messages) = $imap->status($mailFolder);
 
 				$log->debug("$unseen unseen messages, $recent recent messages and totally $num_messages messages");
-	
-				my $nm = $imap->select($mailFolder);
-				$log->debug("Totally $nm messages");
+				
+				if(!$onlyIndication) {	
+					my $nm = $imap->select($mailFolder);
+					$log->debug("Totally $nm messages");
 		
-				for(my $i = $nm;$i > 0; $i--) {
-					my $message = " ";
-					if(!$imap->seen($i)) {
-						my $es = Email::Simple->new(join '', @{$imap->top($i)});
-						my $message = {};
-						$message->{'From'} = $es->header('From');
-						$message->{'To'} = $es->header('To');
-						$message->{'Date'} = $es->header('Date');
-						my $time = timegm(strptime($message->{'Date'}));
-						$message->{'Date'} = Slim::Utils::DateTime::shortDateF($time).' '.Slim::Utils::DateTime::timeF($time);
-						$message->{'Subject'} = $es->header('Subject');
-						push @$messages,$message;
+					for(my $i = $nm;$i > 0; $i--) {
+						if(!$imap->seen($i)) {
+							my $es = Email::Simple->new(join '', @{$imap->top($i)});
+							my $message = {};
+							$message->{'From'} = $es->header('From');
+							$message->{'To'} = $es->header('To');
+							$message->{'Date'} = $es->header('Date');
+							my $time = timegm(strptime($message->{'Date'}));
+							$message->{'Date'} = Slim::Utils::DateTime::shortDateF($time).' '.Slim::Utils::DateTime::timeF($time);
+							$message->{'Subject'} = $es->header('Subject');
+							push @$messages,$message;
+						}
+						if(scalar(@$messages)==$unseen) {
+							last;
+						}
 					}
-					if(scalar(@$messages)==$unseen) {
-						last;
-					}
+				}elsif($unseen>0) {
+					my $message = {
+						'new' => $unseen,
+						'recent' => $recent,
+						'total' => $num_messages,
+					};
+					push @$messages,$message;
 				}
 				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
 				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp",time());
@@ -234,16 +245,25 @@ sub getMailMessages {
 			if($nm<0) {
 				$log->error("Some error when retreiving mails");
 			}
-			for(my $i = $nm;$i > 0; $i--) {
-				my $header = $pop3->Head($i);
-				my $es = Email::Simple->new($header);
-				my $message = {};
-				$message->{'From'} = $es->header('From');
-				$message->{'To'} = $es->header('To');
-				$message->{'Date'} = $es->header('Date');
-				my $time = timegm(strptime($message->{'Date'}));
-				$message->{'Date'} = Slim::Utils::DateTime::shortDateF($time).' '.Slim::Utils::DateTime::timeF($time);
-				$message->{'Subject'} = $es->header('Subject');
+			if(!$onlyIndication) {
+				for(my $i = $nm;$i > 0; $i--) {
+					my $header = $pop3->Head($i);
+					my $es = Email::Simple->new($header);
+					my $message = {};
+					$message->{'From'} = $es->header('From');
+					$message->{'To'} = $es->header('To');
+					$message->{'Date'} = $es->header('Date');
+					my $time = timegm(strptime($message->{'Date'}));
+					$message->{'Date'} = Slim::Utils::DateTime::shortDateF($time).' '.Slim::Utils::DateTime::timeF($time);
+					$message->{'Subject'} = $es->header('Subject');
+					push @$messages,$message;
+				}
+			}elsif($nm>0) {
+				my $message = {
+					'new' => $nm,
+					'recent' => $nm,
+					'total' => $nm,
+				};
 				push @$messages,$message;
 			}
 			$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
@@ -272,7 +292,7 @@ sub handleMusicInfoSCRNewMail
 	my $tag = shift;
 
 	$log->debug("Entering handleMusicInfoSCRNewMail");
-	my $mails = getMailMessagesWithDefaultCredentials(1);
+	my $mails = getMailMessagesWithDefaultCredentials(undef,1);
 	if(scalar(@$mails)>0) {
 		$log->debug("Exiting handleMusicInfoSCRNewMail with new mail");
 		return $client->string("PLUGIN_MAIL_YOUHAVEGOTMAIL");
@@ -286,7 +306,7 @@ sub preprocessInformationScreenNewMailsIndication {
 	my $client = shift;
 	my $screen = shift;
 
-	my $mails = getMailMessagesWithDefaultCredentials(1);
+	my $mails = getMailMessagesWithDefaultCredentials(undef,1);
 	if(scalar(@$mails)==0) {
 		$log->debug("Exit preprocessInformationScreenNewMails with no mails found");
 		return 0;
