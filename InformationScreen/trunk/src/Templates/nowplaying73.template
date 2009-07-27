@@ -3,9 +3,8 @@
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<layout>nowplaying</layout>
 		<items>
-			<group>
+			<item>
 				<id>browsenptitle</id>
 				<item>
 					<id>back</id>
@@ -27,8 +26,8 @@
 					<preprocessingData>X_OF_Y</preprocessingData>
 					<service>showPlaylist</service>
 				</item>
-			</group>
-			<group>
+			</item>
+			<item>
 				<id>browsenptrack</id>
 				<item>
 					<id>text</id>
@@ -36,17 +35,17 @@
 					<preprocessing>titleformat</preprocessing>
 					<preprocessingData>[% currenttrackrow1 %]\n[% currenttrackrow2 %]</preprocessingData>
 				</item>
-			</group>
-			<group>
+			</item>
+			<item>
 				<id>browsenpartwork</id>
 				<item>
 					<id>artwork</id>
 					<type>icon</type>
 					<preprocessing>artwork</preprocessing>
 				</item>
-			</group>
+			</item>
 			[% IF showprogress %]
-			<group>
+			<item>
 				<id>browseprogress</id>
 				<item>
 					<id>elapsed</id>
@@ -69,10 +68,10 @@
 					<preprocessing>titleformat</preprocessing>
 					<preprocessingData>DURATION</preprocessingData>
 				</item>
-			</group>
+			</item>
 			[% END %]
 			[% IF showcontrols %]
-			<group>
+			<item>
 				<id>browsenpcontrols</id>
 				<item>
 					<id>rew</id>
@@ -95,7 +94,7 @@
 					<icon>fwd</icon>
 					<action>jump_fwd</action>
 				</item>
-			</group>
+			</item>
 			[% END %]
 		</items>
 	</screen>

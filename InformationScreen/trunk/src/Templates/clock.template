@@ -3,12 +3,11 @@
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<layout>clock</layout>
 		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %]</style>
 		<skin>getClockStyles</skin>
 		<items>
 			[% IF title1 %]
-			<group>
+			<item>
 				<id>playingtitle</id>
 				<item>
 					<id>playingtitle</id>
@@ -16,9 +15,9 @@
 					<preprocessing>titleformat</preprocessing>
 					<preprocessingData>[% title1 %][% IF title2 %]\n[% title2 %][% END %]</preprocessingData>
 				</item>
-			</group>
+			</item>
 			[% END %]
-			<group>
+			<item>
 				<id>time</id>
 				<item>
 					<id>time</id>
@@ -26,8 +25,8 @@
 					<preprocessing>datetime</preprocessing>
 					<preprocessingData>[% timeformat %]</preprocessingData>
 				</item>
-			</group>
-			<group>
+			</item>
+			<item>
 				<id>date</id>
 				<item>
 					<id>date</id>
@@ -35,7 +34,7 @@
 					<preprocessing>datetime</preprocessing>
 					<preprocessingData>[% dateformat %]</preprocessingData>
 				</item>
-			</group>
+			</item>
 		</items>
 	</screen>
 </informationscreen>
