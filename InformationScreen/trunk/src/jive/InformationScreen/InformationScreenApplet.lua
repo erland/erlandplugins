@@ -581,7 +581,7 @@ function _getStandardStyles(self, skinName)
 		lineHeight = threeRowFont*3 + threeRowFont*3/10
 	}
 	local screenInformationLargeText = {
-		font = _boldfont(threeRowFont*2),
+		font = _boldfont(threeRowFont*1.5),
 		align = 'center',
 		w = WH_FILL,
 		h = WH_FILL,
