@@ -32,6 +32,7 @@ use Storable;
 
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
+use Plugins::InformationScreen::PlayerSettings;
 use Plugins::InformationScreen::ManageScreens;
 use Data::Dumper;
 use Slim::Schema;
@@ -79,6 +80,7 @@ sub initPlugin {
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::InformationScreen::Settings->new($class);
+	Plugins::InformationScreen::PlayerSettings->new($class);
 	$manageScreenHandler = Plugins::InformationScreen::ManageScreens->new($class);
 	Slim::Control::Request::addDispatch(['informationscreen','items'], [1, 1, 1, \&jiveItemsHandler]);
 
@@ -117,8 +119,63 @@ sub getSortedScreenKeys {
 	} @keys;
 	return @keys;
 }
+
+sub isAllowedInState {
+	my $client = shift;
+	my $item = shift;
+
+	if(exists $item->{'includedstates'} && $item->{'includedstates'} ne "" && $item->{'includedstates'} ne "0") {
+		my @allowedStates = split(/,/,$item->{'includedstates'});
+		foreach my $allowedState (@allowedStates) {
+			if($allowedState eq "off" && !$client->power()) {
+				return 1;
+			}elsif($allowedState eq "alarm" && Slim::Utils::Alarm->getCurrentAlarm($client)) {
+				return 1;
+			}elsif($allowedState eq "play" && $client->power() && Slim::Player::Source::playmode($client) eq 'play') {
+				return 1;
+			}elsif($allowedState eq "idle" && $client->power() && Slim::Player::Source::playmode($client) ne 'play') {
+				return 1;
+			}
+		}
+		$log->debug("Not including ".$item->{'id'}." since it's not allowed in this state (power=".$client->power().", playmode=".Slim::Player::Source::playmode($client).", alarm=".(Slim::Utils::Alarm->getCurrentAlarm($client)?1:0).")");
+		return 0;
+	}
+	return 1;
+}
+
+sub isAllowedOnPlayer {
+	my $client = shift;
+	my $item = shift;
+
+	my $selectedGroup = $prefs->client($client)->get('screengroup');
+	if(!$selectedGroup || !exists $item->{'group'} || $item->{'group'} eq "") {
+		return 1;
+	}elsif($selectedGroup && exists $item->{'group'} && $selectedGroup eq $item->{'group'}) {
+		return 1;
+	}
+	$log->debug("Not including ".$item->{'id'}.", it belongs to a screen configuration group (".$item->{'group'}.") which differs from the group configured for player ($selectedGroup)");
+	return 0;
+}
+
+sub isAllowedInSkin {
+	my $client = shift;
+	my $skin = shift;
+	my $item = shift;
+
+	if(exists $item->{'includedskins'} && $item->{'includedskins'} ne "") {
+		my @allowedSkins = split(/,/,$item->{'includedskins'});
+		if(grep $_ eq $skin, @allowedSkins) {
+			return 1;
+		}
+		$log->debug("Not including ".$item->{'id'}." since it's not allowed in this skin ($skin)");
+		return 0;
+	}
+	return 1;
+}
+
 sub getCurrentScreen {
 	my $client = shift;
+	my $skin = shift;
 	if(! defined $screens) {
 		initScreens($client);
 	}
@@ -133,7 +190,7 @@ sub getCurrentScreen {
 	my $lastScreen = undef;
 	my @enabledScreenKeys = ();
 	for my $key (@sortedScreenKeys) {
-		if($screens->{$key}->{'enabled'}) {
+		if(isAllowedInState($client,$screens->{$key}) && isAllowedOnPlayer($client,$screens->{$key}) && isAllowedInSkin($client,$skin,$screens->{$key}) && $screens->{$key}->{'enabled'}) {
 			push @enabledScreenKeys,$key;
 			$lastScreen = $key;
 		}
@@ -145,6 +202,11 @@ sub getCurrentScreen {
 			$log->debug("This is the last screen, let's start from the beginning");
 			$screen = undef;
 		}
+	}
+
+	if(defined($screen) && 	!(grep $_ eq $screen, @enabledScreenKeys)) {
+		$log->debug("Selected screen $screen is no longer enabled, let's start from the beginning");
+		$screen = undef;
 	}
 
 	my $affected = 0;
@@ -160,7 +222,10 @@ sub getCurrentScreen {
 				if($currentTime-$client->pluginData('lastSwitchTime') >= $screens->{$key}->{'time'}) {
 					$screen = undef;
 				}else {
-					$log->debug("Still time left $currentTime, ".$client->pluginData('lastSwitchTime')." of ".$screens->{$key}->{'time'}." seconds");
+					if($client->pluginData('lastSwitchTime') != $currentTime) {
+						$log->debug("Still time left $currentTime, ".$client->pluginData('lastSwitchTime')." of ".$screens->{$key}->{'time'}." seconds");
+					}
+
 					my $currentScreen = Storable::dclone($screens->{$key});
 					if(preprocessScreen($client,$currentScreen)) {
 						return $currentScreen;
@@ -198,8 +263,9 @@ sub jiveItemsHandler {
 	}
 
 	my $params = $request->getParamsCopy();
+	my $skin = $request->getParam('skinName');
 
-	my $currentScreen = getCurrentScreen($client);
+	my $currentScreen = getCurrentScreen($client,$skin);
 
 	my @empty = ();
 	my $listRef = \@empty;
@@ -219,18 +285,14 @@ sub jiveItemsHandler {
 	my $offsetCount = 0;
 	my @itemLoop = ();
 	foreach my $group (@$listRef) {
-		if(preprocessGroup($client,$group)) {
-			if(!exists $group->{'includedskins'} || isSkinIncluded($group->{'includedskins'},$request->getParam('skin'))) {
-				if(!exists $group->{'excludedskins'} || !isSkinExcluded($group->{'excludedskins'},$request->getParam('skin'))) {
-					if($cnt>=$start && $offsetCount<$itemsPerResponse) {
-						my $itemArray = $group->{'item'};
-						foreach my $item (@$itemArray) {
-							preprocessItem($client,$item);
-						}
-						push @itemLoop,$group;
-						$offsetCount++;
-					}
+		if(isAllowedInState($client,$group) && isAllowedInSkin($client,$skin,$group) && preprocessGroup($client,$group)) {
+			if($cnt>=$start && $offsetCount<$itemsPerResponse) {
+				my $itemArray = $group->{'item'};
+				foreach my $item (@$itemArray) {
+					preprocessItem($client,$item);
 				}
+				push @itemLoop,$group;
+				$offsetCount++;
 			}
 		}else {
 			$log->debug("Skipping top item (removed during preprocessing): ".$group->{'id'});
@@ -249,32 +311,6 @@ sub jiveItemsHandler {
 
 	$request->setStatusDone();
 	$log->debug("Exiting jiveItemsHandler");
-}
-
-sub isSkinIncluded {
-	my $allowedSkins = shift;
-	my $currentSkin = shift;
-
-	my @allowedSkinsArray = split(/,/,$allowedSkins);
-	foreach my $skin (@allowedSkinsArray) {
-		if($skin eq $currentSkin) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-sub isSkinExcluded {
-	my $allowedSkins = shift;
-	my $currentSkin = shift;
-
-	my @allowedSkinsArray = split(/,/,$allowedSkins);
-	foreach my $skin (@allowedSkinsArray) {
-		if($skin eq $currentSkin) {
-			return 0;
-		}
-	}
-	return 1;
 }
 
 sub preprocessScreen {

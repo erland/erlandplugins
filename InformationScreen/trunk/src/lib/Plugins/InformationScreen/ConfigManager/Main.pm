@@ -328,17 +328,42 @@ sub webEditItems {
 	Plugins::InformationScreen::Plugin::prepareManagingScreens($client,$params);
 	my $items = $self->items;
 
-	my @webitems = ();
+	my $webitems = {};
 	for my $key (keys %$items) {
 		my %webitem = ();
 		my $item = $items->{$key};
 		for my $key (keys %$item) {
 			$webitem{$key} = $item->{$key};
 		} 
-		push @webitems,\%webitem;
+		my $groupKey = "Default";
+		if(exists $webitem{'group'} && $webitem{'group'} ne "") {
+			$groupKey = $webitem{'group'};
+		}
+		if(exists $webitems->{$groupKey}) {
+			my $prevItems = $webitems->{$groupKey};
+			push @$prevItems,\%webitem;
+		}else {
+			my @empty = ();
+			push @empty,\%webitem;
+			$webitems->{$groupKey} = \@empty;
+		}
 	}
-	@webitems = sort { $a->{'screenname'} cmp $b->{'screenname'} } @webitems;
-	return $self->webAdminMethods->webEditItems($client,$params,\@webitems);	
+	foreach my $key (keys %$webitems) {
+		my $itemList = $webitems->{$key};
+		@$itemList = sort { 
+			if(defined($a->{'order'}) && defined($b->{'order'})) {
+				return $a->{'order'} <=> $b->{'order'};
+			}
+			if(defined($a->{'order'}) && !defined($b->{'order'})) {
+				return $a->{'order'} <=> 50;
+			}
+			if(!defined($a->{'order'}) && defined($b->{'order'})) {
+				return 50 <=> $b->{'order'};
+			}
+			return 50 <=> 50 
+		} @$itemList;
+	}
+	return $self->webAdminMethods->webEditItems($client,$params,$webitems);	
 }
 
 sub webEditItem {

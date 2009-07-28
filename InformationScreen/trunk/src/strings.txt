@@ -172,3 +172,9 @@ PLUGIN_INFORMATIONSCREEN_DOWNLOAD_QUESTION
 PLUGIN_INFORMATIONSCREEN_MORE_INFO
 	EN	More information
 
+SETUP_PLUGIN_INFORMATIONSCREEN_SCREEN_GROUP
+	EN	Screen configuration group
+
+SETUP_PLUGIN_INFORMATIONSCREEN_SCREEN_GROUP_DESC
+	EN	Screen configuration group to use on this player, if not set only screens in "Default" group will be included
+

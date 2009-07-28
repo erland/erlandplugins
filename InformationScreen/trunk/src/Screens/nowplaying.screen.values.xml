@@ -5,6 +5,7 @@
 		<parameter type="text" id="screenname"><value>Now Playing</value></parameter>
 		<parameter type="text" id="screenorder"><value>50</value></parameter>
 		<parameter type="text" id="visibilitytime"><value>5</value></parameter>
+		<parameter type="text" id="includedstates"><value>play</value><value>idle</value></parameter>
 		<parameter type="text" id="title"><value>PLAYING</value></parameter>
 		<parameter type="text" id="currenttrackrow1"><value>TITLE</value></parameter>
 		<parameter type="text" id="currenttrackrow2"><value>ALBUM</value></parameter>

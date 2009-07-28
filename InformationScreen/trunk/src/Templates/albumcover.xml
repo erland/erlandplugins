@@ -4,9 +4,12 @@
 		<name>Album cover</name>
 		<description>Fullscreen album cover</description>
 		<parameter type="text" id="screenname" name="Screen name" value="Album cover"/>
+		<parameter type="text" id="screengroup" name="Screen configuration group" value=""/>
 		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
 		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+		<parameter type="checkboxes" id="includedstates" name="Only show in state" value="0" data="play=Playing,idle=Idle,off=Power Off,alarm=Alarm"/>
 		<parameter type="checkbox" id="blackbackground" name="Use black background" value="0"/>
+		<parameter type="text" id="includedskins" name="Only include in skins (Empty means all)" value=""/>
 	</template>
 </informationscreen>
 
