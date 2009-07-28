@@ -5,6 +5,7 @@
 		<parameter type="text" id="screenname"><value>Digital Clock</value></parameter>
 		<parameter type="text" id="screenorder"><value>50</value></parameter>
 		<parameter type="text" id="visibilitytime"><value>5</value></parameter>
+		<parameter type="text" id="includedstates"><value>off</value><value>idle</value><value>alarm</value></parameter>
 		<parameter type="text" id="title1"><value>ARTIST - ALBUM</value></parameter>
 		<parameter type="text" id="title2"><value>TITLE</value></parameter>
 		<parameter type="text" id="timeformat"><value>%H:%M</value></parameter>
