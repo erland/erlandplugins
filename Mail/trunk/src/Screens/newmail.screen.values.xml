@@ -6,6 +6,7 @@
 		<parameter type="text" id="screentitle"><value>You&#39;ve Got Mail</value></parameter>
 		<parameter type="text" id="screenorder"><value>50</value></parameter>
 		<parameter type="text" id="visibilitytime"><value>5</value></parameter>
+		<parameter type="text" id="includedstates"><value></value></parameter>
 	</template>
 </multilibrary>
 

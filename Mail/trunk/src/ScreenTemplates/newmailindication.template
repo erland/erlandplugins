@@ -4,6 +4,9 @@
 	<screen>
 		<name>[% screenname %]</name>
 		<time>[% visibilitytime %]</time>
+		[% IF screengroup %]<group>[% screengroup %]</group>[% END %]
+		[% IF includedstates %]<includedstates>[% includedstates %]</includedstates>[% END %]
+		[% IF includedskins %]<includedskins>[% includedskins %]</includedskins>[% END %]
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
 		<style>InformationScreenThreeLineText[% IF blackbackground %]Black[% END %]</style>
 		<skin>getStandardStyles</skin>
