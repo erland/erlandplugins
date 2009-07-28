@@ -6,9 +6,12 @@
 		<name>You have got mail</name>
 		<description>Shows indication when there are new mails</description>
 		<parameter type="text" id="screenname" name="Screen name" value="You've Got Mail!"/>
+		<parameter type="text" id="screengroup" name="Screen configuration group" value=""/>
 		<parameter type="text" id="screenorder" name="Screen order" value="50"/>
 		<parameter type="text" id="visibilitytime" name="Visible number of seconds" value="5"/>
+		<parameter type="checkboxes" id="includedstates" name="Only show in state" value="0" data="play=Playing,idle=Idle,off=Power Off,alarm=Alarm"/>
 		<parameter type="singlelist" id="fontsize" name="Font size" value="Medium" data="Huge=Huge,Large=Large,Medium=Medium,Small=Small"/>
+		<parameter type="text" id="includedskins" name="Only include in skins (Empty means all)" value=""/>
 	</template>
 </informationscreen>
 
