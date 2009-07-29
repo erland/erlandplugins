@@ -1,5 +1,5 @@
 <informationscreen>
-	<minpluginversion>0.2</minpluginversion>
+	<minpluginversion>0.3</minpluginversion>
 	<requiresplugin>MythTV</requiresplugin>
 	<screen>
 		<name>[% screenname %]</name>
@@ -20,7 +20,7 @@
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% screentitle %] (SHORTWEEKDAY TIME)</preprocessingData>
 				</item>
 			</item>
@@ -30,7 +30,7 @@
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>(SHORTWEEKDAY TIME)</preprocessingData>
 				</item>
 			</item>
