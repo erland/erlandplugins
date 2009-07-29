@@ -17,7 +17,7 @@
 				<item>
 					<id>playingtitle</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% title1 %][% IF title2 %]\n[% title2 %][% END %]</preprocessingData>
 				</item>
 			</item>

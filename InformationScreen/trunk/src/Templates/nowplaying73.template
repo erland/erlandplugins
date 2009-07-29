@@ -21,13 +21,13 @@
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% title %]</preprocessingData>
 				</item>
 				<item>
 					<id>playlist</id>
 					<type>button</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>X_OF_Y</preprocessingData>
 					<service>showPlaylist</service>
 				</item>
@@ -37,7 +37,7 @@
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow1 %]\n[% currenttrackrow2 %]</preprocessingData>
 				</item>
 			</item>
@@ -55,14 +55,14 @@
 				<item>
 					<id>elapsed</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>PLAYTIME</preprocessingData>
 				</item>
 				<item>
 					<id>slider</id>
 					<style>browseprogressB</style>
 					<type>slider</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>PLAYTIME_PROGRESS</preprocessingData>
 					<min>0</min>
 					<max>100</max>
@@ -70,7 +70,7 @@
 				<item>
 					<id>remain</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>DURATION</preprocessingData>
 				</item>
 			</item>

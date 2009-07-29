@@ -19,7 +19,7 @@
 				<item>
 					<id>text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% title %]</preprocessingData>
 				</item>
 				<item>
@@ -38,25 +38,25 @@
 				<item>
 					<id>nptrack</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow1 %]</preprocessingData>
 				</item>
 				<item>
 					<id>npalbum</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow2 %]</preprocessingData>
 				</item>
 				<item>
 					<id>npartist</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow3 %]</preprocessingData>
 				</item>
 				<item>
 					<id>npartistalbum</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow4 %]</preprocessingData>
 				</item>
 			</item>
@@ -162,7 +162,7 @@
 					<type>slider</type>
 					<min>0</min>
 					<max>100</max>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>VOLUME</preprocessingData>
 				</item>
 				-->
@@ -174,14 +174,14 @@
 				<item>
 					<id>elapsed</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>PLAYTIME</preprocessingData>
 				</item>
 				<item>
 					<id>slider</id>
 					<style>npprogressB</style>
 					<type>slider</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>PLAYTIME_PROGRESS</preprocessingData>
 					<min>0</min>
 					<max>100</max>
@@ -189,7 +189,7 @@
 				<item>
 					<id>remain</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>DURATION</preprocessingData>
 				</item>
 			</item>
