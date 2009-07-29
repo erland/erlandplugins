@@ -17,7 +17,7 @@
 					<id>screenInformation[% topfontsize %]Text</id>
 					<type>label</type>
 					[% IF top %]
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% top %]</preprocessingData>
 					[% ELSE %]
 					<value/>
@@ -31,7 +31,7 @@
 					<id>screenInformation[% centerfontsize %]Text</id>
 					<type>label</type>
 					[% IF center %]
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% center %]</preprocessingData>
 					[% ELSE %]
 					<value/>
@@ -45,7 +45,7 @@
 				<item>
 					<id>screenInformation[% bottomfontsize %]Text</id>
 					<type>label</type>
-					<preprocessing>titleformat</preprocessing>
+					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% bottom %]</preprocessingData>
 				</item>
 			</item>
