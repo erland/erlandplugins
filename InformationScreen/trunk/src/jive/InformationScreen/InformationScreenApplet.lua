@@ -382,6 +382,8 @@ function _getArtwork(self,item,icon)
 		else
 			self:_getIcon(item,icon,usableHeight)
 		end
+	elseif item.preprocessingData and item.preprocessingData == "thumb" then
+		self:_getIcon(item,icon,jiveMain:getSkinParam("THUMB_SIZE"))
 	else
 		self:_getIcon(item,icon)
 	end
@@ -506,6 +508,29 @@ function _getClockStyles(self, skinName)
 	local s = {}
 	local width,height = Framework.getScreenSize()
 	s.InformationScreenClock = {
+		time = {
+			position = LAYOUT_NORTH,
+			border = {0,40,0,40},
+			time = {
+				font = _font(width*3/8),
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		date = {
+			position = LAYOUT_SOUTH,
+			border = {0,0,0,15},
+			date = {
+				font = _font(40),
+				align = 'center',
+				w = WH_FILL,
+				h = 70,
+				fg = { 0xcc, 0xcc, 0xcc },
+			},
+		}
+	}
+	s.InformationScreenClockBlack = {
 		bgImg = Tile:fillColor(0x000000ff),
 		time = {
 			position = LAYOUT_NORTH,
@@ -530,6 +555,40 @@ function _getClockStyles(self, skinName)
 		}
 	}
 	s.InformationScreenClockAndNowPlaying = {
+		playingtitle = {
+			position = LAYOUT_NORTH,
+			border = {0,15,0,0},
+			playingtitle = {
+				font = _font(width/20),
+				lineHeight = width/20,
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		time = {
+			position = LAYOUT_CENTER,
+			border = {0,20,0,20},
+			time = {
+				font = _font(width*3/8-10),
+				align = 'center',
+				w = WH_FILL,
+				fg = { 0xcc,0xcc,0xcc },
+			},
+		},
+		date = {
+			position = LAYOUT_SOUTH,
+			border = {0,30,0,20},
+			date = {
+				font = _font(width/10),
+				align = 'center',
+				w = WH_FILL,
+				h = 70,
+				fg = { 0xcc, 0xcc, 0xcc },
+			},
+		}
+	}
+	s.InformationScreenClockAndNowPlayingBlack = {
 		bgImg = Tile:fillColor(0x000000ff),
 		playingtitle = {
 			position = LAYOUT_NORTH,
