@@ -55,6 +55,8 @@ my $configManager = undef;
 my $screens = undef;
 my $manageScreenHandler = undef;
 my $lastLayoutChange = time();
+my $keywordHandlers = {};
+my $serverStates = {};
 
 sub getDisplayName {
 	return 'PLUGIN_INFORMATIONSCREEN';
@@ -84,14 +86,279 @@ sub initPlugin {
 	Plugins::InformationScreen::PlayerSettings->new($class);
 	$manageScreenHandler = Plugins::InformationScreen::ManageScreens->new($class);
 	Slim::Control::Request::addDispatch(['informationscreen','items'], [1, 1, 1, \&jiveItemsHandler]);
+	Slim::Control::Request::addDispatch(['informationscreen','statemessage'], [0, 0, 1, \&stateMessageHandler]);
 	
-	Slim::Music::TitleFormatter::addFormat("SHORTTIME",\&titleFormatTime,1);
-	Slim::Music::TitleFormatter::addFormat("TIME",\&titleFormatTime,1);
-	Slim::Music::TitleFormatter::addFormat("DATE",\&titleFormatDate,1);
-	Slim::Music::TitleFormatter::addFormat("WEEKDAY",\&titleFormatWeekday,1);
-	Slim::Music::TitleFormatter::addFormat("SHORTWEEKDAY",\&titleFormatShortWeekday,1);
-
 	checkDefaults();
+}
+
+sub postinitPlugin {
+	initCustomKeywordHandlers();
+}
+
+sub registerKeywordHandler {
+	my $keyword = shift;
+	my $callback = shift;
+	my $cache = shift;
+
+	my $keywordHandler = {
+		'cb' => $callback,
+		'cache' => $cache,
+	};
+
+	$log->info("Register keyword handler for $keyword");
+	$keywordHandlers->{$keyword} = $keywordHandler;
+}
+
+sub unregisterKeywordHandler {
+	my $keyword = shift;
+	delete $keywordHandlers->{$keyword};
+}
+
+sub getMusicInfoSCRCustomItems {
+	my $customKeywords = {
+		'PLAYING' => {
+			'cb' => sub {
+				my $client = shift;
+				my $mode = Slim::Player::Source::playmode($client);
+				my $string = $client->string('PLAYING');
+				if($mode eq 'pause') {
+					$string = $client->string('PAUSED');
+				}elsif($mode eq 'stop') {
+					$string = $client->string('STOPPED');
+				}
+				return $string;
+			},
+			'cache' => 0,
+		},
+		'PLAYLIST' => {
+			'cb' => sub {
+				my $client = shift;
+				if (my $string = $client->currentPlaylist()) {
+				        return Slim::Music::Info::standardTitle($client, $string);
+				}else {
+					return undef;
+				}
+			},
+			'cache' => 0,
+		},
+		'X_OF_Y' => {
+			'cb' => sub {
+				my $client = shift;
+				my $songIndex = Slim::Player::Source::playingSongIndex($client);
+				
+				if($songIndex>=0) {
+					my $string = sprintf("%d %s %d", 
+						        (Slim::Player::Source::playingSongIndex($client) + 1), 
+						        $client->string('OUT_OF'), Slim::Player::Playlist::count($client));
+					return $string;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'X_Y' => {
+			'cb' => sub {		
+				my $client = shift;
+				my $songIndex = Slim::Player::Source::playingSongIndex($client);
+				if($songIndex>=0) {
+					my $string = sprintf("%d/%d", 
+						        (Slim::Player::Source::playingSongIndex($client) + 1), 
+						        Slim::Player::Playlist::count($client));
+					return $string;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'ALARM' => {
+			'cb' => sub {
+				my $client = shift;
+				my $currentAlarm = Slim::Utils::Alarm->getCurrentAlarm($client);
+				my $nextAlarm = Slim::Utils::Alarm->getNextAlarm($client);
+
+				# Include the next alarm time in the overlay if there's room
+				if (defined $currentAlarm || ( defined $nextAlarm && ($nextAlarm->nextDue - time < 86400) )) {
+				        # Remove seconds from alarm time
+				        my $timeStr = Slim::Utils::DateTime::timeF($nextAlarm->time % 86400, undef, 1);
+				        $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+					return $timeStr;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'PLAYTIME' => {
+			'cb' => sub {
+				my $client = shift;
+				my $songTime = Slim::Player::Source::songTime($client);
+				if(defined($songTime)) {
+					my $hrs = int($songTime / (60 * 60));
+					my $min = int(($songTime - $hrs * 60 * 60) / 60);
+					my $sec = $songTime - ($hrs * 60 * 60 + $min * 60);
+		
+					if ($hrs) {
+						$songTime = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
+					} else {
+						$songTime = sprintf("%02d:%02d", $min, $sec);
+					}
+					return $songTime;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'DURATION' => {
+			'cb' => sub {
+				my $client = shift;
+				my $songDuration = Slim::Player::Source::playingSongDuration($client);
+				if(defined $songDuration && $songDuration>0) {
+					my $hrs = int($songDuration / (60 * 60));
+					my $min = int(($songDuration - $hrs * 60 * 60) / 60);
+					my $sec = $songDuration - ($hrs * 60 * 60 + $min * 60);
+		
+					if ($hrs) {
+						$songDuration = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
+					} else {
+						$songDuration = sprintf("%02d:%02d", $min, $sec);
+					}
+					return $songDuration;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'PLAYTIME_PROGRESS' => {
+			'cb' => sub {
+				my $client = shift;
+				my $songTime = Slim::Player::Source::songTime($client);
+				my $songDuration = Slim::Player::Source::playingSongDuration($client);
+				if(defined $songTime && defined $songDuration && $songDuration>0) {
+					my $progress = int(100*$songTime/$songDuration);
+					return $progress;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'VOLUME' => {
+			'cb' => sub {
+				my $client = shift;
+
+				if($client->hasVolumeControl()) {
+					my $minVolume = $client->minVolume();
+					my $maxVolume = $client->maxVolume();
+					my $volume = $client->volume()-$client->minVolume();
+					$volume = int(100*(($volume-$minVolume)/($maxVolume-$minVolume)));
+					return $volume;
+				}
+				return undef;
+			},
+			'cache' => 0,
+		},
+		'SHORTWEEKDAY' => {
+			'cb' => sub {
+				my $time = time();
+				return Slim::Utils::DateTime::timeF($time, "%a");
+			},
+			'cache' => 0,
+		},
+		'WEEKDAY' => {
+			'cb' => sub {
+				my $time = time();
+				return Slim::Utils::DateTime::timeF($time, "%A");
+			},
+			'cache' => 0,
+		},
+		'DATE' => {
+			'cb' => sub {
+				my $time = time();
+				return Slim::Utils::DateTime::shortDateF($time);
+			},
+			'cache' => 0,
+		},
+		'TIME' => {
+			'cb' => sub {
+				my $time = time();
+				return Slim::Utils::DateTime::timeF($time);
+			},
+			'cache' => 0,
+		},
+		'SHORTTIME' => {
+			'cb' => sub {
+				my $time = time();
+				my $timeStr = Slim::Utils::DateTime::timeF($time);
+				$timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+				return $timeStr;
+			},
+			'cache' => 0,
+		},
+	};
+	return $customKeywords;
+}
+
+sub replaceCustomKeywords {
+	my $client = shift;
+	my $song = shift;
+	my $string = shift;
+
+	my $cache = $client->pluginData('keywordCache') || {};
+
+	foreach my $keyword (keys %$keywordHandlers) {
+		if($string =~ /\b$keyword\b/) {
+			my $cachedItem = $cache->{$keyword} || {};
+ 
+			my $value = undef;
+        		if ((defined $keywordHandlers->{$keyword}->{'cache'} && !(defined $cachedItem->{'timeout'} && $cachedItem->{'value'}))
+				|| (defined $keywordHandlers->{$keyword}->{'cache'} && $cachedItem->{'timeout'} && $cachedItem->{'timeout'} <= Time::HiRes::time())
+				|| !defined $keywordHandlers->{$keyword}->{'cache'}) {
+
+				$value =  eval { &{$keywordHandlers->{$keyword}->{'cb'}}($client, $song, $keyword) };
+                                
+				if($@) {
+	                		$log->error("Error getting keyword $keyword: $@");
+				}
+
+				if(defined $keywordHandlers->{$keyword}->{'cache'} && $keywordHandlers->{$keyword}->{'cache'}!=0) {
+					$log->debug("Caching $keyword=$value");
+					$cachedItem->{'value'} = $value;
+					$cachedItem->{'timeout'} = Time::HiRes::time() + $keywordHandlers->{$keyword}->{'cache'};
+					$cache->{$keyword} = $cachedItem;
+					$client->pluginData('keywordCache', $cache); 
+				}
+			}else {
+				$value = $cachedItem->{'value'};
+			}
+
+			if(defined($value)) {
+				$log->debug("Replacing $keyword with: $value");
+				$string =~ s/\b$keyword\b/$value/;
+			}else {
+				$string =~ s/\b$keyword\b//;
+			}
+		}
+	}
+	return $string;
+}
+
+sub initCustomKeywordHandlers {
+	no strict 'refs';
+	my @enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
+	for my $plugin (@enabledplugins) {
+		if(UNIVERSAL::can("$plugin","getMusicInfoSCRCustomItems")) {
+			$log->debug("Getting custom keyword handlers from: $plugin\n");
+
+			my $items = eval { &{"${plugin}::getMusicInfoSCRCustomItems"}() };
+			if ($@) {
+				$log->warn("Error custom keyword handlers from $plugin: $@\n");
+			}
+			for my $keyword (keys %$items) {
+				$log->debug("Got item '$keyword' from '$plugin'");
+
+				registerKeywordHandler($keyword,$items->{$keyword}->{'cb'},$items->{$keyword}->{'cache'});
+			}
+		}
+	}
+	use strict 'refs';
 }
 
 sub prepareManagingScreens {
@@ -296,6 +563,51 @@ sub getCurrentScreen {
 	return undef;
 }
 
+sub stateMessageHandler {
+	$log->debug("Entering stateMessageHandler");
+	my $request = shift;
+	my $client = $request->client();
+
+	if (!$request->isCommand([['informationscreen'],['statemessage']])) {
+		$log->warn("Incorrect command");
+		$request->setStatusBadDispatch();
+		$log->debug("Exiting stateMessageHandler");
+		return;
+	}
+
+	my $state = $request->getParam('state');
+	if(!defined($state) || !$state) {
+		$log->warn("Required parameter'state' is missing");
+		$request->setStatusBadDispatch();
+		return;
+	}
+	my $message = $request->getParam('message');
+	
+	if(defined($client)) {
+		# client state
+		my $clientStates = $client->pluginData('stateCache') || {};
+		if(defined($message)) {
+			$clientStates->{$state} = $message;
+			$client->pluginData('stateCache',$clientStates);
+			$log->info("Change state for player ".$client->id.": $state=$message");
+		}else {
+			delete $clientStates->{$state};
+			$client->pluginData('stateCache',$clientStates);
+			$log->info("Removing state for player ".$client->id.": $state");
+		}
+	}else {
+		# server state
+		if(defined($message)) {
+			$log->info("Change state: $state=$message");
+			$serverStates->{$state} = $message;
+		}else {
+			$log->info("Removing state: $state");
+			delete $serverStates->{$state};
+		}
+	}
+	$request->setStatusDone();
+	$log->debug("Exiting stateMessageHandler");
+}
 sub jiveItemsHandler {
 	$log->debug("Entering jiveItemsHandler");
 	my $request = shift;
@@ -404,7 +716,7 @@ sub preprocessItem {
 	my $client = shift;
 	my $item = shift;
 
-	if(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'titleformat') {
+	if(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'keyword') {
 		my @formatParts = split(/\\n/,$item->{'preprocessingData'});
 		$item->{'value'} = "";
 		foreach my $part (@formatParts) {
@@ -536,121 +848,16 @@ sub getKeywordValues {
 	my $client = shift;
 	my $keyword = shift;
 
-	if($keyword =~ /\bPLAYING\b/) {
-		my $mode = Slim::Player::Source::playmode($client);
-		my $string = $client->string('PLAYING');
-		if($mode eq 'pause') {
-			$string = $client->string('PAUSED');
-		}elsif($mode eq 'stop') {
-			$string = $client->string('STOPPED');
-		}
-		$log->debug("Replacing PLAYING with $string");
-		$keyword =~ s/\bPLAYING\b/$string/;
-	}
-	if($keyword =~ /\bPLAYLIST\b/) {
-                if (my $string = $client->currentPlaylist()) {
-                        my $string = Slim::Music::Info::standardTitle($client, $string);
-			$log->debug("Replacing PLAYLIST with $string");
-			$keyword =~ s/\bPLAYLIST\b/$string/;
-                }else {
-			$keyword =~ s/\bPLAYLIST\b//;
-		}
-	}
-	if($keyword =~ /\bX_OF_Y\b/) {
-                my $songIndex = Slim::Player::Source::playingSongIndex($client);
-                
-                my $string = sprintf("%d %s %d", 
-                                (Slim::Player::Source::playingSongIndex($client) + 1), 
-                                $client->string('OUT_OF'), Slim::Player::Playlist::count($client));
-		$log->debug("Replacing X_OF_Y with $string");
-		$keyword =~ s/\bX_OF_Y\b/$string/;
-	}
-	if($keyword =~ /\bX_Y\b/) {
-                my $songIndex = Slim::Player::Source::playingSongIndex($client);
-                
-                my $string = sprintf("%d/%d", 
-                                (Slim::Player::Source::playingSongIndex($client) + 1), 
-                                Slim::Player::Playlist::count($client));
-		$log->debug("Replacing X_Y with $string");
-		$keyword =~ s/\bX_Y\b/$string/;
-	}
-	if($keyword =~ /\bALARM\b/) {
-                my $currentAlarm = Slim::Utils::Alarm->getCurrentAlarm($client);
-                my $nextAlarm = Slim::Utils::Alarm->getNextAlarm($client);
-
-		my $string = "";
-                # Include the next alarm time in the overlay if there's room
-                if (defined $currentAlarm || ( defined $nextAlarm && ($nextAlarm->nextDue - time < 86400) )) {
-                        # Remove seconds from alarm time
-                        my $timeStr = Slim::Utils::DateTime::timeF($nextAlarm->time % 86400, undef, 1);
-                        $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
-                        $string = $timeStr;
-			$log->debug("Replacing ALARM with $string");
-                }
-
-		$keyword =~ s/\bALARM\b/$string/;
-	}
-	if($keyword =~ /\bPLAYTIME\b/) {
-		my $songTime = Slim::Player::Source::songTime($client);
-		if(defined($songTime)) {
-			my $hrs = int($songTime / (60 * 60));
-			my $min = int(($songTime - $hrs * 60 * 60) / 60);
-			my $sec = $songTime - ($hrs * 60 * 60 + $min * 60);
-		
-			if ($hrs) {
-			        $songTime = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
-			} else {
-			        $songTime = sprintf("%02d:%02d", $min, $sec);
-			}
-			$log->debug("Replacing PLAYTIME with $songTime");
-			$keyword =~ s/\bPLAYTIME\b/$songTime/;
-		}else {
-			$keyword =~ s/\bPLAYTIME\b//;
-		}
-	}
-	if($keyword =~ /\bDURATION\b/) {
-		my $songDuration = Slim::Player::Source::playingSongDuration($client);
-		if(defined $songDuration && $songDuration>0) {
-			my $hrs = int($songDuration / (60 * 60));
-			my $min = int(($songDuration - $hrs * 60 * 60) / 60);
-			my $sec = $songDuration - ($hrs * 60 * 60 + $min * 60);
-		
-			if ($hrs) {
-			        $songDuration = sprintf("%d:%02d:%02d", $hrs, $min, $sec);
-			} else {
-			        $songDuration = sprintf("%02d:%02d", $min, $sec);
-			}
-			$log->debug("Replacing DURATION with $songDuration");
-			$keyword =~ s/\bDURATION\b/$songDuration/;
-		}else {
-			$keyword =~ s/\bDURATION\b//;
-		}
-	}
-	if($keyword =~ /\bPLAYTIME_PROGRESS\b/) {
-		my $songTime = Slim::Player::Source::songTime($client);
-		my $songDuration = Slim::Player::Source::playingSongDuration($client);
-		if(defined $songTime && defined $songDuration && $songDuration>0) {
-			my $progress = int(100*$songTime/$songDuration);
-			$log->debug("Replacing PLAYTIME_PROGRESS with $progress");
-			$keyword =~ s/\bPLAYTIME_PROGRESS\b/$progress/;
-		}else {
-			$keyword =~ s/\bPLAYTIME_PROGRESS\b//;
-		}
-	}
-	if($keyword =~ /\bVOLUME\b/) {
-		if($client->hasVolumeControl()) {
-			my $minVolume = $client->minVolume();
-			my $maxVolume = $client->maxVolume();
-			my $volume = $client->volume()-$client->minVolume();
-			$volume = int(100*(($volume-$minVolume)/($maxVolume-$minVolume)));
-			$log->debug("Replacing VOLUME with $volume");
-			$keyword =~ s/\bVOLUME\b/$volume/;
-		}else {
-			$keyword =~ s/\bVOLUME\b//;
-		}
-	}
-
 	my $song = Slim::Player::Playlist::song($client);
+
+	$keyword = replaceCustomKeywords($client,$song,$keyword);
+
+	$log->debug("Replacing client states for ".$client->id." in: $keyword");
+	my $clientStates = $client->pluginData('stateCache') || {};
+	$keyword = replaceStates($clientStates,$keyword);
+
+	$log->debug("Replacing server states in: $keyword");
+	$keyword = replaceStates($serverStates,$keyword);
 
 	$log->debug("Replacing remaining keywords in: $keyword");
 	if(defined($song)) {
@@ -662,27 +869,18 @@ sub getKeywordValues {
 	return $keyword;
 }
 
-sub titleFormatShortWeekday {
-	my $time = time();
-	return Slim::Utils::DateTime::timeF($time, "%a");
-}
-sub titleFormatWeekday {
-	my $time = time();
-	return Slim::Utils::DateTime::timeF($time, "%A");
-}
-sub titleFormatDate {
-	my $time = time();
-	return Slim::Utils::DateTime::shortDateF($time);
-}
-sub titleFormatTime {
-	my $time = time();
-	return Slim::Utils::DateTime::timeF($time);
-}
-sub titleFormatShortTime {
-	my $time = time();
-	my $timeStr = Slim::Utils::DateTime::timeF($time);
-	$timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
-	return $timeStr;
+sub replaceStates {
+	my $states = shift;
+	my $keyword = shift;
+
+	foreach my $state (keys %$states) {
+		if($keyword =~ /\bSTATE_$state\b/) {
+			my $value = $states->{$state} || '';
+			$log->debug("Replacing STATE_$state with $value");
+			$keyword =~ s/\bSTATE_$state\b/$value/;
+		}
+	}
+	return $keyword;
 }
 
 sub initScreens {
