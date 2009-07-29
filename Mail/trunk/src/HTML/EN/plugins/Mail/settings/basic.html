@@ -6,6 +6,9 @@
 	[% WRAPPER setting title="SETUP_PLUGIN_MAIL_POLLING_INTERVAL" desc="SETUP_PLUGIN_MAIL_POLLING_INTERVAL_DESC" %]
 		<input type="text" class="stdedit" name="pref_pollinginterval" id="pollinginterval" value="[% prefs.pref_pollinginterval %]" size="4">
 	[% END %]
+	[% WRAPPER setting title="SETUP_PLUGIN_MAIL_NEWMAILTEXT" desc="SETUP_PLUGIN_MAIL_NEWMAILTEXT_DESC" %]
+		<input type="text" class="stdedit" name="pref_newmailtext" id="newmailtext" value="[% prefs.pref_newmailtext %]" size="40">
+	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_MAIL_HOST" desc="SETUP_PLUGIN_MAIL_HOST_DESC" %]
 		<input type="text" class="stdedit" name="pref_mailhost" id="mailhost" value="[% prefs.pref_mailhost %]" size="40">
@@ -27,5 +30,4 @@
 	[% WRAPPER setting title="SETUP_PLUGIN_MAIL_FOLDER" desc="SETUP_PLUGIN_MAIL_FOLDER_DESC" %]
 		<input type="text" class="stdedit" name="pref_mailfolder" id="mailfolder" value="[% prefs.pref_mailfolder %]" size="40">
 	[% END %]
-
 [% PROCESS settings/footer.html %]

@@ -82,3 +82,9 @@ PLUGIN_MAIL_NO_NEW_MAIL
 PLUGIN_MAIL_YOUHAVEGOTMAIL
 	EN	You've Got Mail
 
+SETUP_PLUGIN_MAIL_NEWMAILTEXT
+	EN	Text when new mail
+
+SETUP_PLUGIN_MAIL_NEWMAILTEXT_DESC
+	EN	Text to show on Classic players in the title format NEWMAIL when there is new mails, if empty the default "You've Got Mail" text will be used
+
