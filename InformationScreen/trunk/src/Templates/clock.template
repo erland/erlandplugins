@@ -5,6 +5,8 @@
 		[% IF screengroup %]<group>[% screengroup %]</group>[% END %]
 		[% IF includedstates %]<includedstates>[% includedstates %]</includedstates>[% END %]
 		[% IF includedskins %]<includedskins>[% includedskins %]</includedskins>[% END %]
+		[% IF includeddays %]<includeddays>[% includeddays %]</includeddays>[% END %]
+		[% IF includedtime %]<includedtime>[% includedtime %]</includedtime>[% END %]
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
 		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %]</style>
 		<skin>getClockStyles</skin>

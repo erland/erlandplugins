@@ -14,6 +14,8 @@
 		<parameter type="checkbox" id="showprogress" name="Show progress" value="1"/>
 		<parameter type="checkbox" id="showcontrols" name="Show controls" value="1"/>
 		<parameter type="text" id="includedskins" name="Only include in skins (Empty means all)" value=""/>
+		<parameter type="text" id="includedtime" name="Only include during time (hh:mm-hh:mm)" value=""/>
+		<parameter type="checkboxes" id="includeddays" name="Only show on weekdays (Empty means all)" value="0" data="1=Monday,2=Tuesday,3=Wednesday,4=Thursday,5=Friday,6=Saturday,0=Sunday"/>
 	</template>
 </informationscreen>
 

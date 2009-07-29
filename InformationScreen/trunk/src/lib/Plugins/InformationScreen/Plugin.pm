@@ -29,6 +29,7 @@ use Slim::Utils::Strings qw(string);
 use Slim::Utils::DateTime;
 use POSIX qw(strftime);
 use Storable;
+use Time::localtime;
 
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
@@ -157,6 +158,50 @@ sub isAllowedOnPlayer {
 	return 0;
 }
 
+sub isAllowedDuringTime {
+	my $client = shift;
+	my $time = shift;
+	my $item = shift;
+
+	if((!exists $item->{'includeddays'} || $item->{'includeddays'} eq "") && (!exists $item->{'includedtime'} || $item->{'includedtime'} eq "")) {
+		return 1;
+	}
+	if(exists $item->{'includedtime'}) {
+		if($item->{'includedtime'} =~ /^(\d?\d)\D(\d\d)\s*-\s*(\d?\d)\D(\d\d)/) {
+			my $startHour = $1;
+			my $startMinute = $2;
+			my $endHour = $3;
+			my $endMinute = $4;
+
+			if($startHour<$time->hour || ($startHour==$time->hour && $startMinute<=$time->min)) {
+				if($endHour<$startHour || ($endHour==$startHour && $endMinute<$startMinute)) {
+					# End time is on next day
+				}elsif($endHour>$time->hour || ($endHour==$time->hour && $endMinute>=$time->min)) {
+					# Time is between start and end time
+				}else {
+					$log->debug("Not including ".$item->{'id'}." only shown between $startHour:$startMinute to $endHour:$endMinute, it shouldn't be shown at ".$time->hour.":".$time->min);
+					return 0;
+				}
+			}else {
+				$log->debug("Not including ".$item->{'id'}." only shown between $startHour:$startMinute to $endHour:$endMinute, it shouldn't be shown at ".$time->hour.":".$time->min);
+				return 0;
+			}
+		}else {
+			$log->error("Invalid includedtime format: ".$time->{'includedtime'}." should be in the format 22:00-06:00 (enable during night) or 06:00-22:00 (enabled during day)")
+		}
+	}
+	if(exists $item->{'includeddays'} && $item->{'includeddays'} ne "") {
+		my @allowedDays = split(/,/,$item->{'includeddays'});
+		if(grep $_ eq $time->wday, @allowedDays) {
+			return 1;
+		}else {
+			$log->debug("Not including ".$item->{'id'}.", it shouldn't be shown this weekday");
+			return 0;
+		}
+	}
+	return 1;
+}
+
 sub isAllowedInSkin {
 	my $client = shift;
 	my $skin = shift;
@@ -189,8 +234,9 @@ sub getCurrentScreen {
 
 	my $lastScreen = undef;
 	my @enabledScreenKeys = ();
+	my $currentTime = localtime();
 	for my $key (@sortedScreenKeys) {
-		if(isAllowedInState($client,$screens->{$key}) && isAllowedOnPlayer($client,$screens->{$key}) && isAllowedInSkin($client,$skin,$screens->{$key}) && $screens->{$key}->{'enabled'}) {
+		if(isAllowedInState($client,$screens->{$key}) && isAllowedOnPlayer($client,$screens->{$key}) && isAllowedInSkin($client,$skin,$screens->{$key}) && isAllowedDuringTime($client,$currentTime,$screens->{$key}) && $screens->{$key}->{'enabled'}) {
 			push @enabledScreenKeys,$key;
 			$lastScreen = $key;
 		}
@@ -284,8 +330,9 @@ sub jiveItemsHandler {
 	my $cnt = 0;
 	my $offsetCount = 0;
 	my @itemLoop = ();
+	my $currentTime = localtime();
 	foreach my $group (@$listRef) {
-		if(isAllowedInState($client,$group) && isAllowedInSkin($client,$skin,$group) && preprocessGroup($client,$group)) {
+		if(isAllowedInState($client,$group) && isAllowedInSkin($client,$skin,$group) && isAllowedDuringTime($client,$currentTime,$group) && preprocessGroup($client,$group)) {
 			if($cnt>=$start && $offsetCount<$itemsPerResponse) {
 				my $itemArray = $group->{'item'};
 				foreach my $item (@$itemArray) {
@@ -362,7 +409,7 @@ sub preprocessItem {
 		}
 
 	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'datetime') {
-		$item->{'value'} = strftime($item->{'preprocessingData'},localtime(time()));
+		$item->{'value'} = strftime($item->{'preprocessingData'},CORE::localtime(time()));
 
 	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'function') {
 		no strict 'refs';
