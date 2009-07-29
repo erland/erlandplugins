@@ -418,7 +418,7 @@ sub getActiveRecordings {
 	my $lines = getPendingRecordings($maxEntries);
 	my @result = ();
 	foreach my $line (@$lines) {
-		if($line->{'recstatus'} eq $MythTV::recstatus_recording) {
+		if($line->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording}) {
 			push @result,$line;
 		}
 	}
@@ -657,13 +657,14 @@ sub preprocessInformationScreenPendingRecordings {
 	my $screen = shift;
 
 	my $lines = getCachedPendingRecordings();
-	return prepareInformationScreenData($client,$screen,$lines);
+	return prepareInformationScreenData($client,$screen,$lines,1);
 }
 
 sub prepareInformationScreenData {
 	my $client = shift;
 	my $screen = shift;
 	my $lines = shift;
+	my $recordingIndication = shift;
 
 	if(scalar(@$lines)==0) {
 		return 0;
@@ -690,11 +691,16 @@ sub prepareInformationScreenData {
 			'type' => 'menuitem',
 			'style' => 'item_no_arrow',
 		};
+		#my $channelName = " (".$recording->{'channel'}.")";
+		my $recStatus = '';
+		if($recordingIndication) {
+			$recStatus = ((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording})?' (Rec)':'');
+		}
 		my @items = ();
 		my $text = {
 			'id' => 'text',
 			'type' => 'text',
-			'value' => $recording->{'title'}." (".$recording->{'channel'}.")".((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::recstatus_recording)?' (Rec)':'')."\n".$recording->{'startdate'}." ".$recording->{'starttime'}." - ".$recording->{'endtime'},
+			'value' => $recording->{'title'}."\n".$recording->{'startdate'}." ".$recording->{'starttime'}." - ".$recording->{'endtime'}.$recStatus,
 		};
 		push @items,$text;
 		my $icon = {
