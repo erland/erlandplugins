@@ -85,8 +85,96 @@ sub initPlugin {
 			$log->error("Unable to load MySQL driver: $@");
 		}
 	}
+
+	
+	eval {
+                require GD;
+                if (!GD::Image->can('jpeg')) {
+			$log->error("GD doesn't support jpeg resizing, no icons will be available for MythTV in Squeezeplay");
+                }
+        };
+	if($@) {
+		$log->error("Unable to load GD: $@");
+	}
+
+	Slim::Music::TitleFormatter::addFormat('MYTHTVRECORDINGINDICATION',\&titleFormatRecordingIndication,1);
+	Slim::Music::TitleFormatter::addFormat('MYTHTVRECORDING',\&titleFormatRecording,1);
+	Slim::Music::TitleFormatter::addFormat('MYTHTVPENDINGRECORDING',\&titleFormatPendingRecording,1);
+	addTitleFormat("MYTHTVRECORDINGINDICATION");
+	addTitleFormat("MYTHTVRECORDING");
+	addTitleFormat("MYTHTVPENDINGRECORDING");
 }
 
+sub addTitleFormat
+{
+	my $titleformat = shift;
+	my $titleFormats = $serverPrefs->get('titleFormat');
+	foreach my $format ( @$titleFormats ) {
+		if($titleformat eq $format) {
+			return;
+		}
+	}
+	$log->debug("Adding: $titleformat");
+	push @$titleFormats,$titleformat;
+	$serverPrefs->set('titleFormat',$titleFormats);
+}
+
+sub titleFormatRecordingIndication
+{
+	$log->debug("Entering titleFormatRecordingIndication");
+	my $recordings = getCachedActiveRecordings();
+	if(scalar(@$recordings)>0) {
+		$log->debug("Exiting titleFormatRecordingIndication with recording");
+		return string("PLUGIN_MYTHTV_RECORDING")."...";
+	}
+	$log->debug("Exiting titleFormatRecordingIndication with undef");
+	return undef;
+}
+
+sub titleFormatRecording
+{
+	$log->debug("Entering titleFormatRecording");
+	my $recordings = getCachedActiveRecordings();
+	if(scalar(@$recordings)>0) {
+		$log->debug("Exiting titleFormatRecording with recordings");
+		my $shows = ($prefs->get("titleformatactiverecordingstext")?$prefs->get("titleformatactiverecordingstext"):string("PLUGIN_MYTHTV_RECORDING")).": ";
+		my $first = 1;
+		foreach my $recording (@$recordings) {
+			if(!$first) {
+				$shows .= ", ";
+			}
+			$shows .= $recording->{'title'};
+			$first = 0;
+		}
+	}
+	$log->debug("Exiting titleFormatRecording with undef");
+	return undef;
+}
+
+sub titleFormatPendingRecording
+{
+	$log->debug("Entering titleFormatPendingRecording");
+	my $recordings = getCachedPendingRecordings();
+	if(scalar(@$recordings)>0) {
+		$log->debug("Exiting titleFormatPendingRecording with recordings");
+		my $shows = ($prefs->get("titleformatpendingrecordingstext")?$prefs->get("titleformatpendingrecordingstext"):string("PLUGIN_MYTHTV_PENDINGRECORDING")).": ";
+		my $index = 0;
+		my $max = $prefs->get('titleformatmaxrecordings') || 3;
+		foreach my $recording (@$recordings) {
+			if($index) {
+				$shows .= ", ";
+			}
+			$shows .= $recording->{'title'};
+			$index++;
+			if($index>=$max) {
+				last;
+			}
+		}
+		return $shows;
+	}
+	$log->debug("Exiting titleFormatPendingRecording with undef");
+	return undef;
+}
 
 sub webPages {
 
@@ -112,12 +200,99 @@ sub handleWebGetIcon {
 	my ($client, $params) = @_;
 
 	if($ICONS->{$params->{'ChanId'}}) {
+		$log->debug("Getting icon ".$params->{'ChanId'}." by using url: ".$params->{'path'});
+		if($params->{'path'} =~ /.*\/geticon_(\d+)x(\d+)_?.*\.png/) {
+			my $requestedWidth = $1;
+			my $requestedHeight = $2;
+			my $content = read_file(createResizedImage("MythTVIcons",$params->{'ChanId'},$requestedWidth,$requestedHeight));
+			return \$content;
+		}
 		my $cachedir = $serverPrefs->get('cachedir');
 		my $icondir  = catdir( $cachedir, 'MythTVIcons' );
 		my $content = read_file(catfile($icondir,$params->{'ChanId'}));
 		return \$content;
 	}
 	return undef;
+}
+
+sub createResizedImage {
+	my $cacheKey = shift;
+	my $image = shift;
+	my $requestedWidth = shift;
+	my $requestedHeight = shift;
+	
+	$log->debug("Getting cached image for channel $image with size $requestedWidth,$requestedHeight");
+	my $cachedir = $serverPrefs->get('cachedir');
+	my $icondir  = catdir( $cachedir, $cacheKey );
+	if(-e catfile($icondir,$image."_".$requestedWidth."_".$requestedHeight)) {
+		$log->debug("Getting from cache");
+		return catfile($icondir,$image."_".$requestedWidth."_".$requestedHeight);
+	}else {
+		$log->debug("Resizing");
+		my $imageData = read_file(catfile($icondir,$image));
+		my $origImage   = GD::Image->newFromPngData($imageData);
+
+		my $sourceWidth = $origImage->width;
+		my $sourceHeight = $origImage->height;
+		my $destWidth = undef;
+		my $destHeight = undef;
+
+		if ( $sourceWidth > $sourceHeight ) {
+                        $destWidth  = $requestedWidth;
+                        $destHeight = $sourceHeight / ( $sourceWidth / $requestedWidth );
+                }
+                elsif ( $sourceHeight > $sourceWidth ) {
+                        $destWidth  = $sourceWidth / ( $sourceHeight / $requestedWidth );
+                        $destHeight = $requestedWidth;
+                }
+                else {
+                        $destWidth = $destHeight = $requestedWidth;
+                }
+
+		# GD doesn't round correctly
+                $destHeight =     Slim::Utils::Misc::round($destHeight);
+                $destWidth =      Slim::Utils::Misc::round($destWidth);
+		my $newImage = GD::Image->new($destWidth, $destHeight);
+
+		$newImage->saveAlpha(1);
+                $newImage->alphaBlending(0);
+                $newImage->filledRectangle(0, 0, $destWidth, $destHeight, 0x7f000000);
+
+		# use faster Resize algorithm on slower machines
+                if ($serverPrefs->get('resampleArtwork')) {
+
+                        $log->info("Resampling file for better quality");
+                        $newImage->copyResampled(
+                                $origImage,
+                                0, 0,
+                                0, 0,
+                                $destWidth, $destHeight,
+                                $sourceWidth, $sourceHeight
+                        );
+
+                } else {
+
+                        $log->info("Resizing file for faster processing");
+                        $newImage->copyResized(
+                                $origImage,
+                                0, 0,
+                                0, 0,
+                                $destWidth, $destHeight,
+                                $sourceWidth, $sourceHeight
+                        );
+                }
+		my $newImageData = $newImage->png();
+		my $fh;
+		open($fh,"> ".catfile($icondir,$image."_".$requestedWidth."_".$requestedHeight)) or do {
+	            $log->error("Error saving resized icon: ".$!)
+		};
+		if(defined($fh)) {
+			print $fh $newImageData;
+			close $fh;
+		}
+		return catfile($icondir,$image."_".$requestedWidth."_".$requestedHeight);
+	}
+	
 }
 
 # Draws the plugin's web page
@@ -239,43 +414,15 @@ sub cacheIconError {
 
 sub getActiveRecordings {
 	my $maxEntries = shift || 20;
-	my $mythtv = new MythTV();
 
-	my $host = $mythtv->backend_setting('BackendServerIP');
-	my $port = $mythtv->backend_setting('BackendStatusPort');
-
-	$mythtv->backend_rows('QUERY_RECORDINGS Delete');
-	my %rows = $mythtv->backend_rows('QUERY_RECORDINGS Recording');
-
-	my @lines = ();
-	my $i=0;
-	my $last = undef;
-	foreach my $row (@{$rows{'rows'}}) {
-		if($i>$maxEntries) {
-			last;
-		}
-		my $show;
-		{
-			# MythTV::Program currently has a slightly broken line with a numeric
-			# comparision.
-			local($^W) = undef;
-			my $program = getProgram($mythtv,$row);
-			if(defined $program && $program && (!defined $last || $last->{'channel'} ne $program->{'channel'} || $last->{'startdate'} != $program->{'startdate'} || $last->{'starttime'} != $program->{'starttime'})) {
-				$last = $program;
-				push @lines,$program;
-				$i++;
-				
-				if($program->{'icon'}) {
-					my $url = "http://$host:$port/Myth/GetChannelIcon?ChanId=".$program->{'icon'};
-					cacheIcon($url,$program->{'icon'});
-				}
-			}else {
-				last;
-			}
+	my $lines = getPendingRecordings($maxEntries);
+	my @result = ();
+	foreach my $line (@$lines) {
+		if($line->{'recstatus'} eq $MythTV::recstatus_recording) {
+			push @result,$line;
 		}
 	}
-	$mythtv = undef;
-	return \@lines;
+	return \@result;
 }
 
 sub getPreviousRecordings {
@@ -461,10 +608,7 @@ sub getRecording {
 	return \%entry;
 }
 
-sub preprocessInformationScreenActiveRecordings {
-	my $client = shift;
-	my $screen = shift;
-
+sub getCachedActiveRecordings {
 	my $cachedData = undef;
 	my $timestamp = $cache->get("MythTV-ActiveRecordings-timestamp");
 	my $pollingInterval = $prefs->get('pollinginterval')||1;
@@ -479,13 +623,18 @@ sub preprocessInformationScreenActiveRecordings {
 		$cache->set("MythTV-ActiveRecordings-timestamp",time());
 		$cache->set("MythTV-ActiveRecordings-data",$lines);
 	}
-	return prepareInformationScreenData($client,$screen,$lines);
+	return $lines;
 }
 
-sub preprocessInformationScreenPendingRecordings {
+sub preprocessInformationScreenActiveRecordings {
 	my $client = shift;
 	my $screen = shift;
 
+	my $lines = getCachedActiveRecordings($client,$screen);
+	return prepareInformationScreenData($client,$screen,$lines);
+}
+
+sub getCachedPendingRecordings {
 	my $cachedData = undef;
 	my $timestamp = $cache->get("MythTV-PendingRecordings-timestamp");
 	my $pollingInterval = $prefs->get('pollinginterval')||1;
@@ -500,6 +649,14 @@ sub preprocessInformationScreenPendingRecordings {
 		$cache->set("MythTV-PendingRecordings-timestamp",time());
 		$cache->set("MythTV-PendingRecordings-data",$lines);
 	}
+	return $lines;
+}
+
+sub preprocessInformationScreenPendingRecordings {
+	my $client = shift;
+	my $screen = shift;
+
+	my $lines = getCachedPendingRecordings();
 	return prepareInformationScreenData($client,$screen,$lines);
 }
 
@@ -537,16 +694,17 @@ sub prepareInformationScreenData {
 		my $text = {
 			'id' => 'text',
 			'type' => 'text',
-			'value' => $recording->{'title'}." (".$recording->{'channel'}.")".((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq 'Recording')?' (Rec)':'')."\n".$recording->{'startdate'}." ".$recording->{'starttime'}." - ".$recording->{'endtime'},
+			'value' => $recording->{'title'}." (".$recording->{'channel'}.")".((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::recstatus_recording)?' (Rec)':'')."\n".$recording->{'startdate'}." ".$recording->{'starttime'}." - ".$recording->{'endtime'},
 		};
 		push @items,$text;
-#		my $icon = {
-#			'id' => 'icon',
-#			'type' => 'icon',
-#			'icon' => 'icon',#plugins/CustomBrowse/html/images/custombrowse.png',
-#			'preprocessing' => 'artwork',
-#		};
-#		push @items,$icon;
+		my $icon = {
+			'id' => 'icon',
+			'type' => 'icon',
+			'icon' => '/plugins/MythTV/geticon.png?ChanId='.$recording->{'icon'},
+			'preprocessing' => 'artwork',
+			'preprocessingData' => 'thumb',
+		};
+		push @items,$icon;
 		$group->{'item'} = \@items;
 		push @menuItems, $group;
 		$index++;
@@ -590,6 +748,12 @@ sub checkDefaults {
 		# Default to standard library directory
 		$log->debug("Defaulting backend_host to: localhost\n");
 		$prefs->set('backend_host', 'localhost');
+	}
+	my $prefVal = $prefs->get('pollinginterval');
+	if (! defined $prefVal) {
+		# Default to standard library directory
+		$log->debug("Defaulting pollinginterval to: 1 minute\n");
+		$prefs->set('pollinginterval', 1);
 	}
 }
 

@@ -60,8 +60,9 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(backend_host));
+        return ($prefs, qw(backend_host pollinginterval titleformatpendingrecordingstext titleformatactiverecordingstext));
 }
+
 sub handler {
 	my ($class, $client, $paramRef) = @_;
 
