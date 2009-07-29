@@ -84,6 +84,12 @@ sub initPlugin {
 	Plugins::InformationScreen::PlayerSettings->new($class);
 	$manageScreenHandler = Plugins::InformationScreen::ManageScreens->new($class);
 	Slim::Control::Request::addDispatch(['informationscreen','items'], [1, 1, 1, \&jiveItemsHandler]);
+	
+	Slim::Music::TitleFormatter::addFormat("SHORTTIME",\&titleFormatTime,1);
+	Slim::Music::TitleFormatter::addFormat("TIME",\&titleFormatTime,1);
+	Slim::Music::TitleFormatter::addFormat("DATE",\&titleFormatDate,1);
+	Slim::Music::TitleFormatter::addFormat("WEEKDAY",\&titleFormatWeekday,1);
+	Slim::Music::TitleFormatter::addFormat("SHORTWEEKDAY",\&titleFormatShortWeekday,1);
 
 	checkDefaults();
 }
@@ -643,40 +649,7 @@ sub getKeywordValues {
 			$keyword =~ s/\bVOLUME\b//;
 		}
 	}
-	if($keyword =~ /\bSHORTTIME\b/) {
-		my $time = time();
-		my $timeStr = Slim::Utils::DateTime::timeF($time);
-                $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
-		$log->debug("Replacing SHORTTIME with $timeStr");
-		$keyword =~ s/\bSHORTTIME\b/$timeStr/;
-	}
-	if($keyword =~ /\bTIME\b/) {
-		my $time = time();
-		my $timeStr = Slim::Utils::DateTime::timeF($time);
 
-		$log->debug("Replacing TIME with $timeStr");
-		$keyword =~ s/\bTIME\b/$timeStr/;
-	}
-	if($keyword =~ /\bDATE\b/) {
-		my $time = time();
-		my $timeStr = Slim::Utils::DateTime::shortDateF($time);
-
-		$log->debug("Replacing DATE with $timeStr");
-		$keyword =~ s/\bDATE\b/$timeStr/;
-	}
-	if($keyword =~ /\bWEEKDAY\b/) {
-		my $time = time();
-		my $timeStr = Slim::Utils::DateTime::timeF($time, "%A");
-
-		$log->debug("Replacing WEEKDAY with $timeStr");
-		$keyword =~ s/\bWEEKDAY\b/$timeStr/;
-	}
-	if($keyword =~ /\bSHORTWEEKDAY\b/) {
-		my $time = time();
-		my $timeStr = Slim::Utils::DateTime::timeF($time, "%a");
-		$log->debug("Replacing SHORTWEEKDAY with $timeStr");
-		$keyword =~ s/\bSHORTWEEKDAY\b/$timeStr/;
-	}
 	my $song = Slim::Player::Playlist::song($client);
 
 	$log->debug("Replacing remaining keywords in: $keyword");
@@ -688,6 +661,30 @@ sub getKeywordValues {
 	$log->debug("Final string after all replacements are: $keyword");
 	return $keyword;
 }
+
+sub titleFormatShortWeekday {
+	my $time = time();
+	return Slim::Utils::DateTime::timeF($time, "%a");
+}
+sub titleFormatWeekday {
+	my $time = time();
+	return Slim::Utils::DateTime::timeF($time, "%A");
+}
+sub titleFormatDate {
+	my $time = time();
+	return Slim::Utils::DateTime::shortDateF($time);
+}
+sub titleFormatTime {
+	my $time = time();
+	return Slim::Utils::DateTime::timeF($time);
+}
+sub titleFormatShortTime {
+	my $time = time();
+	my $timeStr = Slim::Utils::DateTime::timeF($time);
+	$timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+	return $timeStr;
+}
+
 sub initScreens {
 	my $client = shift;
 
