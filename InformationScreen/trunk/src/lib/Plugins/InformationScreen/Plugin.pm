@@ -538,11 +538,13 @@ sub getKeywordValues {
 		}elsif($mode eq 'stop') {
 			$string = $client->string('STOPPED');
 		}
+		$log->debug("Replacing PLAYING with $string");
 		$keyword =~ s/\bPLAYING\b/$string/;
 	}
 	if($keyword =~ /\bPLAYLIST\b/) {
                 if (my $string = $client->currentPlaylist()) {
                         my $string = Slim::Music::Info::standardTitle($client, $string);
+			$log->debug("Replacing PLAYLIST with $string");
 			$keyword =~ s/\bPLAYLIST\b/$string/;
                 }else {
 			$keyword =~ s/\bPLAYLIST\b//;
@@ -554,6 +556,7 @@ sub getKeywordValues {
                 my $string = sprintf("%d %s %d", 
                                 (Slim::Player::Source::playingSongIndex($client) + 1), 
                                 $client->string('OUT_OF'), Slim::Player::Playlist::count($client));
+		$log->debug("Replacing X_OF_Y with $string");
 		$keyword =~ s/\bX_OF_Y\b/$string/;
 	}
 	if($keyword =~ /\bX_Y\b/) {
@@ -562,6 +565,7 @@ sub getKeywordValues {
                 my $string = sprintf("%d/%d", 
                                 (Slim::Player::Source::playingSongIndex($client) + 1), 
                                 Slim::Player::Playlist::count($client));
+		$log->debug("Replacing X_Y with $string");
 		$keyword =~ s/\bX_Y\b/$string/;
 	}
 	if($keyword =~ /\bALARM\b/) {
@@ -575,6 +579,7 @@ sub getKeywordValues {
                         my $timeStr = Slim::Utils::DateTime::timeF($nextAlarm->time % 86400, undef, 1);
                         $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
                         $string = $timeStr;
+			$log->debug("Replacing ALARM with $string");
                 }
 
 		$keyword =~ s/\bALARM\b/$string/;
@@ -591,6 +596,7 @@ sub getKeywordValues {
 			} else {
 			        $songTime = sprintf("%02d:%02d", $min, $sec);
 			}
+			$log->debug("Replacing PLAYTIME with $songTime");
 			$keyword =~ s/\bPLAYTIME\b/$songTime/;
 		}else {
 			$keyword =~ s/\bPLAYTIME\b//;
@@ -608,6 +614,7 @@ sub getKeywordValues {
 			} else {
 			        $songDuration = sprintf("%02d:%02d", $min, $sec);
 			}
+			$log->debug("Replacing DURATION with $songDuration");
 			$keyword =~ s/\bDURATION\b/$songDuration/;
 		}else {
 			$keyword =~ s/\bDURATION\b//;
@@ -618,6 +625,7 @@ sub getKeywordValues {
 		my $songDuration = Slim::Player::Source::playingSongDuration($client);
 		if(defined $songTime && defined $songDuration && $songDuration>0) {
 			my $progress = int(100*$songTime/$songDuration);
+			$log->debug("Replacing PLAYTIME_PROGRESS with $progress");
 			$keyword =~ s/\bPLAYTIME_PROGRESS\b/$progress/;
 		}else {
 			$keyword =~ s/\bPLAYTIME_PROGRESS\b//;
@@ -629,6 +637,7 @@ sub getKeywordValues {
 			my $maxVolume = $client->maxVolume();
 			my $volume = $client->volume()-$client->minVolume();
 			$volume = int(100*(($volume-$minVolume)/($maxVolume-$minVolume)));
+			$log->debug("Replacing VOLUME with $volume");
 			$keyword =~ s/\bVOLUME\b/$volume/;
 		}else {
 			$keyword =~ s/\bVOLUME\b//;
@@ -638,34 +647,46 @@ sub getKeywordValues {
 		my $time = time();
 		my $timeStr = Slim::Utils::DateTime::timeF($time);
                 $timeStr =~ s/(\d?\d\D\d\d)\D\d\d/$1/;
+		$log->debug("Replacing SHORTTIME with $timeStr");
 		$keyword =~ s/\bSHORTTIME\b/$timeStr/;
 	}
 	if($keyword =~ /\bTIME\b/) {
 		my $time = time();
 		my $timeStr = Slim::Utils::DateTime::timeF($time);
 
+		$log->debug("Replacing TIME with $timeStr");
 		$keyword =~ s/\bTIME\b/$timeStr/;
 	}
 	if($keyword =~ /\bDATE\b/) {
 		my $time = time();
 		my $timeStr = Slim::Utils::DateTime::shortDateF($time);
 
+		$log->debug("Replacing DATE with $timeStr");
 		$keyword =~ s/\bDATE\b/$timeStr/;
 	}
 	if($keyword =~ /\bWEEKDAY\b/) {
 		my $time = time();
 		my $timeStr = Slim::Utils::DateTime::timeF($time, "%A");
 
+		$log->debug("Replacing WEEKDAY with $timeStr");
 		$keyword =~ s/\bWEEKDAY\b/$timeStr/;
 	}
 	if($keyword =~ /\bSHORTWEEKDAY\b/) {
 		my $time = time();
 		my $timeStr = Slim::Utils::DateTime::timeF($time, "%a");
-
+		$log->debug("Replacing SHORTWEEKDAY with $timeStr");
 		$keyword =~ s/\bSHORTWEEKDAY\b/$timeStr/;
 	}
 	my $song = Slim::Player::Playlist::song($client);
-	return Slim::Music::Info::displayText($client,$song,$keyword);
+
+	$log->debug("Replacing remaining keywords in: $keyword");
+	if(defined($song)) {
+		$keyword = Slim::Music::Info::displayText($client,$song,$keyword);
+	}else {
+		$keyword = Slim::Music::Info::displayText($client,undef,$keyword,{})
+	}
+	$log->debug("Final string after all replacements are: $keyword");
+	return $keyword;
 }
 sub initScreens {
 	my $client = shift;
