@@ -71,7 +71,7 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(mailhost mailtype mailaccount mailfolder pollinginterval));
+        return ($prefs, qw(mailhost mailtype mailaccount mailfolder pollinginterval newmailtext));
 }
 
 sub handler {

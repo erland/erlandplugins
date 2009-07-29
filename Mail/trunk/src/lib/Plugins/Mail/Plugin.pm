@@ -84,8 +84,23 @@ sub initPlugin {
 			$log->error("Unable to load MySQL driver: $@");
 		}
 	}
+	Slim::Music::TitleFormatter::addFormat('NEWMAIL',\&titleFormatNewMail,1);
+	addTitleFormat("NEWMAIL");
 }
 
+sub addTitleFormat
+{
+	my $titleformat = shift;
+	my $titleFormats = $serverPrefs->get('titleFormat');
+	foreach my $format ( @$titleFormats ) {
+		if($titleformat eq $format) {
+			return;
+		}
+	}
+	$log->debug("Adding: $titleformat");
+	push @$titleFormats,$titleformat;
+	$serverPrefs->set('titleFormat',$titleFormats);
+}
 
 sub webPages {
 
@@ -275,30 +290,19 @@ sub getMailMessages {
 	return $messages;
 }
 
-sub getMusicInfoSCRCustomItems {
-	my $customFormats = {
-		'NEWMAIL' => {
-			'cb' => \&handleMusicInfoSCRNewMail,
-			'cache' => 5,
-		},
-	};
-	return $customFormats;
-}
-
-sub handleMusicInfoSCRNewMail
+sub titleFormatNewMail
 {
-	my $client = shift;
-	my $song = shift;
-	my $tag = shift;
-
-	$log->debug("Entering handleMusicInfoSCRNewMail");
+	$log->debug("Entering titleFormatNewMail");
 	my $mails = getMailMessagesWithDefaultCredentials(undef,1);
 	if(scalar(@$mails)>0) {
-		$log->debug("Exiting handleMusicInfoSCRNewMail with new mail");
-		return $client->string("PLUGIN_MAIL_YOUHAVEGOTMAIL");
+		$log->debug("Exiting titleFormatNewMail with new mail");
+		if($prefs->get('newmailtext')) {
+			return $prefs->get('newmailtext');	
+		}else {
+			return string("PLUGIN_MAIL_YOUHAVEGOTMAIL");
+		}
 	}
-
-	$log->debug("Exiting handleMusicInfoSCRNewMail with undef");
+	$log->debug("Exiting titleFormatNewMail with undef");
 	return undef;
 }
 
