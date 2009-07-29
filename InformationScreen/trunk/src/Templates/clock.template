@@ -8,7 +8,7 @@
 		[% IF includeddays %]<includeddays>[% includeddays %]</includeddays>[% END %]
 		[% IF includedtime %]<includedtime>[% includedtime %]</includedtime>[% END %]
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %]</style>
+		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %][% IF blackbackgroud %]Black[% END %]</style>
 		<skin>getClockStyles</skin>
 		<items>
 			[% IF title1 %]
