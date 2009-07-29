@@ -667,11 +667,21 @@ sub jiveItemsHandler {
 
 	$request->addResult('item_loop',\@itemLoop);
 
+
+	my $remainingtime = $currentScreen->{'time'}-(time()-$client->pluginData('lastSwitchTime'));
+	if($remainingtime<=1) {
+		$remainingtime = 1;
+	}elsif(defined($currentScreen->{'pollinginterval'}) && $currentScreen->{'pollinginterval'}<$remainingtime) {
+		$remainingtime = $currentScreen->{'pollinginterval'};
+	}elsif($remainingtime>5 && !defined($currentScreen->{'pollinginterval'})) {
+		$remainingtime = 5;
+	}
 	$request->addResult('offset',$start);
 	$request->addResult('count',$cnt);
 	$request->addResult('layout',$currentScreen->{'id'});
 	$request->addResult('style',$currentScreen->{'style'}) if exists $currentScreen->{'style'};
 	$request->addResult('skin',$currentScreen->{'skin'}) if exists $currentScreen->{'skin'};
+	$request->addResult('remainingtime',$remainingtime);
 	$request->addResult('layoutChangedTime',$lastLayoutChange);
 
 	$request->setStatusDone();

@@ -127,7 +127,16 @@ function _getInformationResponse(self, result)
 	if self.timer then
 		self.window:removeTimer(self.timer)
 	end
-	self.timer = self.window:addTimer(5000, function() self:_getInformation() end, true)
+	if result.remainingtime then
+		local remainingtime = result.remainingtime
+		if remainingtime>60 then
+			-- We want to update at least every minute
+			remainingtime = 60
+		end
+		self.timer = self.window:addTimer(remainingtime*1000, function() self:_getInformation() end, true)
+	else
+		self.timer = self.window:addTimer(5000, function() self:_getInformation() end, true)
+	end
 end
 
 ----------------------------------------------------------------------------------------
