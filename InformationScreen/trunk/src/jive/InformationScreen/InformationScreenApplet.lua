@@ -49,7 +49,7 @@ local fontpath = "fonts/"
 local FONT_NAME = "FreeSans"
 local BOLD_PREFIX = "Bold"
 
-module(...)
+module(..., Framework.constants)
 oo.class(_M, Applet)
 
 
@@ -207,9 +207,14 @@ function _createUIItems(self,skin,style,groups)
 		first = nil
 	end
 
+	-- register window as a screensaver, unless we are explicitly not in that mode
+	local manager = appletManager:getAppletInstance("ScreenSavers")
+	manager:screensaverWindow(window)
+
 	log:debug("Replacing window and returning")
 	window:show(Window.transitionFadeIn)
 	self.window:hide()
+
 	self.window = window
 end
 
