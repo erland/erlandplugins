@@ -524,7 +524,7 @@ function _getClockStyles(self, skinName)
 	s.InformationScreenClock = {
 		time = {
 			position = LAYOUT_NORTH,
-			border = {0,40,0,40},
+			border = {0,40,0,30},
 			time = {
 				font = _font(width*3/8),
 				align = 'center',
@@ -533,7 +533,7 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		date = {
-			position = LAYOUT_SOUTH,
+			position = LAYOUT_CENTER,
 			border = {0,0,0,15},
 			date = {
 				font = _font(40),
@@ -548,7 +548,7 @@ function _getClockStyles(self, skinName)
 		bgImg = Tile:fillColor(0x000000ff),
 		time = {
 			position = LAYOUT_NORTH,
-			border = {0,40,0,40},
+			border = {0,40,0,30},
 			time = {
 				font = _font(width*3/8),
 				align = 'center',
@@ -557,7 +557,7 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		date = {
-			position = LAYOUT_SOUTH,
+			position = LAYOUT_CENTER,
 			border = {0,0,0,15},
 			date = {
 				font = _font(40),
@@ -581,8 +581,8 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		time = {
-			position = LAYOUT_CENTER,
-			border = {0,20,0,20},
+			position = LAYOUT_NORTH,
+			border = {0,25+width/20*2,0,15},
 			time = {
 				font = _font(width*3/8-10),
 				align = 'center',
@@ -591,8 +591,8 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		date = {
-			position = LAYOUT_SOUTH,
-			border = {0,30,0,20},
+			position = LAYOUT_CENTER,
+			border = {0,0,0,20},
 			date = {
 				font = _font(width/10),
 				align = 'center',
@@ -616,8 +616,8 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		time = {
-			position = LAYOUT_CENTER,
-			border = {0,20,0,20},
+			position = LAYOUT_NORTH,
+			border = {0,25+width/20*2,0,15},
 			time = {
 				font = _font(width*3/8-10),
 				align = 'center',
@@ -626,8 +626,8 @@ function _getClockStyles(self, skinName)
 			},
 		},
 		date = {
-			position = LAYOUT_SOUTH,
-			border = {0,30,0,20},
+			position = LAYOUT_CENTER,
+			border = {0,0,0,20},
 			date = {
 				font = _font(width/10),
 				align = 'center',
