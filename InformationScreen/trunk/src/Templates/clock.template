@@ -8,24 +8,28 @@
 		[% IF includeddays %]<includeddays>[% includeddays %]</includeddays>[% END %]
 		[% IF includedtime %]<includedtime>[% includedtime %]</includedtime>[% END %]
 		[% IF screenorder %]<order>[% screenorder %]</order>[% END %]
-		<style>[% IF title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %][% IF blackbackgroud %]Black[% END %]</style>
+		<style>[% IF titlearea or title1 %]InformationScreenClockAndNowPlaying[% ELSE %]InformationScreenClock[% END %][% IF blackbackgroud %]Black[% END %]</style>
 		<skin>getClockStyles</skin>
 		<items>
-			[% IF title1 %]
+			[% IF titlearea or title1 %]
 			<item>
 				<id>playingtitle</id>
 				<item>
-					<id>playingtitle</id>
+					<id>[% titlesize %]PlayingTitle</id>
 					<type>label</type>
+					[% IF title1 %]
 					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% title1 %][% IF title2 %]\n[% title2 %][% END %]</preprocessingData>
+					[% ELSE %]
+					<value></value>
+					[% END %]
 				</item>
 			</item>
 			[% END %]
 			<item>
 				<id>time</id>
 				<item>
-					<id>time</id>
+					<id>[% timesize %]Time</id>
 					<type>label</type>
 					<preprocessing>datetime</preprocessing>
 					<preprocessingData>[% timeformat %]</preprocessingData>
@@ -34,7 +38,7 @@
 			<item>
 				<id>date</id>
 				<item>
-					<id>date</id>
+					<id>[% datesize %]Date</id>
 					<type>label</type>
 					<preprocessing>datetime</preprocessing>
 					<preprocessingData>[% dateformat %]</preprocessingData>
