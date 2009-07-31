@@ -128,7 +128,7 @@ function _getInformationResponse(self, result)
 		self.window:removeTimer(self.timer)
 	end
 	if result.remainingtime then
-		local remainingtime = result.remainingtime
+		local remainingtime = tonumber(result.remainingtime)
 		if remainingtime>60 then
 			-- We want to update at least every minute
 			remainingtime = 60
@@ -521,27 +521,62 @@ end
 function _getClockStyles(self, skinName)
 	local s = {}
 	local width,height = Framework.getScreenSize()
+	local largeFont = {
+		font = _font(width*3/8),
+		align = 'center',
+		w = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+	}
+	local mediumLargeFont = {
+		font = _font(width*3/8-10),
+		align = 'center',
+		w = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+	}
+	local mediumFont = {
+		font = _font(width*2/8),
+		align = 'center',
+		w = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+	}
+	local mediumSmallFont = {
+		font = _font(40),
+		lineHeight = 40,
+		align = 'center',
+		w = WH_FILL,
+		h = 70,
+		fg = { 0xcc, 0xcc, 0xcc },
+	}
+	local smallFont = {
+		font = _font(width/15),
+		lineHeight = width/15,
+		align = 'center',
+		w = WH_FILL,
+		h = 70,
+		fg = { 0xcc, 0xcc, 0xcc },
+	}
+	local tinyFont = {
+		font = _font(width/20),
+		lineHeight = width/20,
+		align = 'center',
+		w = WH_FILL,
+		fg = { 0xcc,0xcc,0xcc },
+	}
+
 	s.InformationScreenClock = {
 		time = {
 			position = LAYOUT_NORTH,
 			border = {0,40,0,30},
-			time = {
-				font = _font(width*3/8),
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			largeTime = largeFont,
+			mediumLargeTime = mediumLargeFont,
+			mediumTime = mediumFont,
 		},
 		date = {
 			position = LAYOUT_CENTER,
-			border = {0,0,0,15},
-			date = {
-				font = _font(40),
-				align = 'center',
-				w = WH_FILL,
-				h = 70,
-				fg = { 0xcc, 0xcc, 0xcc },
-			},
+			border = {0,5,0,15},
+			mediumSmallDate = mediumSmallFont,
+			smallDate = smallFont,
+			tinyDate = tinyFont,
 		}
 	}
 	s.InformationScreenClockBlack = {
@@ -549,57 +584,39 @@ function _getClockStyles(self, skinName)
 		time = {
 			position = LAYOUT_NORTH,
 			border = {0,40,0,30},
-			time = {
-				font = _font(width*3/8),
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			largeTime = largeFont,
+			mediumLargeTime = mediumLargeFont,
+			mediumTime = mediumFont,
 		},
 		date = {
 			position = LAYOUT_CENTER,
-			border = {0,0,0,15},
-			date = {
-				font = _font(40),
-				align = 'center',
-				w = WH_FILL,
-				h = 70,
-				fg = { 0xcc, 0xcc, 0xcc },
-			},
+			border = {0,5,0,15},
+			mediumSmallDate = mediumSmallFont,
+			smallDate = smallFont,
+			tinyDate = tinyFont,
 		}
 	}
 	s.InformationScreenClockAndNowPlaying = {
 		playingtitle = {
 			position = LAYOUT_NORTH,
-			border = {0,15,0,0},
-			playingtitle = {
-				font = _font(width/20),
-				lineHeight = width/20,
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			border = {0,5,0,0},
+			mediumSmallPlayingTitle = mediumSmallFont,
+			smallPlayingTitle = smallFont,
+			tinyPlayingTitle = tinyFont,
 		},
 		time = {
 			position = LAYOUT_NORTH,
-			border = {0,25+width/20*2,0,15},
-			time = {
-				font = _font(width*3/8-10),
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			border = {0,25+width/20*2,0,10},
+			largeTime = largeFont,
+			mediumLargeTime = mediumLargeFont,
+			mediumTime = mediumFont,
 		},
 		date = {
 			position = LAYOUT_CENTER,
-			border = {0,0,0,20},
-			date = {
-				font = _font(width/10),
-				align = 'center',
-				w = WH_FILL,
-				h = 70,
-				fg = { 0xcc, 0xcc, 0xcc },
-			},
+			border = {0,5,0,20},
+			mediumSmallDate = mediumSmallFont,
+			smallDate = smallFont,
+			tinyDate = tinyFont,
 		}
 	}
 	s.InformationScreenClockAndNowPlayingBlack = {
@@ -607,34 +624,23 @@ function _getClockStyles(self, skinName)
 		playingtitle = {
 			position = LAYOUT_NORTH,
 			border = {0,15,0,0},
-			playingtitle = {
-				font = _font(width/20),
-				lineHeight = width/20,
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			mediumSmallPlayingTitle = mediumSmallFont,
+			smallPlayingTitle = smallFont,
+			tinyPlayingTitle = tinyFont,
 		},
 		time = {
 			position = LAYOUT_NORTH,
 			border = {0,25+width/20*2,0,15},
-			time = {
-				font = _font(width*3/8-10),
-				align = 'center',
-				w = WH_FILL,
-				fg = { 0xcc,0xcc,0xcc },
-			},
+			largeTime = largeFont,
+			mediumLargeTime = mediumLargeFont,
+			mediumTime = mediumFont,
 		},
 		date = {
 			position = LAYOUT_CENTER,
-			border = {0,0,0,20},
-			date = {
-				font = _font(width/10),
-				align = 'center',
-				w = WH_FILL,
-				h = 70,
-				fg = { 0xcc, 0xcc, 0xcc },
-			},
+			border = {0,5,0,20},
+			mediumSmallDate = mediumSmallFont,
+			smallDate = smallFont,
+			tinyDate = tinyFont,
 		}
 	}
 	return s;		
