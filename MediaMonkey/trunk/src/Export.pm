@@ -167,13 +167,13 @@ sub exitScanTrack
 		if(Plugins::MediaMonkey::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
 			$sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating, track_statistics.added FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and (track_statistics.added is not null or track_statistics.lastPlayed is not null or track_statistics.rating>0) and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
 		}else {
-			$sql = "SELECT tracks.url, tracks.title, tracks_persistent.lastPlayed, tracks_persistent.playCount, tracks_persistent.rating, tracks_persistent.added FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.track=tracks.id and (tracks_persistent.added is not null or tracks_persistent.lastPlayed is not null or tracks_persistent.rating>0) and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+			$sql = "SELECT tracks.url, tracks.title, tracks_persistent.lastPlayed, tracks_persistent.playCount, tracks_persistent.rating, tracks_persistent.added FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.url=tracks.url and (tracks_persistent.added is not null or tracks_persistent.lastPlayed is not null or tracks_persistent.rating>0) and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
 		}
 	}else {
 		if(Plugins::MediaMonkey::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
 			$sql = "SELECT track_statistics.url, tracks.title, track_statistics.lastPlayed, track_statistics.playCount, track_statistics.rating, track_statistics.added FROM track_statistics,tracks where track_statistics.url=tracks.url and (track_statistics.added is not null or track_statistics.lastPlayed is not null or track_statistics.rating>0)";
 		}else {
-			$sql = "SELECT tracks.url, tracks.title, tracks_persistent.lastPlayed, tracks_persistent.playCount, tracks_persistent.rating, tracks_persistent.added FROM tracks_persistent,tracks where tracks_persistent.track=tracks.id and (tracks_persistent.added is not null or tracks_persistent.lastPlayed is not null or tracks_persistent.rating>0)";
+			$sql = "SELECT tracks.url, tracks.title, tracks_persistent.lastPlayed, tracks_persistent.playCount, tracks_persistent.rating, tracks_persistent.added FROM tracks_persistent,tracks where tracks_persistent.url=tracks.url and (tracks_persistent.added is not null or tracks_persistent.lastPlayed is not null or tracks_persistent.rating>0)";
 		}
 	}
 
