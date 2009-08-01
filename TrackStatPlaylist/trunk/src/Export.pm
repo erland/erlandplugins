@@ -197,13 +197,13 @@ sub exitScanTrack
 			if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
 				$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks,multilibrary_track where track_statistics.url=tracks.url and track_statistics.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
 			}else {
-				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.track=tracks.id and tracks_persistent.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
+				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks,multilibrary_track where tracks_persistent.url=tracks.url and tracks_persistent.rating>0 and tracks.id=multilibrary_track.track and multilibrary_track.library in ($libraries)";
 			}
 		}else {
 			if(Plugins::TrackStatPlaylist::Plugin::isPluginsInstalled(undef,"TrackStat::Plugin")) {
 				$sql = "SELECT track_statistics.url, track_statistics.rating FROM track_statistics,tracks where track_statistics.url=tracks.url and track_statistics.rating>0";
 			}else {
-				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks where tracks_persistent.track=tracks.id and tracks_persistent.rating>0";
+				$sql = "SELECT tracks.url, tracks_persistent.rating FROM tracks_persistent,tracks where tracks_persistent.url=tracks.url and tracks_persistent.rating>0";
 			}
 		}
 
@@ -375,8 +375,9 @@ sub addRatingToPlaylist {
 
 	if($title && $playlistDir) {
 		my $playlistObj = getPlaylist($playlistDir, $title);
-		my @tracks = ($track);
-		$playlistObj->appendTracks(\@tracks);
+		my @previousTracks = $playlistObj->tracks;
+		push @previousTracks,$track;
+		$playlistObj->setTracks(\@previousTracks);
 		$playlistObj->update;
 		Slim::Schema->forceCommit;
 		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
@@ -435,8 +436,9 @@ sub addPlayedToPlaylist {
 				$playlistObj->setTracks(\@existingTracks);
 			}
 		}
-		my @tracks = ($track);
-		$playlistObj->appendTracks(\@tracks);
+		my @previousTracks = $playlistObj->tracks;
+		push @previousTracks,$track;
+		$playlistObj->setTracks(\@previousTracks);
 		Slim::Schema->forceCommit;
 		Slim::Player::Playlist::scheduleWriteOfPlaylist($client, $playlistObj);
 	}
