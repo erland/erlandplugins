@@ -60,6 +60,10 @@ sub _execute {
 	my $dbh = getCurrentDBH();
 	my $trackno = 0;
 	$sqlstatements =~ s/\r\n/\n/g;
+	my $newUnicodeHandling = 0;
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
     	for my $sql (split(/;\s*\n/,$sqlstatements)) {
 		eval {
 			$sql =~ s/^\s+//g;
@@ -93,24 +97,45 @@ sub _execute {
 	                                $sth->bind_col( 5, \$valueformat);
 				};
 				while( $sth->fetch() ) {
-                                    my %item = (
-                                        'id' => $id?Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')):$id
-				    );
-				    if(defined($name)) {
-                                        $item{'name'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'));
-                                    }else {
-					$item{'name'} = '';
-				    }
-				    if(defined($link)) {
-					$item{'link'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($link,'utf8'));
-                                    }
-				    if(defined($valuetype)) {
-					$item{'type'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valuetype,'utf8'));
-                                    }
-				    if(defined($valueformat)) {
-					$item{'format'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valueformat,'utf8'));
-                                    }
-                                    push @result, \%item;
+					if($newUnicodeHandling) {
+		                            my %item = (
+		                                'id' => $id?Slim::Utils::Unicode::utf8decode($id,'utf8'):$id
+					    );
+					    if(defined($name)) {
+		                                $item{'name'} = Slim::Utils::Unicode::utf8decode($name,'utf8');
+		                            }else {
+						$item{'name'} = '';
+					    }
+					    if(defined($link)) {
+						$item{'link'} = Slim::Utils::Unicode::utf8decode($link,'utf8');
+		                            }
+					    if(defined($valuetype)) {
+						$item{'type'} = Slim::Utils::Unicode::utf8decode($valuetype,'utf8');
+		                            }
+					    if(defined($valueformat)) {
+						$item{'format'} = Slim::Utils::Unicode::utf8decode($valueformat,'utf8');
+		                            }
+		                            push @result, \%item;
+					}else {
+		                            my %item = (
+		                                'id' => $id?Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')):$id
+					    );
+					    if(defined($name)) {
+		                                $item{'name'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'));
+		                            }else {
+						$item{'name'} = '';
+					    }
+					    if(defined($link)) {
+						$item{'link'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($link,'utf8'));
+		                            }
+					    if(defined($valuetype)) {
+						$item{'type'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valuetype,'utf8'));
+		                            }
+					    if(defined($valueformat)) {
+						$item{'format'} = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($valueformat,'utf8'));
+		                            }
+		                            push @result, \%item;
+					}
 				}
 			}
 			$sth->finish();

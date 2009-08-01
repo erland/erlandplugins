@@ -37,6 +37,7 @@ use Data::Dumper;
 
 my $serverPrefs = preferences('server');
 my $multiLibraryPrefs = preferences('plugin.multilibrary');
+my $newUnicodeHandling = 0;
 
 sub new {
 	my $class = shift;
@@ -67,6 +68,9 @@ sub new {
 		'mixHandlers' => $parameters->{'mixHandlers'}
 	);
 	$self->mixHandler(Plugins::CustomBrowse::MenuHandler::MixHandler->new(\%parameters));
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
 
 	return $self;
 }
@@ -1280,7 +1284,10 @@ sub _getSubContext {
 				$currentValue = escape($params->{$group});
 			}
 			my $currentValueUnescaped = unescape($params->{$group}) if defined($params->{$group});
-			$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($currentValueUnescaped)) if defined($currentValueUnescaped);
+			if($newUnicodeHandling) {
+				$currentValueUnescaped = Slim::Utils::Unicode::utf8decode($currentValueUnescaped) if defined($currentValueUnescaped);
+			}else {
+				$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($currentValueUnescaped)) if defined			}
 			my %parameters = ();
 			$parameters{$currentUrl} = $currentValueUnescaped if defined($currentValueUnescaped);
 			$parameterContainer->{$currentUrl}= $currentValueUnescaped if defined($currentValueUnescaped);
