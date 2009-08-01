@@ -1395,8 +1395,10 @@ sub refreshTracks
 	$log->debug("Starting to update play counts in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+		if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
 			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.playCount is null and tracks_persistent.playCount is not null";
+		}elsif(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null";
 		}else {
 			$sql = "UPDATE tracks,track_statistics SET track_statistics.playCount=tracks.playCount where tracks.url=track_statistics.url and track_statistics.playCount is null and tracks.playCount is not null";
 		}
@@ -1428,8 +1430,10 @@ sub refreshTracks
 	$log->debug("Starting to update last played times in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+		if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
 			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
+		}elsif(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
 		}else {
 			$sql = "UPDATE tracks,track_statistics SET track_statistics.lastPlayed=tracks.lastPlayed where tracks.url=track_statistics.url and track_statistics.lastPlayed is null and tracks.lastPlayed is not null";
 		}
@@ -1462,7 +1466,11 @@ sub refreshTracks
 	# Now lets set all new tracks with added times not already set
 	if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
 		if($driver eq 'mysql') {
-			$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+			if(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+			}else {
+				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+			}
 		}else {
 			$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
 		}
