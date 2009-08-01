@@ -23,7 +23,7 @@
 				[%- END %]
 				[%- IF !trackstat and orderby!='random' %]
 				join tracks_persistent on
-					tracks.id=tracks_persistent.track
+					tracks.url=tracks_persistent.url
 				[%- END %]
 				where
 					tracks.audio=1
