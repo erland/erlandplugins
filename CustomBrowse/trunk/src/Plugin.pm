@@ -59,6 +59,7 @@ my $manageMenuHandler = undef;
 
 my $driver;
 my $browseMenusFlat;
+my $lastChange;
 my $globalMixes;
 my $contextBrowseMenusFlat;
 my $templates;
@@ -67,6 +68,7 @@ my $PLUGINVERSION = undef;
 my $sqlerrors = '';
 my %uPNPCache = ();
 my $jiveMenu = undef;
+my $lastScanTime = undef;
 
 my $configManager = undef;
 my $contextConfigManager = undef;
@@ -1137,6 +1139,9 @@ sub initPlugin {
 		Slim::Music::Import->addImporter($class, \%mixerMap);
 	    	Slim::Music::Import->useImporter('Plugins::CustomBrowse::Plugin', 1);
 	}
+	$lastScanTime = time();
+	Slim::Control::Request::subscribe(\&Plugins::CustomBrowse::Plugin::rescanDone,[['rescan'],['done']]);
+	Slim::Control::Request::subscribe(\&Plugins::CustomBrowse::Plugin::customScanRescanDone,[['customscan'],['changedstatus']]);
 	Slim::Control::Request::addDispatch(['custombrowse','browse'], [1, 1, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','browsecontext'], [1, 1, 1, \&cliHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','play'], [1, 0, 1, \&cliHandler]);
@@ -1172,6 +1177,21 @@ sub postinitPlugin {
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
+	}
+}
+
+sub rescanDone {
+	$lastScanTime = Slim::Music::Import->lastScanTime;
+}
+
+sub customScanRescanDone {
+	my $request=shift;
+
+	if($request->getParam("_status") != 1) {
+		my $currentTime = time();
+		if($currentTime>$lastScanTime) {
+			$lastScanTime = $currentTime;
+		}
 	}
 }
 
@@ -1261,11 +1281,14 @@ sub contextMenuBrowseBy {
 sub registerJiveMenu {
 	my $class = shift;
 	my $client = shift;
+
+	# menuIcon is only used for iPeng at the moment
 	my @menuItems = (
 		{
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 80,
 			id => 'custombrowse',
+			menuIcon => 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png',
 			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
@@ -1501,6 +1524,12 @@ sub addJivePlayerMenus {
 				},
 			},
 		);
+		# Provide icon for iPeng
+		if($name ne $key) {
+			@menuItems->[0]->{'menuIconID'} = $key;
+		}else {
+			@menuItems->[0]->{'menuIcon'} = 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png';
+		}
 		if($menu->{'id'} ne $key && $prefs->get('replacecontrollermenus')) {
 			Slim::Control::Jive::deleteMenuItem($key,$client);
 		}
@@ -3348,10 +3377,27 @@ sub cliJiveHandlerImpl {
 
 	my $menuResult = undef;
 	my $context = undef;
+	my $menuAge = $lastChange;
+	my $menuIcon = 0;
 	if (!defined($browseContext)) {
 		$log->debug("Executing CLI browsejive command\n");
 		$menuResult = getMenuHandler()->getPageItemsForContext($client,$params,undef,0,'jive');	
 		$context = getMenuHandler()->getContext($client,$params,1);
+		if(defined($params->{'hierarchy'})) {
+			my @hierarchies = split(/,/,$params->{'hierarchy'});
+			foreach my $hierarchy (@hierarchies) {
+				if(exists $browseMenusFlat->{$hierarchy} && exists $browseMenusFlat->{$hierarchy}->{'timestamp'}) {
+					if(defined($browseMenusFlat->{$hierarchy}->{'cached'}) && !$browseMenusFlat->{$hierarchy}->{'cached'}) {
+						$menuAge = undef;
+					}else {
+						$menuAge = $browseMenusFlat->{$hierarchy}->{'timestamp'};
+					}
+					last;
+				}
+			}
+		}else {
+			$menuIcon = 1;
+		}
 	}else {
 		$log->debug("Executing CLI browsejivecontext command\n");
 		if(defined $browseContext->{'itemtype'}) {
@@ -3383,6 +3429,10 @@ sub cliJiveHandlerImpl {
 			}
 		}
 	}
+	if(defined($lastScanTime) && $lastScanTime>$menuAge) {
+		$menuAge = $lastScanTime;
+	}
+	
 	my $currentContext = undef;
 	if(defined($context) && scalar(@$context)>0) {
 		$currentContext = $context->[scalar(@$context)-1];
@@ -3605,6 +3655,12 @@ sub cliJiveHandlerImpl {
 		}
 
 		$request->addResultLoop('item_loop',$cnt,'text',$name);
+
+		#iPeng icon
+		if($menuIcon) {
+			$request->addResultLoop('item_loop',$cnt,'menuIcon','iPeng/plugins/CustomBrowse/html/images/custombrowse.png');
+		}
+
 		if($menuResult->{'artwork'} || (defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'album')) {
 			if(defined($item->{'coverThumb'})) {
 				$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
@@ -3669,6 +3725,9 @@ sub cliJiveHandlerImpl {
 	}
 	$request->addResult('offset',$start);
 	$request->addResult('count',$count);
+	if (!defined($browseContext) && defined($menuAge)) {
+		$request->addResult('lastChanged',$menuAge);
+	}
 
 	$request->setStatusDone();
 	$log->debug("Exiting cliJiveHandler\n");
@@ -4138,6 +4197,13 @@ sub readBrowseConfiguration {
 
 	my $itemConfiguration = getConfigManager()->readItemConfiguration($client,undef,undef,1,1);
 	my $localBrowseMenus = $itemConfiguration->{'menus'};
+	my $localLastChange = undef;
+	foreach my $menu (keys %$localBrowseMenus) {
+		if(!defined($lastChange) || $localLastChange<$localBrowseMenus->{$menu}->{'timestamp'}) {
+			$localLastChange = $localBrowseMenus->{$menu}->{'timestamp'};
+		}
+	}
+
 	$templates = $itemConfiguration->{'templates'};
 
 	my @menus = ();
@@ -4155,6 +4221,7 @@ sub readBrowseConfiguration {
 	addWebMenus($client,$value);
 	addPlayerMenus($client);
 	addJivePlayerMenus($client);
+	$lastChange = $localLastChange;
 	return $browseMenusFlat;
 }
 
