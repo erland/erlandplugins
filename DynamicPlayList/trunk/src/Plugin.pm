@@ -2317,6 +2317,7 @@ sub registerJiveMenu {
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 85,
 			id => 'dynamicplaylist',
+			menuIcon => 'iPeng/plugins/DynamicPlayList/html/images/dynamicplaylist.png',
 			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
