@@ -1836,6 +1836,12 @@ sub getSQLPropertyValues {
 	my $sqlstatements = shift;
 	my @result =();
 	my $dbh = Slim::Schema->storage->dbh();
+
+	my $newUnicodeHandling = 0;
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
+
 	my $trackno = 0;
     	for my $sql (split(/[;]/,$sqlstatements)) {
 	    	eval {
@@ -1855,11 +1861,19 @@ sub getSQLPropertyValues {
 				$sth->bind_col( 1, \$id);
 				$sth->bind_col( 2, \$name);
 				while( $sth->fetch() ) {
-					my %item = (
-						'id' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')),
-						'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
-					);
-					push @result, \%item;
+					if($newUnicodeHandling) {
+						my %item = (
+							'id' => Slim::Utils::Unicode::utf8decode($id,'utf8'),
+							'name' => Slim::Utils::Unicode::utf8decode($name,'utf8')
+						);
+						push @result, \%item;
+					}else {
+						my %item = (
+							'id' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($id,'utf8')),
+							'name' => Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($name,'utf8'))
+						);
+						push @result, \%item;
+					}
 				}
 			}
 			$sth->finish();
