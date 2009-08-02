@@ -163,7 +163,7 @@ sub commandCallback($)
 	######################################
 	if ( $request->isCommand([['rescan'],['done']]) )
 	{
-		if($prefs->get("auto_rescan") && $::VERSION lt "7.4") {
+		if($prefs->get("auto_rescan") && !$serverPrefs->get('autorescan')) {
 			Plugins::CustomScan::Scanner::fullRescan();
 		}elsif($prefs->get("refresh_rescan")) {
 			Plugins::CustomScan::Scanner::refreshData();
