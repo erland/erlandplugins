@@ -271,6 +271,10 @@ sub webPages {
 sub handleWebNewSQLPlayList {
 	my ($client, $params) = @_;
 
+	my $newUnicodeHandling = 0;
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
 	my $url = 'plugins/SQLPlayList/webadminmethods_newitemparameters.html?';
 	if($params->{'type'} eq 'mixedtag') {
 		$url .= 'itemtemplate=customscan_randommixedtagsfrommixer';
@@ -294,7 +298,11 @@ sub handleWebNewSQLPlayList {
 		                        $sth->bind_col( 2, \$value);
 					if($sth->fetch()) {
 						if($valuetype) {
-							$tagvalue=Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8'));
+							if($newUnicodeHandling) {
+								$tagvalue=Slim::Utils::Unicode::utf8decode($value,'utf8');
+							}else {
+								$tagvalue=Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8'));
+							}
 						}
 					}
 					$sth->finish();
@@ -539,6 +547,12 @@ sub addTitleFormat
 
 sub refreshTitleFormats() {
         my $titleformats = $prefs->get('titleformats');
+
+	my $newUnicodeHandling = 0;
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
+
 	for my $format (@$titleformats) {
 		if($format) {
 			Slim::Music::TitleFormatter::addFormat("CUSTOMSCAN_$format",
@@ -565,7 +579,11 @@ sub refreshTitleFormats() {
 								if($result) {
 									$result .= ', ';
 								}
-								$value=Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8'));
+								if($newUnicodeHandling) {
+									$value=Slim::Utils::Unicode::utf8decode($value,'utf8');
+								}else {
+									$value=Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8'));
+								}
 								$result .= $value;
 							}
 							$sth->finish();
