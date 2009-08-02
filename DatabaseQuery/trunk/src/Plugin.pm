@@ -423,6 +423,11 @@ sub executeDataQuery {
 	my $parameters = shift;
 	my $path = shift;
 
+	my $newUnicodeHandling = 0;
+	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
+		$newUnicodeHandling = 1;
+	}
+
 	my $sql = $dataQuery->{'query'} if exists $dataQuery->{'query'};
 	my $queryId = $dataQuery->{'queryid'} if exists $dataQuery->{'queryid'};
 	my $subQueriesExists = 0;
@@ -460,7 +465,11 @@ sub executeDataQuery {
 				while( @values = $sth->fetchrow_array() ) {
 					my @resultValues = @values;
 					for my $value (@resultValues) {
-						$value = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8')) if defined($value);
+						if($newUnicodeHandling) {
+							$value = Slim::Utils::Unicode::utf8decode($value,'utf8') if defined($value);
+						}else {
+							$value = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($value,'utf8')) if defined($value);
+						}
 					}
 					my @pathelements = ();
 					if($subQueriesExists && defined($queryId) && $queryId ne '' && defined($path)) {
