@@ -2692,6 +2692,7 @@ sub registerJiveMenu {
 			text => Slim::Utils::Strings::string(getDisplayName()),
 			weight => 85,
 			id => 'trackstat',
+			menuIcon => 'iPeng/plugins/TrackStat/html/images/trackstat.png',
 			window => { titleStyle => 'mymusic', 'icon-id' => $class->_pluginDataFor('icon')},
 			actions => {
 				go => {
