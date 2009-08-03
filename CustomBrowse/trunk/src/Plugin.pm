@@ -1009,6 +1009,14 @@ sub initPlugin {
 			$number = floor($number); 
 			return $number;
 		    }, 'create_function');
+		$dbh->func('if', 3, sub {
+			my ($expr,$str1,$str2) = @_;
+			if($expr) {
+				return $str1;
+			}else {
+				return $str2;
+			}
+		    }, 'create_function');
 		$dbh->func('floor', 2, sub {
 			my ($number,$decimals) = @_;
 			if(!defined($number)) {
