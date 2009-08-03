@@ -2,7 +2,7 @@
 	<repository>http://spicefly.f-snet.com/repo.xml</repository>
 	<repository>http://www.tux.org/~peterw/slim/slim7/repodata.xml</repository>
 	<repository>http://triodeplugins.googlecode.com/svn/trunk/repo.xml</repository>
-	<repository>http://ultratrendy.com:31888/slim/repo.xml</repository>
+	<repository>http://bitflip.net/slim/repo.xml</repository>
 	<repository>http://gregbrown.net/squeeze/repo.xml</repository>
 	<repository>http://mdmplugins.googlecode.com/svn/trunk/repo.xml</repository>
 	<repository>http://squeezecenter-seeqpod.googlecode.com/svn/trunk/repodata.xml</repository>
