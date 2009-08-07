@@ -198,14 +198,7 @@ function _createUIItems(self,skin,style,groups)
 		end
 	end
 
-	local first = 1
-	for index,group in ipairs(self.groups) do
-		if first then
-			log:debug("Setting focus to " .. group.id)
-			window:focusWidget(self.groups[group.id])
-		end
-		first = nil
-	end
+	window:focusWidget(nil)
 
 	-- register window as a screensaver, unless we are explicitly not in that mode
 	local manager = appletManager:getAppletInstance("ScreenSavers")
