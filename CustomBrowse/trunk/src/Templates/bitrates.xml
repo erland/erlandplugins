@@ -11,6 +11,8 @@
 		<parameter type="checkboxes" id="roles" name="Roles to include" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 		<parameter type="singlelist" id="defaultalbumsort" name="Default album sorting" value="byyear" data="bytitle=By title,byyear=By year"/>
 		<parameter type="checkbox" id="playalltracks" name="Play all songs in selected album" value="1"/>
+		<parameter type="checkbox" id="lossless" name="Do not show bitrate for lossless tracks" value="1"/>
+		<parameter type="checkbox" id="onlylossy" name="Only show lossy tracks" value="0"/>
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="activelibrary" requireplugins="MultiLibrary::Plugin" name="Limit to active library" value=""/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>

@@ -12,7 +12,7 @@
 			<id>bitrate</id>
 			<menuname>Artists</menuname>
 			<pathtype>sql</pathtype>
-			<pathtypedata>select '{context.itemid}',case when '{context.itemid}'=9999999 then 'Lossless' else concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps') end</pathtypedata>
+			<pathtypedata>select '{context.itemid}',[% IF lossless %]case when '{context.itemid}'=9999999 then 'Lossless' else concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps') end[% ELSE %]concat(floor(('{context.itemid}'+16000)/32000)*32,' kbps')[% END %]</pathtypedata>
 			<playtype>sql</playtype>
 			<playdata>
 				select tracks.id,tracks.title from tracks[% IF library or activelibrary %],multilibrary_track[% END %]
@@ -22,12 +22,17 @@
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					tracks.audio=1 and 
+					[% IF onlylossy %]
+					tracks.lossless=0 and
+					[% END %]
 					(
+						[% IF lossless %]
 						(
 							'{bitrate}'=9999999 and
 							tracks.lossless=1
 						)
 						or
+						[% END %]
 						(
 							tracks.bitrate&gt;={bitrate}-16000 and 
 							tracks.bitrate&lt;{bitrate}+16000
@@ -37,12 +42,15 @@
 			</playdata>
 			<menutype>sql</menutype>
 			<menudata>
-				select case when lossless=1 then 9999999 else floor((bitrate+16000)/32000)*32000 end as calculatedbitrate,case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select [% IF lossless %]case when lossless=1 then 9999999 else floor((bitrate+16000)/32000)*32000 end[% ELSE %]floor((bitrate+16000)/32000)*32000[% END %] as calculatedbitrate,[% IF lossless %]case when lossless=1 then 'Lossless' else concat(floor((bitrate+16000)/32000)*32,' kbps') end[% ELSE %]concat(floor((bitrate+16000)/32000)*32,' kbps')[% END %] from tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					[%- IF library or activelibrary %]
 					tracks.id=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
+					[% IF onlylossy %]
+					tracks.lossless=0 and
+					[% END %]
 					audio=1 
 				group by calculatedbitrate
 				order by calculatedbitrate desc
@@ -60,14 +68,19 @@
 						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
+						[% IF onlylossy %]
+						tracks.lossless=0 and
+						[% END %]
 						contributor_track.track=tracks.id and 
 						contributor_track.contributor={artist} and 
 						(
+							[% IF lossless %]
 							(
 								'{bitrate}'=9999999 and
 								tracks.lossless=1
 							)
 							or
+							[% END %]
 							(
 								tracks.bitrate&gt;={bitrate}-16000 and 
 								tracks.bitrate&lt;{bitrate}+16000
@@ -86,15 +99,20 @@
 						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
+						[% IF onlylossy %]
+						tracks.lossless=0 and
+						[% END %]
 						tracks.id=contributor_track.track and 
 						contributor_track.contributor=contributors.id and 
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 						(
+							[% IF lossless %]
 							(
 								'{bitrate}'=9999999 and
 								tracks.lossless=1
 							)
 							or
+							[% END %]
 							(
 								tracks.bitrate&gt;={bitrate}-16000 and 
 								tracks.bitrate&lt;{bitrate}+16000
@@ -117,16 +135,21 @@
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
+							[% IF onlylossy %]
+							tracks.lossless=0 and
+							[% END %]
 							contributor_track.track=tracks.id and 
 							tracks.album={album} and 
 							contributor_track.contributor={artist} and 
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							(
+								[% IF lossless %]
 								(
 									'{bitrate}'=9999999 and
 									tracks.lossless=1
 								)
 								or
+								[% END %]
 								(
 									tracks.bitrate&gt;={bitrate}-16000 and 
 									tracks.bitrate&lt;{bitrate}+16000
@@ -158,16 +181,21 @@
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							tracks.audio=1 and 
+							[% IF onlylossy %]
+							tracks.lossless=0 and
+							[% END %]
 							albums.id=tracks.album and 
 							tracks.album=contributor_album.album and 
 							contributor_album.contributor={artist} and 
 							contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 							(
+								[% IF lossless %]
 								(
 									'{bitrate}'=9999999 and
 									tracks.lossless=1
 								)
 								or
+								[% END %]
 								(
 									tracks.bitrate&gt;={bitrate}-16000 and 
 									tracks.bitrate&lt;{bitrate}+16000
@@ -192,16 +220,21 @@
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
 								tracks.audio=1 and 
+								[% IF onlylossy %]
+								tracks.lossless=0 and
+								[% END %]
 								contributor_track.track=tracks.id and 
 								tracks.album={album} and 
 								contributor_track.contributor={artist} and 
 								contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 								(
+									[% IF lossless %]
 									(
 										'{bitrate}'=9999999 and
 										tracks.lossless=1
 									)
 									or
+									[% END %]
 									(
 										tracks.bitrate&gt;={bitrate}-16000 and 
 										tracks.bitrate&lt;{bitrate}+16000
