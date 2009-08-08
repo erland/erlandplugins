@@ -80,7 +80,7 @@ sub postinitPlugin {
 }
 
 sub setTrackStatRating {
-	my ($client,$url,$rating)=@_;
+	my ($client,$url,$rating,$type)=@_;
 	my $track = undef;
 	eval {
 		$track = Slim::Schema->objectForUrl({
@@ -92,7 +92,7 @@ sub setTrackStatRating {
 	}
 	$log->debug("Entering setTrackStatRating\n");
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
-		Plugins::MediaMonkey::Export::exportRating($url,$rating,$track);
+		Plugins::MediaMonkey::Export::exportRating($url,$rating,$track,$type);
 	}
 	$log->debug("Exiting setTrackStatRating\n");
 }
