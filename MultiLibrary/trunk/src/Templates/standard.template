@@ -18,7 +18,7 @@
 					[% IF playlist %]
 					exists (select track from playlist_track,tracks t where
 							playlist_track.playlist=t.id and
-							playlist_track.track=tracks.id and
+							playlist_track.track=tracks.url and
 							t.title='[% playlist %]') and
 					[% END %]
 					[% IF directory1 or directory2 or directory3 or directory4 %]([% END %]
