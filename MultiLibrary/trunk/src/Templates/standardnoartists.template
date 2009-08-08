@@ -55,6 +55,12 @@
 					[%- IF lossy %]
 					tracks.lossless=0 and
 					[%- END %]
+					[%- IF minbitrate -%]
+					tracks.bitrate&gt;=[% minbitrate %]*1000 and
+					[%- END %]
+					[%- IF maxbitrate -%]
+					tracks.bitrate&lt;=[% maxbitrate %]*1000 and
+					[%- END %]
 					tracks.audio=1
 					[%- IF includedcontenttypes %]
 					and tracks.content_type in ([% includedcontenttypes %])

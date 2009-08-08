@@ -26,6 +26,8 @@
 		<parameter type="sqlmultiplelist" id="excludedartists" name="Exclude tracks for selected artists" data="select contributors.id,contributors.name,contributors.name from tracks,contributor_track,contributors where tracks.id=contributor_track.track and contributor_track.contributor=contributors.id and contributor_track.role in (1,5) group by contributors.id order by contributors.namesort asc" quotevalue="1"/>
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="checkbox" id="lossy" name="Only lossy format" value="0"/>
+		<parameter type="text" id="minbitrate" name="Min bitrate (in kbps)" value=""/>
+		<parameter type="text" id="maxbitrate" name="Max bitrate (in kbps)" value=""/>
 		<parameter type="sqlcheckboxes" id="includedcontenttypes" name="Include file types" value="0" data="select content_type,content_type,content_type from tracks where audio=1 group by content_type order by content_type asc" quotevalue="1"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
