@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minslimserverversion>6.5</minslimserverversion>
+	<minslimserverversion>7.4</minslimserverversion>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -19,7 +19,8 @@
 				select tracks.id,[% IF playlistnameprefix and hideplaylistnameprefix %]substr(tracks.title,[% playlistnameprefix.length %])[% ELSE %]tracks.title[% END %],substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
 				where 
 					[%- IF library or activelibrary %]
-					playlist_track.track=multilibrary_track.track and
+					playlist_track.track=tracks.url and
+					tracks.id=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					[% IF playlistnameprefix %]
@@ -43,7 +44,7 @@
 						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
 						tracks.audio=1 and 
-						playlist_track.track=tracks.id and 
+						playlist_track.track=tracks.url and 
 						playlist_track.playlist={playlist} 
 					group by tracks.id 
 					order by playlist_track.position asc

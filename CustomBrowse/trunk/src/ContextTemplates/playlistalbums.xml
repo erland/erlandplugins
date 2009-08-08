@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
+	<minslimserverversion>7.4</minslimserverversion>
 	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>121</downloadidentifier>

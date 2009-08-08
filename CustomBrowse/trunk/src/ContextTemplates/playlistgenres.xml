@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
-	<minpluginversion>2.0</minpluginversion>
+	<minslimserverversion>7.4</minslimserverversion>
+	<minpluginversion>2.9</minpluginversion>
 	<template>
 		<downloadidentifier>124</downloadidentifier>
 		<name>Genres for playlist</name>

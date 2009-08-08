@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <custombrowse>
+	<minslimserverversion>7.4</minslimserverversion>
 	<menu>
 		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
 		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
@@ -33,7 +34,7 @@
 			[%- IF showartistwithalbum AND MySQL %]
 			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks,playlist_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
-				tracks.id=playlist_track.track and
+				tracks.url=playlist_track.track and
 				playlist_track.playlist={playlistid} and
 				tracks.album=albums.id and
 				[%- IF library or activelibrary or contextlibrary %]
@@ -46,7 +47,7 @@
 			[% ELSE %]
 			select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks,playlist_track[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
-				tracks.id=playlist_track.track and
+				tracks.url=playlist_track.track and
 				playlist_track.playlist={playlistid} and
 				tracks.album=albums.id
 			[%- IF library or activelibrary or contextlibrary %]
@@ -74,7 +75,7 @@
 					[%- END %]
 					tracks.audio=1 and 
 					tracks.album={album} and
-					tracks.id=playlist_track.track and
+					tracks.url=playlist_track.track and
 					playlist_track.playlist={playlistid}
 				order by tracks.disc,tracks.tracknum,tracks.titlesort asc
 			</menudata>
