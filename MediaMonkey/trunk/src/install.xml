@@ -11,10 +11,10 @@
   <module>Plugins::MediaMonkey::Plugin</module>
   <optionsURL>plugins/CustomScan/settings/modulesettings.html?module=Plugins::MediaMonkey::Plugin-&gt;mediamonkeyexport&amp;</optionsURL>
   <targetApplication>
-    <id>SqueezeCenter</id>
+    <id>Squeezebox Server</id>
     <maxVersion>*</maxVersion>
     <minVersion>7.1.0</minVersion>
   </targetApplication>
   <type>2</type>
-  <version>0.1</version>
+  <version>0.2</version>
 </extension>
