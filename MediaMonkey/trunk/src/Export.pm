@@ -96,6 +96,13 @@ sub getCustomScanFunctions {
 				'description' => 'Continously write a history file when ratings are changed and songs are played in SqueezeCenter',
 				'type' => 'checkbox',
 				'value' => 0
+			},
+			{
+				'id' => 'mediamonkeyincludeautoratings',
+				'name' => 'Include automatic ratings',
+				'description' => 'Ratings automatically set by TrackStat updates the rating playlists',
+				'type' => 'checkbox',
+				'value' => 0
 			}
 		]
 	);
@@ -306,6 +313,15 @@ sub exportRating {
 	my $url = shift;
 	my $rating = shift;
 	my $track = shift;
+	my $type = shift;
+
+	if(defined($type) && $type eq 'auto' && !Plugins::CustomScan::Plugin::getCustomScanProperty("mediamonkeyincludeautoratings")) {
+		$log->debug("Automatic rating, ignoring");
+		return;
+	}elsif(defined($type) && ($type ne 'user' && $type ne 'auto')) {
+		$log->debug("Non user rating, ignoring");
+		return;
+	}
 
 	if(Plugins::CustomScan::Plugin::getCustomScanProperty("mediamonkeydynamicupdate")) {
 		my $mediamonkeyurl = getMediaMonkeyURL($url);
