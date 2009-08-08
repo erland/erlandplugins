@@ -549,7 +549,7 @@ sub getGroupStatistic {
 	}elsif($type eq 'artist') {
 		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$id left join track_statistics on tracks.url = track_statistics.url group by contributor_track.contributor;";
 	}elsif($type eq 'playlist') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join playlist_track on tracks.id=playlist_track.track and playlist_track.playlist=$id left join track_statistics on tracks.url = track_statistics.url group by playlist_track.playlist;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join playlist_track on tracks.url=playlist_track.track and playlist_track.playlist=$id left join track_statistics on tracks.url = track_statistics.url group by playlist_track.playlist;";
 	}elsif($type eq 'year') {
 		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.year=$id group by tracks.year;";
 	}elsif($type eq 'genre') {
