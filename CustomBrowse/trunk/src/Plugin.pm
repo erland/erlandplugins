@@ -2027,7 +2027,7 @@ sub addWebMenus {
             if ( !Slim::Utils::Strings::stringExists($key) ) {
                	Slim::Utils::Strings::setString( uc $key, $name );
             }
-            if($menu->{'enabledbrowse'} || $key ne $name) {
+            if($menu->{'enabledbrowse'} || ($key ne $name && $prefs->get('replacewebmenus'))) {
 		if(defined($menu->{'menu'}) && ref($menu->{'menu'}) ne 'ARRAY' && getMenuHandler()->hasCustomUrl($client,$menu->{'menu'})) {
 			
 			my $url = getMenuHandler()->getCustomUrl($client,$menu->{'menu'});
@@ -2042,9 +2042,9 @@ sub addWebMenus {
 			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
 		}
             }else {
-		$log->debug("Removing menu: $key\n");
-		Slim::Web::Pages->addPageLinks("browse", {$key => undef});
-		Slim::Web::Pages->addPageLinks("browseiPeng", {$key => undef});
+		$log->debug("Removing menu: $name\n");
+		Slim::Web::Pages->addPageLinks("browse", {$name => undef});
+		Slim::Web::Pages->addPageLinks("browseiPeng", {$name => undef});
             }
         }
 }

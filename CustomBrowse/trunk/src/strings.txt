@@ -161,6 +161,7 @@ SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS
 	EN	Select replacements of standard Squeezebox Server menus
 
 SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS_DESC
+	EN	Select replacements of standard Squeezebox Server menus. If you select to replace a menu the standard menu will no longer be available.
 
 SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS
 	EN	Replace in web interface
