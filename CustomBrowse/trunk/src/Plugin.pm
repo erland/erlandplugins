@@ -1182,6 +1182,7 @@ sub postinitPlugin {
 		readContextBrowseConfiguration();
 		registerJiveMenu($class);
 		registerContextMenus();
+		registerStandardContextMenus();
 	};
 	if ($@) {
 		$log->error("Failed to load Custom Browse:\n$@\n");
@@ -1201,6 +1202,146 @@ sub customScanRescanDone {
 			$lastScanTime = $currentTime;
 		}
 	}
+}
+
+sub registerStandardContextMenus {
+	if(UNIVERSAL::can("Slim::Menu::TrackInfo","registerInfoProvider")) {
+		Slim::Menu::TrackInfo->registerInfoProvider( custombrowse => (
+			above => 'favorites',
+			func => sub {
+				return objectInfoHandler(@_,'track');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::AlbumInfo","registerInfoProvider")) {
+		Slim::Menu::AlbumInfo->registerInfoProvider( custombrowse => (
+			below => 'addalbum',
+			func => sub {
+				return objectInfoHandler(@_,'album');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::ArtistInfo","registerInfoProvider")) {
+		Slim::Menu::ArtistInfo->registerInfoProvider( custombrowse => (
+			below => 'addartist',
+			func => sub {
+				return objectInfoHandler(@_,'artist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::YearInfo","registerInfoProvider")) {
+		Slim::Menu::YearInfo->registerInfoProvider( custombrowse => (
+			below => 'addyear',
+			func => sub {
+				return objectInfoHandler(@_,'year');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::PlaylistInfo","registerInfoProvider")) {
+		Slim::Menu::PlaylistInfo->registerInfoProvider( custombrowse => (
+			below => 'addplaylist',
+			func => sub {
+				return objectInfoHandler(@_,'playlist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::GenreInfo","registerInfoProvider")) {
+		Slim::Menu::GenreInfo->registerInfoProvider( custombrowse => (
+			below => 'addgenre',
+			func => sub {
+				return objectInfoHandler(@_,'genre');
+			},
+		));
+	}
+}
+
+sub objectInfoHandler {
+	my ( $client, $url, $obj, $remoteMeta, $tags, $objectType) = @_;
+	$tags ||= {};
+
+	my $objectName = undef;
+	my $objectId = undef;
+	my $parameterId = $objectType.'_id';
+	if($objectType eq 'genre' || $objectType eq 'artist') {
+		$objectName = $obj->name;
+		$objectId = $obj->id;
+	}elsif($objectType eq 'album' || $objectType eq 'playlist' || $objectType eq 'track') {
+		$objectName = $obj->title;
+		$objectId = $obj->id;
+		if($objectType eq 'playlist') {
+			$parameterId = $objectType;
+		}
+	}elsif($objectType eq 'year') {
+		$objectName = ($obj?$obj:$client->string('UNK'));
+		$objectId = $obj;
+		$parameterId = $objectType;
+	}else {	
+		return undef;
+	}
+
+	if(!$contextBrowseMenusFlat) {
+		readContextBrowseConfiguration();
+	}
+	my $menus = getContextMenuHandler()->getMenuItems(undef,undef,undef,'player');
+	my $mixable = 0;
+	for my $menu (@$menus) {
+		if($menu->{'id'} eq 'group_'.$objectType) {
+			$mixable= 1;
+			last;
+		}
+	}
+
+	if($mixable && ($objectType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $objectId)) {
+		my $jive = {};
+		
+		if ( $tags->{menuMode} ) {
+			my $actions = {
+				go => {
+					player => 0,
+					cmd    => [ 'custombrowse', 'stdmixjive' ],
+					params => {
+						$parameterId => $objectId,
+					},
+				},
+			};
+
+			$jive->{actions} = $actions;
+		}
+
+		my $paramItem =  {
+			id => $objectId,
+			name => $objectName,
+		};
+
+		return {
+			type      => 'redirect',
+			jive      => $jive,
+			name      => $client->string('PLUGIN_CUSTOMBROWSE_CONTEXTMIXER'),
+			favorites => 0,
+
+			player => {
+				mode => 'PLUGIN.CustomBrowse.Context',
+				modeParams => {
+					'itemtype' => $objectType,
+					'itemname' => $objectName,
+					'itemid' => $objectId,
+				},
+			},
+
+			web  => {
+				group => 'mixers',
+				url   => 'plugins/CustomBrowse/custombrowse_contextlist.html?contexttype='.$objectType.'&contextid='.$objectId.'&contextname='.$objectName,
+#				item  => mixerlink($obj),
+			},
+		};
+	}
+
+        return undef;
 }
 
 sub registerContextMenus {
