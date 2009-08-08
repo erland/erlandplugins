@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <multilibrary>
+	<minpluginversion>2.4</minpluginversion>
 	<template>
 		<downloadidentifier>95</downloadidentifier>
 		<name>Standard library</name>
