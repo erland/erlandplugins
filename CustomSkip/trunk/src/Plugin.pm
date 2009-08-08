@@ -312,7 +312,11 @@ sub checkCustomSkipFilterType {
 		my $result = 0;
 		eval {
 			$sth->bind_param(1, $url , SQL_VARCHAR);
-			$sth->bind_param(2, $track->id , SQL_INTEGER);
+			if($::VERSION lt "7.4") {
+				$sth->bind_param(2, $track->id , SQL_INTEGER);
+			}else {
+				$sth->bind_param(2, $track->url , SQL_VARCHAR);
+			}
 			$sth->execute();
 			if( $sth->fetch() ) {
 				$result = 1;
@@ -419,7 +423,11 @@ sub checkCustomSkipFilterType {
 				my $sth = $dbh->prepare('select playlist_track.track from tracks,playlist_track where playlist_track.playlist=tracks.id and playlist_track.track=? and tracks.title=?');
 				my $result = 0;
 				eval {
-					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					if($::VERSION lt "7.4") {
+						$sth->bind_param(1, $track->id , SQL_INTEGER);
+					}else {
+						$sth->bind_param(1, $track->url , SQL_VARCHAR);
+					}
 					$sth->bind_param(2, $name , SQL_VARCHAR);
 					$sth->execute();
 					if( $sth->fetch() ) {
@@ -457,7 +465,11 @@ sub checkCustomSkipFilterType {
 				my $sth = $dbh->prepare('select playlist_track.track from tracks,playlist_track where playlist_track.playlist=tracks.id and playlist_track.track=? and tracks.title=?');
 				my $result = 0;
 				eval {
-					$sth->bind_param(1, $track->id , SQL_INTEGER);
+					if($::VERSION lt "7.4") {
+						$sth->bind_param(1, $track->id , SQL_INTEGER);
+					}else {
+						$sth->bind_param(1, $track->url , SQL_VARCHAR);
+					}
 					$sth->bind_param(2, $name , SQL_VARCHAR);
 					$sth->execute();
 					if( $sth->fetch() ) {
