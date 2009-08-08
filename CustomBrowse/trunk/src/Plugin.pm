@@ -1950,6 +1950,29 @@ sub delSlimserverPlayerMenus {
 	}
 }
 
+sub delJivePlayerMenus {
+	my $client = shift;
+
+	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicArtists");
+	}
+	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicGenres");
+	}
+	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicAlbums");
+	}
+	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicYears");
+	}
+	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicNewMusic");
+	}
+	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
+		Slim::Control::Jive::deleteMenuItem("myMusicPlaylists");
+	}
+}
+
 sub getMenuKey {
 	my $client = shift;
 	my $menu = shift;
@@ -4367,6 +4390,7 @@ sub readBrowseConfiguration {
 	}
 	delSlimserverWebMenus();
 	delSlimserverPlayerMenus();
+	delJivePlayerMenus();
 	addWebMenus($client,$value);
 	addPlayerMenus($client);
 	addJivePlayerMenus($client);
