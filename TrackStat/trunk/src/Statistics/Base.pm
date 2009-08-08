@@ -936,9 +936,9 @@ sub getPlaylistTracks {
 				my $sthtracks;
 				if($prefs->get("dynamicplaylist_norepeat")) {
 					my $clientid = $client->id;
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.url=playlist_track.track left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where dynamicplaylist_history.id is null and playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}else {
-					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.id=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
+					$sthtracks = $dbh->prepare("select tracks.id from tracks join playlist_track on tracks.url=playlist_track.track where playlist_track.playlist=$id group by tracks.id order by ".getRandomString()." limit $limit");
 				}
 				$sthtracks->execute();
 				my $trackId;
