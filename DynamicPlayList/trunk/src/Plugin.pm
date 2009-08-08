@@ -2149,6 +2149,7 @@ sub postinitPlugin {
 	initPlayLists();
 	initPlayListTypes();
 	registerJiveMenu($class);
+	registerStandardContextMenus();
 	registerContextMenu();
 }
 
@@ -2195,6 +2196,139 @@ sub getTitleFormatDynamicPlaylist
 	return undef;
 }
 
+sub registerStandardContextMenus {
+	if(UNIVERSAL::can("Slim::Menu::TrackInfo","registerInfoProvider")) {
+		Slim::Menu::TrackInfo->registerInfoProvider( dynamicplaylist => (
+			above => 'favorites',
+			func => sub {
+				return objectInfoHandler(@_,'track');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::AlbumInfo","registerInfoProvider")) {
+		Slim::Menu::AlbumInfo->registerInfoProvider( dynamicplaylist => (
+			below => 'addalbum',
+			func => sub {
+				return objectInfoHandler(@_,'album');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::ArtistInfo","registerInfoProvider")) {
+		Slim::Menu::ArtistInfo->registerInfoProvider( dynamicplaylist => (
+			below => 'addartist',
+			func => sub {
+				return objectInfoHandler(@_,'artist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::YearInfo","registerInfoProvider")) {
+		Slim::Menu::YearInfo->registerInfoProvider( dynamicplaylist => (
+			below => 'addyear',
+			func => sub {
+				return objectInfoHandler(@_,'year');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::PlaylistInfo","registerInfoProvider")) {
+		Slim::Menu::PlaylistInfo->registerInfoProvider( dynamicplaylist => (
+			below => 'addplaylist',
+			func => sub {
+				return objectInfoHandler(@_,'playlist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::GenreInfo","registerInfoProvider")) {
+		Slim::Menu::GenreInfo->registerInfoProvider( dynamicplaylist => (
+			below => 'addgenre',
+			func => sub {
+				return objectInfoHandler(@_,'genre');
+			},
+		));
+	}
+}
+
+sub objectInfoHandler {
+	my ( $client, $url, $obj, $remoteMeta, $tags, $objectType) = @_;
+	$tags ||= {};
+
+	my $objectName = undef;
+	my $objectId = undef;
+	my $parameterId = $objectType.'_id';
+	if($objectType eq 'genre' || $objectType eq 'artist') {
+		$objectName = $obj->name;
+		$objectId = $obj->id;
+	}elsif($objectType eq 'album' || $objectType eq 'playlist' || $objectType eq 'track') {
+		$objectName = $obj->title;
+		$objectId = $obj->id;
+		if($objectType eq 'playlist') {
+			$parameterId = $objectType;
+		}
+	}elsif($objectType eq 'year') {
+		$objectName = ($obj?$obj:$client->string('UNK'));
+		$objectId = $obj;
+		$parameterId = $objectType;
+	}else {	
+		return undef;
+	}
+
+	if(!$playListTypes) {
+		initPlayListTypes();
+	}
+	
+	my $mixable = 0;
+	if($playListTypes->{$objectType} && ($objectType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $objectId)) {
+		my $jive = {};
+		
+		if ( $tags->{menuMode} ) {
+			my $actions = {
+				go => {
+					player => 0,
+					cmd    => [ 'dynamicplaylist', 'mixjive' ],
+					params => {
+						$parameterId => $objectId,
+					},
+				},
+			};
+
+			$jive->{actions} = $actions;
+		}
+
+		my $paramItem =  {
+			id => $objectId,
+			name => $objectName,
+		};
+
+		return {
+			type      => 'redirect',
+			jive      => $jive,
+			name      => $client->string('PLUGIN_DYNAMICPLAYLIST'),
+			favorites => 0,
+
+			player => {
+				mode => 'PLUGIN.DynamicPlayList.Mixer',
+				modeParams => {
+					'dynamicplaylist_parameter_1' => $paramItem,
+					'playlisttype' => $objectName,
+					'flatlist' => 1,
+					'extrapopmode' => 1,
+				},
+			},
+
+			web  => {
+				group => 'mixers',
+				url   => 'plugins/DynamicPlayList/dynamicplaylist_list.html?playlisttype='.$objectType.'&flatlist=1&dynamicplaylist_parameter_1='.$objectId,
+#				item  => mixerlink($obj),
+			},
+		};
+	}
+
+        return undef;
+}
 sub registerContextMenu {
 	if(isPluginsInstalled(undef,'ContextMenu::Plugin')) {
 		my $contextMenuApi = $Plugins::ContextMenu::Plugin::apiVersion;
