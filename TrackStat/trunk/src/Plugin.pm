@@ -2569,6 +2569,125 @@ sub postinitPlugin {
 	}
 	use strict 'refs';
 	registerContextMenu();
+	registerStandardContextMenus();
+}
+
+sub registerStandardContextMenus {
+	if(UNIVERSAL::can("Slim::Menu::AlbumInfo","registerInfoProvider")) {
+		Slim::Menu::AlbumInfo->registerInfoProvider( trackstat => (
+			below => 'addalbum',
+			func => sub {
+				return objectInfoHandler(@_,'album');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::ArtistInfo","registerInfoProvider")) {
+		Slim::Menu::ArtistInfo->registerInfoProvider( trackstat => (
+			below => 'addartist',
+			func => sub {
+				return objectInfoHandler(@_,'artist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::YearInfo","registerInfoProvider")) {
+		Slim::Menu::YearInfo->registerInfoProvider( trackstat => (
+			below => 'addyear',
+			func => sub {
+				return objectInfoHandler(@_,'year');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::PlaylistInfo","registerInfoProvider")) {
+		Slim::Menu::PlaylistInfo->registerInfoProvider( trackstat => (
+			below => 'addplaylist',
+			func => sub {
+				return objectInfoHandler(@_,'playlist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::GenreInfo","registerInfoProvider")) {
+		Slim::Menu::GenreInfo->registerInfoProvider( trackstat => (
+			below => 'addgenre',
+			func => sub {
+				return objectInfoHandler(@_,'genre');
+			},
+		));
+	}
+}
+
+sub objectInfoHandler {
+	my ( $client, $url, $obj, $remoteMeta, $tags, $objectType) = @_;
+	$tags ||= {};
+
+	my $objectName = undef;
+	my $objectId = undef;
+	my $parameterId = $objectType;
+	my $statisticsType = undef;
+	if($objectType eq 'genre' || $objectType eq 'artist') {
+		$objectId = $obj->id;
+		$statisticsType = 'allalbums';
+	}elsif($objectType eq 'album' || $objectType eq 'playlist') {
+		$objectId = $obj->id;
+		$statisticsType = 'all';
+	}elsif($objectType eq 'year') {
+		$objectId = $obj;
+		$statisticsType = 'allalbums';
+	}else {	
+		return undef;
+	}
+
+	if($statisticTypes{$objectType} && ($objectType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $objectId)) {
+		my $jive = {};
+		
+		if ( $tags->{menuMode} ) {
+			my $params = {
+				$parameterId => $objectId,
+				statistics => $statisticsType,
+			};
+			my $actions = {
+				go => {
+					player => 0,
+					cmd    => [ 'trackstat', 'statisticsjive' ],
+					params => $params,
+				},
+			};
+
+			$jive->{actions} = $actions;
+		}
+
+		my $paramItem =  {
+			id => $objectId,
+			name => $objectName,
+		};
+
+		return {
+			type      => 'redirect',
+			jive      => $jive,
+			name      => $client->string('PLUGIN_TRACKSTAT'),
+			favorites => 0,
+
+			player => {
+				mode => 'Plugins::TrackStat::Plugin',
+				modeParams => {
+					'statistictype' => $objectType,
+					$objectType => $objectId,
+					'flatlist' => 1,
+				},
+			},
+
+			web  => {
+				group => 'mixers',
+				url   => 'plugins/TrackStat/'.$statisticsType.'.html?'.$objectType.'='.$objectId.'&flatlist=1',
+#				item  => mixerlink($obj),
+			},
+		};
+	}
+
+        return undef;
 }
 
 sub registerContextMenu {
