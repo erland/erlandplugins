@@ -694,10 +694,18 @@ sub preprocessScreen {
 
 	if(exists $screen->{'preprocessing'} && $screen->{'preprocessing'} eq 'function') {
 		no strict 'refs';
-		$log->debug("Calling: ".$screen->{'preprocessingData'});
-		my $result = eval { &{$screen->{'preprocessingData'}}($client,$screen) };
+		my @functionAndParameters = split(/\|/,$screen->{'preprocessingData'});
+		my $function = shift @functionAndParameters;
+		my $params = {};
+		foreach my $param (@functionAndParameters) {
+			if($param =~ /^([^=]+)=(.*)$/) {
+				$params->{$1}=$2;
+			}
+		}
+		$log->debug("Calling: ".$function);
+		my $result = eval { &{$function}($client,$screen,$params) };
 		if ($@) {
-			$log->warn("Error preprocessing ".$screen->{'id'}." with ".$screen->{'preprocessingData'}.": $@");
+			$log->warn("Error preprocessing ".$screen->{'id'}." with ".$function.": $@");
 		}
 		use strict 'refs';
 		return $result;
@@ -711,10 +719,18 @@ sub preprocessGroup {
 
 	if(exists $group->{'preprocessing'} && $group->{'preprocessing'} eq 'function') {
 		no strict 'refs';
-		$log->debug("Calling: ".$group->{'preprocessingData'});
-		my $result = eval { &{$group->{'preprocessingData'}}($client,$group) };
+		my @functionAndParameters = split(/\|/,$group->{'preprocessingData'});
+		my $function = shift @functionAndParameters;
+		my $params = {};
+		foreach my $param (@functionAndParameters) {
+			if($param =~ /^([^=]+)=(.*)$/) {
+				$params->{$1}=$2;
+			}
+		}
+		$log->debug("Calling: ".$function);
+		my $result = eval { &{$function}($client,$group,$params) };
 		if ($@) {
-			$log->warn("Error preprocessing ".$group->{'id'}." with ".$group->{'preprocessingData'}.": $@");
+			$log->warn("Error preprocessing ".$group->{'id'}." with ".$function.": $@");
 		}
 		use strict 'refs';
 		return $result;
@@ -741,14 +757,22 @@ sub preprocessItem {
 
 	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'function') {
 		no strict 'refs';
-		$log->debug("Calling: ".$item->{'preprocessingData'});
-		eval { &{$item->{'preprocessingData'}}($client,$item) };
+		my @functionAndParameters = split(/\|/,$item->{'preprocessingData'});
+		my $function = shift @functionAndParameters;
+		my $params = {};
+		foreach my $param (@functionAndParameters) {
+			if($param =~ /^([^=]+)=(.*)$/) {
+				$params->{$1}=$2;
+			}
+		}
+		$log->debug("Calling: ".$function);
+		my $result = eval { &{$function}($client,$item,$params) };
 		if ($@) {
-			$log->warn("Error preprocessing ".$item->{'id'}." with ".$item->{'preprocessingData'}.": $@");
+			$log->warn("Error preprocessing ".$item->{'id'}." with ".$function.": $@");
 		}
 		use strict 'refs';
 
-	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'artwork') {
+	}elsif(exists $item->{'preprocessing'} && $item->{'preprocessing'} eq 'artwork' && !defined($item->{'icon-id'}) && !defined($item->{'icon'})) {
 		my $song = Slim::Player::Playlist::song($client);
 		if(defined($song)) {
 			if ( $song->isRemoteURL ) {
@@ -852,6 +876,80 @@ sub preprocessingPlayMode {
 	}
 	my @empty = ();
 	return \@empty;
+}
+
+sub preprocessingImageUrls {
+	my $client = shift;
+	my $screen = shift;
+	my $params = shift;
+
+	my @empty = ();
+	my $groups = \@empty;
+	if(exists $screen->{'items'}->{'item'}) {
+		$groups = $screen->{'items'}->{'item'};
+		if(ref($groups) ne 'ARRAY') {
+			push @empty,$groups;
+			$groups = \@empty;
+		}
+	}
+	my $index = 1;
+	my $albums = retreiveForSQL($params->{'sql'});
+
+	foreach my $album (@$albums) {
+		my $image = {
+			'id' => 'image'.$index,
+			'item' => [{
+				'id' => 'icon',
+				'type' => 'icon',
+				'preprocessing' => 'artwork',
+				'preprocessingData' => $params->{'imagesize'},
+				'icon' => $album,
+			}],
+		};
+		push @$groups, $image;
+		$index++;
+	}
+	$screen->{'items'}->{'item'} = $groups;
+	return 1;
+	
+}
+
+sub getCurrentDBH {
+	return Slim::Schema->storage->dbh();
+}
+
+sub retreiveForSQL {
+	my $sql = shift;
+
+	my @result;
+	my $dbh = getCurrentDBH();
+
+	for my $sql (split(/[;]/,$sql)) {
+    		eval {
+			my $sth = $dbh->prepare( $sql );
+			$log->debug("Executing: $sql\n");
+			$sth->execute() or do {
+				$log->warn("Error executing: $sql\n");
+				$sql = undef;
+			};
+
+		        if ($sql =~ /^\(*SELECT+/oi) {
+				$log->debug("Executing and collecting: $sql\n");
+				my $id;
+				$sth->bind_col( 1, \$id);
+				while( $sth->fetch() ) {
+					if(defined($id)) {
+						push @result, $id;
+					}
+				}
+			}
+			$sth->finish();
+		};
+		if( $@ ) {
+			$log->error("Database error: $DBI::errstr\n$@");
+		}		
+	}
+	return \@result;
 }
 
 sub getKeywordValues {
