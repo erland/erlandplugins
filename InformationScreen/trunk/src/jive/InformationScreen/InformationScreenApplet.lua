@@ -44,6 +44,7 @@ local LAYOUT_SOUTH	= jive.ui.LAYOUT_SOUTH
 local LAYOUT_CENTER	= jive.ui.LAYOUT_CENTER
 local LAYOUT_WEST	= jive.ui.LAYOUT_WEST
 local LAYOUT_EAST	= jive.ui.LAYOUT_EAST
+local LAYOUT_NONE	= jive.ui.LAYOUT_NONE
 
 local fontpath = "fonts/"
 local FONT_NAME = "FreeSans"
@@ -389,6 +390,46 @@ function _getArtwork(self,item,icon)
 		else
 			self:_getIcon(item,icon,usableHeight)
 		end
+	elseif item.preprocessingData and item.preprocessingData == "twoimages" then
+		local width,height = Framework.getScreenSize()
+		local usableHeight = height
+		local skinName = jiveMain:getSelectedSkin()
+		if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+			usableHeight = usableHeight-24
+		end
+		if width<usableHeight then 
+			if width < usableHeight/2 then
+				self:_getIcon(item,icon,width)
+			else
+				self:_getIcon(item,icon,usableHeight/2)
+			end
+		else
+			if width/2 < usableHeight then
+				self:_getIcon(item,icon,width/2)
+			else
+				self:_getIcon(item,icon,usableHeight)
+			end
+		end
+	elseif item.preprocessingData and item.preprocessingData == "siximages" then
+		local width,height = Framework.getScreenSize()
+		local usableHeight = height
+		local skinName = jiveMain:getSelectedSkin()
+		if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+			usableHeight = usableHeight-24
+		end
+		if width<usableHeight then 
+			if width/2 < usableHeight/3 then
+				self:_getIcon(item,icon,width/2)
+			else
+				self:_getIcon(item,icon,usableHeight/3)
+			end
+		else
+			if width/3 < usableHeight/2 then
+				self:_getIcon(item,icon,width/3)
+			else
+				self:_getIcon(item,icon,usableHeight/2)
+			end
+		end
 	elseif item.preprocessingData and item.preprocessingData == "thumb" then
 		self:_getIcon(item,icon,jiveMain:getSkinParam("THUMB_SIZE"))
 	else
@@ -396,6 +437,7 @@ function _getArtwork(self,item,icon)
 	end
 	return icon
 end
+
 function _updateUIItems(self,style,groups)
 	if style and style != self.window:getStyle() then
 		log:debug("Setting window style to: " .. style)
@@ -739,27 +781,267 @@ function _getStandardStyles(self, skinName)
 		}
 	}
 
-	local leftImageBorder = 0
 	local usableImageHeight = height
 
 	if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
 		usableImageHeight = height-24
 	end
+
+	local widthPadding = 0
+	local heightPadding = 0
 	if width > usableImageHeight then
-		leftImageBorder = ((width-usableImageHeight)/2)
+		widthPadding = ((width-usableImageHeight)/2)
+	else
+		heightPadding = ((usableImageHeight-width)/2)
 	end
 
 	s.InformationScreenImage = {
 		image = {
-			border = {leftImageBorder,0,leftImageBorder,0},
+			border = {widthPadding,heightPadding,widthPadding,heightPadding},
 		}
 	}
 	s.InformationScreenImageBlack = {
 		bgImg = Tile:fillColor(0x000000ff),
 		image = {
-			border = {leftImageBorder,0,leftImageBorder,0},
+			border = {widthPadding,heightPadding,widthPadding,heightPadding},
 		}
 	}
+
+	widthPadding = 0
+	heightPadding = 0
+	local imageSize = 0
+	if width<usableImageHeight then 
+		-- 1x2 layout
+		if width < usableImageHeight/2 then
+			-- height padding required
+			heightPadding = (usableImageHeight - 2*width)/2
+			imageSize = width
+		else
+			-- width padding required
+			widthPadding = (width - usableImageHeight/2)/2
+			imageSize = usableImageHeight/2
+		end
+		s.InformationScreenTwoImages = {
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+		}
+		s.InformationScreenTwoImagesBlack = {
+			bgImg = Tile:fillColor(0x000000ff),
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+		}
+	else
+		-- 2x1 layout
+		if width/2 < usableImageHeight then
+			-- height padding required
+			heightPadding = (usableImageHeight - width/2)/2
+			imageSize = width/2
+		else
+			-- width padding required
+			widthPadding = (width - 2*usableImageHeight)/2
+			imageSize=usableImageHeight
+		end
+		s.InformationScreenTwoImages = {
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+		}
+		s.InformationScreenTwoImagesBlack = {
+			bgImg = Tile:fillColor(0x000000ff),
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+		}
+	end
+
+	widthPadding = 0
+	heightPadding = 0
+	imageSize = 0
+	if width<usableImageHeight then 
+		-- 2x3 layout
+		if width/2 < usableImageHeight/3 then
+			-- height padding required
+			heightPadding = (usableImageHeight - 3*(width/2))/2
+			imageSize = width/2
+		else
+			-- width padding required
+			widthPadding = (width - 2*(usableImageHeight/3))/2
+			imageSize = usableImageHeight/3
+		end
+
+		s.InformationScreenSixImages = {
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+			image3 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+			image4 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize,
+			},
+			image5 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize+imageSize,
+			},
+			image6 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize+imageSize,
+			},
+		}
+		s.InformationScreenSixImagesBlack = {
+			bgImg = Tile:fillColor(0x000000ff),
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+			image3 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+			image4 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize,
+			},
+			image5 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize+imageSize,
+			},
+			image6 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize+imageSize,
+			},
+		}
+	else
+		-- 3x2 layout
+		if width/3 < usableImageHeight/2 then
+			-- height padding required
+			heightPadding = (usableImageHeight - 2*(width/3))/2
+			imageSize = width/3
+		else
+			-- width padding required
+			widthPadding = (width - 3*(usableImageHeight/2))/2
+			imageSize = usableImageHeight/2
+		end
+		s.InformationScreenSixImages = {
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+			image3 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize+imageSize,
+				y = heightPadding,
+			},
+			image4 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+			image5 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize,
+			},
+			image6 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize+imageSize,
+				y = heightPadding+imageSize,
+			},
+		}
+		s.InformationScreenSixImagesBlack = {
+			bgImg = Tile:fillColor(0x000000ff),
+			image1 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding,
+			},
+			image2 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding,
+			},
+			image3 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize+imageSize,
+				y = heightPadding,
+			},
+			image4 = {
+				position = LAYOUT_NONE,
+				x = widthPadding,
+				y = heightPadding+imageSize,
+			},
+			image5 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize,
+				y = heightPadding+imageSize,
+			},
+			image6 = {
+				position = LAYOUT_NONE,
+				x = widthPadding+imageSize+imageSize,
+				y = heightPadding+imageSize,
+			},
+		}
+	end
+
 	return s;		
 end
 
