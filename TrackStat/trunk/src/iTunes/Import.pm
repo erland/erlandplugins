@@ -686,7 +686,28 @@ sub normalize_location {
 	}
 
 	$url =~ s/file:\/\/localhost\//file:\/\/\//;
+	$url = replace_problematic_url_chars($url);
 	$log->debug("normalized $location to $url\n");
+
+	return $url;
+}
+sub replace_problematic_url_chars {
+	# correct problematic chars &[]' to get matching file urls in SC's DB
+
+	my $url = shift;
+	$log->debug("original url was $url");
+
+	# &
+	$url =~ s/%26/\&/g;
+
+	# [
+	$url =~ s/%5B/\[/g;
+
+	# ]
+	$url =~ s/%5D/\]/g;
+
+	# '
+	$url =~ s/'/%27/g;
 
 	return $url;
 }
