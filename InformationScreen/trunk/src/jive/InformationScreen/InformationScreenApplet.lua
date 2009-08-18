@@ -23,6 +23,8 @@ local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
 
 local oo               = require("loop.simple")
 
+local table            = require("jive.utils.table")
+
 local Applet           = require("jive.Applet")
 local Window           = require("jive.ui.Window")
 local Label            = require("jive.ui.Label")
@@ -156,15 +158,12 @@ end
 
 function _createUIItems(self,skin,style,groups)
 	local window = nil
-	local path = nil
 	if style then
 		log:debug("Creating window with style: " .. style)
 		window = Window(style)
-		path = style
 	else
 		log:debug("Creating window with default style")
 		window = Window("window")
-		path = "window"
 	end
 	if skin and skin == "getClockStyles" then
 		log:debug("Creating window with skin styles: " .. skin)
@@ -176,12 +175,13 @@ function _createUIItems(self,skin,style,groups)
 		window:reSkin()
 	end
 	self.groups = {}
+	self.buttonCommands = {}
 	for index,group in ipairs(groups) do
 		log:debug("Handling group " .. index .. ": " .. group.id)
-		local groupItems = self:_createGroupItems(window,group,path.."."..group.id)
+		local groupItems = self:_createGroupItems(window,group,group.id)
 		self.groups[group.id] = Group(group.id,groupItems)
 		if group.type == "simplemenu" then
-			log:debug("Creating SimpleMenu(" .. group.id..") with path "..path.."."..group.id)
+			log:debug("Creating SimpleMenu(" .. group.id..") with path ".. group.id)
 			self.groups[group.id] = SimpleMenu(group.id)
 			log:debug("Setting menu items")
 			self.groups[group.id]:setItems(self:_createMenuItemsArray(groupItems))
@@ -193,7 +193,7 @@ function _createUIItems(self,skin,style,groups)
 				window:addWidget(item)
 			end
 		else 
-			log:debug("Creating Group("..group.id..", ... ) with path " .. path .. "." .. group.id)
+			log:debug("Creating Group("..group.id..", ... ) with path " .. group.id)
 			log:debug("Adding group widget")
 			window:addWidget(self.groups[group.id])
 		end
@@ -253,9 +253,34 @@ function _createGroupItems(self,window,group,path)
 		elseif item.type == "defaultrightbutton" then
 			log:debug("Creating default left button")
 			itemObj = window:createDefaultRightButton()
-		elseif item.type == "button" and (item.action or item.service) then
+		elseif item.type == "button" and (item.action or item.service or item.command) then
 			local action = nil
-			if item.action then
+			if item.command then
+				log:debug("Configuring command for ".. path .. "." .. item.id .. ": " ..table.concat(item.command, " "));
+				local server = self.player:getSlimServer()
+				self.buttonCommands[path .. "." .. item.id] = function()
+					server:userRequest(
+						function(chunk, err)
+							if err then
+								log:error(err)
+							elseif chunk then
+								log:debug("Ignoring response")
+								log:debug(table.concat(item.command, ","))
+							end
+						end,
+						self.player and self.player:getId(),
+						item.command)
+					if item.service then
+						log:debug("Configuring service ".. item.service);
+						appletManager:callService(item.service)
+					end
+					return EVENT_CONSUME
+				end
+				action = function() 
+					log:debug("Executing command for " .. path .. "." .. item.id)
+					return self.buttonCommands[path .. "." .. item.id]()
+				end
+			elseif item.action then
 				log:debug("Configuring action ".. item.action);
 				action = function()
 					Framework:pushAction(item.action)
@@ -446,7 +471,7 @@ function _updateUIItems(self,style,groups)
 	for index,group in ipairs(groups) do
 		if not group.type or group.type != "simplemenu" then
 			log:debug("Updating group items for "..group.id)
-			self:_updateGroupItems(group)
+			self:_updateGroupItems(group, group.id)
 		elseif group.type and group.type == "simplemenu" then
 			log:debug("Updating menu items for menu "..group.id)
 			local menuItems = self:_createGroupItems(self.window,group,group.id)
@@ -461,7 +486,7 @@ function _updateUIItems(self,style,groups)
 	end
 end
 
-function _updateGroupItems(self,group)
+function _updateGroupItems(self,group,path)
 	for itemIndex,item in ipairs(group.item) do
 		if item.type == "label" then
 			log:debug("Updating item " .. item.id .." with value:" .. item.value)
@@ -481,8 +506,8 @@ function _updateGroupItems(self,group)
 		elseif item.type == "icon" and item.preprocessing and item.preprocessing == "artwork" then
 			log:debug("Updating artwork Icon(artwork)");
 			self:_getArtwork(item,self.groups[group.id]:getWidget(item.id))
-		elseif item.type == "button" and item.value then
-			log:debug("Updating item " .. item.id .." with value:" .. item.value)
+		elseif item.type == "button" and (item.value or item.icon or item["icon-id"] or item.command) then
+			log:debug("Updating item " .. item.id)
 			if item.preprocessing and item.preprocessing == "artwork" then
 				if item.groupIcon then
 					self:_getArtwork(item,self.groups[group.id]:getWidget(item.id):getWidget(0))
@@ -490,7 +515,31 @@ function _updateGroupItems(self,group)
 					self:_getArtwork(item,self.groups[group.id]:getWidget(item.id))
 				end
 			end
-			self.groups[group.id]:setWidgetValue(item.id,item.value)
+			if item.value then
+				self.groups[group.id]:setWidgetValue(item.id,item.value)
+			end
+			if item.command then
+				log:debug("Configuring command for ".. path .. "." .. item.id .. ": " ..table.concat(item.command, " "));
+				local server = self.player:getSlimServer()
+				self.buttonCommands[path .. "." .. item.id] = function()
+					server:userRequest(
+						function(chunk, err)
+							if err then
+								log:error(err)
+							elseif chunk then
+								log:debug("Ignoring response")
+								log:debug(table.concat(item.command, ","))
+							end
+						end,
+						self.player and self.player:getId(),
+						item.command)
+					if item.service then
+						log:debug("Configuring service ".. item.service);
+						appletManager:callService(item.service)
+					end
+					return EVENT_CONSUME
+				end
+			end
 		elseif item.type == "group" or not item.type then
 			log:debug("Handling sub groups under " .. item.id)
 			self:_updateGroupItems(item)
