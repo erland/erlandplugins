@@ -801,6 +801,16 @@ sub preprocessItem {
 			}
 		}
 	}
+	if(defined($item->{'command'})) {
+		my @parts = split(/ /,$item->{'command'});
+		$item->{'command'} = \@parts;
+	}
+	if(defined($item->{'item'})) {
+		my $subItems = $item->{'item'};
+		foreach my $subitem (@$subItems) {
+			preprocessItem($client,$subitem);
+		}
+	}
 }
 
 sub albumArtExists {
@@ -893,20 +903,33 @@ sub preprocessingImageUrls {
 		}
 	}
 	my $index = 1;
-	my $albums = retreiveForSQL($params->{'sql'});
+	my $images = retreiveForSQL($params->{'sql'});
 
-	foreach my $album (@$albums) {
-		my $image = {
+	foreach my $image (@$images) {
+		my $imageObj = {
 			'id' => 'image'.$index,
 			'item' => [{
 				'id' => 'icon',
 				'type' => 'icon',
 				'preprocessing' => 'artwork',
 				'preprocessingData' => $params->{'imagesize'},
-				'icon' => $album,
+				'icon' => $image->{'url'},
 			}],
 		};
-		push @$groups, $image;
+		if(defined($params->{'command'})) {
+			my $command = $params->{'command'};
+			my $id = $image->{'id'};
+			my $url = $image->{'url'};
+			$command =~ s/{id}/$id/;
+			$command =~ s/{url}/$url/;
+			$imageObj->{'item'}->[0]->{'type'} = 'button';
+			$imageObj->{'item'}->[0]->{'command'} = $command;
+		}
+		if(defined($params->{'service'})) {
+			$imageObj->{'item'}->[0]->{'type'} = 'button';
+			$imageObj->{'item'}->[0]->{'service'} = $params->{'service'};
+		}
+		push @$groups, $imageObj;
 		$index++;
 	}
 	$screen->{'items'}->{'item'} = $groups;
@@ -936,10 +959,19 @@ sub retreiveForSQL {
 		        if ($sql =~ /^\(*SELECT+/oi) {
 				$log->debug("Executing and collecting: $sql\n");
 				my $id;
+				my $url;
 				$sth->bind_col( 1, \$id);
+				$sth->bind_col( 2, \$url);
 				while( $sth->fetch() ) {
+					my $resultItem = {};
 					if(defined($id)) {
-						push @result, $id;
+						$resultItem->{'id'} = $id;
+					}
+					if(defined($url)) {
+						$resultItem->{'url'} = $url;
+					}
+					if(defined($id) && defined($url)) {
+						push @result, $resultItem;
 					}
 				}
 			}
