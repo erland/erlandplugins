@@ -12,7 +12,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&filename=InformationScreenApplet-0.4.2735.zip</url>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-0.4.2735.zip</url>
                         <sha>703f9ed727f798b31b9bbe4f9346e85595f89ae2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -26,7 +26,7 @@ d of information</desc>
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&filename=InformationScreen-0.4.2735.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-0.4.2735.zip</url>
                         <sha>2a344839a4c587799908c268ded2544c54df2a87</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -38,7 +38,7 @@ formation Screen plugin. This plugin has only been tested with MythTV 0.21</desc
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mythtv&filename=MythTV-0.1.2604.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mythtv&amp;filename=MythTV-0.1.2604.zip</url>
                         <sha>fb675b8c764f38560dbcf15e45defe8f3a732f4d</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -51,7 +51,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mail&filename=Mail-0.1.2604.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mail&amp;filename=Mail-0.1.2604.zip</url>
                         <sha>b804bf6f526c3589f6673b22846900c459504d3f</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
