@@ -93,10 +93,10 @@ function openScreensaver(self)
 		-- register window as a screensaver, unless we are explicitly not in that mode
 		local manager = appletManager:getAppletInstance("ScreenSavers")
 		manager:screensaverWindow(self.window)
+		self.window:addTimer(1000, function() self:_tick() end)
 	end
-
+	self.lastminute = 0
 	self:_tick(1)
-	self.window:addTimer(1000, function() self:_tick() end)
 
 	-- Show the window
 	self.window:show(Window.transitionFadeIn)
@@ -117,8 +117,7 @@ function _tick(self,forcedWallpaperUpdate)
 	end
 
 	local minute = os.date("%M")
-
-	if forcedWallpaperUpdate or minute % 15 == 0 then
+	if forcedWallpaperUpdate or (minute % 1 == 0 and self.lastminute!=minute) then
 		log:info("Initiating wallpaper update")
 		local width,height = Framework.getScreenSize()
 		local http = SocketHttp(jnt, "static.die.net", 80)
@@ -137,6 +136,7 @@ function _tick(self,forcedWallpaperUpdate)
 			'GET', "/earth/mercator/480.jpg")
 		http:fetch(req)
 	end
+	self.lastminute = minute
 end
 
 function _getClockSkin(self,skin)
