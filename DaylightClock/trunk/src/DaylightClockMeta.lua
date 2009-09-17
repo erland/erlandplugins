@@ -17,6 +17,7 @@ See L<jive.AppletMeta> for a description of standard applet meta functions.
 
 
 local oo            = require("loop.simple")
+local datetime         = require("jive.utils.datetime")
 
 local AppletMeta    = require("jive.AppletMeta")
 local jul           = require("jive.utils.log")
@@ -34,6 +35,8 @@ function jiveVersion(self)
 end
 
 function registerApplet(self)
+        jiveMain:addItem(self:menuItem('appletDaylightClock', 'screenSettings', "SCREENSAVER_DAYLIGHTCLOCK_SETTINGS",
+                function(applet, ...) applet:openSettings(...) end, 105))
 end
 
 function configureApplet(self)
@@ -44,6 +47,20 @@ function configureApplet(self)
 		_, 
 		_, 
 		90)
+end
+
+function defaultSettings(self)
+        local defaultSetting = {}
+        defaultSetting["perspective"] = "/earth/hemispheredawnduskmoon"
+	if datetime:getHours()==12 then
+	        defaultSetting["item1" ] = "%I:%M"
+	else
+	        defaultSetting["item1" ] = "%H:%M"
+	end
+        defaultSetting["item2" ] = "%a"
+        defaultSetting["item3" ] = "%d %b"
+        defaultSetting["copyright"] = "http://www.die.net/earth"
+        return defaultSetting
 end
 
 --[[
