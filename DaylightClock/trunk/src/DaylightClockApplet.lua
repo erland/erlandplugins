@@ -6,8 +6,8 @@ applets.DaylightClock.DaylightClockApplet - Screensaver displaying a daylight ma
 
 =head1 DESCRIPTION
 
-Daylight Clock is a screen saver for Jive. It is an applet that implements a screen saver
-which displays a daylight map of the earth together with a clock.
+Daylight Clock is a screen saver for Squeezeplay. It is an applet that implements a screen saver
+which displays a daylight map of the earth together with a clock. The images are provided by http://www.die.net/earth
 
 =head1 FUNCTIONS
 
@@ -25,6 +25,7 @@ local oo               = require("loop.simple")
 local os               = require("os")
 local math             = require("math")
 local string           = require("string")
+local table            = require("jive.utils.table")
 
 local datetime         = require("jive.utils.datetime")
 
@@ -69,8 +70,10 @@ oo.class(_M, Applet)
 -- by the ScreenSaversApplet.
 function openScreensaver(self)
 
+	log:debug("Open screensaver")
         -- Create the main window if it doesn't already exist
 	if not self.window then
+		log:debug("Recreating screensaver window")
 		local width,height = Framework.getScreenSize()
 		if width == 480 then
 			self.model = "touch"
@@ -110,9 +113,15 @@ function openScreensaver(self)
 		}
 		self.wallpaperImage = Group("background",wallpaperItems)
 
+		local item4Items = {
+			item4 = Label("item4","")
+		}
+		self.item4Label = Group("item4",item4Items)
+
 		self.window:addWidget(self.item1Label)
 		self.window:addWidget(self.item2Label)
 		self.window:addWidget(self.item3Label)
+		self.window:addWidget(self.item4Label)
 		self.window:addWidget(self.copyrightLabel)
 		self.window:addWidget(self.wallpaperImage)
 
@@ -123,6 +132,7 @@ function openScreensaver(self)
 		self.offset = math.random(15)
 	end
 	self.lastminute = 0
+	self.nowPlaying = 0
 	self:_tick(1)
 
 	-- Show the window
@@ -165,6 +175,14 @@ function openSettings(self)
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
 				self:defineSettingItem(menuItem,"item3")
+				return EVENT_CONSUME
+			end
+		},
+		{
+			text = self:string("SCREENSAVER_DAYLIGHTCLOCK_SETTINGS_NOWPLAYING"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingNowPlaying(menuItem)
 				return EVENT_CONSUME
 			end
 		},
@@ -664,6 +682,55 @@ function defineSettingItem(self, menuItem, itemId)
 	return window
 end
 
+function defineSettingNowPlaying(self, menuItem)
+	local group = RadioGroup()
+
+	local nowplaying = self:getSettings()["nowplaying"]
+
+	local window = Window("text_list", menuItem.text, 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
+			text = self:string("SCREENSAVER_DAYLIGHTCLOCK_SETTINGS_NOWPLAYING_YES"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["nowplaying"] = true
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				nowplaying == true
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_DAYLIGHTCLOCK_SETTINGS_NOWPLAYING_NO"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["nowplaying"] = false
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				nowplaying == false
+			),
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
 local function _loadFont(fontSize)
         return Font:load("fonts/FreeSans.ttf", fontSize)
 end
@@ -676,7 +743,7 @@ function _getUsableWallpaperArea(self)
 		height = height-45
 	elseif self.model == "radio" then
 		if string.find(self:getSettings()["perspective"],"dusk") or string.find(self:getSettings()["perspective"],"dawn") or string.find(self:getSettings()["perspective"],"moon") then
-			height = height - 45
+			height = height - 50
 		else
 			height = height - 85
 		end
@@ -688,6 +755,44 @@ function _getUsableWallpaperArea(self)
 		end
 	end
 	return width,height
+end
+
+function _extractTrackInfo(self, _track, _itemType)
+        if _track.track then
+		if _itemType == 1 then
+			return _track.artist
+		elseif _itemType == 2 then
+			return _track.album
+		else 
+			return _track.track
+		end
+        else
+                return _track.text
+        end
+end
+
+function _updateNowPlaying(self,itemType)
+	local player = appletManager:callService("getCurrentPlayer")
+	local playerStatus = player:getPlayerStatus()
+	if playerStatus.mode == 'play' then
+		if playerStatus.item_loop then
+		        local trackInfo = self:_extractTrackInfo(playerStatus.item_loop[1],itemType)
+			if trackInfo != "" then
+				self.item4Label:setWidgetValue("item4",trackInfo)
+				if self.model == "touch" then
+					self.item1Label:setWidgetValue("item1","")
+				end
+				if self.model != "controller" or string.find(self:getSettings()["perspective"],"dusk") or string.find(self:getSettings()["perspective"],"dawn") or string.find(self:getSettings()["perspective"],"moon") then
+					self.item2Label:setWidgetValue("item2","")
+				end
+				self.item3Label:setWidgetValue("item3","")
+			end
+		else
+			self.item4Label:setWidgetValue("item4","")
+		end
+	else
+		self.item4Label:setWidgetValue("item4","")
+	end
 end
 
 -- Update the time and if needed also the wallpaper
@@ -704,9 +809,23 @@ function _tick(self,forcedWallpaperUpdate)
 		self.item3Label:setWidgetValue("item3",os.date(self:getSettings()["item3"]))
 	end
 
+	local second = os.date("%s")
+	if second % 3 == 0 then
+		if self.nowPlaying>=3 then
+			self.nowPlaying = 0
+		else
+			self.nowPlaying = self.nowPlaying + 1
+		end
+	end
+	if self.nowPlaying>0 and self:getSettings()["nowplaying"] == true then
+		self:_updateNowPlaying(self.nowPlaying)
+	else
+		self.item4Label:setWidgetValue("item4","")	
+	end
+
 	local minute = os.date("%M")
 	if forcedWallpaperUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
-		log:info("Initiating wallpaper update")
+		log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
 
 		local width,height = self:_getUsableWallpaperArea()
 
@@ -787,47 +906,70 @@ function _getClockSkin(self,skin)
 	local copyrightPosition
 	local copyrightFont = 15
 	local copyrightHeight = 20
+	local nowPlayingPosition
+	local nowPlayingFont
+	local nowPlayingHeight
 	if self.model == "touch" then
 		primaryItemHeight = 40
 		primaryItemFont = 40
+		primaryItemPosition = height-primaryItemHeight
 		secondaryItemHeight = 40
-		secondaryItemFont = 40
-		secondary2Position = 0
-		secondary3Position = 0
+		secondaryItemFont = 30
+		secondary2Position = height-primaryItemHeight
+		secondary3Position = height-primaryItemHeight
 		copyrightPosition = height-primaryItemHeight-copyrightHeight-5
+		nowPlayingPosition = height-primaryItemHeight
+		nowPlayingHeight = primaryItemHeight
+		nowPlayingFont = secondaryItemFont
 	elseif self.model == "radio" then
+		secondaryItemHeight = 30
+		secondaryItemFont = 25
 		if string.find(self:getSettings()["perspective"],"dusk") or string.find(self:getSettings()["perspective"],"dawn") or string.find(self:getSettings()["perspective"],"moon") then
 			primaryItemHeight = 40
 			primaryItemFont = 40
-			secondary2Position = 10
-			secondary3Position = 10
-			copyrightPosition = height-primaryItemHeight-copyrightHeight-5
+			primaryItemPosition = height-primaryItemHeight-20
+			secondary2Position = height-primaryItemHeight+10
+			secondary3Position = height-primaryItemHeight+10
+			copyrightPosition = height-primaryItemHeight-copyrightHeight-15
+			nowPlayingPosition = height-primaryItemHeight+15
+			nowPlayingHeight = 20
+			nowPlayingFont = 20
 		else
-			primaryItemHeight = 80
-			primaryItemFont = 60
-			secondary2Position = 60
-			secondary3Position = 60
-			copyrightPosition = height-primaryItemHeight-copyrightHeight-10
+			primaryItemHeight = 60
+			primaryItemFont = 50
+			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight+10
+			secondary2Position = height-secondaryItemHeight
+			secondary3Position = height-secondaryItemHeight
+			copyrightPosition = height-primaryItemHeight-copyrightHeight-20
+			nowPlayingPosition = secondary2Position
+			nowPlayingHeight = 30
+			nowPlayingFont = 20
 		end
-		secondaryItemHeight = 25
-		secondaryItemFont = 25
 	else
 		if string.find(self:getSettings()["perspective"],"dusk") or string.find(self:getSettings()["perspective"],"dawn") or string.find(self:getSettings()["perspective"],"moon") then
 			primaryItemHeight = 70
-			primaryItemFont = 70
-			secondary2Position = 60
-			secondary3Position = 60
-			secondaryItemHeight = 25
-			secondaryItemFont = 25
+			primaryItemFont = 55
+			primaryItemPosition = height-primaryItemHeight-15
+			secondaryItemHeight = 30
+			secondaryItemFont = 20
+			secondary2Position = height-secondaryItemHeight
+			secondary3Position = height-secondaryItemHeight
+			nowPlayingPosition = secondary2Position
+			nowPlayingHeight = 30
+			nowPlayingFont = 20
 		else
 			primaryItemHeight = 150
-			primaryItemFont = 80
-			secondary2Position = 10
+			primaryItemFont = 70
+			primaryItemPosition = height-primaryItemHeight
+			secondary2Position = height-primaryItemHeight+10
 			secondary2Align = 'center'
-			secondary3Position = 110
+			secondary3Position = height-primaryItemHeight+110
 			secondary3Align = 'center'
 			secondaryItemHeight = 35
 			secondaryItemFont = 35
+			nowPlayingPosition = secondary3Position
+			nowPlayingHeight = 35
+			nowPlayingFont = 20
 		end
 		copyrightPosition = height-primaryItemHeight-copyrightHeight-5
 	end
@@ -837,8 +979,10 @@ function _getClockSkin(self,skin)
 	if self:getSettings()["item1"] != "" then
 		item1Style = {
 				bgImg = Tile:fillColor(0x000000ff),
-				position = LAYOUT_SOUTH,
-				border = {0,10,0,5},
+				position = LAYOUT_NONE,
+				y = primaryItemPosition,
+				x = 0,
+				border = {10,0,10,0},
 				item1 = {
 					font = _loadFont(primaryItemFont),
 					align = 'center',
@@ -853,32 +997,54 @@ function _getClockSkin(self,skin)
 	local item2Style = nil
 	if self:getSettings()["item2"] != "" then
 		item2Style = {
-				position = LAYOUT_SOUTH,
-				border = {10,10+secondary2Position,0,5},
+				position = LAYOUT_NONE,
+				y = secondary2Position,
+				x = 0,
 				item2 = {
+					border = {5,0,5,0},
 					font = _loadFont(secondaryItemFont),
 					align = secondary2Align,
 					w = WH_FILL,
 					h = secondaryItemHeight,
 					fg = { 0xcc, 0xcc, 0xcc },
 				},
-				zOrder = 2,
+				zOrder = 3,
 		}
 	end
 
 	local item3Style = nil
 	if self:getSettings()["item3"] != "" then
 		item3Style = {
-				position = LAYOUT_SOUTH,
-				border = {0,10+secondary3Position,10,5},
+				position = LAYOUT_NONE,
+				y = secondary3Position,
+				x = 0,
 				item3 = {
+					border = {5,0,5,0},
 					font = _loadFont(secondaryItemFont),
 					align = secondary3Align,
 					w = WH_FILL,
 					h = secondaryItemHeight,
 					fg = { 0xcc, 0xcc, 0xcc },
 				},
-				zOrder = 2,
+				zOrder = 3,
+		}
+	end
+
+	local item4Style = nil
+	if self:getSettings()["nowplaying"] == true then
+		item4Style = {
+				position = LAYOUT_NONE,
+				y = nowPlayingPosition,
+				x = 0,
+				item4 = {
+					border = {5,0,5,0},
+					font = _loadFont(nowPlayingFont),
+					align = 'center',
+					w = WH_FILL,
+					h = nowPlayingHeight,
+					fg = { 0xcc, 0xcc, 0xcc },
+				},
+				zOrder = 4,
 		}
 	end
 
@@ -900,6 +1066,7 @@ function _getClockSkin(self,skin)
 		item1 = item1Style,
 		item2 = item2Style,
 		item3 = item3Style,
+		item4 = item4Style,
 		background = {
 			bgImg = Tile:fillColor(0x000000ff),
 			position = LAYOUT_NORTH,

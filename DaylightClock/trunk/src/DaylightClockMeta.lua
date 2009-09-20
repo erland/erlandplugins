@@ -60,6 +60,7 @@ function defaultSettings(self)
         defaultSetting["item2" ] = "%a"
         defaultSetting["item3" ] = "%d %b"
         defaultSetting["copyright"] = "http://www.die.net/earth"
+        defaultSetting["nowplaying"] = true
         return defaultSetting
 end
 
