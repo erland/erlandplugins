@@ -5,15 +5,15 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
-                <applet name="DaylightClock" version="1.0" mintarget="7.4" maxTarget="*">
+                <applet name="DaylightClock" version="1.0.1" mintarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
-                        <changes lang="EN">- Initial version
+                        <changes lang="EN">- Changed licensing to LGPL
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.0.zip</url>
-                        <sha>9c042f35b8d0194e4ab5d7f2b3f50f545dca0e4b</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.0.1.zip</url>
+                        <sha>ca44bfd1636afd8d5215862dc5ee34987c04c500</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
