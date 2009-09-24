@@ -59,10 +59,6 @@ function defaultSettings(self)
 	end
         defaultSetting["item2" ] = "%A"
         defaultSetting["item3" ] = "%d %B"
-        defaultSetting["hourimage" ] = "%d %B"
-        defaultSetting["minuteimage" ] = "%d %B"
-        defaultSetting["secondimage" ] = ""
-        defaultSetting["backgroundimage" ] = ""
         defaultSetting["nowplaying"] = true
 	defaultSetting["font"] = "fonts/FreeSans.ttf"
         return defaultSetting

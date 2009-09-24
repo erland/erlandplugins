@@ -24,7 +24,7 @@ local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
 local oo               = require("loop.simple")
 local os               = require("os")
 local math             = require("math")
-local string           = require("string")
+local string           = require("jive.utils.string")
 local table            = require("jive.utils.table")
 
 local datetime         = require("jive.utils.datetime")
@@ -170,45 +170,6 @@ function openSettings(self)
 			end
 		},
 		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ADVANCED"), 
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingAdvanced(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingNowPlaying(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
-
-function defineSettingAdvanced(self, menuItem)
-	local group = RadioGroup()
-
-	local mode = self:getSettings()["mode"]
-
-	local window = Window("text_list", menuItem.text, 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_MODE"), 
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingMode(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-		{
 			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM1"),
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
@@ -232,54 +193,13 @@ function defineSettingAdvanced(self, menuItem)
 				return EVENT_CONSUME
 			end
 		},
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
-
-function defineSettingMode(self, menuItem)
-	local group = RadioGroup()
-
-	local mode = self:getSettings()["mode"]
-
-	local window = Window("text_list", menuItem.text, 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
 		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_MODE_DIGITAL"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["mode"] = "digital"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				mode == "digital"
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_MODE_ANALOG"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["mode"] = "analog"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				mode == "analog"
-			),
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingNowPlaying(menuItem)
+				return EVENT_CONSUME
+			end
 		},
 	}))
 
@@ -799,6 +719,14 @@ function _retrieveImage(self,url,imageType)
 	end
 
 	if imagepath != "" and imagehost != "" then
+ 		if string.find(url, "^http://192%.168") or
+			string.find(url, "^http://172%.16%.") or
+			string.find(url, "^http://10%.") then
+			-- Use direct url
+		else
+                        imagehost = jnt:getSNHostname()
+			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)				
+                end
 		log:info("Getting image for "..imageType.." from "..imagehost.." and "..imagepath)
 		local http = SocketHttp(jnt, imagehost, imageport)
 		local req = RequestHttp(function(chunk, err)
@@ -835,35 +763,35 @@ function _imageUpdate(self)
 	log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
 
 	local background = self:getSettings()["background"]
-	if background != "" then
+	if background and background != "" then
 		self:_retrieveImage(background,"background")
 	else
 		self.images["backgroud"] = nil
 	end
 
 	local clock = self:getSettings()["clockimage"]
-	if clock != "" then
+	if clock and clock != "" then
 		self:_retrieveImage(clock,"clock")
 	else
 		self.images["clock"] = nil
 	end
 	if self:getSettings()["mode"] == "analog" then
 		local hour = self:getSettings()["hourimage"]
-		if hour != "" then
+		if hour and hour != "" then
 			self:_retrieveImage(hour,"hour")
 		else
 			self.images["hour"] = nil
 		end
 
 		local minute = self:getSettings()["minuteimage"]
-		if minute != "" then
+		if minute and minute != "" then
 			self:_retrieveImage(minute,"minute")
 		else
 			self.images["minute"] = nil
 		end
 
 		local second = self:getSettings()["secondimage"]
-		if second != "" then
+		if second and second != "" then
 			self:_retrieveImage(second,"second")
 		else
 			self.images["second"] = nil
