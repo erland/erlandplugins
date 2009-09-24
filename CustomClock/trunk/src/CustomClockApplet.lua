@@ -120,12 +120,16 @@ function openScreensaver(self)
 				self:_reDrawAnalog(screen)
 			end)
 	
+		local canvasItems = {
+			canvas = self.canvas
+		}
+		local canvasGroup = Group("canvas",canvasItems)
 		self.window:addWidget(self.item1Label)
 		self.window:addWidget(self.item2Label)
 		self.window:addWidget(self.item3Label)
 		self.window:addWidget(self.item4Label)
 		self.window:addWidget(self.backgroundImage)
-		self.window:addWidget(self.canvas)
+		self.window:addWidget(canvasGroup)
 
 		-- register window as a screensaver, unless we are explicitly not in that mode
 		local manager = appletManager:getAppletInstance("ScreenSavers")
@@ -166,6 +170,37 @@ function openSettings(self)
 			end
 		},
 		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ADVANCED"), 
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingAdvanced(menuItem)
+				return EVENT_CONSUME
+			end
+		},
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingNowPlaying(menuItem)
+				return EVENT_CONSUME
+			end
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
+function defineSettingAdvanced(self, menuItem)
+	local group = RadioGroup()
+
+	local mode = self:getSettings()["mode"]
+
+	local window = Window("text_list", menuItem.text, 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
 			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_MODE"), 
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
@@ -194,14 +229,6 @@ function openSettings(self)
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
 				self:defineSettingItem(menuItem,"item3")
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingNowPlaying(menuItem)
 				return EVENT_CONSUME
 			end
 		},
@@ -260,6 +287,7 @@ function defineSettingMode(self, menuItem)
 	return window
 end
 
+
 function defineSettingStyle(self, menuItem)
 	local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
 	local req = RequestHttp(function(chunk, err)
@@ -317,50 +345,15 @@ function defineSettingStyleSink(self,menuItem,data)
 						group,
 						function()
 							self:getSettings()["style"] = entry.name
-							if entry.background and entry.background != "" then
-								self:getSettings()["background"] = entry.background
-							else
-								self:getSettings()["background"] = ""
+							for attribute,value in pairs(self:getSettings()) do
+								if attribute != "style" and attribute != "nowplaying" and attribute != "font" then
+									self:getSettings()[attribute] = ""
+								elseif attribute == "font" then
+									self:getSettings()[attribute] = "fonts/FreeSans.ttf"
+								end
 							end
-							if entry.clockimage and entry.clockimage != "" then
-								self:getSettings()["clockimage"] = entry.clockimage
-							else
-								self:getSettings()["clockimage"] = ""
-							end
-							if entry.hourimage and entry.hourimage != "" then
-								self:getSettings()["hourimage"] = entry.hourimage
-							else
-								self:getSettings()["hourimage"] = ""
-							end
-							if entry.minuteimage and entry.minuteimage != "" then
-								self:getSettings()["minuteimage"] = entry.minuteimage
-							else
-								self:getSettings()["minuteimage"] = ""
-							end
-							if entry.secondimage and entry.secondimage != "" then
-								self:getSettings()["secondimage"] = entry.secondimage
-							else
-								self:getSettings()["secondimage"] = ""
-							end
-							if entry.mode and entry.mode == "analog" then
-								self:getSettings()["mode"] = "analog"
-							else
-								self:getSettings()["mode"] = "digital"
-							end
-							if entry.item1 and entry.item1 != "" then
-								self:getSettings()["item1"] = entry.item1
-							else
-								self:getSettings()["item1"] = ""
-							end
-							if entry.item2 and entry.item2 != "" then
-								self:getSettings()["item2"] = entry.item2
-							else
-								self:getSettings()["item2"] = ""
-							end
-							if entry.item3 and entry.item3 != "" then
-								self:getSettings()["item3"] = entry.item3
-							else
-								self:getSettings()["item3"] = ""
+							for attribute,value in pairs(entry) do
+								self:getSettings()[attribute] = value
 							end
 							if self.window then
 								self.window:hide()
@@ -848,14 +841,13 @@ function _imageUpdate(self)
 		self.images["backgroud"] = nil
 	end
 
+	local clock = self:getSettings()["clockimage"]
+	if clock != "" then
+		self:_retrieveImage(clock,"clock")
+	else
+		self.images["clock"] = nil
+	end
 	if self:getSettings()["mode"] == "analog" then
-		local hour = self:getSettings()["clockimage"]
-		if hour != "" then
-			self:_retrieveImage(hour,"clock")
-		else
-			self.images["clock"] = nil
-		end
-
 		local hour = self:getSettings()["hourimage"]
 		if hour != "" then
 			self:_retrieveImage(hour,"hour")
@@ -883,60 +875,89 @@ function _imageUpdate(self)
 		self.images["second"] = nil
 	end
 end
+
+function _getColor(self,color)
+	if color == "white" then
+		return {0xff, 0xff, 0xff}
+	elseif color =="lightgray" then
+		return {0xcc, 0xcc, 0xcc}
+	elseif color =="gray" then
+		return {0x88, 0x88, 0x88}
+	elseif color =="darkgray" then
+		return {0x44, 0x44, 0x44}
+	elseif color =="black" then
+		return {0x00, 0x00, 0x00}
+	else
+		return {0xcc, 0xcc, 0xcc}
+	end
+end
+
 function _getClockSkin(self,skin)
 	local s = {}
 	local width,height = Framework.getScreenSize()
 	local primaryItemHeight
 	local primaryItemFont
-	local secondaryItemHeight
-	local secondaryItemFont
+	local secondary2ItemHeight
+	local secondary2ItemFont
 	local secondary2Position
+	local secondary3ItemHeight
+	local secondary3ItemFont
 	local secondary3Position
 	local secondary2Align = 'left'
 	local secondary3Align = 'right'
 	local nowPlayingPosition
 	local nowPlayingFont
 	local nowPlayingHeight
-	local margins = 5
+	local item2Margin = 5
+	local item3Margin = 5
+	local nowPlayingMargin = 5
 	if self:getSettings()["mode"] == "digital" then
 		if self.model == "touch" then
-			secondaryItemHeight = 40
-			secondaryItemFont = 30
+			secondary2ItemHeight = 40
+			secondary3ItemHeight = 40
+			secondary2ItemFont = 30
+			secondary3ItemFont = 30
 			primaryItemHeight = 180
 			primaryItemFont = 170
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight
-			secondary2Position = height-secondaryItemHeight-5
-			secondary3Position = height-secondaryItemHeight-5
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight
+			secondary2Position = height-secondary2ItemHeight-5
+			secondary3Position = height-secondary2ItemHeight-5
 			if (self:getSettings()["item2"] != "" and self:getSettings()["item3"] == "") or (self:getSettings()["item3"] != "" and self:getSettings()["item2"] == "") then
 				secondary2Align = 'center'
 				secondary3Align = 'center'
 			end
-			margins = 10
+			item2Margin = 10
+			item3Margin = 10
+			nowPlayingMargin = 10
 			nowPlayingHeight = 30
-			nowPlayingPosition = height-primaryItemHeight-secondaryItemHeight-nowPlayingHeight
-			nowPlayingFont = secondaryItemFont
+			nowPlayingPosition = height-primaryItemHeight-secondary2ItemHeight-nowPlayingHeight
+			nowPlayingFont = secondary2ItemFont
 		elseif self.model == "radio" then
-			secondaryItemHeight = 50
-			secondaryItemFont = 35
+			secondary2ItemHeight = 50
+			secondary2ItemFont = 35
+			secondary3ItemHeight = 50
+			secondary3ItemFont = 35
 			primaryItemHeight = 110
 			primaryItemFont = 110
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight-20
-			secondary2Position = height-primaryItemHeight-secondaryItemHeight-secondaryItemHeight-20
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight-20
+			secondary2Position = height-primaryItemHeight-secondary2ItemHeight-secondary3ItemHeight-20
 			secondary2Align = 'center'
-			secondary3Position = height-secondaryItemHeight-20
+			secondary3Position = height-secondary3ItemHeight-20
 			secondary3Align = 'center'
 			nowPlayingPosition = secondary2Position+20
 			nowPlayingHeight = 25
 			nowPlayingFont = 23
 		else
-			secondaryItemHeight = 50
-			secondaryItemFont = 35
+			secondary2ItemHeight = 50
+			secondary2ItemFont = 35
+			secondary3ItemHeight = 50
+			secondary3ItemFont = 35
 			primaryItemHeight = 80
 			primaryItemFont = 80
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight
-			secondary2Position = height-primaryItemHeight-secondaryItemHeight-secondaryItemHeight
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight
+			secondary2Position = height-primaryItemHeight-secondary2ItemHeight-secondary3ItemHeight
 			secondary2Align = 'center'
-			secondary3Position = height-secondaryItemHeight
+			secondary3Position = height-secondary2ItemHeight
 			secondary3Align = 'center'
 			nowPlayingHeight = 30
 			nowPlayingPosition = secondary2Position-nowPlayingHeight
@@ -944,48 +965,129 @@ function _getClockSkin(self,skin)
 		end
 	else
 		if self.model == "touch" then
-			secondaryItemHeight = 30
-			secondaryItemFont = 25
+			secondary2ItemHeight = 30
+			secondary2ItemFont = 25
+			secondary3ItemHeight = 30
+			secondary3ItemFont = 25
 			primaryItemHeight = 180
 			primaryItemFont = 170
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight
-			secondary2Position = height-secondaryItemHeight-5
-			secondary3Position = height-secondaryItemHeight-5
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight
+			secondary2Position = height-secondary2ItemHeight-5
+			secondary3Position = height-secondary3ItemHeight-5
 			if (self:getSettings()["item2"] != "" and self:getSettings()["item3"] == "") or (self:getSettings()["item3"] != "" and self:getSettings()["item2"] == "") then
 				secondary2Align = 'center'
 				secondary3Align = 'center'
 			end
-			margins = 10
+			item2Margin = 10
+			item3Margin = 10
+			nowPlayingMargin = 10
 			nowPlayingHeight = 30
 			nowPlayingPosition = 5
-			nowPlayingFont = secondaryItemFont
+			nowPlayingFont = secondary2ItemFont
 		elseif self.model == "radio" then
-			secondaryItemHeight = 35
-			secondaryItemFont = 23
+			secondary2ItemHeight = 35
+			secondary2ItemFont = 23
+			secondary3ItemHeight = 35
+			secondary3ItemFont = 23
 			primaryItemHeight = 110
 			primaryItemFont = 110
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight-20
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight-20
 			secondary2Position = 0
 			secondary2Align = 'center'
-			secondary3Position = height-secondaryItemHeight
+			secondary3Position = height-secondary3ItemHeight
 			secondary3Align = 'center'
 			nowPlayingPosition = 0
 			nowPlayingHeight = 35
 			nowPlayingFont = 23
 		else
-			secondaryItemHeight = 50
-			secondaryItemFont = 25
+			secondary2ItemHeight = 50
+			secondary2ItemFont = 25
+			secondary3ItemHeight = 50
+			secondary3ItemFont = 25
 			primaryItemHeight = 80
 			primaryItemFont = 80
-			primaryItemPosition = height-primaryItemHeight-secondaryItemHeight
+			primaryItemPosition = height-primaryItemHeight-secondary2ItemHeight
 			secondary2Position = 5
 			secondary2Align = 'center'
-			secondary3Position = height-secondaryItemHeight
+			secondary3Position = height-secondary3ItemHeight
 			secondary3Align = 'center'
 			nowPlayingHeight = 30
 			nowPlayingPosition = 10
 			nowPlayingFont = 20
 		end
+	end
+
+	local text1Color = { 0xcc, 0xcc, 0xcc }
+	local text2Color = { 0xcc, 0xcc, 0xcc }
+	local text3Color = { 0xcc, 0xcc, 0xcc }
+	local nowPlayingColor = { 0xcc, 0xcc, 0xcc }
+
+	if self:getSettings()["item1color"] and self:getSettings()["item1color"] != "" then
+		text1Color = self:_getColor(self:getSettings()["item1color"])
+	end
+	if self:getSettings()["item2color"] and self:getSettings()["item2color"] != "" then
+		text2Color = self:_getColor(self:getSettings()["item2color"])
+	end
+	if self:getSettings()["item3color"] and self:getSettings()["item3color"] != "" then
+		text3Color = self:_getColor(self:getSettings()["item3color"])
+	end
+	if self:getSettings()["nowplayingcolor"] and self:getSettings()["nowplayingcolor"] != "" then
+		nowPlayingColor = self:_getColor(self:getSettings()["nowplayingcolor"])
+	end
+
+	if self:getSettings()["item1position"] and self:getSettings()["item1position"] != "" then
+		primaryItemPosition = tonumber(self:getSettings()["item1position"])
+	end
+	if self:getSettings()["item2position"] and self:getSettings()["item2position"] != "" then
+		secondary2Position = tonumber(self:getSettings()["item2position"])
+	end
+	if self:getSettings()["item3position"] and self:getSettings()["item3position"] != "" then
+		secondary3Position = tonumber(self:getSettings()["item3position"])
+	end
+	if self:getSettings()["nowplayingposition"] and self:getSettings()["nowplayingposition"] != "" then
+		nowPlayingPosition = tonumber(self:getSettings()["nowplayingposition"])
+	end
+	if self:getSettings()["item1height"] and self:getSettings()["item1height"] != "" then
+		primaryItemHeight = tonumber(self:getSettings()["item1height"])
+	end
+	if self:getSettings()["item2height"] and self:getSettings()["item2height"] != "" then
+		secondary2Height = tonumber(self:getSettings()["item2height"])
+	end
+	if self:getSettings()["item3height"] and self:getSettings()["item3height"] != "" then
+		secondary3Height = tonumber(self:getSettings()["item3height"])
+	end
+	if self:getSettings()["nowplayingheight"] and self:getSettings()["nowplayingheight"] != "" then
+		nowPlayingHeight = tonumber(self:getSettings()["nowplayingheight"])
+	end
+
+	if self:getSettings()["item1size"] and self:getSettings()["item1size"] != "" then
+		primaryItemFont = tonumber(self:getSettings()["item1size"])
+	end
+	if self:getSettings()["item2size"] and self:getSettings()["item2size"] != "" then
+		secondary2ItemFont = tonumber(self:getSettings()["item2size"])
+	end
+	if self:getSettings()["item3size"] and self:getSettings()["item3size"] != "" then
+		secondary3ItemFont = tonumber(self:getSettings()["item3size"])
+	end
+	if self:getSettings()["nowplayingsize"] and self:getSettings()["nowplayingsize"] != "" then
+		nowPlayingFont = tonumber(self:getSettings()["nowplayingsize"])
+	end
+
+	if self:getSettings()["item2align"] and self:getSettings()["item2align"] != "" then
+		secondary2Align = self:getSettings()["item2align"]
+	end
+	if self:getSettings()["item3align"] and self:getSettings()["item3align"] != "" then
+		secondary3Align = self:getSettings()["item3align"]
+	end
+
+	if self:getSettings()["item2margin"] and self:getSettings()["item2margin"] != "" then
+		item2Margin = self:getSettings()["item2margin"]
+	end
+	if self:getSettings()["item3margin"] and self:getSettings()["item3margin"] != "" then
+		item3Margin = self:getSettings()["item3margin"]
+	end
+	if self:getSettings()["nowplayingmargin"] and self:getSettings()["nowplayingmargin"] != "" then
+		nowPlayingMargin = self:getSettings()["nowplayingmargin"]
 	end
 
 	local item1Style = nil
@@ -1000,9 +1102,9 @@ function _getClockSkin(self,skin)
 					align = 'center',
 					w = WH_FILL,
 					h = primaryItemHeight,
-					fg = { 0xcc, 0xcc, 0xcc },
+					fg = text1Color,
 				},
-				zOrder = 2,
+				zOrder = 3,
 		}
 	end
 		
@@ -1013,12 +1115,12 @@ function _getClockSkin(self,skin)
 				y = secondary2Position,
 				x = 0,
 				item2 = {
-					border = {margins,0,margins,0},
-					font = self:_loadFont(secondaryItemFont),
+					border = {item2Margin,0,item2Margin,0},
+					font = self:_loadFont(secondary2ItemFont),
 					align = secondary2Align,
 					w = WH_FILL,
-					h = secondaryItemHeight,
-					fg = { 0xcc, 0xcc, 0xcc },
+					h = secondary2ItemHeight,
+					fg = text2Color,
 				},
 				zOrder = 3,
 		}
@@ -1031,12 +1133,12 @@ function _getClockSkin(self,skin)
 				y = secondary3Position,
 				x = 0,
 				item3 = {
-					border = {margins,0,margins,0},
-					font = self:_loadFont(secondaryItemFont),
+					border = {item3Margin,0,item3Margin,0},
+					font = self:_loadFont(secondary3ItemFont),
 					align = secondary3Align,
 					w = WH_FILL,
-					h = secondaryItemHeight,
-					fg = { 0xcc, 0xcc, 0xcc },
+					h = secondary3ItemHeight,
+					fg = text3Color,
 				},
 				zOrder = 3,
 		}
@@ -1049,14 +1151,14 @@ function _getClockSkin(self,skin)
 				y = nowPlayingPosition,
 				x = 0,
 				item4 = {
-					border = {margins,0,margins,0},
+					border = {nowPlayingMargin,0,nowPlayingMargin,0},
 					font = self:_loadFont(nowPlayingFont),
 					align = 'center',
 					w = WH_FILL,
 					h = nowPlayingHeight,
-					fg = { 0xcc, 0xcc, 0xcc },
+					fg = nowPlayingColor,
 				},
-				zOrder = 4,
+				zOrder = 3,
 		}
 	end
 
@@ -1065,6 +1167,9 @@ function _getClockSkin(self,skin)
 		item2 = item2Style,
 		item3 = item3Style,
 		item4 = item4Style,
+		canvas = {
+			zOrder = 2,
+		},
 		background = {
 			bgImg = Tile:fillColor(0x000000ff),
 			position = LAYOUT_NORTH,
@@ -1075,6 +1180,9 @@ function _getClockSkin(self,skin)
 			zOrder = 1,
 		},			
 	}
+	if self:getSettings()["wallpaper"] == "black" then
+		s.window.bgImg= Tile:fillColor(0x000000ff)
+	end
 	return s
 end
 
