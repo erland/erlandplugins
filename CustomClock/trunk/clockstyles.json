@@ -66,7 +66,9 @@
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
 				"item1": "%H:%M",
 				"item2": "%A",
+				"item2color": "black",
 				"item3": "%d %B",
+				"item3color": "black",
                         },
                         {
 				"wallpaper": "black",
