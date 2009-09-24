@@ -1,0 +1,52 @@
+{
+	"data": {
+		"item_loop": [
+			{
+				"name": "Analog Clock (7.3)",
+				"models": ["controller"],
+				"mode": "analog",
+				"background": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_analog_bkgrd.png",
+				"clockimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/ClockFace.png",
+				"hourimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/HourHand.png",
+				"minuteimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/MinuteHand.png",
+				"item2": "%A",
+				"item3": "%d %B",
+			},
+                        {
+                                "name": "Analog Clock",
+                                "models": ["controller"],
+                                "mode": "analog",
+                                "clockimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/jive_wallpaper_clock_analog.png",
+                                "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
+                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_min_hand.png",
+				"item2": "%A",
+				"item3": "%d %B",
+                        },
+                        {
+                                "name": "Analog Clock",
+                                "models": ["touch"],
+                                "mode": "analog",
+                                "clockimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/wallpaper_clock_analog.png",
+                                "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
+                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/clock_analog_min_hand.png",
+                        },
+                        {
+                                "name": "Analog Clock",
+                                "models": ["radio"],
+                                "mode": "analog",
+                                "clockimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/bb_wallpaper_clock_analog.png",
+                                "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
+                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_min_hand.png",
+                        },
+                        {
+                                "name": "Digital Clock",
+                                "models": ["controller","touch","radio"],
+                                "mode": "digital",
+				"item1": "%H:%M",
+				"item2": "%A",
+				"item3": "%d %B",
+                        }
+		]
+	}
+}
+
