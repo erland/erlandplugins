@@ -72,7 +72,7 @@
                         },
                         {
 				"wallpaper": "black",
-                                "name": "Moon Clock",
+                                "name": "Moon Clock (http://www.die.net/moon)",
                                 "models": ["controller","touch","radio"],
                                 "mode": "digital",
 				"background": "http://static.die.net/moon/480.jpg",
