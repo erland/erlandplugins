@@ -60,7 +60,7 @@
                         },
                         {
 				"wallpaper": "black",
-                                "name": "Daylight Clock",
+                                "name": "Daylight Clock (http://www.die.net/earth)",
                                 "models": ["touch","radio"],
                                 "mode": "digital",
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
