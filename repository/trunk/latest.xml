@@ -16,6 +16,17 @@
                         <sha>ca44bfd1636afd8d5215862dc5ee34987c04c500</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+		<applet name="CustomClock" version="1.0" mintarget="7.4" maxTarget="*">
+                        <title lang="EN">Custom Clock</title>
+                        <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
+                        <changes lang="EN">- Changed licensing to LGPL
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-1.0.zip</url>
+                        <sha>c630d3bbdf49e3d1f3cbe38657c7842c81fac645</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
         </applets>
 	<plugins>
 		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="7.3.*">
