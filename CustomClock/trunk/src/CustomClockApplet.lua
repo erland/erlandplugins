@@ -356,6 +356,40 @@ function defineSettingItem(self, menuItem, itemId)
 			),
 		},           
 		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAYDAYMONTH"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[itemId] = "%a %d %b"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				item == "%a %d %b"
+			),
+		},           
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAYDAYMONTHLONG"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[itemId] = "%A %d %B"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				item == "%A %d %B"
+			),
+		},           
+		{
 			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAY"),
 			style = 'item_choice',
 			check = RadioButton(
@@ -489,6 +523,40 @@ function defineSettingItem(self, menuItem, itemId)
 					self:storeSettings()
 				end,
 				item == "%H:%M"
+			),
+		},           
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_12HOURCLOCKNOZERO"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[itemId] = "%l:%M"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				item == "%l:%M"
+			),
+		},           
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_24HOURCLOCKNOZERO"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[itemId] = "%k:%M"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				item == "%k:%M"
 			),
 		},           
 	}))
