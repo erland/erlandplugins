@@ -415,6 +415,18 @@ function _getArtwork(self,item,icon)
 		else
 			self:_getIcon(item,icon,usableHeight)
 		end
+	elseif item.preprocessingData and item.preprocessingData == "original" then
+		local width,height = Framework.getScreenSize()
+		local usableHeight = height
+		local skinName = jiveMain:getSelectedSkin()
+		if skinName == "QVGAlandscapeSkin" or skinName == "QVGAportraitSkin" then
+			usableHeight = usableHeight-24
+		end
+		if width<usableHeight then 
+			self:_getIcon(item,icon,width.."x"..usableHeight)
+		else
+			self:_getIcon(item,icon,width.."x"..usableHeight)
+		end
 	elseif item.preprocessingData and item.preprocessingData == "twoimages" then
 		local width,height = Framework.getScreenSize()
 		local usableHeight = height
@@ -578,14 +590,14 @@ function _getIcon(self, item, icon, size)
 			local remoteContent = string.find(item['icon'], 'http://')
 			-- sometimes this is static content
 			if remoteContent then
-				log:debug("Fetch remote image from url");
+				log:debug("Fetch remote image from url: "..item["icon"]);
 				server:fetchArtworkURL(item["icon"], icon, ARTWORK_SIZE)
 			else
-				log:debug("Fetch remote image from server");
+				log:debug("Fetch remote image from server: "..item["icon"]);
 				server:fetchArtworkThumb(item["icon"], icon, ARTWORK_SIZE)
 			end
 		else 
-				log:debug("Fetch image from server");
+				log:debug("Fetch image from server: "..item["icon"]);
 				server:fetchArtwork(item["icon"], icon, ARTWORK_SIZE)
 		end
 	elseif icon then
@@ -844,6 +856,18 @@ function _getStandardStyles(self, skinName)
 		heightPadding = ((usableImageHeight-width)/2)
 	end
 
+	s.InformationScreenOriginalImage = {
+		image = {
+			border = {0,0,0,0},
+		}
+	}
+	s.InformationScreenOriginalImageBlack = {
+		bgImg = Tile:fillColor(0x000000ff),
+		image = {
+			border = {0,0,0,0},
+		}
+	}
+
 	s.InformationScreenImage = {
 		image = {
 			border = {widthPadding,heightPadding,widthPadding,heightPadding},
@@ -1098,8 +1122,21 @@ end
 
 =head1 LICENSE
 
-This source code is public domain. It is intended for you to use as a starting
-point to create your own applet.
+Copyright (C) 2009 Erland Isaksson (erland_i@hotmail.com)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+   
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+    
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 =cut
 --]]
