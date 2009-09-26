@@ -115,6 +115,7 @@ function openScreensaver(self)
 			background = Icon("background")
 		}
 		self.backgroundImage = Group("background",backgroundItems)
+		self.wallpaperImage = Icon("wallpaper")
 
 		self.canvas = Canvas('debug_canvas',function(screen)
 				self:_reDrawAnalog(screen)
@@ -166,6 +167,14 @@ function openSettings(self)
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
 				self:defineSettingStyle(menuItem)
+				return EVENT_CONSUME
+			end
+		},
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingBackground(menuItem)
 				return EVENT_CONSUME
 			end
 		},
@@ -270,6 +279,8 @@ function defineSettingStyleSink(self,menuItem,data)
 									self:getSettings()[attribute] = ""
 								elseif attribute == "font" then
 									self:getSettings()[attribute] = "fonts/FreeSans.ttf"
+								elseif attribute == "backgroundtype" then
+									self:getSettings()[attribute] = ""
 								end
 							end
 							for attribute,value in pairs(entry) do
@@ -614,6 +625,92 @@ function defineSettingNowPlaying(self, menuItem)
 	return window
 end
 
+function defineSettingBackground(self, menuItem)
+	local group = RadioGroup()
+
+	local backgroundtype = self:getSettings()["backgroundtype"]
+
+	local window = Window("text_list", menuItem.text, 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_NONE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["backgroundtype"] = ""
+					if self.backgroundImage then
+						self.backgroundImage:setWidgetValue("background",nil)
+					end
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				backgroundtype == ""
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_COVER"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["backgroundtype"] = "cover"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				backgroundtype == "cover"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_COVER_BLACK"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["backgroundtype"] = "coverblack"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				backgroundtype == "coverblack"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_SOLID_BLACK"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()["backgroundtype"] = "solidblack"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				backgroundtype == "solidblack"
+			),
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
 function _loadFont(self,fontSize)
         return Font:load(self:getSettings()["font"], fontSize)
 end
@@ -669,6 +766,36 @@ function _updateNowPlaying(self,itemType)
 	end
 end
 
+function _updateAlbumCover(self)
+	local player = appletManager:callService("getCurrentPlayer")
+	local playerStatus = player:getPlayerStatus()
+	if playerStatus.mode == 'play' then
+		if playerStatus.item_loop then
+			local iconId = playerStatus.item_loop[1]["icon-id"]
+			if iconId then
+				local server = player:getSlimServer()
+				if self:getSettings()["coversize"] and self:getSettings()["coversize"] != "" then
+					server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),tonumber(self:getSettings()["coversize"]))
+				else
+					if self.model == "controller" then
+						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),240)
+					elseif self.model == "radio" then
+						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),240)
+					elseif self.model == "touch" then
+						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),272)
+					end
+				end
+			else 
+				self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+			end
+		else
+			self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+		end
+	else
+		self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+	end
+end
+
 -- Update the time and if needed also the wallpaper
 function _tick(self,forcedBackgroundUpdate)
 	log:debug("Updating time")
@@ -703,6 +830,10 @@ function _tick(self,forcedBackgroundUpdate)
 		self:_updateNowPlaying(self.nowPlaying)
 	else
 		self.item4Label:setWidgetValue("item4","")	
+	end
+
+	if self:getSettings()["backgroundtype"] == "cover" or self:getSettings()["backgroundtype"] == "coverblack" then
+		self:_updateAlbumCover()
 	end
 
 	local minute = os.date("%M")
@@ -812,7 +943,10 @@ function _retrieveImage(self,url,imageType)
 							zoom = height/h
 						end
 						image = image:rotozoom(0,zoom,1)
-						self.backgroundImage:setWidgetValue("background",image)
+						if self:getSettings()["backgroundtype"] != "cover" and self:getSettings()["backgroundtype"] != "coverblack" and self:getSettings()["backgroundtype"] != "" then
+							self.backgroundImage:setWidgetValue("background",image)
+						end
+						self.wallpaperImage:setValue(image)
 					end
 					log:debug("Storing downloaded image for "..imageType)
 					self.images[imageType] = image
@@ -1167,7 +1301,6 @@ function _getClockSkin(self,skin)
 			zOrder = 2,
 		},
 		background = {
-			bgImg = Tile:fillColor(0x000000ff),
 			position = LAYOUT_NORTH,
 			background = {
 				w = WH_FILL,
@@ -1176,8 +1309,21 @@ function _getClockSkin(self,skin)
 			zOrder = 1,
 		},			
 	}
-	if self:getSettings()["wallpaper"] == "black" then
+	if self:getSettings()["backgroundtype"] == "solidblack" or self:getSettings()["backgroundtype"] == "coverblack" then
 		s.window.bgImg= Tile:fillColor(0x000000ff)
+		s.window.background.bgImg= Tile:fillColor(0x000000ff)
+	elseif self:getSettings()["backgroundtype"] == "solidwhite" then
+		s.window.bgImg= Tile:fillColor(0xffffffff)
+		s.window.background.bgImg= Tile:fillColor(0x000000ff)
+	elseif self:getSettings()["backgroundtype"] == "solidlightgray" then
+		s.window.bgImg= Tile:fillColor(0xccccccff)
+		s.window.background.bgImg= Tile:fillColor(0x000000ff)
+	elseif self:getSettings()["backgroundtype"] == "soliddarkgray" then
+		s.window.bgImg= Tile:fillColor(0x444444ff)
+		s.window.background.bgImg= Tile:fillColor(0x000000ff)
+	elseif self:getSettings()["backgroundtype"] == "solidgray" then
+		s.window.bgImg= Tile:fillColor(0x888888ff)
+		s.window.background.bgImg= Tile:fillColor(0x000000ff)
 	end
 	return s
 end
