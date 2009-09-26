@@ -33,14 +33,17 @@
 				</item>
 			</item>
 			<item>
-				<id>nptrack</id>
-				<flatten>1</flatten>
+				<id>nptitle</id>
 				<item>
 					<id>nptrack</id>
 					<type>label</type>
 					<preprocessing>keyword</preprocessing>
 					<preprocessingData>[% currenttrackrow1 %]</preprocessingData>
 				</item>
+			</item>
+			<item>
+				<id>nptrack</id>
+				<flatten>1</flatten>
 				<item>
 					<id>npalbum</id>
 					<type>label</type>
