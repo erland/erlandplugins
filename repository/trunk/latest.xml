@@ -5,6 +5,17 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
+                <applet name="InformationScreen" version="1.0" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Information Screen</title>
+                        <desc lang="EN">Configurable screen saver that makes it possible to switch between different kind of information. Please note that you will also have to install the Information Screen plugin into your Squeezebox Server before this applet works</desc>
+                        <changes lang="EN">- Added support for non resized images (not used yet)
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-1.0.zip</url>
+                        <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
                 <applet name="DaylightClock" version="1.0.1" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
@@ -32,6 +43,17 @@
                 </applet>
         </applets>
 	<plugins>
+                <plugin name="InformationScreen" version="1.0" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Information Screen</title>                        
+                        <desc lang="EN">Configurable support plugin for Information Screen screen saver that makes it possible to switch between different kind of information. (Controller, Radio, Touch, SqueezePlay)</desc>
+                        <changes lang="EN">- Corrected so title shows in Now Playing view
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-0.4.2735.zip</url>
+                        <sha>e12a37dc5224d963a578d9901b2e428f411bd382</sha>
+                        <link>http://erland.isaksson.info</link>
+                </plugin>
 		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="7.3.*">
                         <title lang="EN">Auto Repositories</title>
                         <desc lang="EN">Automatically makes all third party plugin repositories that are listed on the Logitech wiki site available through Extension Downloader. The plugin doesn't actually read the wiki page directly since that would open up a security hole, instead it reads the repositories from a list available on the erlandplugins Google Code project. New repostories added to the wiki page will be added after they have been checked so they provide serious plugins and not spam urls. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
