@@ -4,32 +4,7 @@
 	<details>
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
-        <applets>
-                <applet name="InformationScreen" version="0.4.2735" mintarget="7.4" maxTarget="*">
-                        <title lang="EN">Information Screen *Beta*</title>
-                        <desc lang="EN">*** BETA VERSION ***. Configurable screen saver that makes it possible to switch between different kind of information. Please note that you will also have to install the Information Screen plugin into your Squeezebox Server before this applet works</desc>
-                        <changes lang="EN">- Initial public release
-                        </changes>
-                        <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
-			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-0.4.2735.zip</url>
-                        <sha>703f9ed727f798b31b9bbe4f9346e85595f89ae2</sha>
-                        <link>http://erland.isaksson.info</link>
-                </applet>
-        </applets>
 	<plugins>
-                <plugin name="InformationScreen" version="0.4.2735" minTarget="7.4.0" maxTarget="*">
-                        <title lang="EN">Information Screen *Beta*</title>                        
-			<desc lang="EN">*** BETA VERSION ***. Configurable support plugin for Information Screen screen saver that makes it possible to switch between different kin
-d of information. (Controller, Radio, Touch, SqueezePlay)</desc>
-                        <changes lang="EN">- Initial public release
-                        </changes>
-                        <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-0.4.2735.zip</url>
-                        <sha>2a344839a4c587799908c268ded2544c54df2a87</sha>
-                        <link>http://erland.isaksson.info</link>
-                </plugin>
                 <plugin name="MythTV" version="0.1.2604" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">MythTV *Beta*</title>                        
 			<desc lang="EN">*** BETA VERSION ***. Plugin to that shows currently recording or pending recordings from a MythTV media center. Works best together with Information Screen plugin. This plugin has only been tested with MythTV 0.21. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
