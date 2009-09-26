@@ -5,7 +5,7 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
-                <applet name="DaylightClock" version="1.0.1" mintarget="7.4" maxTarget="*">
+                <applet name="DaylightClock" version="1.0.1" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
                         <changes lang="EN">- Changed licensing to LGPL
@@ -16,7 +16,7 @@
                         <sha>ca44bfd1636afd8d5215862dc5ee34987c04c500</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="1.1" mintarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="1.1" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
                         <changes lang="EN">- Added support for showing album covers in background
