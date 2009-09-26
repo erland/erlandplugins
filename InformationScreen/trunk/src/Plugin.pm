@@ -22,7 +22,6 @@ use strict;
 
 use base qw(Slim::Plugin::Base);
 
-use Slim::Utils::ImageResizer;
 use Slim::Utils::Prefs;
 use Slim::Buttons::Home;
 use Slim::Utils::Misc;
@@ -31,9 +30,6 @@ use Slim::Utils::DateTime;
 use POSIX qw(strftime);
 use Storable;
 use Time::localtime;
-use File::Spec::Functions qw(:ALL);
-use File::Slurp;
-use HTTP::Date qw(time2str);
 
 use Plugins::InformationScreen::ConfigManager::Main;
 use Plugins::InformationScreen::Settings;
@@ -89,9 +85,6 @@ sub initPlugin {
 	Plugins::InformationScreen::Settings->new($class);
 	Plugins::InformationScreen::PlayerSettings->new($class);
 	$manageScreenHandler = Plugins::InformationScreen::ManageScreens->new($class);
-	my $cachedir = $serverPrefs->get('cachedir');
-	my $imagedir  = catdir( $cachedir, 'DynamicImages' );
-	mkdir $imagedir;
 	Slim::Control::Request::addDispatch(['informationscreen','items'], [1, 1, 1, \&jiveItemsHandler]);
 	Slim::Control::Request::addDispatch(['informationscreen','statemessage'], [0, 0, 1, \&stateMessageHandler]);
 	
@@ -895,119 +888,6 @@ sub preprocessingPlayMode {
 	return \@empty;
 }
 
-sub preprocessingDynamicImage {
-	my $client = shift;
-	my $item = shift;
-	my $params = shift;
-
-	if(defined($params->{'url'})) {
-		my $cache = Slim::Utils::Cache->new("FileCache/DynamicImages");
-		my $key = $params->{'url'};
-		$key =~ s/[\/\\:\?\$]/_/g;
-		my $cacheTime = $cache->{'timestamp-'.$key} || 0;
-		
-		my $cachedir = $serverPrefs->get('cachedir');
-		my $imagedir  = catdir( $cachedir, 'DynamicImages' );
-
-		my $imagepath = catfile( $imagedir, $key );
-
-		my $updateImage = 0;
-		if(defined($params->{'updateinterval'})) {
-			if(time()-$params->{'updateinterval'} > $cacheTime) {
-				$updateImage = 1;
-			}
-		}elsif(!$cacheTime) {
-			$updateImage = 1;
-		}
-		if($updateImage) {
-			$log->debug("Getting image: ".$params->{'url'}." and saving it as $imagepath");
-			my $http = LWP::UserAgent->new;
-			my $response = $http->get($params->{'url'},':content_type' => $imagepath);
-			if($response->is_error) {
-				$log->warn("Unable to get image: ".$params->{'url'});
-			}else {
-				$log->debug("Successfully downloaded image with id $key");
-				my $cache = Slim::Utils::Cache->new("FileCache/DynamicImages");
-				$cache->{'timestamp-'.$key} = time();
-			}
-			
-		}
-		$item->{'icon'} = "/plugins/InformationScreen/getdynamicimage.png?id=".$key."&mode=.jpg";
-		$item->{'preprocessing'} = "artwork";
-		$item->{'preprocessingData'} = "original";
-	}
-	return 1;
-}
-
-sub handleWebGetDynamicImage {
-        my ($client, $params) = @_;
-
-	my $cache = Slim::Utils::Cache->new("FileCache/DynamicImages");
-	my $key = $params->{'id'};
-	my $cacheTime = $cache->{'timestamp-'.$key} || 0;
-	$log->debug("Getting $key image");
-        my $cachedir = $serverPrefs->get('cachedir');
-        my $imagedir  = catdir( $cachedir, 'DynamicImages' );
-	if(-e catfile($imagedir,$key)) {
-                $log->debug("Getting image ".$params->{'path'}." with mode ".$params->{'mode'});
-                if($params->{'mode'} =~ /_(\d+)x(\d+)_?.*/) {
-                        my $requestedWidth = $1;
-                        my $requestedHeight = $2;
-                        my $content = read_file(createResizedImage("DynamicImages",$key,$requestedWidth,$requestedHeight));
-			$log->debug("Returning resized image: ".catfile($imagedir,$key."_".$requestedWidth."_".$requestedHeight));
-                        return \$content;
-                }
-                my $content = read_file(catfile($imagedir,$key));
-		$log->debug("Returning image: ".catfile($imagedir,$key));
-                return \$content;
-	}
-	$log->debug("Returning, image not found");
-	return undef;
-}
-
-sub createResizedImage {
-	my $cacheKey = shift;
-	my $image = shift;
-	my $requestedWidth = shift;
-	my $requestedHeight = shift;
-	
-	$log->debug("Getting image for $image with size $requestedWidth,$requestedHeight");
-	my $cachedir = $serverPrefs->get('cachedir');
-	my $imagedir  = catdir( $cachedir, $cacheKey );
-	if(-e catfile($imagedir,$image."_".$requestedWidth."_".$requestedHeight)) {
-		$log->debug("Getting from cache");
-		return catfile($imagedir,$image."_".$requestedWidth."_".$requestedHeight);
-	}else {
-		$log->debug("Resizing to $requestedWidth x $requestedHeight");
-		my $imageData = read_file(catfile($imagedir,$image));
-
-		my $newImageData;
-		my $requestedContentType;
-		eval {
-			($newImageData,$requestedContentType) = Slim::Utils::ImageResizer->resize(
-				original => $imageData,
-				mode => "o",
-				width => $requestedWidth,
-				height => $requestedHeight,
-				faster => !$prefs->get('resampleArtwork'),
-			);
-		};
-		if($@) {
-			$log->error("Unable to resize image $image: $@");
-		}
-		my $fh;
-		open($fh,"> ".catfile($imagedir,$image."_".$requestedWidth."_".$requestedHeight)) or do {
-	            $log->error("Error saving resized icon: ".$!)
-		};
-		if(defined($fh)) {
-			print $fh $newImageData;
-			close $fh;
-		}
-		return catfile($imagedir,$image."_".$requestedWidth."_".$requestedHeight);
-	}
-	
-}
-
 sub preprocessingImageUrls {
 	my $client = shift;
 	my $screen = shift;
@@ -1176,7 +1056,6 @@ sub webPages {
 		"InformationScreen/webadminmethods_publishitemparameters\.(?:htm|xml)"      => \&handleWebPublishScreenParameters,
 		"InformationScreen/webadminmethods_publishitem\.(?:htm|xml)"      => \&handleWebPublishScreen,
 		"InformationScreen/webadminmethods_deleteitemtype\.(?:htm|xml)"      => \&handleWebDeleteScreenType,
-		"InformationScreen/getdynamicimage.*\.(?:jpg|png)"     => \&handleWebGetDynamicImage,
 	);
 
 	for my $page (keys %pages) {
