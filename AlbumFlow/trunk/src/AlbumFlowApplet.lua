@@ -62,7 +62,8 @@ local LAYOUT_NONE       = jive.ui.LAYOUT_NONE
 
 local FRAME_RATE	= jive.ui.FRAME_RATE
 
-local ANIM_RANGE	= 10
+local ANIM_RANGE	= 6
+local SS_ANIM_RANGE	= 40
 
 module(..., Framework.constants)
 oo.class(_M, Applet)
@@ -72,11 +73,17 @@ oo.class(_M, Applet)
 -- Helper Functions
 --
 
+function openScreensaver(self)
+	self:_initApplet(true)
+end
 -- display
 -- the main applet function, the meta arranges for it to be called
 -- by the ScreenSaversApplet.
 function menu(self)
+	self:_initApplet(false)
+end
 
+function _initApplet(self, ss)
 	log:debug("Recreating screensaver window")
 	local width,height = Framework.getScreenSize()
 	if width == 480 then
@@ -119,6 +126,14 @@ function menu(self)
 	self.currentPos = -1
 	self.currentDelta = 0
 	self.currentScroll = 0
+	self.loading =  false
+	self.screensaver = false
+	if ss then
+		self.screensaver = true
+		self.currentScroll = 1
+		self.currentDelta = SS_ANIM_RANGE
+		self.currentPos = -1
+	end
 
 	-- Load albums
 	self:_loadAlbums(0)
@@ -129,74 +144,90 @@ function menu(self)
 		end,
 		FRAME_RATE
 	)
-	self.titleGroup:addListener(EVENT_KEY_PRESS | EVENT_SCROLL,
-		function(event)
-			local type = event:getType()
-			if type == EVENT_KEY_PRESS then
-				local keycode = event:getKeycode()
-				log:debug("GOT key="..keycode)
-				if keycode == KEY_GO then
---					local player = appletManager:callService("getCurrentPlayer")
---					local server =self.player:getSlimServer()
---					local album_id = self.albums[self.selectedAlbum].params["album_id"]
---					local jsonAction = {
---						actions = {
---							go = {
---								cmd = {"tracks"},
---								itemParams = "params",
---								params = {
---									menu = "trackinfo",
---									menu_all = 1,
---									sort = "tracknum",
---									album_id = album_id,
---								},
---							},
---						},
---						window = {
---							text = self.albums[self.selectedAlbum].text,
---							titleStyle = "album",
---						},
---					}
---					appletManager:callService("browserActionRequest",server,jsonAction,nil)
-					log:debug("Got GO event, issue play for now")
-					return self:_playFunction()
-				end
-			elseif type == EVENT_SCROLL then
-				local scroll = event:getScroll()
-				log:debug("GOT scroll event="..scroll)
-				if scroll>0 and self.currentDelta == 0 and self.currentPos<table.getn(self.albums)-2 then
-					self.currentDelta = ANIM_RANGE
-					self.currentPos = self.currentPos + 1
-				elseif scroll<0 and self.currentDelta == ANIM_RANGE and self.currentPos>0 then
-					self.currentDelta = 0
-					self.currentPos = self.currentPos - 1
-				end
-				if self.currentScroll>0 and scroll>0 then
-					self.currentScroll = self.currentScroll + scroll
-					if self.currentScroll > 4 then
-						self.currentScroll = 4
+	if not ss then
+		self.titleGroup:addListener(EVENT_KEY_PRESS | EVENT_SCROLL,
+			function(event)
+				local type = event:getType()
+				if type == EVENT_KEY_PRESS then
+					local keycode = event:getKeycode()
+					log:debug("GOT key="..keycode)
+					if keycode == KEY_GO then
+	--					local player = appletManager:callService("getCurrentPlayer")
+	--					local server =self.player:getSlimServer()
+	--					local album_id = self.albums[self.selectedAlbum].params["album_id"]
+	--					local jsonAction = {
+	--						actions = {
+	--							go = {
+	--								cmd = {"tracks"},
+	--								itemParams = "params",
+	--								params = {
+	--									menu = "trackinfo",
+	--									menu_all = 1,
+	--									sort = "tracknum",
+	--									album_id = album_id,
+	--								},
+	--							},
+	--						},
+	--						window = {
+	--							text = self.albums[self.selectedAlbum].text,
+	--							titleStyle = "album",
+	--						},
+	--					}
+	--					appletManager:callService("browserActionRequest",server,jsonAction,nil)
+						log:debug("Got GO event, issue play for now")
+						return self:_playFunction()
+					elseif keycode == KEY_UP then
+						return self:_handleScroll(-1)
+					elseif keycode == KEY_DOWN then
+						return self:_handleScroll(1)
 					end
-				elseif self.currentScroll<0 and scroll<0 then
-					self.currentScroll = self.currentScroll + scroll
-					if self.currentScroll < -4 then
-						self.currentScroll = -4
-					end
-				else
-					self.currentScroll = scroll
+				elseif type == EVENT_SCROLL then
+					return self:_handleScroll(event)
 				end
-				return EVENT_CONSUME
+				return EVENT_UNUSED
 			end
-			return EVENT_UNUSED
-		end
-	)
+		)
 
-	self.titleGroup:addActionListener("play",self.titleGroup,function()
-			return self:_playFunction()
-		end
-	)
+		self.titleGroup:addActionListener("play",self.titleGroup,function()
+				return self:_playFunction()
+			end
+		)
+	else
+		local manager = appletManager:getAppletInstance("ScreenSavers")
+		manager:screensaverWindow(self.window)
+	end
+	self.window:addTimer(1000, function() self:_retrieveMoreArtwork() end)
 
 	-- Show the window
 	self.window:show(Window.transitionFadeIn)
+end
+
+function _handleScroll(self, event, keyScroll)
+	local scroll = keyScroll
+	if not scroll then
+		scroll = event:getScroll()
+	end
+	if scroll>0 and self.currentDelta == 0 and self.currentPos<table.getn(self.albums)-2 then
+		self.currentDelta = ANIM_RANGE
+		self.currentPos = self.currentPos + 1
+	elseif scroll<0 and self.currentDelta == ANIM_RANGE and self.currentPos>0 then
+		self.currentDelta = 0
+		self.currentPos = self.currentPos - 1
+	end
+	if self.currentScroll>0 and scroll>0 then
+		self.currentScroll = self.currentScroll + scroll
+		if self.currentScroll > 4 then
+			self.currentScroll = 4
+		end
+	elseif self.currentScroll<0 and scroll<0 then
+		self.currentScroll = self.currentScroll + scroll
+		if self.currentScroll < -4 then
+			self.currentScroll = -4
+		end
+	else
+		self.currentScroll = scroll
+	end
+	return EVENT_CONSUME
 end
 
 function _playFunction(self) 
@@ -223,15 +254,25 @@ end
 function _refresh(self)
 	local delta = self.currentDelta;
 	local pos = self.currentPos;
+	local animateRange = ANIM_RANGE
+	if self.screensaver then
+		animateRange = SS_ANIM_RANGE
+	end
+
 	if self.currentScroll < 0 then
 		delta = delta - self.currentScroll
-		if delta > ANIM_RANGE then
-			self.currentScroll = self.currentScroll + 1
+		if delta > animateRange then
+			if not self.screensaver then
+				self.currentScroll = self.currentScroll + 1
+			end
 			pos = pos - 1
 			if pos<0 then
 				pos = 0
 				self.right = false
-				delta = ANIM_RANGE
+				delta = animateRange
+				if self.screensaver then
+					self.currentScroll = 1
+				end
 			else
 				delta = 0
 			end
@@ -239,14 +280,19 @@ function _refresh(self)
 	elseif self.currentScroll > 0 then
 		delta = delta - self.currentScroll
 		if delta < 0 then
-			self.currentScroll = self.currentScroll -1
+			if not self.screensaver then
+				self.currentScroll = self.currentScroll -1
+			end
 			pos = pos + 1
 			if pos > table.getn(self.albums)-2 then
 				pos = pos -1
 				self.right = true
 				delta = 0
+				if self.screensaver then
+					self.currentScroll = -1
+				end
 			else
-				delta = ANIM_RANGE
+				delta = animateRange
 			end
 		end
 	end
@@ -256,12 +302,12 @@ function _refresh(self)
 	self.selectedAlbum = pos
 
 	local text = self.titleGroup:getWidgetValue("albumtext")
-	if delta>ANIM_RANGE/2 and self.currentScroll<0 then
+	if delta>animateRange/2 and self.currentScroll<0 then
 		if self.albums and table.getn(self.albums)>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
 			text = self.albums[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
 		end
-	elseif delta<ANIM_RANGE/2 and self.currentScroll>0 then
+	elseif delta<animateRange/2 and self.currentScroll>0 then
 		if self.albums and table.getn(self.albums)>self.currentPos+1 and self.albums[self.currentPos+2] and self.albums[self.currentPos+2].text then
 			text = self.albums[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
@@ -271,7 +317,7 @@ function _refresh(self)
 			text = self.albums[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
 		end
-	elseif delta == ANIM_RANGE then
+	elseif delta == animateRange then
 		if self.albums and table.getn(self.albums)>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
 			text = self.albums[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
@@ -288,6 +334,23 @@ function _refresh(self)
 	self.canvas:reDraw()
 end
 
+function _retrieveMoreArtwork(self)
+	if self.albums and table.getn(self.albums) == tonumber(self.count) then
+		return
+	end 
+	if self.albums and self.albums[table.getn(self.albums)].iconArtwork:getImage() and (table.getn(self.albums) < tonumber(self.count)) and not self.loading then
+		local notLoaded = false
+		for index,album in ipairs(self.albums) do
+			if not album.iconArtwork:getImage() then
+				notLoaded = true
+			end
+		end
+		if not notLoaded then
+			log:debug("Getting more artwork")
+			self:_loadAlbums(table.getn(self.albums))
+		end
+	end
+end
 function _reDrawCanvas(self,screen)
 	local size = self:_getArtworkSize();
 	local sizeby8 = size/8
@@ -299,16 +362,21 @@ function _reDrawCanvas(self,screen)
 	local posx
 	local posy
 
+	local animateRange = ANIM_RANGE
+	if self.screensaver then
+		animateRange = SS_ANIM_RANGE
+	end
+
 	if self.albums[self.currentPos] then
 		-- width = 0% -> 50%
 		-- height = 50% -> 75%
 		-- left = 0
 		-- right = 0 -> 120
 		-- top = 60 -> 30
-		zoomx = (self.currentDelta/2)/ANIM_RANGE
-		zoomy = ((self.currentDelta/4)/ANIM_RANGE)+0.5
+		zoomx = (self.currentDelta/2)/animateRange
+		zoomy = ((self.currentDelta/4)/animateRange)+0.5
 		posx = 0
-		posy = sizeby4-sizeby8*(self.currentDelta/ANIM_RANGE)
+		posy = sizeby4-sizeby8*(self.currentDelta/animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
 		else
@@ -321,10 +389,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 0 -> 120
 		-- right = 120 -> 360
 		-- top = 30 -> 0
-		zoomx = (self.currentDelta/2)/ANIM_RANGE+(ANIM_RANGE/2)/ANIM_RANGE
-		zoomy = ((self.currentDelta/4)/ANIM_RANGE)+0.75
-		posx = sizeby2*(self.currentDelta/ANIM_RANGE)
-		posy = sizeby8-sizeby8*(self.currentDelta/ANIM_RANGE)
+		zoomx = (self.currentDelta/2)/animateRange+(animateRange/2)/animateRange
+		zoomy = ((self.currentDelta/4)/animateRange)+0.75
+		posx = sizeby2*(self.currentDelta/animateRange)
+		posy = sizeby8-sizeby8*(self.currentDelta/animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 		else
@@ -337,10 +405,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 120 -> 360
 		-- right = 360 -> 480
 		-- top = 0 -> 30
-		zoomx = 1-(self.currentDelta/2)/ANIM_RANGE
-		zoomy = 1-((self.currentDelta/4)/ANIM_RANGE)
-		posx = sizeby2+size*(self.currentDelta/ANIM_RANGE)
-		posy = sizeby8*(self.currentDelta/ANIM_RANGE)
+		zoomx = 1-(self.currentDelta/2)/animateRange
+		zoomy = 1-((self.currentDelta/4)/animateRange)
+		posx = sizeby2+size*(self.currentDelta/animateRange)
+		posy = sizeby8*(self.currentDelta/animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 		else
@@ -353,10 +421,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 360 -> 480
 		-- right = 480
 		-- top = 30 -> 60
-		zoomx = ((ANIM_RANGE/2)-(self.currentDelta/2))/ANIM_RANGE
-		zoomy = 0.75-((self.currentDelta/4)/ANIM_RANGE)
-		posx = size+sizeby2+sizeby2*(self.currentDelta/ANIM_RANGE)
-		posy = sizeby8+sizeby8*(self.currentDelta/ANIM_RANGE)
+		zoomx = ((animateRange/2)-(self.currentDelta/2))/animateRange
+		zoomy = 0.75-((self.currentDelta/4)/animateRange)
+		posx = size+sizeby2+sizeby2*(self.currentDelta/animateRange)
+		posy = sizeby8+sizeby8*(self.currentDelta/animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 		else
@@ -380,15 +448,21 @@ function _loadAlbums(self,offset)
 	self.player = appletManager:callService("getCurrentPlayer")
 	local server = self.player:getSlimServer()
 	log:debug("Sending command, requesting "..offset)
+	self.loading = true
+	local amount = 5
+	if offset>0 then
+		amount = 10
+	end
 	server:userRequest(function(chunk,err)
 			if err then
 				log:debug(err)
 			elseif chunk then
 				self:_loadAlbumsSink(chunk.data,offset)
 			end
+			self.loading =  false
 		end,
 		player and player:getId(),
-		{'albums',offset,100,'menu:menu'}
+		{'albums',offset,amount,'menu:menu'}
 	)
 	log:debug("Sent command")
 end
@@ -408,6 +482,7 @@ function _loadAlbumsSink(self,result,offset)
 	local ARTWORK_SIZE = self:_getArtworkSize()
 
 	local lastIndex = 1
+	self.count = result.count
 	for index,item in ipairs(result.item_loop) do
 		local albumIndex = tonumber(index)+offset
 		self.albums[albumIndex] = item
@@ -422,9 +497,6 @@ function _loadAlbumsSink(self,result,offset)
 			log:debug("Got album "..albumIndex..":"..item.text.." without icon-id")
 		end
 		lastIndex = albumIndex
-	end
-	if lastIndex < tonumber(result.count) then
-		self:_loadAlbums(lastIndex)
 	end
 end
 

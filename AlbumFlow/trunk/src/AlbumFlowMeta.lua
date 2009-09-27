@@ -21,6 +21,7 @@ local datetime         = require("jive.utils.datetime")
 
 local AppletMeta    = require("jive.AppletMeta")
 local jul           = require("jive.utils.log")
+local System        = require("jive.System")
 
 local appletManager = appletManager
 local jiveMain      = jiveMain
@@ -35,11 +36,20 @@ function jiveVersion(self)
 end
 
 function registerApplet(self)
-        jiveMain:addItem(self:menuItem('appletAlbumFlow', '_myMusic', "SCREENSAVER_ALBUMFLOW",
-                function(applet, ...) applet:menu(...) end, 30, nil, 'hm_myMusicAlbums'))
+	if System.getMachine() != "fab4" then
+		jiveMain:addItem(self:menuItem('appletAlbumFlow', '_myMusic', "SCREENSAVER_ALBUMFLOW",
+		        function(applet, ...) applet:menu(...) end, 30, nil, 'hm_myMusicAlbums'))
+	end
 end
 
 function configureApplet(self)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW"), 
+		"AlbumFlow",
+		"openScreensaver", 
+		_, 
+		_, 
+		90)
 end
 
 function defaultSettings(self)
