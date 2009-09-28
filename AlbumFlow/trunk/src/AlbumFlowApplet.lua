@@ -64,6 +64,7 @@ local FRAME_RATE	= jive.ui.FRAME_RATE
 
 local ANIM_RANGE	= 6
 local SS_ANIM_RANGE	= 40
+local IMG_PATH          = "applets/AlbumFlow/"
 
 module(..., Framework.constants)
 oo.class(_M, Applet)
@@ -93,6 +94,8 @@ function _initApplet(self, ss)
 	else
 		self.model = "controller"
 	end
+
+	self.images = {}
 
 	self.window = Window("window")
 	self.window:setSkin(self:_getSkin(jiveMain:getSelectedSkin()))
@@ -128,11 +131,16 @@ function _initApplet(self, ss)
 	self.currentScroll = 0
 	self.loading =  false
 	self.screensaver = false
+	self.albums = {}
+	self.maxIndex = 0
 	if ss then
 		self.screensaver = true
 		self.currentScroll = 1
 		self.currentDelta = SS_ANIM_RANGE
 		self.currentPos = -1
+		self.animateRange = SS_ANIM_RANGE
+	else
+		self.animateRange = ANIM_RANGE
 	end
 
 	-- Load albums
@@ -207,10 +215,10 @@ function _handleScroll(self, event, keyScroll)
 	if not scroll then
 		scroll = event:getScroll()
 	end
-	if scroll>0 and self.currentDelta == 0 and self.currentPos<table.getn(self.albums)-2 then
-		self.currentDelta = ANIM_RANGE
+	if scroll>0 and self.currentDelta == 0 and self.currentPos<self.maxIndex-2 then
+		self.currentDelta = self.animateRange
 		self.currentPos = self.currentPos + 1
-	elseif scroll<0 and self.currentDelta == ANIM_RANGE and self.currentPos>0 then
+	elseif scroll<0 and self.currentDelta == self.animateRange and self.currentPos>0 then
 		self.currentDelta = 0
 		self.currentPos = self.currentPos - 1
 	end
@@ -254,14 +262,11 @@ end
 function _refresh(self)
 	local delta = self.currentDelta;
 	local pos = self.currentPos;
-	local animateRange = ANIM_RANGE
-	if self.screensaver then
-		animateRange = SS_ANIM_RANGE
-	end
 
+	-- Scrolling to left (cover moving to right)
 	if self.currentScroll < 0 then
 		delta = delta - self.currentScroll
-		if delta > animateRange then
+		if delta > self.animateRange then
 			if not self.screensaver then
 				self.currentScroll = self.currentScroll + 1
 			end
@@ -269,14 +274,17 @@ function _refresh(self)
 			if pos<0 then
 				pos = 0
 				self.right = false
-				delta = animateRange
+				delta = self.animateRange
 				if self.screensaver then
 					self.currentScroll = 1
 				end
 			else
 				delta = 0
 			end
+			self:_updateCovers(pos)
 		end
+
+	-- Scrolling to right (cover moving to left)
 	elseif self.currentScroll > 0 then
 		delta = delta - self.currentScroll
 		if delta < 0 then
@@ -284,7 +292,7 @@ function _refresh(self)
 				self.currentScroll = self.currentScroll -1
 			end
 			pos = pos + 1
-			if pos > table.getn(self.albums)-2 then
+			if pos > self.maxIndex-2 then
 				pos = pos -1
 				self.right = true
 				delta = 0
@@ -292,8 +300,9 @@ function _refresh(self)
 					self.currentScroll = -1
 				end
 			else
-				delta = animateRange
+				delta = self.animateRange
 			end
+			self:_updateCovers(pos)
 		end
 	end
 
@@ -302,13 +311,13 @@ function _refresh(self)
 	self.selectedAlbum = pos
 
 	local text = self.titleGroup:getWidgetValue("albumtext")
-	if delta>animateRange/2 and self.currentScroll<0 then
-		if self.albums and table.getn(self.albums)>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
+	if delta>self.animateRange/2 and self.currentScroll<0 then
+		if self.albums and self.maxIndex>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
 			text = self.albums[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
 		end
-	elseif delta<animateRange/2 and self.currentScroll>0 then
-		if self.albums and table.getn(self.albums)>self.currentPos+1 and self.albums[self.currentPos+2] and self.albums[self.currentPos+2].text then
+	elseif delta<self.animateRange/2 and self.currentScroll>0 then
+		if self.albums and self.maxIndex>self.currentPos+1 and self.albums[self.currentPos+2] and self.albums[self.currentPos+2].text then
 			text = self.albums[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
 		end
@@ -317,8 +326,8 @@ function _refresh(self)
 			text = self.albums[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
 		end
-	elseif delta == animateRange then
-		if self.albums and table.getn(self.albums)>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
+	elseif delta == self.animateRange then
+		if self.albums and self.maxIndex>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
 			text = self.albums[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
 		end
@@ -334,23 +343,72 @@ function _refresh(self)
 	self.canvas:reDraw()
 end
 
-function _retrieveMoreArtwork(self)
-	if self.albums and table.getn(self.albums) == tonumber(self.count) then
-		return
-	end 
-	if self.albums and self.albums[table.getn(self.albums)].iconArtwork:getImage() and (table.getn(self.albums) < tonumber(self.count)) and not self.loading then
-		local notLoaded = false
-		for index,album in ipairs(self.albums) do
-			if not album.iconArtwork:getImage() then
-				notLoaded = true
-			end
-		end
-		if not notLoaded then
-			log:debug("Getting more artwork")
-			self:_loadAlbums(table.getn(self.albums))
+function _updateCovers(self,pos)
+	local leftSlide = pos - 1
+	local rightSlide = pos + 4
+	local ARTWORK_SIZE = self:_getArtworkSize()
+
+	if leftSlide < 1 then
+		leftSlide = 1
+	end
+	if rightSlide > self.maxIndex then
+		rightSlide = self.maxIndex
+	end
+
+	if leftSlide>1 then
+		local i = leftSlide-1
+		while i>0 and self.albums[i].iconArtwork do
+			log:debug("Deallocating artwork for "..self.albums[i].text)
+			self.albums[i].iconArtwork = nil
+			i = i - 1
 		end
 	end
+
+	if rightSlide<self.count then
+		local i = rightSlide+1
+		while i<=self.maxIndex and self.albums[i].iconArtwork do
+			log:debug("Deallocating artwork for "..self.albums[i].text)
+			self.albums[i].iconArtwork = nil
+			i=i+1
+		end
+	end
+
+	self.player = appletManager:callService("getCurrentPlayer")
+	local server = self.player:getSlimServer()
+	local result = true
+	for i=leftSlide,rightSlide do
+		if not self.albums[i].iconArtwork then
+			result = false
+			self.albums[i].iconArtwork=Icon("artwork",self:_loadImage("album"..self.model..".png"))
+			local iconId = self.albums[i]["icon-id"]
+			if iconId then
+				server:fetchArtwork(iconId,self.albums[i].iconArtwork,ARTWORK_SIZE)
+				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-id:"..iconId)
+			else
+				server:fetchArtwork(0,self.albums[i].iconArtwork,ARTWORK_SIZE,'png')
+				log:debug("Got album "..i..":"..self.albums[i].text.." without icon-id")
+			end
+		elseif not self.albums[i].iconArtwork:getImage() then
+			result = false
+		end
+	end
+	return result
 end
+
+function _retrieveMoreArtwork(self)
+	if self.albums and self.maxIndex == tonumber(self.count) then
+		return
+	end 
+	if self.albums and self.maxIndex>0 then
+		self:_updateCovers(self.currentPos)
+	end
+
+	if self.albums and (self.maxIndex < tonumber(self.count)) and not self.loading then
+		log:debug("Getting more albums")
+		self:_loadAlbums(self.maxIndex)
+	end
+end
+
 function _reDrawCanvas(self,screen)
 	local size = self:_getArtworkSize();
 	local sizeby8 = size/8
@@ -362,21 +420,16 @@ function _reDrawCanvas(self,screen)
 	local posx
 	local posy
 
-	local animateRange = ANIM_RANGE
-	if self.screensaver then
-		animateRange = SS_ANIM_RANGE
-	end
-
 	if self.albums[self.currentPos] then
 		-- width = 0% -> 50%
 		-- height = 50% -> 75%
 		-- left = 0
 		-- right = 0 -> 120
 		-- top = 60 -> 30
-		zoomx = (self.currentDelta/2)/animateRange
-		zoomy = ((self.currentDelta/4)/animateRange)+0.5
+		zoomx = (self.currentDelta/2)/self.animateRange
+		zoomy = ((self.currentDelta/4)/self.animateRange)+0.5
 		posx = 0
-		posy = sizeby4-sizeby8*(self.currentDelta/animateRange)
+		posy = sizeby4-sizeby8*(self.currentDelta/self.animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
 		else
@@ -389,10 +442,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 0 -> 120
 		-- right = 120 -> 360
 		-- top = 30 -> 0
-		zoomx = (self.currentDelta/2)/animateRange+(animateRange/2)/animateRange
-		zoomy = ((self.currentDelta/4)/animateRange)+0.75
-		posx = sizeby2*(self.currentDelta/animateRange)
-		posy = sizeby8-sizeby8*(self.currentDelta/animateRange)
+		zoomx = (self.currentDelta/2)/self.animateRange+(self.animateRange/2)/self.animateRange
+		zoomy = ((self.currentDelta/4)/self.animateRange)+0.75
+		posx = sizeby2*(self.currentDelta/self.animateRange)
+		posy = sizeby8-sizeby8*(self.currentDelta/self.animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 		else
@@ -405,10 +458,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 120 -> 360
 		-- right = 360 -> 480
 		-- top = 0 -> 30
-		zoomx = 1-(self.currentDelta/2)/animateRange
-		zoomy = 1-((self.currentDelta/4)/animateRange)
-		posx = sizeby2+size*(self.currentDelta/animateRange)
-		posy = sizeby8*(self.currentDelta/animateRange)
+		zoomx = 1-(self.currentDelta/2)/self.animateRange
+		zoomy = 1-((self.currentDelta/4)/self.animateRange)
+		posx = sizeby2+size*(self.currentDelta/self.animateRange)
+		posy = sizeby8*(self.currentDelta/self.animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 		else
@@ -421,10 +474,10 @@ function _reDrawCanvas(self,screen)
 		-- left = 360 -> 480
 		-- right = 480
 		-- top = 30 -> 60
-		zoomx = ((animateRange/2)-(self.currentDelta/2))/animateRange
-		zoomy = 0.75-((self.currentDelta/4)/animateRange)
-		posx = size+sizeby2+sizeby2*(self.currentDelta/animateRange)
-		posy = sizeby8+sizeby8*(self.currentDelta/animateRange)
+		zoomx = ((self.animateRange/2)-(self.currentDelta/2))/self.animateRange
+		zoomy = 0.75-((self.currentDelta/4)/self.animateRange)
+		posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
+		posy = sizeby8+sizeby8*(self.currentDelta/self.animateRange)
 		if self.model == "controller" then
 			self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 		else
@@ -438,12 +491,17 @@ function _drawArtwork(self,screen,album,zoomx,zoomy,positionx,positiony)
 		local tmp = album.iconArtwork:getImage():zoom(zoomx,zoomy,1)
 		tmp:blit(screen,positionx,positiony)
 		tmp:release()
+	else
+		local tmp = self:_loadImage("album"..self.model..".png"):zoom(zoomx,zoomy,1)
+		tmp:blit(screen,positionx,positiony)
+		tmp:release()
 	end
 end
 
 function _loadAlbums(self,offset)
 	if offset == 0 then
 		self.albums = {}
+		self.maxIndex = 0
 	end
 	self.player = appletManager:callService("getCurrentPlayer")
 	local server = self.player:getSlimServer()
@@ -451,7 +509,7 @@ function _loadAlbums(self,offset)
 	self.loading = true
 	local amount = 5
 	if offset>0 then
-		amount = 10
+		amount = 100
 	end
 	server:userRequest(function(chunk,err)
 			if err then
@@ -479,29 +537,24 @@ end
 
 function _loadAlbumsSink(self,result,offset)
 	local server = self.player:getSlimServer()
-	local ARTWORK_SIZE = self:_getArtworkSize()
 
 	local lastIndex = 1
 	self.count = result.count
 	for index,item in ipairs(result.item_loop) do
-		local albumIndex = tonumber(index)+offset
-		self.albums[albumIndex] = item
-		local iconId = item["icon-id"]
-		if iconId then
-			self.albums[albumIndex].iconArtwork = Icon("artwork")
-			server:fetchArtwork(iconId,self.albums[albumIndex].iconArtwork,ARTWORK_SIZE)
-			log:debug("Fetching artwork for "..albumIndex..":"..item.text.." with icon-id:"..iconId)
-		else
-			self.albums[albumIndex].iconArtwork = Icon("artwork")
-			server:fetchArtwork(0,self.albums[albumIndex].iconArtwork,ARTWORK_SIZE,'png')
-			log:debug("Got album "..albumIndex..":"..item.text.." without icon-id")
-		end
-		lastIndex = albumIndex
+		self.maxIndex = tonumber(index)+offset
+		self.albums[self.maxIndex] = item
 	end
 end
 
 function _loadFont(self,fontSize)
         return Font:load("fonts/FreeSans.ttf", fontSize)
+end
+
+function _loadImage(self,file)
+	if not self.images[file] then
+		self.images[file] = Surface:loadImage(IMG_PATH .. file)
+	end
+	return self.images[file]
 end
 
 function _getSkin(self,skin)
@@ -516,6 +569,7 @@ function _getSkin(self,skin)
 	else
 		textPosition = height-65
 	end
+
 	s.window = {
 		bgImg= Tile:fillColor(0x000000ff),
 		canvas = {
