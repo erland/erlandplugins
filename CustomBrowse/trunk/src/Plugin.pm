@@ -1336,7 +1336,7 @@ sub objectInfoHandler {
 			web  => {
 				group => 'mixers',
 				url   => 'plugins/CustomBrowse/custombrowse_contextlist.html?contexttype='.$objectType.'&contextid='.$objectId.'&contextname='.$objectName,
-#				item  => mixerlink($obj),
+				item  => mixerlink($obj),
 			},
 		};
 	}
@@ -3661,6 +3661,8 @@ sub cliJiveHandlerImpl {
 		$request->addResultLoop('item_loop',$cnt,'playAction','play');
 		$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');
 		$request->addResultLoop('item_loop',$cnt,'style','itemplay');
+		$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
+
 		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
