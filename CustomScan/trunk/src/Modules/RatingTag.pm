@@ -139,25 +139,36 @@ sub scanTrack {
 		my $tags = Slim::Formats->readTags($track->url);
 		if(defined($tags)) {
 			for my $tag (keys %$tags) {
-				if(defined($ratingTagsHash{uc($tag)})) {
-					my $ratingNumber = $tags->{$tag};
+				my $ratingNumber = undef;
+				if($tag eq 'WM/SharedUserRating' || $tag eq 'SHAREDUSERRATING') {
+					$ratingNumber = $tags->{$tag};
+					if($ratingNumber && $ratingNumber =~ /^\d+$/) {
+						if($ratingNumber == 99) {
+							$ratingNumber = 100;
+						}else {
+							$ratingNumber = floor((($ratingNumber/25)+1)*20);
+						}
+					}
+				}elsif(defined($ratingTagsHash{uc($tag)})) {
+					$ratingNumber = $tags->{$tag};
 					if($ratingNumber && $ratingNumber =~ /^\d+$/) {
 						$ratingNumber = floor($ratingNumber*100/$ratingtagmax);
 						if($ratingNumber>100) {
 							$ratingNumber=100;
 						}
-						if($ratingNumber) {
-							#Lets clear the result, so we ignore any MP3 POPM tag
-							@result = ();
-							my %item = (
-								'name' => 'RATING',
-								'value' => $ratingNumber
-							);
-							push @result,\%item;
-							if($writeratingtag) {
-								rateTrack($track,$ratingNumber);
-							}
-						}
+					}
+				}
+				if(defined($ratingNumber) && $ratingNumber) {
+					$log->debug("Using $tag, adjusted rating is: $ratingNumber / 100");
+					#Lets clear the result, so we ignore any MP3 POPM tag
+					@result = ();
+					my %item = (
+						'name' => 'RATING',
+						'value' => $ratingNumber
+					);
+					push @result,\%item;
+					if($writeratingtag) {
+						rateTrack($track,$ratingNumber);
 					}
 					last;
 				}
