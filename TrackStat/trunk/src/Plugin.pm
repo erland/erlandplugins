@@ -225,7 +225,17 @@ my %mapping = (
 	'6' => 'dead',
 	'7' => 'dead',
 	'8' => 'dead',
-	'9' => 'dead'
+	'9' => 'dead',
+	'0.hold_release' => 'dead',
+	'1.hold_release' => 'dead',
+	'2.hold_release' => 'dead',
+	'3.hold_release' => 'dead',
+	'4.hold_release' => 'dead',
+	'5.hold_release' => 'dead',
+	'6.hold_release' => 'dead',
+	'7.hold_release' => 'dead',
+	'8.hold_release' => 'dead',
+	'9.hold_release' => 'dead',
 );
 
 my %choiceMapping = (
@@ -259,6 +269,16 @@ my %choiceMapping = (
 	'7' => 'dead',
 	'8' => 'dead',
 	'9' => 'dead',
+	'0.hold_release' => 'dead',
+	'1.hold_release' => 'dead',
+	'2.hold_release' => 'dead',
+	'3.hold_release' => 'dead',
+	'4.hold_release' => 'dead',
+	'5.hold_release' => 'dead',
+	'6.hold_release' => 'dead',
+	'7.hold_release' => 'dead',
+	'8.hold_release' => 'dead',
+	'9.hold_release' => 'dead',
 	'arrow_left' => 'exit_left',
 	'arrow_right' => 'exit_right',
 	'knob_push' => 'exit_right',
@@ -2682,7 +2702,7 @@ sub objectInfoHandler {
 			web  => {
 				group => 'mixers',
 				url   => 'plugins/TrackStat/'.$statisticsType.'.html?'.$objectType.'='.$objectId.'&flatlist=1',
-#				item  => mixerlink($obj),
+				item  => mixerlink($obj),
 			},
 		};
 	}
@@ -3175,10 +3195,9 @@ sub jiveStatistics {
 				my $songInfoParams = {
 					track_id => $item->{'itemid'},
 					menu => 'nowhere',
-					cmd => 'load',
 				};
 				$actions->{'go'} = {
-					'cmd' => ['songinfo'],
+					'cmd' => ['trackinfo','items'],
 					'params' => $songInfoParams,
 					'itemsParams' => 'params',
 				};
@@ -3477,46 +3496,47 @@ sub mixerlink {
 #		}
 #		$log->debug("***********************************\n");
 		
-	my $levelName = $form->{'levelName'};
+	my $contextId = undef;
+	my $contextName = undef;
+	my $contextType = undef;
+	my $selectedItem = undef;
+	if(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::Schema::Age') {
+		$contextId = $item->id;
+		$contextName = 'album'; 
+		$contextType = 'all';
+	}elsif(ref($item) eq 'Slim::Schema::Track') {
+		$contextId = $item->album->id;
+		$contextName = 'album'; 
+		$contextType = 'all';
+		$selectedItem = $item->id;
+		$form->{'noitems'} = 1;
+	}elsif(ref($item) eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
+		$contextId = $item->id;
+		$contextName = 'artist'; 
+		$contextType = 'allalbums';
+	}elsif(ref($item) eq 'Slim::Schema::Genre') {
+		$contextId = $item->id;
+		$contextName = 'genre'; 
+		$contextType = 'allalbums';
+	}elsif(ref($item) eq 'Slim::Schema::Year') {
+		$contextId = $item->id;
+		$contextName = 'year'; 
+		$contextType = 'allalbums';
+	}elsif(ref($item) eq 'Slim::Schema::Playlist') {
+		$contextId = $item->id;
+		$contextName = 'playlist'; 
+		$contextType = 'all';
+	}
+
 	if($form->{'noTrackStatButton'}) {
-	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist')) {
-		if(($levelName eq 'artist' || $levelName eq 'contributor') &&  Slim::Schema->variousArtistsObject->id eq $item->id) {
-        	}else {
-			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+	}elsif(defined($contextType)) {
+		$form->{'trackstatstatisticstype'} = $contextType;
+		$form->{'trackstatattributevalue'} = $contextId;
+		$form->{'trackstatattributename'} = $contextName;
+		$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
+		if(defined($selectedItem)) {
+		    	$form->{'currenttrackstatitem'} = $selectedItem;
 		}
-        }elsif(defined($levelName) && $levelName eq 'year') {
-        	$form->{'yearid'} = $item->id;
-        	if(defined($form->{'yearid'})) {
-       			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
-        	}
-        }else {
-        	my $attributes = $form->{'attributes'};
-        	my $playlist = undef;
-        	if(defined($attributes) && $attributes =~ /\&?playlist=(\d+)/) {
-        		$playlist = $1;
-        	}elsif(defined($attributes) && $attributes =~ /\&?playlist\.id=(\d+)/) {
-        		$playlist = $1;
-        	}
-        	if(defined($playlist)) {
-        		$form->{'playlist'} = $playlist;
-        	}else {
-	    		my $album;
-	    		if(defined($form->{'levelName'}) && $form->{'levelName'} eq 'age') {
-	    			$album = $item;
-	    		}elsif(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::DataStores::DBI::Album') {
-	    			$album = $item;
-			}else {
-	    			$album = $item->album;
-	    		}
-	    		if(defined($album)) {
-    				$form->{'albumid'} = $album->id;
-	    		}
-	    	}
-	    	$form->{'currenttrackstatitem'} = $item->id;
-	    	
-        	if(defined($form->{'albumid'}) || defined($form->{'playlist'})) {
-       			$form->{'mixerlinks'}{'TRACKSTAT'} = "plugins/TrackStat/mixerlink65.html";
-        	}
         }
         return $form;
 }
