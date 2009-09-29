@@ -42,6 +42,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 my $lastCalled = undef;
+my $lastCalledCount = 0;
 
 sub getCustomScanFunctions {
 	my %functions = (
@@ -105,12 +106,21 @@ sub scanArtist {
 	my $url = "http://ws.audioscrobbler.com/1.0/artist/".escape($artist->name)."/similar.xml";
 	my $currentTime = time();
 
-	# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
-	if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
-		sleep(1);
+	# We need to make sure to not overload LastFM web services (this is specified in their license)
+	if(defined($lastCalled) && $lastCalledCount>=5 && $currentTime>($lastCalled+2)) {
+		$lastCalledCount=0;
+		$log->debug("Wating a bit to avoid LastFM overload");
+		select(undef,undef,undef,0.5);
+		$log->debug("Continuing...");
+	}elsif(defined($lastCalled) && $currentTime>($lastCalled+2)) {
+		$lastCalledCount=0;
 	}
+
 	my $http = LWP::UserAgent->new;
-	$lastCalled = time();
+	$lastCalledCount++;
+	if($lastCalledCount==1 || !defined($lastCalled)) {
+		$lastCalled = time();
+	}
 	$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtimeout"));
 	my $response = $http->get($url);
 	if($response->is_success) {
@@ -183,13 +193,21 @@ sub scanArtist {
 		$url = "http://ws.audioscrobbler.com/1.0/artist/".escape($artist->name)."/toptags.xml";
 		$currentTime = time();
 
-		# We need to wait for 1-2 seconds to not overload LastFM web services (this is specified in their license)
-		if(defined($lastCalled) && $currentTime<($lastCalled+2)) {
-			sleep(1);
+		# We need to make sure to not overload LastFM web services (this is specified in their license)
+		if(defined($lastCalled) && $lastCalledCount>=5 && $currentTime<($lastCalled+2)) {
+			$lastCalledCount = 0;
+			$log->debug("Wating a bit to avoid LastFM overload");
+			select(undef,undef,undef,0.5);
+			$log->debug("Continuing...");
+		}elsif(defined($lastCalled) && $currentTime>($lastCalled+2)) {
+			$lastCalledCount = 0;
 		}
 		$http = LWP::UserAgent->new;
 		$http->timeout(Plugins::CustomScan::Plugin::getCustomScanProperty("lastfmtimeout"));
-		$lastCalled = time();
+		$lastCalledCount++;
+		if($lastCalledCount==1 || !defined($lastCalled)) {
+			$lastCalled = time();
+		}
 		my $response = $http->get($url);
 		if($response->is_success) {
 			my $xml = eval { XMLin($response->content, forcearray => ["tag"], keyattr => []) };
