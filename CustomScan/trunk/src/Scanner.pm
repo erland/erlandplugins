@@ -30,7 +30,7 @@ use Time::Stopwatch;
 use Plugins::CustomScan::Modules::MixedTag;
 use Plugins::CustomScan::Modules::CustomTag;
 use Plugins::CustomScan::Modules::RatingTag;
-use Plugins::CustomScan::Modules::Amazon;
+#use Plugins::CustomScan::Modules::Amazon; #Disabled until new API has been implemented
 use Plugins::CustomScan::Modules::LastFM;
 
 our %scanningModulesInProgress = ();
@@ -581,7 +581,8 @@ sub getPluginModules {
 	my %plugins = ();
 	my @pluginDirs = Slim::Utils::OSDetect::dirsFor('Plugins');
 	for my $plugindir (@pluginDirs) {
-		for my $plugin (qw(MixedTag CustomTag Amazon LastFM RatingTag)) {
+		# Disabled Amazon until new API has been implemented
+		for my $plugin (qw(MixedTag CustomTag LastFM RatingTag)) {
 			no strict 'refs';
 			my $fullname = "Plugins::CustomScan::Modules::$plugin";
 			if(UNIVERSAL::can("${fullname}","getCustomScanFunctions")) {
