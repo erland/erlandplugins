@@ -1334,6 +1334,43 @@ sub refreshTracks
 	
 	$timeMeasure->clear();
 	$timeMeasure->start();
+	$log->debug("Starting to add tracks without added times in statistic data based on urls\n");
+	# Now lets set all new tracks with added times not already set
+	if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+		if($driver eq 'mysql') {
+			if(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
+				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,null,null,null,null from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+			}else {
+				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+			}
+		}else {
+			$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+		}
+	}else {
+		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+	}
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		commit($dbh);
+		if($count eq '0E0') {
+			$count = 0;
+		}
+	};
+	if( $@ ) {
+	    $log->warn("Database error: $DBI::errstr\n");
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
+	}
+
+	$sth->finish();
+	$log->debug("Finished adding tracks without added times in statistic data based on urls, added $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$timeMeasure->stop();
+
+	$timeMeasure->clear();
+	$timeMeasure->start();
 	$log->debug("Starting to update ratings in standard slimserver database based on urls\n");
 	# Now lets set all ratings not already set in the slimserver standards database
 	if($driver eq 'mysql') {
@@ -1458,43 +1495,6 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating last played times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
-	$timeMeasure->stop();
-
-	$timeMeasure->clear();
-	$timeMeasure->start();
-	$log->debug("Starting to add tracks without added times in statistic data based on urls\n");
-	# Now lets set all new tracks with added times not already set
-	if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-		if($driver eq 'mysql') {
-			if(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-			}else {
-				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-			}
-		}else {
-			$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-		}
-	}else {
-		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-	}
-	$sth = $dbh->prepare( $sql );
-	$count = 0;
-	eval {
-		$count = $sth->execute();
-		commit($dbh);
-		if($count eq '0E0') {
-			$count = 0;
-		}
-	};
-	if( $@ ) {
-	    $log->warn("Database error: $DBI::errstr\n");
-	    eval {
-	    	rollback($dbh); #just die if rollback is failing
-	    };
-	}
-
-	$sth->finish();
-	$log->debug("Finished adding tracks without added times in statistic data based on urls, added $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
