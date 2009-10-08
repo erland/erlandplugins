@@ -1993,67 +1993,55 @@ sub mixerFunction {
 }
 
 sub mixerlink {
-    my $item = shift;
-    my $form = shift;
-    my $descend = shift;
-#		$log->debug("***********************************\n");
-#		for my $it (keys %$form) {
-#			$log->debug("form{$it}=".$form->{$it}."\n");
-#		}
-#		$log->debug("***********************************\n");
+	my $item = shift;
+	my $form = shift;
+	my $descend = shift;
 	
-	my $levelName = $form->{'levelName'};
 	if(!$playListTypes) {
 		initPlayListTypes();
 	}
 	if($form->{'noDynamicPlayListButton'}) {
-	}elsif(defined($levelName) && ($levelName eq 'artist' || $levelName eq 'contributor' || $levelName eq 'album' || $levelName eq 'genre' || $levelName eq 'playlist' || $levelName eq 'track')) {
-		if($levelName eq 'contributor') {
-			$levelName = 'artist';
-		}
-		if($playListTypes->{$levelName} && ($levelName ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
-			if($levelName eq 'track') {
-				$form->{'trackid'} = $item->id;
-			}
-			$form->{'dynamicplaylist_playlisttype'} = $levelName;
-	        	$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
-		}
-	}elsif(defined($levelName) && $levelName eq 'year') {
-		$form->{'dynamicplaylist_playlisttype'} = $levelName;
-	    	$form->{'yearid'} = $item->id;
-		if(defined($form->{'yearid'})) {
-			if($playListTypes->{$levelName}) {
-	    			$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
-			}
-		}
 	}else {
-		my $attributes = $form->{'attributes'};
-		my $album;
-		my $playlist = undef;
-		if(defined($attributes) && $attributes =~ /\&?playlist=(\d+)/) {
-			$playlist = $1;
-		}elsif(defined($attributes) && $attributes =~ /\&?playlist\.id=(\d+)/) {
-			$playlist = $1;
+		my $contextId = undef;
+		my $contextName = undef;
+		my $contextType = undef;
+		if(ref($item) eq 'Slim::Schema::Album' || ref($item) eq 'Slim::Schema::Age') {
+			$contextId = $item->id;
+			$contextName = $item->title; 
+			$contextType = 'album';
+		}elsif(ref($item) eq 'Slim::Schema::Track') {
+			$contextId = $item->id;
+			$contextName = Slim::Music::Info::standardTitle(undef, $item),; 
+			$contextType = 'track';
+			$form->{'noitems'} = 1;
+		}elsif(ref($item) eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
+			$contextId = $item->id;
+			$contextName = $item->name; 
+			$contextType = 'artist';
+		}elsif(ref($item) eq 'Slim::Schema::Genre') {
+			$contextId = $item->id;
+			$contextName = $item->name; 
+			$contextType = 'genre';
+		}elsif(ref($item) eq 'Slim::Schema::Year') {
+			$contextId = $item->id;
+			if($item->id) {
+				$contextName = $item->id; 
+			}else {
+				$contextName = string('UNK'); 
+			}
+			$contextType = 'year';
+		}elsif(ref($item) eq 'Slim::Schema::Playlist') {
+			$contextId = $item->id;
+			$contextName = $item->title; 
+			$contextType = 'playlist';
 		}
-		if(defined($playlist)) {
-			$form->{'playlist'} = $playlist;
-		}else {
-			my $album;
-			if(defined($form->{'levelName'}) && $form->{'levelName'} eq 'age') {
-				$form->{'dynamicplaylist_playlisttype'} = 'album';
-				$form->{'albumid'} = $item->id;
-			}elsif(ref($item) eq 'Slim::Schema::Album') {
-				$form->{'dynamicplaylist_playlisttype'} = 'album';
-				$form->{'albumid'} = $item->id;
-			}elsif(ref($item) eq 'Slim::Schema::Track') {
-				$form->{'dynamicplaylist_playlisttype'} = 'track';
-				$form->{'trackid'} = $item->id;
-	    		}
-		}
-	
-		if(defined($form->{'albumid'}) || defined($form->{'trackid'}) || defined($form->{'playlist'})) {
-			if(defined($form->{'dynamicplaylist_playlisttype'}) && exists $playListTypes->{$form->{'dynamicplaylist_playlisttype'}}) {
-	    			$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
+
+		if($playListTypes->{$contextType} && ($contextType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
+			if(defined($contextType) && defined($contextId)) {
+				$form->{'mixercontexttype'} = $contextType;
+				$form->{'mixercontextid'} = $contextId;
+				$form->{'mixercontextname'} = $contextName;
+				$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 			}
 		}
 	}
@@ -2322,7 +2310,7 @@ sub objectInfoHandler {
 			web  => {
 				group => 'mixers',
 				url   => 'plugins/DynamicPlayList/dynamicplaylist_list.html?playlisttype='.$objectType.'&flatlist=1&dynamicplaylist_parameter_1='.$objectId,
-#				item  => mixerlink($obj),
+				item  => mixerlink($obj),
 			},
 		};
 	}
