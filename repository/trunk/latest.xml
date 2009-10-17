@@ -137,16 +137,15 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.7" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.7.1" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for WM/SharedUserRating tags
-			- Disabled Amazon plugin due to Amazon API changes
-			- Improved LastFM scanning performance thanks to changed license restrictions at LastFM</changes>
+			<changes lang="EN">- Corrected so it works together with larger libraries, caused duplicates in previous version
+			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.zip</url>
-                        <sha>1f26a2c1958f1609ff0f8f199387b90bc802b64e</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.1.zip</url>
+                        <sha>69961e634ff772e8e675b9614be9cd014fdc03ec</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.3" minTarget="7.1.0" maxTarget="*">
