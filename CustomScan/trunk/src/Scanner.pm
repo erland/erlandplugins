@@ -827,7 +827,7 @@ sub moduleClear {
 				$sth->execute();
 				$sth->bind_col(1, \$count);
 				if($sth->fetch()) {
-					if($count>20000) {
+					if($count>40000) {
 						$clearWithDelete = 0;
 					}
 				}
@@ -864,22 +864,27 @@ sub moduleClear {
 					my $sth = $dbh->prepare("DROP TABLE IF EXISTS customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
+					commit($dbh);
 					$log->debug("Clearing track data, renaming current table...\n");
-					$sth = $dbh->prepare("RENAME TABLE customscan_track_attributes to customscan_track_attributes_old");
+					$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
 					$sth->execute();
 					$sth->finish();
 					$log->debug("Clearing track data, recreating empty table...\n");
+					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes");
+					$sth->execute();
+					$sth->finish();
 					initDatabase();
 					main::idleStreams();
 					$log->debug("Clearing track data, inserting data in new table...\n");
-					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old where module!=?");
-					$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
+					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
 					$log->debug("Clearing track data, dropping temporary table...\n");
 					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
+					commit($dbh);
 					main::idleStreams();
 				};
 			}
@@ -1279,7 +1284,7 @@ sub initTrackScan {
 				$sth->execute();
 				$sth->bind_col(1, \$count);
 				if($sth->fetch()) {
-					if($count>20000) {
+					if($count>40000) {
 						$clearWithDelete = 0;
 					}
 				}
@@ -1315,21 +1320,27 @@ sub initTrackScan {
 					my $sth = $dbh->prepare("DROP TABLE IF EXISTS customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
+					commit($dbh);
 					$log->debug("Clearing track data, renaming current table...\n");
-					$sth = $dbh->prepare("RENAME TABLE customscan_track_attributes to customscan_track_attributes_old");
+					$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					$sth->bind_param(1,$moduleId,SQL_VARCHAR);
 					$sth->execute();
 					$sth->finish();
 					$log->debug("Clearing track data, recreating empty table...\n");
+					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes");
+					$sth->execute();
+					$sth->finish();
 					initDatabase();
 					main::idleStreams();
 					$log->debug("Clearing track data, inserting data in new table...\n");
-					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old where module!=".$dbh->quote($moduleId));
+					$sth = $dbh->prepare("INSERT INTO customscan_track_attributes select * from customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
 					$log->debug("Clearing track data, dropping temporary table...\n");
 					$sth = $dbh->prepare("DROP TABLE customscan_track_attributes_old");
 					$sth->execute();
 					$sth->finish();
+					commit($dbh);
 					main::idleStreams();
 				};
 			}
