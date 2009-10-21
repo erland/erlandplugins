@@ -409,8 +409,15 @@ sub scanTrack {
 												}elsif($mappingType eq "combine") {
 													if(defined($orgValue)) {
 														push @values,$orgValue.$currentValue;
-													}elsif(scalar(@$partTagValue)!=scalar(@values)) {
-														map { $_ = $orgValue.$currentValue } @values;
+													}elsif(scalar(@$partTagValues)!=scalar(@values) && scalar(@values)>0) {
+														map { $_ = $_.$currentValue } @values;
+														last;
+													}elsif(scalar(@$partTagValues)!=scalar(@values) && scalar(@values)==0) {
+														for my $v (@$partTagValues) {
+															if($v =~ /$partExp/) {
+																push @values,$1;
+															}
+														}
 														last;
 													}else {
 														$values[$i] = $values[$i].$currentValue;
@@ -473,8 +480,11 @@ sub scanTrack {
 											}elsif($mappingType eq "combine") {
 												if(defined($orgValue)) {
 													push @values,$orgValue.$currentValue;
-												}elsif(scalar(@$partTagValue)!=scalar(@values)) {
-													map { $_ = $orgValue.$currentValue } @values;
+												}elsif(scalar(@$partTagValues)!=scalar(@values) && scalar(@values)>0) {
+													map { $_ = $_.$currentValue } @values;
+													last;
+												}elsif(scalar(@$partTagValues)!=scalar(@values) && scalar(@values)==0) {
+													@values = @$partTagValues;
 													last;
 												}else {
 													$values[$i] = $values[$i].$currentValue;
