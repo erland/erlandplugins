@@ -3834,6 +3834,10 @@ sub cliJiveHandlerImpl {
 		if($menuIcon) {
 			$request->addResultLoop('item_loop',$cnt,'menuIcon','iPeng/plugins/CustomBrowse/html/images/custombrowse.png');
 		}
+		#iPeng support
+		if(defined($item->{'itemtype'})) {
+			$request->addResultLoop('item_loop',$cnt,'type',$item->{'itemtype'}); # This is used by iPeng
+		}
 
 		if($menuResult->{'artwork'} || (defined($item->{'itemtype'}) && $item->{'itemtype'} eq 'album')) {
 			if(defined($item->{'coverThumb'})) {
