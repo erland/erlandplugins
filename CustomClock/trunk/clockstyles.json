@@ -10,7 +10,7 @@
 				"hourimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/HourHand.png",
 				"minuteimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/MinuteHand.png",
 				"item2": "%A",
-				"item3": "%d %B",
+				"item3": "%d %B"
 			},
 			{
 				"name": "Analog Clock (7.3) (with seconds)",
@@ -22,7 +22,7 @@
 				"minuteimage": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/MinuteHand.png",
 				"secondimage": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/SecondHand_controller.png",
 				"item2": "%A",
-				"item3": "%d %B",
+				"item3": "%d %B"
 			},
                         {
                                 "name": "Analog Clock",
@@ -32,7 +32,7 @@
                                 "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
                                 "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_min_hand.png",
 				"item2": "%A",
-				"item3": "%d %B",
+				"item3": "%d %B"
                         },
                         {
                                 "name": "Analog Clock",
@@ -40,7 +40,7 @@
                                 "mode": "analog",
                                 "clockimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/wallpaper_clock_analog.png",
                                 "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
-                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/clock_analog_min_hand.png",
+                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/Clocks/Analog/clock_analog_min_hand.png"
                         },
                         {
                                 "name": "Analog Clock",
@@ -48,7 +48,7 @@
                                 "mode": "analog",
                                 "clockimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/bb_wallpaper_clock_analog.png",
                                 "hourimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_hr_hand.png",
-                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_min_hand.png",
+                                "minuteimage": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_min_hand.png"
                         },
                         {
                                 "name": "Digital Clock",
@@ -56,7 +56,7 @@
                                 "mode": "digital",
 				"item1": "%H:%M",
 				"item2": "%A",
-				"item3": "%d %B",
+				"item3": "%d %B"
                         },
                         {
                                 "name": "Digital Clock (white text)",
@@ -68,7 +68,20 @@
 				"item2color": "white",
 				"item3": "%d %B",
 				"item3color": "white",
-				"nowplayingcolor": "white",
+				"nowplayingcolor": "white"
+                        },
+                        {
+                                "name": "Digital Clock (red text)",
+                                "models": ["controller","touch","radio"],
+                                "mode": "digital",
+				"item1": "%H:%M",
+				"item1color": "red",
+				"item2": "%A",
+				"item2color": "red",
+				"item3": "%d %B",
+				"item3color": "red",
+				"nowplayingcolor": "red",
+				"backgroundtype": "solidblack"
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
@@ -82,7 +95,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
@@ -96,7 +109,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
@@ -110,7 +123,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
@@ -124,7 +137,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
@@ -138,7 +151,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
@@ -152,7 +165,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
@@ -166,7 +179,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
@@ -180,7 +193,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
@@ -194,7 +207,7 @@
 				"item3": "%d %B",
 				"item3color": "white",
 				"nowplayingcolor": "white",
-				"backgroundtype": "cover",
+				"backgroundtype": "cover"
                         },
                         {
 				"wallpaper": "black",
@@ -207,7 +220,7 @@
 				"item2": "%A",
 				"item2color": "black",
 				"item3": "%d %B",
-				"item3color": "black",
+				"item3color": "black"
                         },
                         {
 				"wallpaper": "black",
@@ -223,7 +236,7 @@
 				"item2color": "white",
 				"item2position": 180,
 				"nowplayingcolor": "white",
-				"nowplayingposition": 195,
+				"nowplayingposition": 195
                         },
                         {
 				"wallpaper": "black",
@@ -234,7 +247,7 @@
 				"background": "http://static.die.net/moon/480.jpg",
 				"item1": "%H:%M",
 				"item2": "%A",
-				"item3": "%d %B",
+				"item3": "%d %B"
                         },
                         {
 				"wallpaper": "black",
@@ -253,7 +266,7 @@
 				"item3color": "gray",
 				"item3position": 190,
 				"item3size": 20,
-				"nowplayingposition": 55,
+				"nowplayingposition": 55
                         },
                         {
 				"wallpaper": "black",
@@ -268,7 +281,7 @@
 				"item3": "%d %B",
 				"item3color": "gray",
 				"nowplayingcolor": "black",
-				"nowplayingmargin": 20,
+				"nowplayingmargin": 20
                         },
                         {
 				"wallpaper": "black",
@@ -290,8 +303,8 @@
 				"item3": "%d %B",
 				"item3position": 210,
 				"item3margin": 40,
-				"item3color": "gray",
-                        },
+				"item3color": "gray"
+                        }
 		]
 	}
 }
