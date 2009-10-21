@@ -23,7 +23,6 @@ package Plugins::CustomScan::Modules::CustomTag;
 
 use Slim::Utils::Misc;
 use Slim::Utils::Unicode;
-use MP3::Info;
 use Slim::Utils::Prefs;
 use Data::Dumper;
 my $prefs = preferences('plugin.customscan');
@@ -247,13 +246,6 @@ sub scanTrack {
 	if($track->content_type() eq 'mp3') {
 		eval {
 			getRawMP3Tags($track->url,$tags);
-		};
-		if ($@) {
-			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
-		}
-	}elsif($track->content_type() eq 'mov') {
-		eval {
-			getRawMOVTags($track->url,$tags);
 		};
 		if ($@) {
 			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
@@ -596,14 +588,11 @@ sub getRawMP3Tags {
 	my $url = shift;
 	my $tags = shift;
 
-
-	my $file = Slim::Utils::Misc::pathFromFileURL($url);
-	my $rawTags = MP3::Info::get_mp3tag($file,2,1);
-	for my $t (keys %$rawTags) {
+	for my $t (keys %$tags) {
 		if(defined($rawTagNames{$t})) {
 			my $tagName = $rawTagNames{$t};
 			if(!defined($tags->{$tagName})) {
-				my $value = $rawTags->{$t};
+				my $value = $tags->{$t};
 				my $encoding = '';
 				if($value =~ /^(.)/) { 
 					$encoding = $1;
@@ -622,20 +611,6 @@ sub getRawMP3Tags {
 				$value =~ s/^\0//;
 				$tags->{$tagName} = $value;
 			}
-		}
-	}
-}
-
-sub getRawMOVTags {
-	my $url = shift;
-	my $tags = shift;
-
-	my $file = Slim::Utils::Misc::pathFromFileURL($url);
-	my $rawTags = MP4::Info::get_mp4tag($file);
-	if(exists $rawTags->{'META'}) {
-		my $metaTags = $rawTags->{'META'};
-		for my $tagEntry (@$metaTags) {
-			$tags->{$tagEntry->{'NAME'}}=$tagEntry->{'DATA'};
 		}
 	}
 }
