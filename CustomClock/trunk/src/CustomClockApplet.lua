@@ -218,17 +218,43 @@ end
 
 
 function defineSettingStyle(self, menuItem)
-	local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
-	local req = RequestHttp(function(chunk, err)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
 			if err then
 				log:warn(err)
-			elseif chunk then
-				chunk = json.decode(chunk)
-				self:defineSettingStyleSink(menuItem,chunk.data)
+			else
+				if chunk.data._can == 1 then
+					log:info("CustomClockHelper is installed retrieving local styles")
+					server:userRequest(function(chunk,err)
+							if err then
+								log:warn(err)
+							else
+								self:defineSettingStyleSink(menuItem,chunk.data)
+							end
+						end,
+						player and player:getId(),
+						{'customclock','styles'}
+					)
+				else
+					log:info("CustomClockHelper isn't installed retrieving online styles")
+					local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
+					local req = RequestHttp(function(chunk, err)
+							if err then
+								log:warn(err)
+							elseif chunk then
+								chunk = json.decode(chunk)
+								self:defineSettingStyleSink(menuItem,chunk.data)
+							end
+						end,
+						'GET', "/svn/CustomClock/trunk/clockstyles.json")
+					http:fetch(req)
+				end
 			end
 		end,
-		'GET', "/svn/CustomClock/trunk/clockstyles.json")
-	http:fetch(req)
+		player and player:getId(),
+		{'can','customclock','styles','?'}
+	)
 	
 	-- create animiation to show while we get data from the server
         local popup = Popup("waiting_popup")
@@ -1017,6 +1043,12 @@ function _getColor(self,color)
 		return {0x44, 0x44, 0x44}
 	elseif color =="black" then
 		return {0x00, 0x00, 0x00}
+	elseif color == "lightred" then
+		return {0xff, 0x00, 0x00}
+	elseif color == "red" then
+		return {0xcc, 0x00, 0x00}
+	elseif color == "darkred" then
+		return {0x88, 0x00, 0x00} 
 	else
 		return {0xcc, 0xcc, 0xcc}
 	end
