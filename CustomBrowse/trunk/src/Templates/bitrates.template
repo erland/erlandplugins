@@ -156,7 +156,7 @@
 								)
 							)
 						group by tracks.id 
-						order by [% RANDOMFUNCTION %]
+						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</playdata>
 					<menutype>sql</menutype>
 					[%- IF defaultalbumsort %]<defaultoption>[% defaultalbumsort %]</defaultoption>[% END %]
