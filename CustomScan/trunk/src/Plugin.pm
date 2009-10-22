@@ -45,6 +45,7 @@ use Plugins::CustomScan::Settings;
 use Plugins::CustomScan::Manage;
 use Plugins::CustomScan::Scanner;
 use Plugins::CustomScan::MixedTagSQLPlayListHandler;
+use Scalar::Util qw(blessed);
 
 my $useLongUrls = 1;
 
@@ -559,7 +560,7 @@ sub refreshTitleFormats() {
 				sub {
 					$log->debug("Retreiving title format: $format\n");
 					my $track = shift;
-					if(ref($track) eq 'HASH') {
+					if(ref($track) eq 'HASH' && blessed($track) ne 'Slim::Schema::Track') {
 						return undef;
 					}
 					my $result = '';
