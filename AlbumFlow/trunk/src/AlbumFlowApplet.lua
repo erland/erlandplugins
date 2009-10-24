@@ -18,7 +18,7 @@ Applet related methods are described in L<jive.Applet>.
 
 
 -- stuff we use
-local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
+local pairs, ipairs, tostring, tonumber,collectgarbage = pairs, ipairs, tostring, tonumber,collectgarbage
 
 local oo               = require("loop.simple")
 local os               = require("os")
@@ -133,6 +133,7 @@ function _initApplet(self, ss)
 	self.screensaver = false
 	self.albums = {}
 	self.maxIndex = 0
+	self.iconPool = {}
 	if ss then
 		self.screensaver = true
 		self.currentScroll = 1
@@ -142,6 +143,9 @@ function _initApplet(self, ss)
 	else
 		self.animateRange = ANIM_RANGE
 	end
+
+	self.player = appletManager:callService("getCurrentPlayer")
+	self.server = self.player:getSlimServer()
 
 	-- Load albums
 	self:_loadAlbums(0)
@@ -160,8 +164,6 @@ function _initApplet(self, ss)
 					local keycode = event:getKeycode()
 					log:debug("GOT key="..keycode)
 					if keycode == KEY_GO then
-	--					local player = appletManager:callService("getCurrentPlayer")
-	--					local server =self.player:getSlimServer()
 	--					local album_id = self.albums[self.selectedAlbum].params["album_id"]
 	--					local jsonAction = {
 	--						actions = {
@@ -181,7 +183,7 @@ function _initApplet(self, ss)
 	--							titleStyle = "album",
 	--						},
 	--					}
-	--					appletManager:callService("browserActionRequest",server,jsonAction,nil)
+	--					appletManager:callService("browserActionRequest",self.server,jsonAction,nil)
 						log:debug("Got GO event, issue play for now")
 						return self:_playFunction()
 					elseif keycode == KEY_UP then
@@ -204,7 +206,9 @@ function _initApplet(self, ss)
 		local manager = appletManager:getAppletInstance("ScreenSavers")
 		manager:screensaverWindow(self.window)
 	end
-	self.window:addTimer(1000, function() self:_retrieveMoreArtwork() end)
+	self.timer = self.window:addTimer(1000, function() self:_retrieveMoreAlbums() end)
+
+	collectgarbage()
 
 	-- Show the window
 	self.window:show(Window.transitionFadeIn)
@@ -242,16 +246,14 @@ function _playFunction(self)
 	if self.albums and self.albums[self.selectedAlbum] then
 		log:debug("Play album "..self.albums[self.selectedAlbum].text)
 		local album_id = self.albums[self.selectedAlbum].params["album_id"]
-		local player = appletManager:callService("getCurrentPlayer")
-		local server = self.player:getSlimServer()
-		server:userRequest(function(chunk,err)
+		self.server:userRequest(function(chunk,err)
 				if err then
 					log:debug(err)
 				else
 					appletManager:callService("goNowPlaying")
 				end
 			end,
-			player and player:getId(),
+			self.player and self.player:getId(),
 			{'playlistcontrol','cmd:load','album_id:'..album_id}
 		)
 		return EVENT_CONSUME
@@ -272,6 +274,7 @@ function _refresh(self)
 			end
 			pos = pos - 1
 			if pos<0 then
+				collectgarbage()
 				pos = 0
 				self.right = false
 				delta = self.animateRange
@@ -279,7 +282,7 @@ function _refresh(self)
 					self.currentScroll = 1
 				end
 			else
-				delta = 0
+				delta = 1
 			end
 			self:_updateCovers(pos)
 		end
@@ -293,6 +296,7 @@ function _refresh(self)
 			end
 			pos = pos + 1
 			if pos > self.maxIndex-2 then
+				collectgarbage()
 				pos = pos -1
 				self.right = true
 				delta = 0
@@ -300,7 +304,7 @@ function _refresh(self)
 					self.currentScroll = -1
 				end
 			else
-				delta = self.animateRange
+				delta = self.animateRange-1
 			end
 			self:_updateCovers(pos)
 		end
@@ -340,7 +344,32 @@ function _refresh(self)
 	end
 
 	self.canvas:reSkin()
-	self.canvas:reDraw()
+end
+
+function _restoreIcon(self,icon)
+	local i=1
+	while self.iconPool[i] do
+		i=i+1
+	end
+	icon:setValue(self:_loadImage("album"..self.model..".png"))
+	log:debug("Restore existing icon "..i)
+	self.iconPool[i] = icon
+end
+
+function _getIcon(self)
+	local i=1
+	while self.iconPool[i] do
+		i=i+1
+	end
+	if i==1 then
+		log:debug("Allocate new icon")
+		return Icon("artwork",self:_loadImage("album"..self.model..".png"))
+	else
+		log:debug("Reuse existing icon "..(i-1))
+		local icon = self.iconPool[(i-1)]
+		self.iconPool[(i-1)] = nil
+		return icon
+	end
 end
 
 function _updateCovers(self,pos)
@@ -359,6 +388,7 @@ function _updateCovers(self,pos)
 		local i = leftSlide-1
 		while i>0 and self.albums[i].iconArtwork do
 			log:debug("Deallocating artwork for "..self.albums[i].text)
+			self:_restoreIcon(self.albums[i].iconArtwork)
 			self.albums[i].iconArtwork = nil
 			i = i - 1
 		end
@@ -368,24 +398,23 @@ function _updateCovers(self,pos)
 		local i = rightSlide+1
 		while i<=self.maxIndex and self.albums[i].iconArtwork do
 			log:debug("Deallocating artwork for "..self.albums[i].text)
+			self:_restoreIcon(self.albums[i].iconArtwork)
 			self.albums[i].iconArtwork = nil
 			i=i+1
 		end
 	end
 
-	self.player = appletManager:callService("getCurrentPlayer")
-	local server = self.player:getSlimServer()
 	local result = true
 	for i=leftSlide,rightSlide do
 		if not self.albums[i].iconArtwork then
 			result = false
-			self.albums[i].iconArtwork=Icon("artwork",self:_loadImage("album"..self.model..".png"))
+			self.albums[i].iconArtwork=self:_getIcon()
 			local iconId = self.albums[i]["icon-id"]
 			if iconId then
-				server:fetchArtwork(iconId,self.albums[i].iconArtwork,ARTWORK_SIZE)
+				self.server:fetchArtwork(iconId,self.albums[i].iconArtwork,ARTWORK_SIZE)
 				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-id:"..iconId)
 			else
-				server:fetchArtwork(0,self.albums[i].iconArtwork,ARTWORK_SIZE,'png')
+				self.server:fetchArtwork(0,self.albums[i].iconArtwork,ARTWORK_SIZE,'png')
 				log:debug("Got album "..i..":"..self.albums[i].text.." without icon-id")
 			end
 		elseif not self.albums[i].iconArtwork:getImage() then
@@ -395,13 +424,11 @@ function _updateCovers(self,pos)
 	return result
 end
 
-function _retrieveMoreArtwork(self)
-	if self.albums and self.maxIndex == tonumber(self.count) then
+function _retrieveMoreAlbums(self)
+	if self.albums and self.maxIndex == tonumber(self.count) and self.maxIndex>0 then
+		self.window:removeTimer(self.timer)
 		return
 	end 
-	if self.albums and self.maxIndex>0 then
-		self:_updateCovers(self.currentPos)
-	end
 
 	if self.albums and (self.maxIndex < tonumber(self.count)) and not self.loading then
 		log:debug("Getting more albums")
@@ -503,15 +530,13 @@ function _loadAlbums(self,offset)
 		self.albums = {}
 		self.maxIndex = 0
 	end
-	self.player = appletManager:callService("getCurrentPlayer")
-	local server = self.player:getSlimServer()
 	log:debug("Sending command, requesting "..offset)
 	self.loading = true
 	local amount = 5
 	if offset>0 then
 		amount = 100
 	end
-	server:userRequest(function(chunk,err)
+	self.server:userRequest(function(chunk,err)
 			if err then
 				log:debug(err)
 			elseif chunk then
@@ -519,7 +544,7 @@ function _loadAlbums(self,offset)
 			end
 			self.loading =  false
 		end,
-		player and player:getId(),
+		self.player and self.player:getId(),
 		{'albums',offset,amount,'menu:menu'}
 	)
 	log:debug("Sent command")
@@ -536,8 +561,6 @@ function _getArtworkSize(self)
 end
 
 function _loadAlbumsSink(self,result,offset)
-	local server = self.player:getSlimServer()
-
 	local lastIndex = 1
 	self.count = result.count
 	for index,item in ipairs(result.item_loop) do
