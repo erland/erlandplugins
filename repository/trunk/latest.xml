@@ -148,14 +148,14 @@
                         <sha>60897d152a7607f08d011316ba491ac855ce2ff2</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomSkip" version="2.3.3" minTarget="7.1.0" maxTarget="*">
+		<plugin name="CustomSkip" version="2.3.4" minTarget="7.1.0" maxTarget="*">
                         <title lang="EN">Custom Skip</title>
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Removed deprecated message in log when used with Squeezebox Server 7.4</changes>
+			<changes lang="EN">- Corrected playlist based skip filters</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.3.zip</url>
-                        <sha>020ae614eb32cfdd2ebbf814c4c542ec3d6268f0</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.4.zip</url>
+                        <sha>7723d77d0de013dcd7b8171f232d64bbc78b818b</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
 		<plugin name="DynamicPlayList" version="2.7" minTarget="7.2.0" maxTarget="7.3.*">
