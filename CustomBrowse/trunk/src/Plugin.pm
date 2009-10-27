@@ -3828,6 +3828,7 @@ sub cliJiveHandlerImpl {
 			my %contextMenuParams = (
 				$item->{'itemtype'}.'_id' => $item->{'itemid'},
 				'menu' => $item->{'itemtype'},
+				'isContextMenu' => 1,
 			);
 			if($item->{'itemtype'} eq 'year') {
 				$contextMenuParams{'year'} = $contextMenuParams{'year_id'};
@@ -3837,7 +3838,6 @@ sub cliJiveHandlerImpl {
 				'cmd' => ['contextmenu'],
 				'params' => \%contextMenuParams,
 				'itemParams' => 'params',
-				'window' => { 'isContextMenu' => 1},
 			};
 		}
 
@@ -3889,6 +3889,7 @@ sub cliJiveHandlerImpl {
 					my $contextMenuParams = {
 						track_id => $item->{'itemid'},
 						menu => 'track',
+						'isContextMenu' => 1,
 					};
 					my $actions = {
 						'go' => {
@@ -3898,7 +3899,6 @@ sub cliJiveHandlerImpl {
 						'more' => {
 							'cmd' => ['contextmenu'],
 							'params' => $contextMenuParams,
-							'window' => { 'isContextMenu' => 1},
 						},
 					};
 					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
