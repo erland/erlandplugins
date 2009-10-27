@@ -3824,6 +3824,23 @@ sub cliJiveHandlerImpl {
 			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 		}
 
+		if(defined($item->{'itemtype'})) {
+			my %contextMenuParams = (
+				$item->{'itemtype'}.'_id' => $item->{'itemid'},
+				'menu' => $item->{'itemtype'},
+			);
+			if($item->{'itemtype'} eq 'year') {
+				$contextMenuParams{'year'} = $contextMenuParams{'year_id'};
+				delete $contextMenuParams{'year_id'};
+			}
+			$actions->{'more'} = {
+				'cmd' => ['contextmenu'],
+				'params' => \%contextMenuParams,
+				'itemParams' => 'params',
+				'window' => { 'isContextMenu' => 1},
+			};
+		}
+
 		if(defined($actions)) {
 			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 		}
@@ -3869,13 +3886,23 @@ sub cliJiveHandlerImpl {
 						track_id => $item->{'itemid'},
 						menu => 'nowhere',
 					};
+					my $contextMenuParams = {
+						track_id => $item->{'itemid'},
+						menu => 'track',
+					};
 					my $actions = {
 						'go' => {
 							'cmd' => ['trackinfo','items'],
 							'params' => $songInfoParams,
 						},
+						'more' => {
+							'cmd' => ['contextmenu'],
+							'params' => $contextMenuParams,
+							'window' => { 'isContextMenu' => 1},
+						},
 					};
 					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+
 				}else {
 					my $songInfoParams = {
 						track_id => $item->{'itemid'},
