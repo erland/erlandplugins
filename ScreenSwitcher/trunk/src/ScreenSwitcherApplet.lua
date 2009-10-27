@@ -118,7 +118,8 @@ function _updateScreensaver(self, forced)
 				local activeWindows = screensaversApplet["active"]
 				if activeWindows and #activeWindows > 0 then
 					for i, window in ipairs(activeWindows) do
-						windowsToHide[i] = window;
+						window:hide(Window.transitionFadeIn)
+						--windowsToHide[i] = window;
 					end
 				end
 			end
@@ -127,10 +128,10 @@ function _updateScreensaver(self, forced)
 			self.currentScreensaver = ssKey
 		        log:info("activating " .. ssData.applet .. " "..tostring(ssData.displayName).." screensaver")
 		end
-		for i,window in ipairs(windowsToHide) do
-			window:hide(Window.transitionNone)
-			log:debug("Hiding windows...")
-		end
+		--for i,window in ipairs(windowsToHide) do
+		--	window:hide(Window.transitionNone)
+		--	log:debug("Hiding windows...")
+		--end
 	end
 	if ss then
 		log:info("Start new timer, trigger after "..ss.delay.." seconds")
