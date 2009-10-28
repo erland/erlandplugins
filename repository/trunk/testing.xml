@@ -18,6 +18,18 @@
                         <sha>f08d4b56980235695d2b57e9d61de663785d0b1b</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+                <applet name="ScreenSwitcher" version="0.1.2853" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Screen Switcher *Beta*</title>
+                        <desc lang="EN">*** THIS IS A BETA VERSION***. Switch continuously between different screen savers.
+                        </desc>
+                        <changes lang="EN">- Initial beta version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-0.1.2853.zip</url>
+                        <sha>e215a7b3265239c062587e9fd970075cf6dc13b9</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
 	</applets>
 	<plugins>
                 <plugin name="MythTV" version="0.1.2604" minTarget="7.4.0" maxTarget="*">
