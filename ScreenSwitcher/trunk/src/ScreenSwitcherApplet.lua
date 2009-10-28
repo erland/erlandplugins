@@ -19,7 +19,7 @@ following methods:
 
 
 -- stuff we use
-local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
+local pairs, ipairs, tostring, tonumber, pcall = pairs, ipairs, tostring, tonumber, pcall
 
 local oo               = require("loop.simple")
 local os               = require("os")
@@ -62,8 +62,16 @@ oo.class(_M, Applet)
 -- display
 -- the main applet function, the meta arranges for it to be called
 -- by the ScreenSaversApplet.
-function openScreensaver(self)
+function openRandomScreensaver(self,random)
+	openScreensaver(self,true)
+end
+
+function openScreensaver(self,random)
+	self.random = false
 	self.player = appletManager:callService("getCurrentPlayer")
+	if random then
+		self.random = true
+	end
 	if not self.currentPosition then
 		self.currentPosition = {
 			off = nil,
@@ -74,6 +82,7 @@ function openScreensaver(self)
 	if self.timer then
 		self.timer:stop()
 	end
+
 	self:_updateScreensaver(true)
 end
 
@@ -86,15 +95,28 @@ end
 
 function _updateScreensaver(self, forced)
 	local ss
-        if not self:isSoftPowerOn() and System:getMachine() ~= "jive" then
-                ss = self:_getNextScreensaver("off")
-        else
-                if self.player and self.player:getPlayMode() == "play" then
-                        ss = self:_getNextScreensaver("playing")
-                else
-                        ss = self:_getNextScreensaver("stopped")
-                end
-        end
+	log:debug("Updating random="..tostring(self.random))
+	if not self:isSoftPowerOn() and System:getMachine() ~= "jive" then
+		if self.random then
+		        ss = self:_getRandomScreensaver("off")
+		else
+		        ss = self:_getNextScreensaver("off")
+		end
+	else
+	        if self.player and self.player:getPlayMode() == "play" then
+			if self.random then
+			        ss = self:_getRandomScreensaver("playing")
+			else
+			        ss = self:_getNextScreensaver("playing")
+			end
+	        else
+			if self.random then
+			        ss = self:_getRandomScreensaver("stopped")
+			else
+			        ss = self:_getNextScreensaver("stopped")
+			end
+	        end
+	end
 
 	local ssKey = "BlankScreen:openScreensaver"
 	if ss and ss.screensaver then
@@ -118,23 +140,26 @@ function _updateScreensaver(self, forced)
 				local activeWindows = screensaversApplet["active"]
 				if activeWindows and #activeWindows > 0 then
 					for i, window in ipairs(activeWindows) do
-						window:hide(Window.transitionFadeIn)
-						--windowsToHide[i] = window;
+						--window:hide(Window.transitionFadeIn)
+						windowsToHide[i] = window;
 					end
 				end
 			end
 		end
-		if ssApplet[ssData.method](ssApplet, force, ssData.methodParam) ~= false then
-			self.currentScreensaver = ssKey
-		        log:info("activating " .. ssData.applet .. " "..tostring(ssData.displayName).." screensaver")
+
+		-- We do this with pcall just for safety to make sure our switching isn't stopped if there is an error 
+		-- (switching from analog clock will cause error messages due to canvas usage)
+		local status,err = pcall(ssApplet[ssData.method], ssApplet, force, ssData.methodParam)
+		self.currentScreensaver = ssKey
+	        log:debug("activating " .. ssData.applet .. " "..tostring(ssData.displayName).." screensaver")
+		for i,window in ipairs(windowsToHide) do
+			-- We do this with pcall just for safety to make sure our switching isn't stopped if there is an error
+			log:debug("Hiding windows...")
+			local status,err = pcall(Window.hide,window,Window.transitionNone)
 		end
-		--for i,window in ipairs(windowsToHide) do
-		--	window:hide(Window.transitionNone)
-		--	log:debug("Hiding windows...")
-		--end
 	end
 	if ss then
-		log:info("Start new timer, trigger after "..ss.delay.." seconds")
+		log:debug("Start new timer, trigger after "..ss.delay.." seconds")
 		self.timer = Timer(ss.delay*1000, function() 
 			local screensaversApplet = appletManager:loadApplet("ScreenSavers") 
 			local activeWindows = screensaversApplet["active"]
@@ -400,6 +425,39 @@ function _getNextScreensaver(self,state)
 		log:debug("Getting "..state.." screensaver from position "..currentPos)
 		log:debug("Returning screen saver "..screenSaverList[currentPos].screensaver)
 		return screenSaverList[currentPos]
+	end
+	log:debug("No "..state.." screensaver defined for position "..currentPos..", returning blank screensaver")
+	return nil
+end
+
+function _getRandomScreensaver(self,state)
+	local screensaversApplet = appletManager:loadApplet("ScreenSavers") 
+	local screenSaverList = screensaversApplet["screensavers"]
+
+	local localScreenSaverList = {}
+	local i = 1
+	for _,saver in pairs(screenSaverList) do
+		if state ~= "off" and saver.applet and self:getKey(saver.applet,saver.method,saver.additionalKey) ~= "BlankScreen:openScreensaver" and saver.applet ~= "ScreenSwitcher" then
+			localScreenSaverList[i] = saver
+			i = i+1
+		elseif state == "off" and saver.applet and self:getKey(saver.applet,saver.method,saver.additionalKey) ~= "BlankScreen:openScreensaver" and saver.applet ~= "ScreenSwitcher" and saver.applet ~= "NowPlaying" then
+			localScreenSaverList[i] = saver
+			i = i+1
+		else 
+			log:debug("Skipping "..state.." saver "..self:getKey(saver.applet,saver.method,saver.additionalKey))
+		end
+	end
+	log:debug("Choosing among "..#localScreenSaverList.." screensavers")
+	local currentPos = math.random(#localScreenSaverList)
+
+	if localScreenSaverList and localScreenSaverList[currentPos] then
+		log:debug("Getting random "..state.." screensaver from position "..currentPos)
+		log:debug("Returning screen saver "..self:getKey(localScreenSaverList[currentPos].applet,localScreenSaverList[currentPos].method,localScreenSaverList[currentPos].additionalKey))
+		local result = {
+			screensaver = self:getKey(localScreenSaverList[currentPos].applet,localScreenSaverList[currentPos].method,localScreenSaverList[currentPos].additionalKey),
+			delay = 60,
+		}
+		return result
 	end
 	log:debug("No "..state.." screensaver defined for position "..currentPos..", returning blank screensaver")
 	return nil
