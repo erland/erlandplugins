@@ -3086,7 +3086,22 @@ sub jiveStatistics {
 		                        itemsParams => 'mixerparams',
 		                };
        			}
+			$baseActions->{'actions'}->{'more'} = {
+				cmd => ['contextmenu'],
+				itemsParams => 'mixerparams',
+				window => { 
+					'isContextMenu' => 1,
+				},
+			};
 			$baseActions->{'window'}->{'titleStyle'} = 'album';
+		}elsif($params->{'listtype'} eq 'year' || $params->{'listtype'} eq 'playlist') {
+			$baseActions->{'actions'}->{'more'} = {
+				cmd => ['contextmenu'],
+				itemsParams => 'mixerparams',
+				window => { 
+					'isContextMenu' => 1,
+				},
+			};
 		}
 	
 		$request->addResult('base',$baseActions);		
@@ -3192,6 +3207,7 @@ sub jiveStatistics {
 				};
 				$baseItemParams{'playlist.id'} = $item->{'itemid'};
 				$mixerItemParams{'playlist'} = $item->{'itemid'};
+				$mixerItemParams{'playlist_id'} = $item->{'itemid'};
 				$itemobj = $item->{'itemobj'}->{'playlist'};
 			}elsif($item->{'listtype'} eq 'track') {
 				$itemParams{'track'} = $item->{'itemid'};
@@ -3230,6 +3246,10 @@ sub jiveStatistics {
 			        } elsif ( scalar(@$mixers) ) {
 			                $request->addResultLoop('item_loop', $cnt, 'playHoldAction', 'go');
 	        		}
+				$mixerItemParams{'menu'} = $params->{'listtype'};
+				$request->addResultLoop('item_loop',$cnt,'mixerparams',\%mixerItemParams);
+			}elsif($params->{'listtype'} eq 'year'||$params->{'listtype'} eq 'playlist') {
+				$mixerItemParams{'menu'} = $params->{'listtype'};
 				$request->addResultLoop('item_loop',$cnt,'mixerparams',\%mixerItemParams);
 			}
 
@@ -3510,11 +3530,13 @@ sub mixerlink {
 		$contextName = 'album'; 
 		$contextType = 'all';
 	}elsif(ref($item) eq 'Slim::Schema::Track') {
-		$contextId = $item->album->id;
-		$contextName = 'album'; 
-		$contextType = 'all';
-		$selectedItem = $item->id;
-		$form->{'noitems'} = 1;
+		if(defined($item->album)) {
+			$contextId = $item->album->id;
+			$contextName = 'album'; 
+			$contextType = 'all';
+			$selectedItem = $item->id;
+			$form->{'noitems'} = 1;
+		}
 	}elsif(ref($item) eq 'Slim::Schema::Contributor' &&  Slim::Schema->variousArtistsObject->id ne $item->id) {
 		$contextId = $item->id;
 		$contextName = 'artist'; 
