@@ -781,14 +781,18 @@ sub addToHistory
 	my $ds = getCurrentDS();
 	my $track = objectForUrl($url);
 	if (!defined $track && !defined $mbId) {
-		$log->debug("File $url doesn't exist - will try to find on alternative path.");
-		$track = findObjectForMovedUrl($url);
-		if (defined $track) {
-			$url = $track->url;
-			$log->debug("Found history song on alternative path $url");
-		}
-		else {
-			$log->warn("No matching alternative path found for $url.");
+		if($prefs->get("findalternativefiles")) {
+			$log->debug("File $url doesn't exist - will try to find on alternative path.");
+			$track = findObjectForMovedUrl($url);
+			if (defined $track) {
+				$url = $track->url;
+				$log->info("Found history song on alternative path $url");
+			}
+			else {
+				$log->warn("No matching alternative path found for $url.");
+			}
+		}else {
+			$log->warn("No matching file found for $url.");
 		}
 	}
 	if(!$ignoreTrackInSlimserver) {
@@ -967,14 +971,18 @@ sub saveTrack
 	my $ds        = getCurrentDS();
 	my $track = objectForUrl($url);
 	if (!defined $track && !defined $mbId) {
-		$log->debug("File $url doesn't exist - will try to find on alternative path.");
-		$track = findObjectForMovedUrl($url);
-		if (defined $track) {
-			$url = $track->url;
-			$log->debug("Found song on alternative path $url");
-		}
-		else {
-			$log->warn("No matching alternative path found for $url.");
+		if($prefs->get("findalternativefiles")) {
+			$log->debug("File $url doesn't exist - will try to find on alternative path.");
+			$track = findObjectForMovedUrl($url);
+			if (defined $track) {
+				$url = $track->url;
+				$log->info("Found song on alternative path $url");
+			}
+			else {
+				$log->warn("No matching alternative path found for $url.");
+			}
+		}else {
+			$log->warn("No matching file found for $url.");
 		}
 	}
 
@@ -1070,14 +1078,18 @@ sub mergeTrack
 	my $ds        = getCurrentDS();
 	my $track     = objectForUrl($url);
 	if (!defined $track && !defined $mbId) {
-		$log->debug("File $url doesn't exist - will try to find on alternative path.");
-		$track = findObjectForMovedUrl($url);
-		if (defined $track) {
-			$url = $track->url;
-			$log->debug("Found song on alternative path $url");
-		}
-		else {
-			$log->warn("No matching alternative path found for $url.");
+		if($prefs->get("findalternativefiles")) {
+			$log->debug("File $url doesn't exist - will try to find on alternative path.");
+			$track = findObjectForMovedUrl($url);
+			if (defined $track) {
+				$url = $track->url;
+				$log->debug("Found song on alternative path $url");
+			}
+			else {
+				$log->warn("No matching alternative path found for $url");
+			}
+		}else {
+			$log->warn("No matching file found for $url");
 		}
 	}
 

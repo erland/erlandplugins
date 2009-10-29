@@ -19,6 +19,13 @@
 		<input name="backup" type="submit" class="stdclick" value="[% "SETUP_PLUGIN_TRACKSTAT_BACKUP" | string %]">
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_FIND_ALTERNATIVE_FILES" desc="SETUP_PLUGIN_TRACKSTAT_FIND_ALTERNATIVE_FILES_DESC" %]
+		<select name="pref_findalternativefiles">
+			<option value="1" [% IF prefs.findalternativefiles %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.findalternativefiles %]selected[% END %]>[% "NO" | string %]</option>
+		</select>
+	[% END %]
+
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RESTORE" desc="SETUP_PLUGIN_TRACKSTAT_RESTORE_DESC" %]
 		<input name="restore" type="submit" class="stdclick" value="[% "SETUP_PLUGIN_TRACKSTAT_RESTORE" | string %]" onClick="return confirm('[% "SETUP_PLUGIN_TRACKSTAT_RESTORE_WARNING" | string %]')">
 	[% END %]

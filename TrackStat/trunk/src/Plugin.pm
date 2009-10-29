@@ -2438,6 +2438,11 @@ sub initPlugin
 			$prefs->set("backup_time","03:00");
 		}
 
+		# Set findalternativefiles to 1 (true)
+		if(!defined($prefs->get("findalternativefiles"))) {
+			$prefs->set("findalternativefiles",1);
+		}
+
 		# Set scheduled backup dir
 		if(!defined($prefs->get("backup_dir"))) {
 			if(defined($prefs->get("backup_file"))) {

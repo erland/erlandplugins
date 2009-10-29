@@ -256,6 +256,15 @@ SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME
 SETUP_PLUGIN_TRACKSTAT_BACKUP_TIME_DESC
 	EN	Time each day when a scheduled backup or TrackStat information should take place, if this field is empty no scheduled backups will occur
 
+PLUGIN_TRACKSTAT_FIND_ALTERNATIVE_FILES
+	EN	Find alternative files
+
+SETUP_PLUGIN_TRACKSTAT_FIND_ALTERNATIVE_FILES
+	EN	Find alternative files
+
+SETUP_PLUGIN_TRACKSTAT_FIND_ALTERNATIVE_FILES_DESC
+	EN	Find alternative files during restore or import if a file in the backup file or imported data can't be found, it will try to find a file with the same end of the path but different beginning. This should be safe in most situation but it can cause a performance problem in large databases.
+
 PLUGIN_TRACKSTAT_BACKUP
 	EN	Backup to file
 
