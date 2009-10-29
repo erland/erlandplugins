@@ -153,7 +153,7 @@ sub restoreFromFile
 {
 	my $backupFile = shift;
 	if(stillScanning()) {
-		$log->warning("Restore is already in progress, please wait for the previous restore to finish");
+		$log->warn("Restore is already in progress, please wait for the previous restore to finish");
 		return;
 	}
 	initRestore($backupFile);
