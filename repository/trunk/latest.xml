@@ -75,15 +75,17 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.9.1" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.10" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected startup and rescan performance problem
+			<changes lang="EN">- Added context menu support in TrackStat menu
+			- Corrected crash when two restore operations are performed immediately after each other
+			- Added option to make it possible to deactivate the alternative path logic during restore and import
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9.1.zip</url>
-			<sha>5aa99ded699724b1395b93d614aadce6d0d29c29</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.10.zip</url>
+			<sha>146e60345e3f903e6533dfb3d4418bf5d2496d81</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -102,22 +104,17 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.9" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.10" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for Squeezeplay context menus
-			- Added option to bitrates menu to make it possible to show bitrates for lossless tracks and make it possible to hide lossless tracks
-			- Added better error messages when failed to write file
-			- Corrected issue 74 so you can select to not replace web interface menus
-			- Added possibility to completely delete Squeezeplay menus
-			- Updated so it uses playlist_track.track as url instead of id
-			- Added problem where FishboneCB skin had incorrect links
-			- Added playall type for improved iPeng support
+			<changes lang="EN">- Added support for Squeezeplay context menus from Custom Browse menus
+			- Improved support for future iPeng versions through new type attribute
+			- Changed so tracks are played in order in bitrates menu
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.9.zip</url>
-                        <sha>1c9c0577e87a92733e7a3a1a7fbc6feec8481754</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.zip</url>
+                        <sha>8dd60cca4c213270fdba9987979aa6db3347a0e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
