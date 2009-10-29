@@ -60,7 +60,7 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(backup_file backup_dir backup_time));
+        return ($prefs, qw(backup_file backup_dir backup_time findalternativefiles));
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;
