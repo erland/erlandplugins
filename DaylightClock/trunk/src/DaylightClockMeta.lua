@@ -35,8 +35,6 @@ function jiveVersion(self)
 end
 
 function registerApplet(self)
-        jiveMain:addItem(self:menuItem('appletDaylightClock', 'screenSettings', "SCREENSAVER_DAYLIGHTCLOCK_SETTINGS",
-                function(applet, ...) applet:openSettings(...) end, 105))
 end
 
 function configureApplet(self)
@@ -44,8 +42,8 @@ function configureApplet(self)
 		self:string("SCREENSAVER_DAYLIGHTCLOCK"), 
 		"DaylightClock",
 		"openScreensaver", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_DAYLIGHTCLOCK_SETTINGS"), 
+		"openSettings", 
 		90)
 end
 
