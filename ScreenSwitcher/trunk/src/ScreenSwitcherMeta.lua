@@ -35,8 +35,6 @@ function jiveVersion(self)
 end
 
 function registerApplet(self)
-        jiveMain:addItem(self:menuItem('appletScreenSwitcher', 'screenSettings', "SCREENSAVER_SCREENSWITCHER_SETTINGS",
-                function(applet, ...) applet:openSettings(...) end, 105))
 end
 
 function configureApplet(self)
@@ -44,16 +42,16 @@ function configureApplet(self)
 		self:string("SCREENSAVER_SCREENSWITCHER"), 
 		"ScreenSwitcher",
 		"openScreensaver", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS"), 
+		"openSettings", 
 		90,
 		"closeScreensaver")
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_SCREENSWITCHER_RANDOM"), 
 		"ScreenSwitcher",
 		"openRandomScreensaver", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS"), 
+		"openSettings", 
 		90,
 		"closeScreensaver",
 		true,
