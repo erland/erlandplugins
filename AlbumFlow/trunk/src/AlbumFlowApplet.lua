@@ -74,8 +74,8 @@ oo.class(_M, Applet)
 -- Helper Functions
 --
 
-function openScreensaver(self)
-	self:_initApplet(true)
+function openScreensaver(self,view)
+	self:_initApplet(true,view)
 end
 -- display
 -- the main applet function, the meta arranges for it to be called
@@ -84,128 +84,133 @@ function menu(self)
 	self:_initApplet(false)
 end
 
-function _initApplet(self, ss)
+function _initApplet(self, ss,view)
 	log:debug("Recreating screensaver window")
-	local width,height = Framework.getScreenSize()
-	if width == 480 then
-		self.model = "touch"
-	elseif width == 320 then
-		self.model = "radio"
-	else
-		self.model = "controller"
-	end
+	
+	if not ss or (ss and not self.screensaver) or not self.window or self.view ~= view then
+		self.view = view
+		local width,height = Framework.getScreenSize()
+		if width == 480 then
+			self.model = "touch"
+		elseif width == 320 then
+			self.model = "radio"
+		else
+			self.model = "controller"
+		end
 
-	self.images = {}
+		self.images = {}
 
-	self.window = Window("window")
-	self.window:setSkin(self:_getSkin(jiveMain:getSelectedSkin()))
-	self.window:reSkin()
+		self.window = Window("window")
+		self.window:setSkin(self:_getSkin(jiveMain:getSelectedSkin()))
+		self.window:reSkin()
 
-	local backgroundItems = {
-		background = Icon("background")
-	}
-	self.backgroundImage = Group("background",backgroundItems)
+		local backgroundItems = {
+			background = Icon("background")
+		}
+		self.backgroundImage = Group("background",backgroundItems)
 
-	self.canvas = Canvas('debug_canvas',function(screen)
-			self:_reDrawCanvas(screen)
-		end)
+		self.canvas = Canvas('debug_canvas',function(screen)
+				self:_reDrawCanvas(screen)
+			end)
 
-	local canvasItems = {
-		canvas = self.canvas
-	}
-	local canvasGroup = Group("canvas",canvasItems)
+		local canvasItems = {
+			canvas = self.canvas
+		}
+		local canvasGroup = Group("canvas",canvasItems)
 
-	local titleItems = {
-		albumtext = Label("albumtext"," ")
-	}
-	self.titleGroup = Group("albumtext",titleItems)
+		local titleItems = {
+			albumtext = Label("albumtext"," ")
+		}
+		self.titleGroup = Group("albumtext",titleItems)
 
-	self.window:addWidget(self.backgroundImage)
-	self.window:addWidget(canvasGroup)
-	self.window:addWidget(self.titleGroup)
-	self.window:focusWidget(self.titleGroup)
+		self.window:addWidget(self.backgroundImage)
+		self.window:addWidget(canvasGroup)
+		self.window:addWidget(self.titleGroup)
+		self.window:focusWidget(self.titleGroup)
 
-	self.right = true
-	self.currentPos = -1
-	self.currentDelta = 0
-	self.currentScroll = 0
-	self.loading =  false
-	self.screensaver = false
-	self.albums = {}
-	self.maxIndex = 0
-	self.iconPool = {}
-	if ss then
-		self.screensaver = true
-		self.currentScroll = 1
-		self.currentDelta = SS_ANIM_RANGE
+		self.right = true
 		self.currentPos = -1
-		self.animateRange = SS_ANIM_RANGE
-	else
-		self.animateRange = ANIM_RANGE
-	end
+		self.currentDelta = 0
+		self.currentScroll = 0
+		self.loading =  false
+		self.screensaver = false
+		self.albums = {}
+		self.maxIndex = 0
+		self.iconPool = {}
+		if ss then
+			self.screensaver = true
+			self.currentScroll = 1
+			self.currentDelta = SS_ANIM_RANGE
+			self.currentPos = -1
+			self.animateRange = SS_ANIM_RANGE
+		else
+			self.animateRange = ANIM_RANGE
+		end
 
-	self.player = appletManager:callService("getCurrentPlayer")
-	self.server = self.player:getSlimServer()
+		self.player = appletManager:callService("getCurrentPlayer")
+		self.server = self.player:getSlimServer()
 
-	-- Load albums
-	self:_loadAlbums(0)
+		-- Load albums
+		self:_loadAlbums(0)
 
-	self.canvas:addAnimation(
-		function()
-			self:_refresh()
-		end,
-		FRAME_RATE
-	)
-	if not ss then
-		self.titleGroup:addListener(EVENT_KEY_PRESS | EVENT_SCROLL,
-			function(event)
-				local type = event:getType()
-				if type == EVENT_KEY_PRESS then
-					local keycode = event:getKeycode()
-					log:debug("GOT key="..keycode)
-					if keycode == KEY_GO then
-	--					local album_id = self.albums[self.selectedAlbum].params["album_id"]
-	--					local jsonAction = {
-	--						actions = {
-	--							go = {
-	--								cmd = {"tracks"},
-	--								itemParams = "params",
-	--								params = {
-	--									menu = "trackinfo",
-	--									menu_all = 1,
-	--									sort = "tracknum",
-	--									album_id = album_id,
-	--								},
-	--							},
-	--						},
-	--						window = {
-	--							text = self.albums[self.selectedAlbum].text,
-	--							titleStyle = "album",
-	--						},
-	--					}
-	--					appletManager:callService("browserActionRequest",self.server,jsonAction,nil)
-						log:debug("Got GO event, issue play for now")
-						return self:_playFunction()
-					elseif keycode == KEY_UP then
-						return self:_handleScroll(-1)
-					elseif keycode == KEY_DOWN then
-						return self:_handleScroll(1)
+		self.canvas:addAnimation(
+			function()
+				self:_refresh()
+			end,
+			FRAME_RATE
+		)
+		if not ss then
+			self.titleGroup:addListener(EVENT_KEY_PRESS | EVENT_SCROLL,
+				function(event)
+					local type = event:getType()
+					if type == EVENT_KEY_PRESS then
+						local keycode = event:getKeycode()
+						log:debug("GOT key="..keycode)
+						if keycode == KEY_GO then
+		--					local album_id = self.albums[self.selectedAlbum].params["album_id"]
+		--					local jsonAction = {
+		--						actions = {
+		--							go = {
+		--								cmd = {"tracks"},
+		--								itemParams = "params",
+		--								params = {
+		--									menu = "trackinfo",
+		--									menu_all = 1,
+		--									sort = "tracknum",
+		--									album_id = album_id,
+		--								},
+		--							},
+		--						},
+		--						window = {
+		--							text = self.albums[self.selectedAlbum].text,
+		--							titleStyle = "album",
+		--						},
+		--					}
+		--					appletManager:callService("browserActionRequest",self.server,jsonAction,nil)
+							log:debug("Got GO event, issue play for now")
+							return self:_playFunction()
+						elseif keycode == KEY_UP then
+							return self:_handleScroll(-1)
+						elseif keycode == KEY_DOWN then
+							return self:_handleScroll(1)
+						end
+					elseif type == EVENT_SCROLL then
+						return self:_handleScroll(event)
 					end
-				elseif type == EVENT_SCROLL then
-					return self:_handleScroll(event)
+					return EVENT_UNUSED
 				end
-				return EVENT_UNUSED
-			end
-		)
+			)
 
-		self.titleGroup:addActionListener("play",self.titleGroup,function()
-				return self:_playFunction()
-			end
-		)
-	else
-		local manager = appletManager:getAppletInstance("ScreenSavers")
-		manager:screensaverWindow(self.window)
+			self.titleGroup:addActionListener("play",self.titleGroup,function()
+					return self:_playFunction()
+				end
+			)
+		else
+			local manager = appletManager:getAppletInstance("ScreenSavers")
+			manager:screensaverWindow(self.window)
+		end
 	end
+
 	self.timer = self.window:addTimer(1000, function() self:_retrieveMoreAlbums() end)
 
 	collectgarbage()
