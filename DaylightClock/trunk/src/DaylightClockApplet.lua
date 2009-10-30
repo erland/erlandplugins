@@ -130,10 +130,11 @@ function openScreensaver(self)
 		manager:screensaverWindow(self.window)
 		self.window:addTimer(1000, function() self:_tick() end)
 		self.offset = math.random(15)
+		self.lasttime = 0
 	end
 	self.lastminute = 0
 	self.nowPlaying = 0
-	self:_tick(1)
+	self:_tick()
 
 	-- Show the window
 	self.window:show(Window.transitionFadeIn)
@@ -796,7 +797,7 @@ function _updateNowPlaying(self,itemType)
 end
 
 -- Update the time and if needed also the wallpaper
-function _tick(self,forcedWallpaperUpdate)
+function _tick(self)
 	log:debug("Updating time")
 
 	if self:getSettings()["item1"] != "" then
@@ -824,7 +825,7 @@ function _tick(self,forcedWallpaperUpdate)
 	end
 
 	local minute = os.date("%M")
-	if forcedWallpaperUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
+	if (self.lasttime == 0 or os.time()-self.lasttime>900) or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
 		log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
 
 		local width,height = self:_getUsableWallpaperArea()
@@ -888,6 +889,7 @@ function _tick(self,forcedWallpaperUpdate)
 			end,
 			'GET', perspectiveurl .. "/480.jpg")
 		http:fetch(req)
+		self.lasttime = os.time()
 	end
 	self.lastminute = minute
 end
