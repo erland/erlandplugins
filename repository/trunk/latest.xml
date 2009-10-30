@@ -16,27 +16,27 @@
                         <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="DaylightClock" version="1.0.1" minTarget="7.4" maxTarget="*">
+                <applet name="DaylightClock" version="1.0.2" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
-                        <changes lang="EN">- Changed licensing to LGPL
+                        <changes lang="EN">- Moved settings page under Settings/Screen/Screensavers
+			- Updated so it doesn't refresh the image each time screen saver is activated
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.0.1.zip</url>
-                        <sha>ca44bfd1636afd8d5215862dc5ee34987c04c500</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.0.2.zip</url>
+                        <sha>1b1d5762717efbef3bbdc0b26515eedbc83bd9f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="1.2" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="1.2.1" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added new Digital Clock style with red text
-			- Added support for Custom Clock Helper plugin
+                        <changes lang="EN">- Moved settings page under Settings/Screen/Screensavers
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-1.2.zip</url>
-                        <sha>db47d17f92d6844af52afa63f610461f4c6390ae</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-1.2.1.zip</url>
+                        <sha>1de204372094c98be59a9eca6e20401d426bc021</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
