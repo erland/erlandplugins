@@ -5,17 +5,18 @@
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
 	<applets>
-                <applet name="AlbumFlow" version="0.1.2867" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="0.2.2873" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">- Corrected so it uses less resources
-			- Updated so screen saver start where it existed last time
+                        <changes lang="EN">- Added new screen saver modes
+			- Added style setting
+			- Changed so only albums with covers are shown in screen saver mode
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.1.2867.zip</url>
-                        <sha>5b3a811538ddc595b6b35c77b4284cf7e1eb3b47</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.2.2873.zip</url>
+                        <sha>78a9df4ed3670643cb7c69ff9a0855c473460a4b</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="ScreenSwitcher" version="0.1.2867" minTarget="7.4" maxTarget="*">
