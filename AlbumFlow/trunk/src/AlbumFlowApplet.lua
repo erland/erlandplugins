@@ -254,6 +254,109 @@ function _initApplet(self, ss,view,forced)
 	self.window:show(Window.transitionFadeIn)
 end
 
+function openScreensaverSettings(self)
+	log:debug("Album Flow settings")
+	local window = Window("text_list", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingStyle(menuItem, "screensaver")
+				return EVENT_CONSUME
+			end
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
+function defineSettingStyle(self, menuItem, param)
+	local group = RadioGroup()
+
+	local style = self:getSettings()[param.."style"]
+
+	local window = Window("text_list", menuItem.text, 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_CIRCULAR"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[param.."style"] = "circular"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				style == "circular"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_SHRINKEDSLIDE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[param.."style"] = "shrinkedslide"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				style == "shrinkedslide"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_STRETCHEDSLIDE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[param.."style"] = "stretchedslide"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				style == "stretchedslide"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_SLIDE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[param.."style"] = "slide"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				style == "slide"
+			),
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
 function _handleScroll(self, event, keyScroll)
 	local scroll = keyScroll
 	if not scroll then
@@ -285,7 +388,7 @@ end
 function _playFunction(self) 
 	if self.albums and self.albums[self.selectedAlbum] then
 		log:debug("Play album "..self.albums[self.selectedAlbum].text)
-		local album_id = self.albums[self.selectedAlbum].params["album_id"]
+		local album_id = self.albums[self.selectedAlbum]["album_id"]
 		self.server:userRequest(function(chunk,err)
 				if err then
 					log:debug(err)
@@ -326,7 +429,11 @@ function _refresh(self)
 						end
 					end
 				else
-					delta = 1
+					if self.screensaver then
+						delta = 1
+					else
+						delta = 0
+					end
 				end
 				if self.count then
 					self:_updateCoversAndData(pos)
@@ -353,7 +460,11 @@ function _refresh(self)
 						end
 					end
 				else
-					delta = self.animateRange-1
+					if self.screensaver then
+						delta = self.animateRange-1
+					else 
+						delta = self.animateRange
+					end
 				end
 				if self.count then
 					self:_updateCoversAndData(pos)
@@ -582,81 +693,327 @@ function _reDrawCanvas(self,screen)
 	local posx
 	local posy
 
-	if self.albums[self.currentPos] then
-		-- width = 0% -> 50%
-		-- height = 50% -> 75%
-		-- left = 0
-		-- right = 0 -> 120
-		-- top = 60 -> 30
-		zoomx = (self.currentDelta/2)/self.animateRange
-		zoomy = ((self.currentDelta/4)/self.animateRange)+0.5
-		posx = 0
-		posy = sizeby4-sizeby8*(self.currentDelta/self.animateRange)
-		if self.model == "controller" then
-			self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
-		else
-			self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
-		end
+	local style
+	if self.screensaver then
+		style = self:getSettings()["screensaverstyle"]
+	else
+		-- TODO: Implement so it reads from a separate property
+		style = self:getSettings()["screensaverstyle"]
 	end
-	if self.albums[self.currentPos+1] then
-		-- width = 50% -> 100%
-		-- height = 75% -> 100%
-		-- left = 0 -> 120
-		-- right = 120 -> 360
-		-- top = 30 -> 0
-		zoomx = (self.currentDelta/2)/self.animateRange+(self.animateRange/2)/self.animateRange
-		zoomy = ((self.currentDelta/4)/self.animateRange)+0.75
-		posx = sizeby2*(self.currentDelta/self.animateRange)
-		posy = sizeby8-sizeby8*(self.currentDelta/self.animateRange)
-		if self.model == "controller" then
-			self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
-		else
-			self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+	if style == "circular" then
+		if self.albums[self.currentPos] then
+			-- width = 0% -> 50%
+			-- height = 50% -> 75%
+			-- left = 0
+			-- right = 0 -> 120
+			-- top = 60 -> 30
+			zoomx = (self.currentDelta/2)/self.animateRange
+			zoomy = ((self.currentDelta/4)/self.animateRange)+0.5
+			posx = 0
+			posy = sizeby4-sizeby8*(self.currentDelta/self.animateRange)
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+			end
 		end
-	end
-	if self.albums[self.currentPos+2] then
-		-- width = 100% -> 50%
-		-- height = 100% -> 75%
-		-- left = 120 -> 360
-		-- right = 360 -> 480
-		-- top = 0 -> 30
-		zoomx = 1-(self.currentDelta/2)/self.animateRange
-		zoomy = 1-((self.currentDelta/4)/self.animateRange)
-		posx = sizeby2+size*(self.currentDelta/self.animateRange)
-		posy = sizeby8*(self.currentDelta/self.animateRange)
-		if self.model == "controller" then
-			self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
-		else
-			self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+		if self.albums[self.currentPos+3] then
+			-- width = 50% -> 0%
+			-- height = 75% -> 50%
+			-- left = 360 -> 480
+			-- right = 480
+			-- top = 30 -> 60
+			zoomx = ((self.animateRange/2)-(self.currentDelta/2))/self.animateRange
+			zoomy = 0.75-((self.currentDelta/4)/self.animateRange)
+			posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
+			posy = sizeby8+sizeby8*(self.currentDelta/self.animateRange)
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+			end
 		end
-	end
-	if self.albums[self.currentPos+3] then
-		-- width = 50% -> 0%
-		-- height = 75% -> 50%
-		-- left = 360 -> 480
-		-- right = 480
-		-- top = 30 -> 60
-		zoomx = ((self.animateRange/2)-(self.currentDelta/2))/self.animateRange
-		zoomy = 0.75-((self.currentDelta/4)/self.animateRange)
-		posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
-		posy = sizeby8+sizeby8*(self.currentDelta/self.animateRange)
-		if self.model == "controller" then
-			self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
-		else
-			self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+		if self.albums[self.currentPos+1] then
+			-- width = 50% -> 100%
+			-- height = 75% -> 100%
+			-- left = 0 -> 120
+			-- right = 120 -> 360
+			-- top = 30 -> 0
+			zoomx = (self.currentDelta/2)/self.animateRange+(self.animateRange/2)/self.animateRange
+			zoomy = ((self.currentDelta/4)/self.animateRange)+0.75
+			posx = sizeby2*(self.currentDelta/self.animateRange)
+			posy = sizeby8-sizeby8*(self.currentDelta/self.animateRange)
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+2] then
+			-- width = 100% -> 50%
+			-- height = 100% -> 75%
+			-- left = 120 -> 360
+			-- right = 360 -> 480
+			-- top = 0 -> 30
+			zoomx = 1-(self.currentDelta/2)/self.animateRange
+			zoomy = 1-((self.currentDelta/4)/self.animateRange)
+			posx = sizeby2+size*(self.currentDelta/self.animateRange)
+			posy = sizeby8*(self.currentDelta/self.animateRange)
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+			end
+		end
+	elseif style == "slide" then
+		if self.albums[self.currentPos] then
+			-- width = 100%
+			-- height = 100%
+			-- left = -360 -> -120
+			-- right = -120 -> 120
+			-- top = 0
+			zoomx = 1
+			zoomy = 1
+			posx = -size-sizeby2+size*self.currentDelta/self.animateRange
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+1] then
+			-- width = 100%
+			-- height = 100%
+			-- left = -120 -> 120
+			-- right = 120 -> 360
+			-- top = 0
+			zoomx = 1
+			zoomy = 1
+			posx = -sizeby2+size*self.currentDelta/self.animateRange
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+2] then
+			-- width = 100%
+			-- height = 100%
+			-- left = 120 -> 360
+			-- right = 360 -> 600
+			-- top = 0
+			zoomx = 1
+			zoomy = 1
+			posx = sizeby2+size*self.currentDelta/self.animateRange
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+3] then
+			-- width = 100%
+			-- height = 100%
+			-- left = 360 -> 600
+			-- right = 600 -> 840
+			-- top = 0
+			zoomx = 1
+			zoomy = 1
+			posx = size+sizeby2+size*self.currentDelta/self.animateRange
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+			end
+		end
+	elseif style == "shrinkedslide" then
+		if self.albums[self.currentPos] then
+			-- width = 0% -> 50%
+			-- height = 100%
+			-- left = 0
+			-- right = 0 -> 120
+			-- top = 0
+			zoomx = (self.currentDelta/2)/self.animateRange
+			zoomy = 1
+			posx = 0
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+3] then
+			-- width = 50% -> 0%
+			-- height = 100%
+			-- left = 360 -> 480
+			-- right = 480
+			-- top = 0
+			zoomx = ((self.animateRange/2)-(self.currentDelta/2))/self.animateRange
+			zoomy = 1
+			posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+1] then
+			-- width = 50% -> 100%
+			-- height = 100%
+			-- left = 0 -> 120
+			-- right = 120 -> 360
+			-- top = 0
+			zoomx = (self.currentDelta/2)/self.animateRange+(self.animateRange/2)/self.animateRange
+			zoomy = 1
+			posx = sizeby2*(self.currentDelta/self.animateRange)
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+2] then
+			-- width = 100% -> 50%
+			-- height = 100%
+			-- left = 120 -> 360
+			-- right = 360 -> 480
+			-- top = 0
+			zoomx = 1-(self.currentDelta/2)/self.animateRange
+			zoomy = 1
+			posx = sizeby2+size*(self.currentDelta/self.animateRange)
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+			end
+		end
+	elseif style == "stretchedslide" then
+		if self.albums[self.currentPos] then
+			-- width = 0% -> 0% -> 0% -> 50%
+			-- height = 100%
+			-- left = 0
+			-- right = 0 -> 0 -> 0 -> 120
+			-- top = 0
+			if self.currentDelta>2*self.animateRange/3 then
+				zoomx = ((3*(self.currentDelta-2*self.animateRange/3))/2)/self.animateRange
+			else
+				zoomx = 0
+			end
+			zoomy = 1
+			posx = 0
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+1] then
+			-- width = 50% -> 50% -> 150% -> 100%
+			-- height = 100%
+			-- left = 0 -> 0 -> 0 -> 120
+			-- right = 120 -> 120 -> 360 -> 360
+			-- top = 0
+			if self.currentDelta>2*self.animateRange/3 then
+				zoomx = ((3*(self.animateRange-self.currentDelta))/2)/self.animateRange+1
+			elseif self.currentDelta>self.animateRange/3 then
+				zoomx = (3*(self.currentDelta-self.animateRange/3))/self.animateRange+0.5
+			else
+				zoomx = 0.5
+			end
+			zoomy = 1
+			if self.currentDelta>2*self.animateRange/3 then
+				posx = size*(1.5-zoomx)
+			else
+				posx = 0
+			end
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+2] then
+			-- width = 100% -> 150% -> 50% -> 50%
+			-- height = 100%
+			-- left = 120 -> 120 -> 360 -> 360
+			-- right = 360 -> 480 -> 480 -> 480
+			-- top = 0
+			if self.currentDelta>2*self.animateRange/3 then
+				zoomx = 0.5
+			elseif self.currentDelta>self.animateRange/3 then
+				zoomx = (3*(2*self.animateRange/3-self.currentDelta))/self.animateRange+0.5
+			else
+				zoomx = (3*(self.currentDelta/self.animateRange)/2)+1
+			end
+			zoomy = 1
+			if self.currentDelta>2*self.animateRange/3 then
+				posx = size+sizeby2
+			elseif self.currentDelta>self.animateRange/3 then
+				posx = sizeby2+(1.5-zoomx)*size
+			else
+				posx = sizeby2
+			end
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+			end
+		end
+		if self.albums[self.currentPos+3] then
+			-- width = 50% -> 0% -> 0% -> 0%
+			-- height = 100%
+			-- left = 360 -> 480 -> 480 -> 480
+			-- right = 480
+			-- top = 0
+			if self.currentDelta>self.animateRange/3 then
+				zoomx = 0
+			else
+				zoomx = (3*(self.animateRange/3-self.currentDelta)/2)/self.animateRange
+			end
+			zoomy = 1
+			if self.currentDelta>self.animateRange/3 then
+				posx=size+size
+			else
+				posx=size+sizeby2+size*(0.5-zoomx)
+			end
+			posy = 0
+			if self.model == "controller" then
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+			else
+				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+			end
 		end
 	end
 end
 
 function _drawArtwork(self,screen,album,zoomx,zoomy,positionx,positiony)
 	if album.iconArtwork and album.iconArtwork:getImage() then
-		local tmp = album.iconArtwork:getImage():zoom(zoomx,zoomy,1)
-		tmp:blit(screen,positionx,positiony)
-		tmp:release()
+		if zoomx == 1 and zoomy == 1 then
+			album.iconArtwork:getImage():blit(screen,positionx,positiony)
+		else
+			local tmp = album.iconArtwork:getImage():zoom(zoomx,zoomy,1)
+			tmp:blit(screen,positionx,positiony)
+			tmp:release()
+		end
 	else
-		local tmp = self:_loadImage("album"..self.model..".png"):zoom(zoomx,zoomy,1)
-		tmp:blit(screen,positionx,positiony)
-		tmp:release()
+		if zoomx == 1 and zoomy == 1 then
+			self:_loadImage("album"..self.model..".png"):blit(screen,positionx,positiony)
+		else
+			local tmp = self:_loadImage("album"..self.model..".png"):zoom(zoomx,zoomy,1)
+			tmp:blit(screen,positionx,positiony)
+			tmp:release()
+		end
 	end
 end
 
@@ -873,7 +1230,7 @@ function _loadAlbumsSink(self,result,offset)
 			self.maxIndex = #self.albums + 1
 			local entry = {}
 			entry.text = item.text
-			entry.album_id = item["album_id"]
+			entry.album_id = item.params["album_id"]
 			entry["icon-id"] = item["icon-id"]
 			self.albums[self.maxIndex] = entry
 			index = index + 1
@@ -980,7 +1337,7 @@ function _loadRefreshAlbumsSink(self,result,params)
 		if not self.screensaver or item["icon-id"] then
 			local entry = {}
 			entry.text = item.text
-			entry.album_id = item["album_id"]
+			entry.album_id = item.params["album_id"]
 			entry["icon-id"] = item["icon-id"]
 			self.refreshAlbums[#self.refreshAlbums + 1] = entry
 			index = index + 1

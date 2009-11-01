@@ -47,56 +47,56 @@ function configureApplet(self)
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"), 
 		"AlbumFlow",
 		"openScreensaver", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"), 
 		"AlbumFlow",
 		"openScreensaverRandom", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"), 
 		"AlbumFlow",
 		"openScreensaverByArtist", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"), 
 		"AlbumFlow",
 		"openScreensaverCurrentPlaylist", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"), 
 		"AlbumFlow",
 		"openScreensaverCurrentArtist", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"), 
 		"AlbumFlow",
 		"openScreensaverCurrentGenre", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"), 
 		"AlbumFlow",
 		"openScreensaverCurrentYear", 
-		_, 
-		_, 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
 		90)
 end
 
 function defaultSettings(self)
         local defaultSetting = {}
-        defaultSetting["mode"] = "digital"
+        defaultSetting["screensaverstyle"] = "circular"
         return defaultSetting
 end
 
