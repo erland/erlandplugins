@@ -44,9 +44,51 @@ end
 
 function configureApplet(self)
 	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW"), 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"), 
 		"AlbumFlow",
 		"openScreensaver", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"), 
+		"AlbumFlow",
+		"openScreensaverRandom", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"), 
+		"AlbumFlow",
+		"openScreensaverByArtist", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"), 
+		"AlbumFlow",
+		"openScreensaverCurrentPlaylist", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"), 
+		"AlbumFlow",
+		"openScreensaverCurrentArtist", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"), 
+		"AlbumFlow",
+		"openScreensaverCurrentGenre", 
+		_, 
+		_, 
+		90)
+	appletManager:callService("addScreenSaver", 
+		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"), 
+		"AlbumFlow",
+		"openScreensaverCurrentYear", 
 		_, 
 		_, 
 		90)
