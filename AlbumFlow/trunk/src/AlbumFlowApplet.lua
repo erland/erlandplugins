@@ -74,9 +74,34 @@ oo.class(_M, Applet)
 -- Helper Functions
 --
 
-function openScreensaver(self,view)
-	self:_initApplet(true,view)
+function openScreensaver(self)
+	self:_initApplet(true)
 end
+
+function openScreensaverCurrentPlaylist(self)
+	self:_initApplet(true,"currentplaylist")
+end
+
+function openScreensaverCurrentArtist(self)
+	self:_initApplet(true,"currentartist")
+end
+
+function openScreensaverCurrentGenre(self)
+	self:_initApplet(true,"currentgenre")
+end
+
+function openScreensaverCurrentYear(self)
+	self:_initApplet(true,"currentyear")
+end
+
+function openScreensaverRandom(self)
+	self:_initApplet(true,"random")
+end
+
+function openScreensaverByArtist(self)
+	self:_initApplet(true,"byartist")
+end
+
 -- display
 -- the main applet function, the meta arranges for it to be called
 -- by the ScreenSaversApplet.
@@ -84,10 +109,16 @@ function menu(self)
 	self:_initApplet(false)
 end
 
-function _initApplet(self, ss,view)
-	log:debug("Recreating screensaver window")
-	
-	if not ss or (ss and not self.screensaver) or not self.window or self.view ~= view then
+function _initApplet(self, ss,view,forced)
+	jnt:subscribe(self)
+
+	local player = appletManager:callService("getCurrentPlayer")
+	if self.player and player:getId() ~= self.player:getId() then
+		self.window = nil
+	end
+
+	if not ss or (ss and not self.screensaver) or not self.window or self.view ~= view or forced then
+		log:debug("Recreating screensaver window")
 		self.view = view
 		local width,height = Framework.getScreenSize()
 		if width == 480 then
@@ -135,7 +166,9 @@ function _initApplet(self, ss,view)
 		self.loading =  false
 		self.screensaver = false
 		self.albums = {}
+		self.artworkKeyMap = {}
 		self.maxIndex = 0
+		self.maxLoadedIndex = 0
 		self.iconPool = {}
 		if ss then
 			self.screensaver = true
@@ -209,6 +242,8 @@ function _initApplet(self, ss,view)
 			local manager = appletManager:getAppletInstance("ScreenSavers")
 			manager:screensaverWindow(self.window)
 		end
+	elseif self.view and (self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
+		self:_refreshAlbums(0)
 	end
 
 	self.timer = self.window:addTimer(1000, function() self:_retrieveMoreAlbums() end)
@@ -270,54 +305,70 @@ function _refresh(self)
 	local delta = self.currentDelta;
 	local pos = self.currentPos;
 
-	-- Scrolling to left (cover moving to right)
-	if self.currentScroll < 0 then
-		delta = delta - self.currentScroll
-		if delta > self.animateRange then
-			if not self.screensaver then
-				self.currentScroll = self.currentScroll + 1
-			end
-			pos = pos - 1
-			if pos<0 then
-				collectgarbage()
-				pos = 0
-				self.right = false
-				delta = self.animateRange
-				if self.screensaver then
-					self.currentScroll = 1
+	if self.maxIndex > 1 then
+		-- Scrolling to left (cover moving to right)
+		if self.currentScroll < 0 then
+			delta = delta - self.currentScroll
+			if delta > self.animateRange then
+				if not self.screensaver then
+					self.currentScroll = self.currentScroll + 1
 				end
-			else
-				delta = 1
+				pos = pos - 1
+				if pos<0 then
+					collectgarbage()
+					pos = 0
+					self.right = false
+					delta = self.animateRange
+					if self.screensaver then
+						self.currentScroll = 1
+						if self.view and (self.view == "random" or self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
+							self:_sortByRandom(self.albums,self.currentPos)
+						end
+					end
+				else
+					delta = 1
+				end
+				if self.count then
+					self:_updateCoversAndData(pos)
+				end
 			end
-			self:_updateCovers(pos)
+
+		-- Scrolling to right (cover moving to left)
+		elseif self.currentScroll > 0 then
+			delta = delta - self.currentScroll
+			if delta < 0 then
+				if not self.screensaver then
+					self.currentScroll = self.currentScroll -1
+				end
+				pos = pos + 1
+				if pos > self.maxIndex-2 then
+					collectgarbage()
+					pos = pos -1
+					self.right = true
+					delta = 0
+					if self.screensaver then
+						self.currentScroll = -1
+						if self.view and (self.view == "random" or self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
+							self:_sortByRandom(self.albums,self.currentPos)
+						end
+					end
+				else
+					delta = self.animateRange-1
+				end
+				if self.count then
+					self:_updateCoversAndData(pos)
+				end
+			end
 		end
 
-	-- Scrolling to right (cover moving to left)
-	elseif self.currentScroll > 0 then
-		delta = delta - self.currentScroll
-		if delta < 0 then
-			if not self.screensaver then
-				self.currentScroll = self.currentScroll -1
-			end
-			pos = pos + 1
-			if pos > self.maxIndex-2 then
-				collectgarbage()
-				pos = pos -1
-				self.right = true
-				delta = 0
-				if self.screensaver then
-					self.currentScroll = -1
-				end
-			else
-				delta = self.animateRange-1
-			end
-			self:_updateCovers(pos)
-		end
+		self.currentDelta = delta
+		self.currentPos = pos
+		self.selectedAlbum = pos
+	elseif self.maxIndex == 1 then
+		self.currentDelta = self.animateRange
+		self.currentPos = 0
+		self:_updateCoversAndData(self.currentPos)
 	end
-
-	self.currentDelta = delta
-	self.currentPos = pos
-	self.selectedAlbum = pos
 
 	local text = self.titleGroup:getWidgetValue("albumtext")
 	if delta>self.animateRange/2 and self.currentScroll<0 then
@@ -377,10 +428,24 @@ function _getIcon(self)
 	end
 end
 
-function _updateCovers(self,pos)
+function notify_playerTrackChange(self,player,nowPlaying)
+	log:debug("Got a playerTrackChange event")
+	if self.player:getId() == player:getId() and self.view and (self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
+		self:_refreshAlbums(0)
+		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshAlbums() end)
+	end
+end
+
+function _updateCoversAndData(self,pos)
 	local leftSlide = pos - 1
 	local rightSlide = pos + 4
 	local ARTWORK_SIZE = self:_getArtworkSize()
+
+	if self.view and (self.view == "currentplaylist") and self.player:getPlayerStatus()["playlist_timestamp"] ~= self.lastUpdate and not self.timer then
+		log:debug("Refreshing albums, playlist changed")
+		self:_refreshAlbums(0)
+		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshAlbums() end)
+	end
 
 	if leftSlide < 1 then
 		leftSlide = 1
@@ -418,6 +483,9 @@ function _updateCovers(self,pos)
 			if iconId then
 				self.server:fetchArtwork(iconId,self.albums[i].iconArtwork,ARTWORK_SIZE)
 				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-id:"..iconId)
+			elseif self.albums[i]["icon-url"] then
+				self.server:fetchArtwork(self.albums[i]["icon-url"],self.albums[i].iconArtwork,ARTWORK_SIZE)
+				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-url:"..self.albums[i]["icon-url"])
 			else
 				self.server:fetchArtwork(0,self.albums[i].iconArtwork,ARTWORK_SIZE,'png')
 				log:debug("Got album "..i..":"..self.albums[i].text.." without icon-id")
@@ -430,14 +498,76 @@ function _updateCovers(self,pos)
 end
 
 function _retrieveMoreAlbums(self)
-	if self.albums and self.maxIndex == tonumber(self.count) and self.maxIndex>0 then
-		self.window:removeTimer(self.timer)
+	if self.albums and self.maxLoadedIndex == self.count and self.maxLoadedIndex>0 then
+		if self.timer then
+			self.window:removeTimer(self.timer)
+			self.timer = nil
+		end
 		return
 	end 
 
-	if self.albums and (self.maxIndex < tonumber(self.count)) and not self.loading then
+	if self.albums and (not self.count or (self.maxLoadedIndex < self.count)) and not self.loading then
 		log:debug("Getting more albums")
-		self:_loadAlbums(self.maxIndex)
+		self:_loadAlbums(self.maxLoadedIndex,self.view)
+	end
+end
+function _finishRefreshAlbums(self)
+	local newKeys = {}
+	for _,item in ipairs(self.refreshAlbums) do
+		if item["icon-id"] then
+			newKeys[item["icon-id"]] = 1
+		else
+			newKeys[item["icon-url"]] = 1
+		end
+	end
+	local oldKeys = {}
+	local newAlbums = {}
+	for index,item in ipairs(self.albums) do
+		if (item["icon-id"] and not newKeys[item["icon-id"]]) or (item["icon-url"] and not newKeys[item["icon-url"]]) then
+			self.currentPos = self.currentPos -1
+		else
+			newAlbums[#newAlbums+1] = item
+			if item["icon-id"] then
+				oldKeys[item["icon-id"]] = 1
+			else
+				oldKeys[item["icon-url"]] = 1
+			end
+		end
+	end
+	for index,item in ipairs(self.refreshAlbums) do
+		if (item["icon-id"] and not oldKeys[item["icon-id"]]) or (item["icon-url"] and not oldKeys[item["icon-url"]]) then
+			table.insert(newAlbums,item)
+		end
+	end
+	self.albums=newAlbums
+
+	newAlbums=nil
+	oldKeys=nil
+	newKeys=nil
+	if self.currentPos<0 and #self.albums>0 then
+		self.currentPos = 0
+	end
+	self.maxIndex = #self.albums
+	self.maxLoadedIndex = self.refreshCount
+	self.count = self.refreshCount
+	if self.timer then
+		self.window:removeTimer(self.timer)
+		self.timer = nil
+	end
+end
+
+function _retrieveMoreRefreshAlbums(self)
+	if self.refreshAlbums and self.refreshMaxLoadedIndex == self.refreshCount and self.refreshMaxLoadedIndex>0 then
+		log:debug("All albums retrieved, finishing refresh")
+		self:_finishRefreshAlbums()
+		return
+	end 
+
+	if self.refreshAlbums and (not self.refreshCount or (self.refreshMaxLoadedIndex < self.refreshCount)) and not self.loading then
+		log:debug("Getting more refresh albums")
+		self:_refreshAlbums(self.refreshMaxLoadedIndex,self.view)
+	else
+		log:debug("Retrying to retrieve more albums a bit later")
 	end
 end
 
@@ -533,7 +663,9 @@ end
 function _loadAlbums(self,offset)
 	if offset == 0 then
 		self.albums = {}
+		self.artworkKeyMap = {}
 		self.maxIndex = 0
+		self.maxLoadedIndex = 0
 	end
 	log:debug("Sending command, requesting "..offset)
 	self.loading = true
@@ -541,17 +673,180 @@ function _loadAlbums(self,offset)
 	if offset>0 then
 		amount = 100
 	end
-	self.server:userRequest(function(chunk,err)
-			if err then
-				log:debug(err)
-			elseif chunk then
-				self:_loadAlbumsSink(chunk.data,offset)
-			end
-			self.loading =  false
-		end,
-		self.player and self.player:getId(),
-		{'albums',offset,amount,'menu:menu'}
-	)
+	if not self.view or self.view == "random" then
+		log:debug("Loading album from main list")
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadAlbumsSink(chunk.data,offset)
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'albums',offset,amount,'menu:menu'}
+		)
+	elseif self.view == "byartist" then
+		log:debug("Loading album from main list sort by artist")
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadAlbumsSink(chunk.data,offset)
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'albums',offset,amount,'menu:menu','sort:artflow'}
+		)
+	elseif self.view == "currentplaylist" then
+		log:debug("Loading album from current playlist")
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadCPAlbumsSink(chunk.data,offset)
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'status',offset,amount,"tags:aJKlex"}
+		)
+	elseif self.view == "currentartist" then
+		log:debug("Loading album for current artist")
+		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"artist_id")
+					end
+					self.loading =  false
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:s"}
+			)
+		end
+	elseif self.view == "currentgenre" then
+		log:debug("Loading album for current genre")
+		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"genre_id")
+					end
+					self.loading =  false
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:p"}
+			)
+		end
+	elseif self.view == "currentyear" then
+		log:debug("Loading album for current year")
+		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"year")
+					end
+					self.loading =  false
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:y"}
+			)
+		end
+	else
+		log:warn("Unknown view, don't load any albums: "..self.view)
+	end
+	log:debug("Sent command")
+end
+
+function _refreshAlbums(self,offset)
+	if not offset or offset == 0 then
+		self.refreshAlbums = {}
+		self.artworkKeyMap = {}
+		self.refreshMaxLoadedIndex = 0
+		self.refreshCount = 0
+	end
+	log:debug("Sending command, requesting "..offset)
+	self.loading = true
+	local amount = 5
+	if offset>0 then
+		amount = 100
+	end
+	if self.view and self.view == "currentplaylist" then
+		log:info("Loading album from current playlist")
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadCPRefreshAlbumsSink(chunk.data,offset)
+					self:_sortByRandom(self.refreshAlbums)
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'status',offset,amount,"tags:aJKlex"}
+		)
+	elseif self.view and self.view == "currentartist" then
+		log:debug("Loading album for current artist")
+		if tonumber(self.player:getPlayerStatus().count) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"artist_id")
+					end
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:s"}
+			)
+		else
+			self:_finishRefreshAlbums()
+		end
+	elseif self.view and self.view == "currentgenre" then
+		log:debug("Loading album for current genre")
+		if tonumber(self.player:getPlayerStatus().count) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"genre_id")
+					end
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:p"}
+			)
+		else
+			self:_finishRefreshAlbums()
+		end
+	elseif self.view and self.view == "currentyear" then
+		log:debug("Loading album for current year")
+		if tonumber(self.player:getPlayerStatus().count) >=1 then
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadCurrentContextSink(chunk.data,"year")
+					end
+				end,
+				self.player and self.player:getId(),
+				{'status','-',amount,"tags:y"}
+			)
+		else
+			self:_finishRefreshAlbums()
+		end
+	else
+		log:info("This view doesn't need refresh")
+	end
 	log:debug("Sent command")
 end
 
@@ -567,10 +862,186 @@ end
 
 function _loadAlbumsSink(self,result,offset)
 	local lastIndex = 1
-	self.count = result.count
-	for index,item in ipairs(result.item_loop) do
-		self.maxIndex = tonumber(index)+offset
-		self.albums[self.maxIndex] = item
+	self.count = tonumber(result.count)
+	local index=1
+
+	self.lastUpdate = os.time()
+
+	for _,item in ipairs(result.item_loop) do
+		self.maxLoadedIndex = self.maxLoadedIndex + 1
+		if not self.screensaver or item["icon-id"] then
+			self.maxIndex = #self.albums + 1
+			local entry = {}
+			entry.text = item.text
+			entry.album_id = item["album_id"]
+			entry["icon-id"] = item["icon-id"]
+			self.albums[self.maxIndex] = entry
+			index = index + 1
+		end
+	end
+
+	if self.view and self.view == "random" then
+		self:_sortByRandom(self.albums,self.currentPos)
+	end
+end
+
+function _loadCurrentContextSink(self,result,param)
+	local lastIndex = 1
+	local trackCount = tonumber(result.playlist_tracks)
+	if trackCount>=1 then
+		local param_id = result.playlist_loop[1][param]
+		if param_id then
+			self.lastUpdate=result.playlist_timestamp
+			self.refreshAlbums = {}
+			self.artworkKeyMap = {}
+			self.refreshMaxLoadedIndex = 0
+			self.refreshCount = 0
+			self.loading = true
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadRefreshAlbumsSink(chunk.data,param..":"..param_id)
+						self:_sortByRandom(self.refreshAlbums,self.currentPos)
+						if self.refreshCount == self.refreshMaxLoadedIndex then
+							self:_finishRefreshAlbums()
+						end
+					end
+					self.loading =  false
+				end,
+				self.player and self.player:getId(),
+				{'albums',0,10,param..':'..param_id,'menu:menu'}
+			)
+		end
+	end
+end
+
+function _sortByRandom(self,array,pos)
+	local i = #array-1
+	while i>0 do
+		local j = math.random(i+1)
+		if pos and (i<=pos or i>pos+3) and (j<=pos or j>pos+3) then
+			local item1 = array[i]
+			local item2 = array[j]
+			array[i] = item2
+			array[j] = item1
+		end
+		i = i - 1
+	end
+end
+
+function _loadCPAlbumsSink(self,result,offset)
+	local lastIndex = 1
+	self.count = tonumber(result.playlist_tracks)
+	local index=1
+
+	self.lastUpdate=result.playlist_timestamp
+
+	for _,item in ipairs(result.playlist_loop) do
+		self.maxLoadedIndex = self.maxLoadedIndex + 1
+		if not self.screensaver or item["artwork_track_id"] or item["artwork_url"] then
+			local artworkKey = nil
+			if item["artwork_track_id"] then
+				artworkKey = item["artwork_track_id"]
+			elseif item["artwork_url"] then
+				artworkKey = item["artwork_url"]
+			end
+			if not self.screensaver or not self.artworkKeyMap[artworkKey] then
+				self.artworkKeyMap[artworkKey] = 1
+				self.maxIndex = #self.albums + 1
+				local entry = {}
+				if item.album then
+					entry.text = item.album.." - "..item.artist
+				elseif item.artist then
+					entry.text = item.artist
+				else
+					entry.text = item.title
+				end
+				entry.album_id = item["album_id"]
+				if item["artwork_track_id"] then
+					entry["icon-id"] = item["artwork_track_id"]
+				else
+					entry["icon-url"] = item["artwork_url"]
+				end
+				self.albums[self.maxIndex] = entry
+				index = index + 1
+			end
+		end
+	end
+	self:_sortByRandom(self.albums,self.currentPos)
+end
+
+function _loadRefreshAlbumsSink(self,result,params)
+	local lastIndex = 1
+	self.refreshCount = tonumber(result.count)
+	local index=1
+	for _,item in ipairs(result.item_loop) do
+		self.refreshMaxLoadedIndex = self.refreshMaxLoadedIndex + 1
+		if not self.screensaver or item["icon-id"] then
+			local entry = {}
+			entry.text = item.text
+			entry.album_id = item["album_id"]
+			entry["icon-id"] = item["icon-id"]
+			self.refreshAlbums[#self.refreshAlbums + 1] = entry
+			index = index + 1
+		end
+	end
+	if self.refreshCount>self.refreshMaxLoadedIndex then
+		self.loading = true
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadRefreshAlbumsSink(chunk.data,params)
+					self:_sortByRandom(self.refreshAlbums,self.currentPos)
+					if self.refreshCount == self.refreshMaxLoadedIndex then
+						self:_finishRefreshAlbums()
+					end
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'albums',self.refreshMaxLoadedIndex,200,params,'menu:menu'}
+		)
+	end
+end
+
+function _loadCPRefreshAlbumsSink(self,result,offset)
+	local lastIndex = 1
+	self.refreshCount = tonumber(result.playlist_tracks)
+	local index=1
+
+	self.lastUpdate=result.playlist_timestamp
+
+	for _,item in ipairs(result.playlist_loop) do
+		self.refreshMaxLoadedIndex = self.refreshMaxLoadedIndex + 1
+		if not self.screensaver or item["artwork_track_id"] or item["artwork_url"] then
+			local artworkKey = nil
+			if item["artwork_track_id"] then
+				artworkKey = item["artwork_track_id"]
+			elseif item["artwork_url"] then
+				artworkKey = item["artwork_url"]
+			end
+			if not self.screensaver or not self.artworkKeyMap[artworkKey] then
+				self.artworkKeyMap[artworkKey] = 1
+				local entry = {}
+				if item.album then
+					entry.text = item.album.." - "..item.artist
+				elseif item.artist then
+					entry.text = item.artist
+				else
+					entry.text = item.title
+				end
+				entry.album_id = item["album_id"]
+				if item["artwork_track_id"] then
+					entry["icon-id"] = item["artwork_track_id"]
+				else
+					entry["icon-url"] = item["artwork_url"]
+				end
+				self.refreshAlbums[#self.refreshAlbums + 1] = entry
+				index = index + 1
+			end
+		end
 	end
 end
 
