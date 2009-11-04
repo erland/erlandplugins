@@ -230,7 +230,14 @@ sub getCustomScanFunctions {
 				'description' => 'Comma separated list with the tags and their corresponding sort tag, for example: "ORIGARTIST=ORIGARTISTSORT,OWNER=OWNERSORT". If the scanned tag shall be used for sorting the tag does not have to be listed here.',
 				'type' => 'text',
 				'value' => ''
-			}
+			},
+			{
+				'id' => 'customtagrawmp3tags',
+				'name' => 'Use raw MP3 tags',
+				'description' => 'Use raw encoding of MP3 tags, finds more tags but takes longer time',
+				'type' => 'checkbox',
+				'value' => 0
+			},
 		]
 	);
 	return \%functions;
@@ -598,11 +605,18 @@ sub getRawMP3Tags {
 	my $url = shift;
 	my $tags = shift;
 
-	for my $t (keys %$tags) {
-		if(defined($rawTagNames{$t})) {
+	my $rawTags;
+	if(Plugins::CustomScan::Plugin::getCustomScanProperty("customtagrawmp3tags")) {
+		my $file = Slim::Utils::Misc::pathFromFileURL($url); 	 
+	        $rawTags = MP3::Info::get_mp3tag($file,2,1);
+	}else {
+		$rawTags = $tags;
+	}
+	for my $t (keys %$rawTags) {
+		if(defined($tags->{$t}) && defined($rawTagNames{$t})) {
 			my $tagName = $rawTagNames{$t};
 			if(!defined($tags->{$tagName})) {
-				my $value = $tags->{$t};
+				my $value = $rawTags->{$t};
 				my $encoding = '';
 				if($value =~ /^(.)/) { 
 					$encoding = $1;
