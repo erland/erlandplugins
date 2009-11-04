@@ -132,27 +132,26 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.7.2" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.7.3" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected AAC scanning
-			- Corrected possible bug when using virtual combine tags with multiple tag values
-			- Corrected possible bug when using title formats with remote tags
+			<changes lang="EN">- Made it possible to select raw MP3 tag handling (TDOR support)
+			- Corrected problem with remote tracks when Custom Scan based title formats are used
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.2.zip</url>
-                        <sha>60897d152a7607f08d011316ba491ac855ce2ff2</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.3.zip</url>
+                        <sha>43d57adfe8337519c30290f1bb9b99c1393cd377</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomSkip" version="2.3.4" minTarget="7.1.0" maxTarget="*">
+		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="*">
                         <title lang="EN">Custom Skip</title>
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected playlist based skip filters</changes>
+			<changes lang="EN">- Corrected so only local tracks can be skipped</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.4.zip</url>
-                        <sha>7723d77d0de013dcd7b8171f232d64bbc78b818b</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.5.zip</url>
+                        <sha>bebd6cad35a0e74ece1c3c9bf4040800bcad75e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
 		<plugin name="DynamicPlayList" version="2.7" minTarget="7.2.0" maxTarget="7.3.*">
@@ -248,14 +247,14 @@
                         <sha>9016bf0f8a73f2e5c0776edad8e486977dd89b07</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="TitleSwitcher" version="1.1.2" minTarget="7.1.0" maxTarget="*">
+		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="*">
                         <title lang="EN">Title Switcher</title>
                         <desc lang="EN">Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed. (Boom, Transporter, Classic, SoftSqueeze)</desc>
-			<changes lang="EN">- Added support for SqueezeCenter 7.4</changes>
+			<changes lang="EN">- Corrected handling on SB1 devices with long texts</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.2.zip</url>
-                        <sha>feaf935bfc3802ed3cea5919122f451f33ec81fc</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.3.zip</url>
+                        <sha>d25140b9bf9038bea7c6e4728e84f6d81f5c0b59</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
                 </plugin>
                 <plugin name="TrackStatPlaylist" version="1.0.1" minTarget="7.1.0" maxTarget="7.3.*">
