@@ -560,7 +560,7 @@ sub refreshTitleFormats() {
 				sub {
 					$log->debug("Retreiving title format: $format\n");
 					my $track = shift;
-					if(ref($track) eq 'HASH' && blessed($track) ne 'Slim::Schema::Track') {
+					if(ref($track) eq 'HASH' || ref($track) ne 'Slim::Schema::Track') {
 						return undef;
 					}
 					my $result = '';
