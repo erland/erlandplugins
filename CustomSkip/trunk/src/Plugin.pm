@@ -2026,7 +2026,7 @@ sub newSongCallback
 	if (defined($client) && $client->id eq $masterClient->id && $request->getRequest(0) eq 'playlist') {
 		$command = $request->getRequest(1);
 		my $track  = Slim::Player::Playlist::song($client);
-		if (defined $track) {
+		if (defined $track && ref($track) eq 'Slim::Schema::Track') {
 			$log->debug("Received newsong for ".$track->url."\n");
 			my $result = 0;
 			if(grep(/DynamicPlayList::Plugin/, Slim::Utils::PluginManager->enabledPlugins($client))) {
