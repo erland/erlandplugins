@@ -146,12 +146,16 @@ sub getTitleFormat
 						my $scrollRate = $serverPrefs->client($client)->get($client->display->linesPerScreen() == 1 ? 'scrollRate' : 'scrollRateDouble');
 						my $scrollPixels = $serverPrefs->client($client)->get($client->display->linesPerScreen() == 1 ? 'scrollPixels' : 'scrollPixelsDouble');
 						my $pixelsPerCharacter = 13;
-						my $scrollTimePerCharacter = $pixelsPerCharacter/$scrollPixels*$scrollRate;
-						if($currentPartTime<$scrollPause + length($currentValue)*$scrollTimePerCharacter) {
-							$currentPartTime = $scrollPause + length($currentValue)*$scrollTimePerCharacter;
-							$log->debug("Waiting extra due to scroll: ".$currentPartTime);
+						if($scrollPixels*$scrollRate>0) {
+							my $scrollTimePerCharacter = $pixelsPerCharacter/$scrollPixels*$scrollRate;
+							if($currentPartTime<$scrollPause + length($currentValue)*$scrollTimePerCharacter) {
+								$currentPartTime = $scrollPause + length($currentValue)*$scrollTimePerCharacter;
+								$log->debug("Waiting extra due to scroll: ".$currentPartTime);
+							}else {
+								$log->debug("Wating: $currentPartTime");
+							}
 						}else {
-							$log->debug("Wating: $currentPartTime");
+							$log->debug("Wating: $currentPartTime, got scrollRate=$scrollRate and scrollPixels=$scrollPixels");
 						}
 					}else {
 						$log->debug("Waiting: $currentPartTime");
