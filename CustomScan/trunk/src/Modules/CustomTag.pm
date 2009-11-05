@@ -607,12 +607,12 @@ sub getRawMP3Tags {
 	my $tags = shift;
 
 	my $rawTags;
-	if(Plugins::CustomScan::Plugin::getCustomScanProperty("customtagrawmp3tags")) {
-		my $file = Slim::Utils::Misc::pathFromFileURL($url); 	 
-	        $rawTags = MP3::Info::get_mp3tag($file,2,1);
-	}else {
-		$rawTags = $tags;
+	if(!Plugins::CustomScan::Plugin::getCustomScanProperty("customtagrawmp3tags")) {
+		return;
 	}
+	my $file = Slim::Utils::Misc::pathFromFileURL($url); 	 
+        $rawTags = MP3::Info::get_mp3tag($file,2,1);
+	
 	for my $t (keys %$rawTags) {
 		if(defined($rawTags->{$t}) && defined($rawTagNames{$t}) && ref($rawTags->{$t}) ne 'ARRAY') {
 			my $tagName = $rawTagNames{$t};
