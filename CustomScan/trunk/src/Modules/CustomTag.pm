@@ -25,6 +25,7 @@ use Slim::Utils::Misc;
 use Slim::Utils::Unicode;
 use Slim::Utils::Prefs;
 use Data::Dumper;
+use MP3::Info;
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
@@ -613,7 +614,7 @@ sub getRawMP3Tags {
 		$rawTags = $tags;
 	}
 	for my $t (keys %$rawTags) {
-		if(defined($tags->{$t}) && defined($rawTagNames{$t})) {
+		if(defined($rawTags->{$t}) && defined($rawTagNames{$t}) && ref($rawTags->{$t}) ne 'ARRAY') {
 			my $tagName = $rawTagNames{$t};
 			if(!defined($tags->{$tagName})) {
 				my $value = $rawTags->{$t};
@@ -633,6 +634,7 @@ sub getRawMP3Tags {
 				# Remove null character at end
 				$value =~ s/\0$//;
 				$value =~ s/^\0//;
+				$log->debug("Got raw tag: $tagName($t)=".$value);
 				$tags->{$tagName} = $value;
 			}
 		}
