@@ -73,7 +73,7 @@ my %rawTagNames = (
 	'TIME' => 'TIME',
 	'TRD' => 'RECORDINGDATES',
 	'TRDA' => 'RECORDINGDATES',
-	'TRDC' => 'RECORDINGTIME', #YEAR
+	'TDRC' => 'RECORDINGTIME', #YEAR
 	'TOR' => 'ORIGYEAR',
 	'TORY' => 'ORIGYEAR',
 	'TDOR' => 'ORIGRELEASETIME',
@@ -636,7 +636,11 @@ sub getRawMP3Tags {
 				$value =~ s/^\0//;
 				$log->debug("Got raw tag: $tagName($t)=".$value);
 				$tags->{$tagName} = $value;
+			}else {
+				$log->debug("Got normal tag: $tagName($t)=".$tags->{$tagName});
 			}
+		}else {
+			$log->debug("Ignoring tag: $t=".$rawTags->{$t});
 		}
 	}
 }
