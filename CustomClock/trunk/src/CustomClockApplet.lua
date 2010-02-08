@@ -74,6 +74,40 @@ oo.class(_M, Applet)
 function openScreensaver(self)
 
 	log:debug("Open screensaver")
+	local player = appletManager:callService("getCurrentPlayer")
+	if player then
+		player:unsubscribe('/slim/customclock/changedstyles')
+		player:subscribe(
+			'/slim/customclock/changedstyles',
+			function(chunk)
+				for i,entry in pairs(chunk.data[3]) do
+					if entry.name == self:getSettings()["style"] then
+						for attribute,value in pairs(self:getSettings()) do
+							if attribute != "style" and attribute != "nowplaying" and attribute != "font" then
+								self:getSettings()[attribute] = ""
+							elseif attribute == "font" then
+								self:getSettings()[attribute] = "fonts/FreeSans.ttf"
+							elseif attribute == "backgroundtype" then
+								self:getSettings()[attribute] = ""
+							end
+						end
+						for attribute,value in pairs(entry) do
+							self:getSettings()[attribute] = value
+						end
+						self:storeSettings()
+						if self.window then
+							self.window:hide()
+							self.window=nil
+							self:openScreensaver(self)
+						end
+					end
+				end
+
+			end,
+			player:getId(),
+			{'customclock','changedstyles'}
+		)
+	end
         -- Create the main window if it doesn't already exist
 	if not self.window then
 		log:debug("Recreating screensaver window")
@@ -115,6 +149,10 @@ function openScreensaver(self)
 			background = Icon("background")
 		}
 		self.backgroundImage = Group("background",backgroundItems)
+		local coverItems = {
+			cover = Icon("cover")
+		}
+		self.coverImage = Group("cover",coverItems)
 		self.wallpaperImage = Icon("wallpaper")
 
 		self.canvas = Canvas('debug_canvas',function(screen)
@@ -129,6 +167,7 @@ function openScreensaver(self)
 		self.window:addWidget(self.item2Label)
 		self.window:addWidget(self.item3Label)
 		self.window:addWidget(self.item4Label)
+		self.window:addWidget(self.coverImage)
 		self.window:addWidget(self.backgroundImage)
 		self.window:addWidget(canvasGroup)
 
@@ -224,7 +263,7 @@ function defineSettingStyle(self, menuItem)
 			if err then
 				log:warn(err)
 			else
-				if chunk.data._can == 1 then
+				if tonumber(chunk.data._can) == 1 then
 					log:info("CustomClockHelper is installed retrieving local styles")
 					server:userRequest(function(chunk,err)
 							if err then
@@ -625,7 +664,7 @@ function defineSettingNowPlaying(self, menuItem)
 					end
 					self:storeSettings()
 				end,
-				nowplaying == true
+				nowplaying == true or nowplaying == "true"
 			),
 		},
 		{
@@ -642,7 +681,7 @@ function defineSettingNowPlaying(self, menuItem)
 					end
 					self:storeSettings()
 				end,
-				nowplaying == false
+				nowplaying == false or nowplaying == "false"
 			),
 		},
 	}))
@@ -769,18 +808,20 @@ function _updateNowPlaying(self,itemType)
 		        local trackInfo = self:_extractTrackInfo(playerStatus.item_loop[1],itemType)
 			if trackInfo != "" then
 				self.item4Label:setWidgetValue("item4",trackInfo)
-				if self:getSettings()["mode"] == "analog" then
-					if self.model == "touch" then
-						--self.item2Label:setWidgetValue("item2","")
-						--self.item3Label:setWidgetValue("item3","")
-					elseif self.model == "controller" then
-						self.item2Label:setWidgetValue("item2","")
-					elseif self.model == "radio" then
-						self.item2Label:setWidgetValue("item2","")
-					end
-				else
-					if self.model == "radio" then
-						self.item2Label:setWidgetValue("item2","")
+				if self:getSettings()["nowplayingreplacement"] == "" or self:getSettings()["nowplayingreplacement"] == "auto" then
+					if self:getSettings()["mode"] == "analog" then
+						if self.model == "touch" then
+							--self.item2Label:setWidgetValue("item2","")
+							--self.item3Label:setWidgetValue("item3","")
+						elseif self.model == "controller" then
+							self.item2Label:setWidgetValue("item2","")
+						elseif self.model == "radio" then
+							self.item2Label:setWidgetValue("item2","")
+						end
+					else
+						if self.model == "radio" then
+							self.item2Label:setWidgetValue("item2","")
+						end
 					end
 				end
 			end
@@ -789,6 +830,20 @@ function _updateNowPlaying(self,itemType)
 		end
 	else
 		self.item4Label:setWidgetValue("item4","")
+	end
+end
+
+function _getCoverSize(self)
+	if self:getSettings()["coversize"] and self:getSettings()["coversize"] != "" then
+		return tonumber(self:getSettings()["coversize"])
+	else
+		if self.model == "controller" then
+			return 240
+		elseif self.model == "radio" then
+			return 240
+		elseif self.model == "touch" then
+			return 272
+		end
 	end
 end
 
@@ -801,24 +856,24 @@ function _updateAlbumCover(self)
 			if iconId then
 				local server = player:getSlimServer()
 				if self:getSettings()["coversize"] and self:getSettings()["coversize"] != "" then
-					server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),tonumber(self:getSettings()["coversize"]))
+					server:fetchArtwork(iconId,self.coverImage:getWidget("cover"),self:_getCoverSize())
 				else
 					if self.model == "controller" then
-						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),240)
+						server:fetchArtwork(iconId,self.coverImage:getWidget("cover"),self:_getCoverSize())
 					elseif self.model == "radio" then
-						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),240)
+						server:fetchArtwork(iconId,self.coverImage:getWidget("cover"),self:_getCoverSize())
 					elseif self.model == "touch" then
-						server:fetchArtwork(iconId,self.backgroundImage:getWidget("background"),272)
+						server:fetchArtwork(iconId,self.coverImage:getWidget("cover"),self:_getCoverSize())
 					end
 				end
 			else 
-				self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+				self.coverImage:setWidgetValue("cover",nil)
 			end
 		else
-			self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+			self.coverImage:setWidgetValue("cover",nil)
 		end
 	else
-		self.backgroundImage:setWidgetValue("background",self.wallpaperImage:getImage())
+		self.coverImage:setWidgetValue("cover",nil)
 	end
 end
 
@@ -843,7 +898,7 @@ function _tick(self,forcedBackgroundUpdate)
 	local second = os.date("%S")
 	if second % 3 == 0 then
 		if self.nowPlaying>=3 then
-			if (self.model == "touch" or self.model == "controller") and self:getSettings()["mode"] == "digital" then
+			if self:getSettings()["nowplayingreplacement"] == "none" or ((self.model == "touch" or self.model == "controller") and self:getSettings()["mode"] == "digital") then
 				self.nowPlaying = 1
 			else
 				self.nowPlaying = 0
@@ -852,13 +907,13 @@ function _tick(self,forcedBackgroundUpdate)
 			self.nowPlaying = self.nowPlaying + 1
 		end
 	end
-	if self.nowPlaying>0 and self:getSettings()["nowplaying"] == true then
+	if self.nowPlaying>0 and (self:getSettings()["nowplaying"] == true or self:getSettings()["nowplaying"] == "true") then
 		self:_updateNowPlaying(self.nowPlaying)
 	else
 		self.item4Label:setWidgetValue("item4","")	
 	end
 
-	if self:getSettings()["backgroundtype"] == "cover" or self:getSettings()["backgroundtype"] == "coverblack" then
+	if self:getSettings()["cover"] or self:getSettings()["backgroundtype"] == "cover" or self:getSettings()["backgroundtype"] == "coverblack" then
 		self:_updateAlbumCover()
 	end
 
@@ -969,7 +1024,7 @@ function _retrieveImage(self,url,imageType)
 							zoom = height/h
 						end
 						image = image:rotozoom(0,zoom,1)
-						if self:getSettings()["backgroundtype"] != "cover" and self:getSettings()["backgroundtype"] != "coverblack" and self:getSettings()["backgroundtype"] != "" then
+						if self:getSettings()["backgroundtype"] != "" then
 							self.backgroundImage:setWidgetValue("background",image)
 						end
 						self.wallpaperImage:setValue(image)
@@ -1266,7 +1321,7 @@ function _getClockSkin(self,skin)
 					h = primaryItemHeight,
 					fg = text1Color,
 				},
-				zOrder = 3,
+				zOrder = 4,
 		}
 	end
 		
@@ -1284,7 +1339,7 @@ function _getClockSkin(self,skin)
 					h = secondary2ItemHeight,
 					fg = text2Color,
 				},
-				zOrder = 3,
+				zOrder = 4,
 		}
 	end
 
@@ -1302,12 +1357,12 @@ function _getClockSkin(self,skin)
 					h = secondary3ItemHeight,
 					fg = text3Color,
 				},
-				zOrder = 3,
+				zOrder = 4,
 		}
 	end
 
 	local item4Style = nil
-	if self:getSettings()["nowplaying"] == true then
+	if self:getSettings()["nowplaying"] == true or self:getSettings()["nowplaying"] == "true" then
 		item4Style = {
 				position = LAYOUT_NONE,
 				y = nowPlayingPosition,
@@ -1320,7 +1375,31 @@ function _getClockSkin(self,skin)
 					h = nowPlayingHeight,
 					fg = nowPlayingColor,
 				},
-				zOrder = 3,
+				zOrder = 4,
+		}
+	end
+
+	local coverStyle = nil
+	if self:getSettings()["cover"] or self:getSettings()["backgroundtype"] == 'cover' or self:getSettings()["backgroundtype"] == 'coverblack' then
+		local coverXPos = 0
+		local coverYPos = 0
+		local coverSize = WH_FILL
+		if self:getSettings()["coverpositionx"] then
+			coverXPos = self:getSettings()["coverpositionx"]
+			coverSize = self:_getCoverSize()
+		end
+		if self:getSettings()["coverpositiony"] then
+			coverYPos = self:getSettings()["coverpositiony"]
+		end
+		coverStyle = {
+			position = LAYOUT_NONE,
+			x = coverXPos,
+			y = coverYPos,
+			cover = {
+				w = coverSize,
+				align = 'center',
+			},
+			zOrder = 2,
 		}
 	end
 
@@ -1330,10 +1409,13 @@ function _getClockSkin(self,skin)
 		item3 = item3Style,
 		item4 = item4Style,
 		canvas = {
-			zOrder = 2,
+			zOrder = 3,
 		},
+		cover = coverStyle,
 		background = {
-			position = LAYOUT_NORTH,
+			position = LAYOUT_NONE,
+			x = 0,
+			y = 0,
 			background = {
 				w = WH_FILL,
 				align = 'center',
