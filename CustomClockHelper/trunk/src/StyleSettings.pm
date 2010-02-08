@@ -96,7 +96,7 @@ sub handler {
 		}
 	}
 
-	my @availableProperties = qw(name models mode wallpaper minuteimage hourimage secondimage clockimage backgroundtype item1 item1color item1margin item2position item2 item2color item2margin item2position item3 item3color item3margin item3position nowplaying nowplayingcolor nowplayingmargin nowplayingposition);
+	my @availableProperties = qw(name models mode background minuteimage hourimage secondimage clockimage backgroundtype item1 item1color item1margin item1height item2position item1size item2 item2color item2margin item2align item2height item2position item2size item3 item3color item3margin item3align item3height item3position item3size nowplaying nowplayingreplacement nowplayingcolor nowplayingmargin nowplayingheight nowplayingposition nowplayingsize coversize coverpositionx coverpositiony);
 	foreach my $availableProperty (@availableProperties) {
 		my $found = 0;
 		foreach my $property (@properties) {
@@ -149,6 +149,14 @@ sub handler {
 			$item->{'type'} = 'singlelist';
 			my @values = qw(analog digital);
 			$item->{'values'} = \@values;
+		}elsif($item->{'id'} =~ /^nowplayingreplacement$/) {
+			$item->{'type'} = 'optionalsinglelist';
+			my @values = qw(auto none);
+			$item->{'values'} = \@values;
+		}elsif($item->{'id'} =~ /^nowplaying$/) {
+			$item->{'type'} = 'optionalsinglelist';
+			my @values = qw(true false);
+			$item->{'values'} = \@values;
 		}
 	}
 
@@ -196,7 +204,7 @@ sub saveHandler {
 	}
 	$styleName = $name." - ".$models;
 	if($params->{'delete'}) {
-		Plugins::CustomClockHelper::Plugin->setStyle($oldStyleName);
+		Plugins::CustomClockHelper::Plugin->setStyle($client,$oldStyleName);
 	}elsif($name && $styleName) {
 		foreach my $property (keys %$params) {
 			if($property =~ /^property_(.*)$/) {
@@ -217,9 +225,9 @@ sub saveHandler {
 		my $models = $style->{'models'};
 		@$models = sort { $a cmp $b } @$models;
 		if($oldStyleName && $styleName ne $oldStyleName) {
-			Plugins::CustomClockHelper::Plugin->renameAndSetStyle($oldStyleName,$styleName,$style);
+			Plugins::CustomClockHelper::Plugin->renameAndSetStyle($client,$oldStyleName,$styleName,$style);
 		}else {
-			Plugins::CustomClockHelper::Plugin->setStyle($styleName,$style);
+			Plugins::CustomClockHelper::Plugin->setStyle($client,$styleName,$style);
 		}
 		return $style;	
 	}
