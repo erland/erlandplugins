@@ -57,6 +57,7 @@ sub initPlugin
 	Plugins::CustomClockHelper::StyleSettings->new($class);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Slim::Control::Request::addDispatch(['customclock','styles'], [0, 1, 0, \&getClockStyles]);
+	Slim::Control::Request::addDispatch(['customclock', 'changedstyles'],[0, 1, 0, undef]);
 }
 
 sub getStyleKey {
@@ -119,6 +120,7 @@ sub getStyle {
 
 sub setStyle {
 	my $self = shift;
+	my $client = shift;
 	my $styleId = shift;
 	my $styleData = shift;
 
@@ -129,10 +131,17 @@ sub setStyle {
 		delete $styles->{$styleId};
 	}
 	$prefs->set("styles",$styles);
+
+	my @stylesArray = ();
+	for my $style (keys %$styles) {
+		push @stylesArray,$styles->{$style}
+	}
+	Slim::Control::Request::notifyFromArray($client,['customclock','changedstyles',\@stylesArray]);
 }
 
 sub renameAndSetStyle {
 	my $self = shift;
+	my $client = shift;
 	my $styleId = shift;
 	my $newStyleId = shift;
 	my $styleData = shift;
@@ -141,6 +150,12 @@ sub renameAndSetStyle {
 	delete $styles->{$styleId};
 	$styles->{$newStyleId} = $styleData;
 	$prefs->set("styles",$styles);
+
+	my @stylesArray = ();
+	for my $style (keys %$styles) {
+		push @stylesArray,$styles->{$style}
+	}
+	Slim::Control::Request::notifyFromArray($client,['customclock','changedstyles',\@stylesArray]);
 }
 
 sub getClockStyles {
