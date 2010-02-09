@@ -96,7 +96,7 @@ sub handler {
 		}
 	}
 
-	my @availableProperties = qw(name models mode background minuteimage hourimage secondimage clockimage backgroundtype item1 item1color item1margin item1height item2position item1size item2 item2color item2margin item2align item2height item2position item2size item3 item3color item3margin item3align item3height item3position item3size nowplaying nowplayingreplacement nowplayingcolor nowplayingmargin nowplayingheight nowplayingposition nowplayingsize coversize coverpositionx coverpositiony);
+	my @availableProperties = qw(name models mode background minuteimage hourimage secondimage clockimage backgroundtype item1 item1color item1margin item1height item1position item1align item1size item2 item2color item2margin item2align item2height item2position item2size item3 item3color item3margin item3align item3height item3position item3size nowplaying nowplayingreplacement nowplayingcolor nowplayingmargin nowplayingheight nowplayingposition nowplayingsize nowplaying2 nowplaying2color nowplaying2positionx nowplaying2positiony nowplaying2size nowplaying2width nowplaying2align nowplaying3 nowplaying3color nowplaying3positionx nowplaying3positiony nowplaying3size nowplaying3width nowplaying3align nowplaying4 nowplaying4color nowplaying4positionx nowplaying4positiony nowplaying4size nowplaying4width nowplaying4align cover coversize coverpositionx coverpositiony alarmtime alarmtimepositionx alarmtimepositiony alarmtimesize alarmimage alarmactiveimage alarmimagepositionx alarmimagepositiony repeatstatusoffimage repeatstatussongimage repeatstatusplaylistimage repeatstatuspositionx repeatstatuspositiony playstatusplayimage playstatuspauseimage playstatusstopimage playstatuspositionx playstatuspositiony shufflestatusoffimage shufflestatussongsimage shufflestatusalbumsimage shufflestatuspositionx shufflestatuspositiony);
 	foreach my $availableProperty (@availableProperties) {
 		my $found = 0;
 		foreach my $property (@properties) {
@@ -143,7 +143,7 @@ sub handler {
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^backgroundtype$/) {
 			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(solidblack cover coverblack);
+			my @values = qw(solidblack solidwhite solidlightgray solidgray soliddarkgray cover coverblack);
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^mode$/) {
 			$item->{'type'} = 'singlelist';
@@ -154,6 +154,10 @@ sub handler {
 			my @values = qw(auto none);
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^nowplaying$/) {
+			$item->{'type'} = 'optionalsinglelist';
+			my @values = qw(true false);
+			$item->{'values'} = \@values;
+		}elsif($item->{'id'} =~ /^cover$/) {
 			$item->{'type'} = 'optionalsinglelist';
 			my @values = qw(true false);
 			$item->{'values'} = \@values;
