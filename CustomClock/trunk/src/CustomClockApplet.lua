@@ -144,7 +144,30 @@ function openScreensaver(self)
 			item4 = Label("item4","")
 		}
 		self.item4Label = Group("item4",item4Items)
-
+		if self:getSettings()["alarmtime"] != "" then
+			local alarmtimeItems = {
+				alarmtime = Label("alarmtime","")
+			}
+			self.alarmtimeLabel = Group("alarmtime",alarmtimeItems)
+		end
+		if self:getSettings()["nowplaying2"] != "" then
+			local nowplayingItems = {
+				nowplaying2 = Label("nowplaying2","")
+			}
+			self.nowplaying2Label = Group("nowplaying2",nowplayingItems)
+		end
+		if self:getSettings()["nowplaying3"] != "" then
+			local nowplayingItems = {
+				nowplaying3 = Label("nowplaying3","")
+			}
+			self.nowplaying3Label = Group("nowplaying3",nowplayingItems)
+		end
+		if self:getSettings()["nowplaying4"] != "" then
+			local nowplayingItems = {
+				nowplaying4 = Label("nowplaying4","")
+			}
+			self.nowplaying4Label = Group("nowplaying4",nowplayingItems)
+		end
 		local backgroundItems = {
 			background = Icon("background")
 		}
@@ -153,6 +176,30 @@ function openScreensaver(self)
 			cover = Icon("cover")
 		}
 		self.coverImage = Group("cover",coverItems)
+		if self:getSettings()["playstatusplayimage"] != "" or self:getSettings()["playstatuspauseimage"] != "" or self:getSettings()["playstatusstopimage"] != "" then
+			local playstatusItems = {
+				playstatus = Icon("playstatus")
+			}
+			self.playStatusImage = Group("playstatus",playstatusItems)
+		end
+		if self:getSettings()["alarmimage"] != "" or self:getSettings()["alarmactiveimage"] != "" then
+			local alarmItems = {
+				alarm = Icon("alarm")
+			}
+			self.alarmImage = Group("alarm",alarmItems)
+		end
+		if self:getSettings()["shufflestatusoffimage"] != "" or self:getSettings()["shufflestatussongsimage"] != "" or self:getSettings()["shufflestatusalbumsimage"] != "" then
+			local shufflestatusItems = {
+				shufflestatus = Icon("shufflestatus")
+			}
+			self.shuffleStatusImage = Group("shufflestatus",shufflestatusItems)
+		end
+		if self:getSettings()["repeatstatusoffimage"] != "" or self:getSettings()["repeatstatussongimage"] != "" or self:getSettings()["repeatstatusplaylistimage"] != "" then
+			local repeatstatusItems = {
+				repeatstatus = Icon("repeatstatus")
+			}
+			self.repeatStatusImage = Group("repeatstatus",repeatstatusItems)
+		end
 		self.wallpaperImage = Icon("wallpaper")
 
 		self.canvas = Canvas('debug_canvas',function(screen)
@@ -167,6 +214,30 @@ function openScreensaver(self)
 		self.window:addWidget(self.item2Label)
 		self.window:addWidget(self.item3Label)
 		self.window:addWidget(self.item4Label)
+		if self:getSettings()["alarmtime"] and self:getSettings()["alarmtime"] != "" then
+			self.window:addWidget(self.alarmtimeLabel)
+		end
+		if self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "" then
+			self.window:addWidget(self.nowplaying2Label)
+		end
+		if self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "" then
+			self.window:addWidget(self.nowplaying3Label)
+		end
+		if self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "" then
+			self.window:addWidget(self.nowplaying4Label)
+		end
+		if (self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "") or (self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "") then
+			self.window:addWidget(self.alarmImage)
+		end
+		if (self:getSettings()["playstatusplayimage"] and self:getSettings()["playstatusplayimage"] != "") or (self:getSettings()["playstatuspauseimage"] and self:getSettings()["playstatuspauseimage"] != "") or (self:getSettings()["playstatusstopimage"] and self:getSettings()["playstatusstopimage"] != "") then
+			self.window:addWidget(self.playStatusImage)
+		end
+		if (self:getSettings()["shufflestatusoffimage"] and self:getSettings()["shufflestatusoffimage"] != "") or (self:getSettings()["shufflestatussongsimage"] and self:getSettings()["shufflestatussongsimage"] != "") or (self:getSettings()["shufflestatusalbumsimage"] and self:getSettings()["shufflestatusalbumsimage"] != "") then
+			self.window:addWidget(self.shuffleStatusImage)
+		end
+		if (self:getSettings()["repeatstatusoffimage"] and self:getSettings()["repeatstatusoffimage"] != "") or (self:getSettings()["repeatstatussongimage"] and self:getSettings()["repeatstatussongimage"] != "") or (self:getSettings()["repeatstatusplaylistimage"] and self:getSettings()["repeatstatusplaylistimage"] != "") then
+			self.window:addWidget(self.repeatStatusImage)
+		end
 		self.window:addWidget(self.coverImage)
 		self.window:addWidget(self.backgroundImage)
 		self.window:addWidget(canvasGroup)
@@ -197,66 +268,6 @@ function openSettings(self)
 		self.model = "controller"
 	end
 
-	local window = Window("text_list", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_STYLE"), 
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingStyle(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingBackground(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM1"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingItem(menuItem,"item1")
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM2"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingItem(menuItem,"item2")
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM3"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingItem(menuItem,"item3")
-				return EVENT_CONSUME
-			end
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"),
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingNowPlaying(menuItem)
-				return EVENT_CONSUME
-			end
-		},
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
-
-
-function defineSettingStyle(self, menuItem)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 	server:userRequest(function(chunk,err)
@@ -269,7 +280,7 @@ function defineSettingStyle(self, menuItem)
 							if err then
 								log:warn(err)
 							else
-								self:defineSettingStyleSink(menuItem,chunk.data)
+								self:defineSettingStyleSink(tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS")),chunk.data)
 							end
 						end,
 						player and player:getId(),
@@ -283,7 +294,7 @@ function defineSettingStyle(self, menuItem)
 								log:warn(err)
 							elseif chunk then
 								chunk = json.decode(chunk)
-								self:defineSettingStyleSink(menuItem,chunk.data)
+								self:defineSettingStyleSink(tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS")),chunk.data)
 							end
 						end,
 						'GET', "/svn/CustomClock/trunk/clockstyles.json")
@@ -306,12 +317,12 @@ function defineSettingStyle(self, menuItem)
         self.popup = popup
 end
 
-function defineSettingStyleSink(self,menuItem,data)
+function defineSettingStyleSink(self,title,data)
 	self.popup:hide()
 	
 	local style = self:getSettings()["style"]
 
-	local window = Window("text_list", menuItem.text, 'settingstitle')
+	local window = Window("text_list", title, 'settingstitle')
 	local menu = SimpleMenu("menu")
 
 	window:addWidget(menu)
@@ -371,410 +382,6 @@ function defineSettingStyleSink(self,menuItem,data)
 end
 
 
-function defineSettingItem(self, menuItem, itemId)
-	local group = RadioGroup()
-
-	local item = self:getSettings()[itemId]
-
-	local window = Window("text_list", menuItem.text, 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_EMPTY"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = ""
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == ""
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_DAYMONTH"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%d %b"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%d %b"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_DAYLONGMONTH"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%d %B"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%d %B"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAYDAYMONTH"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%a %d %b"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%a %d %b"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAYDAYMONTHLONG"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%A %d %B"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%A %d %B"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_WEEKDAY"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%a"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%a"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_LONGWEEKDAY"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%A"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%A"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_MONTH"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%b"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%b"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_LONGMONTH"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%B"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%B"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_MONTHDAY"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%d"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%d"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_YEAR"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%Y"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%Y"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_12HOURCLOCK"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%I:%M"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%I:%M"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_24HOURCLOCK"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%H:%M"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%H:%M"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_12HOURCLOCKNOZERO"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%l:%M"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%l:%M"
-			),
-		},           
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ITEM_24HOURCLOCKNOZERO"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()[itemId] = "%k:%M"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				item == "%k:%M"
-			),
-		},           
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
-
-function defineSettingNowPlaying(self, menuItem)
-	local group = RadioGroup()
-
-	local nowplaying = self:getSettings()["nowplaying"]
-
-	local window = Window("text_list", menuItem.text, 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_YES"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["nowplaying"] = true
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				nowplaying == true or nowplaying == "true"
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_NO"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["nowplaying"] = false
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				nowplaying == false or nowplaying == "false"
-			),
-		},
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
-
-function defineSettingBackground(self, menuItem)
-	local group = RadioGroup()
-
-	local backgroundtype = self:getSettings()["backgroundtype"]
-
-	local window = Window("text_list", menuItem.text, 'settingstitle')
-
-	window:addWidget(SimpleMenu("menu",
-	{
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_NONE"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["backgroundtype"] = ""
-					if self.backgroundImage then
-						self.backgroundImage:setWidgetValue("background",nil)
-					end
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				backgroundtype == ""
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_COVER"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["backgroundtype"] = "cover"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				backgroundtype == "cover"
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_COVER_BLACK"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["backgroundtype"] = "coverblack"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				backgroundtype == "coverblack"
-			),
-		},
-		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_BACKGROUND_SOLID_BLACK"),
-			style = 'item_choice',
-			check = RadioButton(
-				"radio",
-				group,
-				function()
-					self:getSettings()["backgroundtype"] = "solidblack"
-					if self.window then
-						self.window:hide()
-						self.window = nil
-					end
-					self:storeSettings()
-				end,
-				backgroundtype == "solidblack"
-			),
-		},
-	}))
-
-	self:tieAndShowWindow(window)
-	return window
-end
 
 function _loadFont(self,fontSize)
         return Font:load(self:getSettings()["font"], fontSize)
@@ -805,22 +412,24 @@ function _updateNowPlaying(self,itemType)
 	local playerStatus = player:getPlayerStatus()
 	if playerStatus.mode == 'play' then
 		if playerStatus.item_loop then
-		        local trackInfo = self:_extractTrackInfo(playerStatus.item_loop[1],itemType)
-			if trackInfo != "" then
-				self.item4Label:setWidgetValue("item4",trackInfo)
-				if self:getSettings()["nowplayingreplacement"] == "" or self:getSettings()["nowplayingreplacement"] == "auto" then
-					if self:getSettings()["mode"] == "analog" then
-						if self.model == "touch" then
-							--self.item2Label:setWidgetValue("item2","")
-							--self.item3Label:setWidgetValue("item3","")
-						elseif self.model == "controller" then
-							self.item2Label:setWidgetValue("item2","")
-						elseif self.model == "radio" then
-							self.item2Label:setWidgetValue("item2","")
-						end
-					else
-						if self.model == "radio" then
-							self.item2Label:setWidgetValue("item2","")
+			if self:getSettings()["nowplaying"] and self:getSettings()["nowplaying"] != ""  then
+				local trackInfo = self:_extractTrackInfo(playerStatus.item_loop[1],itemType)
+				if trackInfo != "" then
+					self.item4Label:setWidgetValue("item4",trackInfo)
+					if self:getSettings()["nowplayingreplacement"] == "" or self:getSettings()["nowplayingreplacement"] == "auto" then
+						if self:getSettings()["mode"] == "analog" then
+							if self.model == "touch" then
+								--self.item2Label:setWidgetValue("item2","")
+								--self.item3Label:setWidgetValue("item3","")
+							elseif self.model == "controller" then
+								self.item2Label:setWidgetValue("item2","")
+							elseif self.model == "radio" then
+								self.item2Label:setWidgetValue("item2","")
+							end
+						else
+							if self.model == "radio" then
+								self.item2Label:setWidgetValue("item2","")
+							end
 						end
 					end
 				end
@@ -831,6 +440,57 @@ function _updateNowPlaying(self,itemType)
 	else
 		self.item4Label:setWidgetValue("item4","")
 	end
+end
+
+function _updateStaticNowPlaying(self)
+	local player = appletManager:callService("getCurrentPlayer")
+	local playerStatus = player:getPlayerStatus()
+	if playerStatus.mode == 'play' then
+		if playerStatus.item_loop then
+			if self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "" then
+				self.nowplaying2Label:setWidgetValue("nowplaying2",self:_replaceTitleKeywords(playerStatus.item_loop[1], self:getSettings()["nowplaying2"],playerStatus.item_loop[1].track))
+			end
+			if self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "" then
+				self.nowplaying3Label:setWidgetValue("nowplaying3",self:_replaceTitleKeywords(playerStatus.item_loop[1], self:getSettings()["nowplaying3"],false))
+			end
+			if self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "" then
+				self.nowplaying4Label:setWidgetValue("nowplaying4",self:_replaceTitleKeywords(playerStatus.item_loop[1], self:getSettings()["nowplaying4"],false))
+			end
+		else
+			if self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "" then
+				self.nowplaying2Label:setWidgetValue("nowplaying2","")
+			end
+			if self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "" then
+				self.nowplaying3Label:setWidgetValue("nowplaying3","")
+			end
+			if self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "" then
+				self.nowplaying4Label:setWidgetValue("nowplaying4","")
+			end
+		end
+	else
+		if self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "" then
+			self.nowplaying2Label:setWidgetValue("nowplaying2","")
+		end
+		if self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "" then
+			self.nowplaying3Label:setWidgetValue("nowplaying3","")
+		end
+		if self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "" then
+			self.nowplaying4Label:setWidgetValue("nowplaying4","")
+		end
+	end
+end
+
+function _replaceTitleKeywords(self,_track, text, replaceNonTracks)
+	if _track.track then
+		text = string.gsub(text,"ARTIST",_track.artist)
+		text = string.gsub(text,"ALBUM",_track.album)
+		text = string.gsub(text,"TITLE",_track.track)
+	elseif replaceNoneTracks then
+		text = _track.text
+	else
+		text = ""
+	end
+	return text
 end
 
 function _getCoverSize(self)
@@ -881,17 +541,17 @@ end
 function _tick(self,forcedBackgroundUpdate)
 	log:debug("Updating time")
 
-	if self:getSettings()["item1"] != "" then
+	if self:getSettings()["item1"] and self:getSettings()["item1"] != "" then
 		self.item1Label:setWidgetValue("item1",os.date(self:getSettings()["item1"]))
 	end
-	if self:getSettings()["item2"] != "" then
+	if self:getSettings()["item2"] and self:getSettings()["item2"] != "" then
 		self.item2Label:setWidgetValue("item2",os.date(self:getSettings()["item2"]))
 	end
-	if self:getSettings()["item3"] != "" then
+	if self:getSettings()["item3"] and self:getSettings()["item3"] != "" then
 		self.item3Label:setWidgetValue("item3",os.date(self:getSettings()["item3"]))
 	end
 
-	if self:getSettings()["mode"] == "analog" then
+	if self:getSettings()["mode"] and self:getSettings()["mode"] == "analog" then
 		self.item1Label:setWidgetValue("item1","")
 	end
 
@@ -912,6 +572,9 @@ function _tick(self,forcedBackgroundUpdate)
 	else
 		self.item4Label:setWidgetValue("item4","")	
 	end
+	if (self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "") or (self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "") or (self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "") then
+		self:_updateStaticNowPlaying()
+	end
 
 	if self:getSettings()["cover"] or self:getSettings()["backgroundtype"] == "cover" or self:getSettings()["backgroundtype"] == "coverblack" then
 		self:_updateAlbumCover()
@@ -922,6 +585,70 @@ function _tick(self,forcedBackgroundUpdate)
 		self:_imageUpdate()
 	end
 	self.lastminute = minute
+	local player = appletManager:callService("getCurrentPlayer")
+	local playstatus = player:getPlayerStatus()["mode"]
+	local shufflestatus = tonumber(player:getPlayerStatus()["playlist shuffle"])
+	local repeatstatus = tonumber(player:getPlayerStatus()["playlist repeat"])
+
+	if (self:getSettings()["playstatusplayimage"] and self:getSettings()["playstatusplayimage"] != "") or (self:getSettings()["playstatuspauseimage"] and self:getSettings()["playstatuspauseimage"] != "") or (self:getSettings()["playstatusstopimage"] and self:getSettings()["playstatusstopimage"] != "") then
+		self.playStatusImage:setWidgetValue("playstatus",self.images[playstatus])
+	else
+		self.playStatusImage:setWidgetValue("playstatus",nil)
+	end
+
+	if shufflestatus == 0 and self:getSettings()["shufflestatusoffimage"] and self:getSettings()["shufflestatusoffimage"] != "" then
+		self.shuffleStatusImage:setWidgetValue("shufflestatus",self.images["shuffleoff"])
+	elseif shufflestatus==1 and self:getSettings()["shufflestatussongsimage"] and self:getSettings()["shufflestatussongsimage"] != "" then
+		self.shuffleStatusImage:setWidgetValue("shufflestatus",self.images["shufflesongs"])
+	elseif shufflestatus==2 and self:getSettings()["shufflestatusalbumsimage"] and self:getSettings()["shufflestatusalbumsimage"] != "" then
+		self.shuffleStatusImage:setWidgetValue("shufflestatus",self.images["shufflealbums"])
+	else	
+		self.shuffleStatusImage:setWidgetValue("shufflestatus",nil)
+	end
+
+	if repeatstatus == 0 and self:getSettings()["repeatstatusoffimage"] and self:getSettings()["repeatstatusoffimage"] != "" then
+		self.repeatStatusImage:setWidgetValue("repeatstatus",self.images["repeatoff"])
+	elseif repeatstatus == 1 and self:getSettings()["repeatstatussongimage"] and self:getSettings()["repeatstatussongimage"] != "" then
+		self.repeatStatusImage:setWidgetValue("repeatstatus",self.images["repeatsong"])
+	elseif repeatstatus == 2 and self:getSettings()["repeatstatusplaylistimage"] and self:getSettings()["repeatstatusplaylistimage"] != "" then
+		self.repeatStatusImage:setWidgetValue("repeatstatus",self.images["repeatplaylist"])
+	else
+		self.repeatStatusImage:setWidgetValue("repeatstatus",nil)
+	end
+
+	local alarmtime = player:getPlayerStatus()["alarm_next"]
+	local alarmstate = player:getPlayerStatus()["alarm_state"]
+
+	if alarmstate=="set" or alarmstate=="snooze" then
+		if self:getSettings()["alarmtime"] and self:getSettings()["alarmtime"] != "" then
+			self.alarmtimeLabel:setWidgetValue("alarmtime",os.date(self:getSettings()["alarmtime"],alarmtime))
+		end
+		if self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "" then
+			self.alarmImage:setWidgetValue("alarm",self.images["alarm"])
+		elseif (self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "")  or (self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "") then
+			self.alarmImage:setWidgetValue("alarm",nil)
+		end
+	elseif alarmstate=="active" then
+		if self:getSettings()["alarmtime"] and self:getSettings()["alarmtime"] != "" then
+			self.alarmtimeLabel:setWidgetValue("alarmtime","")
+		end
+		if self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "" then
+			self.alarmImage:setWidgetValue("alarm",self.images["alarmactive"])
+		elseif self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "" then
+			self.alarmImage:setWidgetValue("alarm",self.images["alarm"])
+		elseif (self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "")  or (self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "") then
+			self.alarmImage:setWidgetValue("alarm",nil)
+		end
+	else
+		if self:getSettings()["alarmtime"] and self:getSettings()["alarmtime"] != "" then
+			self.alarmtimeLabel:setWidgetValue("alarmtime","")
+		end
+		if (self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "") or (self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "") then
+			self.alarmImage:setWidgetValue("alarm",nil)
+		end
+	end
+	
+
 
 	if self:getSettings()["mode"] == "analog" or self.images["clock"] then
 		self.canvas:reSkin()
@@ -1024,7 +751,7 @@ function _retrieveImage(self,url,imageType)
 							zoom = height/h
 						end
 						image = image:rotozoom(0,zoom,1)
-						if self:getSettings()["backgroundtype"] != "" then
+						if self:getSettings()["backgroundtype"] and self:getSettings()["backgroundtype"] != "" then
 							self.backgroundImage:setWidgetValue("background",image)
 						end
 						self.wallpaperImage:setValue(image)
@@ -1042,45 +769,37 @@ function _retrieveImage(self,url,imageType)
 		log:warn("Unable to parse url "..url..", got: "..imagehost..", "..imagepath)
 	end
 end
+function _getImage(self,attribute,id)
+	local img = self:getSettings()[attribute]
+	if img and img != "" then
+		self:_retrieveImage(img,id)
+	else
+		self.images[id] = nil
+	end
+end
+
 function _imageUpdate(self)
 	log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
 
-	local background = self:getSettings()["background"]
-	if background and background != "" then
-		self:_retrieveImage(background,"background")
-	else
-		self.images["backgroud"] = nil
-	end
+	self:_getImage("background","background")
+	self:_getImage("clockimage","clock")
+	self:_getImage("alarmimage","alarm")
+	self:_getImage("alarmactiveimage","alarmactive")
+	self:_getImage("playstatusplayimage","play")
+	self:_getImage("playstatusstopimage","stop")
+	self:_getImage("playstatuspauseimage","pause")
+	self:_getImage("shufflestatusoffimage","shuffleoff")
+	self:_getImage("shufflestatussongsimage","shufflesongs")
+	self:_getImage("shufflestatusalbumsimage","shufflealbums")
+	self:_getImage("repeatstatusoffimage","repeatoff")
+	self:_getImage("repeatstatussongimage","repeatsong")
+	self:_getImage("repeatstatusplaylistimage","repeatplaylist")
 
-	local clock = self:getSettings()["clockimage"]
-	if clock and clock != "" then
-		self:_retrieveImage(clock,"clock")
-	else
-		self.images["clock"] = nil
-	end
 	if self:getSettings()["mode"] == "analog" then
-		local hour = self:getSettings()["hourimage"]
-		if hour and hour != "" then
-			self:_retrieveImage(hour,"hour")
-		else
-			self.images["hour"] = nil
-		end
-
-		local minute = self:getSettings()["minuteimage"]
-		if minute and minute != "" then
-			self:_retrieveImage(minute,"minute")
-		else
-			self.images["minute"] = nil
-		end
-
-		local second = self:getSettings()["secondimage"]
-		if second and second != "" then
-			self:_retrieveImage(second,"second")
-		else
-			self.images["second"] = nil
-		end
+		self:_getImage("hourimage","hour")
+		self:_getImage("minuteimage","minute")
+		self:_getImage("secondimage","second")
 	else
-		self.images["clock"] = nil
 		self.images["hour"] = nil
 		self.images["minute"] = nil
 		self.images["second"] = nil
@@ -1112,6 +831,7 @@ end
 function _getClockSkin(self,skin)
 	local s = {}
 	local width,height = Framework.getScreenSize()
+	local primaryAlign = 'center'
 	local primaryItemHeight
 	local primaryItemFont
 	local secondary2ItemHeight
@@ -1125,6 +845,7 @@ function _getClockSkin(self,skin)
 	local nowPlayingPosition
 	local nowPlayingFont
 	local nowPlayingHeight
+	local item1Margin = 10
 	local item2Margin = 5
 	local item3Margin = 5
 	local nowPlayingMargin = 5
@@ -1238,6 +959,10 @@ function _getClockSkin(self,skin)
 	local text2Color = { 0xcc, 0xcc, 0xcc }
 	local text3Color = { 0xcc, 0xcc, 0xcc }
 	local nowPlayingColor = { 0xcc, 0xcc, 0xcc }
+	local alarmtimeColor = { 0xcc, 0xcc, 0xcc }
+	local nowplaying2Color = { 0xcc, 0xcc, 0xcc }
+	local nowplaying3Color = { 0xcc, 0xcc, 0xcc }
+	local nowplaying4Color = { 0xcc, 0xcc, 0xcc }
 
 	if self:getSettings()["item1color"] and self:getSettings()["item1color"] != "" then
 		text1Color = self:_getColor(self:getSettings()["item1color"])
@@ -1250,6 +975,18 @@ function _getClockSkin(self,skin)
 	end
 	if self:getSettings()["nowplayingcolor"] and self:getSettings()["nowplayingcolor"] != "" then
 		nowPlayingColor = self:_getColor(self:getSettings()["nowplayingcolor"])
+	end
+	if self:getSettings()["alarmtimecolor"] and self:getSettings()["alarmtimecolor"] != "" then
+		alarmtimeColor = self:_getColor(self:getSettings()["alarmtimecolor"])
+	end
+	if self:getSettings()["nowplaying2color"] and self:getSettings()["nowplaying2color"] != "" then
+		nowplaying2Color = self:_getColor(self:getSettings()["nowplaying2color"])
+	end
+	if self:getSettings()["nowplaying3color"] and self:getSettings()["nowplaying3color"] != "" then
+		nowplaying3Color = self:_getColor(self:getSettings()["nowplaying3color"])
+	end
+	if self:getSettings()["nowplaying4color"] and self:getSettings()["nowplaying4color"] != "" then
+		nowplaying4Color = self:_getColor(self:getSettings()["nowplaying4color"])
 	end
 
 	if self:getSettings()["item1position"] and self:getSettings()["item1position"] != "" then
@@ -1290,6 +1027,9 @@ function _getClockSkin(self,skin)
 		nowPlayingFont = tonumber(self:getSettings()["nowplayingsize"])
 	end
 
+	if self:getSettings()["item1align"] and self:getSettings()["item1align"] != "" then
+		primaryAlign = self:getSettings()["item1align"]
+	end
 	if self:getSettings()["item2align"] and self:getSettings()["item2align"] != "" then
 		secondary2Align = self:getSettings()["item2align"]
 	end
@@ -1297,6 +1037,9 @@ function _getClockSkin(self,skin)
 		secondary3Align = self:getSettings()["item3align"]
 	end
 
+	if self:getSettings()["item1margin"] and self:getSettings()["item1margin"] != "" then
+		item1Margin = self:getSettings()["item1margin"]
+	end
 	if self:getSettings()["item2margin"] and self:getSettings()["item2margin"] != "" then
 		item2Margin = self:getSettings()["item2margin"]
 	end
@@ -1308,15 +1051,15 @@ function _getClockSkin(self,skin)
 	end
 
 	local item1Style = nil
-	if self:getSettings()["item1"] != "" then
+	if self:getSettings()["item1"] and self:getSettings()["item1"] != "" then
 		item1Style = {
 				position = LAYOUT_NONE,
 				y = primaryItemPosition,
 				x = 0,
-				border = {10,0,10,0},
 				item1 = {
+					border = {item1Margin,0,item1Margin,0},
 					font = self:_loadFont(primaryItemFont),
-					align = 'center',
+					align = primaryAlign,
 					w = WH_FILL,
 					h = primaryItemHeight,
 					fg = text1Color,
@@ -1326,7 +1069,7 @@ function _getClockSkin(self,skin)
 	end
 		
 	local item2Style = nil
-	if self:getSettings()["item2"] != "" then
+	if self:getSettings()["item2"] and self:getSettings()["item2"] != "" then
 		item2Style = {
 				position = LAYOUT_NONE,
 				y = secondary2Position,
@@ -1344,7 +1087,7 @@ function _getClockSkin(self,skin)
 	end
 
 	local item3Style = nil
-	if self:getSettings()["item3"] != "" then
+	if self:getSettings()["item3"] and self:getSettings()["item3"] != "" then
 		item3Style = {
 				position = LAYOUT_NONE,
 				y = secondary3Position,
@@ -1379,17 +1122,241 @@ function _getClockSkin(self,skin)
 		}
 	end
 
+	local playStatusStyle = nil
+	if (self:getSettings()["playstatusplayimage"] and self:getSettings()["playstatusplayimage"] != "") or (self:getSettings()["playstatuspauseimage"] and self:getSettings()["playstatuspauseimage"] != "") or (self:getSettings()["playstatusstopimage"] and self:getSettings()["playstatusstopimage"] != "") then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["playstatuspositionx"] and self:getSettings()["playstatuspositionx"] != "" then
+			posx = tonumber(self:getSettings()["playstatuspositionx"])
+		end
+		if self:getSettings()["playstatuspositiony"] and self:getSettings()["playstatuspositiony"] != "" then
+			posy = tonumber(self:getSettings()["playstatuspositiony"])
+		end
+		playStatusStyle = {
+			position = LAYOUT_NONE,
+			x = posx,
+			y = posy,
+			playstatus = {
+				align = 'center',
+			},
+			zOrder = 4,
+		}
+	end
+	local shuffleStatusStyle = nil
+	if (self:getSettings()["shufflestatusoffimage"] and self:getSettings()["shufflestatusoffimage"] != "") or (self:getSettings()["shufflestatussongsimage"] and self:getSettings()["shufflestatussongsimage"] != "") or (self:getSettings()["shufflestatusalbumsimage"] and self:getSettings()["shufflestatusalbumsimage"] != "") then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["shufflestatuspositionx"] and self:getSettings()["shufflestatuspositionx"] != "" then
+			posx = tonumber(self:getSettings()["shufflestatuspositionx"])
+		end
+		if self:getSettings()["shufflestatuspositiony"] and self:getSettings()["shufflestatuspositiony"] != "" then
+			posy = tonumber(self:getSettings()["shufflestatuspositiony"])
+		end
+		shuffleStatusStyle = {
+			position = LAYOUT_NONE,
+			x = posx,
+			y = posy,
+			shufflestatus = {
+				align = 'center',
+			},
+			zOrder = 4,
+		}
+	end
+	local repeatStatusStyle = nil
+	if (self:getSettings()["repeatstatusoffimage"] and self:getSettings()["repeatstatusoffimage"] != "") or (self:getSettings()["repeatstatussongimage"] and self:getSettings()["repeatstatussongimage"] != "") or (self:getSettings()["repeatstatusplaylistimage"] and self:getSettings()["repeatstatusplaylistimage"] != "") then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["repeatstatuspositionx"] and self:getSettings()["repeatstatuspositionx"] != "" then
+			posx = tonumber(self:getSettings()["repeatstatuspositionx"])
+		end
+		if self:getSettings()["repeatstatuspositiony"] and self:getSettings()["repeatstatuspositiony"] != "" then
+			posy = tonumber(self:getSettings()["repeatstatuspositiony"])
+		end
+		repeatStatusStyle = {
+			position = LAYOUT_NONE,
+			x = posx,
+			y = posy,
+			repeatstatus = {
+				align = 'center',
+			},
+			zOrder = 4,
+		}
+	end
+
+	local alarmStyle = nil
+	if (self:getSettings()["alarmimage"] and self:getSettings()["alarmimage"] != "") or (self:getSettings()["alarmactiveimage"] and self:getSettings()["alarmactiveimage"] != "") then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["alarmimagepositionx"] and self:getSettings()["alarmimagepositionx"] != "" then
+			posx = tonumber(self:getSettings()["alarmimagepositionx"])
+		end
+		if self:getSettings()["alarmimagepositiony"] and self:getSettings()["alarmimagepositiony"] != "" then
+			posy = tonumber(self:getSettings()["alarmimagepositiony"])
+		end
+		alarmStyle = {
+			position = LAYOUT_NONE,
+			x = posx,
+			y = posy,
+			alarm = {
+				align = 'center',
+			},
+			zOrder = 4,
+		}
+	end
+	local alarmtimeStyle = nil
+	if self:getSettings()["alarmtime"] and self:getSettings()["alarmtime"] != "" then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["alarmtimepositionx"] and self:getSettings()["alarmtimepositionx"] != "" then
+			posx = tonumber(self:getSettings()["alarmtimepositionx"])
+		end
+		if self:getSettings()["alarmtimepositiony"] and self:getSettings()["alarmtimepositiony"] != "" then
+			posy = tonumber(self:getSettings()["alarmtimepositiony"])
+		end
+		local alarmtimeFont = secondary2ItemFont
+		if self:getSettings()["alarmtimesize"] and self:getSettings()["alarmtimesize"] != "" then
+			alarmtimeFont = tonumber(self:getSettings()["alarmtimesize"])
+		end
+		alarmtimeStyle = {
+				position = LAYOUT_NONE,
+				x = posx,
+				y = posy,
+				alarmtime = {
+					border = {0,0,0,0},
+					font = self:_loadFont(alarmtimeFont),
+					align = 'center',
+					h = alarmtimeFont,
+					fg = alarmtimeColor,
+				},
+				zOrder = 4,
+		}
+	end
+
+	local nowplaying2Style = nil
+	if self:getSettings()["nowplaying2"] and self:getSettings()["nowplaying2"] != "" then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["nowplaying2positionx"] and self:getSettings()["nowplaying2positionx"] != "" then
+			posx = tonumber(self:getSettings()["nowplaying2positionx"])
+		end
+		if self:getSettings()["nowplaying2positiony"] and self:getSettings()["nowplaying2positiony"] != "" then
+			posy = tonumber(self:getSettings()["nowplaying2positiony"])
+		end
+		local font = secondary2ItemFont
+		if self:getSettings()["nowplaying2size"] and self:getSettings()["nowplaying2size"] != "" then
+			font = tonumber(self:getSettings()["nowplaying2size"])
+		end
+		local nowplaying2Align = 'center'
+		if self:getSettings()["nowplaying2align"] and self:getSettings()["nowplaying2align"] != "" then
+			nowplaying2Align = self:getSettings()["nowplaying2align"]
+		end
+		local width = WH_FILL
+		if self:getSettings()["nowplaying2width"] and self:getSettings()["nowplaying2width"] != "" then
+			width = tonumber(self:getSettings()["nowplaying2width"])
+		end
+		nowplaying2Style = {
+				position = LAYOUT_NONE,
+				x = posx,
+				y = posy,
+				nowplaying2 = {
+					border = {nowPlayingMargin,0,nowPlayingMargin,0},
+					w = width,
+					font = self:_loadFont(font),
+					align = nowplaying2Align,
+					h = font,
+					fg = nowplaying2Color,
+				},
+				zOrder = 4,
+		}
+	end
+
+	local nowplaying3Style = nil
+	if self:getSettings()["nowplaying3"] and self:getSettings()["nowplaying3"] != "" then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["nowplaying3positionx"] and self:getSettings()["nowplaying3positionx"] != "" then
+			posx = tonumber(self:getSettings()["nowplaying3positionx"])
+		end
+		if self:getSettings()["nowplaying3positiony"] and self:getSettings()["nowplaying3positiony"] != "" then
+			posy = tonumber(self:getSettings()["nowplaying3positiony"])
+		end
+		local font = secondary2ItemFont
+		if self:getSettings()["nowplaying3size"] and self:getSettings()["nowplaying3size"] != "" then
+			font = tonumber(self:getSettings()["nowplaying3size"])
+		end
+		local nowplaying3Align = 'center'
+		if self:getSettings()["nowplaying3align"] and self:getSettings()["nowplaying3align"] != "" then
+			nowplaying3Align = self:getSettings()["nowplaying3align"]
+		end
+		local width = WH_FILL
+		if self:getSettings()["nowplaying3width"] and self:getSettings()["nowplaying3width"] != "" then
+			width = tonumber(self:getSettings()["nowplaying3width"])
+		end
+		nowplaying3Style = {
+				position = LAYOUT_NONE,
+				x = posx,
+				y = posy,
+				nowplaying3 = {
+					border = {nowPlayingMargin,0,nowPlayingMargin,0},
+					w = width,
+					font = self:_loadFont(font),
+					align = nowplaying3Align,
+					h = font,
+					fg = nowplaying3Color,
+				},
+				zOrder = 4,
+		}
+	end
+
+	local nowplaying4Style = nil
+	if self:getSettings()["nowplaying4"] and self:getSettings()["nowplaying4"] != "" then
+		local posx = 0
+		local posy = 0
+		if self:getSettings()["nowplaying4positionx"] and self:getSettings()["nowplaying4positionx"] != "" then
+			posx = tonumber(self:getSettings()["nowplaying4positionx"])
+		end
+		if self:getSettings()["nowplaying4positiony"] and self:getSettings()["nowplaying4positiony"] != "" then
+			posy = tonumber(self:getSettings()["nowplaying4positiony"])
+		end
+		local font = secondary2ItemFont
+		if self:getSettings()["nowplaying4size"] and self:getSettings()["nowplaying4size"] != "" then
+			font = tonumber(self:getSettings()["nowplaying4size"])
+		end
+		local nowplaying4Align = 'center'
+		if self:getSettings()["nowplaying4align"] and self:getSettings()["nowplaying4align"] != "" then
+			nowplaying4Align = self:getSettings()["nowplaying4align"]
+		end
+		local width = WH_FILL
+		if self:getSettings()["nowplaying4width"] and self:getSettings()["nowplaying4width"] != "" then
+			width = tonumber(self:getSettings()["nowplaying4width"])
+		end
+		nowplaying4Style = {
+				position = LAYOUT_NONE,
+				x = posx,
+				y = posy,
+				nowplaying4 = {
+					border = {nowPlayingMargin,0,nowPlayingMargin,0},
+					w = width,
+					font = self:_loadFont(font),
+					align = nowplaying4Align,
+					h = font,
+					fg = nowplaying4Color,
+				},
+				zOrder = 4,
+		}
+	end
+
 	local coverStyle = nil
 	if self:getSettings()["cover"] or self:getSettings()["backgroundtype"] == 'cover' or self:getSettings()["backgroundtype"] == 'coverblack' then
 		local coverXPos = 0
 		local coverYPos = 0
 		local coverSize = WH_FILL
-		if self:getSettings()["coverpositionx"] then
-			coverXPos = self:getSettings()["coverpositionx"]
+		if self:getSettings()["coverpositionx"] and self:getSettings()["coverpositionx"] != "" then
+			coverXPos = tonumber(self:getSettings()["coverpositionx"])
 			coverSize = self:_getCoverSize()
 		end
-		if self:getSettings()["coverpositiony"] then
-			coverYPos = self:getSettings()["coverpositiony"]
+		if self:getSettings()["coverpositiony"] and self:getSettings()["coverpositiony"] != "" then
+			coverYPos = tonumber(self:getSettings()["coverpositiony"])
 		end
 		coverStyle = {
 			position = LAYOUT_NONE,
@@ -1408,10 +1375,18 @@ function _getClockSkin(self,skin)
 		item2 = item2Style,
 		item3 = item3Style,
 		item4 = item4Style,
+		nowplaying2 = nowplaying2Style,
+		nowplaying3 = nowplaying3Style,
+		nowplaying4 = nowplaying4Style,
 		canvas = {
 			zOrder = 3,
 		},
 		cover = coverStyle,
+		playstatus = playStatusStyle,
+		shufflestatus = shuffleStatusStyle,
+		repeatstatus = repeatStatusStyle,
+		alarm = alarmStyle,
+		alarmtime = alarmtimeStyle,
 		background = {
 			position = LAYOUT_NONE,
 			x = 0,
