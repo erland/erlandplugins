@@ -83,12 +83,10 @@ function openScreensaver(self)
 				for i,entry in pairs(chunk.data[3]) do
 					if entry.name == self:getSettings()["style"] then
 						for attribute,value in pairs(self:getSettings()) do
-							if attribute != "style" and attribute != "nowplaying" and attribute != "font" then
+							if attribute != "style" and attribute != "font" then
 								self:getSettings()[attribute] = ""
 							elseif attribute == "font" then
 								self:getSettings()[attribute] = "fonts/FreeSans.ttf"
-							elseif attribute == "backgroundtype" then
-								self:getSettings()[attribute] = ""
 							end
 						end
 						for attribute,value in pairs(entry) do
