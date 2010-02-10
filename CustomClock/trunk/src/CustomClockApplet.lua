@@ -349,12 +349,10 @@ function defineSettingStyleSink(self,title,data)
 						function()
 							self:getSettings()["style"] = entry.name
 							for attribute,value in pairs(self:getSettings()) do
-								if attribute != "style" and attribute != "nowplaying" and attribute != "font" then
+								if attribute != "style" and attribute != "font" then
 									self:getSettings()[attribute] = ""
 								elseif attribute == "font" then
 									self:getSettings()[attribute] = "fonts/FreeSans.ttf"
-								elseif attribute == "backgroundtype" then
-									self:getSettings()[attribute] = ""
 								end
 							end
 							for attribute,value in pairs(entry) do
