@@ -15,6 +15,7 @@ See L<jive.AppletMeta> for a description of standard applet meta functions.
 =cut
 --]]
 
+local tostring = tostring
 
 local oo            = require("loop.simple")
 local datetime         = require("jive.utils.datetime")
@@ -38,26 +39,19 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_CUSTOMCLOCK"), 
-		"CustomClock",
-		"openScreensaver", 
-		self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
-		"openSettings", 
-		90)
+	for i=1,5 do
+		appletManager:callService("addScreenSaver", 
+			tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..i, 
+			"CustomClock",
+			"openScreensaver"..i, 
+			self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
+			"openSettings", 
+			90)
+	end
 end
 
 function defaultSettings(self)
         local defaultSetting = {}
-        defaultSetting["mode"] = "digital"
-	if datetime:getHours()==12 then
-	        defaultSetting["item1" ] = "%I:%M"
-	else
-	        defaultSetting["item1" ] = "%H:%M"
-	end
-        defaultSetting["item2" ] = "%A"
-        defaultSetting["item3" ] = "%d %B"
-        defaultSetting["nowplaying"] = true
 	defaultSetting["font"] = "fonts/FreeSans.ttf"
         return defaultSetting
 end
