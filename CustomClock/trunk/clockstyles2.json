@@ -943,7 +943,7 @@
 						"text": "%d %B"
 					},
 					{	
-						"itemtype": "switchingplayingtext",
+						"itemtype": "switchingtrackplayingtext",
 						"fontsize": 35,
 						"posy": 30,
 						"margin": 40,
