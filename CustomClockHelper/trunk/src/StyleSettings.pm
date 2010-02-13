@@ -147,7 +147,7 @@ sub handler {
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^backgroundtype$/) {
 			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(solidblack solidwhite solidlightgray solidgray soliddarkgray);
+			my @values = qw(black white lightgray gray darkgray);
 			$item->{'values'} = \@values;
 		}
 	}
@@ -308,8 +308,8 @@ sub saveHandler {
 		Plugins::CustomClockHelper::Plugin->setStyle($client,$oldStyleName);
 	}elsif($name && $styleName) {
 		my $itemId = $params->{'pluginCustomClockHelperStyleItemNo'};
+		my $oldStyle = Plugins::CustomClockHelper::Plugin->getStyle($oldStyleName);
 		if($itemId && $itemId>0) {
-			my $oldStyle = Plugins::CustomClockHelper::Plugin->getStyle($oldStyleName);
 			my $items = $oldStyle->{'items'};
 			if($params->{'itemdelete'}) {
 				splice(@$items,$itemId-1,1);
@@ -328,6 +328,8 @@ sub saveHandler {
 				splice(@$items,$itemId-1,1,$itemStyle);
 				$style->{'items'} = $items;
 			}
+		}else {
+			$style->{'items'} = $oldStyle->{'items'};
 		}
 		if(!$params->{'itemdelete'}) {
 			foreach my $property (keys %$params) {
