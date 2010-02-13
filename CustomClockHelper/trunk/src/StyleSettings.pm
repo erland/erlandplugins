@@ -26,6 +26,8 @@ use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings;
 
+use Data::Dumper;
+
 my $prefs = preferences('plugin.customclockhelper');
 my $log   = logger('plugin.customclockhelper');
 
@@ -88,15 +90,17 @@ sub handler {
 	my @properties = ();
 	if(defined($style)) {
 		for my $property (keys %$style) {
-			my %p = (
-				'id' => $property,
-				'value' => $style->{$property}
-			);
-			push @properties,\%p;
+			if($property ne "items") {
+				my %p = (
+					'id' => $property,
+					'value' => $style->{$property}
+				);
+				push @properties,\%p;
+			}
 		}
 	}
 
-	my @availableProperties = qw(name models mode background minuteimage hourimage secondimage clockimage backgroundtype item1 item1color item1margin item1height item1position item1align item1size item2 item2color item2margin item2align item2height item2position item2size item3 item3color item3margin item3align item3height item3position item3size nowplaying nowplayingreplacement nowplayingcolor nowplayingmargin nowplayingheight nowplayingposition nowplayingsize nowplaying2 nowplaying2color nowplaying2positionx nowplaying2positiony nowplaying2size nowplaying2width nowplaying2align nowplaying3 nowplaying3color nowplaying3positionx nowplaying3positiony nowplaying3size nowplaying3width nowplaying3align nowplaying4 nowplaying4color nowplaying4positionx nowplaying4positiony nowplaying4size nowplaying4width nowplaying4align cover coversize coverpositionx coverpositiony alarmtime alarmtimepositionx alarmtimepositiony alarmtimesize alarmimage alarmactiveimage alarmimagepositionx alarmimagepositiony repeatstatusoffimage repeatstatussongimage repeatstatusplaylistimage repeatstatuspositionx repeatstatuspositiony playstatusplayimage playstatuspauseimage playstatusstopimage playstatuspositionx playstatuspositiony shufflestatusoffimage shufflestatussongsimage shufflestatusalbumsimage shufflestatuspositionx shufflestatuspositiony);
+	my @availableProperties = qw(name models background backgroundtype clockposx clockposy);
 	foreach my $availableProperty (@availableProperties) {
 		my $found = 0;
 		foreach my $property (@properties) {
@@ -143,23 +147,7 @@ sub handler {
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^backgroundtype$/) {
 			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(solidblack solidwhite solidlightgray solidgray soliddarkgray cover coverblack);
-			$item->{'values'} = \@values;
-		}elsif($item->{'id'} =~ /^mode$/) {
-			$item->{'type'} = 'singlelist';
-			my @values = qw(analog digital);
-			$item->{'values'} = \@values;
-		}elsif($item->{'id'} =~ /^nowplayingreplacement$/) {
-			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(auto none);
-			$item->{'values'} = \@values;
-		}elsif($item->{'id'} =~ /^nowplaying$/) {
-			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(true false);
-			$item->{'values'} = \@values;
-		}elsif($item->{'id'} =~ /^cover$/) {
-			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(true false);
+			my @values = qw(solidblack solidwhite solidlightgray solidgray soliddarkgray);
 			$item->{'values'} = \@values;
 		}
 	}
@@ -181,6 +169,113 @@ sub handler {
 			return $a->{'id'} cmp $b->{'id'};
 		}
 	} @properties;
+
+	my @availableItems = ();
+	my $id = 1;
+	if(defined($style) && defined($style->{'items'})) {
+		my $items = $style->{'items'};
+		for my $item (@$items) {
+			my $entry = {
+				'id' => $id
+			};
+			if($item->{'itemtype'} =~ /text$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
+			}elsif($item->{'itemtype'} =~ /image$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
+			}else {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
+			}
+			push @availableItems,$entry;
+			$id++;
+		}
+	}
+	if($params->{'itemnew'}) {
+		my $entry = {
+			'id' => $id,
+			'name' => "New item..."
+		};
+		$params->{'pluginCustomClockHelperStyleItemNo'} = $id;
+		push @availableItems,$entry;
+	}
+	$params->{'pluginCustomClockHelperStyleItems'} = \@availableItems;
+
+	my @itemproperties = ();
+	if(defined($style) && defined($style->{'items'}) && $params->{'pluginCustomClockHelperStyleItemNo'}) {
+		my $items = $style->{'items'};
+		my $item = $items->[$params->{'pluginCustomClockHelperStyleItemNo'}-1];
+		my $itemtype = $item->{'itemtype'} || "timetext";
+		for my $property (keys %$item) {
+			if($item->{$property} ne "" && isItemTypeParameter($itemtype,$property)) {
+				my %p = (
+					'id' => $property,
+					'value' => $item->{$property}
+				);
+				push @itemproperties,\%p;
+			}
+		}
+		my @availableProperties = getItemTypeParameters($itemtype);
+		foreach my $availableProperty (@availableProperties) {
+			my $found = 0;
+			foreach my $property (@itemproperties) {
+				if($property->{'id'} eq $availableProperty) {
+					$found = 1;
+					last;
+				}
+			}
+			if(!$found) {
+				my %p = (
+					'id' => $availableProperty,
+					'value' => '',
+				);
+				push @itemproperties,\%p;
+			}
+		}	
+		foreach my $item (@itemproperties) {
+			if($item->{'id'} =~ /color$/) {
+				$item->{'type'} = 'optionalsinglelist';
+				my @values = qw(white lightgray gray darkgray lightred red darkred);
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^itemtype$/) {
+				$item->{'type'} = 'singlelist';
+				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon);
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^align$/) {
+				$item->{'type'} = 'optionalsinglelist';
+				my @values = qw(left center right);
+				$item->{'values'} = \@values;
+			}
+		}
+		@itemproperties = sort { 		
+			if($a->{'id'} eq 'itemtype') {
+				return -1;
+			}elsif($b->{'id'} eq 'itemtype') {
+				return 1;
+			}elsif($a->{'id'} eq 'color') {
+				return -1;
+			}elsif($b->{'id'} eq 'color') {
+				return 1;
+			}elsif($a->{'id'} eq 'posx') {
+				return -1;
+			}elsif($b->{'id'} eq 'posx') {
+				return 1;
+			}elsif($a->{'id'} eq 'posy') {
+				return -1;
+			}elsif($b->{'id'} eq 'posy') {
+				return 1;
+			}elsif($a->{'id'} eq 'text') {
+				return -1;
+			}elsif($b->{'id'} eq 'text') {
+				return 1;
+			}elsif($a->{'id'} =~ /^url/) {
+				return -1;
+			}elsif($b->{'id'} =~ /^url/) {
+				return 1;
+			}else {
+				return $a->{'id'} cmp $b->{'id'};
+			}
+		} @itemproperties;
+		$params->{'pluginCustomClockHelperStyleItemProperties'} = \@itemproperties;
+	}
 
 	if(defined($style)) {
 		$params->{'pluginCustomClockHelperStyle'} = Plugins::CustomClockHelper::Plugin::getStyleKey($style);
@@ -206,28 +301,58 @@ sub saveHandler {
 			$models.=$model;
 		}
 	}
-	$styleName = $name." - ".$models;
+	if($models ne "") {
+		$styleName = $name." - ".$models;
+	}
 	if($params->{'delete'}) {
 		Plugins::CustomClockHelper::Plugin->setStyle($client,$oldStyleName);
 	}elsif($name && $styleName) {
-		foreach my $property (keys %$params) {
-			if($property =~ /^property_(.*)$/) {
-				my $propertyId = $1;
-				if($propertyId =~ /^models_(.*)$/) {
-					my $model = $1;
-					if(!defined($style->{'models'})) {
-						my @empty = ();
-						$style->{'models'} = \@empty;
-					}
-					my $models = $style->{'models'};
-					push @$models,$model;
-				}else {
-					$style->{$propertyId} = $params->{'property_'.$propertyId};
+		my $itemId = $params->{'pluginCustomClockHelperStyleItemNo'};
+		if($itemId && $itemId>0) {
+			my $oldStyle = Plugins::CustomClockHelper::Plugin->getStyle($oldStyleName);
+			my $items = $oldStyle->{'items'};
+			if($params->{'itemdelete'}) {
+				splice(@$items,$itemId-1,1);
+				$style = $oldStyle;
+				if(scalar(@$items)<$itemId) {
+					$params->{'pluginCustomClockHelperStyleItemNo'} = $itemId-1;
 				}
+			} else {
+				my $itemStyle = {};
+				foreach my $property (keys %$params) {
+					if($property =~ /^itemproperty_(.*)$/) {
+						my $propertyId = $1;
+						$itemStyle->{$propertyId} = $params->{'itemproperty_'.$propertyId};
+					}
+				}
+				splice(@$items,$itemId-1,1,$itemStyle);
+				$style->{'items'} = $items;
 			}
 		}
-		my $models = $style->{'models'};
-		@$models = sort { $a cmp $b } @$models;
+		if(!$params->{'itemdelete'}) {
+			foreach my $property (keys %$params) {
+				if($property =~ /^property_(.*)$/) {
+					my $propertyId = $1;
+					if($propertyId =~ /^models_(.*)$/) {
+						my $model = $1;
+						if(!defined($style->{'models'})) {
+							my @empty = ();
+							$style->{'models'} = \@empty;
+						}
+						my $models = $style->{'models'};
+						push @$models,$model;
+					}else {
+						$style->{$propertyId} = $params->{'property_'.$propertyId};
+					}
+				}
+			}
+			if(!exists $style->{'items'}) {
+				my @empty = ();
+				$style->{'items'} = \@empty;
+			}
+			my $models = $style->{'models'};
+			@$models = sort { $a cmp $b } @$models;
+		}
 		if($oldStyleName && $styleName ne $oldStyleName) {
 			Plugins::CustomClockHelper::Plugin->renameAndSetStyle($client,$oldStyleName,$styleName,$style);
 		}else {
@@ -238,6 +363,44 @@ sub saveHandler {
 	return undef;
 }
 
+sub isItemTypeParameter {
+	my $itemType = shift;
+	my $parameter = shift;
+	
+	my @parameters = getItemTypeParameters($itemType);
+	my %params;
+	undef %params;
+	for (@parameters) { $params{$_} = 1 }
+	return $params{$parameter};
+}
+
+sub getItemTypeParameters {
+	my $itemType = shift;
+
+	if($itemType =~ /text$/) {	
+		return qw(itemtype text color posx posy width align fontsize margin order);
+	}elsif($itemType =~ /^cover/) {
+		return qw(itemtype posx posy size align order);
+	}elsif($itemType =~ /image$/) {
+		return qw(itemtype url);
+	}elsif($itemType eq 'alarmicon') {
+		return qw(itemtype posx posy order url url.set url.active url.snooze);
+	}elsif($itemType eq 'batteryicon') {
+		return qw(itemtype posx posy order url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
+	}elsif($itemType eq 'wirelessicon') {
+		return qw(itemtype posx posy order url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
+	}elsif($itemType eq 'playstatusicon') {
+		return qw(itemtype posx posy order url.play url.stop url.pause);
+	}elsif($itemType eq 'repeatstatusicon') {
+		return qw(itemtype posx posy order url.song url.playlist);
+	}elsif($itemType eq 'shufflestatusicon') {
+		return qw(itemtype posx posy order url.songs url.albums);
+	}elsif($itemType =~ /icon^/) {
+		return qw(itemtype posx posy order url);
+	}else {
+		return qw(itemtype);
+	}
+}
 # other people call us externally.
 *escape   = \&URI::Escape::uri_escape_utf8;
 		

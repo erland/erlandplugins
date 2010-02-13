@@ -34,6 +34,7 @@ use JSON::XS;
 use Data::Dumper;
 
 use Plugins::CustomClockHelper::StyleSettings;
+use Plugins::CustomClockHelper::ImportStyle;
 
 my $prefs = preferences('plugin.customclockhelper');
 my $serverPrefs = preferences('server');
@@ -54,10 +55,34 @@ sub initPlugin
 {
 	my $class = shift;
 	$class->SUPER::initPlugin(@_);
+	Plugins::CustomClockHelper::ImportStyle->new($class);
 	Plugins::CustomClockHelper::StyleSettings->new($class);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Slim::Control::Request::addDispatch(['customclock','styles'], [0, 1, 0, \&getClockStyles]);
 	Slim::Control::Request::addDispatch(['customclock', 'changedstyles'],[0, 1, 0, undef]);
+	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
+	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
+}
+
+sub webPages {
+	my %pages = (
+		"CustomClockHelper/export\.(?:htm|xml|binfile)" => \&exportJSON,
+	);
+	for my $page (keys %pages) {
+		if(UNIVERSAL::can("Slim::Web::Pages","addPageFunction")) {
+			Slim::Web::Pages->addPageFunction($page, $pages{$page});
+		}else {
+			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
+		}
+	}
+}
+
+sub exportJSON {
+	my ($client, $params, $prepareResponseForSending, $httpClient, $response) = @_;
+	my $style = Plugins::CustomClockHelper::Plugin->getStyle($params->{'style'}) || {};
+	$response->header("Content-Disposition","attachment; filename=\"".$params->{'style'}.".json\"");
+	my $message = JSON::XS::encode_json($style);
+	return \$message;
 }
 
 sub getStyleKey {
@@ -76,7 +101,7 @@ sub getStyles {
 	my $styles = {};
 	if(!$localOnly) {
 		my $http = LWP::UserAgent->new;
-		my $response = $http->get("http://erlandplugins.googlecode.com/svn/CustomClock/trunk/clockstyles.json");
+		my $response = $http->get("http://erlandplugins.googlecode.com/svn/CustomClock/trunk/clockstyles2.json");
 		if($response->is_success) {
 			my $jsonStyles = $response->content;
 			eval {
@@ -170,6 +195,8 @@ sub getClockStyles {
 	$request->addResult('item_loop', \@stylesArray);
 	$request->setStatusDone();
 }
+
+*escape   = \&URI::Escape::uri_escape_utf8;
 
 1;
 
