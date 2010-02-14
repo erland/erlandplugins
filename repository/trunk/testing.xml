@@ -31,6 +31,24 @@
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+		<applet name="PatchInstaller" version="0.1.13" minTarget="7.5" maxTarget="*">
+			<title lang="EN">Patch Installer *Beta*</title>
+			<desc lang="EN">*** THIS IS A BETA VERSION ***. Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland_i@hotmail.com</email>
+			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.13.zip</url>
+			<sha>8e64fe85c1d955992e07998cfdcfc5cb04b58bc4</sha>
+			<link>http://erland.isaksson.info</link>
+		</applet>
+		<applet name="AlarmSavers" version="0.1.14" minTarget="7.5" maxTarget="*">
+			<title lang="EN">Alarm Savers *Beta*</title>
+			<desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to configure any screen saver as alarm popup window instead of the standard snooze window</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland_i@hotmail.com</email>
+			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-alarmsavers&amp;filename=AlarmSavers-0.1.14.zip</url>
+			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
+			<link>http://erland.isaksson.info</link>
+		</applet>
 	</applets>
 	<plugins>
                 <plugin name="MythTV" version="0.1.2604" minTarget="7.4.0" maxTarget="*">
@@ -191,5 +209,16 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                 </plugin>
 -->
 	</plugins>
+	<patches>
+		<patch name="60a51265-1938-4fd7-b703-12d3725870da" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Custom alarm window</title>
+			<desc lang="EN">Makes it possible open a third party applet when an alarm is triggered instead of the standard alarm snooze popup</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland_i@hotmail.com</email>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/CustomAlarmWindow/CustomAlarmWindow-1.0.patch</url>
+			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
+			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
+		</patch>
+	</patches>
 </extensions>
 
