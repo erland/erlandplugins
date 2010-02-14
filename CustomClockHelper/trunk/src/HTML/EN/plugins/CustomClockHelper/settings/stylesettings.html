@@ -9,7 +9,7 @@
 	<table border="0">
 		[% IF pluginCustomClockHelperStyle %]
 			<tr><td colspan="2">
-				<input type="button" value="[% "SETUP_PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS_EXPORT"|string %]" onClick="window.open('[% webroot %]/plugins/CustomClockHelper/export.binfile?style=[% pluginCustomClockHelperStyle %]')">
+				<input type="button" value="[% "SETUP_PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS_EXPORT"|string %]" onClick="window.open('[% webroot %]plugins/CustomClockHelper/export.binfile?style=[% pluginCustomClockHelperStyle %]')">
 				<input type="checkbox" name="delete" id="delete" value="1"><label for="delete">[% "SETUP_PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS_DELETE"|string %]</label>
 			</td></tr>
 			<tr><td>&nbsp;</td></tr>
@@ -65,13 +65,13 @@
 			<tr><td colspan="2"><hr></hr></td></tr>
 			<tr><td><b>[% "SETUP_PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS_ITEMS"|string %]</b></td><td>
 				<select name="items" onchange="location.href=options[selectedIndex].value">
-				<option name="0" id="0" value="[% webroot %]/settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]"></option>
-				<option name="new" id="new" value="[% webroot %]/settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&itemnew=1">New item...</option>
+				<option name="0" id="0" value="[% webroot %]settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]"></option>
+				<option name="new" id="new" value="[% webroot %]settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&itemnew=1">New item...</option>
 				[%- FOREACH item = pluginCustomClockHelperStyleItems %]
-					<option name="[% item.id %]" id="[% item.id %]" value="[% webroot %]/settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&pluginCustomClockHelperStyleItemNo=[% item.id %]" [% IF item.id == pluginCustomClockHelperStyleItemNo %]selected[% END %]>[% item.name | html %]</option>
+					<option name="[% item.id %]" id="[% item.id %]" value="[% webroot %]settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&pluginCustomClockHelperStyleItemNo=[% item.id %]" [% IF item.id == pluginCustomClockHelperStyleItemNo %]selected[% END %]>[% item.name | html %]</option>
 				[%- END %]
 				</select>
-				<input type="button" value="Delete" onclick="location.href='[% webroot %]/settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&property_name=[% pluginCustomClockHelperStyle %]&pluginCustomClockHelperStyleItemNo=[% pluginCustomClockHelperStyleItemNo %]&saveSettings=1&itemdelete=1'">
+				<input type="button" value="Delete" onclick="location.href='[% webroot %]settings/server/plugins/CustomClockHelper/settings/stylesettings.html?style=[% pluginCustomClockHelperStyle %]&property_name=[% pluginCustomClockHelperStyle %]&pluginCustomClockHelperStyleItemNo=[% pluginCustomClockHelperStyleItemNo %]&saveSettings=1&itemdelete=1'">
 			</td></tr>
 
 			<tr><td>&nbsp;</td></tr>
