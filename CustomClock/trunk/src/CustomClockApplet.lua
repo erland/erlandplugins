@@ -322,55 +322,59 @@ end
 
 function _updateCustomTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
-	server:userRequest(function(chunk,err)
-			if err then
-				log:warn(err)
-			else
-				server:userRequest(function(chunk,err)
-						if err then
-							log:warn(err)
-						else
-							self.customtitleformats = chunk.data.titleformats
-							for attribute,value in pairs(self.customtitleformats) do
-								log:debug("Title format: "..tostring(attribute).."="..tostring(value))
+	if server then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					server:userRequest(function(chunk,err)
+							if err then
+								log:warn(err)
+							else
+								self.customtitleformats = chunk.data.titleformats
+								for attribute,value in pairs(self.customtitleformats) do
+									log:debug("Title format: "..tostring(attribute).."="..tostring(value))
+								end
 							end
-						end
-					end,
-					player and player:getId(),
-					{'customclock','titleformats'}
-				)
-			end
-		end,
-		player and player:getId(),
-		{'can','customclock','titleformats','?'}
-	)
+						end,
+						player and player:getId(),
+						{'customclock','titleformats'}
+					)
+				end
+			end,
+			player and player:getId(),
+			{'can','customclock','titleformats','?'}
+		)
+	end
 end
 
 function _updateTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
-	server:userRequest(function(chunk,err)
-			if err then
-				log:warn(err)
-			else
-				local index = chunk.data.playlist_cur_index
-				if index and chunk.data.playlist_loop[index+1] then
-					self.titleformats["BAND"] = chunk.data.playlist_loop[index+1].band
-					self.titleformats["COMPOSER"] = chunk.data.playlist_loop[index+1].composer
-					self.titleformats["CONDUCTOR"] = chunk.data.playlist_loop[index+1].conductor
-					self.titleformats["TRACKARTIST"] = chunk.data.playlist_loop[index+1].trackartist
-					self.titleformats["ALBUMARTIST"] = chunk.data.playlist_loop[index+1].albumartist
-					self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
-					self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
-					self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
-					self.titleformats["DISCCOUNT"] = chunk.data.playlist_loop[index+1].disccount
+	if server then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
 				else
-					self.titleformats = {}
+					local index = chunk.data.playlist_cur_index
+					if index and chunk.data.playlist_loop[index+1] then
+						self.titleformats["BAND"] = chunk.data.playlist_loop[index+1].band
+						self.titleformats["COMPOSER"] = chunk.data.playlist_loop[index+1].composer
+						self.titleformats["CONDUCTOR"] = chunk.data.playlist_loop[index+1].conductor
+						self.titleformats["TRACKARTIST"] = chunk.data.playlist_loop[index+1].trackartist
+						self.titleformats["ALBUMARTIST"] = chunk.data.playlist_loop[index+1].albumartist
+						self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
+						self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
+						self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
+						self.titleformats["DISCCOUNT"] = chunk.data.playlist_loop[index+1].disccount
+					else
+						self.titleformats = {}
+					end
 				end
-			end
-		end,
-		player and player:getId(),
-		{'status','0','100','tags:AtiqR'}
-	)
+			end,
+			player and player:getId(),
+			{'status','0','100','tags:AtiqR'}
+		)
+	end
 end
 
 function defineSettingStyle(self,mode,menuItem)
