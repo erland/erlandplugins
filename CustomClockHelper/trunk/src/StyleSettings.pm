@@ -237,7 +237,7 @@ sub handler {
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon);
+				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^align$/) {
 				$item->{'type'} = 'optionalsinglelist';
@@ -261,14 +261,6 @@ sub handler {
 			}elsif($a->{'id'} eq 'posy') {
 				return -1;
 			}elsif($b->{'id'} eq 'posy') {
-				return 1;
-			}elsif($a->{'id'} eq 'text') {
-				return -1;
-			}elsif($b->{'id'} eq 'text') {
-				return 1;
-			}elsif($a->{'id'} =~ /^url/) {
-				return -1;
-			}elsif($b->{'id'} =~ /^url/) {
 				return 1;
 			}else {
 				return $a->{'id'} cmp $b->{'id'};
@@ -387,6 +379,8 @@ sub getItemTypeParameters {
 		return qw(itemtype url);
 	}elsif($itemType eq 'alarmicon') {
 		return qw(itemtype posx posy order url url.set url.active url.snooze);
+	}elsif($itemType =~ /^rating.*icon$/) {
+		return qw(itemtype posx posy order url.0 url.1 url.2 url.3 url.4 url.5);
 	}elsif($itemType eq 'batteryicon') {
 		return qw(itemtype posx posy order url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
 	}elsif($itemType eq 'wirelessicon') {

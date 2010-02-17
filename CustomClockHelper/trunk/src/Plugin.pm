@@ -35,6 +35,7 @@ use Data::Dumper;
 
 use Plugins::CustomClockHelper::StyleSettings;
 use Plugins::CustomClockHelper::ImportStyle;
+use Plugins::CustomClockHelper::Settings;
 
 my $prefs = preferences('plugin.customclockhelper');
 my $serverPrefs = preferences('server');
@@ -46,6 +47,10 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my $PLUGINVERSION = undef;
 
+$prefs->migrate(1,sub {
+	my @empty = ();
+	$prefs->set('titleformats',\@empty)
+});
 sub getDisplayName()
 {
 	return string('PLUGIN_CUSTOMCLOCKHELPER'); 
@@ -57,11 +62,46 @@ sub initPlugin
 	$class->SUPER::initPlugin(@_);
 	Plugins::CustomClockHelper::ImportStyle->new($class);
 	Plugins::CustomClockHelper::StyleSettings->new($class);
+	Plugins::CustomClockHelper::Settings->new($class);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Slim::Control::Request::addDispatch(['customclock','styles'], [0, 1, 0, \&getClockStyles]);
+	Slim::Control::Request::addDispatch(['customclock', 'titleformats'],[0, 1, 0, \&getTitleFormats]);
 	Slim::Control::Request::addDispatch(['customclock', 'changedstyles'],[0, 1, 0, undef]);
+	Slim::Control::Request::addDispatch(['customclock', 'titleformatsupdated'],[0, 1, 0, undef]);
+	Slim::Control::Request::subscribe(\&changedSong,[['playlist'],['newsong','delete','clear']]);
+	Slim::Control::Request::subscribe(\&changedSong,[['trackstat'],['changedrating']]);
 	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
 	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
+}
+
+sub changedSong {
+	my $request = shift;
+
+	my $client = $request->client();
+
+	if($request->isCommand([['playlist'],['newsong']])) {
+		$log->warn("Got playlist newsong");
+
+	}else {
+		$log->warn("Got ".$request->getRequestString());
+	}
+
+	my $titleFormatsHash = {};
+	my $formats = $prefs->get("titleformats");
+	my $songIndex = Slim::Player::Source::playingSongIndex($client);
+	my $song = Slim::Player::Playlist::song($client,$songIndex);
+	for my $format (@$formats) {
+		my $value = undef;
+		if(defined($song)) {
+			$value = Slim::Music::Info::displayText($client,$song,$format);
+		}
+		if(defined($value) && $value ne "") {
+			$titleFormatsHash->{$format} = $value;
+		}else {
+			$titleFormatsHash->{$format} = $value;
+		}
+	}
+	Slim::Control::Request::notifyFromArray($client,['customclock','titleformatsupdated',$titleFormatsHash]);
 }
 
 sub webPages {
@@ -193,6 +233,31 @@ sub getClockStyles {
 		push @stylesArray,$styles->{$style}
 	}
 	$request->addResult('item_loop', \@stylesArray);
+	$request->setStatusDone();
+}
+
+sub getTitleFormats {
+	my $request = shift;
+
+	my $client = $request->client();
+
+	my $titleFormatsHash = {};
+	my $formats = $prefs->get("titleformats");
+	my $songIndex = Slim::Player::Source::playingSongIndex($client);
+	my $song = Slim::Player::Playlist::song($client,$songIndex);
+	for my $format (@$formats) {
+		my $value = undef;
+		if(defined($song)) {
+			$value = Slim::Music::Info::displayText($client,$song,$format);
+		}
+		if(defined($value) && $value ne "") {
+			$titleFormatsHash->{$format} = $value;
+		}else {
+			$titleFormatsHash->{$format} = $value;
+		}
+	}
+
+	$request->addResult('titleformats', $titleFormatsHash);
 	$request->setStatusDone();
 }
 
