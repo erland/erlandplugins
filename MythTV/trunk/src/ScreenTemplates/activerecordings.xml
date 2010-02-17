@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <informationscreen>
-	<minpluginversion>0.3</minpluginversion>
+	<minpluginversion>1.0</minpluginversion>
 	<requiresplugin>MythTV</requiresplugin>
 	<template>
 		<name>MythTV active recordings</name>
