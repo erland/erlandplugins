@@ -823,11 +823,11 @@ function _tick(self,forcedBackgroundUpdate)
 		elseif item.itemtype == "ratingstoppedicon" then
 			self:_updateRatingIcon(self.items[no],"item"..no,"stop")
 		elseif item.itemtype == "switchingtrackplayingtext" then
-			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno","stop")
+			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop")
 		elseif item.itemtype == "switchingtrackstoppedtext" then
-			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno","play")
+			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play")
 		elseif item.itemtype == "switchingtracktext" then
-			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno")
+			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno")
 		elseif item.itemtype == "tracktext" then
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text)
 		elseif item.itemtype == "trackplayingtext" then
