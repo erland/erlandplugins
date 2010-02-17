@@ -41,15 +41,15 @@
                 </applet>
         </applets>
 	<plugins>
-                <plugin name="InformationScreen" version="1.0" minTarget="7.4.0" maxTarget="7.*">
+                <plugin name="InformationScreen" version="1.0.1" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Information Screen</title>                        
                         <desc lang="EN">Configurable support plugin for Information Screen screen saver that makes it possible to switch between different kind of information. (Controller, Radio, Touch, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected so title shows in Now Playing view
+                        <changes lang="EN">- Corrected library template
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-1.0.zip</url>
-                        <sha>9d9f3222ad9af068cfbda3731a4bd1bab546d4da</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-1.0.1.zip</url>
+                        <sha>2efe9e47d4045553508361da20b28ce79ca1d4f1</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 		<plugin name="AutoRepo" version="1.0.1" minTarget="7.3.0" maxTarget="7.3.*">
