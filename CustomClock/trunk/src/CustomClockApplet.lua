@@ -99,7 +99,10 @@ function openScreensaver(self,mode)
 		self.window:hide()
 		self.window = nil
 	end
+	self.titleformats = {}
+	self.customtitleformats = {}
 	if player then
+		player:unsubscribe('/slim/customclock/titleformatsupdated')
 		player:unsubscribe('/slim/customclock/changedstyles')
 		player:subscribe(
 			'/slim/customclock/changedstyles',
@@ -147,6 +150,17 @@ function openScreensaver(self,mode)
 			end,
 			player:getId(),
 			{'customclock','changedstyles'}
+		)
+		player:subscribe(
+			'/slim/customclock/titleformatsupdated',
+			function(chunk)
+				self.customtitleformats = chunk.data[3]
+				for attribute,value in pairs(self.customtitleformats) do
+					log:debug("Title format: "..tostring(attribute).."="..tostring(value))
+				end
+			end,
+			player:getId(),
+			{'customclock','titleformatsupdated'}
 		)
 	end
         -- Create the main window if it doesn't already exist
@@ -223,6 +237,10 @@ function openScreensaver(self,mode)
 		self.window:addTimer(1000, function() self:_tick() end)
 		self.offset = math.random(15)
 		self.images = {}
+		if player then
+			self:_checkAndUpdateTitleFormatInfo(player)
+			self:_updateCustomTitleFormatInfo(player)
+		end
 	end
 	self.lastminute = 0
 	self.nowPlaying = 1
@@ -269,6 +287,90 @@ function openSettings(self)
 	window:addWidget(menu)
 	self:tieAndShowWindow(window)
 	return window
+end
+
+function init(self)
+	jnt:subscribe(self)
+	self.titleformats = self.titleformats or {}
+	self.customtitleformats = self.customtitleformats or {}
+end
+
+function notify_playerTrackChange(self,player,nowPlaying)
+	self:_checkAndUpdateTitleFormatInfo(player)
+end
+
+function _checkAndUpdateTitleFormatInfo(self,player)
+	local requestData = false
+	for _,item in pairs(self.configItems) do
+		if string.find(item.itemtype,"^track") and string.find(item.itemtype,"text$") then
+			if string.find(item.text,"BAND") or string.find(item.text,"COMPOSER") or string.find(item.text,"CONDUCTOR") or string.find(item.text,"ALBUMARTIST") or string.find(item.text,"TRACKARTIST") or string.find(item.text,"TRACKNUM") or string.find(item.text,"DISC") or string.find(item.text,"DISCCOUNT") then
+				requestData = true
+				break
+			end
+		elseif item.itemtype == "ratingicon" or item.itemtype == "ratingplayingicon" or item.itemtype == "ratingstoppedicon" then
+			requestData = true
+			break
+		end
+	end	
+	if not requestData then
+		log:debug("Track changed, updating extended title formats")
+		self:_updateTitleFormatInfo(player)
+	else
+		log:debug("Track changed but extended title formats doesn't have to be updated")
+	end
+end
+
+function _updateCustomTitleFormatInfo(self,player)
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
+			if err then
+				log:warn(err)
+			else
+				server:userRequest(function(chunk,err)
+						if err then
+							log:warn(err)
+						else
+							self.customtitleformats = chunk.data.titleformats
+							for attribute,value in pairs(self.customtitleformats) do
+								log:debug("Title format: "..tostring(attribute).."="..tostring(value))
+							end
+						end
+					end,
+					player and player:getId(),
+					{'customclock','titleformats'}
+				)
+			end
+		end,
+		player and player:getId(),
+		{'can','customclock','titleformats','?'}
+	)
+end
+
+function _updateTitleFormatInfo(self,player)
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
+			if err then
+				log:warn(err)
+			else
+				local index = chunk.data.playlist_cur_index
+				if index and chunk.data.playlist_loop[index+1] then
+					self.titleformats["BAND"] = chunk.data.playlist_loop[index+1].band
+					self.titleformats["COMPOSER"] = chunk.data.playlist_loop[index+1].composer
+					self.titleformats["CONDUCTOR"] = chunk.data.playlist_loop[index+1].conductor
+					self.titleformats["TRACKARTIST"] = chunk.data.playlist_loop[index+1].trackartist
+					self.titleformats["ALBUMARTIST"] = chunk.data.playlist_loop[index+1].albumartist
+					self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
+					self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
+					self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
+					self.titleformats["DISCCOUNT"] = chunk.data.playlist_loop[index+1].disccount
+				else
+					self.titleformats = {}
+				end
+			end
+		end,
+		player and player:getId(),
+		{'status','0','100','tags:AtiqR'}
+	)
 end
 
 function defineSettingStyle(self,mode,menuItem)
@@ -434,6 +536,34 @@ function _extractTrackInfo(_track, _itemType)
         end
 end
 
+function _updateRatingIcon(self,widget,id,mode)
+	local player = appletManager:callService("getCurrentPlayer")
+	local playerStatus = player:getPlayerStatus()
+	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
+		local rating = self.titleformats["RATING"]
+		local trackstatrating = self.customtitleformats["TRACKSTATRATINGNUMBER"]
+		if trackstatrating then
+			if self.images[self.mode..id.."."..trackstatrating] then
+				widget:setWidgetValue("itemno",self.images[self.mode..id.."."..trackstatrating])
+			else
+				widget:setWidgetValue("itemno",nil)
+			end
+		elseif rating then
+			rating = math.floor((rating + 10)/ 20)
+			if self.images[self.mode..id.."."..rating] then
+				widget:setWidgetValue("itemno",self.images[self.mode..id.."."..rating])
+			else
+				widget:setWidgetValue("itemno",nil)
+			end
+		else
+			if self.images[self.mode..id..".0"] then
+				widget:setWidgetValue("itemno",self.images[self.mode..id..".0"])
+			else
+				widget:setWidgetValue("itemno",nil)
+			end
+		end
+	end
+end
 function _updateNowPlaying(itemType,widget,id,mode)
 	local player = appletManager:callService("getCurrentPlayer")
 	local playerStatus = player:getPlayerStatus()
@@ -451,12 +581,53 @@ function _updateNowPlaying(itemType,widget,id,mode)
 	end
 end
 
-function _updateStaticNowPlaying(widget,id,format,mode)
+function _updateStaticNowPlaying(self,widget,id,format,mode)
 	local player = appletManager:callService("getCurrentPlayer")
 	local playerStatus = player:getPlayerStatus()
 	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 		if playerStatus.item_loop then
-			widget:setWidgetValue(id,_replaceTitleKeywords(playerStatus.item_loop[1], format ,playerStatus.item_loop[1].track))
+			local text = self:_replaceTitleKeywords(playerStatus.item_loop[1], format ,playerStatus.item_loop[1].track)
+			text = self:_replaceCustomTitleFormats(text)
+			text = self:_replaceTitleFormatKeyword(text,"BAND")
+			text = self:_replaceTitleFormatKeyword(text,"CONDUCTOR")
+			text = self:_replaceTitleFormatKeyword(text,"COMPOSER")
+			text = self:_replaceTitleFormatKeyword(text,"TRACKARTIST")
+			text = self:_replaceTitleFormatKeyword(text,"ALBUMARTIST")
+			text = self:_replaceTitleFormatKeyword(text,"TRACKNUM")
+			text = self:_replaceTitleFormatKeyword(text,"DISCCOUNT")
+			text = self:_replaceTitleFormatKeyword(text,"DISC")
+
+			local elapsed, duration = player:getTrackElapsed()
+				
+			if duration then
+				text = string.gsub(text,"DURATION",_secondsToString(duration))
+			else
+				text = string.gsub(text,"DURATION","")
+			end
+			if elapsed then
+				text = string.gsub(text,"ELAPSED",_secondsToString(elapsed))
+				if duration then
+					text = string.gsub(text,"REMAINING",_secondsToString(duration-elapsed))
+				else
+					text = string.gsub(text,"REMAINING","")
+				end
+			else
+				text = string.gsub(text,"ELAPSED","")
+				text = string.gsub(text,"REMAINING","")
+			end
+
+			local playlistsize = player:getPlaylistSize()
+			local playlistcurrent = player:getPlaylistCurrentIndex()
+
+			if playlistcurrent>=1 and playlistsize>=1 then
+				text = string.gsub(text,"X_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_Y",playlistcurrent,playlistsize)))
+				text = string.gsub(text,"X_OF_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_OF_Y",playlistcurrent,playlistsize)))
+			else
+				text = string.gsub(text,"X_Y","")
+				text = string.gsub(text,"X_OF_Y","")
+			end
+
+			widget:setWidgetValue(id,text)
 		else
 			widget:setWidgetValue(id,"")
 		end
@@ -465,7 +636,25 @@ function _updateStaticNowPlaying(widget,id,format,mode)
 	end
 end
 
-function _replaceTitleKeywords(_track, text, replaceNonTracks)
+function _replaceTitleFormatKeyword(self,text,keyword)
+	if self.titleformats[keyword] then
+		text = string.gsub(text,keyword,self.titleformats[keyword])
+	else
+		text = string.gsub(text,keyword,"")
+	end
+	return text
+end
+
+function _replaceCustomTitleFormats(self,text)
+	if self.customtitleformats then
+		for attr,value in pairs(self.customtitleformats) do
+			text = string.gsub(text,attr,value)
+		end
+	end
+	return text
+end
+
+function _replaceTitleKeywords(self,_track, text, replaceNonTracks)
 	if _track.track then
 		text = string.gsub(text,"ARTIST",_track.artist)
 		text = string.gsub(text,"ALBUM",_track.album)
@@ -557,7 +746,9 @@ function _tick(self,forcedBackgroundUpdate)
 			end
 		elseif item.itemtype == "wirelessicon" then
 			local wirelessMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_wireless_","")
+			log:debug("Wireless status is "..tostring(wirelessMode))
 			if images[self.mode.."item"..no.."."..wirelessMode] then
+				log:debug("Battery status is "..batteryMode)
 				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no.."."..wirelessMode])
 			elseif batteryMode != "NONE" then
 				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no])
@@ -566,6 +757,7 @@ function _tick(self,forcedBackgroundUpdate)
 			end
 		elseif item.itemtype == "batteryicon" then
 			local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
+			log:debug("Battery status is "..tostring(batteryMode))
 			if images[self.mode.."item"..no.."."..batteryMode] then
 				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no.."."..batteryMode])
 			elseif batteryMode != "NONE" then
@@ -576,11 +768,12 @@ function _tick(self,forcedBackgroundUpdate)
 		elseif item.itemtype == "alarmicon" then
 			local alarmstate = player:getPlayerStatus()["alarm_state"]
 
+			log:debug("Alarm state is "..tostring(alarmstate))
 			if alarmstate=="active" or alarmstate=="snooze" or alarmstate=="set" then
-				if images[self.mode.."item"..no.."."..alarmstate] then
-					self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no.."."..alarmstate])
+				if self.images[self.mode.."item"..no.."."..alarmstate] then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..alarmstate])
 				else
-					self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no])
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
 				end
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
@@ -594,6 +787,7 @@ function _tick(self,forcedBackgroundUpdate)
 			else
 				status = nil
 			end
+			log:debug("Shuffle state is "..tostring(status))
 			if status and self.images[self.mode.."item"..no.."."..status] then
 				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
 			else
@@ -608,6 +802,7 @@ function _tick(self,forcedBackgroundUpdate)
 			else
 				status = nil
 			end
+			log:debug("Repeat state is "..tostring(status))
 			if status and self.images[self.mode.."item"..no.."."..status] then
 				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
 			else
@@ -615,23 +810,30 @@ function _tick(self,forcedBackgroundUpdate)
 			end
 		elseif item.itemtype == "playstatusicon" then
 			local mode = player:getPlayerStatus()["mode"]
+			log:debug("Play state is "..tostring(mode))
 			if mode and self.images[self.mode.."item"..no.."."..mode] then
 				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..mode])
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
+		elseif item.itemtype == "ratingicon" then
+			self:_updateRatingIcon(self.items[no],"item"..no,nil)
+		elseif item.itemtype == "ratingplayingicon" then
+			self:_updateRatingIcon(self.items[no],"item"..no,"play")
+		elseif item.itemtype == "ratingstoppedicon" then
+			self:_updateRatingIcon(self.items[no],"item"..no,"stop")
 		elseif item.itemtype == "switchingtrackplayingtext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop")
+			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno","stop")
 		elseif item.itemtype == "switchingtrackstoppedtext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play")
+			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno","play")
 		elseif item.itemtype == "switchingtracktext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno")
+			_updateNowPlaying(player,self.nowPlaying,self.items[no],"itemno")
 		elseif item.itemtype == "tracktext" then
-			_updateStaticNowPlaying(self.items[no],"itemno",item.text)
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text)
 		elseif item.itemtype == "trackplayingtext" then
-			_updateStaticNowPlaying(self.items[no],"itemno",item.text,"play")
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"play")
 		elseif item.itemtype == "trackstoppedtext" then
-			_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
 		elseif item.itemtype == "coverplayingicon" then
@@ -658,6 +860,18 @@ function _tick(self,forcedBackgroundUpdate)
 		self.canvas:reSkin()
 		self.canvas:reDraw()
 	end
+end
+
+function _secondsToString(seconds)
+        local hrs = math.floor(seconds / 3600)
+        local min = math.floor((seconds / 60) - (hrs*60))
+        local sec = math.floor( seconds - (hrs*3600) - (min*60) )
+
+        if hrs > 0 then
+                return string.format("%d:%02d:%02d", hrs, min, sec)
+        else
+                return string.format("%d:%02d", min, sec)
+        end
 end
 
 function _reDrawAnalog(self,screen) 
@@ -775,12 +989,12 @@ function _retrieveImage(self,url,imageType)
 end
 
 function _imageUpdate(self)
-	log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
+	log:debug("Initiating image update (offset="..self.offset.. " minutes)")
 
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"icon$") then
-			for attr,value in ipairs(item) do
+			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
 						self:_retrieveImage(item.url,self.mode.."item"..no)
