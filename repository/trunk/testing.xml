@@ -252,7 +252,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<creator>Aslak3</creator>
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/RadioBiggerFont/bigger-text-1.0.patch</url>
 			<sha>bf59a44819e54647eb0cd8d8dfcea16a409f7c81</sha>
-		<patch>
+		</patch>
 	</patches>
 </extensions>
 
