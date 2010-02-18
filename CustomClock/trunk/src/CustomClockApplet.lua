@@ -739,7 +739,7 @@ function _tick(self,forcedBackgroundUpdate)
 			self.items[no]:setWidgetValue("itemno",os.date(_getString(item.text,"%H:%M")))
 		elseif item.itemtype == "text" then
 			self.items[no]:setWidgetValue("itemno",item.text)
-		elseif item.itemtype == "alarmnexttext" then
+		elseif item.itemtype == "alarmtimetext" then
 			local alarmtime = player:getPlayerStatus()["alarm_next"]
 			local alarmstate = player:getPlayerStatus()["alarm_state"]
 
@@ -749,23 +749,23 @@ function _tick(self,forcedBackgroundUpdate)
 				self.items[no]:setWidgetValue("itemno","")
 			end
 		elseif item.itemtype == "wirelessicon" then
-			local wirelessMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_wireless_","")
+			local wirelessMode = string.gsub(iconbar.iconWireless:getStyle(),"^button_wireless_","")
 			log:debug("Wireless status is "..tostring(wirelessMode))
-			if images[self.mode.."item"..no.."."..wirelessMode] then
-				log:debug("Battery status is "..batteryMode)
-				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no.."."..wirelessMode])
+			if self.images[self.mode.."item"..no.."."..wirelessMode] then
+				log:debug("Battery status is "..wirelessMode)
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..wirelessMode])
 			elseif batteryMode != "NONE" then
-				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no])
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "batteryicon" then
 			local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
 			log:debug("Battery status is "..tostring(batteryMode))
-			if images[self.mode.."item"..no.."."..batteryMode] then
-				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no.."."..batteryMode])
+			if self.images[self.mode.."item"..no.."."..batteryMode] then
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..batteryMode])
 			elseif batteryMode != "NONE" then
-				self.items[no]:setWidgetValue("itemno",images[self.mode.."item"..no])
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
