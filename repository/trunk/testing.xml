@@ -31,13 +31,13 @@
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="PatchInstaller" version="0.1.13" minTarget="7.5" maxTarget="*">
+		<applet name="PatchInstaller" version="0.1.19" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Patch Installer *Beta*</title>
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.13.zip</url>
-			<sha>8e64fe85c1d955992e07998cfdcfc5cb04b58bc4</sha>
+			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.19.zip</url>
+			<sha>b66aebdd309acb4643a2da7e6935ea47fb9f6065</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
 		<applet name="AlarmSavers" version="0.1.14" minTarget="7.5" maxTarget="*">
@@ -217,6 +217,34 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/CustomAlarmWindow/CustomAlarmWindow-1.0.patch</url>
 			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
 			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
+		</patch>
+		<patch name="ControllerGreenHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Green highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items green</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerGreenHighlight/ControllerGreenHighlight-1.0.zip</url>
+			<sha>b8692cda2029a919a3d1bc80c87227d05ec115ac</sha>
+		</patch>
+		<patch name="ControllerYellowHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Yellow highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items yellow</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerYellowHighlight/ControllerYellowHighlight-1.0.zip</url>
+			<sha>6b9718cdc63b4837a40872934ab876c4a437b994</sha>
+		</patch>
+		<patch name="ControllerOrangeHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Orange highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items orange</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerOrangeHighlight/ControllerOrangeHighlight-1.0.zip</url>
+			<sha>c309387d4589ce28add88d3c1165d052d49e7402</sha>
+		</patch>
+		<patch name="ControllerMagentaHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Magenta highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items Magenta</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerMagentaHighlight/ControllerMagentaHighlight-1.0.zip</url>
+			<sha>8a079df2d38b2066ea62e3fc081bbd922f158f55</sha>
 		</patch>
 	</patches>
 </extensions>
