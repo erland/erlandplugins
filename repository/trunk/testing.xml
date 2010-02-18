@@ -246,6 +246,13 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerMagentaHighlight/ControllerMagentaHighlight-1.0.zip</url>
 			<sha>8a079df2d38b2066ea62e3fc081bbd922f158f55</sha>
 		</patch>
+		<patch name="RadioBiggerFont" target="baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Bigger font</title>
+			<desc lang="EN">Makes the font larger on some user interface items</desc>
+			<creator>Aslak3</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/RadioBiggerFont/bigger-text-1.0.patch</url>
+			<sha>bf59a44819e54647eb0cd8d8dfcea16a409f7c81</sha>
+		<patch>
 	</patches>
 </extensions>
 
