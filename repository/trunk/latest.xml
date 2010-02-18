@@ -28,15 +28,15 @@
                         <sha>1b1d5762717efbef3bbdc0b26515eedbc83bd9f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.1.1" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.1.2" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected bug in switchingtext items
+                        <changes lang="EN">- Corrected bug in alarmtimetext, batteryicon, wirelessicon
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.1.1.zip</url>
-                        <sha>bbd3d71dc6b9058f3ed38cc18dddac05816f7a11</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.1.2.zip</url>
+                        <sha>eeb30d25a587e5f889cdb340c41de2ba8f7c2c69</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
