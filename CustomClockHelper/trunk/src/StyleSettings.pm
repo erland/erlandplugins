@@ -372,7 +372,7 @@ sub getItemTypeParameters {
 	my $itemType = shift;
 
 	if($itemType =~ /text$/) {	
-		return qw(itemtype text color posx posy width align fontsize margin order);
+		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin order);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype posx posy size align order);
 	}elsif($itemType =~ /image$/) {
