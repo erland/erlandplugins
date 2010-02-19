@@ -985,7 +985,14 @@ function _tick(self,forcedBackgroundUpdate)
 	end
 	self.lastminute = minute
 
-	if self.images[self.mode.."clockimage"] or self.images[self.mode.."hourimage"] or self.images[self.mode.."minuteimage"] or self.images[self.mode.."secondimage"] then
+	local hasImages = false
+	for key,image in pairs(self.images) do
+		if string.find(key,"image$") then
+			hasImages = true
+			break
+		end
+	end	
+	if hasImages then
 		self.canvas:reSkin()
 		self.canvas:reDraw()
 	end
@@ -1057,6 +1064,41 @@ function _reDrawAnalog(self,screen)
 		tmp:blit(screen, x, y)
 		tmp:release()
 	end
+
+	local player = appletManager:callService("getCurrentPlayer")
+	local playerStatus = player:getPlayerStatus()
+	local imageType = nil
+	if playerStatus.mode == 'play' then
+		imageType = "playing"
+	else
+		imageType = "stopped"
+	end
+
+	for no,item in pairs(self.configItems) do
+		if string.find(item.itemtype,"^rotatingimage") then
+			local id = ""
+			local rotating = 1
+			if _getString(item["url."..imageType.."rotating"],nil) then
+				id = "."..imageType.."rotating"
+			elseif _getString(item["url."..imageType],nil) then
+				id = "."..imageType
+				rotating = 0
+			end
+
+			if self.images[self.mode.."item"..no..id] then
+				local speed = _getNumber(item.speed,10)
+				local angle = (360 / 60) * s * speed * rotating
+
+				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				local facew, faceh = tmp:getSize()
+				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
+				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
+				log:debug("Updating playing image at "..angle..", "..x..", "..y)
+				tmp:blit(screen, x, y)
+				tmp:release()
+			end
+		end
+	end
 end
 
 function _retrieveImage(self,url,imageType)
@@ -1123,6 +1165,23 @@ function _imageUpdate(self)
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"icon$") then
+			for attr,value in pairs(item) do
+				if attr == "url" then
+					if _getString(item.url,nil) then
+						self:_retrieveImage(item.url,self.mode.."item"..no)
+					else
+						self.images[self.mode.."item"..no] = nil
+					end
+				elseif string.find(attr,"^url%.") then
+					local id = string.gsub(attr,"^url%.","")
+					if _getString(value,nil) then
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id)
+					else
+						self.images[self.mode.."item"..no.."."..id] = nil
+					end
+				end
+			end
+		elseif string.find(item.itemtype,"^rotatingimage$") then
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
