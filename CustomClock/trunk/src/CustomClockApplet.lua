@@ -19,13 +19,15 @@ following methods:
 
 
 -- stuff we use
-local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
+local pairs, ipairs, tostring, tonumber, package, type = pairs, ipairs, tostring, tonumber, package, type
 
 local oo               = require("loop.simple")
 local os               = require("os")
+local io               = require("io")
 local math             = require("math")
 local string           = require("jive.utils.string")
 local table            = require("jive.utils.table")
+local zip              = require("zipfilter")
 
 local datetime         = require("jive.utils.datetime")
 
@@ -50,6 +52,8 @@ local SocketHttp       = require("jive.net.SocketHttp")
 local RequestHttp      = require("jive.net.RequestHttp")
 local json             = require("json")
 
+local ltn12            = require("ltn12")
+local lfs              = require("lfs")
 local iconbar          = iconbar
 local appletManager    = appletManager
 local jiveMain         = jiveMain
@@ -516,8 +520,129 @@ function _getMode(self)
 	end
 end
 
-function _loadFont(self,fontSize)
-        return Font:load(self:getSettings()["font"], fontSize)
+function _retrieveFont(self,fonturl,fontfile,fontSize)
+	if fonturl and string.find(fonturl,"^http") then
+		if not _getString(fontfile,nil) then
+			local name = string.sub(fonturl,string.find(fonturl,"/[^/]+$"))
+			fontfile = string.gsub(name,"^/","")
+		end
+
+		local luadir = nil
+		if lfs.attributes("/usr/share/jive/applets") ~= nil then
+			luadir = "/usr/"
+		else
+			-- find the main lua directory
+			for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
+				local mode = lfs.attributes(dir .. "share", "mode")
+				if mode == "directory" then
+					luadir = dir
+					break
+				end
+			end
+		end
+		os.execute("mkdir -p \""..luadir.."share/jive/applets/CustomClock/fonts\"")
+		if lfs.attributes(luadir.."share/jive/applets/CustomClock/fonts/"..fontfile) ~= nil then
+			return self:_loadFont("applets/CustomClock/fonts/"..fontfile,fontSize)
+		elseif lfs.attributes(luadir.."share/jive/fonts/"..fontfile) ~= nil then
+			return self:_loadFont("fonts/"..fontfile,fontSize)
+		else
+			local req = nil
+			log:info("Getting "..fonturl)
+			if not string.find(fonturl,"%.ttf$") and not string.find(fonturl,"%.TTF$")then
+				local sink = ltn12.sink.chain(zip.filter(),self:_downloadFontZipFile(luadir.."share/jive/applets/CustomClock/fonts/"))
+				req = RequestHttp(sink, 'GET', fonturl, {stream = true})
+			else
+				req = RequestHttp(self:_downloadFontFile(luadir.."share/jive/applets/CustomClock/fonts/",fontfile), 'GET', fonturl, {stream = true})
+			end
+			local uri = req:getURI()
+
+			local http = SocketHttp(jnt, uri.host, uri.port, uri.host)
+			http:fetch(req)
+			return nil
+		end
+	else
+		return self:_loadFont("fonts/"..fontfile,fontSize)
+	end
+end
+
+function _downloadFontZipFile(self, dir)
+        local fh = nil
+
+        return function(chunk)
+
+                if chunk == nil then
+                        if fh and fh ~= 'DIR' then
+                                fh:close()
+                        end
+                        fh = nil
+			log:debug("Downloaded fonts in "..dir)
+			if self.window then
+				log:debug("Refreshing skin")
+				self.window:setSkin(self:_getClockSkin(jiveMain:getSelectedSkin()))
+				self.window:reSkin()
+			end
+                        return nil
+
+                elseif type(chunk) == "table" then
+
+                        if fh and fh ~= 'DIR' then
+		                fh:close()
+			end
+                        fh = nil
+                        local filename = dir .. chunk.filename
+                        if string.sub(filename, -1) == "/" then
+                                log:debug("creating directory: " .. filename)
+                                lfs.mkdir(filename)
+                                fh = 'DIR'
+                        elseif string.find(filename,"%.ttf") or string.find(filename,"%.TTF") then
+                                log:info("Extracting font file: " .. filename)
+                                fh = io.open(filename, "w")
+			else
+				log:debug("ignoring file: "..filename)
+                        end
+
+                else
+                        if fh and fh ~= 'DIR' then
+                                fh:write(chunk)
+                        end
+                end
+
+                return 1
+        end
+end
+
+function _downloadFontFile(self,dir,filename)
+        local fh = nil
+
+        return function(chunk)
+                if chunk == nil then
+                        if fh and fh ~= DIR then
+                                fh:close()
+                                fh = nil
+				log:info("Downloaded "..dir..filename)
+				if self.window then
+					log:debug("Refreshing skin")
+					self.window:setSkin(self:_getClockSkin(jiveMain:getSelectedSkin()))
+					self.window:reSkin()
+				end
+                                return nil
+                        end
+
+                else
+                        if fh == nil then
+	                        fh = io.open(dir .. filename, "w")
+                        end
+
+                        fh:write(chunk)
+                end
+
+                return 1
+        end
+end
+
+function _loadFont(self,font,fontSize)
+	log:debug("Loading font: "..font.." of size "..fontSize)
+        return Font:load(font, fontSize)
 end
 
 -- Get usable wallpaper area
@@ -1098,9 +1223,16 @@ function _getClockSkin(self,skin)
 				x = _getNumber(item.posx,0),
 				zOrder = _getNumber(item.order,4),
 			}
+			local font = nil
+			if _getString(item.fonturl,nil) then
+				font = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.fontsize,20))
+			end
+			if not font then
+				font = self:_loadFont(self:getSettings()["font"],_getNumber(item.fontsize,20))
+			end
 			s.window["item"..no]["item"..no] = {
 					border = {_getNumber(item.margin,10),0,_getNumber(item.margin,10),0},
-					font = self:_loadFont(_getNumber(item.fontsize,20)),
+					font = font,
 					align = _getString(item.align,"center"),
 					w = _getNumber(item.width,WH_FILL),
 					h = _getNumber(item.fontsize,20),
