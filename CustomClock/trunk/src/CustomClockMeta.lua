@@ -46,7 +46,15 @@ function configureApplet(self)
 			"openScreensaver"..i, 
 			self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
 			"openSettings", 
-			90)
+			90,
+			"closeScreensaver")
+	end
+	if self:getSettings()["confignowplayingstyle"] then
+		log:info("Registering custom Now Playing screen")
+		self:registerService('goNowPlaying')
+		appletManager:loadApplet("CustomClock")
+	else
+		log:info("Using standard Now Playing screen")
 	end
 end
 

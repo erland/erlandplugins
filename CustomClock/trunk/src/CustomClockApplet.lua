@@ -45,6 +45,7 @@ local Framework        = require("jive.ui.Framework")
 local SimpleMenu       = require("jive.ui.SimpleMenu")
 local RadioGroup       = require("jive.ui.RadioGroup")
 local RadioButton      = require("jive.ui.RadioButton")
+local Timer            = require("jive.ui.Timer")
 
 --local Networking       = require("jive.net.Networking")
 
@@ -93,7 +94,10 @@ end
 function openScreensaver5(self)
 	self:openScreensaver("config5")
 end
-function openScreensaver(self,mode)
+function goNowPlaying(self, transition)
+	self:openScreensaver("confignowplaying",transition)
+end
+function openScreensaver(self,mode, transition)
 
 	log:debug("Open screensaver "..tostring(mode))
 	local player = appletManager:callService("getCurrentPlayer")
@@ -234,9 +238,42 @@ function openScreensaver(self,mode)
 		self.window:addWidget(self.backgroundImage)
 		self.window:addWidget(canvasGroup)
 
-		-- register window as a screensaver, unless we are explicitly not in that mode
-		local manager = appletManager:getAppletInstance("ScreenSavers")
-		manager:screensaverWindow(self.window)
+		-- Register custom actions which we want to catch in the screen saver
+		local showPlaylistAction = function (self)
+			self.window:playSound("WINDOWSHOW")
+			local player = appletManager:callService("getCurrentPlayer")
+			local playlistSize = player and player:getPlaylistSize()
+			if playlistSize == 1 then
+				appletManager:callService("showTrackOne")
+			else
+				appletManager:callService("showPlaylist")
+			end
+		        return EVENT_CONSUME
+		end
+
+		self.window:addActionListener("go", self, showPlaylistAction)
+		self.window:addActionListener("go_now_playing_or_playlist", self, showPlaylistAction)
+		self.window:addActionListener("go_home", self, function(self)
+			appletManager:callService("goHome")
+			return EVENT_CONSUME
+		end)
+		self.window:addActionListener("add", self, function(self)
+			appletManager:callService("showTrackOne")
+			return EVENT_CONSUME
+		end)
+		for i=1,6 do
+			local action = 'set_preset_'..tostring(i)
+			self.window:addActionListener(action, self, function()
+				appletManager:callService("setPresetCurrentTrack",i)
+				return EVENT_CONSUME
+			end)
+		end
+		if mode ~= "confignowplaying" then
+			-- register window as a screensaver
+			local manager = appletManager:getAppletInstance("ScreenSavers")
+			manager:screensaverWindow(self.window,nil,{'go','go_home','go_now_playing_or_playlist','add','set_preset_1','set_preset_2','set_preset_3','set_preset_4','set_preset_5','set_preset_6'})
+		end
+
 		self.window:addTimer(1000, function() self:_tick() end)
 		self.offset = math.random(15)
 		self.images = {}
@@ -249,12 +286,20 @@ function openScreensaver(self,mode)
 	self.nowPlaying = 1
 	self:_tick(1)
 
+	transition = transition or Window.transitionFadeIn
 	-- Show the window
-	self.window:show(Window.transitionFadeIn)
+	self.window:show(transition)
 	for no,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
 			self.items[no]:getWidget("itemno"):animate(true)
 		end
+	end
+end
+
+function closeScreensaver(self)
+	if self.window then
+		self.window:hide()
+		self.window = nil
 	end
 end
 
@@ -283,6 +328,16 @@ function openSettings(self)
 				end
 			})
 	end	
+	menu:addItem(
+		{
+			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"), 
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingStyle("confignowplaying",menuItem)
+				return EVENT_CONSUME
+			end
+		})
+
 --	menu:addItem(
 --		{
 --			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM"), 
@@ -303,28 +358,51 @@ function init(self)
 	self.customtitleformats = self.customtitleformats or {}
 end
 
+function _installCustomNowPlaying(self)
+	-- We need to delay this a bit so standard Now Playing applet gets to do its stuff first
+	local timer = Timer(100, function() 
+			local item = jiveMain:getMenuItem('appletNowPlaying')
+			if item then
+				log:info("Setting custom callback to Now Playing menu")
+				item.callback = function(event, menuItem)
+					self:goNowPlaying(Window.transitionPushLeft)
+				end
+			end
+		end,
+		true)
+	timer:start()
+end
+
+function notify_playerCurrent(self,player)
+	if self:getSettings()["confignowplayingstyle"] then
+		self:_installCustomNowPlaying()
+	end
+end
+
 function notify_playerTrackChange(self,player,nowPlaying)
 	self:_checkAndUpdateTitleFormatInfo(player)
 end
 
 function _checkAndUpdateTitleFormatInfo(self,player)
 	local requestData = false
-	for _,item in pairs(self.configItems) do
-		if string.find(item.itemtype,"^track") and string.find(item.itemtype,"text$") then
-			if string.find(item.text,"BAND") or string.find(item.text,"COMPOSER") or string.find(item.text,"CONDUCTOR") or string.find(item.text,"ALBUMARTIST") or string.find(item.text,"TRACKARTIST") or string.find(item.text,"TRACKNUM") or string.find(item.text,"DISC") or string.find(item.text,"DISCCOUNT") then
+	if self.configItems then
+		for _,item in pairs(self.configItems) do
+			if string.find(item.itemtype,"^track") and string.find(item.itemtype,"text$") then
+				if string.find(item.text,"BAND") or string.find(item.text,"COMPOSER") or string.find(item.text,"CONDUCTOR") or string.find(item.text,"ALBUMARTIST") or string.find(item.text,"TRACKARTIST") or string.find(item.text,"TRACKNUM") or string.find(item.text,"DISC") or string.find(item.text,"DISCCOUNT") then
+					requestData = true
+					break
+				end
+			elseif item.itemtype == "ratingicon" or item.itemtype == "ratingplayingicon" or item.itemtype == "ratingstoppedicon" then
 				requestData = true
 				break
 			end
-		elseif item.itemtype == "ratingicon" or item.itemtype == "ratingplayingicon" or item.itemtype == "ratingstoppedicon" then
-			requestData = true
-			break
+		end	
+		if not requestData then
+			log:debug("Track changed, updating extended title formats")
+			self:_updateTitleFormatInfo(player)
+		else
+			log:debug("Track changed but extended title formats doesn't have to be updated")
 		end
-	end	
-	if not requestData then
-		log:debug("Track changed, updating extended title formats")
-		self:_updateTitleFormatInfo(player)
-	else
-		log:debug("Track changed but extended title formats doesn't have to be updated")
 	end
 end
 
@@ -445,9 +523,26 @@ function defineSettingStyleSink(self,title,mode,data)
 	local menu = SimpleMenu("menu")
 
 	window:addWidget(menu)
+	local group = RadioGroup()
+	if mode == "confignowplaying" then
+		menu:addItem({
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_STYLE")),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."style"] = nil
+					self:storeSettings()
+					log:info("Changing to standard Now Playing applet")
+					appletManager:registerService("NowPlaying",'goNowPlaying')
+				end,
+				style == nil
+			),
+		})
+	end
 
 	if data.item_loop then
-		local group = RadioGroup()
 		for _,entry in pairs(data.item_loop) do
 			local isCompliant = true
 			if entry.models then
@@ -489,6 +584,11 @@ function defineSettingStyleSink(self,title,mode,data)
 								self.window=nil
 							end
 							self:storeSettings()
+							if mode == "confignowplaying" then
+								log:info("Changing to custom Now Playing applet")
+								appletManager:registerService("CustomClock",'goNowPlaying')
+								self:_installCustomNowPlaying()
+							end
 						end,
 						style == entry.name
 					),
