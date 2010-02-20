@@ -492,7 +492,7 @@ sub checkCustomSkipFilterType {
 				my $lengths = $parameter->{'value'};
 				my $length = $lengths->[0] if(defined($lengths) && scalar(@$lengths)>0);
 				
-				if($track->durationSeconds<=$length) {
+				if($track->secs<=$length) {
 					return 1;
 				}
 				last;
@@ -504,7 +504,7 @@ sub checkCustomSkipFilterType {
 				my $lengths = $parameter->{'value'};
 				my $length = $lengths->[0] if(defined($lengths) && scalar(@$lengths)>0);
 				
-				if($track->durationSeconds>=$length) {
+				if($track->secs>=$length) {
 					return 1;
 				}
 				last;
