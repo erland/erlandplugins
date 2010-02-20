@@ -239,6 +239,10 @@ sub handler {
 				$item->{'type'} = 'singlelist';
 				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage);
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^animate$/) {
+				$item->{'type'} = 'singlelist';
+				my @values = qw(true false);
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^align$/) {
 				$item->{'type'} = 'optionalsinglelist';
 				my @values = qw(left center right);
@@ -372,7 +376,7 @@ sub getItemTypeParameters {
 	my $itemType = shift;
 
 	if($itemType =~ /text$/) {	
-		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin order);
+		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype posx posy size align order);
 	}elsif($itemType =~ /^rotatingimage$/) {
