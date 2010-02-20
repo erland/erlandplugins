@@ -208,7 +208,6 @@ function openScreensaver(self,mode)
 				}
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
-				
 			elseif string.find(item.itemtype,"icon$") then
 				local childItems = {
 					itemno = Icon("item"..no)
@@ -252,6 +251,11 @@ function openScreensaver(self,mode)
 
 	-- Show the window
 	self.window:show(Window.transitionFadeIn)
+	for no,item in pairs(self.configItems) do
+		if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
+			self.items[no]:getWidget("itemno"):animate(true)
+		end
+	end
 end
 
 function openSettings(self)
@@ -818,28 +822,48 @@ function _updateAlbumCover(self,widget,id,size,mode,index)
 		if playerStatus.item_loop then
 			local iconId = nil
 			if playerStatus.item_loop[index] then
-				iconId = playerStatus.item_loop[index]["icon-id"]
+				iconId = playerStatus.item_loop[index]["icon-id"] or playerStatus.item_loop[index]["icon"]
 			end
-			if iconId then
-				local server = player:getSlimServer()
-				if _getNumber(size,nil) then
-					server:fetchArtwork(iconId,widget:getWidget(id),size)
-				else
-					if self.model == "controller" then
-						server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
-					elseif self.model == "radio" then
-						server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
-					elseif self.model == "touch" then
-						server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
+			local server = player:getSlimServer()
+			if _getNumber(size,nil) then
+				if iconId then
+					log:debug("Get fresh artwork for icon-id "..tostring(iconId))
+					if widget then
+						server:fetchArtwork(iconId,widget:getWidget(id),size)
+					else
+						server:fetchArtwork(iconId,Icon("artwork"),size)
 					end
+				elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
+					log:debug("Get fresh artwork for track_id "..tostring(playerStatus.item_loop[index]["params"]["track_id"]))
+					if widget then
+						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
+					else
+						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),size)
+					end
+				elseif widget then
+					widget:setWidgetValue(nil)
 				end
-			else 
-				widget:setWidgetValue(id,nil)
+			else
+				if iconId then
+					if widget then
+						server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
+					else
+						server:fetchArtwork(iconId,Icon("artwork"),self:_getCoverSize(size))
+					end
+				elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
+					if widget then
+						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
+					else
+						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),self:_getCoverSize(size),'png')
+					end
+				elseif widget then
+					widget:setWidgetValue(nil)
+				end
 			end
-		else
+		elseif widget then
 			widget:setWidgetValue(id,nil)
 		end
-	else
+	elseif widget then
 		widget:setWidgetValue(id,nil)
 	end
 end
@@ -965,10 +989,16 @@ function _tick(self,forcedBackgroundUpdate)
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
+			-- Pre-load next artwork
+			self:_updateAlbumCover(nil,"itemno",item.size,nil,2)
 		elseif item.itemtype == "coverplayingicon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",1)
+			-- Pre-load next artwork
+			self:_updateAlbumCover(nil,"itemno",item.size,"play",2)
 		elseif item.itemtype == "coverstoppedicon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",1)
+			-- Pre-load next artwork
+			self:_updateAlbumCover(nil,"itemno",item.size,"stop",2)
 		elseif item.itemtype == "covernexticon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,2)
 		elseif item.itemtype == "covernextplayingicon" then
