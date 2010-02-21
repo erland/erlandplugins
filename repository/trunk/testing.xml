@@ -253,6 +253,13 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/RadioBiggerFont/bigger-text-1.0.patch</url>
 			<sha>bf59a44819e54647eb0cd8d8dfcea16a409f7c81</sha>
 		</patch>
+                <patch name="NoIR" target="baby|fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+                        <title lang="EN">Disable IR remote</title>
+                        <desc lang="EN">Disables all the standard Squeezebox IR codes</desc>
+                        <creator>Erland Isaksson</creator>
+                        <url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/NoIR/NoIR-1.0.zip</url>
+                        <sha>1ae36f19aa839c6f5aa4a48cf8572255a019e099</sha>
+                </patch>
 	</patches>
 </extensions>
 
