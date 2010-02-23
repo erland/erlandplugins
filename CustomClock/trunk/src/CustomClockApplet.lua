@@ -1203,7 +1203,11 @@ function _reDrawAnalog(self,screen)
 	else
 		imageType = "stopped"
 	end
-
+	local elapsed, duration = player:getTrackElapsed()
+	if not duration then
+		duration = 0
+		elapsed = 1
+	end
 	for no,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"^rotatingimage") then
 			local id = ""
@@ -1224,6 +1228,66 @@ function _reDrawAnalog(self,screen)
 				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
 				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
 				log:debug("Updating playing image at "..angle..", "..x..", "..y)
+				tmp:blit(screen, x, y)
+				tmp:release()
+			end
+		elseif string.find(item.itemtype,"^elapsedimage") then
+			local id = ""
+			if _getString(item["url."..imageType.."rotating"],nil) then
+				id = "."..imageType.."rotating"
+			elseif _getString(item["url.rotating"],nil) then
+				id = ".rotating"
+			end
+
+			if self.images[self.mode.."item"..no..id] then
+				local range = (_getNumber(item.finalangle,360)-_getNumber(item.initialangle,0))
+				if range<0 then
+					range = -range
+				end
+				local angle = _getNumber(item.initialangle,0) + (range / duration) * elapsed
+
+				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				local facew, faceh = tmp:getSize()
+				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
+				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
+				log:debug("Updating rotating elapsed image at "..angle..", "..x..", "..y.." for "..tonumber(elapsed).." out of "..tonumber(duration))
+				tmp:blit(screen, x, y)
+				tmp:release()
+			end
+
+			id = ""
+			if _getString(item["url."..imageType.."clippingx"],nil) then
+				id = "."..imageType.."clippingx"
+			elseif _getString(item["url.clippingx"],nil) then
+				id = ".clippingx"
+			end
+
+			if self.images[self.mode.."item"..no..id] then
+				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(0, 1, 5)
+				local facew, faceh = tmp:getSize()
+				x = _getNumber(item.posx,0)
+				y = _getNumber(item.posy,0)
+				local clipwidth = math.floor(_getNumber(item.width,width) * elapsed / duration)
+				log:debug("Updating clipping elapsed image at "..x..", "..y.." with width "..clipwidth)
+				tmp:blitClip(0, 0,clipwidth,faceh,screen, x,y)
+				tmp:release()
+			end
+
+			id = ""
+			if _getString(item["url."..imageType.."slidingx"],nil) then
+				id = "."..imageType.."slidingx"
+			elseif _getString(item["url.slidingx"],nil) then
+				id = ".slidingx"
+			end
+
+			if self.images[self.mode.."item"..no..id] then
+				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(0, 1, 5)
+				local facew, faceh = tmp:getSize()
+				local posx = math.floor(_getNumber(item.width,width-facew) * elapsed / duration)
+				posx = _getNumber(item.posx,0) + posx
+				x = _getNumber(posx,0)
+				y = _getNumber(item.posy,0)
+				log:debug("Updating sliding elapsed image at "..x..", "..y)
 				tmp:blit(screen, x, y)
 				tmp:release()
 			end
@@ -1311,7 +1375,7 @@ function _imageUpdate(self)
 					end
 				end
 			end
-		elseif string.find(item.itemtype,"^rotatingimage$") then
+		elseif string.find(item.itemtype,"^rotatingimage$") or string.find(item.itemtype,"^elapsedimage$") then
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
