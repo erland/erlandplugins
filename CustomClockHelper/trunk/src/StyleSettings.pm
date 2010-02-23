@@ -237,7 +237,7 @@ sub handler {
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage);
+				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
@@ -379,6 +379,8 @@ sub getItemTypeParameters {
 		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype posx posy size align order);
+	}elsif($itemType =~ /^elapsedimage$/) {
+		return qw(itemtype posx posy width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
 	}elsif($itemType =~ /^rotatingimage$/) {
 		return qw(itemtype posx posy speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
 	}elsif($itemType =~ /image$/) {
