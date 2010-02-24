@@ -985,7 +985,7 @@ function _tick(self,forcedBackgroundUpdate)
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
-			self.items[no]:setWidgetValue("itemno",os.date(_getString(item.text,"%H:%M")))
+			self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(nil,_getString(item.text,"%H:%M")))
 		elseif item.itemtype == "text" then
 			self.items[no]:setWidgetValue("itemno",item.text)
 		elseif item.itemtype == "alarmtimetext" then
@@ -993,7 +993,7 @@ function _tick(self,forcedBackgroundUpdate)
 			local alarmstate = player:getPlayerStatus()["alarm_state"]
 
 			if alarmstate=="set" then
-				self.items[no]:setWidgetValue("itemno",os.date(item.text,alarmtime))
+				self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(alarmtime,_getString(item.text,"%H:%M")))
 			else
 				self.items[no]:setWidgetValue("itemno","")
 			end
@@ -1126,6 +1126,25 @@ function _tick(self,forcedBackgroundUpdate)
 		self.canvas:reSkin()
 		self.canvas:reDraw()
 	end
+end
+
+function _getLocalizedDateInfo(self,time,text)
+	local weekday = os.date("%w",time)
+	local month = os.date("%m",time)
+	if text and string.find(text,"%%A") then
+		text = string.gsub(text,"%%A",tostring(self:string("WEEKDAY_"..weekday)))
+	end
+	if text and string.find(text,"%%a") then
+		text = string.gsub(text,"%%a",tostring(self:string("WEEKDAY_SHORT_"..weekday)))
+	end
+	if text and string.find(text,"%%B") then
+		text = string.gsub(text,"%%B",tostring(self:string("MONTH_"..month)))
+	end
+	if text and string.find(text,"%%b") then
+		text = string.gsub(text,"%%b",tostring(self:string("MONTH_SHORT_"..month)))
+	end
+	text = os.date(text,time)
+	return text
 end
 
 function _secondsToString(seconds)
