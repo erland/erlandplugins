@@ -1169,13 +1169,12 @@ function _reDrawAnalog(self,screen)
 	local defaultposx = (width/2)
 	local defaultposy = (height/2)
 	if self.images[self.mode.."clockimage"] then
-		local tmp = self.images[self.mode.."clockimage"]:rotozoom(0, 1, 5)
+		local tmp = self.images[self.mode.."clockimage"]
 		local facew, faceh = tmp:getSize()
 		x = math.floor(_getNumber(self:getSettings()[self.mode.."clockposx"],defaultposx) - (facew/2))
 		y = math.floor(_getNumber(self:getSettings()[self.mode.."clockposy"],defaultposy) - (faceh/2))
 		log:debug("Updating clock face at "..x..", "..y)
 		tmp:blit(screen, x, y)
-		tmp:release()
 	end
 
 	if self.images[self.mode.."hourimage"] then
@@ -1223,9 +1222,9 @@ function _reDrawAnalog(self,screen)
 		imageType = "stopped"
 	end
 	local elapsed, duration = player:getTrackElapsed()
-	if not duration then
-		duration = 0
-		elapsed = 1
+	if not duration or duration == 0 then
+		duration = 1
+		elapsed = 0
 	end
 	for no,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"^rotatingimage") then
@@ -1242,13 +1241,20 @@ function _reDrawAnalog(self,screen)
 				local speed = _getNumber(item.speed,10)
 				local angle = (360 / 60) * s * speed * rotating
 
-				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				local tmp = nil
+				if rotating then
+					tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				else
+					tmp = self.images[self.mode.."item"..no..id]
+				end
 				local facew, faceh = tmp:getSize()
 				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
 				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
 				log:debug("Updating playing image at "..angle..", "..x..", "..y)
 				tmp:blit(screen, x, y)
-				tmp:release()
+				if rotating then
+					tmp:release()
+				end
 			end
 		elseif string.find(item.itemtype,"^elapsedimage") then
 			local id = ""
@@ -1265,13 +1271,20 @@ function _reDrawAnalog(self,screen)
 				end
 				local angle = _getNumber(item.initialangle,0) + (range / duration) * elapsed
 
-				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				local tmp = nil
+				if angle != 0 then
+					tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
+				else
+					tmp = self.images[self.mode.."item"..no..id]
+				end
 				local facew, faceh = tmp:getSize()
 				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
 				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
 				log:debug("Updating rotating elapsed image at "..angle..", "..x..", "..y.." for "..tonumber(elapsed).." out of "..tonumber(duration))
 				tmp:blit(screen, x, y)
-				tmp:release()
+				if angle != 0 then
+					tmp:release()
+				end
 			end
 
 			id = ""
@@ -1282,14 +1295,13 @@ function _reDrawAnalog(self,screen)
 			end
 
 			if self.images[self.mode.."item"..no..id] then
-				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(0, 1, 5)
+				local tmp = self.images[self.mode.."item"..no..id]
 				local facew, faceh = tmp:getSize()
 				x = _getNumber(item.posx,0)
 				y = _getNumber(item.posy,0)
 				local clipwidth = math.floor(_getNumber(item.width,width) * elapsed / duration)
 				log:debug("Updating clipping elapsed image at "..x..", "..y.." with width "..clipwidth)
 				tmp:blitClip(0, 0,clipwidth,faceh,screen, x,y)
-				tmp:release()
 			end
 
 			id = ""
@@ -1300,7 +1312,7 @@ function _reDrawAnalog(self,screen)
 			end
 
 			if self.images[self.mode.."item"..no..id] then
-				local tmp = self.images[self.mode.."item"..no..id]:rotozoom(0, 1, 5)
+				local tmp = self.images[self.mode.."item"..no..id]
 				local facew, faceh = tmp:getSize()
 				local posx = math.floor(_getNumber(item.width,width-facew) * elapsed / duration)
 				posx = _getNumber(item.posx,0) + posx
@@ -1308,7 +1320,6 @@ function _reDrawAnalog(self,screen)
 				y = _getNumber(item.posy,0)
 				log:debug("Updating sliding elapsed image at "..x..", "..y)
 				tmp:blit(screen, x, y)
-				tmp:release()
 			end
 		end
 	end
