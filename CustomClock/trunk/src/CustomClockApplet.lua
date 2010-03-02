@@ -97,6 +97,10 @@ end
 function goNowPlaying(self, transition)
 	self:openScreensaver("confignowplaying",transition)
 end
+function openCustomClockAlarmWindow(self)
+	self:openScreensaver("configalarmactive")
+end
+
 function openScreensaver(self,mode, transition)
 
 	log:debug("Open screensaver "..tostring(mode))
@@ -106,6 +110,9 @@ function openScreensaver(self,mode, transition)
 	if oldMode and self.mode != oldMode and self.window then
 		self.window:hide()
 		self.window = nil
+	end
+	if mode != "configalarmactive" then
+		self.prevmode = nil
 	end
 	self.titleformats = {}
 	self.customtitleformats = {}
@@ -238,40 +245,77 @@ function openScreensaver(self,mode, transition)
 		self.window:addWidget(self.backgroundImage)
 		self.window:addWidget(canvasGroup)
 
-		-- Register custom actions which we want to catch in the screen saver
-		local showPlaylistAction = function (self)
-			self.window:playSound("WINDOWSHOW")
-			local player = appletManager:callService("getCurrentPlayer")
-			local playlistSize = player and player:getPlaylistSize()
-			if playlistSize == 1 then
-				appletManager:callService("showTrackOne")
-			else
-				appletManager:callService("showPlaylist")
-			end
-		        return EVENT_CONSUME
-		end
-
-		self.window:addActionListener("go", self, showPlaylistAction)
-		self.window:addActionListener("go_now_playing_or_playlist", self, showPlaylistAction)
-		self.window:addActionListener("go_home", self, function(self)
-			appletManager:callService("goHome")
-			return EVENT_CONSUME
-		end)
-		self.window:addActionListener("add", self, function(self)
-			appletManager:callService("showTrackOne")
-			return EVENT_CONSUME
-		end)
-		for i=1,6 do
-			local action = 'set_preset_'..tostring(i)
-			self.window:addActionListener(action, self, function()
-				appletManager:callService("setPresetCurrentTrack",i)
+		if mode == "configalarmactive" then
+			self.window:setAllowScreensaver(false)
+			self.window:addActionListener("power",self,function()
+				self.window:hide()
+				self.window = nil
+				appletManager:callService("alarmOff",true)
+				return EVENT_UNUSED
+			end)
+			self.window:addActionListener("back",self,function()
+				self.window:hide()
+				self.window = nil
+				appletManager:callService("alarmOff",false)
 				return EVENT_CONSUME
 			end)
-		end
-		if mode ~= "confignowplaying" then
-			-- register window as a screensaver
-			local manager = appletManager:getAppletInstance("ScreenSavers")
-			manager:screensaverWindow(self.window,nil,{'go','go_home','go_now_playing_or_playlist','add','set_preset_1','set_preset_2','set_preset_3','set_preset_4','set_preset_5','set_preset_6'})
+			self.window:addActionListener("mute",self,function()
+				appletManager:callService("alarmSnooze",true)
+				self.window:hide()
+				self.window = nil
+				if self.prevmode then
+					self:openScreensaver(self.prevmode)
+				end
+				return EVENT_CONSUME
+			end)
+
+			self.window:ignoreAllInputExcept(
+				--these actions are not ignored
+				{ 'go', 'back', 'power', 'mute', 'volume_up', 'volume_down', 'pause' }, 
+				-- consumeAction is the callback issued for all "ignored" input
+				function()
+					log:warn('Consuming this action')
+					Framework:playSound("BUMP")
+					window:bumpLeft()
+					return EVENT_CONSUME
+				end
+			)
+		else
+			-- Register custom actions which we want to catch in the screen saver
+			local showPlaylistAction = function (self)
+				self.window:playSound("WINDOWSHOW")
+				local player = appletManager:callService("getCurrentPlayer")
+				local playlistSize = player and player:getPlaylistSize()
+				if playlistSize == 1 then
+					appletManager:callService("showTrackOne")
+				else
+					appletManager:callService("showPlaylist")
+				end
+				return EVENT_CONSUME
+			end
+
+			self.window:addActionListener("go", self, showPlaylistAction)
+			self.window:addActionListener("go_now_playing_or_playlist", self, showPlaylistAction)
+			self.window:addActionListener("go_home", self, function(self)
+				appletManager:callService("goHome")
+				return EVENT_CONSUME
+			end)
+			self.window:addActionListener("add", self, function(self)
+				appletManager:callService("showTrackOne")
+				return EVENT_CONSUME
+			end)
+			for i=1,6 do
+				local action = 'set_preset_'..tostring(i)
+				self.window:addActionListener(action, self, function()
+					appletManager:callService("setPresetCurrentTrack",i)
+					return EVENT_CONSUME
+				end)
+			end
+			if mode ~= "confignowplaying" then
+				-- register window as a screensaver
+				local manager = appletManager:getAppletInstance("ScreenSavers")
+				manager:screensaverWindow(self.window,nil,{'go','go_home','go_now_playing_or_playlist','add','set_preset_1','set_preset_2','set_preset_3','set_preset_4','set_preset_5','set_preset_6'})
+			end
 		end
 
 		self.window:addTimer(1000, function() self:_tick() end)
@@ -286,12 +330,16 @@ function openScreensaver(self,mode, transition)
 	self.nowPlaying = 1
 	self:_tick(1)
 
-	transition = transition or Window.transitionFadeIn
-	-- Show the window
-	self.window:show(transition)
-	for no,item in pairs(self.configItems) do
-		if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
-			self.items[no]:getWidget("itemno"):animate(true)
+	if not transition then
+		transition = Window.transitionFadeIn
+	end
+	if self.window then
+		-- Show the window
+		self.window:show(transition)
+		for no,item in pairs(self.configItems) do
+			if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
+				self.items[no]:getWidget("itemno"):animate(true)
+			end
 		end
 	end
 end
@@ -337,6 +385,17 @@ function openSettings(self)
 				return EVENT_CONSUME
 			end
 		})
+	if appletManager:callService("isPatchInstalled","60a51265-1938-4fd7-b703-12d3725870da") then
+		menu:addItem(
+			{
+				text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM_ACTIVE"), 
+				sound = "WINDOWSHOW",
+				callback = function(event, menuItem)
+					self:defineSettingStyle("configalarmactive",menuItem)
+					return EVENT_CONSUME
+				end
+			})
+	end
 
 --	menu:addItem(
 --		{
@@ -540,6 +599,21 @@ function defineSettingStyleSink(self,title,mode,data)
 				style == nil
 			),
 		})
+	elseif mode == "configalarmactive" then
+		menu:addItem({
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE")),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."style"] = nil
+					self:storeSettings()
+					appletManager:callService("registerAlternativeAlarmWindow",nil)
+				end,
+				style == nil
+			),
+		})
 	end
 
 	if data.item_loop then
@@ -588,6 +662,8 @@ function defineSettingStyleSink(self,title,mode,data)
 								log:info("Changing to custom Now Playing applet")
 								appletManager:registerService("CustomClock",'goNowPlaying')
 								self:_installCustomNowPlaying()
+							elseif mode == "configalarmactive" then
+								appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
 							end
 						end,
 						style == entry.name
@@ -982,6 +1058,13 @@ function _tick(self,forcedBackgroundUpdate)
 	end
 
 	local player = appletManager:callService("getCurrentPlayer")
+	if self.mode == "configalarmactive" then
+		local alarmstate = player:getPlayerStatus()["alarm_state"]
+		if not alarmstate or alarmstate != "active" then
+			self:closeScreensaver()
+		end
+	end
+
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then

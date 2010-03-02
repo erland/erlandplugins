@@ -56,6 +56,12 @@ function configureApplet(self)
 	else
 		log:info("Using standard Now Playing screen")
 	end
+	if appletManager:callService("isPatchInstalled","60a51265-1938-4fd7-b703-12d3725870da") then
+		if self:getSettings()["configalarmactivestyle"] then
+			self:registerService("openCustomClockAlarmWindow")
+			appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
+		end
+	end
 end
 
 function defaultSettings(self)
