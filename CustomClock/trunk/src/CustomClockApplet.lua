@@ -285,11 +285,13 @@ function openScreensaver(self,mode, transition)
 			local showPlaylistAction = function (self)
 				self.window:playSound("WINDOWSHOW")
 				local player = appletManager:callService("getCurrentPlayer")
-				local playlistSize = player and player:getPlaylistSize()
-				if playlistSize == 1 then
-					appletManager:callService("showTrackOne")
-				else
-					appletManager:callService("showPlaylist")
+				if player then
+					local playlistSize = player and player:getPlaylistSize()
+					if playlistSize == 1 then
+						appletManager:callService("showTrackOne")
+					else
+						appletManager:callService("showPlaylist")
+					end
 				end
 				return EVENT_CONSUME
 			end
@@ -847,40 +849,48 @@ end
 
 function _updateRatingIcon(self,widget,id,mode)
 	local player = appletManager:callService("getCurrentPlayer")
-	local playerStatus = player:getPlayerStatus()
-	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-		local rating = self.titleformats["RATING"]
-		local trackstatrating = self.customtitleformats["TRACKSTATRATINGNUMBER"]
-		if trackstatrating then
-			if self.images[self.mode..id.."."..trackstatrating] then
-				widget:setWidgetValue("itemno",self.images[self.mode..id.."."..trackstatrating])
+	if player then
+		local playerStatus = player:getPlayerStatus()
+		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
+			local rating = self.titleformats["RATING"]
+			local trackstatrating = self.customtitleformats["TRACKSTATRATINGNUMBER"]
+			if trackstatrating then
+				if self.images[self.mode..id.."."..trackstatrating] then
+					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..trackstatrating])
+				else
+					widget:setWidgetValue("itemno",nil)
+				end
+			elseif rating then
+				rating = math.floor((rating + 10)/ 20)
+				if self.images[self.mode..id.."."..rating] then
+					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..rating])
+				else
+					widget:setWidgetValue("itemno",nil)
+				end
 			else
-				widget:setWidgetValue("itemno",nil)
-			end
-		elseif rating then
-			rating = math.floor((rating + 10)/ 20)
-			if self.images[self.mode..id.."."..rating] then
-				widget:setWidgetValue("itemno",self.images[self.mode..id.."."..rating])
-			else
-				widget:setWidgetValue("itemno",nil)
-			end
-		else
-			if self.images[self.mode..id..".0"] then
-				widget:setWidgetValue("itemno",self.images[self.mode..id..".0"])
-			else
-				widget:setWidgetValue("itemno",nil)
+				if self.images[self.mode..id..".0"] then
+					widget:setWidgetValue("itemno",self.images[self.mode..id..".0"])
+				else
+					widget:setWidgetValue("itemno",nil)
+				end
 			end
 		end
+	else
+		widget:setWidgetValue("itemno",nil)
 	end
 end
 function _updateNowPlaying(itemType,widget,id,mode)
 	local player = appletManager:callService("getCurrentPlayer")
-	local playerStatus = player:getPlayerStatus()
-	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-		if playerStatus.item_loop then
-			local trackInfo = _extractTrackInfo(playerStatus.item_loop[1],itemType)
-			if trackInfo != "" then
-				widget:setWidgetValue(id,trackInfo)
+	if player then
+		local playerStatus = player:getPlayerStatus()
+		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
+			if playerStatus.item_loop then
+				local trackInfo = _extractTrackInfo(playerStatus.item_loop[1],itemType)
+				if trackInfo != "" then
+					widget:setWidgetValue(id,trackInfo)
+				end
+			else
+				widget:setWidgetValue(id,"")
 			end
 		else
 			widget:setWidgetValue(id,"")
@@ -892,51 +902,55 @@ end
 
 function _updateStaticNowPlaying(self,widget,id,format,mode)
 	local player = appletManager:callService("getCurrentPlayer")
-	local playerStatus = player:getPlayerStatus()
-	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-		if playerStatus.item_loop then
-			local text = self:_replaceTitleKeywords(playerStatus.item_loop[1], format ,playerStatus.item_loop[1].track)
-			text = self:_replaceCustomTitleFormats(text)
-			text = self:_replaceTitleFormatKeyword(text,"BAND")
-			text = self:_replaceTitleFormatKeyword(text,"CONDUCTOR")
-			text = self:_replaceTitleFormatKeyword(text,"COMPOSER")
-			text = self:_replaceTitleFormatKeyword(text,"TRACKARTIST")
-			text = self:_replaceTitleFormatKeyword(text,"ALBUMARTIST")
-			text = self:_replaceTitleFormatKeyword(text,"TRACKNUM")
-			text = self:_replaceTitleFormatKeyword(text,"DISCCOUNT")
-			text = self:_replaceTitleFormatKeyword(text,"DISC")
+	if player then
+		local playerStatus = player:getPlayerStatus()
+		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
+			if playerStatus.item_loop then
+				local text = self:_replaceTitleKeywords(playerStatus.item_loop[1], format ,playerStatus.item_loop[1].track)
+				text = self:_replaceCustomTitleFormats(text)
+				text = self:_replaceTitleFormatKeyword(text,"BAND")
+				text = self:_replaceTitleFormatKeyword(text,"CONDUCTOR")
+				text = self:_replaceTitleFormatKeyword(text,"COMPOSER")
+				text = self:_replaceTitleFormatKeyword(text,"TRACKARTIST")
+				text = self:_replaceTitleFormatKeyword(text,"ALBUMARTIST")
+				text = self:_replaceTitleFormatKeyword(text,"TRACKNUM")
+				text = self:_replaceTitleFormatKeyword(text,"DISCCOUNT")
+				text = self:_replaceTitleFormatKeyword(text,"DISC")
 
-			local elapsed, duration = player:getTrackElapsed()
+				local elapsed, duration = player:getTrackElapsed()
 				
-			if duration then
-				text = string.gsub(text,"DURATION",_secondsToString(duration))
-			else
-				text = string.gsub(text,"DURATION","")
-			end
-			if elapsed then
-				text = string.gsub(text,"ELAPSED",_secondsToString(elapsed))
 				if duration then
-					text = string.gsub(text,"REMAINING",_secondsToString(duration-elapsed))
+					text = string.gsub(text,"DURATION",_secondsToString(duration))
 				else
+					text = string.gsub(text,"DURATION","")
+				end
+				if elapsed then
+					text = string.gsub(text,"ELAPSED",_secondsToString(elapsed))
+					if duration then
+						text = string.gsub(text,"REMAINING",_secondsToString(duration-elapsed))
+					else
+						text = string.gsub(text,"REMAINING","")
+					end
+				else
+					text = string.gsub(text,"ELAPSED","")
 					text = string.gsub(text,"REMAINING","")
 				end
+
+				local playlistsize = player:getPlaylistSize()
+				local playlistcurrent = player:getPlaylistCurrentIndex()
+
+				if playlistcurrent>=1 and playlistsize>=1 then
+					text = string.gsub(text,"X_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_Y",playlistcurrent,playlistsize)))
+					text = string.gsub(text,"X_OF_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_OF_Y",playlistcurrent,playlistsize)))
+				else
+					text = string.gsub(text,"X_Y","")
+					text = string.gsub(text,"X_OF_Y","")
+				end
+
+				widget:setWidgetValue(id,text)
 			else
-				text = string.gsub(text,"ELAPSED","")
-				text = string.gsub(text,"REMAINING","")
+				widget:setWidgetValue(id,"")
 			end
-
-			local playlistsize = player:getPlaylistSize()
-			local playlistcurrent = player:getPlaylistCurrentIndex()
-
-			if playlistcurrent>=1 and playlistsize>=1 then
-				text = string.gsub(text,"X_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_Y",playlistcurrent,playlistsize)))
-				text = string.gsub(text,"X_OF_Y",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_X_OF_Y",playlistcurrent,playlistsize)))
-			else
-				text = string.gsub(text,"X_Y","")
-				text = string.gsub(text,"X_OF_Y","")
-			end
-
-			widget:setWidgetValue(id,text)
 		else
 			widget:setWidgetValue(id,"")
 		end
@@ -993,48 +1007,52 @@ end
 
 function _updateAlbumCover(self,widget,id,size,mode,index)
 	local player = appletManager:callService("getCurrentPlayer")
-	local playerStatus = player:getPlayerStatus()
-	if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-		if playerStatus.item_loop then
-			local iconId = nil
-			if playerStatus.item_loop[index] then
-				iconId = playerStatus.item_loop[index]["icon-id"] or playerStatus.item_loop[index]["icon"]
-			end
-			local server = player:getSlimServer()
-			if _getNumber(size,nil) then
-				if iconId then
-					log:debug("Get fresh artwork for icon-id "..tostring(iconId))
-					if widget then
-						server:fetchArtwork(iconId,widget:getWidget(id),size)
-					else
-						server:fetchArtwork(iconId,Icon("artwork"),size)
-					end
-				elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
-					log:debug("Get fresh artwork for track_id "..tostring(playerStatus.item_loop[index]["params"]["track_id"]))
-					if widget then
-						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
-					else
-						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),size)
-					end
-				elseif widget then
-					widget:setWidgetValue(nil)
+	if player then
+		local playerStatus = player:getPlayerStatus()
+		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
+			if playerStatus.item_loop then
+				local iconId = nil
+				if playerStatus.item_loop[index] then
+					iconId = playerStatus.item_loop[index]["icon-id"] or playerStatus.item_loop[index]["icon"]
 				end
-			else
-				if iconId then
-					if widget then
-						server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
-					else
-						server:fetchArtwork(iconId,Icon("artwork"),self:_getCoverSize(size))
+				local server = player:getSlimServer()
+				if _getNumber(size,nil) then
+					if iconId then
+						log:debug("Get fresh artwork for icon-id "..tostring(iconId))
+						if widget then
+							server:fetchArtwork(iconId,widget:getWidget(id),size)
+						else
+							server:fetchArtwork(iconId,Icon("artwork"),size)
+						end
+					elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
+						log:debug("Get fresh artwork for track_id "..tostring(playerStatus.item_loop[index]["params"]["track_id"]))
+						if widget then
+							server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
+						else
+							server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),size)
+						end
+					elseif widget then
+						widget:setWidgetValue(nil)
 					end
-				elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
-					if widget then
-						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
-					else
-						server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),self:_getCoverSize(size),'png')
+				else
+					if iconId then
+						if widget then
+							server:fetchArtwork(iconId,widget:getWidget(id),self:_getCoverSize(size))
+						else
+							server:fetchArtwork(iconId,Icon("artwork"),self:_getCoverSize(size))
+						end
+					elseif playerStatus.item_loop[index] and playerStatus.item_loop[index]["params"]["track_id"] then
+						if widget then
+							server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],widget:getWidget(id),self:_getCoverSize(size),'png')
+						else
+							server:fetchArtwork(playerStatus.item_loop[index]["params"]["track_id"],Icon("artwork"),self:_getCoverSize(size),'png')
+						end
+					elseif widget then
+						widget:setWidgetValue(nil)
 					end
-				elseif widget then
-					widget:setWidgetValue(nil)
 				end
+			elseif widget then
+				widget:setWidgetValue(id,nil)
 			end
 		elseif widget then
 			widget:setWidgetValue(id,nil)
@@ -1058,7 +1076,7 @@ function _tick(self,forcedBackgroundUpdate)
 	end
 
 	local player = appletManager:callService("getCurrentPlayer")
-	if self.mode == "configalarmactive" then
+	if self.mode == "configalarmactive" and player then
 		local alarmstate = player:getPlayerStatus()["alarm_state"]
 		if not alarmstate or alarmstate != "active" then
 			self:closeScreensaver()
@@ -1072,11 +1090,15 @@ function _tick(self,forcedBackgroundUpdate)
 		elseif item.itemtype == "text" then
 			self.items[no]:setWidgetValue("itemno",item.text)
 		elseif item.itemtype == "alarmtimetext" then
-			local alarmtime = player:getPlayerStatus()["alarm_next"]
-			local alarmstate = player:getPlayerStatus()["alarm_state"]
+			if player then
+				local alarmtime = player:getPlayerStatus()["alarm_next"]
+				local alarmstate = player:getPlayerStatus()["alarm_state"]
 
-			if alarmstate=="set" then
-				self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(alarmtime,_getString(item.text,"%H:%M")))
+				if alarmstate=="set" then
+					self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(alarmtime,_getString(item.text,"%H:%M")))
+				else
+					self.items[no]:setWidgetValue("itemno","")
+				end
 			else
 				self.items[no]:setWidgetValue("itemno","")
 			end
@@ -1102,53 +1124,69 @@ function _tick(self,forcedBackgroundUpdate)
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "alarmicon" then
-			local alarmstate = player:getPlayerStatus()["alarm_state"]
+			if player then
+				local alarmstate = player:getPlayerStatus()["alarm_state"]
 
-			log:debug("Alarm state is "..tostring(alarmstate))
-			if alarmstate=="active" or alarmstate=="snooze" or alarmstate=="set" then
-				if self.images[self.mode.."item"..no.."."..alarmstate] then
-					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..alarmstate])
+				log:debug("Alarm state is "..tostring(alarmstate))
+				if alarmstate=="active" or alarmstate=="snooze" or alarmstate=="set" then
+					if self.images[self.mode.."item"..no.."."..alarmstate] then
+						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..alarmstate])
+					else
+						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+					end
 				else
-					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+					self.items[no]:setWidgetValue("itemno",nil)
 				end
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "shufflestatusicon" then
-			local status = tonumber(player:getPlayerStatus()["playlist shuffle"])
-			if status == 1 then
-				status = "songs"
-			elseif status == 2 then
-				status = "albums"
-			else
-				status = nil
-			end
-			log:debug("Shuffle state is "..tostring(status))
-			if status and self.images[self.mode.."item"..no.."."..status] then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+			if player then
+				local status = tonumber(player:getPlayerStatus()["playlist shuffle"])
+				if status == 1 then
+					status = "songs"
+				elseif status == 2 then
+					status = "albums"
+				else
+					status = nil
+				end
+				log:debug("Shuffle state is "..tostring(status))
+				if status and self.images[self.mode.."item"..no.."."..status] then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "repeatstatusicon" then
-			local status = tonumber(player:getPlayerStatus()["playlist repeat"])
-			if status == 1 then
-				status = "song"
-			elseif status == 2 then
-				status = "playlist"
-			else
-				status = nil
-			end
-			log:debug("Repeat state is "..tostring(status))
-			if status and self.images[self.mode.."item"..no.."."..status] then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+			if player then
+				local status = tonumber(player:getPlayerStatus()["playlist repeat"])
+				if status == 1 then
+					status = "song"
+				elseif status == 2 then
+					status = "playlist"
+				else
+					status = nil
+				end
+				log:debug("Repeat state is "..tostring(status))
+				if status and self.images[self.mode.."item"..no.."."..status] then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "playstatusicon" then
-			local mode = player:getPlayerStatus()["mode"]
-			log:debug("Play state is "..tostring(mode))
-			if mode and self.images[self.mode.."item"..no.."."..mode] then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..mode])
+			if player then
+				local mode = player:getPlayerStatus()["mode"]
+				log:debug("Play state is "..tostring(mode))
+				if mode and self.images[self.mode.."item"..no.."."..mode] then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..mode])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
@@ -1242,69 +1280,145 @@ function _secondsToString(seconds)
         end
 end
 
+function _blitImage(self,screen,id,posx,posy,angle)
+	log:debug("Updating "..tostring(id).." at "..tostring(angle)..", "..tostring(x)..", "..tostring(y))
+	local tmp = self.images[id]
+	if angle and angle!=0 then
+		tmp = tmp:rotozoom(-angle, 1, 5)
+	end
+	local facew, faceh = tmp:getSize()
+	x = math.floor(posx - (facew/2))
+	y = math.floor(posy - (faceh/2))
+	tmp:blit(screen, x, y)
+	if angle and angle!=0 then
+		tmp:release()
+	end
+end
+
 function _reDrawAnalog(self,screen) 
 	local m = os.date("%M")
 	local h = os.date("%I")
 	local s = os.date("%S")
+	local ah = nil
+	local am = nil
+	
+	local player = appletManager:callService("getCurrentPlayer")
+	if player then
+		local alarmstate = player:getPlayerStatus()["alarm_state"]
+		if alarmstate and alarmstate == "set" then
+			local alarmtime = player:getPlayerStatus()["alarm_next"]
+			ah = os.date("%I",alarmtime)
+			am = os.date("%M",alarmtime)
+		end
+	end
 
 	local width,height = self:_getUsableWallpaperArea()
 	
 	local defaultposx = (width/2)
 	local defaultposy = (height/2)
-	if self.images[self.mode.."clockimage"] then
-		local tmp = self.images[self.mode.."clockimage"]
-		local facew, faceh = tmp:getSize()
-		x = math.floor(_getNumber(self:getSettings()[self.mode.."clockposx"],defaultposx) - (facew/2))
-		y = math.floor(_getNumber(self:getSettings()[self.mode.."clockposy"],defaultposy) - (faceh/2))
-		log:debug("Updating clock face at "..x..", "..y)
-		tmp:blit(screen, x, y)
+
+	for no,item in pairs(self.configItems) do
+		if item.itemtype == "clockimage" then
+			local posx = _getNumber(_getNumber(item.posx,self:getSettings()[self.mode.."clockposx"]),defaultposx)
+			local posy = _getNumber(_getNumber(item.posy,self:getSettings()[self.mode.."clockposy"]),defaultposy)
+			if self.images[self.mode.."item"..no]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no,
+					posx,
+					posy)
+			end
+			if self.images[self.mode.."item"..no..".alarmhour"] and ah and am then
+				self:_blitImage(screen,
+					self.mode.."item"..no..".alarmhour",
+					posx,
+					posy,
+					(360 / 12) * (ah + (am/60)))
+			end
+			if self.images[self.mode.."item"..no..".alarmminute"] and am then
+				self:_blitImage(screen,
+					self.mode.."item"..no..".alarmminute",
+					posx,
+					posy,
+					(360 / 60) * am)
+			end
+			if self.images[self.mode.."item"..no..".hour"]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no..".hour",
+					posx,
+					posy,
+					(360 / 12) * (h + (m/60)))
+			end
+			if self.images[self.mode.."item"..no..".minute"]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no..".hour",
+					posx,
+					posy,
+					(360 / 60) * m)
+			end
+			if self.images[self.mode.."item"..no..".second"]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no..".hour",
+					posx,
+					posy,
+					(360 / 60) * s)
+			end
+		end
 	end
 
-	if self.images[self.mode.."hourimage"] then
-		local angle = (360 / 12) * (h + (m/60))
-
-		local tmp = self.images[self.mode.."hourimage"]:rotozoom(-angle, 1, 5)
-		local facew, faceh = tmp:getSize()
-		x = math.floor(_getNumber(self:getSettings()[self.mode.."clockposx"],defaultposx) - (facew/2))
-		y = math.floor(_getNumber(self:getSettings()[self.mode.."clockposy"],defaultposy) - (faceh/2))
-		log:debug("Updating hour pointer at "..angle..", "..x..", "..y)
-		tmp:blit(screen, x, y)
-		tmp:release()
+	for no,item in pairs(self.configItems) do
+		if item.itemtype == "hourimage" then
+			local posx = _getNumber(_getNumber(item.posx,self:getSettings()[self.mode.."clockposx"]),defaultposx)
+			local posy = _getNumber(_getNumber(item.posy,self:getSettings()[self.mode.."clockposy"]),defaultposy)
+			if self.images[self.mode.."item"..no]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no,
+					posx,
+					posy,
+					(360 / 12) * (h + (m/60)))
+			end
+		end
 	end
 
-	if self.images[self.mode.."minuteimage"] then
-		local angle = (360 / 60) * m
-
-		local tmp = self.images[self.mode.."minuteimage"]:rotozoom(-angle, 1, 5)
-		local facew, faceh = tmp:getSize()
-		x = math.floor(_getNumber(self:getSettings()[self.mode.."clockposx"],defaultposx) - (facew/2))
-		y = math.floor(_getNumber(self:getSettings()[self.mode.."clockposy"],defaultposy) - (faceh/2))
-		log:debug("Updating minute pointer at "..angle..", "..x..", "..y)
-		tmp:blit(screen, x, y)
-		tmp:release()
+	for no,item in pairs(self.configItems) do
+		if item.itemtype == "minuteimage" then
+			local posx = _getNumber(_getNumber(item.posx,self:getSettings()[self.mode.."clockposx"]),defaultposx)
+			local posy = _getNumber(_getNumber(item.posy,self:getSettings()[self.mode.."clockposy"]),defaultposy)
+			if self.images[self.mode.."item"..no]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no,
+					posx,
+					posy,
+					(360 / 60) * m)
+			end
+		end
 	end
 
-	if self.images[self.mode.."secondimage"] then
-		local angle = (360 / 60) * s
-
-		local tmp = self.images[self.mode.."secondimage"]:rotozoom(-angle, 1, 5)
-		local facew, faceh = tmp:getSize()
-		x = math.floor(_getNumber(self:getSettings()[self.mode.."clockposx"],defaultposx) - (facew/2))
-		y = math.floor(_getNumber(self:getSettings()[self.mode.."clockposy"],defaultposy) - (faceh/2))
-		log:debug("Updating second pointer at "..angle..", "..x..", "..y)
-		tmp:blit(screen, x, y)
-		tmp:release()
+	for no,item in pairs(self.configItems) do
+		if item.itemtype == "secondimage" then
+			local posx = _getNumber(_getNumber(item.posx,self:getSettings()[self.mode.."clockposx"]),defaultposx)
+			local posy = _getNumber(_getNumber(item.posy,self:getSettings()[self.mode.."clockposy"]),defaultposy)
+			if self.images[self.mode.."item"..no]  then
+				self:_blitImage(screen,
+					self.mode.."item"..no,
+					posx,
+					posy,
+					(360 / 60) * s)
+			end
+		end
 	end
 
-	local player = appletManager:callService("getCurrentPlayer")
-	local playerStatus = player:getPlayerStatus()
-	local imageType = nil
-	if playerStatus.mode == 'play' then
-		imageType = "playing"
-	else
-		imageType = "stopped"
+	local imageType = "stopped"
+	if player then
+		local playerStatus = player:getPlayerStatus()
+		if playerStatus.mode == 'play' then
+			imageType = "playing"
+		end
 	end
-	local elapsed, duration = player:getTrackElapsed()
+	local duration = 0
+	local elapsed = 1
+	if player then
+		elapsed,duration = player:getTrackElapsed()
+	end
 	if not duration or duration == 0 then
 		duration = 1
 		elapsed = 0
@@ -1324,20 +1438,11 @@ function _reDrawAnalog(self,screen)
 				local speed = _getNumber(item.speed,10)
 				local angle = (360 / 60) * s * speed * rotating
 
-				local tmp = nil
-				if rotating then
-					tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
-				else
-					tmp = self.images[self.mode.."item"..no..id]
-				end
-				local facew, faceh = tmp:getSize()
-				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
-				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
-				log:debug("Updating playing image at "..angle..", "..x..", "..y)
-				tmp:blit(screen, x, y)
-				if rotating then
-					tmp:release()
-				end
+				self:_blitImage(screen,
+					self.mode.."item"..no..id,
+					_getNumber(item.posx,defaultposx),
+					_getNumber(item.posy,defaultposy),
+					angle)
 			end
 		elseif string.find(item.itemtype,"^elapsedimage") then
 			local id = ""
@@ -1354,20 +1459,11 @@ function _reDrawAnalog(self,screen)
 				end
 				local angle = _getNumber(item.initialangle,0) + (range / duration) * elapsed
 
-				local tmp = nil
-				if angle != 0 then
-					tmp = self.images[self.mode.."item"..no..id]:rotozoom(-angle, 1, 5)
-				else
-					tmp = self.images[self.mode.."item"..no..id]
-				end
-				local facew, faceh = tmp:getSize()
-				x = math.floor(_getNumber(item.posx,defaultposx) - (facew/2))
-				y = math.floor(_getNumber(item.posy,defaultposy) - (faceh/2))
-				log:debug("Updating rotating elapsed image at "..angle..", "..x..", "..y.." for "..tonumber(elapsed).." out of "..tonumber(duration))
-				tmp:blit(screen, x, y)
-				if angle != 0 then
-					tmp:release()
-				end
+				self:_blitImage(screen,
+					self.mode.."item"..no..id,
+					_getNumber(item.posx,defaultposx),
+					_getNumber(item.posy,defaultposy),
+					angle)
 			end
 
 			id = ""
@@ -1488,7 +1584,7 @@ function _imageUpdate(self)
 					end
 				end
 			end
-		elseif string.find(item.itemtype,"^rotatingimage$") or string.find(item.itemtype,"^elapsedimage$") then
+		elseif string.find(item.itemtype,"image$") then
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
@@ -1504,12 +1600,6 @@ function _imageUpdate(self)
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
 				end
-			end
-		elseif string.find(item.itemtype,"image$") then
-			if _getString(item.url,nil) then
-				self:_retrieveImage(item.url,self.mode..item.itemtype)
-			else
-				self.images[self.mode..item.itemtype] = nil
 			end
 		end
 		no = no +1
@@ -1538,6 +1628,24 @@ function _getColor(color)
 		return {0xcc, 0x00, 0x00}
 	elseif color == "darkred" then
 		return {0x88, 0x00, 0x00} 
+	elseif color == "lightyellow" then
+		return {0xff, 0xff, 0x00}
+	elseif color == "yellow" then
+		return {0xcc, 0xcc, 0x00}
+	elseif color == "darkyellow" then
+		return {0x88, 0x88, 0x00} 
+	elseif color == "lightblue" then
+		return {0x00, 0x00, 0xff}
+	elseif color == "blue" then
+		return {0x00, 0x00, 0xcc}
+	elseif color == "darkblue" then
+		return {0x00, 0x00, 0x88} 
+	elseif color == "lightgreen" then
+		return {0x00, 0xff, 0x00}
+	elseif color == "green" then
+		return {0x00, 0xcc, 0x00}
+	elseif color == "darkgreen" then
+		return {0x00, 0x88, 0x00} 
 	else
 		return {0xcc, 0xcc, 0xcc}
 	end
