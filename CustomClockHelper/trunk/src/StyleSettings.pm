@@ -118,11 +118,7 @@ sub handler {
 		}
 	}	
 	foreach my $item (@properties) {
-		if($item->{'id'} =~ /color$/) {
-			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(white lightgray gray darkgray lightred red darkred);
-			$item->{'values'} = \@values;
-		}elsif($item->{'id'} =~ /^models$/) {
+		if($item->{'id'} =~ /^models$/) {
 			$item->{'type'} = 'checkboxes';
 			my @values;
 			foreach my $value qw(controller radio touch) {
@@ -233,7 +229,7 @@ sub handler {
 		foreach my $item (@itemproperties) {
 			if($item->{'id'} =~ /color$/) {
 				$item->{'type'} = 'optionalsinglelist';
-				my @values = qw(white lightgray gray darkgray lightred red darkred);
+				my @values = qw(white lightgray gray darkgray lightred red darkred black lightyellow yellow darkyellow lightblue blue darkblue lightgreen green darkgreen);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
@@ -383,8 +379,10 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
 	}elsif($itemType =~ /^rotatingimage$/) {
 		return qw(itemtype posx posy speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
+	}elsif($itemType =~ /clockimage$/) {
+		return qw(itemtype posx posy url url.hour url.minute url.second url.alarmhour url.alarmminute);
 	}elsif($itemType =~ /image$/) {
-		return qw(itemtype url);
+		return qw(itemtype posx posy url);
 	}elsif($itemType eq 'alarmicon') {
 		return qw(itemtype posx posy order url url.set url.active url.snooze);
 	}elsif($itemType =~ /^rating.*icon$/) {
