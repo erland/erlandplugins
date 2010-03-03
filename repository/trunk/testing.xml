@@ -50,6 +50,15 @@
 			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
+                <applet name="SettingsRemover" target="jive|fab4|baby" version="0.1.25" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Settings Remover *Beta*</title>
+                        <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to reset settings from a individual applet insteaed of doing a complete factory reset</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.1.25.zip</url>
+                        <sha>57993516ce86c82ba63748e65793951d2891887a</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
 	</applets>
 	<plugins>
                 <plugin name="MythTV" version="0.1.2921" minTarget="7.4.0" maxTarget="*">
