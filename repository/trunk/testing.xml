@@ -59,6 +59,15 @@
                         <sha>57993516ce86c82ba63748e65793951d2891887a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+                <applet name="FileServer" target="jive|fab4|baby" version="0.1.27" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">File Server *Beta*</title>
+                        <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to view files and browse the file system of a Radio, Touch or Controller</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-fileserver&amp;filename=FileServer-0.1.27.zip</url>
+                        <sha>822f9b1f837eafaed4264d7c8602829b83d39e5f</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
 	</applets>
 	<plugins>
                 <plugin name="MythTV" version="0.1.2921" minTarget="7.4.0" maxTarget="*">
@@ -217,6 +226,18 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
 -->
+                <plugin name="FileServerClient" version="0.1.2958" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">File Server Client *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to view files and browse the file system of a Touch, Radio or Controller. The File Server applet has to be installed on the device you like to browse/view files from. (Controller, Radio, Touch)</desc>
+                        <changes lang="EN">- Initial version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-fileserverclient&amp;filename=FileServerClient-0.1.2958.zip</url>
+                        <sha>fc112eb8b12e3b46e774a5a5ce2c6de53de15721</sha>
+                        <link>http://wiki.slimdevices.com/index.php/File_Server_Client_plugin</link>
+                </plugin>
+
 	</plugins>
 	<patches>
 		<patch name="60a51265-1938-4fd7-b703-12d3725870da" version="1.0" minTarget="7.5" maxTarget="7.5">
