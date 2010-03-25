@@ -1,0 +1,32 @@
+SONGINFO
+	EN	Song Info
+
+PLUGIN_SONGINFO
+	EN	Song Info
+
+SETUP_PLUGIN_SONGINFO_GROUP
+	EN	Song Info
+
+SETUP_PLUGIN_SONGINFO_GROUP_DESC
+	EN	The Song Info plugin makes it possible to show various information about a song
+
+SETUP_PLUGIN_SONGINFO_DONATE_LINK
+	EN	Click here to donate
+
+SETUP_PLUGIN_SONGINFO_SECTION
+	EN	Settings Section
+
+SETUP_PLUGIN_SONGINFO_SECTION_DESC
+	EN	Select a settings section
+
+SETUP_PLUGIN_SONGINFO_MODULESETTINGS
+	EN	Module Settings
+
+SETUP_PLUGIN_SONGINFO_SETTINGS_TITLE
+	EN	Module Settings
+
+SETUP_PLUGIN_SONGINFO_DEVELOPEDBY
+	EN	Developed by
+
+PLUGIN_SONGINFO_PROPERTIES_TITLE
+	EN	Configuration
