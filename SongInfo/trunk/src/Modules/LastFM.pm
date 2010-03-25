@@ -626,6 +626,7 @@ sub getImagesResponse {
 	my $content = $http->content();
 	my @result = ();
 	if(defined($content)) {
+$log->error("GOT: ".Dumper($content));
 		my $xml = eval { XMLin($content, forcearray => ["image"], keyattr => ["name"]) };
 		my $images = $xml->{'images'}->{'image'};
 		if($images) {

@@ -152,8 +152,8 @@ sub getSongInfo {
 			my $paramHash = $request->getParamsCopy();
 			no strict 'refs';
 			eval { 
-				my $result = &{$modules->{$module}->{'function'}}($client,\&cliResponse,\&cliError,{request => $request},$obj,$paramHash); 
-				$log->error("GOT: ".Dumper($result));
+				$request->setStatusProcessing();
+				&{$modules->{$module}->{'function'}}($client,\&cliResponse,\&cliError,{request => $request},$obj,$paramHash); 
 			};
 			if( $@ ) {
 			    $log->error("Error getting item from $module and $context: $@");
@@ -198,7 +198,14 @@ sub cliResponse {
 	my $result = shift;
 
 	my $request = $params->{'request'};
-	$log->error("Writing result: ".Dumper($result));
+	my $cnt = 0;
+	for my $item (@$result) {
+		for my $key (keys %$item) {
+			$request->addResultLoop('item_loop',$cnt,$key,$item->{$key});
+		}
+		$cnt++;
+	}
+	$request->addResult('count',$cnt);
 	$request->setStatusDone();
 }
 
