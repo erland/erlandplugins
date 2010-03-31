@@ -104,10 +104,16 @@ sub getSongInfo {
 	if(defined($modules->{$module})) {
 		my $obj = undef;
 		my $context = "";
+		my $trackId = $request->getParam('track');
 		if($modules->{$module}->{'context'} eq 'album') {
 			my $albumId = $request->getParam('album');
 			if(!defined($albumId)) {
-				my $track = Slim::Player::Playlist::song($client);
+				my $track = undef;
+				if(defined($trackId)) {
+					$track = Slim::Schema->resultset('Track')->find($trackId);
+				}else {
+					$track = Slim::Player::Playlist::song($client);
+				}
 				if(defined($track)) {
 					$obj = $track->album();
 				}
@@ -122,7 +128,12 @@ sub getSongInfo {
 		}elsif($modules->{$module}->{'context'} eq 'artist') {
 			my $artistId = $request->getParam('artist');
 			if(!defined($artistId)) {
-				my $track = Slim::Player::Playlist::song($client);
+				my $track = undef;
+				if(defined($trackId)) {
+					$track = Slim::Schema->resultset('Track')->find($trackId);
+				}else {
+					$track = Slim::Player::Playlist::song($client);
+				}
 				if(defined($track)) {
 					$obj = $track->artist();
 				}
@@ -135,7 +146,6 @@ sub getSongInfo {
 				$context = "artist";
 			}
 		}elsif($modules->{$module}->{'context'} eq 'track') {
-			my $trackId = $request->getParam('track');
 			if(!defined($trackId)) {
 				$obj = Slim::Player::Playlist::song($client);
 			}else {
