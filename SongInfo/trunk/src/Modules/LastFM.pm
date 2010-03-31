@@ -77,7 +77,7 @@ sub getSongInfoFunctions {
 			'dataproviderlink' => 'http://www.last.fm',
 			'dataprovidername' => 'Audioscrobbler/LastFM',
 			'function' => \&getSimilarArtistsImages,
-			'type' => 'text',
+			'type' => 'image',
 			'context' => 'artist',
 			'properties' => [
 				{
@@ -380,6 +380,7 @@ sub getArtistImages {
                 callback => $callback, 
                 callbackParams => $callbackParams,
 		params => $params,
+		default => $artist->name(),
         });
 	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artist->name())."&api_key=$API_KEY");
 	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artist->name())."&api_key=$API_KEY");
@@ -626,14 +627,17 @@ sub getImagesResponse {
 	my $content = $http->content();
 	my @result = ();
 	if(defined($content)) {
-$log->error("GOT: ".Dumper($content));
 		my $xml = eval { XMLin($content, forcearray => ["image"], keyattr => ["name"]) };
 		my $images = $xml->{'images'}->{'image'};
 		if($images) {
 			for my $image (@$images) {
+				my $title = $image->{'title'};
+				if(!defined($title) || ref($title) eq 'HASH') {
+					$title = $params->{'default'};
+				}
 				my %item = (
 					'type' => 'image',
-					'text' => $image->{'title'},
+					'text' => $title,
 					'url' => $image->{'sizes'}->{'size'}->{'original'}->{'content'},
 				);
 				push @result,\%item;
