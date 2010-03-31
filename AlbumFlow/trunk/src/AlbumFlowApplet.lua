@@ -74,32 +74,24 @@ oo.class(_M, Applet)
 -- Helper Functions
 --
 
+function openScreensaver1(self)
+	self:_initApplet(true,"config1")
+end
+function openScreensaver2(self)
+	self:_initApplet(true,"config2")
+end
+function openScreensaver3(self)
+	self:_initApplet(true,"config3")
+end
+function openScreensaver4(self)
+	self:_initApplet(true,"config4")
+end
+function openScreensaver5(self)
+	self:_initApplet(true,"config5")
+end
+
 function openScreensaver(self)
 	self:_initApplet(true)
-end
-
-function openScreensaverCurrentPlaylist(self)
-	self:_initApplet(true,"currentplaylist")
-end
-
-function openScreensaverCurrentArtist(self)
-	self:_initApplet(true,"currentartist")
-end
-
-function openScreensaverCurrentGenre(self)
-	self:_initApplet(true,"currentgenre")
-end
-
-function openScreensaverCurrentYear(self)
-	self:_initApplet(true,"currentyear")
-end
-
-function openScreensaverRandom(self)
-	self:_initApplet(true,"random")
-end
-
-function openScreensaverByArtist(self)
-	self:_initApplet(true,"byartist")
 end
 
 -- display
@@ -109,17 +101,21 @@ function menu(self)
 	self:_initApplet(false)
 end
 
-function _initApplet(self, ss,view,forced)
+function _initApplet(self, ss,config,forced)
 	jnt:subscribe(self)
+
+	self.config = config
+	local mode = self:getSettings()[config.."mode"]
+	self.style = self:getSettings()[config.."style"]
 
 	local player = appletManager:callService("getCurrentPlayer")
 	if self.player and player:getId() ~= self.player:getId() then
 		self.window = nil
 	end
 
-	if not ss or (ss and not self.screensaver) or not self.window or self.view ~= view or forced then
-		log:debug("Recreating screensaver window")
-		self.view = view
+	if not ss or (ss and not self.screensaver) or not self.window or self.mode ~= mode or forced then
+		log:debug("Recreating screensaver window for "..config.." with mode "..mode)
+		self.mode = mode
 		local width,height = Framework.getScreenSize()
 		if width == 480 then
 			self.model = "touch"
@@ -165,7 +161,7 @@ function _initApplet(self, ss,view,forced)
 		self.currentScroll = 0
 		self.loading =  false
 		self.screensaver = false
-		self.albums = {}
+		self.images = {}
 		self.artworkKeyMap = {}
 		self.maxIndex = 0
 		self.maxLoadedIndex = 0
@@ -183,8 +179,8 @@ function _initApplet(self, ss,view,forced)
 		self.player = appletManager:callService("getCurrentPlayer")
 		self.server = self.player:getSlimServer()
 
-		-- Load albums
-		self:_loadAlbums(0)
+		-- Load images
+		self:_loadImages(0)
 
 		self.canvas:addAnimation(
 			function()
@@ -200,7 +196,7 @@ function _initApplet(self, ss,view,forced)
 						local keycode = event:getKeycode()
 						log:debug("GOT key="..keycode)
 						if keycode == KEY_GO then
-		--					local album_id = self.albums[self.selectedAlbum].params["album_id"]
+		--					local album_id = self.images[self.selectedAlbum].params["album_id"]
 		--					local jsonAction = {
 		--						actions = {
 		--							go = {
@@ -215,7 +211,7 @@ function _initApplet(self, ss,view,forced)
 		--							},
 		--						},
 		--						window = {
-		--							text = self.albums[self.selectedAlbum].text,
+		--							text = self.images[self.selectedAlbum].text,
 		--							titleStyle = "album",
 		--						},
 		--					}
@@ -242,11 +238,12 @@ function _initApplet(self, ss,view,forced)
 			local manager = appletManager:getAppletInstance("ScreenSavers")
 			manager:screensaverWindow(self.window)
 		end
-	elseif self.view and (self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
-		self:_refreshAlbums(0)
+	elseif self.mode and (self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+		log:debug("Refreshing images in mode "..mode)
+		self:_refreshImages(0)
 	end
 
-	self.timer = self.window:addTimer(1000, function() self:_retrieveMoreAlbums() end)
+	self.timer = self.window:addTimer(1000, function() self:_retrieveMoreImages() end)
 
 	collectgarbage()
 
@@ -254,9 +251,36 @@ function _initApplet(self, ss,view,forced)
 	self.window:show(Window.transitionFadeIn)
 end
 
+function closeScreensaver(self)
+	if self.window then
+		self.window:hide();
+	end
+end
+
 function openScreensaverSettings(self)
 	log:debug("Album Flow settings")
 	local window = Window("text_list", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 'settingstitle')
+
+	local menu = SimpleMenu("menu");
+	for i = 1,5 do
+		menu:addItem(
+			{
+				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i, 
+				sound = "WINDOWSHOW",
+				callback = function(event, menuItem)
+					self:defineSettingConfig(menuItem,"config"..i)
+					return EVENT_CONSUME
+				end
+			})
+	end	
+	window:addWidget(menu)
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
+function defineSettingConfig(self,menuItem,mode)
+	local window = Window("text_list", menuItem.text, 'settingstitle')
 
 	window:addWidget(SimpleMenu("menu",
 	{
@@ -264,20 +288,261 @@ function openScreensaverSettings(self)
 			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE"),
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
-				self:defineSettingStyle(menuItem, "screensaver")
+				self:defineSettingStyle(menuItem, mode)
+				return EVENT_CONSUME
+			end
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_MODE"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingMode(menuItem, mode)
 				return EVENT_CONSUME
 			end
 		},
 	}))
 
 	self:tieAndShowWindow(window)
+end
+
+function defineSettingMode(self,menuItem,mode)
+	
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
+			if err then
+				log:warn(err)
+			else
+				if tonumber(chunk.data._can) == 1 then
+					log:info("SongInfo is installed retrieving additional modes")
+					server:userRequest(function(chunk,err)
+							if err then
+								log:warn(err)
+							else
+								self:defineSettingModeSink(menuItem.text,mode,chunk.data)
+							end
+						end,
+						player and player:getId(),
+						{'songinfomodules','type:image'}
+					)
+				else
+					log:info("SongInfo is NOT installed only using built-in modes")
+					self:defineSettingModeSink(menuItem.text,mode)
+				end
+			end
+		end,
+		player and player:getId(),
+		{'can','songinfomodules','type:image','?'}
+	)
+	
+	-- create animiation to show while we get data from the server
+        local popup = Popup("waiting_popup")
+        local icon  = Icon("icon_connecting")
+        local label = Label("text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_FETCHING"))
+        popup:addWidget(icon)
+        popup:addWidget(label)
+        self:tieAndShowWindow(popup)
+
+        self.popup = popup
+end
+
+function defineSettingModeSink(self,title,mode,data)
+	self.popup:hide()
+	
+	local modesetting = self:getSettings()[mode.."mode"]
+
+	local window = Window("text_list", title, 'settingstitle')
+	local menu = SimpleMenu("menu")
+
+	window:addWidget(menu)
+	local group = RadioGroup()
+
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "album"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "album"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "random"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "random"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "byartist"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "byartist"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "currentplaylist"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "currentplaylist"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "currentartist"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "currentartist"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "currentgenre"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "currentgenre"
+		),
+	})
+	menu:addItem({
+		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"),
+		style = 'item_choice',
+		check = RadioButton(
+			"radio",
+			group,
+			function()
+				self:getSettings()[mode.."mode"] = "currentyear"
+				if self.window then
+					self.window:hide()
+					self.window = nil
+				end
+				self:storeSettings()
+			end,
+			modesetting == "currentyear"
+		),
+	})
+
+	if data and data.item_loop then
+		for _,entry in pairs(data.item_loop) do
+			if entry.id == "lastfmartistimages" then
+				menu:addItem({
+					text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTISTS"),
+					style = 'item_choice',
+					check = RadioButton(
+						"radio",
+						group,
+						function()
+							self:getSettings()[mode.."mode"] = "artists"
+							if self.window then
+								self.window:hide()
+								self.window = nil
+							end
+							self:storeSettings()
+						end,
+						modesetting == "artists"
+					),
+				})
+				menu:addItem({
+					text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOMARTISTS"),
+					style = 'item_choice',
+					check = RadioButton(
+						"radio",
+						group,
+						function()
+							self:getSettings()[mode.."mode"] = "randomartists"
+							if self.window then
+								self.window:hide()
+								self.window = nil
+							end
+							self:storeSettings()
+						end,
+						modesetting == "randomartists"
+					),
+				})
+			end
+			menu:addItem({
+				text = entry.name.." "..tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_SONGINFO")),
+				style = 'item_choice',
+				check = RadioButton(
+					"radio",
+					group,
+					function()
+						self:getSettings()[mode.."mode"] = "songinfo"..entry.id
+						if self.window then
+							self.window:hide()
+							self.window = nil
+						end
+						self:storeSettings()
+					end,
+					modesetting == "songinfo"..entry.id
+				),
+			})
+		end
+	end
+
+	self:tieAndShowWindow(window)
 	return window
 end
 
-function defineSettingStyle(self, menuItem, param)
+function defineSettingStyle(self, menuItem, mode)
 	local group = RadioGroup()
 
-	local style = self:getSettings()[param.."style"]
+	local style = self:getSettings()[mode.."style"]
 
 	local window = Window("text_list", menuItem.text, 'settingstitle')
 
@@ -290,7 +555,7 @@ function defineSettingStyle(self, menuItem, param)
 				"radio",
 				group,
 				function()
-					self:getSettings()[param.."style"] = "circular"
+					self:getSettings()[mode.."style"] = "circular"
 					if self.window then
 						self.window:hide()
 						self.window = nil
@@ -307,7 +572,7 @@ function defineSettingStyle(self, menuItem, param)
 				"radio",
 				group,
 				function()
-					self:getSettings()[param.."style"] = "shrinkedslide"
+					self:getSettings()[mode.."style"] = "shrinkedslide"
 					if self.window then
 						self.window:hide()
 						self.window = nil
@@ -324,7 +589,7 @@ function defineSettingStyle(self, menuItem, param)
 				"radio",
 				group,
 				function()
-					self:getSettings()[param.."style"] = "stretchedslide"
+					self:getSettings()[mode.."style"] = "stretchedslide"
 					if self.window then
 						self.window:hide()
 						self.window = nil
@@ -341,7 +606,7 @@ function defineSettingStyle(self, menuItem, param)
 				"radio",
 				group,
 				function()
-					self:getSettings()[param.."style"] = "slide"
+					self:getSettings()[mode.."style"] = "slide"
 					if self.window then
 						self.window:hide()
 						self.window = nil
@@ -386,9 +651,9 @@ function _handleScroll(self, event, keyScroll)
 end
 
 function _playFunction(self) 
-	if self.albums and self.albums[self.selectedAlbum] then
-		log:debug("Play album "..self.albums[self.selectedAlbum].text)
-		local album_id = self.albums[self.selectedAlbum]["album_id"]
+	if self.images and self.images[self.selectedAlbum] and self.images[self.selectedAlbum]["album_id"] then
+		log:debug("Play album "..self.images[self.selectedAlbum].text)
+		local album_id = self.images[self.selectedAlbum]["album_id"]
 		self.server:userRequest(function(chunk,err)
 				if err then
 					log:debug(err)
@@ -424,8 +689,8 @@ function _refresh(self)
 					delta = self.animateRange
 					if self.screensaver then
 						self.currentScroll = 1
-						if self.view and (self.view == "random" or self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
-							self:_sortByRandom(self.albums,self.currentPos)
+						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+							self:_sortByRandom(self.images,self.currentPos)
 						end
 					end
 				else
@@ -455,8 +720,8 @@ function _refresh(self)
 					delta = 0
 					if self.screensaver then
 						self.currentScroll = -1
-						if self.view and (self.view == "random" or self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
-							self:_sortByRandom(self.albums,self.currentPos)
+						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+							self:_sortByRandom(self.images,self.currentPos)
 						end
 					end
 				else
@@ -483,23 +748,23 @@ function _refresh(self)
 
 	local text = self.titleGroup:getWidgetValue("albumtext")
 	if delta>self.animateRange/2 and self.currentScroll<0 then
-		if self.albums and self.maxIndex>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
-			text = self.albums[self.currentPos+1].text
+		if self.images and self.maxIndex>self.currentPos and self.images[self.currentPos+1] and self.images[self.currentPos+1].text then
+			text = self.images[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
 		end
 	elseif delta<self.animateRange/2 and self.currentScroll>0 then
-		if self.albums and self.maxIndex>self.currentPos+1 and self.albums[self.currentPos+2] and self.albums[self.currentPos+2].text then
-			text = self.albums[self.currentPos+2].text
+		if self.images and self.maxIndex>self.currentPos+1 and self.images[self.currentPos+2] and self.images[self.currentPos+2].text then
+			text = self.images[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
 		end
 	elseif delta == 0 then
-		if self.albums and table.getn(self.albums)>self.currentPos+1 and self.albums[self.currentPos+2] and self.albums[self.currentPos+2].text then
-			text = self.albums[self.currentPos+2].text
+		if self.images and table.getn(self.images)>self.currentPos+1 and self.images[self.currentPos+2] and self.images[self.currentPos+2].text then
+			text = self.images[self.currentPos+2].text
 			self.selectedAlbum = self.currentPos+2
 		end
 	elseif delta == self.animateRange then
-		if self.albums and self.maxIndex>self.currentPos and self.albums[self.currentPos+1] and self.albums[self.currentPos+1].text then
-			text = self.albums[self.currentPos+1].text
+		if self.images and self.maxIndex>self.currentPos and self.images[self.currentPos+1] and self.images[self.currentPos+1].text then
+			text = self.images[self.currentPos+1].text
 			self.selectedAlbum = self.currentPos+1
 		end
 	end
@@ -538,12 +803,23 @@ function _getIcon(self)
 		return icon
 	end
 end
+function notify_playerCurrent(self,player)
+	log:debug("Got a playerCurrent event for: "..player:getId())
+	if self.player:getId() ~= player:getId() then
+		self.player = player
+		self.server = self.player:getSlimServer()
+		if self.mode then
+			self.window:hide()
+			self.window = nil
+		end
+	end
+end
 
 function notify_playerTrackChange(self,player,nowPlaying)
-	log:debug("Got a playerTrackChange event")
-	if self.player:getId() == player:getId() and self.view and (self.view == "currentplaylist" or self.view == "currentartist" or self.view == "currentgenre" or self.view == "currentyear") then
-		self:_refreshAlbums(0)
-		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshAlbums() end)
+	log:debug("*** Got a playerTrackChange event")
+	if self.player:getId() == player:getId() and self.mode and (string.find(self.mode,"^songinfo") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+		self:_refreshImages(0)
+		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshImages() end)
 	end
 end
 
@@ -552,10 +828,10 @@ function _updateCoversAndData(self,pos)
 	local rightSlide = pos + 4
 	local ARTWORK_SIZE = self:_getArtworkSize()
 
-	if self.view and (self.view == "currentplaylist") and self.player:getPlayerStatus()["playlist_timestamp"] ~= self.lastUpdate and not self.timer then
-		log:debug("Refreshing albums, playlist changed")
-		self:_refreshAlbums(0)
-		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshAlbums() end)
+	if self.mode and (self.mode == "currentplaylist") and self.player:getPlayerStatus()["playlist_timestamp"] ~= self.lastUpdate and not self.timer then
+		log:debug("Refreshing images, playlist changed")
+		self:_refreshImages(0)
+		self.timer = self.window:addTimer(1000, function() self:_retrieveMoreRefreshImages() end)
 	end
 
 	if leftSlide < 1 then
@@ -567,49 +843,52 @@ function _updateCoversAndData(self,pos)
 
 	if leftSlide>1 then
 		local i = leftSlide-1
-		while i>0 and self.albums[i].iconArtwork do
-			log:debug("Deallocating artwork for "..self.albums[i].text)
-			self:_restoreIcon(self.albums[i].iconArtwork)
-			self.albums[i].iconArtwork = nil
+		while i>0 and self.images[i].iconArtwork do
+			log:debug("Deallocating artwork for "..self.images[i].text)
+			self:_restoreIcon(self.images[i].iconArtwork)
+			self.images[i].iconArtwork = nil
 			i = i - 1
 		end
 	end
 
 	if rightSlide<self.count then
 		local i = rightSlide+1
-		while i<=self.maxIndex and self.albums[i].iconArtwork do
-			log:debug("Deallocating artwork for "..self.albums[i].text)
-			self:_restoreIcon(self.albums[i].iconArtwork)
-			self.albums[i].iconArtwork = nil
+		while i<=self.maxIndex and self.images[i].iconArtwork do
+			log:debug("Deallocating artwork for "..self.images[i].text)
+			self:_restoreIcon(self.images[i].iconArtwork)
+			self.images[i].iconArtwork = nil
 			i=i+1
 		end
 	end
 
 	local result = true
 	for i=leftSlide,rightSlide do
-		if not self.albums[i].iconArtwork then
+		if not self.images[i].iconArtwork then
 			result = false
-			self.albums[i].iconArtwork=self:_getIcon()
-			local iconId = self.albums[i]["icon-id"]
+			self.images[i].iconArtwork=self:_getIcon()
+			local iconId = self.images[i]["icon-id"]
 			if iconId then
-				self.server:fetchArtwork(iconId,self.albums[i].iconArtwork,ARTWORK_SIZE)
-				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-id:"..iconId)
-			elseif self.albums[i]["icon-url"] then
-				self.server:fetchArtwork(self.albums[i]["icon-url"],self.albums[i].iconArtwork,ARTWORK_SIZE)
-				log:debug("Fetching artwork for "..i..":"..self.albums[i].text.." with icon-url:"..self.albums[i]["icon-url"])
+				self.server:fetchArtwork(iconId,self.images[i].iconArtwork,ARTWORK_SIZE)
+				log:debug("Fetching artwork for "..i..":"..self.images[i].text.." with icon-id:"..iconId)
+			elseif self.images[i]["icon-url"] then
+				self.server:fetchArtwork(self.images[i]["icon-url"],self.images[i].iconArtwork,ARTWORK_SIZE)
+				log:debug("Fetching artwork for "..i..":"..self.images[i].text.." with icon-url:"..self.images[i]["icon-url"])
+			elseif self.images[i]["artist_id"] then
+				self:_loadArtistImageUrl(self.images[i]["artist_id"],self.images[i])
+				log:debug("Got artist image for "..i..":"..self.images[i].text.." without icon-url")
 			else
-				self.server:fetchArtwork(0,self.albums[i].iconArtwork,ARTWORK_SIZE,'png')
-				log:debug("Got album "..i..":"..self.albums[i].text.." without icon-id")
+				self.server:fetchArtwork(0,self.images[i].iconArtwork,ARTWORK_SIZE,'png')
+				log:debug("Got album "..i..":"..self.images[i].text.." without icon-id")
 			end
-		elseif not self.albums[i].iconArtwork:getImage() then
+		elseif not self.images[i].iconArtwork:getImage() then
 			result = false
 		end
 	end
 	return result
 end
 
-function _retrieveMoreAlbums(self)
-	if self.albums and self.maxLoadedIndex == self.count and self.maxLoadedIndex>0 then
+function _retrieveMoreImages(self)
+	if self.images and self.maxLoadedIndex == self.count and self.maxLoadedIndex>0 then
 		if self.timer then
 			self.window:removeTimer(self.timer)
 			self.timer = nil
@@ -617,14 +896,14 @@ function _retrieveMoreAlbums(self)
 		return
 	end 
 
-	if self.albums and (not self.count or (self.maxLoadedIndex < self.count)) and not self.loading then
-		log:debug("Getting more albums")
-		self:_loadAlbums(self.maxLoadedIndex,self.view)
+	if self.images and (not self.count or (self.maxLoadedIndex < self.count)) and not self.loading then
+		log:debug("Getting more images")
+		self:_loadImages(self.maxLoadedIndex,self.mode)
 	end
 end
-function _finishRefreshAlbums(self)
+function _finishRefreshImages(self)
 	local newKeys = {}
-	for _,item in ipairs(self.refreshAlbums) do
+	for _,item in ipairs(self.refreshImages) do
 		if item["icon-id"] then
 			newKeys[item["icon-id"]] = 1
 		else
@@ -632,12 +911,12 @@ function _finishRefreshAlbums(self)
 		end
 	end
 	local oldKeys = {}
-	local newAlbums = {}
-	for index,item in ipairs(self.albums) do
+	local newImages = {}
+	for index,item in ipairs(self.images) do
 		if (item["icon-id"] and not newKeys[item["icon-id"]]) or (item["icon-url"] and not newKeys[item["icon-url"]]) then
 			self.currentPos = self.currentPos -1
 		else
-			newAlbums[#newAlbums+1] = item
+			newImages[#newImages+1] = item
 			if item["icon-id"] then
 				oldKeys[item["icon-id"]] = 1
 			else
@@ -645,20 +924,20 @@ function _finishRefreshAlbums(self)
 			end
 		end
 	end
-	for index,item in ipairs(self.refreshAlbums) do
+	for index,item in ipairs(self.refreshImages) do
 		if (item["icon-id"] and not oldKeys[item["icon-id"]]) or (item["icon-url"] and not oldKeys[item["icon-url"]]) then
-			table.insert(newAlbums,item)
+			table.insert(newImages,item)
 		end
 	end
-	self.albums=newAlbums
+	self.images=newImages
 
-	newAlbums=nil
+	newImages=nil
 	oldKeys=nil
 	newKeys=nil
-	if self.currentPos<0 and #self.albums>0 then
+	if self.currentPos<0 and #self.images>0 then
 		self.currentPos = 0
 	end
-	self.maxIndex = #self.albums
+	self.maxIndex = #self.images
 	self.maxLoadedIndex = self.refreshCount
 	self.count = self.refreshCount
 	if self.timer then
@@ -667,18 +946,18 @@ function _finishRefreshAlbums(self)
 	end
 end
 
-function _retrieveMoreRefreshAlbums(self)
-	if self.refreshAlbums and self.refreshMaxLoadedIndex == self.refreshCount and self.refreshMaxLoadedIndex>0 then
-		log:debug("All albums retrieved, finishing refresh")
-		self:_finishRefreshAlbums()
+function _retrieveMoreRefreshImages(self)
+	if self.refreshImages and self.refreshMaxLoadedIndex == self.refreshCount and self.refreshMaxLoadedIndex>0 then
+		log:debug("All images retrieved, finishing refresh")
+		self:_finishRefreshImages()
 		return
 	end 
 
-	if self.refreshAlbums and (not self.refreshCount or (self.refreshMaxLoadedIndex < self.refreshCount)) and not self.loading then
-		log:debug("Getting more refresh albums")
-		self:_refreshAlbums(self.refreshMaxLoadedIndex,self.view)
+	if self.refreshImages and (not self.refreshCount or (self.refreshMaxLoadedIndex < self.refreshCount)) and not self.loading then
+		log:debug("Getting more refresh images")
+		self:_refreshImages(self.refreshMaxLoadedIndex,self.mode)
 	else
-		log:debug("Retrying to retrieve more albums a bit later")
+		log:debug("Retrying to retrieve more images a bit later")
 	end
 end
 
@@ -693,15 +972,8 @@ function _reDrawCanvas(self,screen)
 	local posx
 	local posy
 
-	local style
-	if self.screensaver then
-		style = self:getSettings()["screensaverstyle"]
-	else
-		-- TODO: Implement so it reads from a separate property
-		style = self:getSettings()["screensaverstyle"]
-	end
-	if style == "circular" then
-		if self.albums[self.currentPos] then
+	if self.style == "circular" then
+		if self.images[self.currentPos] then
 			-- width = 0% -> 50%
 			-- height = 50% -> 75%
 			-- left = 0
@@ -712,12 +984,12 @@ function _reDrawCanvas(self,screen)
 			posx = 0
 			posy = sizeby4-sizeby8*(self.currentDelta/self.animateRange)
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+3] then
+		if self.images[self.currentPos+3] then
 			-- width = 50% -> 0%
 			-- height = 75% -> 50%
 			-- left = 360 -> 480
@@ -728,12 +1000,12 @@ function _reDrawCanvas(self,screen)
 			posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
 			posy = sizeby8+sizeby8*(self.currentDelta/self.animateRange)
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+1] then
+		if self.images[self.currentPos+1] then
 			-- width = 50% -> 100%
 			-- height = 75% -> 100%
 			-- left = 0 -> 120
@@ -744,12 +1016,12 @@ function _reDrawCanvas(self,screen)
 			posx = sizeby2*(self.currentDelta/self.animateRange)
 			posy = sizeby8-sizeby8*(self.currentDelta/self.animateRange)
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+2] then
+		if self.images[self.currentPos+2] then
 			-- width = 100% -> 50%
 			-- height = 100% -> 75%
 			-- left = 120 -> 360
@@ -760,13 +1032,13 @@ function _reDrawCanvas(self,screen)
 			posx = sizeby2+size*(self.currentDelta/self.animateRange)
 			posy = sizeby8*(self.currentDelta/self.animateRange)
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomx,zoomy,posx,posy)
 			end
 		end
-	elseif style == "slide" then
-		if self.albums[self.currentPos] then
+	elseif self.style == "slide" then
+		if self.images[self.currentPos] then
 			-- width = 100%
 			-- height = 100%
 			-- left = -360 -> -120
@@ -777,12 +1049,12 @@ function _reDrawCanvas(self,screen)
 			posx = -size-sizeby2+size*self.currentDelta/self.animateRange
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+1] then
+		if self.images[self.currentPos+1] then
 			-- width = 100%
 			-- height = 100%
 			-- left = -120 -> 120
@@ -793,12 +1065,12 @@ function _reDrawCanvas(self,screen)
 			posx = -sizeby2+size*self.currentDelta/self.animateRange
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+2] then
+		if self.images[self.currentPos+2] then
 			-- width = 100%
 			-- height = 100%
 			-- left = 120 -> 360
@@ -809,12 +1081,12 @@ function _reDrawCanvas(self,screen)
 			posx = sizeby2+size*self.currentDelta/self.animateRange
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+3] then
+		if self.images[self.currentPos+3] then
 			-- width = 100%
 			-- height = 100%
 			-- left = 360 -> 600
@@ -825,13 +1097,13 @@ function _reDrawCanvas(self,screen)
 			posx = size+sizeby2+size*self.currentDelta/self.animateRange
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomx,zoomy,posx,posy)
 			end
 		end
-	elseif style == "shrinkedslide" then
-		if self.albums[self.currentPos] then
+	elseif self.style == "shrinkedslide" then
+		if self.images[self.currentPos] then
 			-- width = 0% -> 50%
 			-- height = 100%
 			-- left = 0
@@ -842,12 +1114,12 @@ function _reDrawCanvas(self,screen)
 			posx = 0
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+3] then
+		if self.images[self.currentPos+3] then
 			-- width = 50% -> 0%
 			-- height = 100%
 			-- left = 360 -> 480
@@ -858,12 +1130,12 @@ function _reDrawCanvas(self,screen)
 			posx = size+sizeby2+sizeby2*(self.currentDelta/self.animateRange)
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+1] then
+		if self.images[self.currentPos+1] then
 			-- width = 50% -> 100%
 			-- height = 100%
 			-- left = 0 -> 120
@@ -874,12 +1146,12 @@ function _reDrawCanvas(self,screen)
 			posx = sizeby2*(self.currentDelta/self.animateRange)
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+2] then
+		if self.images[self.currentPos+2] then
 			-- width = 100% -> 50%
 			-- height = 100%
 			-- left = 120 -> 360
@@ -890,13 +1162,13 @@ function _reDrawCanvas(self,screen)
 			posx = sizeby2+size*(self.currentDelta/self.animateRange)
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomx,zoomy,posx,posy)
 			end
 		end
-	elseif style == "stretchedslide" then
-		if self.albums[self.currentPos] then
+	elseif self.style == "stretchedslide" then
+		if self.images[self.currentPos] then
 			-- width = 0% -> 0% -> 0% -> 50%
 			-- height = 100%
 			-- left = 0
@@ -911,12 +1183,12 @@ function _reDrawCanvas(self,screen)
 			posx = 0
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+1] then
+		if self.images[self.currentPos+1] then
 			-- width = 50% -> 50% -> 150% -> 100%
 			-- height = 100%
 			-- left = 0 -> 0 -> 0 -> 120
@@ -937,12 +1209,12 @@ function _reDrawCanvas(self,screen)
 			end
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+1],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+1],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+2] then
+		if self.images[self.currentPos+2] then
 			-- width = 100% -> 150% -> 50% -> 50%
 			-- height = 100%
 			-- left = 120 -> 120 -> 360 -> 360
@@ -965,12 +1237,12 @@ function _reDrawCanvas(self,screen)
 			end
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+2],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+2],zoomx,zoomy,posx,posy)
 			end
 		end
-		if self.albums[self.currentPos+3] then
+		if self.images[self.currentPos+3] then
 			-- width = 50% -> 0% -> 0% -> 0%
 			-- height = 100%
 			-- left = 360 -> 480 -> 480 -> 480
@@ -989,9 +1261,9 @@ function _reDrawCanvas(self,screen)
 			end
 			posy = 0
 			if self.model == "controller" then
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomy,zoomx,posy+60,posx)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomy,zoomx,posy+60,posx)
 			else
-				self:_drawArtwork(screen,self.albums[self.currentPos+3],zoomx,zoomy,posx,posy)
+				self:_drawArtwork(screen,self.images[self.currentPos+3],zoomx,zoomy,posx,posy)
 			end
 		end
 	end
@@ -1016,10 +1288,36 @@ function _drawArtwork(self,screen,album,zoomx,zoomy,positionx,positiony)
 		end
 	end
 end
+function _loadArtistImageUrl(self,artist,image)
+	self.server:userRequest(function(chunk,err)
+			if err then
+				log:debug(err)
+			elseif chunk then
+				self:_loadArtistImageUrlSink(chunk.data,image)
+			end
+		end,
+		self.player and self.player:getId(),
+		{'songinfoitems','lastfmartistimages','artist:'..artist}
+	)
+end
 
-function _loadAlbums(self,offset)
+function _loadArtistImageUrlSink(self,result,image)
+	local ARTWORK_SIZE = self:_getArtworkSize()
+	if result.item_loop then
+		for _,item in ipairs(result.item_loop) do
+			if not string.find(item.url,"KeepStatsClean.jpg$") and not string.find(item.url,"keep_stats_clean.png$") then
+				image["icon-url"] = item.url
+				log:debug("Getting image of "..image.text.." from "..image["icon-url"]);
+				self.server:fetchArtwork(image["icon-url"],image.iconArtwork,ARTWORK_SIZE)
+				break
+			end
+		end
+	end
+end
+
+function _loadImages(self,offset)
 	if offset == 0 then
-		self.albums = {}
+		self.images = {}
 		self.artworkKeyMap = {}
 		self.maxIndex = 0
 		self.maxLoadedIndex = 0
@@ -1030,7 +1328,7 @@ function _loadAlbums(self,offset)
 	if offset>0 then
 		amount = 100
 	end
-	if not self.view or self.view == "random" then
+	if not self.mode or self.mode == "random" then
 		log:debug("Loading album from main list")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1043,7 +1341,7 @@ function _loadAlbums(self,offset)
 			self.player and self.player:getId(),
 			{'albums',offset,amount,'menu:menu'}
 		)
-	elseif self.view == "byartist" then
+	elseif self.mode == "byartist" then
 		log:debug("Loading album from main list sort by artist")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1056,7 +1354,7 @@ function _loadAlbums(self,offset)
 			self.player and self.player:getId(),
 			{'albums',offset,amount,'menu:menu','sort:artflow'}
 		)
-	elseif self.view == "currentplaylist" then
+	elseif self.mode == "currentplaylist" then
 		log:debug("Loading album from current playlist")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1069,9 +1367,9 @@ function _loadAlbums(self,offset)
 			self.player and self.player:getId(),
 			{'status',offset,amount,"tags:aJKlex"}
 		)
-	elseif self.view == "currentartist" then
+	elseif self.mode == "currentartist" then
 		log:debug("Loading album for current artist")
-		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1085,9 +1383,9 @@ function _loadAlbums(self,offset)
 				{'status','-',amount,"tags:s"}
 			)
 		end
-	elseif self.view == "currentgenre" then
+	elseif self.mode == "currentgenre" then
 		log:debug("Loading album for current genre")
-		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1101,9 +1399,9 @@ function _loadAlbums(self,offset)
 				{'status','-',amount,"tags:p"}
 			)
 		end
-	elseif self.view == "currentyear" then
+	elseif self.mode == "currentyear" then
 		log:debug("Loading album for current year")
-		if tonumber(self.player:getPlayerStatus()["count"]) >=1 then
+		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1117,15 +1415,49 @@ function _loadAlbums(self,offset)
 				{'status','-',amount,"tags:y"}
 			)
 		end
+	elseif self.mode == "artists" or self.mode == "randomartists" then
+		log:debug("Loading artists from main list")
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadArtistsSink(chunk.data,offset)
+				end
+				self.loading =  false
+			end,
+			self.player and self.player:getId(),
+			{'artists',offset,amount,'menu:menu'}
+		)
+	elseif string.find(self.mode,"^songinfo") then
+		log:debug("Loading "..self.mode.." for current song")
+		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus().count) >=1 then
+			self.refreshImages = {}
+			self.artworkKeyMap = {}
+			self.refreshMaxLoadedIndex = 0
+			self.refreshCount = 0
+			local songinfomode = string.gsub(self.mode,"^songinfo","")
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			log:debug("Issuing server call: songinfoitems "..songinfomode.." track:"..track_id)
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadSongInfoSink(chunk.data)
+					end
+				end,
+				self.player and self.player:getId(),
+				{'songinfoitems',songinfomode,"track:"..track_id}
+			)
+		end
 	else
-		log:warn("Unknown view, don't load any albums: "..self.view)
+		log:warn("Unknown view, don't load any albums: "..self.mode)
 	end
 	log:debug("Sent command")
 end
 
-function _refreshAlbums(self,offset)
+function _refreshImages(self,offset)
 	if not offset or offset == 0 then
-		self.refreshAlbums = {}
+		self.refreshImages = {}
 		self.artworkKeyMap = {}
 		self.refreshMaxLoadedIndex = 0
 		self.refreshCount = 0
@@ -1136,23 +1468,23 @@ function _refreshAlbums(self,offset)
 	if offset>0 then
 		amount = 100
 	end
-	if self.view and self.view == "currentplaylist" then
+	if self.mode and self.mode == "currentplaylist" then
 		log:info("Loading album from current playlist")
 		self.server:userRequest(function(chunk,err)
 				if err then
 					log:debug(err)
 				elseif chunk then
 					self:_loadCPRefreshAlbumsSink(chunk.data,offset)
-					self:_sortByRandom(self.refreshAlbums)
+					self:_sortByRandom(self.refreshImages)
 				end
 				self.loading =  false
 			end,
 			self.player and self.player:getId(),
 			{'status',offset,amount,"tags:aJKlex"}
 		)
-	elseif self.view and self.view == "currentartist" then
+	elseif self.mode and self.mode == "currentartist" then
 		log:debug("Loading album for current artist")
-		if tonumber(self.player:getPlayerStatus().count) >=1 then
+		if self.player:getPlayerStatus().count and tonumber(self.player:getPlayerStatus().count) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1165,11 +1497,11 @@ function _refreshAlbums(self,offset)
 				{'status','-',amount,"tags:s"}
 			)
 		else
-			self:_finishRefreshAlbums()
+			self:_finishRefreshImages()
 		end
-	elseif self.view and self.view == "currentgenre" then
+	elseif self.mode and self.mode == "currentgenre" then
 		log:debug("Loading album for current genre")
-		if tonumber(self.player:getPlayerStatus().count) >=1 then
+		if self.player:getPlayerStatus().count and tonumber(self.player:getPlayerStatus().count) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1182,11 +1514,11 @@ function _refreshAlbums(self,offset)
 				{'status','-',amount,"tags:p"}
 			)
 		else
-			self:_finishRefreshAlbums()
+			self:_finishRefreshImages()
 		end
-	elseif self.view and self.view == "currentyear" then
+	elseif self.mode and self.mode == "currentyear" then
 		log:debug("Loading album for current year")
-		if tonumber(self.player:getPlayerStatus().count) >=1 then
+		if self.player:getPlayerStatus().count and tonumber(self.player:getPlayerStatus().count) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
 			self.server:userRequest(function(chunk,err)
 					if err then
@@ -1199,7 +1531,25 @@ function _refreshAlbums(self,offset)
 				{'status','-',amount,"tags:y"}
 			)
 		else
-			self:_finishRefreshAlbums()
+			self:_finishRefreshImages()
+		end
+	elseif self.mode and string.find(self.mode,"^songinfo") then
+		log:debug("Loading "..self.mode.." for current song")
+		if self.player:getPlayerStatus().count and tonumber(self.player:getPlayerStatus().count) >=1 then
+			local songinfomode = string.gsub(self.mode,"^songinfo","")
+			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
+			self.server:userRequest(function(chunk,err)
+					if err then
+						log:debug(err)
+					elseif chunk then
+						self:_loadSongInfoSink(chunk.data)
+					end
+				end,
+				self.player and self.player:getId(),
+				{'songinfoitems',songinfomode,"track:"..track_id}
+			)
+		else
+			self:_finishRefreshImages()
 		end
 	else
 		log:info("This view doesn't need refresh")
@@ -1227,18 +1577,39 @@ function _loadAlbumsSink(self,result,offset)
 	for _,item in ipairs(result.item_loop) do
 		self.maxLoadedIndex = self.maxLoadedIndex + 1
 		if not self.screensaver or item["icon-id"] then
-			self.maxIndex = #self.albums + 1
+			self.maxIndex = #self.images + 1
 			local entry = {}
 			entry.text = item.text
 			entry.album_id = item.params["album_id"]
 			entry["icon-id"] = item["icon-id"]
-			self.albums[self.maxIndex] = entry
+			self.images[self.maxIndex] = entry
 			index = index + 1
 		end
 	end
 
-	if self.view and self.view == "random" then
-		self:_sortByRandom(self.albums,self.currentPos)
+	if self.mode and self.mode == "random" then
+		self:_sortByRandom(self.images,self.currentPos)
+	end
+end
+
+function _loadArtistsSink(self,result,offset)
+	local lastIndex = 1
+	self.count = tonumber(result.count)
+	local index=1
+
+	self.lastUpdate = os.time()
+	for _,item in ipairs(result.item_loop) do
+		self.maxLoadedIndex = self.maxLoadedIndex + 1
+		self.maxIndex = #self.images + 1
+		local entry = {}
+		entry.text = item.text
+		entry.artist_id = item.params["artist_id"]
+		self.images[self.maxIndex] = entry
+		index = index + 1
+	end
+
+	if self.mode and self.mode == "randomartists" then
+		self:_sortByRandom(self.images,self.currentPos)
 	end
 end
 
@@ -1249,7 +1620,7 @@ function _loadCurrentContextSink(self,result,param)
 		local param_id = result.playlist_loop[1][param]
 		if param_id then
 			self.lastUpdate=result.playlist_timestamp
-			self.refreshAlbums = {}
+			self.refreshImages = {}
 			self.artworkKeyMap = {}
 			self.refreshMaxLoadedIndex = 0
 			self.refreshCount = 0
@@ -1259,9 +1630,9 @@ function _loadCurrentContextSink(self,result,param)
 						log:debug(err)
 					elseif chunk then
 						self:_loadRefreshAlbumsSink(chunk.data,param..":"..param_id)
-						self:_sortByRandom(self.refreshAlbums,self.currentPos)
+						self:_sortByRandom(self.refreshImages,self.currentPos)
 						if self.refreshCount == self.refreshMaxLoadedIndex then
-							self:_finishRefreshAlbums()
+							self:_finishRefreshImages()
 						end
 					end
 					self.loading =  false
@@ -1271,6 +1642,30 @@ function _loadCurrentContextSink(self,result,param)
 			)
 		end
 	end
+end
+
+function _loadSongInfoSink(self,result)
+	local lastIndex = 1
+	self.refreshCount = tonumber(result.count)
+	local index=1
+
+	self.lastUpdate = os.time()
+	if result.item_loop then
+		for _,item in ipairs(result.item_loop) do
+			self.refreshMaxLoadedIndex = self.refreshMaxLoadedIndex + 1
+			if not string.find(item.url,"KeepStatsClean.jpg$") and not string.find(item.url,"keep_stats_clean.png$") then
+				local entry = {}
+				log:debug("Storing image with text: "..item.text)
+				entry.text = item.text
+				entry["icon-url"] = item.url
+				self.refreshImages[#self.refreshImages + 1] = entry
+			end
+			index = index + 1
+		end
+	end
+
+	self:_sortByRandom(self.refreshImages,self.currentPos)
+	self:_finishRefreshImages()
 end
 
 function _sortByRandom(self,array,pos)
@@ -1305,7 +1700,7 @@ function _loadCPAlbumsSink(self,result,offset)
 			end
 			if not self.screensaver or not self.artworkKeyMap[artworkKey] then
 				self.artworkKeyMap[artworkKey] = 1
-				self.maxIndex = #self.albums + 1
+				self.maxIndex = #self.images + 1
 				local entry = {}
 				if item.album then
 					entry.text = item.album.." - "..item.artist
@@ -1320,12 +1715,12 @@ function _loadCPAlbumsSink(self,result,offset)
 				else
 					entry["icon-url"] = item["artwork_url"]
 				end
-				self.albums[self.maxIndex] = entry
+				self.images[self.maxIndex] = entry
 				index = index + 1
 			end
 		end
 	end
-	self:_sortByRandom(self.albums,self.currentPos)
+	self:_sortByRandom(self.images,self.currentPos)
 end
 
 function _loadRefreshAlbumsSink(self,result,params)
@@ -1339,7 +1734,7 @@ function _loadRefreshAlbumsSink(self,result,params)
 			entry.text = item.text
 			entry.album_id = item.params["album_id"]
 			entry["icon-id"] = item["icon-id"]
-			self.refreshAlbums[#self.refreshAlbums + 1] = entry
+			self.refreshImages[#self.refreshImages + 1] = entry
 			index = index + 1
 		end
 	end
@@ -1349,10 +1744,10 @@ function _loadRefreshAlbumsSink(self,result,params)
 				if err then
 					log:debug(err)
 				elseif chunk then
-					self:_loadRefreshAlbumsSink(chunk.data,params)
-					self:_sortByRandom(self.refreshAlbums,self.currentPos)
+					self:_loadRefreshImagesSink(chunk.data,params)
+					self:_sortByRandom(self.refreshImages,self.currentPos)
 					if self.refreshCount == self.refreshMaxLoadedIndex then
-						self:_finishRefreshAlbums()
+						self:_finishRefreshImages()
 					end
 				end
 				self.loading =  false
@@ -1395,7 +1790,7 @@ function _loadCPRefreshAlbumsSink(self,result,offset)
 				else
 					entry["icon-url"] = item["artwork_url"]
 				end
-				self.refreshAlbums[#self.refreshAlbums + 1] = entry
+				self.refreshImages[#self.refreshImages + 1] = entry
 				index = index + 1
 			end
 		end

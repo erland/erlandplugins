@@ -5,26 +5,41 @@
 SCREENSAVER_ALBUMFLOW
 	EN	Album Flow
 
+SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG
+	EN	Config
+
+SCREENSAVER_ALBUMFLOW_SETTINGS_MODE
+	EN	Mode
+
 SCREENSAVER_ALBUMFLOW_VIEW_ALBUM
-	EN	Album Flow (album)
+	EN	All albums (by album)
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST
-	EN	Album Flow (current playlist)
+	EN	Albums in current playlist
 
 SCREENSAVER_ALBUMFLOW_VIEW_RANDOM
-	EN	Album Flow (random)
+	EN	All albums (random)
 
 SCREENSAVER_ALBUMFLOW_VIEW_ARTIST
-	EN	Album Flow (by artist)
+	EN	All albums (by artist)
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST
-	EN	Album Flow (current artist)
+	EN	Albums for current artist
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE
-	EN	Album Flow (current genre)
+	EN	Albums in current genre
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR
-	EN	Album Flow (current year)
+	EN	Albums in current year
+
+SCREENSAVER_ALBUMFLOW_VIEW_ARTISTS
+	EN	All artists (by artist)
+
+SCREENSAVER_ALBUMFLOW_VIEW_RANDOMARTISTS
+	EN	All artists (random)
+
+SCREENSAVER_ALBUMFLOW_VIEW_SONGINFO
+	EN	(Song Info)
 
 SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_CIRCULAR
 	EN	Circular
