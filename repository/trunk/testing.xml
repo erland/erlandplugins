@@ -5,18 +5,17 @@
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
 	<applets>
-                <applet name="AlbumFlow" version="0.2.2873" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="0.3.2966" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">- Added new screen saver modes
-			- Added style setting
-			- Changed so only albums with covers are shown in screen saver mode
+                        <changes lang="EN">- Added support for LastFM images through Song Info plugin
+			- Changed configuration to make it possible to setup 5 different configurations
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.2.2873.zip</url>
-                        <sha>78a9df4ed3670643cb7c69ff9a0855c473460a4b</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.3.2966.zip</url>
+                        <sha>fc7008299a158448295170014e70c33797f1f07b</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="ScreenSwitcher" version="0.1.2867" minTarget="7.4" maxTarget="*">
@@ -91,6 +90,17 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <email>erland_i@hotmail.com</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mail&amp;filename=Mail-0.1.2922.zip</url>
                         <sha>c79b22c35fe6af442b0ddb8787d553da3f5e77f2</sha>
+                        <link>http://erland.isaksson.info</link>
+                </plugin>
+		<plugin name="SongInfo" version="0.1.2966" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Song Info *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Controller, Radio, Touch, SqueezePlay)</desc>
+                        <changes lang="EN">- Initial version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-0.1.2966.zip</url>
+                        <sha>e2eedf464b3d8acf72859b5fb340900f63a74a87</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 <!--
