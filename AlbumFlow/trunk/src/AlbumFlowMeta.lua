@@ -15,6 +15,7 @@ See L<jive.AppletMeta> for a description of standard applet meta functions.
 =cut
 --]]
 
+local pairs,tostring = pairs,tostring
 
 local oo            = require("loop.simple")
 local datetime         = require("jive.utils.datetime")
@@ -43,60 +44,37 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"), 
-		"AlbumFlow",
-		"openScreensaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"), 
-		"AlbumFlow",
-		"openScreensaverRandom", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"), 
-		"AlbumFlow",
-		"openScreensaverByArtist", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"), 
-		"AlbumFlow",
-		"openScreensaverCurrentPlaylist", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"), 
-		"AlbumFlow",
-		"openScreensaverCurrentArtist", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"), 
-		"AlbumFlow",
-		"openScreensaverCurrentGenre", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
-	appletManager:callService("addScreenSaver", 
-		self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"), 
-		"AlbumFlow",
-		"openScreensaverCurrentYear", 
-		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
-		"openScreensaverSettings", 
-		90)
+	for i=1,5 do
+		appletManager:callService("addScreenSaver", 
+			tostring(self:string("SCREENSAVER_ALBUMFLOW")).." #"..i, 
+			"AlbumFlow",
+			"openScreensaver"..i, 
+			self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+			"openScreensaverSettings", 
+			90,
+			"closeScreensaver")
+	end
+	if self:getSettings()["screensaverstyle"] then
+		self:getSettings()["screensaverstyle"] = nil
+		for attr,value in pairs(self:defaultSettings()) do
+			self:getSettings()[attr] = value
+		end
+		self:storeSettings()
+	end
 end
 
 function defaultSettings(self)
         local defaultSetting = {}
-        defaultSetting["screensaverstyle"] = "circular"
+        defaultSetting["config1style"] = "circular"
+        defaultSetting["config2style"] = "circular"
+        defaultSetting["config3style"] = "circular"
+        defaultSetting["config4style"] = "circular"
+        defaultSetting["config5style"] = "circular"
+        defaultSetting["config1mode"] = "random"
+        defaultSetting["config2mode"] = "currentplaylist"
+        defaultSetting["config3mode"] = "currentartist"
+        defaultSetting["config4mode"] = "currentgenre"
+        defaultSetting["config5mode"] = "currentyear"
         return defaultSetting
 end
 
