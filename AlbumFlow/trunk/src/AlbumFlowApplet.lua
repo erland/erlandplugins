@@ -43,6 +43,7 @@ local Framework        = require("jive.ui.Framework")
 local SimpleMenu       = require("jive.ui.SimpleMenu")
 local RadioGroup       = require("jive.ui.RadioGroup")
 local RadioButton      = require("jive.ui.RadioButton")
+local System        = require("jive.System")
 
 local SocketHttp       = require("jive.net.SocketHttp")
 local RequestHttp      = require("jive.net.RequestHttp")
