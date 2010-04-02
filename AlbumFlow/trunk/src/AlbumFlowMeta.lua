@@ -61,6 +61,11 @@ function configureApplet(self)
 		end
 		self:storeSettings()
 	end
+	if not self:getSettings()["browsealbumsstyle"] then
+		self:getSettings()["browsealbumsstyle"] = "circular"
+		self:getSettings()["browsealbumsmode"] = "byartist"
+		self:storeSettings()
+	end
 end
 
 function defaultSettings(self)
@@ -75,6 +80,8 @@ function defaultSettings(self)
         defaultSetting["config3mode"] = "currentartist"
         defaultSetting["config4mode"] = "currentgenre"
         defaultSetting["config5mode"] = "currentyear"
+        defaultSetting["browsealbumsstyle"] = "circular"
+        defaultSetting["browsealbumsmode"] = "byartist"
         return defaultSetting
 end
 

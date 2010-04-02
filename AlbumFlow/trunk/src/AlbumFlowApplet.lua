@@ -90,15 +90,11 @@ function openScreensaver5(self)
 	self:_initApplet(true,"config5")
 end
 
-function openScreensaver(self)
-	self:_initApplet(true)
-end
-
 -- display
 -- the main applet function, the meta arranges for it to be called
 -- by the ScreenSaversApplet.
 function menu(self)
-	self:_initApplet(false)
+	self:_initApplet(false,"browsealbums")
 end
 
 function _initApplet(self, ss,config,forced)
@@ -273,6 +269,17 @@ function openScreensaverSettings(self)
 				end
 			})
 	end	
+	if System.getMachine() != "fab4" then
+		menu:addItem(
+			{
+				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_BROWSE_ALBUMS")),
+				sound = "WINDOWSHOW",
+				callback = function(event, menuItem)
+					self:defineSettingStyle(menuItem, "browsealbums")
+					return EVENT_CONSUME
+				end
+			})
+	end
 	window:addWidget(menu)
 
 	self:tieAndShowWindow(window)
@@ -1328,7 +1335,7 @@ function _loadImages(self,offset)
 	if offset>0 then
 		amount = 100
 	end
-	if not self.mode or self.mode == "random" then
+	if not self.mode or self.mode == "random" or self.mode == "album" then
 		log:debug("Loading album from main list")
 		self.server:userRequest(function(chunk,err)
 				if err then
