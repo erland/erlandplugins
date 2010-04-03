@@ -58,6 +58,9 @@ sub getSongInfoFunctions {
 			'function' => \&getSimilarArtists,
 			'type' => 'text',
 			'context' => 'artist',
+			'jivemenu' => 0,
+			'playermenu' => 1,
+			'webmenu' => 0,
 			'properties' => [
 				{
 					'id' => 'lastfmsimilarartistpercent',
@@ -79,6 +82,9 @@ sub getSongInfoFunctions {
 			'function' => \&getSimilarArtistsImages,
 			'type' => 'image',
 			'context' => 'artist',
+			'jivemenu' => 1,
+			'playermenu' => 0,
+			'webmenu' => 1,
 			'properties' => [
 				{
 					'id' => 'lastfmsimilarartistpercent',
@@ -100,6 +106,9 @@ sub getSongInfoFunctions {
 			'function' => \&getTrackTags,
 			'type' => 'text',
 			'context' => 'track',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',
@@ -121,6 +130,9 @@ sub getSongInfoFunctions {
 			'function' => \&getArtistTags,
 			'type' => 'text',
 			'context' => 'artist',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',
@@ -142,6 +154,9 @@ sub getSongInfoFunctions {
 			'function' => \&getArtistImages,
 			'type' => 'image',
 			'context' => 'artist',
+			'jivemenu' => 1,
+			'playermenu' => 0,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
@@ -155,6 +170,9 @@ sub getSongInfoFunctions {
 			'function' => \&getAlbumImage,
 			'type' => 'image',
 			'context' => 'album',
+			'jivemenu' => 1,
+			'playermenu' => 0,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
@@ -168,6 +186,9 @@ sub getSongInfoFunctions {
 			'function' => \&getArtistInfoBiography,
 			'type' => 'text',
 			'context' => 'artist',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
@@ -181,6 +202,9 @@ sub getSongInfoFunctions {
 			'function' => \&getAlbumInfoDescription,
 			'type' => 'text',
 			'context' => 'album',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
@@ -194,6 +218,9 @@ sub getSongInfoFunctions {
 			'function' => \&getTrackInfoDescription,
 			'type' => 'text',
 			'context' => 'track',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
@@ -207,6 +234,9 @@ sub getSongInfoFunctions {
 			'function' => \&getTrackImage,
 			'type' => 'image',
 			'context' => 'track',
+			'jivemenu' => 1,
+			'playermenu' => 0,
+			'webmenu' => 1,
 			'properties' => [
 			]
 		},
