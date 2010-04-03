@@ -9,7 +9,7 @@
   <icon>plugins/SongInfo/html/images/songinfo.png</icon>
   <id>BFA76761-4413-4494-A559-E688DCFC674C</id>
   <module>Plugins::SongInfo::Plugin</module>
-  <optionsURL>plugins/SongInfo/settings/settings.html</optionsURL>
+  <optionsURL>plugins/SongInfo/settings/modulesettings.html</optionsURL>
   <targetApplication>
     <id>SqueezeCenter</id>
     <maxVersion>*</maxVersion>

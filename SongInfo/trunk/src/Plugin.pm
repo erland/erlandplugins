@@ -63,8 +63,115 @@ sub initPlugin
 	Plugins::SongInfo::ModuleSettings->new($class);
 	Slim::Control::Request::addDispatch(['songinfoitems','_module'], [1, 1, 1, \&getSongInfo]);
 	Slim::Control::Request::addDispatch(['songinfomodules'], [0, 1, 1, \&getSongInfoModules]);
+	Slim::Control::Request::addDispatch(['songinfomenu'], [0, 1, 1, \&getSongInfoMenu]);
 }
 
+sub postinitPlugin
+{
+	my @trackItems = ();
+	my @artistItems = ();
+	my @albumItems = ();
+	my $modules = getInformationModules();
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		if($module->{'type'} eq 'text' || $module->{'type'} eq 'image') {
+			if($module->{'context'} eq 'track') {
+				push @trackItems,$module;
+			}elsif($module->{'context'} eq 'artist') {
+				push @artistItems,$module;
+			}elsif($module->{'context'} eq 'album') {
+				push @albumItems,$module;
+			}
+		}
+	}
+	if(scalar(@trackItems)>0) {
+		for my $item (@trackItems) {
+			my $id = $item->{'id'};
+			my $itemid = "songinfo".$item->{'id'};
+			Slim::Menu::TrackInfo->registerInfoProvider( $itemid => (
+				after => 'middle',
+				func => sub {
+					return objectInfoHandler(@_,$id);
+				}
+			));
+		}
+	}
+	if(scalar(@albumItems)>0) {
+		for my $item (@albumItems) {
+			my $id = $item->{'id'};
+			my $itemid = "songinfo".$item->{'id'};
+			Slim::Menu::AlbumInfo->registerInfoProvider( $itemid => (
+				after => 'middle',
+				func => sub {
+					return objectInfoHandler(@_,$id);
+				}
+			));
+		}
+	}
+	if(scalar(@artistItems)>0) {
+		for my $item (@artistItems) {
+			my $id = $item->{'id'};
+			my $itemid = "songinfo".$item->{'id'};
+			Slim::Menu::ArtistInfo->registerInfoProvider( $itemid => (
+				after => 'middle',
+				func => sub {
+					return objectInfoHandler(@_,$id);
+				}
+			));
+		}
+	}
+}
+
+sub objectInfoHandler {
+        my ( $client, $url, $obj, $remoteMeta, $tags, $moduleId) = @_;
+        $tags ||= {};
+	my $modules = getInformationModules();
+	my $module = $modules->{$moduleId};
+	$log->debug("Requesting $moduleId sub menu: ".$module->{'name'});
+
+	if(!$module->{'jivemenu'}) {
+		return undef;
+	}
+	my $jive = {};
+	my $context = $module->{'context'};
+	if($tags->{menuMode}) {
+		my $actions = {
+			go => {
+				player => 0,
+				cmd => ['songinfomenu'],
+				params => {
+					module => $moduleId,
+					$context => $obj->id,
+				},
+			},
+		};
+		$jive->{actions} = $actions;
+		if($module->{'type'} eq 'image') {
+			$jive->{'window'} = {
+				menuStyle => 'album',
+			}
+		}
+	}
+	return {
+		type => 'redirect',
+		jive => $jive,
+		name => $module->{'name'},
+		favorites => 0,
+
+#		player => {
+#			mode => 'Plugins::Biography::Plugin',
+#			modeParams => {
+#				'moduleid' => $moduleId,
+#				$context => $obj->id,
+#			},
+#		},
+
+#		web => {
+#			group => 'moreinfo',
+#			url => 'plugins/SongInfo/songinfo_items.html?module=$moduleId&'.$module->{'context'}."=".$obj->id,
+#		},
+	};
+}
 sub getInformationModules {
 	my %items = ();
 
@@ -81,6 +188,34 @@ sub getInformationModules {
 					if(defined($item->{'name'})) {
 						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
 							$items{$key} = $item;
+							$items{$key}->{'id'} = $key;
+							$items{$key}->{'plugin'} = $fullname;
+						}
+					}
+				}
+			}
+		}
+		use strict 'refs';
+	}
+
+	my @enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
+	for my $plugin (@enabledplugins) {
+		my $fullname = "$plugin";
+		no strict 'refs';
+		eval "use $fullname";
+		if ($@) {
+			$log->error("SongInfo: Failed to load module $fullname: $@\n");
+		}elsif(UNIVERSAL::can("${fullname}","getSongInfoFunctions")) {
+			my $data = eval { &{$fullname . "::getSongInfoFunctions"}($PLUGINVERSION); };
+			if ($@) {
+				$log->error("SongInfo: Failed to call module $fullname: $@\n");
+			}elsif(defined($data)) {
+				for my $key (keys %$data) {
+					my $item = $data->{$key};
+					if(defined($item->{'name'})) {
+						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
+							$items{$key} = $item;
+							$items{$key}->{'id'} = $key;
 							$items{$key}->{'plugin'} = $fullname;
 						}
 					}
@@ -93,13 +228,95 @@ sub getInformationModules {
 }
 
 
-
-sub getSongInfo {
+sub getSongInfoMenu {
 	my $request = shift;
 	my $client = $request->client();
 	
 	# get our parameters
-  	my $module    = $request->getParam('_module');
+  	my $moduleId    = $request->getParam('module');
+	my $modules = getInformationModules();
+	if(defined($modules->{$moduleId})) {
+		my $module = $modules->{$moduleId};
+		my $context = $module->{'context'};
+		my $type = $module->{'type'};
+
+		$log->debug("Getting $type menu $moduleId for $context=".$request->getParam($context));
+		
+		if($module->{'type'} eq 'text') {
+			getSongInfo($request,\&cliResponseTextArea);
+		}else {
+			getSongInfo($request,\&cliResponseImages);
+		}
+	}else {
+		$request->setStatusDone();
+	}
+}
+sub cliResponseTextArea {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+
+	my $request = $params->{'request'};
+	my $cnt = 0;
+	
+	my $text = '';
+	for my $item (@$result) {
+		if($text ne '') {
+			$text .= "\n";
+		}
+		$text .= $item->{'text'};
+		$cnt++;
+	}
+	if($text eq '') {
+		$text = string('PLUGIN_SONGINFO_NOT_AVAILABLE'); 
+	}
+	$request->addResult('window', {
+		textarea => $text,
+	});
+	$request->addResult('offset',0);
+	$request->addResult('count',0);
+	$request->setStatusDone();
+}
+
+sub cliResponseImages {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+
+	my $request = $params->{'request'};
+	my $cnt = 0;
+	
+	my @items = ();
+	for my $item (@$result) {
+		push @items, {
+			text => $item->{'text'},
+			icon => $item->{'url'},
+			showBigArtwork => 1,
+			actions => {
+				do => {
+					cmd => ['artwork',$item->{'url'}]
+				},
+			},
+			style => 'item',
+		};
+		$cnt++;
+	}
+	$request->addResult('window', {
+		menustyle => 'album',
+	});
+	$request->addResult('item_loop',\@items);
+	$request->addResult('offset',0);
+	$request->addResult('count',$cnt);
+	$request->setStatusDone();
+}
+
+sub getSongInfo {
+	my $request = shift;
+	my $callback = shift || \&cliResponse;
+	my $client = $request->client();
+	
+	# get our parameters
+  	my $module    = $request->getParam('_module') || $request->getParam('module');
 	my $modules = getInformationModules();
 	if(defined($modules->{$module})) {
 		my $obj = undef;
@@ -163,7 +380,7 @@ sub getSongInfo {
 			no strict 'refs';
 			eval { 
 				$request->setStatusProcessing();
-				&{$modules->{$module}->{'function'}}($client,\&cliResponse,\&cliError,{request => $request},$obj,$paramHash); 
+				&{$modules->{$module}->{'function'}}($client,$callback,\&cliError,{request => $request},$obj,$paramHash); 
 			};
 			if( $@ ) {
 			    $log->error("Error getting item from $module and $context: $@");
