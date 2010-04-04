@@ -320,11 +320,12 @@ sub objectInfoHandler {
 			};
 		}
 	}elsif($module->{'type'} eq 'image') {
-		if($module->{'webmenu'}) {
-			$web = {
-				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
-			};
-		}
+		return undef;
+#		if($module->{'webmenu'}) {
+#			$web = {
+#				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
+#			};
+#		}
 	}else {
 		return undef;
 	}
