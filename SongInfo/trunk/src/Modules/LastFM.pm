@@ -109,6 +109,7 @@ sub getSongInfoFunctions {
 			'jivemenu' => 1,
 			'playermenu' => 1,
 			'webmenu' => 1,
+			'webinplace' => 1,
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',
@@ -133,6 +134,7 @@ sub getSongInfoFunctions {
 			'jivemenu' => 1,
 			'playermenu' => 1,
 			'webmenu' => 1,
+			'webinplace' => 1,
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',

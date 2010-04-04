@@ -122,6 +122,157 @@ sub postinitPlugin
 	}
 }
 
+sub webPages {
+	my %pages = (
+		"SongInfo/viewinfo\.html" => \&handleViewInfo,
+	);
+	
+	for my $page (keys %pages) {
+		Slim::Web::Pages->addPageFunction($page, $pages{$page});
+	}
+}
+
+sub handleViewInfo {
+	my ($client, $params, $callback, $httpClient, $response) = @_;
+
+  	my $moduleId    = $params->{'module'};
+	my $modules = getInformationModules();
+	if(defined($modules->{$moduleId})) {
+		my $module = $modules->{$moduleId};
+		my $context = $module->{'context'};
+		my $type = $module->{'type'};
+
+		$params->{'pluginSongInfoModuleName'} = $module->{'name'};
+		$log->debug("Getting $type menu $moduleId for $context=".$params->{$context});
+		my $requestParams = {
+			module => $moduleId,
+			$context => $params->{$context},
+		};
+		
+		my $callbackParams = {
+			callback => $callback,
+			httpClient => $httpClient,
+			response => $response,
+			params => $params,
+		};
+		if($module->{'type'} eq 'image') {
+			executeSongInfoRequest($client, $params, \&webResponseImages,undef,$callbackParams);
+			return undef;
+		}else {
+			executeSongInfoRequest($client, $params, \&webResponseText,undef,$callbackParams);
+			return undef;
+		}
+	}
+	return undef;
+}
+
+sub webResponseImages {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+	$params = $params->{callbackParams};
+
+	my $webParams = $params->{params};
+
+	my $cnt = 0;
+	
+	my @items = ();
+	for my $item (@$result) {
+		push @items, {
+			text => $item->{'text'},
+			image => $item->{'url'},
+		};
+		$cnt++;
+	}
+	$webParams->{pluginSongInfoItems} = \@items;
+	
+	my $output = Slim::Web::HTTP::filltemplatefile('plugins/SongInfo/viewimages.html', $webParams);
+
+	$params->{callback}->($client,$params->{params},$output,$params->{httpClient},$params->{response});	
+}
+
+sub webResponseText {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+	$params = $params->{callbackParams};
+	my $webParams = $params->{params};
+
+	my $cnt = 0;
+	
+	my @items = ();
+	for my $item (@$result) {
+		push @items, {
+			text => $item->{'text'},
+		};
+		$cnt++;
+	}
+	$webParams->{pluginSongInfoItems} = \@items;
+	
+	my $output = Slim::Web::HTTP::filltemplatefile('plugins/SongInfo/viewtext.html', $webParams);
+
+	$params->{callback}->($client,$params->{params},$output,$params->{httpClient},$params->{response});	
+}
+
+sub setMode {
+	my ($class, $client, $method) = @_;
+
+	if($method eq 'pop') {
+		Slim::Buttons::Common::popMode($client);
+		return;
+	}
+	# get our parameters
+  	my $moduleId    = $client->modeParam('module');
+	my $modules = getInformationModules();
+	if(defined($modules->{$moduleId})) {
+		my $module = $modules->{$moduleId};
+		my $context = $module->{'context'};
+		my $type = $module->{'type'};
+
+		$log->debug("Getting $type menu $moduleId for $context=".$client->modeParam($context));
+		my $params = {
+			module => $moduleId,
+			$context => $client->modeParam($context),
+		};
+		
+		if($module->{'type'} eq 'text') {
+			executeSongInfoRequest($client, $params, \&playerResponseTextArea);
+		}
+	}
+}
+
+sub playerResponseTextArea {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+
+	my $request = $params->{'request'};
+	my $cnt = 0;
+	
+	my @listRef;
+	for my $item (@$result) {
+		push @listRef,$item->{'text'};
+		$cnt++;
+	}
+	if(scalar(@listRef)==0) {
+		push @listRef,string('PLUGIN_SONGINFO_NOT_AVAILABLE'); 
+	}
+
+	my %params = (
+		header => '{PLUGIN_SONGINFO}',
+		headerAddCount => 1,
+		listRef => \@listRef,
+		name => \&getDisplayText,
+		modeName => 'SongInfo',
+	);
+	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice',\%params);
+}
+
+sub getDisplayText {
+	my ($client, $item) = @_;
+
+	return $item;
+}
 sub objectInfoHandler {
         my ( $client, $url, $obj, $remoteMeta, $tags, $moduleId) = @_;
         $tags ||= {};
@@ -129,12 +280,14 @@ sub objectInfoHandler {
 	my $module = $modules->{$moduleId};
 	$log->debug("Requesting $moduleId sub menu: ".$module->{'name'});
 
-	if(!$module->{'jivemenu'}) {
-		return undef;
-	}
-	my $jive = {};
+	my $jive = undef;
 	my $context = $module->{'context'};
+	my $player = undef;
+	my $web = undef;
 	if($tags->{menuMode}) {
+		if(!$module->{'jivemenu'}) {
+			return undef;
+		}
 		my $actions = {
 			go => {
 				player => 0,
@@ -151,26 +304,45 @@ sub objectInfoHandler {
 				menuStyle => 'album',
 			}
 		}
+	}elsif($module->{'type'} eq 'text') {
+		if($module->{'playermenu'}) {
+			$player = {
+				mode => 'Plugins::SongInfo::Plugin',
+				modeParams => {
+					'module' => $moduleId,
+					$context => $obj->id,
+				},
+			}
+		}
+		if($module->{'webmenu'}) {
+			$web = {
+				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
+			};
+		}
+	}elsif($module->{'type'} eq 'image') {
+		if($module->{'webmenu'}) {
+			$web = {
+				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
+			};
+		}
+	}else {
+		return undef;
 	}
-	return {
+	my $result = {
 		type => 'redirect',
-		jive => $jive,
 		name => $module->{'name'},
 		favorites => 0,
-
-#		player => {
-#			mode => 'Plugins::Biography::Plugin',
-#			modeParams => {
-#				'moduleid' => $moduleId,
-#				$context => $obj->id,
-#			},
-#		},
-
-#		web => {
-#			group => 'moreinfo',
-#			url => 'plugins/SongInfo/songinfo_items.html?module=$moduleId&'.$module->{'context'}."=".$obj->id,
-#		},
 	};
+	if($player) {
+		$result->{player} = $player;
+	}
+	if($jive) {
+		$result->{jive} = $jive;
+	}
+	if($web) {
+		$result->{web} = $web;
+	}
+	return $result;
 }
 sub getInformationModules {
 	my %items = ();
@@ -242,15 +414,17 @@ sub getSongInfoMenu {
 
 		$log->debug("Getting $type menu $moduleId for $context=".$request->getParam($context));
 		
+		my $params = $request->getParamsCopy();
 		if($module->{'type'} eq 'text') {
-			getSongInfo($request,\&cliResponseTextArea);
+			executeSongInfoRequest($client, $params,\&cliResponseTextArea,$request);
 		}else {
-			getSongInfo($request,\&cliResponseImages);
+			executeSongInfoRequest($client, $params,\&cliResponseImages,$request);
 		}
 	}else {
 		$request->setStatusDone();
 	}
 }
+
 sub cliResponseTextArea {
 	my $client = shift;
 	my $params = shift;
@@ -312,18 +486,28 @@ sub cliResponseImages {
 
 sub getSongInfo {
 	my $request = shift;
-	my $callback = shift || \&cliResponse;
 	my $client = $request->client();
 	
+	my $params = $request->getParamsCopy();
+	executeSongInfoRequest($client, $params, \&cliResponse, $request);
+}
+
+sub executeSongInfoRequest {
+	my $client = shift;
+	my $params = shift;
+	my $callback = shift;
+	my $request = shift;
+	my $callbackParams = shift;
+
 	# get our parameters
-  	my $module    = $request->getParam('_module') || $request->getParam('module');
+  	my $module    = $params->{'_module'}||$params->{'module'};
 	my $modules = getInformationModules();
 	if(defined($modules->{$module})) {
 		my $obj = undef;
 		my $context = "";
-		my $trackId = $request->getParam('track');
+		my $trackId = $params->{'track'};
 		if($modules->{$module}->{'context'} eq 'album') {
-			my $albumId = $request->getParam('album');
+			my $albumId = $params->{'album'};
 			if(!defined($albumId)) {
 				my $track = undef;
 				if(defined($trackId)) {
@@ -343,7 +527,7 @@ sub getSongInfo {
 				$context = "album";
 			}
 		}elsif($modules->{$module}->{'context'} eq 'artist') {
-			my $artistId = $request->getParam('artist');
+			my $artistId = $params->{'artist'};
 			if(!defined($artistId)) {
 				my $track = undef;
 				if(defined($trackId)) {
@@ -376,11 +560,12 @@ sub getSongInfo {
 		}
 
 		if(defined($obj)) {
-			my $paramHash = $request->getParamsCopy();
 			no strict 'refs';
 			eval { 
-				$request->setStatusProcessing();
-				&{$modules->{$module}->{'function'}}($client,$callback,\&cliError,{request => $request},$obj,$paramHash); 
+				if($request) {
+					$request->setStatusProcessing();
+				}
+				&{$modules->{$module}->{'function'}}($client,$callback,\&cliError,{request => $request,callbackParams=>$callbackParams},$obj,$params); 
 			};
 			if( $@ ) {
 			    $log->error("Error getting item from $module and $context: $@");
