@@ -202,9 +202,13 @@ sub webResponseText {
 	
 	my @items = ();
 	for my $item (@$result) {
-		push @items, {
+		my $entry = {
 			text => $item->{'text'},
 		};
+		if(defined($item->{'name'})) {
+			$entry->{'name'} = $item->{'name'};
+		}
+		push @items,$entry; 
 		$cnt++;
 	}
 	$webParams->{pluginSongInfoItems} = \@items;
@@ -232,11 +236,15 @@ sub setMode {
 		$log->debug("Getting $type menu $moduleId for $context=".$client->modeParam($context));
 		my $params = {
 			module => $moduleId,
+			type => $context,
 			$context => $client->modeParam($context),
 		};
+		if($client->modeParam("item")) {
+			$params->{'item'} = $client->modeParam("item");
+		}
 		
 		if($module->{'type'} eq 'text') {
-			executeSongInfoRequest($client, $params, \&playerResponseTextArea);
+			executeSongInfoRequest($client, $params, \&playerResponseTextArea,undef,$params);
 		}
 	}
 }
@@ -248,24 +256,61 @@ sub playerResponseTextArea {
 
 	my $request = $params->{'request'};
 	my $cnt = 0;
+	my $callbackParams = $params->{'callbackParams'};
 	
+	my $subMenus=0;
+
 	my @listRef;
-	for my $item (@$result) {
-		push @listRef,$item->{'text'};
-		$cnt++;
+	if(scalar(@$result)>0) {
+		my $firstItem = $result->[0];
+		if(defined($firstItem->{'name'}) && scalar(@$result)>1 && !defined($callbackParams->{'item'})) {
+			for my $item (@$result) {
+				push @listRef,$item->{'name'};
+				$subMenus=1;
+				$cnt++;
+			}
+		}else {
+			for my $item (@$result) {
+				if(!defined($callbackParams->{'item'}) || $callbackParams->{'item'} eq $item->{'name'}) {
+					push @listRef,$item->{'text'};
+					$cnt++;
+				}
+			}
+		}
 	}
 	if(scalar(@listRef)==0) {
 		push @listRef,string('PLUGIN_SONGINFO_NOT_AVAILABLE'); 
 	}
 
-	my %params = (
-		header => '{PLUGIN_SONGINFO}',
-		headerAddCount => 1,
-		listRef => \@listRef,
-		name => \&getDisplayText,
-		modeName => 'SongInfo',
-	);
-	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice',\%params);
+	if($subMenus) {
+		my %params = (
+			header => '{PLUGIN_SONGINFO}',
+			headerAddCount => 1,
+			listRef => \@listRef,
+			name => \&getDisplayText,
+			modeName => 'SongInfoGroup',
+			onRight    => sub {
+				my ($client, $item) = @_;
+				my %params = (				
+					'module' => $callbackParams->{'module'},
+					$callbackParams->{'type'} => $callbackParams->{$callbackParams->{'type'}},
+					item => $item,
+				);
+				Slim::Buttons::Common::pushMode($client, 'Plugins::SongInfo::Plugin',\%params);
+			},
+
+		);
+		Slim::Buttons::Common::pushMode($client, 'INPUT.Choice',\%params);
+	}else {
+		my %params = (
+			header => '{PLUGIN_SONGINFO}',
+			headerAddCount => 1,
+			listRef => \@listRef,
+			name => \&getDisplayText,
+			modeName => 'SongInfo',
+		);
+		Slim::Buttons::Common::pushMode($client, 'INPUT.Choice',\%params);
+	}
 }
 
 sub getDisplayText {
@@ -344,7 +389,6 @@ sub objectInfoHandler {
 	if($web) {
 		$result->{web} = $web;
 	}
-$log->error(Dumper($result));
 	return $result;
 }
 sub getInformationModules {
@@ -425,9 +469,9 @@ sub getSongInfoMenu {
 		
 		my $params = $request->getParamsCopy();
 		if($module->{'type'} eq 'text') {
-			executeSongInfoRequest($client, $params,\&cliResponseTextArea,$request);
+			executeSongInfoRequest($client, $params,\&cliResponseTextArea,$request,$params);
 		}else {
-			executeSongInfoRequest($client, $params,\&cliResponseImages,$request);
+			executeSongInfoRequest($client, $params,\&cliResponseImages,$request,$params);
 		}
 	}else {
 		$request->setStatusDone();
@@ -440,24 +484,51 @@ sub cliResponseTextArea {
 	my $result = shift;
 
 	my $request = $params->{'request'};
+	my $callbackParams = $params->{'callbackParams'};
+
 	my $cnt = 0;
-	
+
 	my $text = '';
-	for my $item (@$result) {
-		if($text ne '') {
-			$text .= "\n";
+	my @items = ();
+	if(scalar(@$result)>0) {
+		my $firstItem = $result->[0];
+		if(defined($firstItem->{'name'}) && scalar(@$result)>1 && !defined($callbackParams->{'item'})) {
+			for my $item (@$result) {
+				my $entry = {
+					text => $item->{'name'},
+					actions => {
+						go => {
+							cmd => ['songinfomenu',"module:".$callbackParams->{'module'},"item:".$item->{'name'}]
+						},
+					},
+					style => 'item',
+				};
+				push @items,$entry;
+			}
+		}else {
+			for my $item (@$result) {
+				if($text ne '') {
+					$text .= "\n";
+				}
+				if(!defined($callbackParams->{'item'}) || $callbackParams->{'item'} eq $item->{'name'}) {
+					$text .= $item->{'text'};
+					$cnt++;
+				}
+			}
 		}
-		$text .= $item->{'text'};
-		$cnt++;
+	}else {
+		$text = string('PLUGIN_SONGINFO_NOT_AVAILABLE');
 	}
-	if($text eq '') {
-		$text = string('PLUGIN_SONGINFO_NOT_AVAILABLE'); 
+	if($text ne '') {
+		$request->addResult('window', {
+			textarea => $text,
+		});
+		$request->addResult('count',0);
+	}else {
+		$request->addResult('item_loop',\@items);
+		$request->addResult('count',scalar(@items));
 	}
-	$request->addResult('window', {
-		textarea => $text,
-	});
 	$request->addResult('offset',0);
-	$request->addResult('count',0);
 	$request->setStatusDone();
 }
 

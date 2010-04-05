@@ -20,6 +20,9 @@
 		[% odd = 1 %]
 		[% FOREACH item = pluginSongInfoItems %]
 			[% WRAPPER contentitem %]
+				[% IF item.name %]
+					<b>[% item.name %]</b><br/>
+				[% END %]
 				[% item.text %]
 			[% END %]
 			[% odd = (not odd) %]
