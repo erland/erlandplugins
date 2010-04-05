@@ -320,12 +320,11 @@ sub objectInfoHandler {
 			};
 		}
 	}elsif($module->{'type'} eq 'image') {
-		return undef;
-#		if($module->{'webmenu'}) {
-#			$web = {
-#				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
-#			};
-#		}
+		if($module->{'webmenu'}) {
+			$web = {
+				url => "plugins/SongInfo/viewinfo.html?module=$moduleId&$context=".$obj->id
+			};
+		}
 	}else {
 		return undef;
 	}
@@ -336,6 +335,8 @@ sub objectInfoHandler {
 	};
 	if($player) {
 		$result->{player} = $player;
+	}else {
+		$result->{hide} = "ip3k";
 	}
 	if($jive) {
 		$result->{jive} = $jive;
@@ -343,6 +344,7 @@ sub objectInfoHandler {
 	if($web) {
 		$result->{web} = $web;
 	}
+$log->error(Dumper($result));
 	return $result;
 }
 sub getInformationModules {
@@ -363,6 +365,9 @@ sub getInformationModules {
 							$items{$key} = $item;
 							$items{$key}->{'id'} = $key;
 							$items{$key}->{'plugin'} = $fullname;
+							$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
+							$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
+							$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
 						}
 					}
 				}
@@ -390,6 +395,9 @@ sub getInformationModules {
 							$items{$key} = $item;
 							$items{$key}->{'id'} = $key;
 							$items{$key}->{'plugin'} = $fullname;
+							$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
+							$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
+							$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
 						}
 					}
 				}
