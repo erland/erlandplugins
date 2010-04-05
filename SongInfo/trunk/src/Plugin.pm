@@ -44,6 +44,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 my $PLUGINVERSION = undef;
+my $externalModules = {};
 
 #$prefs->migrate(1,sub {
 #	my @empty = ();
@@ -391,6 +392,20 @@ sub objectInfoHandler {
 	}
 	return $result;
 }
+
+sub registerInformationModule {
+	my $id = shift;
+	my $data = shift;
+
+	$externalModules->{$id} = $data;
+}
+
+sub unregisterInformationModule {
+	my $id = shift;
+
+	delete $externalModules->{$id};
+}
+
 sub getInformationModules {
 	my %items = ();
 
@@ -408,7 +423,6 @@ sub getInformationModules {
 						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
 							$items{$key} = $item;
 							$items{$key}->{'id'} = $key;
-							$items{$key}->{'plugin'} = $fullname;
 							$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
 							$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
 							$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
@@ -420,34 +434,17 @@ sub getInformationModules {
 		use strict 'refs';
 	}
 
-	my @enabledplugins = Slim::Utils::PluginManager->enabledPlugins();
-	for my $plugin (@enabledplugins) {
-		my $fullname = "$plugin";
-		no strict 'refs';
-		eval "use $fullname";
-		if ($@) {
-			$log->error("SongInfo: Failed to load module $fullname: $@\n");
-		}elsif(UNIVERSAL::can("${fullname}","getSongInfoFunctions")) {
-			my $data = eval { &{$fullname . "::getSongInfoFunctions"}($PLUGINVERSION); };
-			if ($@) {
-				$log->error("SongInfo: Failed to call module $fullname: $@\n");
-			}elsif(defined($data)) {
-				for my $key (keys %$data) {
-					my $item = $data->{$key};
-					if(defined($item->{'name'})) {
-						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
-							$items{$key} = $item;
-							$items{$key}->{'id'} = $key;
-							$items{$key}->{'plugin'} = $fullname;
-							$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
-							$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
-							$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
-						}
-					}
-				}
+	for my $key (keys %$externalModules) {
+		my $item = $externalModules->{$key};
+		if(defined($item->{'name'})) {
+			if(!defined($item->{'minpluginversion'}) || isAllowedVersion($item->{'minpluginversion'})) {
+				$items{$key} = $item;
+				$items{$key}->{'id'} = $key;
+				$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
+				$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
+				$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
 			}
 		}
-		use strict 'refs';
 	}
 	return \%items;
 }
