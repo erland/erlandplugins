@@ -91,15 +91,16 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>c79b22c35fe6af442b0ddb8787d553da3f5e77f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-		<plugin name="SongInfo" version="0.1.2966" minTarget="7.4.0" maxTarget="*">
+		<plugin name="SongInfo" version="0.2.2979" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Info *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Controller, Radio, Touch, SqueezePlay)</desc>
-                        <changes lang="EN">- Initial version
+                        <changes lang="EN">- Show items in context menus
+			- Added plugin api
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-0.1.2966.zip</url>
-                        <sha>e2eedf464b3d8acf72859b5fb340900f63a74a87</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-0.2.2979.zip</url>
+                        <sha>bb1581054a2abca7ed854878692abbfd4f269af5</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 <!--
