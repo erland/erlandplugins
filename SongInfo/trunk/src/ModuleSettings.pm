@@ -88,6 +88,14 @@ sub handler {
 	$params->{'pluginSongInfoModuleDescription'} = $module->{'description'};
 	$params->{'pluginSongInfoModuleDevelopedBy'} = $module->{'developedBy'} if defined($module->{'developedBy'});
 	$params->{'pluginSongInfoModuleDevelopedByLink'} = $module->{'developedByLink'} if defined($module->{'developedByLink'});
+	$params->{'pluginSongInfoModuleWebMenu'} = $module->{'webmenu'};
+	$params->{'pluginSongInfoModulePlayerMenu'} = $module->{'playermenu'};
+	if($module->{'type'} eq 'image') {
+		$params->{'pluginSongInfoModulePlayerMenuAvailable'} = 0;
+	}else {
+		$params->{'pluginSongInfoModulePlayerMenuAvailable'} = 1;
+	}
+	$params->{'pluginSongInfoModuleJiveMenu'} = $module->{'jivemenu'};
 	my @properties = ();
 	my $moduleProperties = $module->{'properties'};
 	for my $property (@$moduleProperties) {
@@ -176,24 +184,22 @@ sub saveHandler {
 			Plugins::SongInfo::Plugin::setSongInfoProperty($property->{'id'},'');
 		}
 	}
-	if($params->{'moduleenabled'}) {
-		$module->{'enabled'} = 1;
-		$prefs->set('module_'.$module->{'id'}.'_enabled',1);
+	if($params->{'webmenu'}) {
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",1)
 	}else {
-		$module->{'enabled'} = 0;
-		$prefs->set('module_'.$module->{'id'}.'_enabled',0);
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",0)
 	}
-	if($params->{'moduleactive'}) {
-		$module->{'active'} = 1;
-		$prefs->set('module_'.$module->{'id'}.'_active',1);
+	if($params->{'playermenu'}) {
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",1)
 	}else {
-		$module->{'active'} = 0;
-		$prefs->set('module_'.$module->{'id'}.'_active',0);
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",0)
 	}
-	if($params->{'moduleorder'}) {
-		$module->{'order'} = $params->{'moduleorder'};
-		$prefs->set('module_'.$module->{'id'}.'_order',$params->{'moduleorder'});
+	if($params->{'jivemenu'}) {
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",1)
+	}else {
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",0)
 	}
+
 	if(scalar(keys %errorItems)>0) {
 		$params->{'pluginSongInfoErrorItems'} = \%errorItems;
 	}

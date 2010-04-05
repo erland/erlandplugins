@@ -73,7 +73,7 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmsimilarartistsimages' => {
-			'name' => 'LastFM Similar Artists',
+			'name' => 'LastFM Similar Artists Images',
 			'description' => "This module gets images of similar artists",
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
