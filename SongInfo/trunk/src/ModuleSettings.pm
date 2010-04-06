@@ -88,6 +88,8 @@ sub handler {
 	$params->{'pluginSongInfoModuleDescription'} = $module->{'description'};
 	$params->{'pluginSongInfoModuleDevelopedBy'} = $module->{'developedBy'} if defined($module->{'developedBy'});
 	$params->{'pluginSongInfoModuleDevelopedByLink'} = $module->{'developedByLink'} if defined($module->{'developedByLink'});
+	$params->{'pluginSongInfoModuleDataProvider'} = $module->{'dataprovidername'} if defined($module->{'dataprovidername'});
+	$params->{'pluginSongInfoModuleDataProviderLink'} = $module->{'dataproviderlink'} if defined($module->{'dataproviderlink'});
 	$params->{'pluginSongInfoModuleWebMenu'} = $module->{'webmenu'};
 	$params->{'pluginSongInfoModulePlayerMenu'} = $module->{'playermenu'};
 	if($module->{'type'} eq 'image') {
