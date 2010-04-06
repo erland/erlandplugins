@@ -5,11 +5,15 @@
 
 	<input type="hidden" name="module" value="[% pluginSongInfoModuleId %]">
 	<table border="0">
-		<tr><td colspan="4"><strong>[% pluginSongInfoModuleName %] [% "SETUP_PLUGIN_SONGINFO_SETTINGS_TITLE" | string %]</strong></td></tr>
+		<tr><td colspan="4"><b>[% pluginSongInfoModuleName %] [% "SETUP_PLUGIN_SONGINFO_SETTINGS_TITLE" | string %]</b></td></tr>
 		<tr><td colspan="4">[% pluginSongInfoModuleDescription %]</td></tr>
 		[% IF pluginSongInfoModuleDevelopedBy %]
 		<tr><td>&nbsp;</td></tr>
 		<tr><td colspan="4"><b>[% "SETUP_PLUGIN_SONGINFO_DEVELOPEDBY" | string %]:</b> [% IF pluginSongInfoModuleDevelopedByLink %]<a href="[% pluginSongInfoModuleDevelopedByLink %]" target="_blank">[% pluginSongInfoModuleDevelopedBy %]</a>[% ELSE %][% pluginSongInfoModuleDevelopedBy %][% END %]</td>
+		[% END %]
+		[% IF pluginSongInfoModuleDataProvider %]
+		<tr><td>&nbsp;</td></tr>
+		<tr><td colspan="4"><b>[% "SETUP_PLUGIN_SONGINFO_DATAPROVIDER" | string %]:</b> [% IF pluginSongInfoModuleDataProviderLink %]<a href="[% pluginSongInfoModuleDataProviderLink %]" target="_blank">[% pluginSongInfoModuleDataProvider %]</a>[% ELSE %][% pluginSongInfoModuleDataProvider %][% END %]</td>
 		[% END %]
 		<tr><td>&nbsp;</td></tr>
 		<tr><td colspan="3">[% "PLUGIN_CUSTOMSCAN_SETTINGS_WEBMENU" | string %]</td><td><input type="checkbox" name="webmenu" id="webmenu" value="1" [% pluginSongInfoModuleWebMenu ? "checked" : "" %]></td></tr>
