@@ -1,0 +1,12 @@
+SONGLYRICS
+	EN	Song Lyrics
+
+PLUGIN_SONGLYRICS
+	EN	Song Lyrics
+
+SETUP_PLUGIN_SONGLYRICS_GROUP
+	EN	Song Lyrics
+
+SETUP_PLUGIN_SONGLYRICS_GROUP_DESC
+	EN	The Song Lyrics plugin gets song lyrics from online sources and provides them through the Song Info plugin. Lyrics data is provided by lyricsfly.com
+
