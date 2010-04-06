@@ -23,7 +23,7 @@
 				[% IF item.name %]
 					<b>[% item.name %]</b><br/>
 				[% END %]
-				[% item.text %]
+				[% item.text |html_line_break%]
 			[% END %]
 			[% odd = (not odd) %]
 	        [% END %]
