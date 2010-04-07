@@ -206,6 +206,10 @@ sub webResponseText {
 		my $entry = {
 			text => $item->{'text'},
 		};
+		if(defined($item->{'providerlink'})) {
+			$entry->{'externallink'} = $item->{'providerlink'};
+			$entry->{'externallinkname'} = defined($item->{'providername'})?$item->{'providername'}:$item->{'providerlink'};
+		}
 		if(defined($item->{'name'})) {
 			$entry->{'name'} = $item->{'name'};
 		}
@@ -509,6 +513,9 @@ sub cliResponseTextArea {
 				}
 				if(!defined($callbackParams->{'item'}) || $callbackParams->{'item'} eq $item->{'name'}) {
 					$text .= $item->{'text'};
+					if(defined($item->{'providername'})) {
+						$text .= "\n\n".$item->{'providername'};
+					}
 					$cnt++;
 				}
 			}
