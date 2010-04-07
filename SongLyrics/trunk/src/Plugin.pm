@@ -61,11 +61,11 @@ sub initPlugin
 	if(UNIVERSAL::can("Plugins::SongInfo::Plugin","registerInformationModule")) {
                 Plugins::SongInfo::Plugin::registerInformationModule('songlyrics',{
                         'name' => 'Song Lyrics',
-                        'description' => "This module gets song lyrics for the specified song",
+                        'description' => "This module gets song lyrics for the specified song, the lyrics are provided by http://lyricsfly.com",
                         'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://lyricsfly.com',
-			'dataprovidername' => 'lyricsfly',
+			'dataprovidername' => 'lyricsfly.com',
                         'function' => \&getSongLyrics,
                         'type' => 'text',
                         'context' => 'track',
@@ -121,9 +121,12 @@ sub getSongLyricsResponse {
 				my $firstLyrics = pop @$lyrics;
 				my $text = $firstLyrics->{'tx'};
 				$text =~ s/\[br\]//mg;
+				$text =~ s/Lyrics delivered by lyricsfly.com//mg;
 				my %item = (
 					'type' => 'text',
 					'text' => $text,
+					'providername' => "Lyrics delivered by lyricsfly.com",
+					'providerlink' => "http://lyricsfly.com/search/correction.php?".$firstLyrics->{'cs'}."&id=".$firstLyrics->{'id'},
 				);
 				push @result,\%item;
 			}
