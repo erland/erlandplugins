@@ -24,6 +24,9 @@
 					<b>[% item.name %]</b><br/>
 				[% END %]
 				[% item.text |html_line_break%]
+				[% IF item.externallink %]
+					<br><br><a href="[% item.externallink %]" target="_blank">[% item.externallinkname %]</a>
+				[% END %]
 			[% END %]
 			[% odd = (not odd) %]
 	        [% END %]
