@@ -45,7 +45,8 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my $PLUGINVERSION = undef;
 
-my $API_KEY="4232b1161401f867b-temporary.API.access";
+#Please don't use this key in other applications, you can apply for one for free at lyricsfly.com
+my $API_KEY="YOZVbVbovftAlDGdSg6-M43wGmtbi4yA37cJ28pCiKpA0Ne_\n37cPPKE1vSpgIFUrn44iDd56NtIyl6Bj8nnVkw";
 
 sub getDisplayName()
 {
@@ -126,7 +127,7 @@ sub getSongLyricsResponse {
 					'type' => 'text',
 					'text' => $text,
 					'providername' => "Lyrics delivered by lyricsfly.com",
-					'providerlink' => "http://lyricsfly.com/search/correction.php?".$firstLyrics->{'cs'}."&id=".$firstLyrics->{'id'},
+					'providerlink' => "http://lyricsfly.com",
 				);
 				push @result,\%item;
 			}
