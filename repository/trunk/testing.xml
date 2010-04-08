@@ -103,15 +103,16 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>c45098b9b9e0c6b3f2440de12343dadf14dc394f</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="SongLyrics" version="0.1.2983" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SongLyrics" version="0.1.2991" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics *Beta*</title>
-                        <desc lang="EN">*** BETA VERSION ***. A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Initial version
+                        <desc lang="EN">*** ALPHA VERSION ***. A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">- Small adjustments in provider links to lyricsfly.com
+			- Added real API key to get complete lyrics
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.1.2983.zip</url>
-                        <sha>735ac8435a0598c51cd833f5d78f4d42499b001f</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.1.2991.zip</url>
+                        <sha>8f3595266125cc5a11844c41202a98aea9947dd6</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 
