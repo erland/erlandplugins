@@ -29,6 +29,8 @@ use Slim::Utils::Misc;
 use Slim::Utils::OSDetect;
 use Slim::Utils::Strings qw(string);
 use XML::Simple;
+use Slim::Utils::Timers;
+use Time::HiRes;
 
 use LWP::UserAgent;
 use JSON::XS;
@@ -47,6 +49,9 @@ my $PLUGINVERSION = undef;
 
 #Please don't use this key in other applications, you can apply for one for free at lyricsfly.com
 my $API_KEY="YOZVbVbovftAlDGdSg6-M43wGmtbi4yA37cJ28pCiKpA0Ne_\n37cPPKE1vSpgIFUrn44iDd56NtIyl6Bj8nnVkw";
+
+my $prevRequest = Time::HiRes::time();
+my $lastRequest = Time::HiRes::time();
 
 sub getDisplayName()
 {
@@ -103,7 +108,10 @@ sub getSongLyrics {
                 callback => $callback, 
                 callbackParams => $callbackParams,
 		params => $params,
+		track => $track,
         });
+	$prevRequest = $lastRequest;
+	$lastRequest = Time::HiRes::time;
 	$log->debug("Making call to: http://api.lyricsfly.com/api/api.php?i=???".$query);
 	$http->get("http://api.lyricsfly.com/api/api.php?i=".$API_KEY.$query);
 }
@@ -117,6 +125,7 @@ sub getSongLyricsResponse {
 	if(defined($content)) {
 		my $xml = eval { XMLin($content, forcearray => ["sg"], keyattr => []) };
 		if($xml->{'status'} eq '200' || $xml->{'status'} eq '300') {
+			$log->debug("Got lyrics: ".Dumper($xml));
 			my $lyrics = $xml->{'sg'};
 			if($lyrics && scalar(@$lyrics)>0) {
 				my $firstLyrics = pop @$lyrics;
@@ -133,6 +142,19 @@ sub getSongLyricsResponse {
 			}
 		}elsif($xml->{'status'} eq '204') {
 			$log->info("Failed to get lyrics, not found");
+		}elsif($xml->{'status'} eq '402') {
+			# Our request is too soon, let's request again in the specified time interval
+			my $nextCall = $prevRequest+($xml->{'delay'}/1000)+0.5;
+			$log->info("Request too soon after ".$prevRequest." at ".Time::HiRes::time().", needs to wait ".$xml->{'delay'}.", requesting again at $nextCall");
+			my @timerParams = ();
+			push @timerParams, $params->{'callback'};
+			push @timerParams, $params->{'errorCallback'};
+			push @timerParams, $params->{'callbackParams'};
+			push @timerParams, $params->{'track'};
+			push @timerParams, $params->{'params'};
+
+			Slim::Utils::Timers::setTimer($params->{'client'}, $nextCall, \&getSongLyrics,@timerParams);
+			return;
 		}else {
 			$log->warn("Failed to get lyrics, status: ".$xml->{'status'});
 		}
