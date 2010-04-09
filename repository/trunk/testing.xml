@@ -103,16 +103,15 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>c45098b9b9e0c6b3f2440de12343dadf14dc394f</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="SongLyrics" version="0.1.2991" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SongLyrics" version="0.1.2993" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics *Beta*</title>
                         <desc lang="EN">*** ALPHA VERSION ***. A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Small adjustments in provider links to lyricsfly.com
-			- Added real API key to get complete lyrics
+                        <changes lang="EN">- Corrected to requests too soon are delayed instead of returning empty result
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.1.2991.zip</url>
-                        <sha>8f3595266125cc5a11844c41202a98aea9947dd6</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.1.2993.zip</url>
+                        <sha>5eeddf56b481824383f828267e9a084e7c0405c4</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 
