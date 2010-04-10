@@ -94,12 +94,15 @@ sub getSongLyrics {
         my $callbackParams = shift;
         my $track = shift;
         my $params = shift;
+	my $trackTitle = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $query = "";
-	if($track->artist()) {
-		$query="&a=".$track->artist()->name."&t=".$track->title();
+	if($artistName) {
+		$query="&a=".$artistName."&t=".$trackTitle;
 	}else {
-		$query="&l=".$track->title();
+		$query="&l=".$trackTitle;
 	}
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getSongLyricsResponse, \&gotErrorViaHTTP, {
