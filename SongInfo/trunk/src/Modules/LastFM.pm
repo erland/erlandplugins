@@ -254,6 +254,7 @@ sub getSimilarArtists {
 	my $callbackParams = shift;
 	my $artist = shift;
 	my $params = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getSimilarArtistsResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -262,8 +263,8 @@ sub getSimilarArtists {
                 callbackParams => $callbackParams,
 		params => $params,
         });
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artist->name())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artist->name())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getSimilarArtistsImages {
@@ -273,6 +274,7 @@ sub getSimilarArtistsImages {
 	my $callbackParams = shift;
 	my $artist = shift;
 	my $params = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getSimilarArtistsResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -282,8 +284,8 @@ sub getSimilarArtistsImages {
 		type => "images",
 		params => $params,
         });
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artist->name())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artist->name())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getSimilarArtistsResponse {
@@ -329,6 +331,9 @@ sub getTrackTags {
 	my $callbackParams = shift;
 	my $track = shift;
 	my $params = shift;
+	my $trackTitle = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $musicbrainz_id = "";
 	if($track->musicbrainz_id) {
@@ -336,8 +341,8 @@ sub getTrackTags {
 	}
 
 	my $artist = "";
-	if($track->artist()) {
-		$artist="&artist=".$track->artist()->name;
+	if($artistName) {
+		$artist="&artist=".$artistName;
 	}
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getTagsResponse, \&gotErrorViaHTTP, {
@@ -347,8 +352,8 @@ sub getTrackTags {
                 callbackParams => $callbackParams,
 		params => $params,
         });
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.gettoptags$artist$musicbrainz_id&track=".escape($track->title)."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.gettoptags$artist$musicbrainz_id&track=".escape($track->title)."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.gettoptags$artist$musicbrainz_id&track=".escape($trackTitle)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.gettoptags$artist$musicbrainz_id&track=".escape($trackTitle)."&api_key=$API_KEY");
 }
 
 
@@ -386,6 +391,7 @@ sub getArtistTags {
 	my $callbackParams = shift;
 	my $artist = shift;
 	my $params = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getTagsResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -394,8 +400,8 @@ sub getArtistTags {
                 callbackParams => $callbackParams,
 		params => $params,
         });
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=".escape($artist->name())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=".escape($artist->name())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getArtistImages {
@@ -405,6 +411,7 @@ sub getArtistImages {
 	my $callbackParams = shift;
 	my $artist = shift;
 	my $params = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getImagesResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -412,10 +419,10 @@ sub getArtistImages {
                 callback => $callback, 
                 callbackParams => $callbackParams,
 		params => $params,
-		default => $artist->name(),
+		default => $artistName,
         });
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artist->name())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artist->name())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getArtistInfoBiography {
@@ -425,6 +432,7 @@ sub getArtistInfoBiography {
 	my $callbackParams = shift;
 	my $artist = shift;
 	my $params = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getArtistInfoResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -435,12 +443,12 @@ sub getArtistInfoBiography {
 		params => $params,
         });
 	my $musicbrainz_id = "";
-	if($artist->musicbrainz_id) {
+	if($artist && $artist->musicbrainz_id) {
 		$musicbrainz_id="&mbid=".$artist->musicbrainz_id;
 	}
 
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artist->name())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artist->name())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getAlbumImage {
@@ -450,6 +458,8 @@ sub getAlbumImage {
 	my $callbackParams = shift;
 	my $album = shift;
 	my $params = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getAlbumInfoResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -461,20 +471,17 @@ sub getAlbumImage {
         });
 
 	my $musicbrainz_id = "";
-	if($album->musicbrainz_id) {
+	if($album && $album->musicbrainz_id) {
 		$musicbrainz_id="&mbid=".$album->musicbrainz_id;
 	}
 
 	my $artist = "";
-	if($album->contributorid()) {
-		my $obj = Slim::Schema->resultset('Contributor')->find($album->contributorid());
-		if($obj) {
-			$artist="&artist=".$obj->name;
-		}
+	if($artistName) {
+		$artist="&artist=".$artistName;
 	}
 	
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($album->title())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($album->title())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($albumTitle)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($albumTitle)."&api_key=$API_KEY");
 }
 
 sub getAlbumInfoDescription {
@@ -484,6 +491,8 @@ sub getAlbumInfoDescription {
 	my $callbackParams = shift;
 	my $album = shift;
 	my $params = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getAlbumInfoResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -495,20 +504,17 @@ sub getAlbumInfoDescription {
         });
 
 	my $musicbrainz_id = "";
-	if($album->musicbrainz_id) {
+	if($album && $album->musicbrainz_id) {
 		$musicbrainz_id="&mbid=".$album->musicbrainz_id;
 	}
 
 	my $artist = "";
-	if($album->contributorid()) {
-		my $obj = Slim::Schema->resultset('Contributor')->find($album->contributorid());
-		if($obj) {
-			$artist="&artist=".escape($obj->name);
-		}
+	if($artistName) {
+		$artist="&artist=".escape($artistName);
 	}
 	
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($album->title())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($album->title())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($albumTitle)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($albumTitle)."&api_key=$API_KEY");
 }
 
 sub getTrackImage {
@@ -518,6 +524,9 @@ sub getTrackImage {
 	my $callbackParams = shift;
 	my $track = shift;
 	my $params = shift;
+	my $trackTitle = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getTrackInfoResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -534,12 +543,12 @@ sub getTrackImage {
 	}
 
 	my $artist = "";
-	if($track->artist) {
-		$artist="&artist=".escape($track->artist->name);
+	if($artistName) {
+		$artist="&artist=".escape($artistName);
 	}
 	
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($track->title())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($track->title())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($trackTitle)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($trackTitle)."&api_key=$API_KEY");
 }
 
 sub getTrackInfoDescription {
@@ -549,6 +558,9 @@ sub getTrackInfoDescription {
 	my $callbackParams = shift;
 	my $track = shift;
 	my $params = shift;
+	my $trackTitle = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getTrackInfoResponse, \&gotErrorViaHTTP, {
                 client => $client, 
@@ -565,12 +577,12 @@ sub getTrackInfoDescription {
 	}
 
 	my $artist = "";
-	if($track->artist) {
-		$artist="&artist=".escape($track->artist->name);
+	if($artistName) {
+		$artist="&artist=".escape($artistName);
 	}
 	
-	$log->error("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($track->title())."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($track->title())."&api_key=$API_KEY");
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($trackTitle)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=track.getinfo$musicbrainz_id$artist&track=".escape($trackTitle)."&api_key=$API_KEY");
 }
 
 sub getArtistInfoResponse {
