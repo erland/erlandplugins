@@ -342,7 +342,7 @@ sub getTrackTags {
 
 	my $artist = "";
 	if($artistName) {
-		$artist="&artist=".$artistName;
+		$artist="&artist=".escape($artistName);
 	}
 
 	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getTagsResponse, \&gotErrorViaHTTP, {
@@ -477,7 +477,7 @@ sub getAlbumImage {
 
 	my $artist = "";
 	if($artistName) {
-		$artist="&artist=".$artistName;
+		$artist="&artist=".escape($artistName);
 	}
 	
 	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=album.getinfo$musicbrainz_id$artist&album=".escape($albumTitle)."&api_key=$API_KEY");
