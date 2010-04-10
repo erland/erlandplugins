@@ -329,11 +329,19 @@ sub objectInfoHandler {
 	my $modules = getInformationModules();
 	my $module = $modules->{$moduleId};
 	$log->debug("Requesting $moduleId sub menu: ".$module->{'name'});
-
 	my $jive = undef;
 	my $context = $module->{'context'};
 	my $player = undef;
 	my $web = undef;
+	if(defined($module->{'supportremote'}) && !$module->{'supportremote'} && ref($obj) eq 'Slim::Schema::RemoteTrack') {
+		return undef;
+	}
+	if(defined($module->{'menufunction'})) {
+		no strict 'refs';
+		my $result = &{$module}->{'menufunction'}($client,$url,$obj,$remoteMeta,$tags);
+		use strict 'refs';
+		return $result;
+	}
 	if($tags->{menuMode}) {
 		if(!$module->{'jivemenu'}) {
 			return undef;
@@ -588,6 +596,10 @@ sub executeSongInfoRequest {
 	my $modules = getInformationModules();
 	if(defined($modules->{$module})) {
 		my $obj = undef;
+		my $objName = undef;
+		my $obj2Name = undef;
+		my $obj3Name = undef;
+
 		my $context = "";
 		my $trackId = $params->{'track'};
 		if($modules->{$module}->{'context'} eq 'album') {
@@ -595,18 +607,40 @@ sub executeSongInfoRequest {
 			if(!defined($albumId)) {
 				my $track = undef;
 				if(defined($trackId)) {
-					$track = Slim::Schema->resultset('Track')->find($trackId);
+					if($trackId<0) {
+						$track = Slim::Schema::RemoteTrack->fetchById($trackId);
+					}else {
+						$track = Slim::Schema->resultset('Track')->find($trackId);
+					}
 				}else {
 					$track = Slim::Player::Playlist::song($client);
 				}
 				if(defined($track)) {
-					$obj = $track->album();
+					if($track->remote) {
+						my $handler = Slim::Player::ProtocolHandlers->handlerForURL( $track->url );
+						if ( $handler && $handler->can('getMetadataFor') ) {
+							# this plugin provides track metadata, i.e. Pandora, Rhapsody
+							my $meta  = $handler->getMetadataFor( $client, $track->url, 'forceCurrent' );                   
+							$objName    = $meta->{album};
+							$obj2Name   = $meta->{artist};
+						}
+					}else {
+						$obj = $track->album();
+						$objName = $obj->title() if defined($obj);
+						if($track->artist()) {
+							$obj2Name = $track->artist()->name;
+						}
+					}
 				}
 			}else {
 				$obj = Slim::Schema->resultset('Album')->find($albumId);
+				if($obj && $obj->artist()) {
+					$obj2Name = $obj->artist()->name;
+				}
+				$objName = $obj->title() if defined($obj);
 			}
-			if(defined($obj)) {
-				$context = "album=".$obj->title;
+			if(defined($objName)) {
+				$context = "album=".$objName;
 			}else {
 				$context = "album";
 			}
@@ -615,18 +649,33 @@ sub executeSongInfoRequest {
 			if(!defined($artistId)) {
 				my $track = undef;
 				if(defined($trackId)) {
-					$track = Slim::Schema->resultset('Track')->find($trackId);
+					if($trackId<0) {
+						$track = Slim::Schema::RemoteTrack->fetchById($trackId);
+					}else {
+						$track = Slim::Schema->resultset('Track')->find($trackId);
+					}
 				}else {
 					$track = Slim::Player::Playlist::song($client);
 				}
 				if(defined($track)) {
-					$obj = $track->artist();
+					if($track->remote) {
+						my $handler = Slim::Player::ProtocolHandlers->handlerForURL( $track->url );
+						if ( $handler && $handler->can('getMetadataFor') ) {
+							# this plugin provides track metadata, i.e. Pandora, Rhapsody
+							my $meta  = $handler->getMetadataFor( $client, $track->url, 'forceCurrent' );                   
+							$objName    = $meta->{artist};
+						}
+					}else {
+						$obj = $track->artist();
+						$objName = $obj->name() if defined($obj);
+					}
 				}
 			}else {
 				$obj = Slim::Schema->resultset('Contributor')->find($artistId);
+				$objName = $obj->name() if defined($obj);
 			}
-			if(defined($obj)) {
-				$context = "artist=".$obj->name;
+			if(defined($objName)) {
+				$context = "artist=".$objName;
 			}else {
 				$context = "artist";
 			}
@@ -634,32 +683,62 @@ sub executeSongInfoRequest {
 			if(!defined($trackId)) {
 				$obj = Slim::Player::Playlist::song($client);
 			}else {
-				$obj = Slim::Schema->resultset('Track')->find($trackId);
+				if($trackId<0) {
+					$obj = Slim::Schema::RemoteTrack->fetchById($trackId);
+				}else {
+					$obj = Slim::Schema->resultset('Track')->find($trackId);
+				}
 			}
 			if(defined($obj)) {
-				$context = "track=".$obj->title;
+				if($obj->remote) {
+					my $handler = Slim::Player::ProtocolHandlers->handlerForURL( $obj->url );
+					if ( $handler && $handler->can('getMetadataFor') ) {
+						# this plugin provides track metadata, i.e. Pandora, Rhapsody
+						my $meta  = $handler->getMetadataFor( $client, $obj->url, 'forceCurrent' );                   
+						$objName    = $meta->{title};
+						$obj2Name   = $meta->{album};
+						$obj3Name   = $meta->{artist};
+					}
+				}else {
+					$objName = $obj->title();
+					if($obj->album()) {
+						$obj2Name = $obj->album()->name;
+					}
+					if($obj->artists()) {
+						$obj3Name = $obj->artists()->[0]->name;
+					}
+				}
+				$context = "track=".$objName;
 			}else {
 				$context = "track";
 			}
 		}
-
-		if(defined($obj)) {
+		if(defined($obj) || defined($objName)) {
 			no strict 'refs';
 			eval { 
 				if($request) {
 					$request->setStatusProcessing();
 				}
-				&{$modules->{$module}->{'function'}}($client,$callback,\&cliError,{request => $request,callbackParams=>$callbackParams},$obj,$params); 
+				&{$modules->{$module}->{'function'}}($client,$callback,\&cliError,{request => $request,callbackParams=>$callbackParams},$obj,$params,$objName,$obj2Name,$obj3Name); 
 			};
 			if( $@ ) {
-			    $log->error("Error getting item from $module and $context: $@");
+				$log->error("Error getting item from $module and $context: $@");
+				if($request) {
+					$request->setStatusBadDispatch();
+				}
 			}
 			use strict 'refs';
 		}else {
 			$log->error("Can't find $context");
+			if($request) {
+				$request->setStatusBadParams();
+			}
 		}
 	}else {
 		$log->error("Can't find module: $module");
+		if($request) {
+			$request->setStatusBadParams();
+		}
 	}
 	$log->debug("Exiting getSongInfo\n");
 }
@@ -712,7 +791,9 @@ sub cliError {
 
 	my $request = $params->{'request'};
 	$log->error("Error!");
-	$request->setStatusDone();
+	if(defined($request)) {
+		$request->setStatusBadDispatch();
+	}
 }
 
 sub setSongInfoProperty {
