@@ -634,8 +634,11 @@ sub executeSongInfoRequest {
 				}
 			}else {
 				$obj = Slim::Schema->resultset('Album')->find($albumId);
-				if($obj && $obj->artist()) {
-					$obj2Name = $obj->artist()->name;
+				if($obj) {
+					my @artists = $obj->artists();
+					if(scalar(@artists)>0) {
+						$obj2Name = $artists[0]->name;
+					}
 				}
 				$objName = $obj->title() if defined($obj);
 			}
