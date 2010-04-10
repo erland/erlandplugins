@@ -704,8 +704,9 @@ sub executeSongInfoRequest {
 					if($obj->album()) {
 						$obj2Name = $obj->album()->name;
 					}
-					if($obj->artists()) {
-						$obj3Name = $obj->artists()->[0]->name;
+					my @artists = $obj->artists();
+					if(scalar(@artists)>0) {
+						$obj3Name = $artists[0]->name;
 					}
 				}
 				$context = "track=".$objName;
