@@ -201,7 +201,7 @@ sub setStyle {
 	for my $style (keys %$styles) {
 		push @stylesArray,$styles->{$style}
 	}
-	Slim::Control::Request::notifyFromArray($client,['customclock','changedstyles',\@stylesArray]);
+	Slim::Control::Request::notifyFromArray(undef,['customclock','changedstyles',\@stylesArray]);
 }
 
 sub renameAndSetStyle {
@@ -220,7 +220,7 @@ sub renameAndSetStyle {
 	for my $style (keys %$styles) {
 		push @stylesArray,$styles->{$style}
 	}
-	Slim::Control::Request::notifyFromArray($client,['customclock','changedstyles',\@stylesArray]);
+	Slim::Control::Request::notifyFromArray(undef,['customclock','changedstyles',\@stylesArray]);
 }
 
 sub getClockStyles {
