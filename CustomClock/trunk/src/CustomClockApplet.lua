@@ -364,7 +364,7 @@ function openSettings(self)
 		self.model = "controller"
 	end
 
-	local window = Window("text_list", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 'settingstitle')
+	self.settingsWindow = Window("text_list", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 'settingstitle')
 
 	local menu = SimpleMenu("menu")
 	for i = 1,5 do
@@ -399,6 +399,23 @@ function openSettings(self)
 			})
 	end
 
+	local luadir = _getLuaDir()
+	if lfs.attributes(luadir.."share/jive/applets/CustomClock/fonts") or lfs.attributes(luadir.."share/jive/applets/CustomClock/images") then
+		menu:addItem(
+			{
+				text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CLEAR_CACHE"), 
+				sound = "WINDOWSHOW",
+				callback = function(event, menuItem)
+					os.execute("rm -rf \""..luadir.."share/jive/applets/CustomClock/fonts\"")
+					os.execute("rm -rf \""..luadir.."share/jive/applets/CustomClock/images\"")
+					self.settingsWindow:hide()
+					self.settingsWindow = nil
+					self:openSettings()
+					return EVENT_CONSUME
+				end
+			})
+	end
+
 --	menu:addItem(
 --		{
 --			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM"), 
@@ -408,9 +425,9 @@ function openSettings(self)
 --				return EVENT_CONSUME
 --			end
 --		})
-	window:addWidget(menu)
-	self:tieAndShowWindow(window)
-	return window
+	self.settingsWindow:addWidget(menu)
+	self:tieAndShowWindow(self.settingsWindow)
+	return self.settingsWindow
 end
 
 function init(self)
@@ -702,6 +719,23 @@ function _getMode(self)
 	end
 end
 
+function _getLuaDir()
+	local luadir = nil
+	if lfs.attributes("/usr/share/jive/applets") ~= nil then
+		luadir = "/usr/"
+	else
+		-- find the main lua directory
+		for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
+			local mode = lfs.attributes(dir .. "share", "mode")
+			if mode == "directory" then
+				luadir = dir
+				break
+			end
+		end
+	end
+	return luadir
+end
+
 function _retrieveFont(self,fonturl,fontfile,fontSize)
 	if fonturl and string.find(fonturl,"^http") then
 		if not _getString(fontfile,nil) then
@@ -709,19 +743,7 @@ function _retrieveFont(self,fonturl,fontfile,fontSize)
 			fontfile = string.gsub(name,"^/","")
 		end
 
-		local luadir = nil
-		if lfs.attributes("/usr/share/jive/applets") ~= nil then
-			luadir = "/usr/"
-		else
-			-- find the main lua directory
-			for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
-				local mode = lfs.attributes(dir .. "share", "mode")
-				if mode == "directory" then
-					luadir = dir
-					break
-				end
-			end
-		end
+		local luadir = _getLuaDir()
 		os.execute("mkdir -p \""..luadir.."share/jive/applets/CustomClock/fonts\"")
 		if lfs.attributes(luadir.."share/jive/applets/CustomClock/fonts/"..fontfile) ~= nil then
 			return self:_loadFont("applets/CustomClock/fonts/"..fontfile,fontSize)
@@ -1504,8 +1526,7 @@ function _reDrawAnalog(self,screen)
 	end
 end
 
-function _retrieveImage(self,url,imageType)
-	local width,height = self:_getUsableWallpaperArea()
+function _retrieveImage(self,url,imageType,dynamic)
 	local imagehost = ""
 	local imageport = tonumber("80")
 	local imagepath = ""
@@ -1529,37 +1550,57 @@ function _retrieveImage(self,url,imageType)
 			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)				
                 end
 		log:info("Getting image for "..imageType.." from "..imagehost.." and "..imagepath)
-		local http = SocketHttp(jnt, imagehost, imageport)
-		local req = RequestHttp(function(chunk, err)
-				if chunk then
-					local image = Surface:loadImageData(chunk, #chunk)
-					if string.find(imageType,"background$") then
-						local w,h = image:getSize()
-
-						local zoom
-						if w>h or self.model == "controller" then
-							log:debug("width based zoom ".. width .. "/" .. w .. "=" .. (width/w))
-							zoom = width/w
-						else
-							log:debug("height based zoom ".. height .. "/" .. h .. "=" .. (height/h))
-							zoom = height/h
+		local luadir = _getLuaDir()
+		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url)) then
+			log:info("Image found in cache")
+			local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url), "rb")
+			local chunk = fh:read("*all")
+			fh:close()
+			self:_retrieveImageData(url,imageType,chunk)
+		else
+			local http = SocketHttp(jnt, imagehost, imageport)
+			local req = RequestHttp(function(chunk, err)
+					if chunk then
+						if _getString(dynamic,"false") == "false" then
+							os.execute("mkdir -p \""..luadir.."share/jive/applets/CustomClock/images\"")
+					                local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url), "w")
+					                fh:write(chunk)
+							fh:close()
 						end
-						image = image:rotozoom(0,zoom,1)
-						self.backgroundImage:setWidgetValue("background",image)
-						self.wallpaperImage:setValue(image)
+						self:_retrieveImageData(url,imageType,chunk)
+					elseif err then
+						log:warn("error loading picture " .. url)
 					end
-					log:debug("Storing downloaded image for "..imageType)
-					self.images[imageType] = image
-					log:debug("image ready")
-				elseif err then
-					log:warn("error loading picture " .. url)
-				end
-			end,
-			'GET', imagepath)
-		http:fetch(req)
+				end,
+				'GET', imagepath)
+			http:fetch(req)
+		end
 	else
 		log:warn("Unable to parse url "..url..", got: "..imagehost..", "..imagepath)
 	end
+end
+
+function _retrieveImageData(self,url,imageType,chunk)
+	local width,height = self:_getUsableWallpaperArea()
+	local image = Surface:loadImageData(chunk, #chunk)
+	if string.find(imageType,"background$") then
+		local w,h = image:getSize()
+
+		local zoom
+		if w>h or self.model == "controller" then
+			log:debug("width based zoom ".. width .. "/" .. w .. "=" .. (width/w))
+			zoom = width/w
+		else
+			log:debug("height based zoom ".. height .. "/" .. h .. "=" .. (height/h))
+			zoom = height/h
+		end
+		image = image:rotozoom(0,zoom,1)
+		self.backgroundImage:setWidgetValue("background",image)
+		self.wallpaperImage:setValue(image)
+	end
+	log:debug("Storing downloaded image for "..imageType)
+	self.images[imageType] = image
+	log:debug("image ready")
 end
 
 function _imageUpdate(self)
@@ -1571,14 +1612,14 @@ function _imageUpdate(self)
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no)
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id)
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -1588,14 +1629,14 @@ function _imageUpdate(self)
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no)
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id)
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -1605,7 +1646,7 @@ function _imageUpdate(self)
 		no = no +1
 	end
 	if _getString(self:getSettings()[self.mode.."background"],nil) then
-		self:_retrieveImage(self:getSettings()[self.mode.."background"],self.mode.."background")
+		self:_retrieveImage(self:getSettings()[self.mode.."background"],self.mode.."background",self:getSettings()[self.mode.."backgrounddynamic"])
 	else
 		self.images[self.mode.."background"] = nil
 	end

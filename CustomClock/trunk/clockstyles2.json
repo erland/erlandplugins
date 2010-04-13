@@ -700,6 +700,7 @@
                                 "name": "Daylight Clock (http://www.die.net/earth)",
                                 "models": ["touch"],
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
+				"backgrounddynamic": "true",
 				"items": [
 					{
 						"itemtype": "timetext",
@@ -733,6 +734,7 @@
                                 "name": "Daylight Clock (http://www.die.net/earth)",
                                 "models": ["radio"],
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
+				"backgrounddynamic": "true",
 				"items": [
 					{
 						"itemtype": "timetext",
@@ -762,6 +764,7 @@
                                 "name": "Moon Clock (http://www.die.net/moon)",
                                 "models": ["controller"],
 				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
 				"items": [
 					{
 						"itemtype": "timetext",
@@ -791,6 +794,7 @@
                                 "name": "Moon Clock (http://www.die.net/moon)",
                                 "models": ["radio"],
 				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
 				"items": [
 					{
 						"itemtype": "timetext",
@@ -820,6 +824,7 @@
                                 "name": "Moon Clock (http://www.die.net/moon)",
                                 "models": ["touch"],
 				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
 				"items": [
 					{
 						"itemtype": "timetext",
