@@ -322,6 +322,13 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/YellowVUMeter/YellowVUMeter-1.0.zip</url>
 			<sha>4fcee953a86f07a06c15f8794639882dbf8de634</sha>
 		</patch>
+		<patch name="dBVolume" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">dB Volume</title>
+			<desc lang="EN">Display volume as dB</desc>
+			<creator>Erland Isaksson</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/dBVolume/dBVolume-1.0.patch</url>
+			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
+		</patch>
 	</patches>
 </extensions>
 
