@@ -100,7 +100,7 @@ sub handler {
 		}
 	}
 
-	my @availableProperties = qw(name models background backgroundtype clockposx clockposy);
+	my @availableProperties = qw(name models background backgroundtype backgrounddynamic clockposx clockposy);
 	foreach my $availableProperty (@availableProperties) {
 		my $found = 0;
 		foreach my $property (@properties) {
@@ -144,6 +144,10 @@ sub handler {
 		}elsif($item->{'id'} =~ /^backgroundtype$/) {
 			$item->{'type'} = 'optionalsinglelist';
 			my @values = qw(black white lightgray gray darkgray);
+			$item->{'values'} = \@values;
+		}elsif($item->{'id'} =~ /^backgrounddynamic$/) {
+			$item->{'type'} = 'singlelist';
+			my @values = qw(false true);
 			$item->{'values'} = \@values;
 		}
 	}
@@ -238,6 +242,10 @@ sub handler {
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
 				my @values = qw(true false);
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /dynamic$/) {
+				$item->{'type'} = 'singlelist';
+				my @values = qw(false true);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^align$/) {
 				$item->{'type'} = 'optionalsinglelist';
@@ -376,13 +384,13 @@ sub getItemTypeParameters {
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype posx posy size align order);
 	}elsif($itemType =~ /^elapsedimage$/) {
-		return qw(itemtype posx posy width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
+		return qw(itemtype posx posy dynamic width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
 	}elsif($itemType =~ /^rotatingimage$/) {
-		return qw(itemtype posx posy speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
+		return qw(itemtype posx posy dynamic speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
 	}elsif($itemType =~ /clockimage$/) {
-		return qw(itemtype posx posy url url.hour url.minute url.second url.alarmhour url.alarmminute);
+		return qw(itemtype posx posy dynamic url url.hour url.minute url.second url.alarmhour url.alarmminute);
 	}elsif($itemType =~ /image$/) {
-		return qw(itemtype posx posy url);
+		return qw(itemtype posx posy dynamic url);
 	}elsif($itemType eq 'alarmicon') {
 		return qw(itemtype posx posy order url url.set url.active url.snooze);
 	}elsif($itemType =~ /^rating.*icon$/) {
@@ -398,7 +406,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'shufflestatusicon') {
 		return qw(itemtype posx posy order url.songs url.albums);
 	}elsif($itemType =~ /icon^/) {
-		return qw(itemtype posx posy order url);
+		return qw(itemtype posx posy order dynamic url);
 	}else {
 		return qw(itemtype);
 	}
