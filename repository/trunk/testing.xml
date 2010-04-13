@@ -48,13 +48,15 @@
 			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
-                <applet name="SettingsRemover" target="jive|fab4|baby" version="0.1.25" minTarget="7.4" maxTarget="*">
+                <applet name="SettingsRemover" target="jive|fab4|baby" version="0.2.30" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Settings Remover *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to reset settings from a individual applet insteaed of doing a complete factory reset</desc>
+			<changes lang="EN">- Added support for cleaning Custom Clock image cache
+			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.1.25.zip</url>
-                        <sha>57993516ce86c82ba63748e65793951d2891887a</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.2.30.zip</url>
+                        <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="FileServer" target="jive|fab4|baby" version="0.1.27" minTarget="7.4" maxTarget="*">
