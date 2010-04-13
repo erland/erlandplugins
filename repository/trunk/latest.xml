@@ -28,15 +28,16 @@
                         <sha>1b1d5762717efbef3bbdc0b26515eedbc83bd9f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.4" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.5.3003" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added support for progressbar (elapsedimage)
+                        <changes lang="EN">- Added support for localized date strings
+			- Added support for caching images
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.4.zip</url>
-                        <sha>1cc1ceade12ac06e07723e48ea5c5eb4102195c5</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.5.3003.zip</url>
+                        <sha>c391cf17257cffe2bf50bf157225fc3acfe37186</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
@@ -307,14 +308,14 @@
                         <sha>5d58baac67ff9b8ff965ed9c0f5a55646140cd9f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
-		<plugin name="CustomClockHelper" version="2.4" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomClockHelper" version="2.5.3004" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Clock Helper</title>
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for progressbar (elapsedimage)</changes>
+			<changes lang="EN">- Added caching images</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.4.zip</url>
-                        <sha>31abe7c2aef122e4cb4a5fe77c494d9fe9b622c8</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.5.3004.zip</url>
+                        <sha>789dbd6964fa9b32e0f1fe03198d464df5fd6275</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
 	</plugins>
