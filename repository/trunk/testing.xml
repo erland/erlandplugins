@@ -29,14 +29,14 @@
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="PatchInstaller" version="0.1.23" minTarget="7.5" maxTarget="*">
+		<applet name="PatchInstaller" version="0.1.28" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Patch Installer *Beta*</title>
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
-			<changes lang="EN">Corrected error in uninstall of zip patches</changes>
+			<changes lang="EN">Corrected so replacement patches are reinstalled correctly</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.23.zip</url>
-			<sha>4341b2fa61a7007f5d41e45b716f8a0270783711</sha>
+			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.28.zip</url>
+			<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
 		<applet name="AlarmSavers" version="0.1.14" minTarget="7.5" maxTarget="*">
@@ -313,6 +313,13 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/NoIR/NoIR-1.0.zip</url>
                         <sha>1ae36f19aa839c6f5aa4a48cf8572255a019e099</sha>
                 </patch>
+		<patch name="YellowVUMeter" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Yellow VU Meter</title>
+			<desc lang="EN">Yellow version of the VU meters</desc>
+			<creator>jstraw</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/YellowVUMeter/YellowVUMeter-1.0.zip</url>
+			<sha>4fcee953a86f07a06c15f8794639882dbf8de634</sha>
+		</patch>
 	</patches>
 </extensions>
 
