@@ -237,7 +237,7 @@ sub handler {
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage);
+				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage analogvumeter digitalvumeter);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
@@ -405,8 +405,12 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy order url.song url.playlist);
 	}elsif($itemType eq 'shufflestatusicon') {
 		return qw(itemtype posx posy order url.songs url.albums);
-	}elsif($itemType =~ /icon^/) {
+	}elsif($itemType =~ /icon$/) {
 		return qw(itemtype posx posy order dynamic url);
+	}elsif($itemType eq 'analogvumeter') {
+		return qw(itemtype posx posy width height order url);
+	}elsif($itemType eq 'digitalvumeter') {
+		return qw(itemtype posx posy width height order url url.tickcap url.tickon url.tickoff);
 	}else {
 		return qw(itemtype);
 	}
