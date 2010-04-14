@@ -47,7 +47,7 @@ local RadioGroup       = require("jive.ui.RadioGroup")
 local RadioButton      = require("jive.ui.RadioButton")
 local Timer            = require("jive.ui.Timer")
 
---local Networking       = require("jive.net.Networking")
+local CustomVUMeter    = require("applets.CustomClock.CustomVUMeter")
 
 local SocketHttp       = require("jive.net.SocketHttp")
 local RequestHttp      = require("jive.net.RequestHttp")
@@ -225,6 +225,18 @@ function openScreensaver(self,mode, transition)
 				}
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
+			elseif string.find(item.itemtype,"digitalvumeter$") then
+				local childItems = {
+					itemno = CustomVUMeter("item"..no,"digital")
+				}
+				self.items[no] = Group("item"..no,childItems)
+				self.window:addWidget(self.items[no])
+			elseif string.find(item.itemtype,"analogvumeter$") then
+				local childItems = {
+					itemno = CustomVUMeter("item"..no,"analog")
+				}
+				self.items[no] = Group("item"..no,childItems)
+				self.window:addWidget(self.items[no])
 			end
 			no = no +1
 		end
@@ -323,6 +335,7 @@ function openScreensaver(self,mode, transition)
 		self.window:addTimer(1000, function() self:_tick() end)
 		self.offset = math.random(15)
 		self.images = {}
+		self.vumeterimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
 			self:_updateCustomTitleFormatInfo(player)
@@ -572,7 +585,7 @@ function defineSettingStyle(self,mode,menuItem)
 								self:defineSettingStyleSink(menuItem.text,mode,chunk.data)
 							end
 						end,
-						'GET', "/svn/CustomClock/trunk/clockstyles2.json")
+						'GET', "/svn/CustomClock/trunk/clockstyles3.json")
 					http:fetch(req)
 				end
 			end
@@ -1128,9 +1141,9 @@ function _tick(self,forcedBackgroundUpdate)
 			local wirelessMode = string.gsub(iconbar.iconWireless:getStyle(),"^button_wireless_","")
 			log:debug("Wireless status is "..tostring(wirelessMode))
 			if self.images[self.mode.."item"..no.."."..wirelessMode] then
-				log:debug("Battery status is "..wirelessMode)
+				log:debug("Wireless status is "..wirelessMode)
 				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..wirelessMode])
-			elseif batteryMode != "NONE" then
+			elseif wirelessMode != "NONE" then
 				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
@@ -1576,7 +1589,15 @@ function _retrieveImage(self,url,imageType,dynamic)
 			http:fetch(req)
 		end
 	else
-		log:warn("Unable to parse url "..url..", got: "..imagehost..", "..imagepath)
+		local luadir = _getLuaDir()
+		if lfs.attributes(luadir.."share/jive/"..url) ~= nil then
+			local fh = io.open(luadir.."share/jive/"..url, "rb")
+			local chunk = fh:read("*all")
+			fh:close()
+			self:_retrieveImageData(url,imageType,chunk)
+		else 
+			log:warn("Unable to parse url "..url..", got: "..imagehost..", "..imagepath)
+		end
 	end
 end
 
@@ -1600,6 +1621,14 @@ function _retrieveImageData(self,url,imageType,chunk)
 	end
 	log:debug("Storing downloaded image for "..imageType)
 	self.images[imageType] = image
+	if self.vumeterimages[imageType] ~= nil then
+		local id = "background"
+		if string.find(imageType,"%.") then
+			id = string.gsub(imageType,"^.*%.","")
+		end
+		log:info("Setting visualizer image: "..id)
+		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
+	end
 	log:debug("image ready")
 end
 
@@ -1634,6 +1663,25 @@ function _imageUpdate(self)
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
+					local id = string.gsub(attr,"^url%.","")
+					if _getString(value,nil) then
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
+					else
+						self.images[self.mode.."item"..no.."."..id] = nil
+					end
+				end
+			end
+		elseif string.find(item.itemtype,"vumeter$") then
+			for attr,value in pairs(item) do
+				if attr == "url" then
+					self.vumeterimages[self.mode.."item"..no] = no
+					if _getString(item.url,nil) then
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
+					else
+						self.images[self.mode.."item"..no] = nil
+					end
+				elseif string.find(attr,"^url%.") then
+					self.vumeterimages[self.mode.."item"..no.."."..id] = no
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
 						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
@@ -1777,6 +1825,22 @@ function _getClockSkin(self,skin)
 			}
 			s.window["item"..no]["item"..no] = {
 					align = 'center',
+				}
+		elseif string.find(item.itemtype,"vumeter$") then
+			s.window["item"..no] = {
+				position = LAYOUT_NONE,
+				x = _getNumber(item.posx,0),
+				y = _getNumber(item.posy,0),
+				w = _getNumber(item.width,width),
+				h = _getNumber(item.height,height),
+				zOrder = _getNumber(item.order,4),
+			}
+			s.window["item"..no]["item"..no] = {
+					align = 'center',
+					x = _getNumber(item.posx,0),
+					y = _getNumber(item.posy,0),
+					w = _getNumber(item.width,width),
+					h = _getNumber(item.height,height),
 				}
 		end
 		no = no +1
