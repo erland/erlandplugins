@@ -1225,6 +1225,22 @@ function _tick(self,forcedBackgroundUpdate)
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
+		elseif item.itemtype == "timeicon" then
+			if _getString(item.text,nil) ~= nil then
+				local number = _getNumber(os.date(item.text),0)
+				if self.images[self.mode.."item"..no] then
+					local w,h = self.images[self.mode.."item"..no]:getSize()
+					if self.items[no]:getWidget("itemno"):getImage() == nil then
+						self.items[no]:setWidgetValue("itemno",Surface:newRGB(item.width,h))
+					end
+					if self.images[self.mode.."item"..no..".background"] ~= nil then
+						self.images[self.mode.."item"..no..".background"]:blit(self.items[no]:getWidget("itemno"):getImage(),0,0)
+					end
+					if number*item.width<w then
+						self.images[self.mode.."item"..no]:blitClip(number*item.width,0,item.width,h,self.items[no]:getWidget("itemno"):getImage(),0,0)
+					end
+				end
+			end
 		elseif item.itemtype == "ratingicon" then
 			self:_updateRatingIcon(self.items[no],"item"..no,nil)
 		elseif item.itemtype == "ratingplayingicon" then
@@ -1826,6 +1842,12 @@ function _getClockSkin(self,skin)
 			s.window["item"..no]["item"..no] = {
 					align = 'center',
 				}
+			if _getNumber(item.framewidth,nil) ~= nil then
+				s.window["item"..no]["item"..no].frameWidth = _getNumber(item.framewidth,nil)
+			end
+			if _getNumber(item.framerate,nil) ~= nil then
+				s.window["item"..no]["item"..no].frameRate = _getNumber(item.framerate,nil)
+			end
 		elseif string.find(item.itemtype,"vumeter$") then
 			s.window["item"..no] = {
 				position = LAYOUT_NONE,
