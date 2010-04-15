@@ -33,6 +33,7 @@
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
                         <changes lang="EN">- Added support for timeicon item type
 			- Added support for animated icons through framerate/framewidth attributes
+			- Added support for analogvumeter and digitalvumeter item types
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
@@ -313,6 +314,7 @@
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
 			<changes lang="EN">- Added support for timeicon item type
 			- Added support for framerate and framewidth attributes on icon item types
+			- Added support for analogvumeter and digitalvumeter item types
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
