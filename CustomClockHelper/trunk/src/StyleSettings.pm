@@ -237,7 +237,7 @@ sub handler {
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(text timetext tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage analogvumeter digitalvumeter);
+				my @values = qw(text timetext timeicon tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage analogvumeter digitalvumeter);
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
@@ -391,22 +391,24 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy dynamic url url.hour url.minute url.second url.alarmhour url.alarmminute);
 	}elsif($itemType =~ /image$/) {
 		return qw(itemtype posx posy dynamic url);
+	}elsif($itemType eq 'timeicon') {
+		return qw(itemtype posx posy width order url url.background text);
 	}elsif($itemType eq 'alarmicon') {
-		return qw(itemtype posx posy order url url.set url.active url.snooze);
+		return qw(itemtype posx posy order framewidth framerate url url.set url.active url.snooze);
 	}elsif($itemType =~ /^rating.*icon$/) {
-		return qw(itemtype posx posy order url.0 url.1 url.2 url.3 url.4 url.5);
+		return qw(itemtype posx posy order framewidth framerate url.0 url.1 url.2 url.3 url.4 url.5);
 	}elsif($itemType eq 'batteryicon') {
-		return qw(itemtype posx posy order url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
+		return qw(itemtype posx posy order framewidth framerate url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
 	}elsif($itemType eq 'wirelessicon') {
-		return qw(itemtype posx posy order url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
+		return qw(itemtype posx posy order framewidth framerate url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
 	}elsif($itemType eq 'playstatusicon') {
-		return qw(itemtype posx posy order url.play url.stop url.pause);
+		return qw(itemtype posx posy order framewidth framerate url.play url.stop url.pause);
 	}elsif($itemType eq 'repeatstatusicon') {
-		return qw(itemtype posx posy order url.song url.playlist);
+		return qw(itemtype posx posy order framewidth framerate url.song url.playlist);
 	}elsif($itemType eq 'shufflestatusicon') {
-		return qw(itemtype posx posy order url.songs url.albums);
+		return qw(itemtype posx posy order framewidth framerate url.songs url.albums);
 	}elsif($itemType =~ /icon$/) {
-		return qw(itemtype posx posy order dynamic url);
+		return qw(itemtype posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
 		return qw(itemtype posx posy width height order url);
 	}elsif($itemType eq 'digitalvumeter') {
