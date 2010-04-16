@@ -18,11 +18,15 @@
 	<table width="100%" style="margin-top:0;margin-bottom:20px;border-spacing:0px;">
 		<tr><td>[% "PLUGIN_FILESERVERCLIENT_SELECT_DEVICE" | string %]</td><td>
 			<select name="server" onchange="location.href='[% webroot %]plugins/FileServerClient/index.htm?server='+options[selectedIndex].value">
+				<option name="noserver" id="noserver" value="" [% IF !pluginFileServerCurrentServer %]selected[% END %]></option>
 				[%- FOREACH server IN pluginFileServerServers %]
 					<option name="[% server.id %]" id="[% server.id %]" value="[% server.id %]" [% IF server.id == pluginFileServerCurrentServer %]selected[% END %]>[% server.name | html %]</option>
 				[%- END %]
 			</select>
 		</td></tr>
+		[% IF pluginFileServerWarning %]
+		<tr><td colspan="2"><b>[% pluginFileServerWarning %]</b></td></tr>
+		[% END %]
 		<tr><td colspan="2"><hr></hr></td></tr>
 		[% odd = 1 %]
 		[% FOREACH item IN pluginFileServerClientItems %]
