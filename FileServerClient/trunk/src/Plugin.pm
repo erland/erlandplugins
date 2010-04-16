@@ -57,7 +57,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['fileserver.get'],[0,1,0,undef]);
 	Slim::Control::Request::addDispatch(['fileserver','dirresult','_handle','_dirs'],[0,1,0,\&getDirResponse]);
 	Slim::Control::Request::addDispatch(['fileserver','getresult','_handle','_file','_data'],[0,1,0,\&getFileResponse]);
-	Slim::Control::Request::addDispatch(['fileserver','register','_id','_model'],[0,1,0,\&registerCallback]);
+	Slim::Control::Request::addDispatch(['fileserver','register','_id','_model','_secret'],[0,1,0,\&registerCallback]);
 
 	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
 	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
@@ -70,8 +70,8 @@ sub getFunctions {
 sub webPages {
 
 	my %pages = (
-		"FileServerClient/index\.(?:htm|xml)"     => \&handleWebList,
-		"FileServerClient/viewfile\.binfile"     => \&handleWebFile,
+		"plugins\/FileServerClient\/index\.(?:htm|xml).*"     => \&handleWebList,
+		"plugins\/FileServerClient\/viewfile\.binfile.*"     => \&handleWebFile,
 	);
 
 	for my $page (keys %pages) {
@@ -80,14 +80,28 @@ sub webPages {
 		}else {
 			Slim::Web::HTTP::addPageFunction($page, $pages{$page});
 		}
+		Slim::Web::HTTP::CSRF->protectURI($page);
 	}
 	Slim::Web::Pages->addPageLinks("plugins", { 'PLUGIN_FILESERVERCLIENT' => 'plugins/FileServerClient/index.html' });
+}
+
+sub getNewHandle {
+	my $handle = $counter++;
+	if($counter>1000) {
+		$counter = 0;
+	}
+	return $handle;
 }
 
 sub handleWebList {
 	my ($client, $params, $callback, $httpClient, $response) = @_;
 
-	my $handle = $counter++;
+	if (!$serverPrefs->get('csrfProtectionLevel') && !$serverPrefs->get('authorize')) {
+		$params->{'pluginFileServerWarning'} = $client->string("PLUGIN_FILESERVERCLIENT_SECURITY_WARNING");
+	}
+
+	my $handle = getNewHandle();
+	
 	my $dir = "/";
 	if(defined($params->{'dir'}) && $params->{'dir'} ne "") {
 		$dir = $params->{'dir'};
@@ -104,13 +118,16 @@ sub handleWebList {
 	}
 
 	if((!defined($server) || $server eq "") && scalar(@serverList)>0) {
-		$server = @serverList->[0]->{'id'}
+		if(!defined($params->{'pluginFileServerWarning'})) {
+			$server = @serverList->[0]->{'id'}
+		}
 	}
 	$params->{'pluginFileServerServers'} = \@serverList;
 	$params->{'pluginFileServerClientVersion'} = $PLUGINVERSION;
 
 	if(defined($server) && $server ne "") {
-		Slim::Control::Request::notifyFromArray(undef,["fileserver.dir",$server,$handle,$dir]);
+		my $secret = $servers->{$server}->{'secret'};
+		Slim::Control::Request::notifyFromArray(undef,["fileserver.dir",$server,$secret,$handle,$dir]);
 		$params->{'pluginFileServerCurrentServer'} = $server;
 		$params->{'pluginFileServerCurrentDirectory'} = $dir;
 		$responses->{$handle} = {
@@ -129,12 +146,12 @@ sub handleWebList {
 sub handleWebFile {
 	my ($client, $params, $callback, $httpClient, $response) = @_;
 
-	my $handle = $counter++;
+	my $handle = getNewHandle();
 	my $file = $params->{'file'};
 
 	my $server = $params->{'server'};
-
-	Slim::Control::Request::notifyFromArray(undef,["fileserver.get",$server,$handle,$file]);
+	my $secret = $servers->{$server}->{'secret'};
+	Slim::Control::Request::notifyFromArray(undef,["fileserver.get",$server,$secret,$handle,$file]);
 	$params->{'pluginFileServerClientVersion'} = $PLUGINVERSION;
 
 	$responses->{$handle} = {
@@ -167,11 +184,13 @@ sub registerCallback {
 		$servers->{$id} = {
 			name => $client->name,
 			model => $model,
+			secret => $request->getParam("_secret") || "",
 		}
 	}else {
 		$servers->{$id} = {
 			name => $id,
 			model => $model,
+			secret => $request->getParam("_secret") || "",
 		}
 	}
 	$log->info("Registering: ".Dumper($servers->{$id}));
