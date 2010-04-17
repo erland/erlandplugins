@@ -5,6 +5,7 @@
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
 	<applets>
+<!--
                 <applet name="AlbumFlow" version="0.3.2971" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
@@ -17,6 +18,8 @@
                         <sha>7c8d5b2e8f97112cc3c4407dad82159d1bb60432</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+-->
+<!--
                 <applet name="ScreenSwitcher" version="0.1.2867" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Switch continuously between different screen savers.
@@ -29,6 +32,8 @@
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+-->
+<!--
 		<applet name="PatchInstaller" version="0.1.28" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Patch Installer *Beta*</title>
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
@@ -39,6 +44,7 @@
 			<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
+-->
 		<applet name="AlarmSavers" version="0.1.14" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Alarm Savers *Beta*</title>
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to configure any screen saver as alarm popup window instead of the standard snooze window</desc>
@@ -48,6 +54,7 @@
 			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
+<!--
                 <applet name="SettingsRemover" target="jive|fab4|baby" version="0.2.30" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Settings Remover *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to reset settings from a individual applet insteaed of doing a complete factory reset</desc>
@@ -59,6 +66,7 @@
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+-->
                 <applet name="SqueezePlayAdmin" target="jive|fab4|baby" version="0.1.39" minTarget="7.4" maxTarget="*">
                         <title lang="EN">SqueezePlay Admin *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to remotely access preferences and files on a Radio, Touch or Controller</desc>
@@ -93,7 +101,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>c79b22c35fe6af442b0ddb8787d553da3f5e77f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-		<plugin name="SongInfo" version="0.3.2999" minTarget="7.4.0" maxTarget="*">
+<!--
+				<plugin name="SongInfo" version="0.3.2999" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Info *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Added support for remote streams, for example Spotify through DSBridge
@@ -104,6 +113,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>f23e60eaf9aee238ab3c06ba3aebae7cd999673f</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
+-->
+<!--
                 <plugin name="SongLyrics" version="0.2.2997" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
@@ -116,7 +127,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>65ea498b79d13cff321ca8f275ab466abe5ef588</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-
+-->
 <!--
 		<plugin name="TrackStat" version="2.9pre5" minTarget="7.4.0" maxTarget="*">
 			<title lang="EN">TrackStat *Beta*</title>
@@ -264,6 +275,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 
 	</plugins>
 	<patches>
+<!--
 		<patch name="60a51265-1938-4fd7-b703-12d3725870da" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Custom alarm window</title>
 			<desc lang="EN">Makes it possible open a third party applet when an alarm is triggered instead of the standard alarm snooze popup</desc>
@@ -273,6 +285,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
 			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
 		</patch>
+-->
+<!--
 		<patch name="ControllerGreenHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Green highlight</title>
 			<desc lang="EN">Makes the highlight of selected menu items green</desc>
@@ -280,6 +294,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerGreenHighlight/ControllerGreenHighlight-1.0.zip</url>
 			<sha>b8692cda2029a919a3d1bc80c87227d05ec115ac</sha>
 		</patch>
+-->
+<!--
 		<patch name="ControllerYellowHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Yellow highlight</title>
 			<desc lang="EN">Makes the highlight of selected menu items yellow</desc>
@@ -287,6 +303,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerYellowHighlight/ControllerYellowHighlight-1.0.zip</url>
 			<sha>6b9718cdc63b4837a40872934ab876c4a437b994</sha>
 		</patch>
+-->
+<!--
 		<patch name="ControllerOrangeHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Orange highlight</title>
 			<desc lang="EN">Makes the highlight of selected menu items orange</desc>
@@ -294,6 +312,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerOrangeHighlight/ControllerOrangeHighlight-1.0.zip</url>
 			<sha>c309387d4589ce28add88d3c1165d052d49e7402</sha>
 		</patch>
+-->
+<!--
 		<patch name="ControllerMagentaHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Magenta highlight</title>
 			<desc lang="EN">Makes the highlight of selected menu items Magenta</desc>
@@ -301,6 +321,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerMagentaHighlight/ControllerMagentaHighlight-1.0.zip</url>
 			<sha>8a079df2d38b2066ea62e3fc081bbd922f158f55</sha>
 		</patch>
+-->
+<!--
 		<patch name="RadioBiggerFont" target="baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Bigger font</title>
 			<desc lang="EN">Makes the font larger on some user interface items</desc>
@@ -308,6 +330,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/RadioBiggerFont/bigger-text-1.0.patch</url>
 			<sha>bf59a44819e54647eb0cd8d8dfcea16a409f7c81</sha>
 		</patch>
+-->
+<!--
                 <patch name="NoIR" target="baby|fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
                         <title lang="EN">Disable IR remote</title>
                         <desc lang="EN">Disables all the standard Squeezebox IR codes</desc>
@@ -315,13 +339,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/NoIR/NoIR-1.0.zip</url>
                         <sha>1ae36f19aa839c6f5aa4a48cf8572255a019e099</sha>
                 </patch>
-		<patch name="YellowVUMeter" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
-			<title lang="EN">Yellow VU Meter</title>
-			<desc lang="EN">Yellow version of the VU meters</desc>
-			<creator>jstraw</creator>
-			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/YellowVUMeter/YellowVUMeter-1.0.zip</url>
-			<sha>4fcee953a86f07a06c15f8794639882dbf8de634</sha>
-		</patch>
+-->
+<!--
 		<patch name="dBVolume" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">dB Volume</title>
 			<desc lang="EN">Display volume as dB</desc>
@@ -329,6 +348,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/dBVolume/dBVolume-1.0.patch</url>
 			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
 		</patch>
+-->
 	</patches>
 </extensions>
 
