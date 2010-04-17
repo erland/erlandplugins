@@ -59,13 +59,13 @@
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="FileServer" target="jive|fab4|baby" version="0.1.27" minTarget="7.4" maxTarget="*">
-                        <title lang="EN">File Server *Beta*</title>
-                        <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to view files and browse the file system of a Radio, Touch or Controller</desc>
+                <applet name="SqueezePlayAdmin" target="jive|fab4|baby" version="0.1.39" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">SqueezePlay Admin *Beta*</title>
+                        <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to remotely access preferences and files on a Radio, Touch or Controller</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-fileserver&amp;filename=FileServer-0.1.27.zip</url>
-                        <sha>822f9b1f837eafaed4264d7c8602829b83d39e5f</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdmin-0.1.39.zip</url>
+                        <sha>bea4a8dfe3d01b0f4b1375621e3b0da88313a400</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
 	</applets>
@@ -250,16 +250,16 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
 -->
-                <plugin name="FileServerClient" version="0.1.2958" minTarget="7.4.0" maxTarget="*">
-                        <title lang="EN">File Server Client *Beta*</title>
-                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to view files and browse the file system of a Touch, Radio or Controller. The File Server applet has to be installed on the device you like to browse/view files from. (Controller, Radio, Touch)</desc>
+                <plugin name="SqueezePlayAdminClient" version="0.1.3018" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">SqueezePlay Admin Client *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to remotely access files and preferences on a Touch, Radio or Controller. The SqueezePlay Admin applet has to be installed on the device you like to browse/view files and preferences on. (Controller, Radio, Touch)</desc>
                         <changes lang="EN">- Initial version
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-fileserverclient&amp;filename=FileServerClient-0.1.2958.zip</url>
-                        <sha>fc112eb8b12e3b46e774a5a5ce2c6de53de15721</sha>
-                        <link>http://wiki.slimdevices.com/index.php/File_Server_Client_plugin</link>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdminClient-0.1.3018.zip</url>
+                        <sha>49f7903c44247dc5b221affd4c8e9259fcd5844d</sha>
+                        <link>http://wiki.slimdevices.com/index.php/SqueezePlay_Admin_plugin</link>
                 </plugin>
 
 	</plugins>
