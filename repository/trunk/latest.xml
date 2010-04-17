@@ -5,6 +5,18 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
+                <applet name="AlbumFlow" version="1.0.2971" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Album Flow</title>
+                        <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
+			</desc>
+                        <changes lang="EN">No changes since latest beta
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.0.2971.zip</url>
+                        <sha>7c8d5b2e8f97112cc3c4407dad82159d1bb60432</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
                 <applet name="InformationScreen" version="1.0" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Information Screen</title>
                         <desc lang="EN">Configurable screen saver that makes it possible to switch between different kind of information. Please note that you will also have to install the Information Screen plugin into your Squeezebox Server before this applet works</desc>
@@ -39,6 +51,37 @@
                         <email>erland_i@hotmail.com</email>
                         <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.6.3012.zip</url>
                         <sha>04323b8f4db73f84203a7bfebcc789f58360c024</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
+				<applet name="PatchInstaller" version="1.0.28" minTarget="7.5" maxTarget="*">
+					<title lang="EN">Patch Installer</title>
+					<desc lang="EN">Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
+					<changes lang="EN">No changes since latest beta</changes>
+					<creator>Erland Isaksson</creator>
+					<email>erland_i@hotmail.com</email>
+					<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.0.28.zip</url>
+					<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
+					<link>http://erland.isaksson.info</link>
+				</applet>
+                <applet name="ScreenSwitcher" version="1.0.2867" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Screen Switcher</title>
+                        <desc lang="EN">Switch continuously between different screen savers.
+                        </desc>
+                        <changes lang="EN">No changes since latest beta</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.0.2867.zip</url>
+                        <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
+                <applet name="SettingsRemover" target="jive|fab4|baby" version="1.0.30" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Settings Remover</title>
+                        <desc lang="EN">Make it possible to reset settings from a individual applet insteaed of doing a complete factory reset</desc>
+						<changes lang="EN">No changes since latest beta</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-1.0.30.zip</url>
+                        <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
@@ -322,6 +365,88 @@
                         <sha>2fac4ab53c51dbd585c2fd3a546f25f082b4e2b3</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
+				<plugin name="SongInfo" version="1.0.2999" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Song Info</title>
+                        <desc lang="EN">A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">No changes since latest beta
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.0.2999.zip</url>
+                        <sha>f23e60eaf9aee238ab3c06ba3aebae7cd999673f</sha>
+                        <link>http://erland.isaksson.info</link>
+                </plugin>
+                <plugin name="SongLyrics" version="1.0.2997" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">Song Lyrics</title>
+                        <desc lang="EN">A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">No changes since latest beta
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.0.2997.zip</url>
+                        <sha>65ea498b79d13cff321ca8f275ab466abe5ef588</sha>
+                        <link>http://erland.isaksson.info</link>
+                </plugin>
 	</plugins>
+	<patches>
+		<patch name="60a51265-1938-4fd7-b703-12d3725870da" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Custom alarm window</title>
+			<desc lang="EN">Makes it possible open a third party applet when an alarm is triggered instead of the standard alarm snooze popup, this patch doesn't add any user visible features it just adds an API which other plugins can use</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland_i@hotmail.com</email>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/CustomAlarmWindow/CustomAlarmWindow-1.0.patch</url>
+			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
+			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
+		</patch>
+		<patch name="ControllerGreenHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Green highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items green</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerGreenHighlight/ControllerGreenHighlight-1.0.zip</url>
+			<sha>b8692cda2029a919a3d1bc80c87227d05ec115ac</sha>
+		</patch>
+		<patch name="ControllerYellowHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Yellow highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items yellow</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerYellowHighlight/ControllerYellowHighlight-1.0.zip</url>
+			<sha>6b9718cdc63b4837a40872934ab876c4a437b994</sha>
+		</patch>
+		<patch name="ControllerOrangeHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Orange highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items orange</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerOrangeHighlight/ControllerOrangeHighlight-1.0.zip</url>
+			<sha>c309387d4589ce28add88d3c1165d052d49e7402</sha>
+		</patch>
+		<patch name="ControllerMagentaHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Magenta highlight</title>
+			<desc lang="EN">Makes the highlight of selected menu items Magenta</desc>
+			<creator>iisfaq</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/ControllerMagentaHighlight/ControllerMagentaHighlight-1.0.zip</url>
+			<sha>8a079df2d38b2066ea62e3fc081bbd922f158f55</sha>
+		</patch>
+		<patch name="RadioBiggerFont" target="baby" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Bigger font</title>
+			<desc lang="EN">Makes the font larger on some user interface items</desc>
+			<creator>Aslak3</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/RadioBiggerFont/bigger-text-1.0.patch</url>
+			<sha>bf59a44819e54647eb0cd8d8dfcea16a409f7c81</sha>
+		</patch>
+		<patch name="NoIR" target="baby|fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Disable IR remote</title>
+			<desc lang="EN">Disables all the standard Squeezebox IR codes</desc>
+			<creator>Erland Isaksson</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/NoIR/NoIR-1.0.zip</url>
+			<sha>1ae36f19aa839c6f5aa4a48cf8572255a019e099</sha>
+		</patch>
+		<patch name="dBVolume" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">dB Volume</title>
+			<desc lang="EN">Display volume as dB</desc>
+			<creator>Erland Isaksson</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/dBVolume/dBVolume-1.0.patch</url>
+			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
+		</patch>
+	</patches>
 </extensions>
 
