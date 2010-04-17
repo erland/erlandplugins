@@ -265,6 +265,8 @@ sub handleResponse {
 				if(!defined($data->{'count'})) {
 					$responses->{$handle}->{'request'}->addResult('count',$cnt);
 				}
+			}else {
+				$responses->{$handle}->{'request'}->addResult($key,$data->{$key});
 			}
 		}
 		$responses->{$handle}->{'request'}->setStatusDone();
