@@ -1,0 +1,17 @@
+PLUGIN_SQUEEZEPLAYADMIN
+	EN	SqueezePlay Admin
+
+SETUP_PLUGIN_SQUEEZEPLAYADMIN_GROUP
+	EN	SqueezePlay Admin
+
+SETUP_PLUGIN_SQUEEZEPLAYADMIN_GROUP_DESC
+	EN	SqueezePlay Admin is a plugin which makes it possible to browse the file system on a Radio, Touch, Controller through the SqueezePlay Admin applet
+
+PLUGIN_SQUEEZEPLAYADMIN_NO_FILES
+	EN	No files
+
+PLUGIN_SQUEEZEPLAYADMIN_SELECT_DEVICE
+	EN	Select device
+
+PLUGIN_SQUEEZEPLAYADMIN_SECURITY_WARNING
+	EN	Your server is not secure, to be safe you should either set CSRF Protection Level or enable Password Protection

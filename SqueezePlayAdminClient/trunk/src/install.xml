@@ -1,0 +1,18 @@
+<?xml version='1.0' standalone='yes'?>
+<extension>
+  <name>PLUGIN_SQUEEZEPLAYADMIN</name>
+  <creator>Erland Isaksson</creator>
+  <defaultState>enabled</defaultState>
+  <description>SETUP_PLUGIN_SQUEEZEPLAYADMIN_GROUP_DESC</description>
+  <email>erland_i@hotmail.com</email>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
+  <id>B1D9130D-C93A-49EA-A35E-4A4DE575ADE0</id>
+  <module>Plugins::SqueezePlayAdminClient::Plugin</module>
+  <targetApplication>
+    <id>SqueezeCenter</id>
+    <maxVersion>7+</maxVersion>
+    <minVersion>7.4.0</minVersion>
+  </targetApplication>
+  <type>2</type>
+  <version>0.1.2958</version>
+</extension>
