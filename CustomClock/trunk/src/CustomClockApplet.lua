@@ -336,6 +336,7 @@ function openScreensaver(self,mode, transition)
 		self.offset = math.random(15)
 		self.images = {}
 		self.vumeterimages = {}
+		self.galleryimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
 			self:_updateCustomTitleFormatInfo(player)
@@ -1040,6 +1041,41 @@ function _getCoverSize(self,size)
 	end
 end
 
+function _updateGalleryImage(self,widget,id,width,height,favorite)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	if server then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					local cmd = {'gallery','random'}
+					if _getNumber(favorite,nil) then
+						cmd = {'gallery','random',_getNumber(favorite,nil)}
+					end
+					server:userRequest(function(chunk,err)
+							if err then
+								log:warn(err)
+							else
+								local maxwidth,maxheight = self:_getUsableWallpaperArea()
+								local url = string.gsub(chunk.data.image,"{resizeParams}","_".._getNumber(width,maxwidth).."x".._getNumber(height,maxheight).."_p")
+								local ip,port = server:getIpPort()
+								url = "http://"..ip..":"..port.."/"..url
+								self.galleryimages[self.mode.."item"..id] = id
+								self:_retrieveImage(url,self.mode.."item"..id,true)
+							end
+						end,
+						nil,
+						cmd
+					)
+				end
+			end,
+			nil,
+			{'can','gallery','random','?'}
+		)
+	end
+end
+
 function _updateAlbumCover(self,widget,id,size,mode,index)
 	local player = appletManager:callService("getCurrentPlayer")
 	if player then
@@ -1117,6 +1153,8 @@ function _tick(self,forcedBackgroundUpdate)
 			self:closeScreensaver()
 		end
 	end
+
+	local minute = os.date("%M")
 
 	local no = 1
 	for _,item in pairs(self.configItems) do
@@ -1277,11 +1315,14 @@ function _tick(self,forcedBackgroundUpdate)
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",2)
 		elseif item.itemtype == "covernextstoppedicon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2)
+		elseif item.itemtype == "galleryicon" then
+			if forcedBackgroundUpdate or self.lastminute!=minute then
+				self:_updateGalleryImage(self.items[no],no,item.width,item.height,item.favorite)
+			end
 		end
 		no = no +1
 	end
 
-	local minute = os.date("%M")
 	if forcedBackgroundUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
 		self:_imageUpdate()
 	end
@@ -1563,6 +1604,11 @@ function _retrieveImage(self,url,imageType,dynamic)
 	local start,stop,value = string.find(url,"http://([^/]+)")
 	if value and value != "" then
 		imagehost = value
+		local start, stop,value = string.find(imagehost,":(.+)$")
+		if value and value != "" then
+			imageport = tonumber(value)
+			imagehost = string.gsub(imagehost,":"..imageport,"")
+		end
 	end
 	start,stop,value = string.find(url,"http://[^/]+(.+)")
 	if value and value != "" then
@@ -1578,7 +1624,7 @@ function _retrieveImage(self,url,imageType,dynamic)
                         imagehost = jnt:getSNHostname()
 			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)				
                 end
-		log:info("Getting image for "..imageType.." from "..imagehost.." and "..imagepath)
+		log:info("Getting image for "..imageType.." from "..imagehost.." and "..imageport.." and "..imagepath)
 		local luadir = _getLuaDir()
 		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url)) then
 			log:info("Image found in cache")
@@ -1644,6 +1690,8 @@ function _retrieveImageData(self,url,imageType,chunk)
 		end
 		log:info("Setting visualizer image: "..id)
 		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
+	elseif self.galleryimages[imageType] ~= nil then
+		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
 	log:debug("image ready")
 end
