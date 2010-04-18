@@ -23,7 +23,7 @@
 						<tr><td>
 							<select name="[% propertyid %]">
 							[%- FOREACH item = property.values %]
-								<option name="[% item %]" id="[% item %]" value="[% item %]" [% IF item == property.value %]selected[% END %]>[% item | html %]</option>
+								<option name="[% item.id %]" id="[% item.id %]" value="[% item.id %]" [% IF item.id == property.value %]selected[% END %]>[% item.name | html %]</option>
 							[%- END %]
 							</select>
 						</td></tr>
@@ -34,7 +34,7 @@
 							<select name="[% propertyid %]">
 								<option name="" id="" value="" [% IF property.value == "" %]selected[% END %]></option>
 							[%- FOREACH item = property.values %]
-								<option name="[% item %]" id="[% item %]" value="[% item %]" [% IF item == property.value %]selected[% END %]>[% item | html %]</option>
+								<option name="[% item.id %]" id="[% item.id %]" value="[% item.id %]" [% IF item.id == property.value %]selected[% END %]>[% item.name | html %]</option>
 							[%- END %]
 							</select>
 						</td></tr>
@@ -87,7 +87,7 @@
 							<tr><td>
 								<select name="[% propertyid %]">
 								[%- FOREACH item = property.values %]
-									<option name="[% item %]" id="[% item %]" value="[% item %]" [% IF item == property.value %]selected[% END %]>[% item | html %]</option>
+									<option name="[% item.id %]" id="[% item.id %]" value="[% item.id %]" [% IF item.id == property.value %]selected[% END %]>[% item.name | html %]</option>
 								[%- END %]
 								</select>
 							</td></tr>
@@ -98,7 +98,7 @@
 								<select name="[% propertyid %]">
 									<option name="" id="" value="" [% IF property.value == "" %]selected[% END %]></option>
 								[%- FOREACH item = property.values %]
-									<option name="[% item %]" id="[% item %]" value="[% item %]" [% IF item == property.value %]selected[% END %]>[% item | html %]</option>
+									<option name="[% item.id %]" id="[% item.id %]" value="[% item.id %]" [% IF item.id == property.value %]selected[% END %]>[% item.name | html %]</option>
 								[%- END %]
 								</select>
 							</td></tr>

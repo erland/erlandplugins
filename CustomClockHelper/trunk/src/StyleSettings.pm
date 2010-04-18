@@ -143,11 +143,18 @@ sub handler {
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^backgroundtype$/) {
 			$item->{'type'} = 'optionalsinglelist';
-			my @values = qw(black white lightgray gray darkgray);
+			my @values = ();
+			push @values,{id=>'black',name=>'black'};				
+			push @values,{id=>'white',name=>'white'};				
+			push @values,{id=>'lightgray',name=>'lightgray'};				
+			push @values,{id=>'gray',name=>'gray'};				
+			push @values,{id=>'darkgray',name=>'darkgray'};				
 			$item->{'values'} = \@values;
 		}elsif($item->{'id'} =~ /^backgrounddynamic$/) {
 			$item->{'type'} = 'singlelist';
-			my @values = qw(false true);
+			my @values = ();
+			push @values,{id=>'false',name=>'false'};				
+			push @values,{id=>'true',name=>'true'};				
 			$item->{'values'} = \@values;
 		}
 	}
@@ -233,23 +240,93 @@ sub handler {
 		foreach my $item (@itemproperties) {
 			if($item->{'id'} =~ /color$/) {
 				$item->{'type'} = 'optionalsinglelist';
-				my @values = qw(white lightgray gray darkgray lightred red darkred black lightyellow yellow darkyellow lightblue blue darkblue lightgreen green darkgreen);
+				my @values = ();
+				push @values,{id=>'white',name=>'white'};				
+				push @values,{id=>'lightgray',name=>'lightgray'};				
+				push @values,{id=>'gray',name=>'gray'};				
+				push @values,{id=>'darkgray',name=>'darkgray'};				
+				push @values,{id=>'lightred',name=>'lightred'};				
+				push @values,{id=>'red',name=>'red'};				
+				push @values,{id=>'darkred',name=>'darkred'};				
+				push @values,{id=>'black',name=>'black'};				
+				push @values,{id=>'lightyellow',name=>'lightyellow'};				
+				push @values,{id=>'yellow',name=>'yellow'};				
+				push @values,{id=>'darkyellow',name=>'darkyellow'};				
+				push @values,{id=>'lightblue',name=>'lightblue'};				
+				push @values,{id=>'blue',name=>'blue'};				
+				push @values,{id=>'darkblue',name=>'darkblue'};				
+				push @values,{id=>'lightgreen',name=>'lightgreen'};				
+				push @values,{id=>'green',name=>'green'};				
+				push @values,{id=>'darkgreen',name=>'darkgreen'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(text timetext timeicon tracktext trackplayingtext trackstoppedtext switchingtracktext switchingtrackplayingtext switchingtrackstoppedtext alarmtimetext clockimage hourimage minuteimage secondimage playstatusicon shufflestatusicon repeatstatusicon alarmicon ratingicon ratingplayingicon ratingstoppedicon wirelessicon batteryicon covericon coverplayingicon coverstoppedicon covernexticon covernextplayingicon covernextstoppedicon rotatingimage elapsedimage analogvumeter digitalvumeter);
+				my @values = ();
+				push @values,{id=>'text',name=>'text'};				
+				push @values,{id=>'timetext',name=>'timetext'};				
+				push @values,{id=>'tracktext',name=>'tracktext'};				
+				push @values,{id=>'trackplayingtext',name=>'trackplayingtext'};				
+				push @values,{id=>'trackstoppedtext',name=>'trackstoppedtext'};				
+				push @values,{id=>'switchingtracktext',name=>'switchingtracktext'};				
+				push @values,{id=>'switchingtrackplayingtext',name=>'switchingtrackplayingtext'};				
+				push @values,{id=>'switchingtrackstoppedtext',name=>'switchingtrackstoppedtext'};				
+				push @values,{id=>'alarmtimetext',name=>'alarmtimetext'};				
+				push @values,{id=>'clockimage',name=>'clockimage'};				
+				push @values,{id=>'hourimage',name=>'hourimage'};				
+				push @values,{id=>'minuteimage',name=>'minuteimage'};				
+				push @values,{id=>'secondimage',name=>'secondimage'};				
+				push @values,{id=>'playstatusicon',name=>'playstatusicon'};				
+				push @values,{id=>'shufflestatusicon',name=>'shufflestatusicon'};				
+				push @values,{id=>'repeatstatusicon',name=>'repeatstatusicon'};				
+				push @values,{id=>'alarmicon',name=>'alarmicon'};				
+				push @values,{id=>'ratingicon',name=>'ratingicon'};				
+				push @values,{id=>'ratingplayingicon',name=>'ratingplayingicon'};				
+				push @values,{id=>'ratingstoppedicon',name=>'ratingstoppedicon'};				
+				push @values,{id=>'wirelessicon',name=>'wirelessicon'};				
+				push @values,{id=>'batteryicon',name=>'batteryicon'};				
+				push @values,{id=>'covericon',name=>'covericon'};				
+				push @values,{id=>'coverplayingicon',name=>'coverplayingicon'};				
+				push @values,{id=>'coverstoppedicon',name=>'coverstoppedicon'};				
+				push @values,{id=>'covernexticon',name=>'covernexticon'};				
+				push @values,{id=>'covernextplayingicon',name=>'covernextplayingicon'};				
+				push @values,{id=>'covernextstoppedicon',name=>'covernextstoppedicon'};				
+				push @values,{id=>'rotatingimage',name=>'rotatingimage'};				
+				push @values,{id=>'elapsedimage',name=>'elapsedimage'};				
+				push @values,{id=>'analogvumeter',name=>'analogvumeter'};				
+				push @values,{id=>'digitalvumeter',name=>'digitalvumeter'};				
+				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','favorites','?']);
+				my $result = $request->getResult("_can");
+				if($result) {
+					push @values,{id=>'galleryicon',name=>'galleryicon'};				
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(true false);
+				my @values = ();
+				push @values,{id=>'true',name=>'true'};				
+				push @values,{id=>'false',name=>'false'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /dynamic$/) {
 				$item->{'type'} = 'singlelist';
-				my @values = qw(false true);
+				my @values = ();
+				push @values,{id=>'false',name=>'false'};				
+				push @values,{id=>'true',name=>'true'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^align$/) {
 				$item->{'type'} = 'optionalsinglelist';
-				my @values = qw(left center right);
+				my @values = ();
+				push @values,{id=>'left',name=>'left'};				
+				push @values,{id=>'center',name=>'center'};				
+				push @values,{id=>'right',name=>'right'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^favorite$/) {
+				$item->{'type'} = 'optionalsinglelist';
+				my $request = Slim::Control::Request::executeRequest(undef,['gallery','favorites']);
+				my $result = $request->getResult("item_loop");
+				my @values = ();
+				for my $entry (@$result) {
+					push @values,{id=>$entry->{'id'}, name=>$entry->{'title'}};
+				}
 				$item->{'values'} = \@values;
 			}
 		}
@@ -407,6 +484,8 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy order framewidth framerate url.song url.playlist);
 	}elsif($itemType eq 'shufflestatusicon') {
 		return qw(itemtype posx posy order framewidth framerate url.songs url.albums);
+	}elsif($itemType eq 'galleryicon') {
+		return qw(itemtype posx posy order width height favorite);
 	}elsif($itemType =~ /icon$/) {
 		return qw(itemtype posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
