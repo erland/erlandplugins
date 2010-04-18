@@ -327,15 +327,15 @@ function defineSettingMode(self,menuItem,mode)
 							if err then
 								log:warn(err)
 							else
-								self:defineSettingModeSink(menuItem.text,mode,chunk.data)
+								self:fetchGalleryFavorites(menuItem.text,mode,chunk.data)
 							end
 						end,
 						player and player:getId(),
 						{'songinfomodules','type:image'}
 					)
 				else
-					log:info("SongInfo is NOT installed only using built-in modes")
-					self:defineSettingModeSink(menuItem.text,mode)
+					log:info("SongInfo is NOT installed ignoring Song Info modes")
+					self:fetchGalleryFavorites(menuItem.text,mode)
 				end
 			end
 		end,
@@ -354,7 +354,37 @@ function defineSettingMode(self,menuItem,mode)
         self.popup = popup
 end
 
-function defineSettingModeSink(self,title,mode,data)
+function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
+			if err then
+				log:warn(err)
+			else
+				if tonumber(chunk.data._can) == 1 then
+					log:info("Picture Galley is installed retrieving additional modes")
+					server:userRequest(function(chunk,err)
+							if err then
+								log:warn(err)
+							else
+								self:defineSettingModeSink(menuItem.text,mode,songInfoItems,chunk.data)
+							end
+						end,
+						nil,
+						{'gallery','favorites'}
+					)
+				else
+					log:info("Picture Gallery is NOT installed ignoring Picture Gallery modes")
+					self:defineSettingModeSink(menuItem.text,mode,songInfoItems)
+				end
+			end
+		end,
+		nil,
+		{'can','gallery','favorites','?'}
+	)
+end
+
+function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems)
 	self.popup:hide()
 	
 	local modesetting = self:getSettings()[mode.."mode"]
@@ -485,8 +515,8 @@ function defineSettingModeSink(self,title,mode,data)
 		),
 	})
 
-	if data and data.item_loop then
-		for _,entry in pairs(data.item_loop) do
+	if songInfoItems and songInfoItems.item_loop then
+		for _,entry in pairs(songInfoItems.item_loop) do
 			if entry.id == "lastfmartistimages" then
 				menu:addItem({
 					text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTISTS"),
@@ -542,7 +572,27 @@ function defineSettingModeSink(self,title,mode,data)
 			})
 		end
 	end
-
+	if pictureGalleryItems and pictureGalleryItems.item_loop then
+		for _,entry in pairs(pictureGalleryItems.item_loop) do
+			menu:addItem({
+				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_PICTURE_GALLERY"))..": "..entry.title,
+				style = 'item_choice',
+				check = RadioButton(
+					"radio",
+					group,
+					function()
+						self:getSettings()[mode.."mode"] = "picturegallery"..entry.id
+						if self.window then
+							self.window:hide()
+							self.window = nil
+						end
+						self:storeSettings()
+					end,
+					modesetting == "picturegallery"..entry.id
+				),
+			})
+		end
+	end
 	self:tieAndShowWindow(window)
 	return window
 end
@@ -697,7 +747,7 @@ function _refresh(self)
 					delta = self.animateRange
 					if self.screensaver then
 						self.currentScroll = 1
-						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"^picturegallery") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
 							self:_sortByRandom(self.images,self.currentPos)
 						end
 					end
@@ -728,7 +778,7 @@ function _refresh(self)
 					delta = 0
 					if self.screensaver then
 						self.currentScroll = -1
-						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
+						if self.mode and (string.find(self.mode,"^songinfo") or string.find(self.mode,"^picturegallery") or string.find(self.mode,"random$") or self.mode == "currentplaylist" or self.mode == "currentartist" or self.mode == "currentgenre" or self.mode == "currentyear") then
 							self:_sortByRandom(self.images,self.currentPos)
 						end
 					end
@@ -1457,6 +1507,19 @@ function _loadImages(self,offset)
 				{'songinfoitems',songinfomode,"track:"..track_id}
 			)
 		end
+	elseif string.find(self.mode,"^picturegallery") then
+		local favorite = string.gsub(self.mode,"^picturegallery","")
+		log:debug("Loading "..self.mode.." for favorite: "..favorite)
+		self.server:userRequest(function(chunk,err)
+				if err then
+					log:debug(err)
+				elseif chunk then
+					self:_loadPictureGallerySink(chunk.data)
+				end
+			end,
+			nil,
+			{'gallery','items',offset, amount, 'folder:__FAVORITES__'..favorite}
+		)
 	else
 		log:warn("Unknown view, don't load any albums: "..self.mode)
 	end
@@ -1674,6 +1737,30 @@ function _loadSongInfoSink(self,result)
 
 	self:_sortByRandom(self.refreshImages,self.currentPos)
 	self:_finishRefreshImages()
+end
+
+function _loadPictureGallerySink(self,result)
+	local lastIndex = 1
+	self.count = tonumber(result.count)
+	local index=1
+	self.lastUpdate = os.time()
+	if result.loop_loop then
+		for _,item in ipairs(result.loop_loop) do
+			self.maxIndex = #self.images + 1
+			local entry = {}
+			log:debug("Storing image with text: "..item.title)
+			entry.text = item.title
+			local ARTWORK_SIZE = self:_getArtworkSize()
+			local url = string.gsub(item.image,"_100x100_o","_"..ARTWORK_SIZE.."x"..ARTWORK_SIZE.."_p")
+			local ip,port = self.server:getIpPort()
+			url = "http://"..ip..":"..port..url
+			entry["icon-url"] = url
+			self.images[self.maxIndex] = entry
+			index = index + 1
+		end
+	end
+
+	self:_sortByRandom(self.images,self.currentPos)
 end
 
 function _sortByRandom(self,array,pos)
