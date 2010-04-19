@@ -1266,6 +1266,18 @@ sub refreshTracks
 		    };
 		}
 	}else {
+		$sql = "drop table if exists temp_track_statistics";
+		$sth = $dbh->prepare( $sql );
+		eval {
+			$sth->execute();
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->warn("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
+		}		
 		$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.musicbrainz_id from tracks,track_statistics where track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
@@ -1301,6 +1313,7 @@ sub refreshTracks
 			$sql = "drop table temp_track_statistics";
 			$sth = $dbh->prepare( $sql );
 			eval {
+				$sth->execute();
 				commit($dbh);
 			};
 			if( $@ ) {
