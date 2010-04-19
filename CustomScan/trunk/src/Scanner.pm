@@ -91,18 +91,7 @@ sub initDatabase {
 	$log->debug("Checking if customscan_track_attributes database table exists\n");
 	my $dbh = getCurrentDBH();
 	if($driver eq 'SQLite') {
-		$dbh->func('regexp', 2, sub {
-			my ($regex, $string) = @_;
-			if(defined($string)) {
-				return $string =~ /$regex/;
-			}else {
-				return 0;
-			}
-		    }, 'create_function');
-		$dbh->func('if', 3, sub {
-			my ($expr,$true,$false) = @_;
-			return $expr?$true:$false;
-		    }, 'create_function');
+		createSQLiteFunctions()
 	}
 	my $st = $dbh->table_info();
 	my $tblexists;
@@ -458,6 +447,24 @@ sub initDatabase {
 	}else {
 		$log->info("Creating indexes\n");
 		executeSQLFile("dbindex.sql");
+	}
+}
+
+sub createSQLiteFunctions {
+	if($driver eq 'SQLite') {
+		my $dbh = getCurrentDBH();
+		$dbh->func('regexp', 2, sub {
+			my ($regex, $string) = @_;
+			if(defined($string)) {
+				return $string =~ /$regex/;
+			}else {
+				return 0;
+			}
+		    }, 'create_function');
+		$dbh->func('if', 3, sub {
+			my ($expr,$true,$false) = @_;
+			return $expr?$true:$false;
+		    }, 'create_function');
 	}
 }
 
@@ -2059,6 +2066,18 @@ sub refreshData
 		    };
 		}
 	}else {
+		$sql = "drop table if exists temp_customscan_track_attributes";
+		$sth = $dbh->prepare( $sql );
+		eval {
+			$sth->execute();
+			commit($dbh);
+		};
+		if( $@ ) {
+		    $log->error("Database error: $DBI::errstr\n");
+		    eval {
+		    	rollback($dbh); #just die if rollback is failing
+		    };
+		}
 		$sql = "create temp table temp_customscan_track_attributes as select tracks.id,tracks.url,tracks.musicbrainz_id from tracks,customscan_track_attributes where customscan_track_attributes.musicbrainz_id is not null and customscan_track_attributes.musicbrainz_id=tracks.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
