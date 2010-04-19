@@ -983,72 +983,8 @@ sub initPlugin {
 		($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
 	}
 
-	my $dbh = Slim::Schema->storage->dbh();
 	if($driver eq 'SQLite') {
-		$dbh->func('from_unixtime', 1, sub {
-			my ($seconds) = @_;
-			return Slim::Utils::DateTime::shortDateF($seconds).' '.Slim::Utils::DateTime::timeF($seconds);
-		    }, 'create_function');
-		$dbh->func('time_format', 2, sub {
-			my ($str,$format) = @_;
-			return $str;
-		    }, 'create_function');
-		$dbh->func('date_format', 2, sub {
-			my ($str,$format) = @_;
-			return $str;
-		    }, 'create_function');
-		$dbh->func('repeat', 2, sub {
-			my ($str,$repititions) = @_;
-			return $str x $repititions;
-		    }, 'create_function');
-		$dbh->func('floor', 1, sub {
-			my ($number) = @_;
-			if(!defined($number)) {
-				$number = 0;
-			}
-			$number = floor($number); 
-			return $number;
-		    }, 'create_function');
-		$dbh->func('if', 3, sub {
-			my ($expr,$str1,$str2) = @_;
-			if($expr) {
-				return $str1;
-			}else {
-				return $str2;
-			}
-		    }, 'create_function');
-		$dbh->func('floor', 2, sub {
-			my ($number,$decimals) = @_;
-			if(!defined($number)) {
-				$number = 0;
-			}
-			if($decimals>0) {
-				$number =~s/(^\d{1,}\.\d{$decimals})(.*$)/$1/; 
-			}else {
-				$number =~s/(^\d{1,})(.*$)/$1/; 
-			}
-			return $number;
-		    }, 'create_function');
-		$dbh->func('concat', 2, sub {
-			my ($str1, $str2) = @_;
-			return $str1.$str2;
-		    }, 'create_function');
-		$dbh->func('concat', 3, sub {
-			my ($str1, $str2, $str3) = @_;
-			return $str1.$str2.$str3;
-		    }, 'create_function');
-		$dbh->func('concat', 4, sub {
-			my ($str1, $str2, $str3,$str4) = @_;
-			return $str1.$str2.$str3.$str4;
-		    }, 'create_function');
-		$dbh->func('sec_to_time', 1, sub {
-			my ($sec) = @_;
-			if($sec/(60)>=60) {
-				return int($sec/(60*60)%24).":".(($sec/60)%60).":".($sec%60);
-			}else {
-				return int(($sec/60)).":".($sec%60);
-			}
-		    }, 'create_function');
+		createSQLiteFunctions();
 	}
 
 	checkDefaults();
@@ -1191,6 +1127,77 @@ sub postinitPlugin {
 
 sub rescanDone {
 	$lastScanTime = Slim::Music::Import->lastScanTime;
+	if($driver eq 'SQLite') {
+		createSQLiteFunctions();
+	}
+}
+
+sub createSQLiteFunctions {
+	my $dbh = Slim::Schema->storage->dbh();
+	$dbh->func('from_unixtime', 1, sub {
+		my ($seconds) = @_;
+		return Slim::Utils::DateTime::shortDateF($seconds).' '.Slim::Utils::DateTime::timeF($seconds);
+	    }, 'create_function');
+	$dbh->func('time_format', 2, sub {
+		my ($str,$format) = @_;
+		return $str;
+	    }, 'create_function');
+	$dbh->func('date_format', 2, sub {
+		my ($str,$format) = @_;
+		return $str;
+	    }, 'create_function');
+	$dbh->func('repeat', 2, sub {
+		my ($str,$repititions) = @_;
+		return $str x $repititions;
+	    }, 'create_function');
+	$dbh->func('floor', 1, sub {
+		my ($number) = @_;
+		if(!defined($number)) {
+			$number = 0;
+		}
+		$number = floor($number); 
+		return $number;
+	    }, 'create_function');
+	$dbh->func('if', 3, sub {
+		my ($expr,$str1,$str2) = @_;
+		if($expr) {
+			return $str1;
+		}else {
+			return $str2;
+		}
+	    }, 'create_function');
+	$dbh->func('floor', 2, sub {
+		my ($number,$decimals) = @_;
+		if(!defined($number)) {
+			$number = 0;
+		}
+		if($decimals>0) {
+			$number =~s/(^\d{1,}\.\d{$decimals})(.*$)/$1/; 
+		}else {
+			$number =~s/(^\d{1,})(.*$)/$1/; 
+		}
+		return $number;
+	    }, 'create_function');
+	$dbh->func('concat', 2, sub {
+		my ($str1, $str2) = @_;
+		return $str1.$str2;
+	    }, 'create_function');
+	$dbh->func('concat', 3, sub {
+		my ($str1, $str2, $str3) = @_;
+		return $str1.$str2.$str3;
+	    }, 'create_function');
+	$dbh->func('concat', 4, sub {
+		my ($str1, $str2, $str3,$str4) = @_;
+		return $str1.$str2.$str3.$str4;
+	    }, 'create_function');
+	$dbh->func('sec_to_time', 1, sub {
+		my ($sec) = @_;
+		if($sec/(60)>=60) {
+			return int($sec/(60*60)%24).":".(($sec/60)%60).":".($sec%60);
+		}else {
+			return int(($sec/60)).":".($sec%60);
+		}
+	    }, 'create_function');
 }
 
 sub customScanRescanDone {
