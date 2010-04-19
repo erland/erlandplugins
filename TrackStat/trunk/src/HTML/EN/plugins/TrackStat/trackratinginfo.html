@@ -23,7 +23,7 @@
 [% FOR ratingstar IN [20,40,60,80,100] %]
        [% ratingstarlow = ratingstar - 10 %]
        <a href="javascript:changeRating(playerid,[% item.itemid %],[% ratingstar %]);">
-               <img id="rating[% ratingstar %]" src="[% webroot %]plugins/TrackStat/html/images/[% IF item.itemvalue<ratingstarlow %]empty[% ELSE %]star[% END %].gif">
+               <img id="rating[% ratingstar %]" src="[% webroot %]plugins/TrackStat/html/images/[% IF item.itemvalue == "Rating" or item.itemvalue<ratingstarlow %]empty[% ELSE %]star[% END %].gif">
        </a>
 [% END %]
 <img src="[% webroot %]html/images/spacer.gif" width="4" alt="">
