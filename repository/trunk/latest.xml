@@ -120,17 +120,15 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.10" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.10.3031" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added context menu support in TrackStat menu
-			- Corrected crash when two restore operations are performed immediately after each other
-			- Added option to make it possible to deactivate the alternative path logic during restore and import
+			<changes lang="EN">- Corrected so refresh operation works correctly with SQLite in 7.6
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.10.zip</url>
-			<sha>146e60345e3f903e6533dfb3d4418bf5d2496d81</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.10.3031.zip</url>
+			<sha>4d0aaf1f4b0b878f5743f02e82c46aa0bff482d8</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -149,17 +147,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.10" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.10.3030" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for Squeezeplay context menus from Custom Browse menus
-			- Improved support for future iPeng versions through new type attribute
-			- Changed so tracks are played in order in bitrates menu
+			<changes lang="EN">- Corrected so a full rescan with SQLite doesn't require restarting SBS
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.zip</url>
-                        <sha>8dd60cca4c213270fdba9987979aa6db3347a0e8</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.3030.zip</url>
+                        <sha>3263a46d4d9b22fddda68128fa273dee5bd5317b</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -177,15 +173,16 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.7.4" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.7.5" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected MP3 tag handling which was broken in 2.7.3
+			<changes lang="EN">- Corrected so TDRC is mapped to RECORDINGTIME
+			- Corrected some bugs related to SQLite and 7.6
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.4.zip</url>
-                        <sha>1b92f8b734f3e8c7429e0d077b2afda061d6e0eb</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7.5.zip</url>
+                        <sha>89019d8e672479f84580c12e1d443785be20ada5</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
@@ -372,8 +369,8 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.0.2999.zip</url>
-                        <sha>f23e60eaf9aee238ab3c06ba3aebae7cd999673f</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.0.2999_fixed.zip</url>
+                        <sha>f727ff461710a8d68e156393c15f7f6e1843e822</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
                 <plugin name="SongLyrics" version="1.0.2997" minTarget="7.4.0" maxTarget="*">
@@ -383,8 +380,8 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.0.2997.zip</url>
-                        <sha>65ea498b79d13cff321ca8f275ab466abe5ef588</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.0.2997_fixed.zip</url>
+                        <sha>958330039031f1d9fdd62d4e2d5cbd6bacacbaa9</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
