@@ -164,6 +164,7 @@ sub commandCallback($)
 	######################################
 	if ( $request->isCommand([['rescan'],['done']]) )
 	{
+		Plugins::CustomScan::Scanner::createSQLiteFunctions();
 		if($prefs->get("auto_rescan") && !$serverPrefs->get('autorescan')) {
 			Plugins::CustomScan::Scanner::fullRescan();
 		}elsif($prefs->get("refresh_rescan")) {
