@@ -251,6 +251,21 @@ sub scanTrack {
 	my @resultVirtual = ();
 	$log->debug("Scanning track: ".$track->title."\n");
 	my $tags = Slim::Formats->readTags($track->url);
+	if($log->is_debug) {
+		for my $t (keys %$tags) {
+			if($t ne 'APIC' && $t ne 'GEOB' && $t ne 'PRIV' && $t ne 'ARTWORK' && $t ne 'ASFLeakyBucketPairs' && $t ne 'WM/Picture') {
+				$log->debug("Got tag: $t=".$tags->{$t});
+			}else {
+				$log->debug("Got tag: $t=(binary data)");
+			}
+			if(ref($tags->{$t}) eq 'ARRAY' && $t ne 'APIC' && $t ne 'GEOB' && $t ne 'PRIV' && $t ne 'PRIV' && $t ne 'ASFLeakyBucketPairs' && $t ne 'WM/Picture') {
+				my $array = $tags->{$t};
+				for my $item (@$array) {
+					$log->debug("Got array item: $item");
+				}
+			}
+		}
+	}
 	if($track->content_type() eq 'mp3') {
 		eval {
 			getRawMP3Tags($track->url,$tags);
@@ -640,7 +655,7 @@ sub getRawMP3Tags {
 				$log->debug("Got normal tag: $tagName($t)=".$tags->{$tagName});
 			}
 		}else {
-			$log->debug("Ignoring tag: $t=".$rawTags->{$t});
+			$log->debug("Ignoring tag: $t");
 		}
 	}
 }
