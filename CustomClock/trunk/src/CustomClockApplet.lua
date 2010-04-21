@@ -286,7 +286,7 @@ function openScreensaver(self,mode, transition)
 				{ 'go', 'back', 'power', 'mute', 'volume_up', 'volume_down', 'pause' }, 
 				-- consumeAction is the callback issued for all "ignored" input
 				function()
-					log:warn('Consuming this action')
+					log:debug('Consuming this action')
 					Framework:playSound("BUMP")
 					window:bumpLeft()
 					return EVENT_CONSUME
@@ -455,7 +455,7 @@ function _installCustomNowPlaying(self)
 	local timer = Timer(100, function() 
 			local item = jiveMain:getMenuItem('appletNowPlaying')
 			if item then
-				log:info("Setting custom callback to Now Playing menu")
+				log:debug("Setting custom callback to Now Playing menu")
 				item.callback = function(event, menuItem)
 					self:goNowPlaying(Window.transitionPushLeft)
 				end
@@ -576,7 +576,7 @@ function defineSettingStyle(self,mode,menuItem)
 						{'customclock','styles'}
 					)
 				else
-					log:info("CustomClockHelper isn't installed retrieving online styles")
+					log:debug("CustomClockHelper isn't installed retrieving online styles")
 					local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
 					local req = RequestHttp(function(chunk, err)
 							if err then
@@ -765,7 +765,7 @@ function _retrieveFont(self,fonturl,fontfile,fontSize)
 			return self:_loadFont("fonts/"..fontfile,fontSize)
 		else
 			local req = nil
-			log:info("Getting "..fonturl)
+			log:debug("Getting "..fonturl)
 			if not string.find(fonturl,"%.ttf$") and not string.find(fonturl,"%.TTF$")then
 				local sink = ltn12.sink.chain(zip.filter(),self:_downloadFontZipFile(luadir.."share/jive/applets/CustomClock/fonts/"))
 				req = RequestHttp(sink, 'GET', fonturl, {stream = true})
@@ -813,7 +813,7 @@ function _downloadFontZipFile(self, dir)
                                 lfs.mkdir(filename)
                                 fh = 'DIR'
                         elseif string.find(filename,"%.ttf") or string.find(filename,"%.TTF") then
-                                log:info("Extracting font file: " .. filename)
+                                log:debug("Extracting font file: " .. filename)
                                 fh = io.open(filename, "w")
 			else
 				log:debug("ignoring file: "..filename)
@@ -837,7 +837,7 @@ function _downloadFontFile(self,dir,filename)
                         if fh and fh ~= DIR then
                                 fh:close()
                                 fh = nil
-				log:info("Downloaded "..dir..filename)
+				log:debug("Downloaded "..dir..filename)
 				if self.window then
 					log:debug("Refreshing skin")
 					self.window:setSkin(self:_getClockSkin(jiveMain:getSelectedSkin()))
@@ -1051,7 +1051,7 @@ function _updateGalleryImage(self,widget,id,width,height,favorite)
 				else
 					local cmd = {'gallery','random'}
 					if _getNumber(favorite,nil) then
-						cmd = {'gallery','random',_getNumber(favorite,nil)}
+						cmd = {'gallery','random','favid:'.._getNumber(favorite,nil)}
 					end
 					server:userRequest(function(chunk,err)
 							if err then
@@ -1624,10 +1624,10 @@ function _retrieveImage(self,url,imageType,dynamic)
                         imagehost = jnt:getSNHostname()
 			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)				
                 end
-		log:info("Getting image for "..imageType.." from "..imagehost.." and "..imageport.." and "..imagepath)
+		log:debug("Getting image for "..imageType.." from "..imagehost.." and "..imageport.." and "..imagepath)
 		local luadir = _getLuaDir()
 		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url)) then
-			log:info("Image found in cache")
+			log:debug("Image found in cache")
 			local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url), "rb")
 			local chunk = fh:read("*all")
 			fh:close()
@@ -1688,7 +1688,7 @@ function _retrieveImageData(self,url,imageType,chunk)
 		if string.find(imageType,"%.") then
 			id = string.gsub(imageType,"^.*%.","")
 		end
-		log:info("Setting visualizer image: "..id)
+		log:debug("Setting visualizer image: "..id)
 		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
 	elseif self.galleryimages[imageType] ~= nil then
 		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
