@@ -334,7 +334,7 @@ function defineSettingMode(self,menuItem,mode)
 						{'songinfomodules','type:image'}
 					)
 				else
-					log:info("SongInfo is NOT installed ignoring Song Info modes")
+					log:debug("SongInfo is NOT installed ignoring Song Info modes")
 					self:fetchGalleryFavorites(menuItem.text,mode)
 				end
 			end
@@ -374,7 +374,7 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 						{'gallery','favorites'}
 					)
 				else
-					log:info("Picture Gallery is NOT installed ignoring Picture Gallery modes")
+					log:debug("Picture Gallery is NOT installed ignoring Picture Gallery modes")
 					self:defineSettingModeSink(menuItem.text,mode,songInfoItems)
 				end
 			end
@@ -1518,7 +1518,7 @@ function _loadImages(self,offset)
 				end
 			end,
 			nil,
-			{'gallery','items',offset, amount, 'folder:__FAVORITES__'..favorite}
+			{'gallery','slideshow','favid:'..favorite}
 		)
 	else
 		log:warn("Unknown view, don't load any albums: "..self.mode)
@@ -1540,7 +1540,7 @@ function _refreshImages(self,offset)
 		amount = 100
 	end
 	if self.mode and self.mode == "currentplaylist" then
-		log:info("Loading album from current playlist")
+		log:debug("Loading album from current playlist")
 		self.server:userRequest(function(chunk,err)
 				if err then
 					log:debug(err)
@@ -1623,7 +1623,7 @@ function _refreshImages(self,offset)
 			self:_finishRefreshImages()
 		end
 	else
-		log:info("This view doesn't need refresh")
+		log:debug("This view doesn't need refresh")
 	end
 	log:debug("Sent command")
 end
@@ -1741,19 +1741,25 @@ end
 
 function _loadPictureGallerySink(self,result)
 	local lastIndex = 1
-	self.count = tonumber(result.count)
+	if result.count then
+		self.count = tonumber(result.count)
+	elseif result.data then
+		self.count = #result.data
+	else
+		self.count = 0
+	end
 	local index=1
 	self.lastUpdate = os.time()
-	if result.loop_loop then
-		for _,item in ipairs(result.loop_loop) do
+	if result.data then
+		for _,item in ipairs(result.data) do
 			self.maxIndex = #self.images + 1
 			local entry = {}
-			log:debug("Storing image with text: "..item.title)
-			entry.text = item.title
+			log:debug("Storing image with text: "..item.caption)
+			entry.text = item.caption
 			local ARTWORK_SIZE = self:_getArtworkSize()
-			local url = string.gsub(item.image,"_100x100_o","_"..ARTWORK_SIZE.."x"..ARTWORK_SIZE.."_p")
+			local url = string.gsub(item.image,"{resizeParams}","_"..ARTWORK_SIZE.."x"..ARTWORK_SIZE.."_p")
 			local ip,port = self.server:getIpPort()
-			url = "http://"..ip..":"..port..url
+			url = "http://"..ip..":"..port.."/"..url
 			entry["icon-url"] = url
 			self.images[self.maxIndex] = entry
 			index = index + 1
