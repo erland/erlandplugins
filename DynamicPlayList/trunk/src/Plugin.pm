@@ -3901,12 +3901,13 @@ sub getNextDynamicPlayListTracks {
 		if($::VERSION lt "7.4") {
 			$sql = "select playlist_track.track from playlist_track left join dynamicplaylist_history on playlist_track.track=dynamicplaylist_history.id and dynamicplaylist_history.client=$clientid where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
 		}else {
-			$sql = "select playlist_track.track from playlist_track join tracks on playlist_track.track=tracks.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client=$clientid where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
+			$sql = "select tracks.id from playlist_track join tracks on playlist_track.track=tracks.url left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client=$clientid where playlist_track.playlist=".$dynamicplaylist->{'id'}." and dynamicplaylist_history.id is null group by playlist_track.track order by $rand";
 		}
 		if(defined($limit)) {
 			$sql .= " limit $limit";
 		}
 		eval {
+			$log->debug("Executing $sql");
 			my $sth = $dbh->prepare($sql);
 			$sth->execute() or do {
 	            		$sql = undef;
