@@ -1745,8 +1745,8 @@ function _imageUpdate(self)
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
-					self.vumeterimages[self.mode.."item"..no.."."..id] = no
 					local id = string.gsub(attr,"^url%.","")
+					self.vumeterimages[self.mode.."item"..no.."."..id] = no
 					if _getString(value,nil) then
 						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
 					else
