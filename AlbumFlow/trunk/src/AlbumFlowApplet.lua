@@ -104,6 +104,7 @@ function _initApplet(self, ss,config,forced)
 	self.config = config
 	local mode = self:getSettings()[config.."mode"]
 	self.style = self:getSettings()[config.."style"]
+	self.speed = self:getSettings()[config.."speed"]
 
 	local player = appletManager:callService("getCurrentPlayer")
 	if self.player and player:getId() ~= self.player:getId() then
@@ -164,11 +165,11 @@ function _initApplet(self, ss,config,forced)
 		self.maxLoadedIndex = 0
 		self.iconPool = {}
 		if ss then
+			self.animateRange = self:_getAnimRange(self.speed,self.style)
 			self.screensaver = true
 			self.currentScroll = 1
-			self.currentDelta = SS_ANIM_RANGE
+			self.currentDelta = self.animateRange
 			self.currentPos = -1
-			self.animateRange = SS_ANIM_RANGE
 		else
 			self.animateRange = ANIM_RANGE
 		end
@@ -254,6 +255,26 @@ function closeScreensaver(self)
 	end
 end
 
+function _getAnimRange(self,speed,style)
+	if not speed and style == "single" then
+		speed = "slow"
+	elseif not speed then
+		speed = "medium"
+	end
+
+	if speed == "veryfast" then
+		return SS_ANIM_RANGE/4
+	elseif speed == "fast" then
+		return SS_ANIM_RANGE/2
+	elseif speed == "medium" then
+		return SS_ANIM_RANGE
+	elseif speed == "slow" then
+		return SS_ANIM_RANGE*4
+	else
+		return SS_ANIM_RANGE*8
+	end
+end
+
 function openScreensaverSettings(self)
 	log:debug("Album Flow settings")
 	local window = Window("text_list", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 'settingstitle')
@@ -292,6 +313,14 @@ function defineSettingConfig(self,menuItem,mode)
 
 	window:addWidget(SimpleMenu("menu",
 	{
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED"),
+			sound = "WINDOWSHOW",
+			callback = function(event, menuItem)
+				self:defineSettingSpeed(menuItem, mode)
+				return EVENT_CONSUME
+			end
+		},
 		{
 			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE"),
 			sound = "WINDOWSHOW",
@@ -674,6 +703,128 @@ function defineSettingStyle(self, menuItem, mode)
 				style == "slide"
 			),
 		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_STYLE_SINGLE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."style"] = "single"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				style == "single"
+			),
+		},
+	}))
+
+	self:tieAndShowWindow(window)
+	return window
+end
+
+function defineSettingSpeed(self, menuItem, mode)
+	local group = RadioGroup()
+
+	local speed = self:getSettings()[mode.."speed"]
+	if not speed and self:getSettings()[mode.."style"] == "single" then
+		speed = "slow"
+	elseif not speed then
+		speed = "medium"
+	end
+
+	local window = Window("text_list", menuItem.text, 'settingstitle')
+
+	window:addWidget(SimpleMenu("menu",
+	{
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED_VERY_FAST"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."speed"] = "veryfast"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				speed == "veryfast"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED_FAST"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."speed"] = "fast"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				speed == "fast"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED_MEDIUM"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."speed"] = "medium"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				speed == "medium"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED_SLOW"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."speed"] = "slow"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				speed == "slow"
+			),
+		},
+		{
+			text = self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_SPEED_VERY_SLOW"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."speed"] = "veryslow"
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+				end,
+				speed == "veryslow"
+			),
+		},
 	}))
 
 	self:tieAndShowWindow(window)
@@ -789,6 +940,10 @@ function _refresh(self)
 						delta = self.animateRange
 					end
 				end
+				if self.count then
+					self:_updateCoversAndData(pos)
+				end
+			elseif delta == (self.animateRange - 1 - self.currentScroll) then
 				if self.count then
 					self:_updateCoversAndData(pos)
 				end
@@ -1020,7 +1175,7 @@ function _retrieveMoreRefreshImages(self)
 end
 
 function _reDrawCanvas(self,screen)
-	local size = self:_getArtworkSize();
+	local size = string.match(self:_getArtworkSize(),"(%d+)x%d+") or self:_getArtworkSize()
 	local sizeby8 = size/8
 	local sizeby4 = size/4
 	local sizeby2 = size/2
@@ -1030,7 +1185,25 @@ function _reDrawCanvas(self,screen)
 	local posx
 	local posy
 
-	if self.style == "circular" then
+	if self.style == "single" then
+		local selectedAlbum = self.selectedAlbum
+		if selectedAlbum and selectedAlbum<1 then
+			selectedAlbum = self.lastSelectedAlbum or 1
+		end
+		if selectedAlbum and self.images[selectedAlbum] then
+			self.lastSelectedAlbum = selectedAlbum
+			-- width = 100%
+			-- height = 100%
+			-- left = -360
+			-- right = -120
+			-- top = 0
+			zoomx = 1
+			zoomy = 1
+			posx = 0
+			posy = 0
+			self:_drawArtwork(screen,self.images[selectedAlbum],zoomx,zoomy,posy,posx)
+		end
+	elseif self.style == "circular" then
 		if self.images[self.currentPos] then
 			-- width = 0% -> 50%
 			-- height = 50% -> 75%
@@ -1630,11 +1803,23 @@ end
 
 function _getArtworkSize(self)
 	if self.model == "touch" then
-		return 240
+		if self.style == "single" then
+			return "480x272"
+		else
+			return 240
+		end			
 	elseif self.model == "radio" then
-		return 160
+		if self.style == "single" then
+			return "320x216"
+		else
+			return 160
+		end
 	else
-		return 120
+		if self.style == "single" then
+			return "240x296"
+		else
+			return 120
+		end
 	end		
 end
 
@@ -1756,8 +1941,9 @@ function _loadPictureGallerySink(self,result)
 			local entry = {}
 			log:debug("Storing image with text: "..item.caption)
 			entry.text = item.caption
-			local ARTWORK_SIZE = self:_getArtworkSize()
-			local url = string.gsub(item.image,"{resizeParams}","_"..ARTWORK_SIZE.."x"..ARTWORK_SIZE.."_p")
+			local WIDTH = string.match(self:_getArtworkSize(),"(%d+)x%d+") or self:_getArtworkSize()
+			local HEIGHT = string.match(self:_getArtworkSize(),"%d+x(%d+)") or self:_getArtworkSize()
+			local url = string.gsub(item.image,"{resizeParams}","_"..WIDTH.."x"..HEIGHT.."_p")
 			local ip,port = self.server:getIpPort()
 			url = "http://"..ip..":"..port.."/"..url
 			entry["icon-url"] = url
