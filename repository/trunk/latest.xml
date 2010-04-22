@@ -444,6 +444,13 @@
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/dBVolume/dBVolume-1.0.patch</url>
 			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
 		</patch>
+		<patch name="VolumeSpeed" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Volume Speed</title>
+			<desc lang="EN">Increase the speed while changing volume using a IR remote</desc>
+			<creator>plympton</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/VolumeSpeed/VolumeSpeed-1.0.patch</url>
+			<sha>91b04b43b61bf9bbe8c8dee506a1a298831765f9</sha>
+		</patch>
 	</patches>
 </extensions>
 
