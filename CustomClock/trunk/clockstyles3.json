@@ -988,6 +988,37 @@
 						"animate":"true"
 					}
 				]
+			},
+			{
+				"models":["radio"],
+				"name":"Analog VU Meter",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/vu_analog_25seq_b_radio.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"35",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"95",
+						"fontsize":"20",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"55",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
 			}
 		]
 	}
