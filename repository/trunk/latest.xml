@@ -451,6 +451,13 @@
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/VolumeSpeed/VolumeSpeed-1.0.patch</url>
 			<sha>91b04b43b61bf9bbe8c8dee506a1a298831765f9</sha>
 		</patch>
+		<patch name="FatFingerSkin" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">FatFinger Skin</title>
+			<desc lang="EN">Larger buttons in touch skin with Shuffle and Repeat buttons removed</desc>
+			<creator>plympton</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/FatFingerSkin/FatFingerSkin-1.0.zip</url>
+			<sha>bb467ecae82a226efb363275a35d92fd1f26c0b8</sha>
+		</patch>
 	</patches>
 </extensions>
 
