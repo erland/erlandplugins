@@ -48,6 +48,7 @@ local RadioButton      = require("jive.ui.RadioButton")
 local Timer            = require("jive.ui.Timer")
 
 local CustomVUMeter    = require("applets.CustomClock.CustomVUMeter")
+local CustomSpectrumMeter    = require("applets.CustomClock.CustomSpectrumMeter")
 
 local SocketHttp       = require("jive.net.SocketHttp")
 local RequestHttp      = require("jive.net.RequestHttp")
@@ -227,14 +228,30 @@ function openScreensaver(self,mode, transition)
 				self.window:addWidget(self.items[no])
 			elseif string.find(item.itemtype,"digitalvumeter$") then
 				local childItems = {
-					itemno = CustomVUMeter("item"..no,"digital")
+					itemno = CustomVUMeter("item"..no,"digital",_getString(item.channels,nil))
 				}
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
 			elseif string.find(item.itemtype,"analogvumeter$") then
 				local childItems = {
-					itemno = CustomVUMeter("item"..no,"analog")
+					itemno = CustomVUMeter("item"..no,"analog",_getString(item.channels,nil))
 				}
+				self.items[no] = Group("item"..no,childItems)
+				self.window:addWidget(self.items[no])
+			elseif string.find(item.itemtype,"spectrummeter$") then
+				local childItems = {
+					itemno = CustomSpectrumMeter("item"..no,_getString(item.channels,nil))
+				}
+				for attr,value in pairs(item) do
+					if string.find(attr,"color$") and _getString(value,nil) then
+						local color = string.gsub(attr,"color$","")
+						childItems["itemno"]:setColor(color,_getColorNumber(value))
+					end
+					if string.find(attr,"^attr.") and _getNumber(value,nil) then
+						local size = string.gsub(attr,"^attr.","")
+						childItems["itemno"]:setAttr(size,tonumber(value))
+					end
+				end
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
 			end
@@ -649,64 +666,89 @@ function defineSettingStyleSink(self,title,mode,data)
 		})
 	end
 
-	if data.item_loop then
-		for _,entry in pairs(data.item_loop) do
-			local isCompliant = true
-			if entry.models then
-				isCompliant = false
-				for _,model in pairs(entry.models) do
-					if model == self.model then
-						isCompliant = true
-					end
-				end
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	server:userRequest(function(chunk,err)
+			if err then
+				log:warn(err)
 			else
-				log:debug("Supported on all models")
-			end 
-			if isCompliant then
-				menu:addItem({
-					text = entry.name,
-					style = 'item_choice',
-					check = RadioButton(
-						"radio",
-						group,
-						function()
-							for attribute,value in pairs(self:getSettings()) do
-								if string.find(attribute,"^"..mode) then
-									self:getSettings()[attribute] = nil
+				local galleryitems = false
+				if tonumber(chunk.data._can) == 1 then
+					galleryitems = true
+				end
+				if data.item_loop then
+					for _,entry in pairs(data.item_loop) do
+						local isCompliant = true
+						if entry.models then
+							isCompliant = false
+							for _,model in pairs(entry.models) do
+								if model == self.model then
+									isCompliant = true
 								end
 							end
-							self:getSettings()[mode.."style"] = entry.name
-							for attribute,value in pairs(entry) do
-								self:getSettings()[mode..attribute] = value
-							end
-							if self.images then
-								for attribute,value in pairs(self.images) do
-									if string.find(attribute,"^"..mode) then
-										self.images[attribute] = nil
+						else
+							log:debug("Supported on all models")
+						end 
+						
+						if isCompilant and not galleryItems and entry.items then
+							for _,item in pairs(entry.items) do
+								for attr,value in pairs(item) do
+									if attr == "itemtype" and value == "galleryicon" then
+										isCompliant = false
 									end
 								end
 							end
-							if self.window then
-								self.window:hide()
-								self.window=nil
-							end
-							self:storeSettings()
-							if mode == "confignowplaying" then
-								log:info("Changing to custom Now Playing applet")
-								appletManager:registerService("CustomClock",'goNowPlaying')
-								self:_installCustomNowPlaying()
-							elseif mode == "configalarmactive" then
-								appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
-							end
-						end,
-						style == entry.name
-					),
-				})
-			else
-				log:debug("Skipping "..entry.name..", isn't supported on "..self.model)
+						end
+						if isCompliant then
+							menu:addItem({
+								text = entry.name,
+								style = 'item_choice',
+								check = RadioButton(
+									"radio",
+									group,
+									function()
+										for attribute,value in pairs(self:getSettings()) do
+											if string.find(attribute,"^"..mode) then
+												self:getSettings()[attribute] = nil
+											end
+										end
+										self:getSettings()[mode.."style"] = entry.name
+										for attribute,value in pairs(entry) do
+											self:getSettings()[mode..attribute] = value
+										end
+										if self.images then
+											for attribute,value in pairs(self.images) do
+												if string.find(attribute,"^"..mode) then
+													self.images[attribute] = nil
+												end
+											end
+										end
+										if self.window then
+											self.window:hide()
+											self.window=nil
+										end
+										self:storeSettings()
+										if mode == "confignowplaying" then
+											log:info("Changing to custom Now Playing applet")
+											appletManager:registerService("CustomClock",'goNowPlaying')
+											self:_installCustomNowPlaying()
+										elseif mode == "configalarmactive" then
+											appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
+										end
+									end,
+									style == entry.name
+								),
+							})
+						else
+							log:debug("Skipping "..entry.name..", isn't supported on "..self.model)
+						end
+					end
+				end
 			end
-		end
-	end
+		end,
+		nil,
+		{'can','gallery','random','?'}
+	)
 
 	self:tieAndShowWindow(window)
 	return window
@@ -1356,6 +1398,18 @@ function _getLocalizedDateInfo(self,time,text)
 	if text and string.find(text,"%%b") then
 		text = string.gsub(text,"%%b",tostring(self:string("MONTH_SHORT_"..month)))
 	end
+	if text and string.find(text,"%%H1") then
+		local hour = os.date("%H",time)
+		text = string.gsub(text,"%%H1",tostring(tonumber(hour)))
+	end
+	if text and string.find(text,"%%I1") then
+		local hour = os.date("%I",time)
+		text = string.gsub(text,"%%I1",tostring(tonumber(hour)))
+	end
+	if text and string.find(text,"%%m1") then
+		local month = os.date("%m",time)
+		text = string.gsub(text,"%%m1",tostring(tonumber(month)))
+	end
 	text = os.date(text,time)
 	return text
 end
@@ -1799,8 +1853,55 @@ function _getColor(color)
 		return {0x00, 0xcc, 0x00}
 	elseif color == "darkgreen" then
 		return {0x00, 0x88, 0x00} 
+	elseif color and string.find(color,"^0x") then
+		color = string.gsub(color,"^0x","")
+		local number = tonumber(color,16)
+		return {number/(256*256*256*256),number/(256*256*256),number/(256*256)}
 	else
 		return {0xcc, 0xcc, 0xcc}
+	end
+end
+
+function _getColorNumber(color)
+	if color == "white" then
+		return 0xffffffff
+	elseif color =="lightgray" then
+		return 0xccccccff
+	elseif color =="gray" then
+		return 0x888888ff
+	elseif color =="darkgray" then
+		return 0x444444ff
+	elseif color =="black" then
+		return 0x000000ff
+	elseif color == "lightred" then
+		return 0xff0000ff
+	elseif color == "red" then
+		return 0xcc0000ff
+	elseif color == "darkred" then
+		return 0x880000ff 
+	elseif color == "lightyellow" then
+		return 0xffff00ff
+	elseif color == "yellow" then
+		return 0xcccc00ff
+	elseif color == "darkyellow" then
+		return 0x888800ff 
+	elseif color == "lightblue" then
+		return 0x0000ffff
+	elseif color == "blue" then
+		return 0x0000ccff
+	elseif color == "darkblue" then
+		return 0x000088ff 
+	elseif color == "lightgreen" then
+		return 0x00ff00ff
+	elseif color == "green" then
+		return 0x00cc00ff
+	elseif color == "darkgreen" then
+		return 0x008800ff 
+	elseif string.find(color,"^0x") then
+		color = string.gsub(color,"^0x","")
+		return tonumber(color,16)
+	else
+		return 0xccccccff
 	end
 end
 
@@ -1896,7 +1997,7 @@ function _getClockSkin(self,skin)
 			if _getNumber(item.framerate,nil) ~= nil then
 				s.window["item"..no]["item"..no].frameRate = _getNumber(item.framerate,nil)
 			end
-		elseif string.find(item.itemtype,"vumeter$") then
+		elseif string.find(item.itemtype,"vumeter$") or string.find(item.itemtype,"spectrummeter$") then
 			s.window["item"..no] = {
 				position = LAYOUT_NONE,
 				x = _getNumber(item.posx,0),
