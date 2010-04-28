@@ -103,6 +103,18 @@
 								</select>
 							</td></tr>
 						</table>
+					[% ELSIF property.type == 'optionalsinglecombobox' %]
+						<table border="0">
+							<tr><td>
+								<input type="text" name="[% propertyid %]" value="[% property.value %]" size="10" /><br>
+								<select name="combobox_[% propertyid %]" onChange="document.settingsForm.[% propertyid %].value=options[selectedIndex].value;">
+									<option name="" id="" value="" [% IF property.value == "" %]selected[% END %]></option>
+								[%- FOREACH item = property.values %]
+									<option name="[% item.id %]" id="[% item.id %]" value="[% item.id %]" [% IF item.id == property.value %]selected[% END %]>[% item.name | html %]</option>
+								[%- END %]
+								</select>
+							</td></tr>
+						</table>
 					[% ELSIF property.type == 'checkboxes' %]
 						<table border="0">[% USE table property.values, cols=3, pad=0 %]
 							[%- FOREACH itemrow = table.rows %]
