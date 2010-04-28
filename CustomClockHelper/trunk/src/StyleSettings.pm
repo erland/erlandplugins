@@ -239,7 +239,7 @@ sub handler {
 		}	
 		foreach my $item (@itemproperties) {
 			if($item->{'id'} =~ /color$/) {
-				$item->{'type'} = 'optionalsinglelist';
+				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'white',name=>'white'};				
 				push @values,{id=>'lightgray',name=>'lightgray'};				
@@ -294,10 +294,15 @@ sub handler {
 				push @values,{id=>'elapsedimage',name=>'elapsedimage'};				
 				push @values,{id=>'analogvumeter',name=>'analogvumeter'};				
 				push @values,{id=>'digitalvumeter',name=>'digitalvumeter'};				
-				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','favorites','?']);
+				push @values,{id=>'spectrummeter',name=>'spectrummeter'};				
+				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','random','?']);
 				my $result = $request->getResult("_can");
 				if($result) {
-					push @values,{id=>'galleryicon',name=>'galleryicon'};				
+					my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','favorites','?']);
+					$result = $request->getResult("_can");
+					if($result) {
+						push @values,{id=>'galleryicon',name=>'galleryicon'};				
+					}
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
@@ -318,6 +323,14 @@ sub handler {
 				push @values,{id=>'left',name=>'left'};				
 				push @values,{id=>'center',name=>'center'};				
 				push @values,{id=>'right',name=>'right'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'channels') {
+				$item->{'type'} = 'optionalsinglelist';
+				my @values = ();
+				push @values,{id=>'left',name=>'left'};				
+				push @values,{id=>'right',name=>'right'};				
+				push @values,{id=>'left+right',name=>'left+right'};				
+				push @values,{id=>'mono',name=>'mono'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^favorite$/) {
 				$item->{'type'} = 'optionalsinglelist';
@@ -399,6 +412,25 @@ sub saveHandler {
 				foreach my $property (keys %$params) {
 					if($property =~ /^itemproperty_(.*)$/) {
 						my $propertyId = $1;
+						if($propertyId =~ /color$/) {
+							my $value = $params->{'itemproperty_'.$propertyId};
+							if($value =~ /^0x[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}$/i) {
+								# No transparency by default
+								$params->{'itemproperty_'.$propertyId} = $value."ff";
+							}elsif($value =~ /^0x[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}$/i) {
+								# Do nothing we already have a valid hex value
+							}elsif($value =~ /^[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}$/i) {
+								# add 0x prefix
+								$params->{'itemproperty_'.$propertyId} = "0x".$value;
+							}elsif($value =~ /^[0-9a-f]{2}[0-9a-f]{2}[0-9a-f]{2}$/i) {
+								# No transparency by default
+								# add 0x prefix
+								$params->{'itemproperty_'.$propertyId} = "0x".$value."ff";
+							}elsif($value =~ /\d+/) {
+								$log->warn("Invalid color: $value");
+								$params->{'itemproperty_'.$propertyId} = ""
+							}
+						}
 						$itemStyle->{$propertyId} = $params->{'itemproperty_'.$propertyId};
 					}
 				}
@@ -489,9 +521,11 @@ sub getItemTypeParameters {
 	}elsif($itemType =~ /icon$/) {
 		return qw(itemtype posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
-		return qw(itemtype posx posy width height order url);
+		return qw(itemtype posx posy width height order channels url);
+	}elsif($itemType eq 'spectrummeter') {
+		return qw(itemtype posx posy width height order channels backgroundcolor capcolor barcolor attr.capHeight attr.capSpace attr.barsInBin attr.barWidth attr.barSpace attr.binSpace);
 	}elsif($itemType eq 'digitalvumeter') {
-		return qw(itemtype posx posy width height order url url.tickcap url.tickon url.tickoff);
+		return qw(itemtype posx posy width height order channels url url.tickcap url.tickon url.tickoff);
 	}else {
 		return qw(itemtype);
 	}
