@@ -7,6 +7,7 @@ local Surface       = require("jive.ui.Surface")
 local Timer         = require("jive.ui.Timer")
 local Widget        = require("jive.ui.Widget")
 
+local string           = require("jive.utils.string")
 local decode        = require("squeezeplay.decode")
 
 local debug         = require("jive.utils.debug")
@@ -18,7 +19,7 @@ module(...)
 oo.class(_M, Icon)
 
 
-function __init(self, style, mode)
+function __init(self, style, mode, channels)
 	local obj = oo.rawnew(self, Icon(style))
 
 	obj.mode = mode
@@ -28,6 +29,8 @@ function __init(self, style, mode)
 	obj:addAnimation(function() obj:reDraw() end, FRAME_RATE)
 
 	obj.images = nil
+
+	obj.channels = channels or "left+right"
 
 	return obj
 end
@@ -53,7 +56,7 @@ function _layout(self)
 		return
 	end
 
-	if self.mode == "digital" then
+	if self.mode == "digital" and self.images and self.images["tickon"] then
 		self.w = w - l - r
 		self.h = h - t - b
 
@@ -82,9 +85,21 @@ function draw(self, surface)
 		end
 
 		local sampleAcc = decode:vumeter()
+		-- Uncomment to simulate in SqueezePlay
+		-- sampleAcc = {}
+		-- sampleAcc[1] = math.random(3227)
+		-- sampleAcc[2] = math.random(3227)
 
-		_drawMeter(self, surface, sampleAcc, 1, self.x1, self.y, self.w, self.h)
-		_drawMeter(self, surface, sampleAcc, 2, self.x2, self.y, self.w, self.h)
+		if string.find(self.channels,'^left') or self.channels == "mono" then
+			_drawMeter(self, surface, sampleAcc, 1, self.x1, self.y, self.w, self.h)
+		end
+		if string.find(self.channels,'right$') then
+			if string.find(self.channels,"^right") then
+				_drawMeter(self, surface, sampleAcc, 2, self.x1, self.y, self.w, self.h)
+			else
+				_drawMeter(self, surface, sampleAcc, 2, self.x2, self.y, self.w, self.h)
+			end
+		end
 	end
 end
 
@@ -119,9 +134,9 @@ function _drawMeter(self, surface, sampleAcc, ch, x, y, w, h)
 		end
 	end
 
-	if self.mode == "digital" and self.images ~= nil then
-
+	if self.mode == "digital" and self.images ~= nil and self.bars and self.images["tickon"] then
 		local tw,th = self.images["tickon"]:getSize()
+
 		local it = nil
 		local last = true
 		for i = 1, self.bars do
