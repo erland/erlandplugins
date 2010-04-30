@@ -354,11 +354,14 @@ function openScreensaver(self,mode, transition)
 		self.images = {}
 		self.vumeterimages = {}
 		self.galleryimages = {}
+		self.sdtimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
 			self:_updateCustomTitleFormatInfo(player)
 		end
 	end
+	self.sdtWeatherChecked = false
+	self.sdtMacroChecked = false
 	self.lastminute = 0
 	self.nowPlaying = 1
 	self:_tick(1)
@@ -1083,6 +1086,100 @@ function _getCoverSize(self,size)
 	end
 end
 
+function _updateSDTText(self,widget,format,period)
+	local player = appletManager:callService("getCurrentPlayer")
+	period = _getString(period,nil) or 0 
+	local server = player:getSlimServer()
+	if not self.sdtMacroChecked then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtMacroChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self.sdtMacroInstalled = true
+						self:_updateSDTText(widget,format,period)
+					else	
+						self.sdtMacroInstalled = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','sdtMacroString', '?'}
+		)
+	elseif self.sdtMacroInstalled then
+		server:userRequest(
+			function(chunk, err)
+				if err then
+					log:warn(err)
+				elseif chunk then
+					local text = chunk.data.macroString
+					-- Lets allow time keywords to be specified as %$M instead of %M
+					text = string.gsub(text,"%%%$","%%")
+					text = self:_getLocalizedDateInfo(nil,_getString(text,""))
+					widget:setWidgetValue("itemno",text)
+					log:debug("Result from macroString: "..text)
+				end
+			end,
+			player and player:getId(),
+			{ 'sdtMacroString', 'format:'..format, 'period:'..tostring(period)}
+		)
+	end
+end
+
+function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
+	local player = appletManager:callService("getCurrentPlayer")
+	period = _getString(period,nil) or 0 
+	local server = player:getSlimServer()
+	if not self.sdtWeatherChecked then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtWeatherChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self.sdtWeatherInstalled = true
+						self:_updateSDTIcon(widget,id,width,height,period,dynamic)
+					else	
+						self.sdtWeatherInstalled = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','SuperDateTime', '?'}
+		)
+	elseif self.sdtWeatherInstalled then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					local url = nil
+					if chunk.data.wetData[tostring(period)].forecastIconURLSmall then
+						url = chunk.data.wetData[tostring(period)].forecastIconURLSmall
+					elseif chunk.data.wetData[tostring(period)].forecastIcon then
+						url = "/plugins/SuperDateTime/html/images/"..chunk.data.wetData[tostring(period)].forecastIcon..".png"
+					end
+					if url then
+						local ip,port = server:getIpPort()
+						url = "http://"..ip..":"..port..url
+						if width and height then
+							url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
+							url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
+							url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
+						end
+						self.sdtimages[self.mode.."item"..id] = id
+						self:_retrieveImage(url,self.mode.."item"..id,dynamic)
+					end
+				end
+			end,
+			player and player:getId(),
+			{'SuperDateTime','weather'}
+		)
+	end
+end
+
 function _updateGalleryImage(self,widget,id,width,height,favorite)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
@@ -1176,7 +1273,7 @@ function _updateAlbumCover(self,widget,id,size,mode,index)
 end
 
 -- Update the time and if needed also the wallpaper
-function _tick(self,forcedBackgroundUpdate)
+function _tick(self,forcedUpdate)
 	log:debug("Updating time")
 
 	local second = os.date("%S")
@@ -1339,6 +1436,10 @@ function _tick(self,forcedBackgroundUpdate)
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"play")
 		elseif item.itemtype == "trackstoppedtext" then
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
+		elseif item.itemtype == "sdttext" then
+			if forcedUpdate or self.lastminute!=minute then
+				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
+			end
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
 			-- Pre-load next artwork
@@ -1358,14 +1459,18 @@ function _tick(self,forcedBackgroundUpdate)
 		elseif item.itemtype == "covernextstoppedicon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2)
 		elseif item.itemtype == "galleryicon" then
-			if forcedBackgroundUpdate or self.lastminute!=minute then
+			if forcedUpdate or self.lastminute!=minute then
 				self:_updateGalleryImage(self.items[no],no,item.width,item.height,item.favorite)
+			end
+		elseif item.itemtype == "sdticon" then
+			if forcedUpdate or self.lastminute!=minute then
+				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
 			end
 		end
 		no = no +1
 	end
 
-	if forcedBackgroundUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
+	if forcedUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
 		self:_imageUpdate()
 	end
 	self.lastminute = minute
@@ -1746,6 +1851,8 @@ function _retrieveImageData(self,url,imageType,chunk)
 		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
 	elseif self.galleryimages[imageType] ~= nil then
 		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
+	elseif self.sdtimages[imageType] ~= nil then
+		self.items[self.sdtimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
 	log:debug("image ready")
 end
