@@ -185,10 +185,14 @@ sub handler {
 			my $entry = {
 				'id' => $id
 			};
-			if($item->{'itemtype'} =~ /text$/) {
+			if($item->{'itemtype'} =~ /sdttext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").$item->{'sdtformat'};
+			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
 			}elsif($item->{'itemtype'} =~ /image$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
+			}elsif($item->{'itemtype'} =~ /sdticon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'period'};
 			}else {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
 			}
@@ -259,6 +263,11 @@ sub handler {
 				push @values,{id=>'green',name=>'green'};				
 				push @values,{id=>'darkgreen',name=>'darkgreen'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sdtformat') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%T',name=>'Temerature (°C)'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
 				my @values = ();
@@ -303,6 +312,16 @@ sub handler {
 					if($result) {
 						push @values,{id=>'galleryicon',name=>'galleryicon'};				
 					}
+				}
+				$request = Slim::Control::Request::executeRequest(undef,['can','sdtMacroString','?']);
+				$result = $request->getResult("_can");
+				if($result) {
+					push @values,{id=>'sdttext',name=>'sdttext'};				
+				}
+				$request = Slim::Control::Request::executeRequest(undef,['can','SuperDateTime','?']);
+				$result = $request->getResult("_can");
+				if($result) {
+					push @values,{id=>'sdticon',name=>'sdticon'};				
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
@@ -488,7 +507,9 @@ sub isItemTypeParameter {
 sub getItemTypeParameters {
 	my $itemType = shift;
 
-	if($itemType =~ /text$/) {	
+	if($itemType eq 'sdttext') {	
+		return qw(itemtype sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
+	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype posx posy size align order);
@@ -518,6 +539,8 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy order framewidth framerate url.songs url.albums);
 	}elsif($itemType eq 'galleryicon') {
 		return qw(itemtype posx posy order width height favorite);
+	}elsif($itemType eq 'sdticon') {
+		return qw(itemtype posx posy order width height period dynamic);
 	}elsif($itemType =~ /icon$/) {
 		return qw(itemtype posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
