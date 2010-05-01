@@ -1141,7 +1141,7 @@ function _updateSDTText(self,widget,format,period)
 	end
 end
 
-function _updateSDTSportText(self,widget,id,sport,status)
+function _updateSDTSportText(self,widget,id,sport,status,prefix)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or 0 
 	local server = player:getSlimServer()
@@ -1153,7 +1153,7 @@ function _updateSDTSportText(self,widget,id,sport,status)
 					self.sdtWeatherChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self.sdtWeatherInstalled = true
-						self:_updateSDTSportText(widget,id,sport,status)
+						self:_updateSDTSportText(widget,id,sport,status,prefix)
 					else	
 						self.sdtWeatherInstalled = false
 					end
@@ -1194,7 +1194,7 @@ function _updateSDTSportText(self,widget,id,sport,status)
 									self.configItems[id].results = games
 									if #games>0 then
 										self.configItems[id].currentResult = 1
-										widget:setWidgetValue("itemno",self:_getGamesString(self.configItems[id].results,1,_getNumber(self.configItems[id].noofscores,1)))
+										widget:setWidgetValue("itemno",self:_getGamesString(self.configItems[id].results,1,_getNumber(self.configItems[id].noofscores,1),prefix))
 									else
 										widget:setWidgetValue("itemno","")
 										self.configItems[id].currentResult = nil
@@ -1213,7 +1213,7 @@ function _updateSDTSportText(self,widget,id,sport,status)
 	end
 end
 
-function _getGamesString(self,results,first,length)
+function _getGamesString(self,results,first,length,prefix)
 	local result = ""
 	for i=first,(first+length-1) do
 		if #results>=i then
@@ -1223,7 +1223,7 @@ function _getGamesString(self,results,first,length)
 			if _getNumber(results[i].homeScore,nil) then
 				result = result..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." @ "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
 			else
-				result = result..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
+				result = result.._getString(prefix,"")..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
 			end
 		end
 	end
@@ -1589,7 +1589,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtsporttext" then
 			if forcedUpdate or self.lastminute!=minute then
-				self:_updateSDTSportText(self.items[no],no,_getString(item.sport,nil),_getString(item.gamestatus,nil))
+				self:_updateSDTSportText(self.items[no],no,_getString(item.sport,nil),_getString(item.gamestatus,nil),_getString(item.text,""))
 			elseif second % _getNumber(item.interval,3) == 0 then
 				if item.results and #item.results>0 then
 					if #item.results > (item.currentResult+_getNumber(item.noofscores,1)-1) then
@@ -1597,7 +1597,7 @@ function _tick(self,forcedUpdate)
 					else
 						item.currentResult = 1
 					end
-					self.items[no]:setWidgetValue("itemno",self:_getGamesString(item.results,item.currentResult,_getNumber(item.noofscores,1)))
+					self.items[no]:setWidgetValue("itemno",self:_getGamesString(item.results,item.currentResult,_getNumber(item.noofscores,1),item.text))
 				else
 					self.items[no]:setWidgetValue("itemno","")
 				end
