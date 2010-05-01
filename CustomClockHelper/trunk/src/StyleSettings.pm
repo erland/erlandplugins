@@ -268,6 +268,21 @@ sub handler {
 				my @values = ();
 				push @values,{id=>'%T',name=>'Temerature (°C)'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sport') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'mlb',name=>'Baseball (MLB)'};				
+				push @values,{id=>'nfl',name=>'Football (NFL)'};				
+				push @values,{id=>'nba',name=>'Basketball (NBA)'};				
+				push @values,{id=>'nhl',name=>'Hockey (NHL)'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'gamestatus') {
+				$item->{'type'} = 'optionalsinglelist';
+				my @values = ();
+				push @values,{id=>'active',name=>'Active'};				
+				push @values,{id=>'activeandfinal',name=>'Active or completed'};				
+				push @values,{id=>'final',name=>'Completed'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^itemtype$/) {
 				$item->{'type'} = 'singlelist';
 				my @values = ();
@@ -322,6 +337,7 @@ sub handler {
 				$result = $request->getResult("_can");
 				if($result) {
 					push @values,{id=>'sdticon',name=>'sdticon'};				
+					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
 				$result = $request->getResult("_can");
@@ -347,6 +363,12 @@ sub handler {
 				push @values,{id=>'left',name=>'left'};				
 				push @values,{id=>'center',name=>'center'};				
 				push @values,{id=>'right',name=>'right'};				
+				push @values,{id=>'top',name=>'top'};				
+				push @values,{id=>'bottom',name=>'bottom'};				
+				push @values,{id=>'top-left',name=>'top-left'};				
+				push @values,{id=>'top-right',name=>'top-right'};				
+				push @values,{id=>'bottom-left',name=>'bottom-left'};				
+				push @values,{id=>'bottom-right',name=>'bottom-right'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'channels') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -523,6 +545,8 @@ sub getItemTypeParameters {
 
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
+	}elsif($itemType eq 'sdtsporttext') {	
+		return qw(itemtype sport gamestatus noofscores color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
