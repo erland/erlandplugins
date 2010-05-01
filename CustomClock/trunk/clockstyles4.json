@@ -1,0 +1,1605 @@
+{
+	"data": {
+		"item_loop": [
+			{
+				"name": "Analog Clock (7.3)",
+				"models": ["controller"],
+				"background": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_analog_bkgrd.png",
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/ClockFace.png"
+					},
+					{
+						"itemtype": "hourimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/HourHand.png"
+					},
+					{
+						"itemtype": "minuteimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/MinuteHand.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 15,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 275,
+						"text": "%d %B"
+					}
+				]
+			},
+			{
+				"name": "Analog Clock (7.3) (with seconds)",
+				"models": ["controller"],
+				"background": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_analog_bkgrd.png",
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/ClockFace.png"
+					},
+					{
+						"itemtype": "hourimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/HourHand.png"
+					},
+					{
+						"itemtype": "minuteimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/MinuteHand.png"
+					},
+					{
+						"itemtype": "secondimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/SecondHand_controller.png"
+
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 15,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 275,
+						"text": "%d %B"
+					}
+				]
+			},
+                        {
+                                "name": "Analog Clock",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/jive_wallpaper_clock_analog.png"
+					},
+					{
+						"itemtype": "hourimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_hr_hand.png"
+					},
+					{
+						"itemtype": "minuteimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAportraitSkin/images/Clocks/Analog/clock_analog_min_hand.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 15,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 25,
+						"posy": 275,
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Analog Clock",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/bb_wallpaper_clock_analog.png"
+					},
+					{
+						"itemtype": "hourimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_hr_hand.png"
+					},
+					{
+						"itemtype": "minuteimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.4/trunk/squeezeplay/src/squeezeplay/share/applets/QVGAlandscapeSkin/images/Clocks/Analog/clock_analog_min_hand.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 15,
+						"posy": 150,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 17,
+						"posy": 170,
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (white text)",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (white text)",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (white text)",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (red text)",
+                                "models": ["controller"],
+                                "backgroundtype": "black",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "red",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "red",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "red",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (red text)",
+                                "models": ["radio"],
+                                "backgroundtype": "black",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "red",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "red",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "red",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (red text)",
+                                "models": ["touch"],
+                                "backgroundtype": "black",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "red",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "red",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "red",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (lightly shaded cover)",
+				"models": ["controller"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black25_controller.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (shaded cover)",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black50_controller.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (dark shaded cover)",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black75_controller.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (lightly shaded cover)",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black25_radio.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (shaded cover)",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black50_radio.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (dark shaded cover)",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black75_radio.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (lightly shaded cover)",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black25_touch.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (shaded cover)",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black50_touch.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+                                "name": "Digital Clock (dark shaded cover)",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black75_touch.png"
+					},
+					{
+						"itemtype": "coverplayingicon"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Daylight Clock (http://www.die.net/earth)",
+                                "models": ["touch"],
+				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
+				"backgrounddynamic": "true",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Daylight Clock (http://www.die.net/earth)",
+                                "models": ["radio"],
+				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
+				"backgrounddynamic": "true",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Moon Clock (http://www.die.net/moon)",
+                                "models": ["controller"],
+				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 85,
+						"posy": 100,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 50,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 200,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Moon Clock (http://www.die.net/moon)",
+                                "models": ["radio"],
+				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 60,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 10,
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 190,
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Moon Clock (http://www.die.net/moon)",
+                                "models": ["touch"],
+				"background": "http://static.die.net/moon/480.jpg",
+				"backgrounddynamic": "true",
+				"items": [
+					{
+						"itemtype": "timetext",
+						"fontsize": 180,
+						"posy": 40,
+						"color": "white",
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "left",
+						"color": "white",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 220,
+						"margin": 10,
+						"align": "right",
+						"color": "white",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Classic Clock",
+                                "models": ["controller"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_classic_bkgrd.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 80,
+						"posy": 130,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"posy": 210,
+						"fontsize": 20,
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"color": "black",
+						"posy": 90,
+						"fontsize": 25,
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Classic Clock",
+                                "models": ["radio"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/clock_classic_bkgrd_radio.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 110,
+						"posy": 80,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 20,
+						"color": "black",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 185,
+						"color": "gray",
+						"text": "%d %B"
+					}
+				]
+                        },
+                        {
+				"backgroundtype": "black",
+                                "name": "Classic Clock",
+                                "models": ["touch"],
+				"items": [
+					{
+						"itemtype": "clockimage",
+						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/clock_classic_bkgrd_touch.png"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 150,
+						"posy": 70,
+						"text": "%H:%M"
+					},
+					{
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 210,
+						"margin": 40,
+						"align": "left",
+						"color": "gray",
+						"text": "%A"
+					},
+					{	
+						"itemtype": "timetext",
+						"fontsize": 35,
+						"posy": 210,
+						"margin": 40,
+						"align": "right",
+						"color": "gray",
+						"text": "%d %B"
+					},
+					{	
+						"itemtype": "switchingtrackplayingtext",
+						"fontsize": 35,
+						"posy": 30,
+						"margin": 40,
+						"align": "center",
+						"color": "black",
+						"text": ""
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Analog VU Meter",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://svn.slimdevices.com/repos/jive/7.5/trunk/squeezeplay/src/squeezeplay/share/applets/WQVGAsmallSkin/images/UNOFFICIAL/VUMeter/vu_analog_25seq_b.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"240",
+						"fontsize":"25",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"65",
+						"fontsize":"35",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"Analog VU Meter",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/vu_analog_25seq_b_radio.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"35",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"95",
+						"fontsize":"20",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"55",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Spectrum Meter",
+				"items":[
+					{
+						"itemtype":"spectrummeter",
+						"barcolor":"green",
+						"capcolor":"yellow",
+						"posy":"112",
+						"height":"160"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"60",
+						"fontsize":"40",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"110",
+						"fontsize":"35",
+						"text":"TITLE",
+						"animate":"true"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"Spectrum Meter",
+				"items":[
+					{
+						"itemtype":"spectrummeter",
+						"barcolor":"green",
+						"capcolor":"yellow",
+						"posy":"110",
+						"height":"130"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"95",
+						"fontsize":"20",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"55",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"10",
+						"fontsize":"35",
+						"text":"ARTIST",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"clockposx":"421",
+				"backgroundtype":"black",
+				"name":"Cassetta Touch",
+				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/background.png",
+				"clockposy":"163",
+				"items":[
+					{
+						"width":"65",
+						"itemtype":"timetext",
+						"posy":"175",
+						"color":"red",
+						"fontsize":"60",
+						"text":"%d",
+						"animate":"false",
+						"posx":"255"
+					},
+					{
+						"width":"65",
+						"itemtype":"timetext",
+						"posy":"240",
+						"color":"darkgray",
+						"fontsize":"13",
+						"text":"%A",
+						"animate":"true",
+						"posx":"255"
+					},
+					{
+						"width":"65",
+						"itemtype":"timetext",
+						"posy":"163",
+						"color":"darkgray",
+						"fontsize":"13",
+						"text":"%B",
+						"animate":"true",
+						"posx":"255"
+					},
+					{
+						"width":"190",
+						"align":"left",
+						"itemtype":"tracktext",
+						"posy":"55",
+						"color":"darkgray",
+						"fontsize":"15",
+						"text":"TITLE",
+						"animate":"true",
+						"posx":"30"
+					},
+					{
+						"width":"215",
+						"align":"left",
+						"itemtype":"tracktext",
+						"posy":"75",
+						"color":"darkgray",
+						"fontsize":"15",
+						"text":"ARTIST - ALBUM",
+						"animate":"true",
+						"posx":"10"
+					},
+					{
+						"itemtype":"covericon",
+						"posy":"9",
+						"size":"128",
+						"posx":"249"
+					},
+					{
+						"itemtype":"rotatingimage",
+						"posy":"114",
+						"url.stopped":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/wheel.png",
+						"url.playingrotating":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/wheel.png",
+						"speed":"2",
+						"posx":"73"
+					},
+					{
+						"itemtype":"rotatingimage",
+						"posy":"114",
+						"url.stopped":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/wheel.png",
+						"url.playingrotating":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/wheel.png",
+						"speed":"2",
+						"posx":"178"
+					},
+					{
+						"itemtype":"hourimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/hour.png"
+					},
+					{
+						"itemtype":"minuteimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/minute.png"
+					},
+					{
+						"itemtype":"secondimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/second.png"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"clockposx":"267",
+				"backgroundtype":"black",
+				"name":"Cassetta",
+				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/background.png",
+				"clockposy":"123",
+				"items":[
+					{
+						"width":"55",
+						"itemtype":"timetext",
+						"posy":"27",
+						"color":"red",
+						"fontsize":"45",
+						"text":"%d",
+						"animate":"false",
+						"posx":"23"
+					},
+					{
+						"width":"55",
+						"itemtype":"timetext",
+						"posy":"75",
+						"color":"darkgray",
+						"fontsize":"11",
+						"text":"%A",
+						"animate":"true",
+						"posx":"23"
+					},
+					{
+						"width":"55",
+						"itemtype":"timetext",
+						"posy":"20",
+						"color":"darkgray",
+						"fontsize":"11",
+						"text":"%B",
+						"animate":"true",
+						"posx":"23"
+					},
+					{
+						"width":"160",
+						"align":"left",
+						"itemtype":"tracktext",
+						"posy":"110",
+						"color":"darkgray",
+						"fontsize":"13",
+						"text":"TITLE",
+						"animate":"true",
+						"posx":"30"
+					},
+					{
+						"width":"187",
+						"align":"left",
+						"itemtype":"tracktext",
+						"posy":"127",
+						"color":"darkgray",
+						"fontsize":"11",
+						"text":"ARTIST - ALBUM",
+						"animate":"true",
+						"posx":"10"
+					},
+					{
+						"itemtype":"covericon",
+						"posy":"7",
+						"size":"90",
+						"posx":"135"
+					},
+					{
+						"itemtype":"rotatingimage",
+						"posy":"162",
+						"url.stopped":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/wheel.png",
+						"url.playingrotating":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/wheel.png",
+						"speed":"2",
+						"posx":"65"
+					},
+					{
+						"itemtype":"rotatingimage",
+						"posy":"162",
+						"url.stopped":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/wheel.png",
+						"url.playingrotating":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/wheel.png",
+						"speed":"2",
+						"posx":"158"
+					},
+					{
+						"itemtype":"hourimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/hour.png"
+					},
+					{
+						"itemtype":"minuteimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/minute.png"
+					},
+					{
+						"itemtype":"secondimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/second.png"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"SimpleGrayClock",
+				"background":"http://home.roadrunner.com/~tcutting/images/simple gray.png",
+				"items":[
+					{
+						"itemtype":"timetext",
+						"posy":"18",
+						"color":"white",
+						"fontsize":"90",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"3",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf"
+					},
+					{
+						"itemtype":"timetext",
+						"posy":"23",
+						"color":"darkgray",
+						"fontsize":"90",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"2",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"6"
+					},
+					{
+						"align":"left",
+						"itemtype":"timetext",
+						"posy":"80",
+						"color":"white",
+						"fontsize":"15",
+						"text":"%p",
+						"animate":"false",
+						"posx":"12"
+					},
+					{
+						"align":"left",
+						"itemtype":"timetext",
+						"posy":"82",
+						"color":"darkgray",
+						"fontsize":"15",
+						"order":"2",
+						"text":"%p",
+						"animate":"true",
+						"posx":"15"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"170",
+						"color":"white",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%A",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-60"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"173",
+						"color":"darkgray",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"3",
+						"text":"%A",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-57"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"195",
+						"color":"white",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%B %e",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-60"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"198",
+						"color":"darkgray",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"3",
+						"text":"%B %e",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-57"
+					},
+					{
+						"align":"right",
+						"itemtype":"alarmtimetext",
+						"posy":"198",
+						"color":"white",
+						"fontsize":"16",
+						"text":"%l:%M %p",
+						"animate":"true",
+						"posx":"-15"
+					},
+					{
+						"align":"right",
+						"itemtype":"alarmtimetext",
+						"posy":"201",
+						"color":"darkgray",
+						"fontsize":"16",
+						"order":"3",
+						"text":"%l:%M %p",
+						"animate":"true",
+						"posx":"-12"
+					},
+					{
+						"url.set":"http://home.roadrunner.com/~tcutting/images/AlarmIcon.png",
+						"itemtype":"alarmicon",
+						"posy":"198",
+						"url.active":"http://home.roadrunner.com/~tcutting/images/AlarmIcon_Active.png",
+						"posx":"210",
+						"url.snooze":"http://home.roadrunner.com/~tcutting/images/AlarmIconSnooze.png"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"Notturno",
+				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Notturno/face.png",
+				"items":[
+					{
+						"itemtype":"secondimage",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Notturno/second.png"
+					},
+					{
+						"itemtype":"timetext",
+						"posy":"86",
+						"color":"white",
+						"fontsize":"65",
+						"fonturl":"http://www.fontfiles.com/Fonts/M/minisystem.zip",
+						"text":"%H1:%M",
+						"animate":"true",
+						"fontfile":"MINISYST.TTF",
+						"posx":"2"
+					},
+					{
+						"itemtype":"timetext",
+						"posy":"85",
+						"color":"darkred",
+						"fontsize":"65",
+						"fonturl":"http://www.fontfiles.com/Fonts/M/minisystem.zip",
+						"text":"%H1:%M",
+						"animate":"true",
+						"fontfile":"MINISYST.TTF",
+						"posx":"1"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"SDT Weather Fahrenheit",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"180",
+						"color":"yellow",
+						"fontsize":"90",
+						"text":"%l:%M %p",
+						"animate":"true"
+					},
+					{
+						"period":"0",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"45",
+						"posx":"30"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"20",
+						"sdtformat":"%2 (Sunset %S)",
+						"color":"lightyellow",
+						"fontsize":"25",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"50",
+						"sdtformat":"%t",
+						"color":"white",
+						"fontsize":"110",
+						"animate":"true",
+						"posx":"120"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"160",
+						"sdtformat":"%z",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"100"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"160",
+						"sdtformat":"Precip %x",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"-140"
+					},
+					{
+						"width":"50",
+						"period":"1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"60",
+						"height":"50",
+						"posx":"145"
+					},
+					{
+						"width":"50",
+						"period":"2",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"110",
+						"height":"50",
+						"posx":"145"
+					}
+				]
+			},
+						{
+				"models":["touch"],
+				"name":"SDT Weather Celsius",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"180",
+						"color":"yellow",
+						"fontsize":"90",
+						"text":"%H1:%M",
+						"animate":"true"
+					},
+					{
+						"period":"0",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"45",
+						"posx":"30"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"20",
+						"sdtformat":"%2 (Sunset %S)",
+						"color":"lightyellow",
+						"fontsize":"25",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"50",
+						"sdtformat":"%T",
+						"color":"white",
+						"fontsize":"110",
+						"animate":"true",
+						"posx":"120"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"160",
+						"sdtformat":"%z",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"100"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"160",
+						"sdtformat":"Precip %x",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"-140"
+					},
+					{
+						"width":"50",
+						"period":"1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"60",
+						"height":"50",
+						"posx":"145"
+					},
+					{
+						"width":"50",
+						"period":"2",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"110",
+						"height":"50",
+						"posx":"145"
+					}
+				]
+			}
+		]
+	}
+}
+
