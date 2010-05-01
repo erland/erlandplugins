@@ -640,7 +640,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'shufflestatusicon') {
 		return qw(itemtype posx posy order framewidth framerate url.songs url.albums);
 	}elsif($itemType eq 'galleryicon') {
-		return qw(itemtype posx posy order width height favorite);
+		return qw(itemtype posx posy order width height interval favorite);
 	}elsif($itemType eq 'sdticon') {
 		return qw(itemtype posx posy order width height period dynamic);
 	}elsif($itemType eq 'songinfoicon') {
