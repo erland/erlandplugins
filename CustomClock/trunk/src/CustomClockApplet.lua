@@ -1621,7 +1621,7 @@ function _tick(self,forcedUpdate)
 		elseif item.itemtype == "covernextstoppedicon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2)
 		elseif item.itemtype == "galleryicon" then
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate or self.lastminute!=minute or (_getNumber(item.interval,nil) and second % tonumber(item.interval) == 0) then
 				self:_updateGalleryImage(self.items[no],no,item.width,item.height,item.favorite)
 			end
 		elseif item.itemtype == "sdticon" then
