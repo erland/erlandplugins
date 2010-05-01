@@ -355,6 +355,7 @@ function openScreensaver(self,mode, transition)
 		self.vumeterimages = {}
 		self.galleryimages = {}
 		self.sdtimages = {}
+		self.songinfoimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
 			self:_updateCustomTitleFormatInfo(player)
@@ -493,6 +494,18 @@ end
 
 function notify_playerTrackChange(self,player,nowPlaying)
 	self:_checkAndUpdateTitleFormatInfo(player)
+	self:_updateSongInfoIcons(player)
+end
+
+function _updateSongInfoIcons(self,player)
+	if self.configItems then
+		local width,height = Framework.getScreenSize()
+		for no,item in pairs(self.configItems) do
+			if item.itemtype == "songinfoicon" then
+				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true")
+			end
+		end
+	end
 end
 
 function _checkAndUpdateTitleFormatInfo(self,player)
@@ -1156,9 +1169,9 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 					log:warn(err)
 				else
 					local url = nil
-					if chunk.data.wetData[tostring(period)].forecastIconURLSmall then
+					if chunk.data.wetData[tostring(period)] and chunk.data.wetData[tostring(period)].forecastIconURLSmall then
 						url = chunk.data.wetData[tostring(period)].forecastIconURLSmall
-					elseif chunk.data.wetData[tostring(period)].forecastIcon then
+					elseif chunk.data.wetData[tostring(period)] and chunk.data.wetData[tostring(period)].forecastIcon then
 						url = "/plugins/SuperDateTime/html/images/"..chunk.data.wetData[tostring(period)].forecastIcon..".png"
 					end
 					if url then
@@ -1176,6 +1189,51 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 			end,
 			player and player:getId(),
 			{'SuperDateTime','weather'}
+		)
+	end
+end
+
+function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+	if not self.sdtSongInfoChecked then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtSongInfoChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self.sdtSongInfoInstalled = true
+						self:_updateSongInfoIcon(widget,id,width,height,module,dynamic)
+					else	
+						self.sdtSongInfoInstalled = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','songinfoitems', '?'}
+		)
+	elseif self.sdtSongInfoInstalled and _getString(module,nil) then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					if chunk.data.item_loop then
+						self.configItems[id].urls = {}
+						for no,item in ipairs(chunk.data.item_loop) do
+							self.configItems[id].urls[no] = item.url
+						end
+						local imageNo = math.random(1,#self.configItems[id].urls)
+						self.songinfoimages[self.mode.."item"..id] = id
+						self:_retrieveImage(self.configItems[id].urls[imageNo],self.mode.."item"..id,dynamic,_getNumber(width,nil),_getNumber(height,nil))
+					else
+						self.configItems[id].urls = nil
+					end
+				end
+			end,
+			player and player:getId(),
+			{'songinfoitems','0','100','module:'..module}
 		)
 	end
 end
@@ -1466,6 +1524,16 @@ function _tick(self,forcedUpdate)
 			if forcedUpdate or self.lastminute!=minute then
 				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
 			end
+		elseif item.itemtype == "songinfoicon" then
+			if forcedUpdate or (minute % 3 == 0 and self.lastminute!=minute) then
+				local width,height = Framework.getScreenSize()
+				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true")
+			elseif second % _getNumber(item.interval,10) == 0 and item.urls and #item.urls>0 then
+				local width,height = Framework.getScreenSize()
+				local imageNo = math.random(1,#item.urls)
+				self.songinfoimages[self.mode.."item"..no] = no
+				self:_retrieveImage(item.urls[imageNo],self.mode.."item"..no,"true",_getNumber(item.width,width),_getNumber(item.height,height))
+			end
 		end
 		no = no +1
 	end
@@ -1755,7 +1823,7 @@ function _reDrawAnalog(self,screen)
 	end
 end
 
-function _retrieveImage(self,url,imageType,dynamic)
+function _retrieveImage(self,url,imageType,dynamic,width,height)
 	local imagehost = ""
 	local imageport = tonumber("80")
 	local imagepath = ""
@@ -1781,13 +1849,29 @@ function _retrieveImage(self,url,imageType,dynamic)
 			-- Use direct url
 		else
                         imagehost = jnt:getSNHostname()
-			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)				
+			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)
+			if width then
+				imagepath = imagepath.."&w="..width
+			end				
+			if height then
+				imagepath = imagepath.."&h="..height
+			end
+			if width or height then
+				imagepath = imagepath.."&m=p"
+			end				
                 end
 		log:debug("Getting image for "..imageType.." from "..imagehost.." and "..imageport.." and "..imagepath)
 		local luadir = _getLuaDir()
-		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url)) then
+		local cacheName = string.urlEncode(url)
+		if width then
+			cacheName = cacheName.."-w"..width
+		end
+		if height then
+			cacheName = cacheName.."-h"..height
+		end
+		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..cacheName) then
 			log:debug("Image found in cache")
-			local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url), "rb")
+			local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..cacheName, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
 			self:_retrieveImageData(url,imageType,chunk)
@@ -1853,6 +1937,8 @@ function _retrieveImageData(self,url,imageType,chunk)
 		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
 	elseif self.sdtimages[imageType] ~= nil then
 		self.items[self.sdtimages[imageType]]:getWidget("itemno"):setValue(image)
+	elseif self.songinfoimages[imageType] ~= nil then
+		self.items[self.songinfoimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
 	log:debug("image ready")
 end
