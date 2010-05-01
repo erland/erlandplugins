@@ -1687,6 +1687,10 @@ function _getLocalizedDateInfo(self,time,text)
 		local month = os.date("%m",time)
 		text = string.gsub(text,"%%m1",tostring(tonumber(month)))
 	end
+	if text and string.find(text,"%%d1") then
+		local month = os.date("%d",time)
+		text = string.gsub(text,"%%d1",tostring(tonumber(month)))
+	end
 	text = os.date(text,time)
 	return text
 end
