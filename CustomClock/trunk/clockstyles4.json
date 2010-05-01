@@ -1033,6 +1033,7 @@
 						"posy":"10",
 						"fontsize":"45",
 						"text":"ARTIST",
+						"color":"black",
 						"animate":"true"
 					},
 					{
@@ -1040,6 +1041,7 @@
 						"posy":"240",
 						"fontsize":"25",
 						"text":"ALBUM",
+						"color":"black",
 						"animate":"true"
 					},
 					{
@@ -1047,6 +1049,7 @@
 						"posy":"65",
 						"fontsize":"35",
 						"text":"TITLE",
+						"color":"black",
 						"animate":"true"
 					}
 				]
@@ -1068,8 +1071,8 @@
 					},
 					{
 						"itemtype":"trackplayingtext",
-						"posy":"240",
-						"fontsize":"25",
+						"posy":"230",
+						"fontsize":"35",
 						"text":"ALBUM",
 						"animate":"true"
 					},
@@ -1099,15 +1102,15 @@
 					},
 					{
 						"itemtype":"trackplayingtext",
-						"posy":"240",
-						"fontsize":"25",
+						"posy":"230",
+						"fontsize":"35",
 						"text":"ALBUM",
 						"animate":"true"
 					},
 					{
 						"itemtype":"trackplayingtext",
-						"posy":"65",
-						"fontsize":"35",
+						"posy":"60",
+						"fontsize":"25",
 						"text":"TITLE",
 						"animate":"true"
 					}
