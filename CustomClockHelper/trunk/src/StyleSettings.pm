@@ -398,6 +398,28 @@ sub handler {
 					push @values,{id=>$entry->{'id'}, name=>$entry->{'name'}};
 				}
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'text' && $itemtype eq 'timetext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%I1:%M',name=>'5:46'};				
+				push @values,{id=>'%I:%M',name=>'05:46'};				
+				push @values,{id=>'%I1:%M%p',name=>'5:46pm'};				
+				push @values,{id=>'%H:%M',name=>'17:46'};				
+				push @values,{id=>'%Y-%m-%d',name=>'2010-04-15'};				
+				push @values,{id=>'%d1 %B',name=>'15 April'};				
+				push @values,{id=>'%B',name=>'April'};				
+				push @values,{id=>'%A %m1 %B',name=>'Wednesday 15 April'};				
+				push @values,{id=>'%a %m1 %b',name=>'Wed 15 Apr'};				
+				push @values,{id=>'%H:%M:%S',name=>'17:46:13'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'text' && $itemtype eq 'alarmtimetext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%I1:%M',name=>'5:46'};				
+				push @values,{id=>'%I:%M',name=>'05:46'};				
+				push @values,{id=>'%I1:%M%p',name=>'5:46pm'};				
+				push @values,{id=>'%H:%M',name=>'17:46'};				
+				$item->{'values'} = \@values;
 			}
 		}
 		@itemproperties = sort { 		
