@@ -187,6 +187,8 @@ sub handler {
 			};
 			if($item->{'itemtype'} =~ /sdttext$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").$item->{'sdtformat'};
+			}elsif($item->{'itemtype'} =~ /sdtsporttext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
 			}elsif($item->{'itemtype'} =~ /image$/) {
