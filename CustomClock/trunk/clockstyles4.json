@@ -1961,6 +1961,40 @@
 						"posx":"250"
 					}
 				]
+			},
+			{
+				"models":["touch"],
+				"name":"Random Gallery Image",
+				"items":[
+					{
+						"width":"480",
+						"itemtype":"galleryicon",
+						"height":"230"
+					},
+					{
+						"itemtype":"switchingtrackplayingtext",
+						"posy":"235",
+						"fontsize":"30",
+						"animate":"false"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"Random Gallery Image",
+				"items":[
+					{
+						"width":"320",
+						"itemtype":"galleryicon",
+						"height":"200"
+					},
+					{
+						"itemtype":"switchingtrackplayingtext",
+						"posy":"205",
+						"fontsize":"25",
+						"animate":"false"
+					}
+				]
 			}
 		]
 	}
