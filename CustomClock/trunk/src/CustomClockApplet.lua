@@ -619,7 +619,7 @@ function defineSettingStyle(self,mode,menuItem)
 								self:defineSettingStyleSink(menuItem.text,mode,chunk.data)
 							end
 						end,
-						'GET', "/svn/CustomClock/trunk/clockstyles3.json")
+						'GET', "/svn/CustomClock/trunk/clockstyles4.json")
 					http:fetch(req)
 				end
 			end
