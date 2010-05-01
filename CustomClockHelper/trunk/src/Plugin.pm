@@ -120,7 +120,7 @@ sub webPages {
 sub exportJSON {
 	my ($client, $params, $prepareResponseForSending, $httpClient, $response) = @_;
 	my $style = Plugins::CustomClockHelper::Plugin->getStyle($params->{'style'}) || {};
-	$response->header("Content-Disposition","attachment; filename=\"".$params->{'style'}.".json\"");
+	$response->header("Content-Disposition","attachment; filename=\"".$params->{'style'}.".txt\"");
 	my $message = JSON::XS::encode_json($style);
 	return \$message;
 }
