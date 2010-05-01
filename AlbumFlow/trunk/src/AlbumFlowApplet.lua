@@ -391,16 +391,30 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 				log:warn(err)
 			else
 				if tonumber(chunk.data._can) == 1 then
-					log:info("Picture Galley is installed retrieving additional modes")
 					server:userRequest(function(chunk,err)
 							if err then
 								log:warn(err)
 							else
-								self:defineSettingModeSink(menuItem.text,mode,songInfoItems,chunk.data)
+								if tonumber(chunk.data._can) == 1 then
+									log:info("Picture Galley is installed retrieving additional modes")
+									server:userRequest(function(chunk,err)
+											if err then
+												log:warn(err)
+											else
+												self:defineSettingModeSink(menuItem.text,mode,songInfoItems,chunk.data)
+											end
+										end,
+										nil,
+										{'gallery','favorites'}
+									)
+								else
+									log:debug("Picture Gallery is NOT installed ignoring Picture Gallery modes")
+									self:defineSettingModeSink(menuItem.text,mode,songInfoItems)
+								end
 							end
 						end,
 						nil,
-						{'gallery','favorites'}
+						{'can','gallery','favorites','?'}
 					)
 				else
 					log:debug("Picture Gallery is NOT installed ignoring Picture Gallery modes")
@@ -409,7 +423,7 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 			end
 		end,
 		nil,
-		{'can','gallery','favorites','?'}
+		{'can','gallery','random','?'}
 	)
 end
 
