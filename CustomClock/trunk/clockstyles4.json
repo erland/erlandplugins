@@ -1022,6 +1022,99 @@
 			},
 			{
 				"models":["touch"],
+				"name":"Vintage TEAC VU Meters",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/VUMeters/VintageTEAC.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"240",
+						"fontsize":"25",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"65",
+						"fontsize":"35",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Vintage Dark VU Meters",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/VUMeters/VintageDark.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"240",
+						"fontsize":"25",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"65",
+						"fontsize":"35",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Vintage Dark Revised VU Meters",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/VUMeters/VintageDarkRevised.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"240",
+						"fontsize":"25",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"posy":"65",
+						"fontsize":"35",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
 				"name":"Spectrum Meter",
 				"items":[
 					{
@@ -1521,7 +1614,95 @@
 					}
 				]
 			},
-						{
+			{
+				"models":["radio"],
+				"name":"SDT Weather Fahrenheit",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"165",
+						"color":"yellow",
+						"fontsize":"65",
+						"text":"%l:%M %p",
+						"animate":"true"
+					},
+					{
+						"period":"0",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"45",
+						"posx":"0"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"30",
+						"sdtformat":"(Sunset %S)",
+						"color":"lightyellow",
+						"fontsize":"20",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"5",
+						"sdtformat":"%2",
+						"color":"lightyellow",
+						"fontsize":"20",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"50",
+						"sdtformat":"%t",
+						"color":"white",
+						"fontsize":"80",
+						"animate":"true",
+						"posx":"80"
+					},
+					{
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"140",
+						"sdtformat":"%z",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"180",
+						"width":"80"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"120",
+						"sdtformat":"Precip %x",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"80"
+					},
+					{
+						"width":"50",
+						"period":"1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"60",
+						"height":"50",
+						"posx":"110"
+					},
+					{
+						"width":"50",
+						"period":"2",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"110",
+						"height":"50",
+						"posx":"110"
+					}
+				]
+			},
+			{
 				"models":["touch"],
 				"name":"SDT Weather Celsius",
 				"items":[
@@ -1596,6 +1777,94 @@
 						"posy":"110",
 						"height":"50",
 						"posx":"145"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"SDT Weather Celsius",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"160",
+						"color":"yellow",
+						"fontsize":"75",
+						"text":"%H1:%M",
+						"animate":"true"
+					},
+					{
+						"period":"0",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"45",
+						"posx":"0"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"30",
+						"sdtformat":"(Sunset %S)",
+						"color":"lightyellow",
+						"fontsize":"20",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"5",
+						"sdtformat":"%2",
+						"color":"lightyellow",
+						"fontsize":"20",
+						"animate":"true"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"50",
+						"sdtformat":"%T",
+						"color":"white",
+						"fontsize":"80",
+						"animate":"true",
+						"posx":"80"
+					},
+					{
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"140",
+						"sdtformat":"%z",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"180",
+						"width":"80"
+					},
+					{
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"120",
+						"sdtformat":"Precip %x",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"80"
+					},
+					{
+						"width":"50",
+						"period":"1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"60",
+						"height":"50",
+						"posx":"110"
+					},
+					{
+						"width":"50",
+						"period":"2",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"110",
+						"height":"50",
+						"posx":"110"
 					}
 				]
 			}
