@@ -5,16 +5,17 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
-                <applet name="AlbumFlow" version="1.0.2971" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="1.1.3064" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow</title>
                         <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">No changes since latest beta
+                        <changes lang="EN">- Added support for integration with Picture Gallery plugin
+			- Added option to make it possible to adjust scrolling speed
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.0.2971.zip</url>
-                        <sha>7c8d5b2e8f97112cc3c4407dad82159d1bb60432</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3064.zip</url>
+                        <sha>1054dcaa004fbd64509bda28e9974fabba535e22</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="InformationScreen" version="1.0" minTarget="7.4" maxTarget="*">
@@ -40,17 +41,20 @@
                         <sha>1b1d5762717efbef3bbdc0b26515eedbc83bd9f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.6.3012" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.7.3081" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added support for timeicon item type
-			- Added support for animated icons through framerate/framewidth attributes
-			- Added support for analogvumeter and digitalvumeter item types
+                        <changes lang="EN">- Added support for sdttext,sdticon,sdtsporttext item types if SuperDateTime is installed
+			- Added support for integration with Song Info plugin, for example showing artist images from LastFM
+			- Added support for spectrum meter visualizer
+			- Added support for %H1, %I1, %m1, %d1 keyword in timetext item for 5 instead of 05
+			- Added support for showing visualier for a single channel
+			- Added integration with Picture Gallery plugin to show random images from a favorite
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.6.3012.zip</url>
-                        <sha>04323b8f4db73f84203a7bfebcc789f58360c024</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.7.3081.zip</url>
+                        <sha>97fe992ad63358291c23ad94fc823455f81bfa1d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
 				<applet name="PatchInstaller" version="1.0.28" minTarget="7.5" maxTarget="*">
@@ -348,17 +352,18 @@
                         <sha>5d58baac67ff9b8ff965ed9c0f5a55646140cd9f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
-		<plugin name="CustomClockHelper" version="2.6.3012" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomClockHelper" version="2.7.3080" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Clock Helper</title>
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for timeicon item type
-			- Added support for framerate and framewidth attributes on icon item types
-			- Added support for analogvumeter and digitalvumeter item types
+			<changes lang="EN">- Added support for predefined time formats to ease configuration
+			- Added support for sdttext, sdticon, sdtsporttext items if SuperDateTime plugin is installed
+			- Added support for galleryicon if Picture Gallery plugin is installed
+			- Added support for songinfoicon if Song Info plugin is installed
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.6.3012.zip</url>
-                        <sha>2fac4ab53c51dbd585c2fd3a546f25f082b4e2b3</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.7.3080.zip</url>
+                        <sha>02ea01221527d0a901fefc6f2e25c3a9b562b310</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
 				<plugin name="SongInfo" version="1.0.2999" minTarget="7.4.0" maxTarget="*">
