@@ -1141,6 +1141,95 @@ function _updateSDTText(self,widget,format,period)
 	end
 end
 
+function _updateSDTSportText(self,widget,id,sport,status)
+	local player = appletManager:callService("getCurrentPlayer")
+	period = _getString(period,nil) or 0 
+	local server = player:getSlimServer()
+	if not self.sdtWeatherChecked then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtWeatherChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self.sdtWeatherInstalled = true
+						self:_updateSDTSportText(widget,id,sport,status)
+					else	
+						self.sdtWeatherInstalled = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','SuperDateTime', '?'}
+		)
+	elseif self.sdtWeatherInstalled and sport then
+		server:userRequest(
+			function(chunk, err)
+				if err then
+					log:warn(err)
+				elseif chunk then
+					local sportsData = chunk.data.sportsData
+					if sportsData[string.upper(sport)] then
+						server:userRequest(
+							function(chunk, err)
+								if err then
+									log:warn(err)
+								elseif chunk.data then
+									local games = {}
+									local no = 1
+									for _,value in pairs(sportsData[string.upper(sport)]) do
+										for _,enabledTeam in pairs(chunk.data["_p2"]) do
+											if tostring(enabledTeam) == "1" or value.awayTeam == enabledTeam or value.homeTeam == enabledTeam then
+												if not status or 
+													(string.find(status,"final$") and _getNumber(games[no].homeScore,nil) and games[no].gameTime == "F") or 
+													(string.find(status,"^active") and _getNumber(games[no].homeScore,nil) and games[no].gameTime ~= "F") then
+													games[no] = value
+													no = no + 1
+												end
+												break
+											end
+										end
+									end
+									self.configItems[id].results = games
+									if #games>0 then
+										self.configItems[id].currentResult = 1
+										widget:setWidgetValue("itemno",self:_getGamesString(self.configItems[id].results,1,_getNumber(self.configItems[id].noofscores,1)))
+									else
+										widget:setWidgetValue("itemno","")
+										self.configItems[id].currentResult = nil
+									end
+								end
+							end,
+							player and player:getId(),
+							{ 'pref', 'plugin.superdatetime:'..sport,'?'}
+						)
+					end
+				end
+			end,
+			player and player:getId(),
+			{ 'SuperDateTime', 'sports'}
+		)
+	end
+end
+
+function _getGamesString(self,results,first,length)
+	local result = ""
+	for i=first,(first+length-1) do
+		if #results>=i then
+			if i>first then
+				result = result.."\n"
+			end
+			if _getNumber(results[i].homeScore,nil) then
+				result = result..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." @ "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
+			else
+				result = result..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
+			end
+		end
+	end
+	return result
+end
+
 function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or 0 
@@ -1497,6 +1586,21 @@ function _tick(self,forcedUpdate)
 		elseif item.itemtype == "sdttext" then
 			if forcedUpdate or self.lastminute!=minute then
 				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
+			end
+		elseif item.itemtype == "sdtsporttext" then
+			if forcedUpdate or self.lastminute!=minute then
+				self:_updateSDTSportText(self.items[no],no,_getString(item.sport,nil),_getString(item.gamestatus,nil))
+			elseif second % _getNumber(item.interval,3) == 0 then
+				if item.results and #item.results>0 then
+					if #item.results > (item.currentResult+_getNumber(item.noofscores,1)-1) then
+						item.currentResult = item.currentResult + _getNumber(item.noofscores,1)
+					else
+						item.currentResult = 1
+					end
+					self.items[no]:setWidgetValue("itemno",self:_getGamesString(item.results,item.currentResult,_getNumber(item.noofscores,1)))
+				else
+					self.items[no]:setWidgetValue("itemno","")
+				end
 			end
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
@@ -2156,9 +2260,12 @@ function _getClockSkin(self,skin)
 					font = font,
 					align = _getString(item.align,"center"),
 					w = _getNumber(item.width,WH_FILL),
-					h = _getNumber(item.fontsize,20),
+					h = _getNumber(item.height,_getNumber(item.fontsize,20)),
 					fg = _getColor(item.color),
 				}
+			if _getNumber(item.lineheight,nil) then
+				s.window["item"..no]["item"..no].lineHeight = _getNumber(item.lineheight,nil)
+			end
 		elseif string.find(item.itemtype,"^cover") then
 			local defaultSize = WH_FILL
 			if _getNumber(item.posx,nil) then
