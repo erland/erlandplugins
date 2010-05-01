@@ -1870,6 +1870,97 @@
 						"posx":"110"
 					}
 				]
+			},
+			{
+				"models":["touch"],
+				"name":"LastFM Album Cover",
+				"items":[
+					{
+						"itemtype":"songinfoicon",
+						"songinfomodule":"lastfmalbumimage"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"LastFM Album Cover",
+				"items":[
+					{
+						"itemtype":"songinfoicon",
+						"songinfomodule":"lastfmalbumimage"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"LastFM Artist Images",
+				"items":[
+					{
+						"itemtype":"songinfoicon",
+						"interval":"5",
+						"songinfomodule":"lastfmartistimages"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"LastFM Artist Images",
+				"items":[
+					{
+						"itemtype":"songinfoicon",
+						"interval":"5",
+						"songinfomodule":"lastfmartistimages"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"LastFM Artist Image with visualizer",
+				"items":[
+					{
+						"width":"240",
+						"itemtype":"songinfoicon",
+						"height":"220",
+						"interval":"5",
+						"songinfomodule":"lastfmartistimages"
+					},
+					{
+						"width":"240",
+						"align":"center",
+						"itemtype":"tracktext",
+						"posy":"20",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true",
+						"posx":"240"
+					},
+					{
+						"width":"240",
+						"itemtype":"tracktext",
+						"posy":"55",
+						"fontsize":"25",
+						"text":"ALBUM",
+						"animate":"true",
+						"posx":"240"
+					},
+					{
+						"itemtype":"tracktext",
+						"posy":"230",
+						"fontsize":"35",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"width":"220",
+						"itemtype":"spectrummeter",
+						"barcolor":"green",
+						"capcolor":"yellow",
+						"posy":"90",
+						"attr.barsInBin":"",
+						"height":"130",
+						"posx":"250"
+					}
+				]
 			}
 		]
 	}
