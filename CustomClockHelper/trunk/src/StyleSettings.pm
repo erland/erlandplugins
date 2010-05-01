@@ -323,6 +323,11 @@ sub handler {
 				if($result) {
 					push @values,{id=>'sdticon',name=>'sdticon'};				
 				}
+				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
+				$result = $request->getResult("_can");
+				if($result) {
+					push @values,{id=>'songinfoicon',name=>'songinfoicon'};				
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^animate$/) {
 				$item->{'type'} = 'singlelist';
@@ -358,6 +363,15 @@ sub handler {
 				my @values = ();
 				for my $entry (@$result) {
 					push @values,{id=>$entry->{'id'}, name=>$entry->{'title'}};
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^songinfomodule$/) {
+				$item->{'type'} = 'singlelist';
+				my $request = Slim::Control::Request::executeRequest(undef,['songinfomodules','type:image']);
+				my $result = $request->getResult("item_loop");
+				my @values = ();
+				for my $entry (@$result) {
+					push @values,{id=>$entry->{'id'}, name=>$entry->{'name'}};
 				}
 				$item->{'values'} = \@values;
 			}
@@ -541,6 +555,8 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy order width height favorite);
 	}elsif($itemType eq 'sdticon') {
 		return qw(itemtype posx posy order width height period dynamic);
+	}elsif($itemType eq 'songinfoicon') {
+		return qw(itemtype posx posy order width height songinfomodule interval);
 	}elsif($itemType =~ /icon$/) {
 		return qw(itemtype posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
