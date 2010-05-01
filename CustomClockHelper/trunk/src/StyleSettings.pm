@@ -548,7 +548,7 @@ sub getItemTypeParameters {
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype text sport gamestatus noofscores color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype text interval sport gamestatus noofscores color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
