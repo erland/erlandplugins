@@ -345,42 +345,51 @@ end
 function defineSettingMode(self,menuItem,mode)
 	
 	local player = appletManager:callService("getCurrentPlayer")
-	local server = player:getSlimServer()
-	server:userRequest(function(chunk,err)
-			if err then
-				log:warn(err)
-			else
-				if tonumber(chunk.data._can) == 1 then
-					log:info("SongInfo is installed retrieving additional modes")
-					server:userRequest(function(chunk,err)
-							if err then
-								log:warn(err)
-							else
-								self:fetchGalleryFavorites(menuItem.text,mode,chunk.data)
-							end
-						end,
-						player and player:getId(),
-						{'songinfomodules','type:image'}
-					)
-				else
-					log:debug("SongInfo is NOT installed ignoring Song Info modes")
-					self:fetchGalleryFavorites(menuItem.text,mode)
-				end
-			end
-		end,
-		player and player:getId(),
-		{'can','songinfomodules','type:image','?'}
-	)
-	
-	-- create animiation to show while we get data from the server
-        local popup = Popup("waiting_popup")
-        local icon  = Icon("icon_connecting")
-        local label = Label("text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_FETCHING"))
-        popup:addWidget(icon)
-        popup:addWidget(label)
-        self:tieAndShowWindow(popup)
+	if player then
+		local server = player:getSlimServer()
+		if server then
+			server:userRequest(function(chunk,err)
+					if err then
+						log:warn(err)
+					else
+						if tonumber(chunk.data._can) == 1 then
+							log:info("SongInfo is installed retrieving additional modes")
+							server:userRequest(function(chunk,err)
+									if err then
+										log:warn(err)
+									else
+										self:fetchGalleryFavorites(menuItem.text,mode,chunk.data)
+									end
+								end,
+								player and player:getId(),
+								{'songinfomodules','type:image'}
+							)
+						else
+							log:debug("SongInfo is NOT installed ignoring Song Info modes")
+							self:fetchGalleryFavorites(menuItem.text,mode)
+						end
+					end
+				end,
+				player and player:getId(),
+				{'can','songinfomodules','type:image','?'}
+			)
+			-- create animiation to show while we get data from the server
+			local popup = Popup("waiting_popup")
+			local icon  = Icon("icon_connecting")
+			local label = Label("text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_FETCHING"))
+			popup:addWidget(icon)
+			popup:addWidget(label)
+			self:tieAndShowWindow(popup)
 
-        self.popup = popup
+			self.popup = popup
+		else
+			log:info("No connection to server, ignoring Song Info and Picture Gallery modes")
+			self:defineSettingModeSink(menuItem.text,mode)
+		end
+	else
+		log:info("No connection to server, ignoring Song Info and Picture Gallery modes")
+		self:defineSettingModeSink(menuItem.text,mode)
+	end
 end
 
 function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
@@ -428,7 +437,9 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 end
 
 function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems)
-	self.popup:hide()
+	if self.popup then
+		self.popup:hide()
+	end
 	
 	local modesetting = self:getSettings()[mode.."mode"]
 
