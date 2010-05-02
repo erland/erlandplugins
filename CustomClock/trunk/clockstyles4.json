@@ -2158,7 +2158,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"72",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"%z",
 						"color":"lightgray",
 						"fontsize":"20",
@@ -2169,7 +2169,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"89",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"Precip %x",
 						"color":"lightgray",
 						"fontsize":"20",
@@ -2298,7 +2298,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"3",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"%T",
 						"color":"white",
 						"fontsize":"75",
@@ -2310,7 +2310,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"72",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"%z",
 						"color":"lightgray",
 						"fontsize":"20",
@@ -2321,7 +2321,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"89",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"Precip %x",
 						"color":"lightgray",
 						"fontsize":"20",
