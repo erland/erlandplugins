@@ -399,6 +399,13 @@
 			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
 			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
 		</patch>
+		<patch name="LowerFallbackAlarm" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Low Volume Fallback Alarm</title>
+			<desc lang="EN">Decreases the volume on the fallback alarm used when the server doesn't trigger an alarm correctly</desc>
+			<creator>gerko</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/LowerFallbackAlarm/LowerFallbackAlarm-1.0.patch</url>
+			<sha>a68d50e73483637c5a61430318a2a58b8a85c06b</sha>
+		</patch>
 		<patch name="ControllerGreenHighlight" target="jive|baby" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Green highlight</title>
 			<desc lang="EN">Makes the highlight of selected menu items green</desc>
