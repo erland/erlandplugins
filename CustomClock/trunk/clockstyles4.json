@@ -2146,7 +2146,7 @@
 						"align":"left",
 						"itemtype":"sdttext",
 						"posy":"3",
-						"period":"-1"
+						"period":"-1",
 						"sdtformat":"%t",
 						"color":"white",
 						"fontsize":"75",
