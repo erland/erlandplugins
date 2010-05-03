@@ -19,7 +19,7 @@ following methods:
 
 
 -- stuff we use
-local pairs, ipairs, tostring, tonumber, package, type = pairs, ipairs, tostring, tonumber, package, type
+local pairs, ipairs, tostring, tonumber, setmetatable, package, type = pairs, ipairs, tostring, tonumber, setmetatable, package, type
 
 local oo               = require("loop.simple")
 local os               = require("os")
@@ -60,6 +60,7 @@ local iconbar          = iconbar
 local appletManager    = appletManager
 local jiveMain         = jiveMain
 local jnt              = jnt
+local jive             = jive
 
 local WH_FILL           = jive.ui.WH_FILL
 local LAYOUT_NORTH      = jive.ui.LAYOUT_NORTH
@@ -94,6 +95,18 @@ function openScreensaver4(self)
 end
 function openScreensaver5(self)
 	self:openScreensaver("config5")
+end
+function openScreensaver6(self)
+	self:openScreensaver("config6")
+end
+function openScreensaver7(self)
+	self:openScreensaver("config7")
+end
+function openScreensaver8(self)
+	self:openScreensaver("config8")
+end
+function openScreensaver9(self)
+	self:openScreensaver("config9")
 end
 function goNowPlaying(self, transition)
 	self:openScreensaver("confignowplaying",transition)
@@ -402,10 +415,16 @@ function openSettings(self)
 	self.settingsWindow = Window("text_list", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 'settingstitle')
 
 	local menu = SimpleMenu("menu")
-	for i = 1,5 do
+	for i = 1,9 do
+		local name = self:getSettings()["config"..i.."style"];
+		if name then
+			name = ": "..name
+		else
+			name = ""
+		end
 		menu:addItem(
 			{
-				text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG")).." #"..i, 
+				text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG")).." #"..i..name, 
 				sound = "WINDOWSHOW",
 				callback = function(event, menuItem)
 					self:defineSettingStyle("config"..i,menuItem)
@@ -413,9 +432,15 @@ function openSettings(self)
 				end
 			})
 	end	
+	local name = self:getSettings()["confignowplayingstyle"];
+	if name then
+		name = ": "..name
+	else
+		name = ""
+	end
 	menu:addItem(
 		{
-			text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"), 
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"))..name, 
 			sound = "WINDOWSHOW",
 			callback = function(event, menuItem)
 				self:defineSettingStyle("confignowplaying",menuItem)
@@ -423,9 +448,15 @@ function openSettings(self)
 			end
 		})
 	if appletManager:callService("isPatchInstalled","60a51265-1938-4fd7-b703-12d3725870da") then
+		name = self:getSettings()["configalarmactivestyle"];
+		if name then
+			name = ": "..name
+		else
+			name = ""
+		end
 		menu:addItem(
 			{
-				text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM_ACTIVE"), 
+				text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM_ACTIVE"))..name, 
 				sound = "WINDOWSHOW",
 				callback = function(event, menuItem)
 					self:defineSettingStyle("configalarmactive",menuItem)
@@ -653,20 +684,49 @@ function _getOnlineStylesSink(self,title,mode)
 	http:fetch(req)
 end
 
+function _uses(parent, value)
+        if parent == nil then
+                log:warn("nil parent in _uses at:\n", debug.traceback())
+        end
+        local style = {}
+        setmetatable(style, { __index = parent })
+        for k,v in pairs(value or {}) do
+                if type(v) == "table" and type(parent[k]) == "table" then
+                        -- recursively inherrit from parent style
+                        style[k] = _uses(parent[k], v)
+                else
+                        style[k] = v
+                end
+        end
+
+        return style
+end
+
 function defineSettingStyleSink(self,title,mode,data)
 	self.popup:hide()
 	
 	local style = self:getSettings()[mode.."style"]
+	jive.ui.style.item_no_icon = _uses(jive.ui.style.item, {
+		order = { 'text', 'check' },
+	})
+	jive.ui.style.icon_list.menu.item_no_icon = _uses(jive.ui.style.icon_list.menu.item, {
+		order = { 'text', 'check' },
+	})
+	jive.ui.style.icon_list.menu.selected.item_no_icon = _uses(jive.ui.style.icon_list.menu.selected.item, {
+		order = { 'text', 'check' },
+	})
+	jive.ui.style.icon_list.menu.pressed.item_no_icon = _uses(jive.ui.style.icon_list.menu.pressed.item, {
+	})
 
-	local window = Window("text_list", title, 'settingstitle')
+	local window = Window("icon_list", title, 'settingstitle')
 	local menu = SimpleMenu("menu")
-
+	menu:setComparator(menu.itemComparatorAlpha)
 	window:addWidget(menu)
 	local group = RadioGroup()
 	if mode == "confignowplaying" then
 		menu:addItem({
-			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_STYLE")),
-			style = 'item_choice',
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_STYLE")).."\n(Logitech)",
+			style = 'item_no_icon',
 			check = RadioButton(
 				"radio",
 				group,
@@ -681,8 +741,8 @@ function defineSettingStyleSink(self,title,mode,data)
 		})
 	elseif mode == "configalarmactive" then
 		menu:addItem({
-			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE")),
-			style = 'item_choice',
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE")).."\n(Logitech)",
+			style = 'item_no_icon',
 			check = RadioButton(
 				"radio",
 				group,
@@ -715,9 +775,13 @@ function defineSettingStyleSink(self,title,mode,data)
 					end 
 			
 					if isCompliant then
+						local name = entry.name.."\n"
+						if _getString(entry.contributors,nil) then
+							name = name.."("..entry.contributors..")"
+						end
 						menu:addItem({
-							text = entry.name,
-							style = 'item_choice',
+							text = name,
+							style = 'item_no_icon',
 							check = RadioButton(
 								"radio",
 								group,

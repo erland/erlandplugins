@@ -39,7 +39,7 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
-	for i=1,5 do
+	for i=1,9 do
 		appletManager:callService("addScreenSaver", 
 			tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..i, 
 			"CustomClock",
