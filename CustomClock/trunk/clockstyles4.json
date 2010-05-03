@@ -3,6 +3,7 @@
 		"item_loop": [
 			{
 				"name": "Analog Clock (7.3)",
+				"contributors":"Logitech (Graphics)",
 				"models": ["controller"],
 				"background": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_analog_bkgrd.png",
 				"items": [
@@ -34,6 +35,7 @@
 			},
 			{
 				"name": "Analog Clock (7.3) (with seconds)",
+				"contributors":"Logitech (Graphics)",
 				"models": ["controller"],
 				"background": "http://svn.slimdevices.com/repos/jive/7.3/trunk/squeezeplay/src/squeezeplay/share/applets/Clock/clock_analog_bkgrd.png",
 				"items": [
@@ -70,6 +72,7 @@
 			},
                         {
                                 "name": "Analog Clock",
+				"contributors":"Logitech (Graphics)",
                                 "models": ["controller"],
 				"items": [
 					{
@@ -100,6 +103,7 @@
                         },
                         {
                                 "name": "Analog Clock",
+				"contributors":"Logitech (Graphics)",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -130,6 +134,7 @@
                         },
                         {
                                 "name": "Digital Clock",
+				"contributors":"Erland",
                                 "models": ["controller"],
 				"items": [
 					{
@@ -154,6 +159,7 @@
                         },
                         {
                                 "name": "Digital Clock",
+				"contributors":"Erland",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -178,6 +184,7 @@
                         },
                         {
                                 "name": "Digital Clock",
+				"contributors":"Erland",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -206,6 +213,7 @@
                         },
                         {
                                 "name": "Digital Clock (white text)",
+				"contributors":"Erland",
                                 "models": ["controller"],
 				"items": [
 					{
@@ -233,6 +241,7 @@
                         },
                         {
                                 "name": "Digital Clock (white text)",
+				"contributors":"Erland",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -260,6 +269,7 @@
                         },
                         {
                                 "name": "Digital Clock (white text)",
+				"contributors":"Erland",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -291,6 +301,7 @@
                         },
                         {
                                 "name": "Digital Clock (red text)",
+				"contributors":"Erland",
                                 "models": ["controller"],
                                 "backgroundtype": "black",
 				"items": [
@@ -319,6 +330,7 @@
                         },
                         {
                                 "name": "Digital Clock (red text)",
+				"contributors":"Erland",
                                 "models": ["radio"],
                                 "backgroundtype": "black",
 				"items": [
@@ -347,6 +359,7 @@
                         },
                         {
                                 "name": "Digital Clock (red text)",
+				"contributors":"Erland",
                                 "models": ["touch"],
                                 "backgroundtype": "black",
 				"items": [
@@ -379,6 +392,7 @@
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
+				"contributors":"Erland",
 				"models": ["controller"],
 				"items": [
 					{
@@ -413,6 +427,7 @@
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
+				"contributors":"Erland",
                                 "models": ["controller"],
 				"items": [
 					{
@@ -447,6 +462,7 @@
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
+				"contributors":"Erland",
                                 "models": ["controller"],
 				"items": [
 					{
@@ -481,6 +497,7 @@
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
+				"contributors":"Erland",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -515,6 +532,7 @@
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
+				"contributors":"Erland",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -549,6 +567,7 @@
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
+				"contributors":"Erland",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -583,6 +602,7 @@
                         },
                         {
                                 "name": "Digital Clock (lightly shaded cover)",
+				"contributors":"Erland",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -621,6 +641,7 @@
                         },
                         {
                                 "name": "Digital Clock (shaded cover)",
+				"contributors":"Erland",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -659,6 +680,7 @@
                         },
                         {
                                 "name": "Digital Clock (dark shaded cover)",
+				"contributors":"Erland",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -698,6 +720,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Daylight Clock (http://www.die.net/earth)",
+				"contributors":"Erland, www.die.net (Images)",
                                 "models": ["touch"],
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
 				"backgrounddynamic": "true",
@@ -732,6 +755,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Daylight Clock (http://www.die.net/earth)",
+				"contributors":"Erland, www.die.net (Images)",
                                 "models": ["radio"],
 				"background": "http://static.die.net/earth/mercator-cloudless/480.jpg",
 				"backgrounddynamic": "true",
@@ -762,6 +786,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Moon Clock (http://www.die.net/moon)",
+				"contributors":"Erland, www.die.net (Images)",
                                 "models": ["controller"],
 				"background": "http://static.die.net/moon/480.jpg",
 				"backgrounddynamic": "true",
@@ -792,6 +817,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Moon Clock (http://www.die.net/moon)",
+				"contributors":"Erland, www.die.net (Images)",
                                 "models": ["radio"],
 				"background": "http://static.die.net/moon/480.jpg",
 				"backgrounddynamic": "true",
@@ -822,6 +848,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Moon Clock (http://www.die.net/moon)",
+				"contributors":"Erland, www.die.net (Images)",
                                 "models": ["touch"],
 				"background": "http://static.die.net/moon/480.jpg",
 				"backgrounddynamic": "true",
@@ -855,6 +882,7 @@
                         },
                         {
 				"backgroundtype": "black",
+				"contributors":"Logitech (Graphics)",
                                 "name": "Classic Clock",
                                 "models": ["controller"],
 				"items": [
@@ -886,6 +914,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Classic Clock",
+				"contributors":"Logitech (Graphics)",
                                 "models": ["radio"],
 				"items": [
 					{
@@ -917,6 +946,7 @@
                         {
 				"backgroundtype": "black",
                                 "name": "Classic Clock",
+				"contributors":"Logitech (Graphics)",
                                 "models": ["touch"],
 				"items": [
 					{
@@ -961,6 +991,7 @@
 			{
 				"models":["touch"],
 				"name":"Analog VU Meter",
+				"contributors":"Erland, Logitech (Graphics)",
 				"items":[
 					{
 						"itemtype":"analogvumeter",
@@ -992,6 +1023,7 @@
 			{
 				"models":["radio"],
 				"name":"Analog VU Meter",
+				"contributors":"Erland, Logitech (Graphics)",
 				"items":[
 					{
 						"itemtype":"analogvumeter",
@@ -1023,6 +1055,7 @@
 			{
 				"models":["touch"],
 				"name":"Vintage TEAC VU Meters",
+				"contributors":"jstraw (Graphics)",
 				"items":[
 					{
 						"itemtype":"analogvumeter",
@@ -1057,6 +1090,7 @@
 			{
 				"models":["touch"],
 				"name":"Vintage Dark VU Meters",
+				"contributors":"jstraw (Graphics)",
 				"items":[
 					{
 						"itemtype":"analogvumeter",
@@ -1088,6 +1122,7 @@
 			{
 				"models":["touch"],
 				"name":"Vintage Dark Revised VU Meters",
+				"contributors":"jstraw (Graphics)",
 				"items":[
 					{
 						"itemtype":"analogvumeter",
@@ -1119,6 +1154,7 @@
 			{
 				"models":["touch"],
 				"name":"Spectrum Meter",
+				"contributors":"Erland",
 				"items":[
 					{
 						"itemtype":"spectrummeter",
@@ -1153,6 +1189,7 @@
 			{
 				"models":["radio"],
 				"name":"Spectrum Meter",
+				"contributors":"Erland",
 				"items":[
 					{
 						"itemtype":"spectrummeter",
@@ -1189,6 +1226,7 @@
 				"clockposx":"421",
 				"backgroundtype":"black",
 				"name":"Cassetta Touch",
+				"contributors":"Rikk (Graphics)",
 				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Touch/background.png",
 				"clockposy":"163",
 				"items":[
@@ -1285,6 +1323,7 @@
 				"clockposx":"267",
 				"backgroundtype":"black",
 				"name":"Cassetta",
+				"contributors":"Rikk (Graphics)",
 				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Cassetta/Radio/background.png",
 				"clockposy":"123",
 				"items":[
@@ -1379,6 +1418,7 @@
 			{
 				"models":["radio"],
 				"name":"SimpleGrayClock",
+				"contributors":"Rikk (Graphics), tcutting",
 				"background":"http://home.roadrunner.com/~tcutting/images/simple gray.png",
 				"items":[
 					{
@@ -1509,6 +1549,7 @@
 			{
 				"models":["radio"],
 				"name":"Notturno",
+				"contributors":"Rikk (Graphics)",
 				"background":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/Notturno/face.png",
 				"items":[
 					{
@@ -1542,6 +1583,7 @@
 			{
 				"models":["touch"],
 				"name":"SDT Weather Fahrenheit",
+				"contributors":"plympton, GoCubs (SuperDateTime)",
 				"items":[
 					{
 						"align":"center",
@@ -1620,6 +1662,7 @@
 			{
 				"models":["radio"],
 				"name":"SDT Weather Fahrenheit",
+				"contributors":"Erland, GoCubs (SuperDateTime)",
 				"items":[
 					{
 						"align":"center",
@@ -1708,6 +1751,7 @@
 			{
 				"models":["touch"],
 				"name":"SDT Weather Celsius",
+				"contributors":"plympton, GoCubs (SuperDateTime)",
 				"items":[
 					{
 						"align":"center",
@@ -1786,6 +1830,7 @@
 			{
 				"models":["radio"],
 				"name":"SDT Weather Celsius",
+				"contributors":"Erland, GoCubs (SuperDateTime)",
 				"items":[
 					{
 						"align":"center",
@@ -1874,6 +1919,7 @@
 			{
 				"models":["touch"],
 				"name":"LastFM Album Cover",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"itemtype":"songinfoicon",
@@ -1884,6 +1930,7 @@
 			{
 				"models":["radio"],
 				"name":"LastFM Album Cover",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"itemtype":"songinfoicon",
@@ -1894,6 +1941,7 @@
 			{
 				"models":["touch"],
 				"name":"LastFM Artist Images",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"itemtype":"songinfoicon",
@@ -1905,6 +1953,7 @@
 			{
 				"models":["radio"],
 				"name":"LastFM Artist Images",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"itemtype":"songinfoicon",
@@ -1916,6 +1965,7 @@
 			{
 				"models":["touch"],
 				"name":"LastFM Artist Image with visualizer",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"width":"240",
@@ -1965,6 +2015,7 @@
 			{
 				"models":["touch"],
 				"name":"Random Gallery Image",
+				"contributors":"erland, mherger (Picture Gallery)",
 				"items":[
 					{
 						"width":"480",
@@ -1982,6 +2033,7 @@
 			{
 				"models":["radio"],
 				"name":"Random Gallery Image",
+				"contributors":"erland, mherger (Picture Gallery)",
 				"items":[
 					{
 						"width":"320",
@@ -1999,6 +2051,7 @@
 			{
 				"models":["radio"],
 				"name":"SDT LastFM Artist Images Celsius",
+				"contributors":"Erland, LastFM (Images)",
 				"items":[
 					{
 						"itemtype":"switchingtracktext",
@@ -2125,6 +2178,7 @@
 			{
 				"models":["controller"],
 				"name":"SDT Weather Fahrenheit",
+				"contributors":"GoCubs (SuperDateTime)",
 				"items":[
 					{
 						"align":"center",
@@ -2277,6 +2331,7 @@
 			{
 				"models":["controller"],
 				"name":"SDT Weather Celsius",
+				"contributors":"GoCubs (Super Date Time)",
 				"items":[
 					{
 						"align":"center",
