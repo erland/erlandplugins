@@ -215,13 +215,13 @@ sub handler {
 	my @itemproperties = ();
 	if(defined($style) && defined($style->{'items'}) && $params->{'pluginCustomClockHelperStyleItemNo'}) {
 		my $items = $style->{'items'};
-		my $item = $items->[$params->{'pluginCustomClockHelperStyleItemNo'}-1];
-		my $itemtype = $item->{'itemtype'} || "timetext";
-		for my $property (keys %$item) {
-			if($item->{$property} ne "" && isItemTypeParameter($itemtype,$property)) {
+		my $currentItem = $items->[$params->{'pluginCustomClockHelperStyleItemNo'}-1];
+		my $itemtype = $currentItem->{'itemtype'} || "timetext";
+		for my $property (keys %$currentItem) {
+			if($currentItem->{$property} ne "" && isItemTypeParameter($itemtype,$property)) {
 				my %p = (
 					'id' => $property,
-					'value' => $item->{$property}
+					'value' => $currentItem->{$property}
 				);
 				push @itemproperties,\%p;
 			}
@@ -268,47 +268,59 @@ sub handler {
 			}elsif($item->{'id'} eq 'sdtformat') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
-				push @values,{id=>'%1',name=>'Time'};				
-				push @values,{id=>'%2',name=>'Date'};				
-				push @values,{id=>'%y',name=>'Period Covered (ie Today)'};				
-				push @values,{id=>'%e',name=>'Temperature (F)'};				
-				push @values,{id=>'%v',name=>'Brief Forecast (ie Sunny)'};				
-				push @values,{id=>'%E',name=>'Temperature (C)'};				
-				push @values,{id=>'%t',name=>'Temperature (F)'};				
-				push @values,{id=>'%T',name=>'Temperature (C)'};
-				push @values,{id=>'%z',name=>'High/Low (F)'};				
-				push @values,{id=>'%Z',name=>'High/Low (C)'};				
-				push @values,{id=>'%a',name=>'Average High/Low (F)'};				
-				push @values,{id=>'%A',name=>'Average High/Low (C)'};				
-				push @values,{id=>'%c',name=>'Record High/Low (F)'};				
-				push @values,{id=>'%C',name=>'Record High/Low (C)'};				
-				push @values,{id=>'%g',name=>'Record High/Low Year'};				
-				push @values,{id=>'%m',name=>'Dew Point (F)'};				
-				push @values,{id=>'%M',name=>'Dew Point (C)'};				
-				push @values,{id=>'%d',name=>'Dew Point (F)'};				
-				push @values,{id=>'%D',name=>'Dew Point (C)'};				
-				push @values,{id=>'%f',name=>'Feels-Like Temperature (F)'};				
-				push @values,{id=>'%F',name=>'Feels-Like Temperature (C)'};				
-				push @values,{id=>'%h',name=>'Humidity'};				
-				push @values,{id=>'%H',name=>'Humidity'};				
-				push @values,{id=>'%j',name=>'Wind Speed (mi/hr)'};				
-				push @values,{id=>'%J',name=>'Wind Speed (km/hr)'};				
-				push @values,{id=>'%K',name=>'Wind Speed (m/s)'};				
-				push @values,{id=>'%w',name=>'Wind Speed (mi/hr)'};				
-				push @values,{id=>'%W',name=>'Wind Speed (km/hr)'};				
-				push @values,{id=>'%q',name=>'Wind Speed (kt/hr)'};				
-				push @values,{id=>'%Q',name=>'Wind Speed (m/s)'};				
-				push @values,{id=>'%x',name=>'Precipitation'};				
-				push @values,{id=>'%l',name=>'Barometric Preassure (inHg)'};				
-				push @values,{id=>'%p',name=>'Barometric Preassure (inHg)'};				
-				push @values,{id=>'%L',name=>'Barometric Preassure (hPa)'};				
-				push @values,{id=>'%P',name=>'Barometric Preassure (hPa)'};				
-				push @values,{id=>'%s',name=>'Sunrise'};				
-				push @values,{id=>'%S',name=>'Sunset'};				
-				push @values,{id=>'%u',name=>'UV Index (Value)'};				
-				push @values,{id=>'%U',name=>'UV Index (Text)'};				
-				push @values,{id=>'%b',name=>'Past 24-hr Precip'};				
-				push @values,{id=>'%B',name=>'Past 24-hr Snowfall'};				
+				if($currentItem->{'period'} !~ /^d\d+/) {
+					push @values,{id=>'%1',name=>'Time'};				
+					push @values,{id=>'%2',name=>'Date'};				
+					push @values,{id=>'%y',name=>'Period Covered (ie Today)'};				
+					push @values,{id=>'%e',name=>'Temperature (F)'};				
+					push @values,{id=>'%v',name=>'Brief Forecast (ie Sunny)'};				
+					push @values,{id=>'%E',name=>'Temperature (C)'};				
+					push @values,{id=>'%t',name=>'Temperature (F)'};				
+					push @values,{id=>'%T',name=>'Temperature (C)'};
+					push @values,{id=>'%z',name=>'High/Low (F)'};				
+					push @values,{id=>'%Z',name=>'High/Low (C)'};				
+					push @values,{id=>'%a',name=>'Average High/Low (F)'};				
+					push @values,{id=>'%A',name=>'Average High/Low (C)'};				
+					push @values,{id=>'%c',name=>'Record High/Low (F)'};				
+					push @values,{id=>'%C',name=>'Record High/Low (C)'};				
+					push @values,{id=>'%g',name=>'Record High/Low Year'};				
+					push @values,{id=>'%m',name=>'Dew Point (F)'};				
+					push @values,{id=>'%M',name=>'Dew Point (C)'};				
+					push @values,{id=>'%d',name=>'Dew Point (F)'};				
+					push @values,{id=>'%D',name=>'Dew Point (C)'};				
+					push @values,{id=>'%f',name=>'Feels-Like Temperature (F)'};				
+					push @values,{id=>'%F',name=>'Feels-Like Temperature (C)'};				
+					push @values,{id=>'%h',name=>'Humidity'};				
+					push @values,{id=>'%H',name=>'Humidity'};				
+					push @values,{id=>'%j',name=>'Wind Speed (mi/hr)'};				
+					push @values,{id=>'%J',name=>'Wind Speed (km/hr)'};				
+					push @values,{id=>'%K',name=>'Wind Speed (m/s)'};				
+					push @values,{id=>'%w',name=>'Wind Speed (mi/hr)'};				
+					push @values,{id=>'%W',name=>'Wind Speed (km/hr)'};				
+					push @values,{id=>'%q',name=>'Wind Speed (kt/hr)'};				
+					push @values,{id=>'%Q',name=>'Wind Speed (m/s)'};				
+					push @values,{id=>'%x',name=>'Precipitation'};				
+					push @values,{id=>'%l',name=>'Barometric Preassure (inHg)'};				
+					push @values,{id=>'%p',name=>'Barometric Preassure (inHg)'};				
+					push @values,{id=>'%L',name=>'Barometric Preassure (hPa)'};				
+					push @values,{id=>'%P',name=>'Barometric Preassure (hPa)'};				
+					push @values,{id=>'%s',name=>'Sunrise'};				
+					push @values,{id=>'%S',name=>'Sunset'};				
+					push @values,{id=>'%u',name=>'UV Index (Value)'};				
+					push @values,{id=>'%U',name=>'UV Index (Text)'};				
+					push @values,{id=>'%b',name=>'Past 24-hr Precip'};				
+					push @values,{id=>'%B',name=>'Past 24-hr Snowfall'};
+				}
+				if($currentItem->{'period'} =~ /^d\d+/) {
+					push @values,{id=>'%_3',name=>'dx Weekday'};
+					push @values,{id=>'%_4',name=>'dx Date'};
+					push @values,{id=>'%_5',name=>'dx High (F)'};
+					push @values,{id=>'%_6',name=>'dx High (C)'};
+					push @values,{id=>'%_7',name=>'dx Low (F)'};
+					push @values,{id=>'%_8',name=>'dx Low (C)'};
+					push @values,{id=>'%_9',name=>'dx Precip'};
+					push @values,{id=>'%_0',name=>'dx Condition'};
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sport') {
 				$item->{'type'} = 'optionalsinglecombobox';
@@ -393,11 +405,35 @@ sub handler {
 				push @values,{id=>'true',name=>'true'};				
 				push @values,{id=>'false',name=>'false'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^scrolling$/) {
+				$item->{'type'} = 'singlelist';
+				my @values = ();
+				push @values,{id=>'false',name=>'false'};				
+				push @values,{id=>'true',name=>'true'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /dynamic$/) {
 				$item->{'type'} = 'singlelist';
 				my @values = ();
 				push @values,{id=>'false',name=>'false'};				
 				push @values,{id=>'true',name=>'true'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^period$/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'-1',name=>'C'};				
+				push @values,{id=>'0',name=>'1'};				
+				push @values,{id=>'1',name=>'2'};				
+				push @values,{id=>'2',name=>'3'};				
+				push @values,{id=>'d1',name=>'d1'};				
+				push @values,{id=>'d2',name=>'d2'};				
+				push @values,{id=>'d3',name=>'d3'};				
+				push @values,{id=>'d4',name=>'d4'};				
+				push @values,{id=>'d5',name=>'d5'};				
+				push @values,{id=>'d6',name=>'d6'};				
+				push @values,{id=>'d7',name=>'d7'};				
+				push @values,{id=>'d8',name=>'d8'};				
+				push @values,{id=>'d9',name=>'d9'};				
+				push @values,{id=>'d10',name=>'d10'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^align$/) {
 				$item->{'type'} = 'optionalsinglelist';
@@ -610,7 +646,7 @@ sub getItemTypeParameters {
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype text interval sport gamestatus noofscores color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype text interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
