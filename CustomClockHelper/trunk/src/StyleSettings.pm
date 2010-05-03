@@ -100,7 +100,7 @@ sub handler {
 		}
 	}
 
-	my @availableProperties = qw(name models background backgroundtype backgrounddynamic clockposx clockposy);
+	my @availableProperties = qw(name models contributors background backgroundtype backgrounddynamic clockposx clockposy);
 	foreach my $availableProperty (@availableProperties) {
 		my $found = 0;
 		foreach my $property (@properties) {
@@ -163,6 +163,10 @@ sub handler {
 		if($a->{'id'} eq 'name') {
 			return -1;
 		}elsif($b->{'id'} eq 'name') {
+			return 1;
+		}elsif($a->{'id'} eq 'contributors') {
+			return -1;
+		}elsif($b->{'id'} eq 'contributors') {
 			return 1;
 		}elsif($a->{'id'} eq 'models') {
 			return -1;
