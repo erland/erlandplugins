@@ -126,38 +126,29 @@ function openScreensaver(self,mode, transition)
 				for i,entry in pairs(chunk.data[3]) do
 					local updateStyle = false
 					local updatedModes = {}
-					
-					for _,model in ipairs(entry.models) do
-						if model == self.model then
-							updateStyle = true
-						end
-					end
-					if updateStyle then
-						updateStyle = false
-						for attribute,value in pairs(self:getSettings()) do
-							if string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
-								log:debug("Updating "..attribute.."="..tostring(value))
-								local config = string.gsub(attribute,"style$","")
-								updatedModes[config]=true
-								for attribute,value in pairs(self:getSettings()) do
-									if string.find(attribute,"^"..config) and attribute != config.."style" then
-										self:getSettings()[attribute] = nil
-									end
+					for attribute,value in pairs(self:getSettings()) do
+						if string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
+							log:debug("Updating "..attribute.."="..tostring(value))
+							local config = string.gsub(attribute,"style$","")
+							updatedModes[config]=true
+							for attribute,value in pairs(self:getSettings()) do
+								if string.find(attribute,"^"..config) and attribute != config.."style" then
+									self:getSettings()[attribute] = nil
 								end
-								for attribute,value in pairs(entry) do
-									self:getSettings()[config..attribute] = value
-								end
-								if self.images then
-									for attribute,value in pairs(self.images) do
-										if string.find(attribute,"^"..config) then
-											self.images[attribute] = nil
-										end
-									end
-								end
-								updateStyle = true
-							else
-								log:debug("Ignoring "..attribute.."="..tostring(value))
 							end
+							for attribute,value in pairs(entry) do
+								self:getSettings()[config..attribute] = value
+							end
+							if self.images then
+								for attribute,value in pairs(self.images) do
+									if string.find(attribute,"^"..config) then
+										self.images[attribute] = nil
+									end
+								end
+							end
+							updateStyle = true
+						else
+							log:debug("Ignoring "..attribute.."="..tostring(value))
 						end
 					end
 					if updateStyle then
@@ -370,7 +361,7 @@ function openScreensaver(self,mode, transition)
 			self:_updateCustomTitleFormatInfo(player)
 		end
 	end
-	self.sdtWeatherChecked = false
+	self.sdtSuperDateTimeChecked = false
 	self.sdtMacroChecked = false
 	self.lastminute = 0
 	self.nowPlaying = 1
@@ -600,52 +591,66 @@ end
 function defineSettingStyle(self,mode,menuItem)
 	
 	local player = appletManager:callService("getCurrentPlayer")
-	local server = player:getSlimServer()
-	server:userRequest(function(chunk,err)
+	if player then
+		local server = player:getSlimServer()
+		if server then
+			server:userRequest(function(chunk,err)
+					if err then
+						log:warn(err)
+					else
+						if tonumber(chunk.data._can) == 1 then
+							log:info("CustomClockHelper is installed retrieving local styles")
+							server:userRequest(function(chunk,err)
+									if err then
+										log:warn(err)
+									else
+										self:defineSettingStyleSink(menuItem.text,mode,chunk.data)
+									end
+								end,
+								player and player:getId(),
+								{'customclock','styles'}
+							)
+						else
+							log:debug("CustomClockHelper isn't installed retrieving online styles")
+							self:_getOnlineStylesSink(menuItem.text,mode)
+						end
+					end
+				end,
+				player and player:getId(),
+				{'can','customclock','styles','?'}
+			)
+	
+			-- create animiation to show while we get data from the server
+			local popup = Popup("waiting_popup")
+			local icon  = Icon("icon_connecting")
+			local label = Label("text", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_FETCHING"))
+			popup:addWidget(icon)
+			popup:addWidget(label)
+			self:tieAndShowWindow(popup)
+
+			self.popup = popup
+		else
+			log:debug("Server not available retrieving online styles")
+			self:_getOnlineStylesSink(menuItem.text,mode)
+		end
+	else
+		log:debug("Player not selected retrieving online styles")
+		self:_getOnlineStylesSink(menuItem.text,mode)
+	end
+end
+
+function _getOnlineStylesSink(self,title,mode)
+	local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
+	local req = RequestHttp(function(chunk, err)
 			if err then
 				log:warn(err)
-			else
-				if tonumber(chunk.data._can) == 1 then
-					log:info("CustomClockHelper is installed retrieving local styles")
-					server:userRequest(function(chunk,err)
-							if err then
-								log:warn(err)
-							else
-								self:defineSettingStyleSink(menuItem.text,mode,chunk.data)
-							end
-						end,
-						player and player:getId(),
-						{'customclock','styles'}
-					)
-				else
-					log:debug("CustomClockHelper isn't installed retrieving online styles")
-					local http = SocketHttp(jnt, "erlandplugins.googlecode.com", 80)
-					local req = RequestHttp(function(chunk, err)
-							if err then
-								log:warn(err)
-							elseif chunk then
-								chunk = json.decode(chunk)
-								self:defineSettingStyleSink(menuItem.text,mode,chunk.data)
-							end
-						end,
-						'GET', "/svn/CustomClock/trunk/clockstyles4.json")
-					http:fetch(req)
-				end
+			elseif chunk then
+				chunk = json.decode(chunk)
+				self:defineSettingStyleSink(title,mode,chunk.data)
 			end
 		end,
-		player and player:getId(),
-		{'can','customclock','styles','?'}
-	)
-	
-	-- create animiation to show while we get data from the server
-        local popup = Popup("waiting_popup")
-        local icon  = Icon("icon_connecting")
-        local label = Label("text", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_FETCHING"))
-        popup:addWidget(icon)
-        popup:addWidget(label)
-        self:tieAndShowWindow(popup)
-
-        self.popup = popup
+		'GET', "/svn/CustomClock/trunk/clockstyles4.json")
+	http:fetch(req)
 end
 
 function defineSettingStyleSink(self,title,mode,data)
@@ -692,88 +697,74 @@ function defineSettingStyleSink(self,title,mode,data)
 	end
 
 	local player = appletManager:callService("getCurrentPlayer")
-	local server = player:getSlimServer()
-	server:userRequest(function(chunk,err)
-			if err then
-				log:warn(err)
-			else
-				local galleryitems = false
-				if tonumber(chunk.data._can) == 1 then
-					galleryitems = true
-				end
-				if data.item_loop then
-					for _,entry in pairs(data.item_loop) do
-						local isCompliant = true
-						if entry.models then
-							isCompliant = false
-							for _,model in pairs(entry.models) do
-								if model == self.model then
-									isCompliant = true
-								end
+	if player then
+		local server = player:getSlimServer()
+		if server then
+			if data.item_loop then
+				for _,entry in pairs(data.item_loop) do
+					local isCompliant = true
+					if entry.models then
+						isCompliant = false
+						for _,model in pairs(entry.models) do
+							if model == self.model then
+								isCompliant = true
 							end
-						else
-							log:debug("Supported on all models")
-						end 
-						
-						if isCompilant and not galleryItems and entry.items then
-							for _,item in pairs(entry.items) do
-								for attr,value in pairs(item) do
-									if attr == "itemtype" and value == "galleryicon" then
-										isCompliant = false
+						end
+					else
+						log:debug("Supported on all models")
+					end 
+			
+					if isCompliant then
+						menu:addItem({
+							text = entry.name,
+							style = 'item_choice',
+							check = RadioButton(
+								"radio",
+								group,
+								function()
+									for attribute,value in pairs(self:getSettings()) do
+										if string.find(attribute,"^"..mode) then
+											self:getSettings()[attribute] = nil
+										end
 									end
-								end
-							end
-						end
-						if isCompliant then
-							menu:addItem({
-								text = entry.name,
-								style = 'item_choice',
-								check = RadioButton(
-									"radio",
-									group,
-									function()
-										for attribute,value in pairs(self:getSettings()) do
+									self:getSettings()[mode.."style"] = entry.name
+									for attribute,value in pairs(entry) do
+										self:getSettings()[mode..attribute] = value
+									end
+									if self.images then
+										for attribute,value in pairs(self.images) do
 											if string.find(attribute,"^"..mode) then
-												self:getSettings()[attribute] = nil
+												self.images[attribute] = nil
 											end
 										end
-										self:getSettings()[mode.."style"] = entry.name
-										for attribute,value in pairs(entry) do
-											self:getSettings()[mode..attribute] = value
-										end
-										if self.images then
-											for attribute,value in pairs(self.images) do
-												if string.find(attribute,"^"..mode) then
-													self.images[attribute] = nil
-												end
-											end
-										end
-										if self.window then
-											self.window:hide()
-											self.window=nil
-										end
-										self:storeSettings()
-										if mode == "confignowplaying" then
-											log:info("Changing to custom Now Playing applet")
-											appletManager:registerService("CustomClock",'goNowPlaying')
-											self:_installCustomNowPlaying()
-										elseif mode == "configalarmactive" then
-											appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
-										end
-									end,
-									style == entry.name
-								),
-							})
-						else
-							log:debug("Skipping "..entry.name..", isn't supported on "..self.model)
-						end
+									end
+									if self.window then
+										self.window:hide()
+										self.window=nil
+									end
+									self:storeSettings()
+									if mode == "confignowplaying" then
+										log:info("Changing to custom Now Playing applet")
+										appletManager:registerService("CustomClock",'goNowPlaying')
+										self:_installCustomNowPlaying()
+									elseif mode == "configalarmactive" then
+										appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
+									end
+								end,
+								style == entry.name
+							),
+						})
+					else
+						log:debug("Skipping "..entry.name..", isn't supported on "..self.model)
 					end
 				end
 			end
-		end,
-		nil,
-		{'can','gallery','random','?'}
-	)
+		else
+			log:debug("Server not selected, ignoring Picture Gallyery styles")
+		end
+	else
+		log:debug("Player not selected, ignoring Picture Gallyery styles")
+	end
 
 	self:tieAndShowWindow(window)
 	return window
@@ -1138,8 +1129,10 @@ function _updateSDTText(self,widget,format,period)
 				elseif chunk then
 					local text = chunk.data.macroString
 					-- Lets allow time keywords to be specified as %$M instead of %M
-					text = string.gsub(text,"%%%$","%%")
-					text = self:_getLocalizedDateInfo(nil,_getString(text,""))
+					if string.find(text,"%%%$") then
+						text = string.gsub(text,"%%%$","%%")
+						text = self:_getLocalizedDateInfo(nil,_getString(text,""))
+					end
 					widget:setWidgetValue("itemno",text)
 					log:debug("Result from macroString: "..text)
 				end
@@ -1150,21 +1143,21 @@ function _updateSDTText(self,widget,format,period)
 	end
 end
 
-function _updateSDTSportText(self,widget,id,sport,status,prefix)
+function _updateSDTSportText(self,widget,item)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or 0 
 	local server = player:getSlimServer()
-	if not self.sdtWeatherChecked then
+	if not self.sdtSuperDateTimeChecked then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
-					self.sdtWeatherChecked = true
+					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtWeatherInstalled = true
-						self:_updateSDTSportText(widget,id,sport,status,prefix)
+						self.sdtSuperDateTimeInstalled = true
+						self:_updateSDTSportText(widget,item)
 					else	
-						self.sdtWeatherInstalled = false
+						self.sdtSuperDateTimeInstalled = false
 					end
 					
 				end
@@ -1172,67 +1165,75 @@ function _updateSDTSportText(self,widget,id,sport,status,prefix)
 			nil,
 			{'can','SuperDateTime', '?'}
 		)
-	elseif self.sdtWeatherInstalled and sport then
+	elseif self.sdtSuperDateTimeInstalled and _getString(item.sport,nil) then
 		server:userRequest(
 			function(chunk, err)
 				if err then
 					log:warn(err)
 				elseif chunk then
-					local sportsData = chunk.data.sportsData
-					if sportsData[string.upper(sport)] then
-						server:userRequest(
-							function(chunk, err)
-								if err then
-									log:warn(err)
-								elseif chunk.data then
-									local games = {}
-									local no = 1
-									for _,value in pairs(sportsData[string.upper(sport)]) do
-										for _,enabledTeam in pairs(chunk.data["_p2"]) do
-											if tostring(enabledTeam) == "1" or value.awayTeam == enabledTeam or value.homeTeam == enabledTeam then
-												if not status or 
-													(string.find(status,"final$") and _getNumber(games[no].homeScore,nil) and games[no].gameTime == "F") or 
-													(string.find(status,"^active") and _getNumber(games[no].homeScore,nil) and games[no].gameTime ~= "F") then
-													games[no] = value
-													no = no + 1
-												end
-												break
-											end
-										end
-									end
-									self.configItems[id].results = games
-									if #games>0 then
-										self.configItems[id].currentResult = 1
-										widget:setWidgetValue("itemno",self:_getGamesString(self.configItems[id].results,1,_getNumber(self.configItems[id].noofscores,1),prefix))
-									else
-										widget:setWidgetValue("itemno","")
-										self.configItems[id].currentResult = nil
-									end
-								end
-							end,
-							player and player:getId(),
-							{ 'pref', 'plugin.superdatetime:'..sport,'?'}
-						)
-					end
+					local sportsData = chunk.data.selsports
+					self:_changeSDTTextItem(widget,item,sportsData)
 				end
 			end,
 			player and player:getId(),
-			{ 'SuperDateTime', 'sports'}
+			{ 'SuperDateTime', 'selsports'}
 		)
 	end
 end
 
-function _getGamesString(self,results,first,length,prefix)
+function _changeSDTTextItem(self,widget,item,sportsData)
+	local games = {}
+	local no = 1
+	if _getString(item.sport,nil) then
+		for _,value in pairs(sportsData[string.upper(item.sport)]) do
+			if not _getString(item.status,nil) or 
+				(string.find(item.status,"final$") and _getNumber(games[no].homeScore,nil) and string.find(games[no].gameTime,"^F")) or 
+				(string.find(item.status,"^active") and _getNumber(games[no].homeScore,nil) and not string.find(games[no].gameTime,"^F")) then
+				games[no] = value
+				no = no + 1
+			end
+		end
+	else
+		for _,sport in ipairs(sportsData) do
+			for _,value in pairs(sportsData[string.upper(sport)]) do
+				if not _getString(item.status,nil) or 
+					(string.find(item.status,"final$") and _getNumber(games[no].homeScore,nil) and string.find(games[no].gameTime,"^F")) or 
+					(string.find(item.status,"^active") and _getNumber(games[no].homeScore,nil) and not string.find(games[no].gameTime,"^F")) then
+					games[no] = value
+					no = no + 1
+				end
+			end
+		end
+	end
+	item.results = games
+	if #games>0 then
+		item.currentResult = 1
+		widget:setWidgetValue("itemno",self:_getGamesString(item))
+	else
+		widget:setWidgetValue("itemno","")
+		item.currentResult = nil
+	end
+end
+
+function _getGamesString(self,item)
 	local result = ""
+	local length = _getNumber(item.noofscores,1)
+	if length == 1 and _getString(item.scrolling,"false") == "true" then
+		length = #item.results
+	end
+	local first = item.currentResult
+	local results = item.results
 	for i=first,(first+length-1) do
 		if #results>=i then
-			if i>first then
+			if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofscores,1))>1) then
 				result = result.."\n"
+			elseif i>first then
+				result = result.."      "
 			end
 			if _getNumber(results[i].homeScore,nil) then
-				result = result..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." @ "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
+				result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." @ "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
 			else
-				result = result.._getString(prefix,"")..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
+				result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
 			end
 		end
 	end
@@ -1241,19 +1242,19 @@ end
 
 function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 	local player = appletManager:callService("getCurrentPlayer")
-	period = _getString(period,nil) or 0 
+	period = _getString(period,nil) or "-1" 
 	local server = player:getSlimServer()
-	if not self.sdtWeatherChecked then
+	if not self.sdtSuperDateTimeChecked then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
-					self.sdtWeatherChecked = true
+					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtWeatherInstalled = true
+						self.sdtSuperDateTimeInstalled = true
 						self:_updateSDTIcon(widget,id,width,height,period,dynamic)
 					else	
-						self.sdtWeatherInstalled = false
+						self.sdtSuperDateTimeInstalled = false
 					end
 					
 				end
@@ -1261,7 +1262,7 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 			nil,
 			{'can','SuperDateTime', '?'}
 		)
-	elseif self.sdtWeatherInstalled then
+	elseif self.sdtSuperDateTimeInstalled then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
@@ -1598,15 +1599,22 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtsporttext" then
 			if forcedUpdate or self.lastminute!=minute then
-				self:_updateSDTSportText(self.items[no],no,_getString(item.sport,nil),_getString(item.gamestatus,nil),_getString(item.text,""))
+				self:_updateSDTSportText(self.items[no],item)
 			elseif second % _getNumber(item.interval,3) == 0 then
 				if item.results and #item.results>0 then
-					if #item.results > (item.currentResult+_getNumber(item.noofscores,1)-1) then
-						item.currentResult = item.currentResult + _getNumber(item.noofscores,1)
+					local length = _getNumber(item.noofscores,1)
+					if length == 1 and _getString(item.scrolling,"false") == "true" then
+						length = #item.results
+					end
+					if #item.results > (item.currentResult+length-1) then
+						item.currentResult = item.currentResult + length
 					else
 						item.currentResult = 1
 					end
-					self.items[no]:setWidgetValue("itemno",self:_getGamesString(item.results,item.currentResult,_getNumber(item.noofscores,1),item.text))
+					local gamesString = self:_getGamesString(item)
+					if self.items[no]:getWidgetValue("itemno") ~= gamesString then
+						self.items[no]:setWidgetValue("itemno",gamesString)
+					end
 				else
 					self.items[no]:setWidgetValue("itemno","")
 				end
