@@ -1403,7 +1403,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
 					end
 					if url then
 						self.sdtimages[self.mode.."item"..id] = id
-						self:_retrieveImage(url,self.mode.."item"..id,dynamic,width,height)
+						self:_retrieveImage(url,self.mode.."item"..id,"true",width,height)
 					end
 				end
 			end,
@@ -1777,7 +1777,7 @@ function _tick(self,forcedUpdate)
 				end
 				if item.mapURLs and item.currentMap then
 					self.sdtimages[self.mode.."item"..no] = no
-					self:_retrieveImage(item.mapURLs[item.currentMap],self.mode.."item"..no,"false",item.width,item.height)
+					self:_retrieveImage(item.mapURLs[item.currentMap],self.mode.."item"..no,"true",item.width,item.height)
 				end
 			end
 		elseif item.itemtype == "songinfoicon" then
