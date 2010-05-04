@@ -1387,21 +1387,9 @@ function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
 					local url = nil
 					if location and chunk.data.wetmapURL[location] and chunk.data.wetmapURL[location].URL then
 						url = chunk.data.wetmapURL[location].URL
-					elseif not location and chunk.data.wetmapURL then
-						local max = 0
-						self.configItems[id].mapURLs = {}
-						for key,data in pairs(chunk.data.wetmapURL) do
-							if not _getString(maptype,nil) or maptype == data.Type then
-								max = max + 1
-								if not url then
-									self.configItems[id].currentMap = max
-									url = data.URL
-								end
-								self.configItems[id].mapURLs[max] = data.URL
-							end
-						end
 					end
 					if url then
+						self.configItems[id].url = url
 						self.sdtimages[self.mode.."item"..id] = id
 						self:_retrieveImage(url,self.mode.."item"..id,"true",width,height)
 					end
@@ -1767,17 +1755,14 @@ function _tick(self,forcedUpdate)
 				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
 			end
 		elseif item.itemtype == "sdtweathermapicon" then
-			if forcedUpdate or minute % 15 == 0 then
+			if forcedUpdate then
 				self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
-			elseif not _getString(location,nil) and (self.lastminute!=minute or (_getNumber(item.interval,nil) and second % tonumber(item.interval)==0)) then
-				if item.mapURLs and item.currentMap >= #item.mapURLs then
-					item.currentMap = 1
-				elseif item.mapURLs then
-					item.currentMap = item.currentMap + 1
-				end
-				if item.mapURLs and item.currentMap then
+			elseif self.lastminute!=minute and (not item.url or (minute % 15 == 0 and not _getNumber(item.interval,nil)) or (_getNumber(item.interval,nil) and minute % tonumber(item.interval)==0)) then
+				if item.url then
 					self.sdtimages[self.mode.."item"..no] = no
-					self:_retrieveImage(item.mapURLs[item.currentMap],self.mode.."item"..no,"true",item.width,item.height)
+					self:_retrieveImage(item.url,self.mode.."item"..no,"true",item.width,item.height)
+				else
+					self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
 				end
 			end
 		elseif item.itemtype == "songinfoicon" then
