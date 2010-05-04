@@ -376,6 +376,7 @@ function openScreensaver(self,mode, transition)
 	end
 	self.sdtSuperDateTimeChecked = false
 	self.sdtMacroChecked = false
+	self.sdtVersionChecked = false
 	self.lastminute = 0
 	self.nowPlaying = 1
 	self:_tick(1)
@@ -1356,6 +1357,62 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 	end
 end
 
+function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
+	local player = appletManager:callService("getCurrentPlayer")
+	location = _getString(location,nil)
+	local server = player:getSlimServer()
+	if not self.sdtVersionChecked then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtVersionChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self.sdtVersionInstalled = true
+						self:_updateSDTWeatherMapIcon(widget,id,width,height,maptype,location)
+					else	
+						self.sdtVersionInstalled = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','sdtVersion', '?'}
+		)
+	elseif self.sdtVersionInstalled then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					local url = nil
+					if location and chunk.data.wetmapURL[location] and chunk.data.wetmapURL[location].URL then
+						url = chunk.data.wetmapURL[location].URL
+					elseif not location and chunk.data.wetmapURL then
+						local max = 0
+						self.configItems[id].mapURLs = {}
+						for key,data in pairs(chunk.data.wetmapURL) do
+							if not _getString(maptype,nil) or maptype == data.Type then
+								max = max + 1
+								if not url then
+									self.configItems[id].currentMap = max
+									url = data.URL
+								end
+								self.configItems[id].mapURLs[max] = data.URL
+							end
+						end
+					end
+					if url then
+						self.sdtimages[self.mode.."item"..id] = id
+						self:_retrieveImage(url,self.mode.."item"..id,dynamic,width,height)
+					end
+				end
+			end,
+			player and player:getId(),
+			{'SuperDateTime','wetmapURL'}
+		)
+	end
+end
+
 function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
@@ -1708,6 +1765,20 @@ function _tick(self,forcedUpdate)
 		elseif item.itemtype == "sdticon" then
 			if forcedUpdate or self.lastminute!=minute then
 				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
+			end
+		elseif item.itemtype == "sdtweathermapicon" then
+			if forcedUpdate or minute % 15 == 0 then
+				self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
+			elseif not _getString(location,nil) and (self.lastminute!=minute or (_getNumber(item.interval,nil) and second % tonumber(item.interval)==0)) then
+				if item.mapURLs and item.currentMap >= #item.mapURLs then
+					item.currentMap = 1
+				elseif item.mapURLs then
+					item.currentMap = item.currentMap + 1
+				end
+				if item.mapURLs and item.currentMap then
+					self.sdtimages[self.mode.."item"..no] = no
+					self:_retrieveImage(item.mapURLs[item.currentMap],self.mode.."item"..no,"false",item.width,item.height)
+				end
 			end
 		elseif item.itemtype == "songinfoicon" then
 			if forcedUpdate or (minute % 3 == 0 and self.lastminute!=minute) then
