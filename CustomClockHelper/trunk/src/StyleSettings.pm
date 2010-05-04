@@ -199,6 +199,8 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
 			}elsif($item->{'itemtype'} =~ /sdticon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'period'};
+			}elsif($item->{'itemtype'} =~ /sdtweathermapicon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'location'};
 			}else {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
 			}
@@ -397,6 +399,11 @@ sub handler {
 					push @values,{id=>'sdticon',name=>'sdticon'};				
 					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
 				}
+				$request = Slim::Control::Request::executeRequest(undef,['can','sdtVersion','?']);
+				$result = $request->getResult("_can");
+				if($result) {
+					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
+				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
 				$result = $request->getResult("_can");
 				if($result) {
@@ -467,6 +474,28 @@ sub handler {
 				my @values = ();
 				for my $entry (@$result) {
 					push @values,{id=>$entry->{'id'}, name=>$entry->{'title'}};
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
+				$item->{'type'} = 'optionalsinglelist';
+				my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','wetmapURL']);
+				my $result = $request->getResult("wetmapURL");
+				my @values = ();
+				for my $entry (keys %$result) {
+					push @values,{id=>$entry, name=>$entry};
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^maptype$/ &&  $itemtype eq 'sdtweathermapicon') {
+				$item->{'type'} = 'optionalsinglelist';
+				my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','wetmapURL']);
+				my $result = $request->getResult("wetmapURL");
+				my %types = ();
+				for my $key (keys %$result) {
+					$types{$result->{$key}->{'Type'}} = 1;
+				}
+				my @values = ();
+				for my $entry (keys %types) {
+					push @values,{id=>$entry, name=>$entry};
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^songinfomodule$/) {
@@ -683,6 +712,8 @@ sub getItemTypeParameters {
 		return qw(itemtype posx posy order width height interval favorite);
 	}elsif($itemType eq 'sdticon') {
 		return qw(itemtype posx posy order framewidth framerate width height period dynamic);
+	}elsif($itemType eq 'sdtweathermapicon') {
+		return qw(itemtype posx posy order framewidth framerate width height maptype location interval);
 	}elsif($itemType eq 'songinfoicon') {
 		return qw(itemtype posx posy order width height songinfomodule interval);
 	}elsif($itemType =~ /icon$/) {
