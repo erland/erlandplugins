@@ -485,19 +485,6 @@ sub handler {
 					push @values,{id=>$entry, name=>$entry};
 				}
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^maptype$/ &&  $itemtype eq 'sdtweathermapicon') {
-				$item->{'type'} = 'optionalsinglelist';
-				my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','wetmapURL']);
-				my $result = $request->getResult("wetmapURL");
-				my %types = ();
-				for my $key (keys %$result) {
-					$types{$result->{$key}->{'Type'}} = 1;
-				}
-				my @values = ();
-				for my $entry (keys %types) {
-					push @values,{id=>$entry, name=>$entry};
-				}
-				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^songinfomodule$/) {
 				$item->{'type'} = 'singlelist';
 				my $request = Slim::Control::Request::executeRequest(undef,['songinfomodules','type:image']);
@@ -713,7 +700,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdticon') {
 		return qw(itemtype posx posy order framewidth framerate width height period dynamic);
 	}elsif($itemType eq 'sdtweathermapicon') {
-		return qw(itemtype posx posy order framewidth framerate width height maptype location interval);
+		return qw(itemtype posx posy order width height location interval);
 	}elsif($itemType eq 'songinfoicon') {
 		return qw(itemtype posx posy order width height songinfomodule interval);
 	}elsif($itemType =~ /icon$/) {
