@@ -115,6 +115,35 @@ end
 function openCustomClockAlarmWindow(self)
 	self:openScreensaver("configalarmactive")
 end
+function openMenu(self,transition)
+	local window = Window("text_list",self:string("SCREENSAVER_CUSTOMCLOCK"), 'settingstitle')
+
+	local menu = SimpleMenu("menu")
+	for i = 1,9 do
+		local name = self:getSettings()["config"..i.."style"];
+		if _getString(name,nil) then
+			menu:addItem(
+				{
+					text = name, 
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						self:openScreensaver("config"..i)
+						return EVENT_CONSUME
+					end
+				})
+		end
+	end
+        if menu:numItems() == 0 then
+                self.menu:addItem( {
+                        text = "No styles configured", 
+                        iconStyle = 'item_no_arrow',
+                        weight = 2
+                })
+
+	end
+	window:addWidget(menu)
+	self:tieAndShowWindow(window)
+end
 
 function openScreensaver(self,mode, transition)
 

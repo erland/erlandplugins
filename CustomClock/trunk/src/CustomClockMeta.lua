@@ -36,6 +36,9 @@ function jiveVersion(self)
 end
 
 function registerApplet(self)
+	jiveMain:addItem(self:menuItem('appletCustomClock', 'home', "SCREENSAVER_CUSTOMCLOCK", function(applet, ...) applet:openMenu(...) end, 900))
+	jiveMain:disableItemById('appletCustomClock')
+	jiveMain:addItem(self:menuItem('appletExtrasCustomClock', 'extras', "SCREENSAVER_CUSTOMCLOCK", function(applet, ...) applet:openMenu(...) end, 900))
 end
 
 function configureApplet(self)
