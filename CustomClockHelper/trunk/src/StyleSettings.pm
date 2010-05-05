@@ -664,55 +664,55 @@ sub getItemTypeParameters {
 	my $itemType = shift;
 
 	if($itemType eq 'sdttext') {	
-		return qw(itemtype sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype text interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime text interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType =~ /text$/) {	
-		return qw(itemtype text color posx posy width align fonturl fontfile fontsize margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
-		return qw(itemtype posx posy size align order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy size align order);
 	}elsif($itemType =~ /^elapsedimage$/) {
-		return qw(itemtype posx posy dynamic width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy dynamic width initialangle finalangle url.rotating url.playingrotating url.stoppedrotating url.slidingx url.playingslidingx url.stoppedslidingx url.clippingx url.playingclippingx url.stoppedclippingx);
 	}elsif($itemType =~ /^rotatingimage$/) {
-		return qw(itemtype posx posy dynamic speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy dynamic speed url url.playing url.playingrotating url.stopped url.stoppedrotating);
 	}elsif($itemType =~ /clockimage$/) {
-		return qw(itemtype posx posy dynamic url url.hour url.minute url.second url.alarmhour url.alarmminute);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy dynamic url url.hour url.minute url.second url.alarmhour url.alarmminute);
 	}elsif($itemType =~ /image$/) {
-		return qw(itemtype posx posy dynamic url);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy dynamic url);
 	}elsif($itemType eq 'timeicon') {
-		return qw(itemtype posx posy width order url url.background text);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width order url url.background text);
 	}elsif($itemType eq 'alarmicon') {
-		return qw(itemtype posx posy order framewidth framerate url url.set url.active url.snooze);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url url.set url.active url.snooze);
 	}elsif($itemType =~ /^rating.*icon$/) {
-		return qw(itemtype posx posy order framewidth framerate url.0 url.1 url.2 url.3 url.4 url.5);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.0 url.1 url.2 url.3 url.4 url.5);
 	}elsif($itemType eq 'batteryicon') {
-		return qw(itemtype posx posy order framewidth framerate url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
 	}elsif($itemType eq 'wirelessicon') {
-		return qw(itemtype posx posy order framewidth framerate url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
 	}elsif($itemType eq 'playstatusicon') {
-		return qw(itemtype posx posy order framewidth framerate url.play url.stop url.pause);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.play url.stop url.pause);
 	}elsif($itemType eq 'repeatstatusicon') {
-		return qw(itemtype posx posy order framewidth framerate url.song url.playlist);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.song url.playlist);
 	}elsif($itemType eq 'shufflestatusicon') {
-		return qw(itemtype posx posy order framewidth framerate url.songs url.albums);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.songs url.albums);
 	}elsif($itemType eq 'galleryicon') {
-		return qw(itemtype posx posy order width height interval favorite);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height interval favorite);
 	}elsif($itemType eq 'sdticon') {
-		return qw(itemtype posx posy order framewidth framerate width height period dynamic);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate width height period dynamic);
 	}elsif($itemType eq 'sdtweathermapicon') {
-		return qw(itemtype posx posy order width height location interval);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height location interval);
 	}elsif($itemType eq 'songinfoicon') {
-		return qw(itemtype posx posy order width height songinfomodule interval);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height songinfomodule interval);
 	}elsif($itemType =~ /icon$/) {
-		return qw(itemtype posx posy order framewidth framerate dynamic url);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate dynamic url);
 	}elsif($itemType eq 'analogvumeter') {
-		return qw(itemtype posx posy width height order channels url);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order channels url);
 	}elsif($itemType eq 'spectrummeter') {
-		return qw(itemtype posx posy width height order channels backgroundcolor capcolor barcolor attr.capHeight attr.capSpace attr.barsInBin attr.barWidth attr.barSpace attr.binSpace);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order channels backgroundcolor capcolor barcolor attr.capHeight attr.capSpace attr.barsInBin attr.barWidth attr.barSpace attr.binSpace);
 	}elsif($itemType eq 'digitalvumeter') {
-		return qw(itemtype posx posy width height order channels url url.tickcap url.tickon url.tickoff);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order channels url url.tickcap url.tickon url.tickoff);
 	}else {
-		return qw(itemtype);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime);
 	}
 }
 # other people call us externally.
