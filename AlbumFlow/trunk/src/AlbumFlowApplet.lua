@@ -392,7 +392,7 @@ function defineSettingMode(self,menuItem,mode)
 	end
 end
 
-function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
+function fetchGalleryFavorites(self,title,mode,songInfoItems)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 	server:userRequest(function(chunk,err)
@@ -410,7 +410,7 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 											if err then
 												log:warn(err)
 											else
-												self:defineSettingModeSink(menuItem.text,mode,songInfoItems,chunk.data)
+												self:defineSettingModeSink(title,mode,songInfoItems,chunk.data)
 											end
 										end,
 										nil,
@@ -418,7 +418,7 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 									)
 								else
 									log:debug("Picture Gallery is NOT installed ignoring Picture Gallery modes")
-									self:defineSettingModeSink(menuItem.text,mode,songInfoItems)
+									self:defineSettingModeSink(title,mode,songInfoItems)
 								end
 							end
 						end,
@@ -427,7 +427,7 @@ function fetchGalleryFavorites(self,menuItem,mode,songInfoItems)
 					)
 				else
 					log:debug("Picture Gallery is NOT installed ignoring Picture Gallery modes")
-					self:defineSettingModeSink(menuItem.text,mode,songInfoItems)
+					self:defineSettingModeSink(title,mode,songInfoItems)
 				end
 			end
 		end,
