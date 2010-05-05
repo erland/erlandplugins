@@ -194,6 +194,22 @@ sub getSongInfoFunctions {
 			'properties' => [
 			]
 		},
+		'lastfmartistevents' => {
+			'name' => 'LastFM Artist Events',
+			'description' => "This module gets artist events from LastFM",
+			'developedBy' => 'Erland Isaksson',
+			'developedByLink' => 'http://erland.isaksson.info/donate',
+			'dataproviderlink' => 'http://www.last.fm',
+			'dataprovidername' => 'Audioscrobbler/LastFM',
+			'function' => \&getArtistEvents,
+			'type' => 'text',
+			'context' => 'artist',
+			'jivemenu' => 1,
+			'playermenu' => 1,
+			'webmenu' => 1,
+			'properties' => [
+			]
+		},
 		'lastfmalbumdesc' => {
 			'name' => 'LastFM Album Description',
 			'description' => "This module gets album description from LastFM",
@@ -451,6 +467,27 @@ sub getArtistInfoBiography {
 	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
+sub getArtistEvents {
+	my $client = shift;
+	my $callback = shift;
+	my $errorCallback = shift;
+	my $callbackParams = shift;
+	my $artist = shift;
+	my $params = shift;
+	my $artistName = shift;
+
+	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getArtistEventsResponse, \&gotErrorViaHTTP, {
+                client => $client, 
+		errorCallback => $errorCallback,
+                callback => $callback, 
+                callbackParams => $callbackParams,
+		params => $params,
+        });
+
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getevents&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getevents&artist=".escape($artistName)."&api_key=$API_KEY");
+}
+
 sub getAlbumImage {
 	my $client = shift;
 	my $callback = shift;
@@ -598,6 +635,26 @@ sub getArtistInfoResponse {
 			my %item = (
 				'type' => 'text',
 				'text' => $artist->{'bio'}->{'content'},
+			);
+			push @result,\%item;
+		}
+	}
+	sendResponse($params,\@result);
+}
+
+sub getArtistEventsResponse {
+	my $http = shift;
+	my $params = $http->params();
+
+	my $content = $http->content();
+	my @result = ();
+	if(defined($content)) {
+		my $xml = eval { XMLin($content, forcearray => ["event"], keyattr => ["size"]) };
+		my $events = $xml->{'events'}->{'event'};
+		for my $event (@$events) {
+			my %item = (
+				'type' => 'text',
+				'text' => $event->{'startDate'}." - ".$event->{'title'}.":\n".$event->{'venue'}->{'location'}->{'country'}.", ".$event->{'venue'}->{'location'}->{'city'}." (".$event->{'venue'}->{'name'}.")\n",
 			);
 			push @result,\%item;
 		}
