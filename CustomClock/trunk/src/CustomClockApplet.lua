@@ -56,6 +56,7 @@ local json             = require("json")
 
 local ltn12            = require("ltn12")
 local lfs              = require("lfs")
+local socket           = require("socket")
 local iconbar          = iconbar
 local appletManager    = appletManager
 local jiveMain         = jiveMain
@@ -223,7 +224,20 @@ function openScreensaver(self,mode, transition)
 		self.items = {}
 		local no = 1
 		self.switchingNowPlaying = false
+		self.visibilityGroups = {}
 		for _,item in pairs(self.configItems) do
+			if _getString(item.visibilitygroup,nil) then
+				if not self.visibilityGroups[item.visibilitygroup] then
+					self.visibilityGroups[item.visibilitygroup] = {}
+					self.visibilityGroups[item.visibilitygroup].current = 0
+					self.visibilityGroups[item.visibilitygroup].items = {}
+				end
+				local idx = #self.visibilityGroups[item.visibilitygroup].items + 1
+				self.visibilityGroups[item.visibilitygroup].items[idx] = {}
+				self.visibilityGroups[item.visibilitygroup].items[idx].item = no
+				self.visibilityGroups[item.visibilitygroup].items[idx].delay = _getNumber(item.visibilitytime,1)	
+				self.visibilityGroups[item.visibilitygroup].items[idx].order = _getNumber(item.visibilityorder,100)	
+			end
 			if string.find(item.itemtype,"^switchingtrack") then
 				self.switchingNowPlaying = true
 			end
@@ -270,6 +284,15 @@ function openScreensaver(self,mode, transition)
 			end
 			no = no +1
 		end
+		for key,group in pairs(self.visibilityGroups) do
+			local sortedItems = {}
+			for no,item in ipairs(group.items) do
+				table.insert(sortedItems,item)
+			end
+			table.sort(sortedItems, function(a,b) return a.order<b.order end)
+			group.items = sortedItems
+		end
+
 		local backgroundItems = {
 			background = Icon("background")
 		}
@@ -399,6 +422,31 @@ function closeScreensaver(self)
 	if self.window then
 		self.window:hide()
 		self.window = nil
+	end
+end
+
+function _updateVisibilityGroups(self)
+	local now = socket.gettime()
+	for key,group in pairs(self.visibilityGroups) do
+		-- We need an extra 0.1 seconds because the timer triggering once per second isn't as accurate as socket.gettime()
+		if not group.lastswitchtime or group.lastswitchtime+group.items[group.current].delay<now+0.1 then
+			if group.current >= #group.items then
+				group.current = 1
+			else
+				group.current = group.current + 1
+			end
+			group.lastswitchtime = now
+
+			for no,item in ipairs(group.items) do
+				if group.current == no then
+					if not self.items[item.item]:getWindow() then
+						self.window:addWidget(self.items[item.item])
+					end
+				elseif self.items[item.item]:getWindow() then
+					self.window:removeWidget(self.items[item.item])
+				end
+			end
+		end
 	end
 end
 
@@ -1558,6 +1606,8 @@ function _tick(self,forcedUpdate)
 			self:closeScreensaver()
 		end
 	end
+
+	self:_updateVisibilityGroups()
 
 	local minute = os.date("%M")
 
