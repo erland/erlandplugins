@@ -367,6 +367,7 @@ sub handler {
 				push @values,{id=>'ratingplayingicon',name=>'ratingplayingicon'};				
 				push @values,{id=>'ratingstoppedicon',name=>'ratingstoppedicon'};				
 				push @values,{id=>'wirelessicon',name=>'wirelessicon'};				
+				push @values,{id=>'sleepicon',name=>'sleepicon'};				
 				push @values,{id=>'batteryicon',name=>'batteryicon'};				
 				push @values,{id=>'covericon',name=>'covericon'};				
 				push @values,{id=>'coverplayingicon',name=>'coverplayingicon'};				
@@ -689,6 +690,8 @@ sub getItemTypeParameters {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url url.NONE url.AC url.4 url.3 url.2 url.1 url.0 url.CHARGING);
 	}elsif($itemType eq 'wirelessicon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url url.3 url.2 url.1 url.NONE url.ERROR url.SERVERERROR);
+	}elsif($itemType eq 'sleepicon') {
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.ON url.OFF);
 	}elsif($itemType eq 'playstatusicon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate url.play url.stop url.pause);
 	}elsif($itemType eq 'repeatstatusicon') {
