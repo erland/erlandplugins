@@ -1670,6 +1670,17 @@ function _tick(self,forcedUpdate)
 			else
 				self.items[no]:setWidgetValue("itemno",nil)
 			end
+		elseif item.itemtype == "sleepicon" then
+			local sleepMode = string.gsub(iconbar.iconSleep:getStyle(),"^button_sleep_","")
+			log:debug("Sleep status is "..tostring(sleepMode))
+			if self.images[self.mode.."item"..no.."."..sleepMode] then
+				log:debug("Sleep status is "..sleepMode)
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..sleepMode])
+			elseif sleepMode == "ON" then
+				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+			else
+				self.items[no]:setWidgetValue("itemno",nil)
+			end
 		elseif item.itemtype == "batteryicon" then
 			local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
 			log:debug("Battery status is "..tostring(batteryMode))
