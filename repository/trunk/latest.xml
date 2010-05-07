@@ -469,6 +469,27 @@
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/FatFingerSkin/FatFingerSkin-1.0.zip</url>
 			<sha>bb467ecae82a226efb363275a35d92fd1f26c0b8</sha>
 		</patch>
+		<patch name="DarkBlueGlowVUMeter" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Dark Blue Glow VU Meter</title>
+			<desc lang="EN">Replacement VU meter for the standard analog VU meter with a dark blue glow style</desc>
+			<creator>jstraw, Gazjam</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/DarkBlueGlowVUMeter/DarkBlueGlowVUMeter-1.0.zip</url>
+			<sha>db7340fa88922619e3fdd5233a1ab8f9d133332b</sha>
+		</patch>
+		<patch name="LightBlueGlowVUMeter" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Light Blue Glow VU Meter</title>
+			<desc lang="EN">Replacement VU meter for the standard analog VU meter with a light blue glow style</desc>
+			<creator>jstraw, Gazjam</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/LightBlueGlowVUMeter/LightBlueGlowVUMeter-1.0.zip</url>
+			<sha>d61a7f835a03efd0855a604d43b2724e46e2780c</sha>
+		</patch>
+		<patch name="VintageDarkerGoldVUMeter" target="fab4" version="1.0" minTarget="7.5" maxTarget="7.5">
+			<title lang="EN">Vintage Darker Gold VU Meter</title>
+			<desc lang="EN">Replacement VU meter for the standard analog VU meter with vintage darker gold style</desc>
+			<creator>jstraw, Gazjam</creator>
+			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/VintageDarkerGoldVUMeter/VintageDarkerGoldVUMeter-1.0.zip</url>
+			<sha>6470a912788e8bc85a3467932dfab577413c6109</sha>
+		</patch>
 	</patches>
 </extensions>
 
