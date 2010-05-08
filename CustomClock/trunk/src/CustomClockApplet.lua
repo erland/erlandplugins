@@ -1012,13 +1012,13 @@ end
 function _getLuaDir()
 	local luadir = nil
 	if lfs.attributes("/usr/share/jive/applets") ~= nil then
-		luadir = "/usr/"
+		luadir = "/usr/share/jive/"
 	else
 		-- find the main lua directory
 		for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
 			local mode = lfs.attributes(dir .. "share", "mode")
-			if mode == "directory" then
-				luadir = dir
+			if mode == "directory" and lfs.attributes(dir .. "share/jive", "mode") then
+				luadir = dir.."share/jive/"
 				break
 			end
 		end
@@ -1027,6 +1027,7 @@ function _getLuaDir()
 		log:debug("Lua dir is: "..luadir)
 	else
 		log:error("Can't locate lua \"share\" directory")
+		luadir = "./"
 	end
 	return luadir
 end
@@ -1040,10 +1041,10 @@ function _retrieveFont(self,fonturl,fontfile,fontSize)
 
 		local luadir = _getLuaDir()
 		local appletdir = _getAppletDir()
-		os.execute("mkdir -p \""..appletdir.."CustomClock/fonts\"")
+		lfs.mkdir(appletdir.."CustomClock/fonts")
 		if lfs.attributes(appletdir.."CustomClock/fonts/"..fontfile) ~= nil then
 			return self:_loadFont(appletdir.."CustomClock/fonts/"..fontfile,fontSize)
-		elseif lfs.attributes(luadir.."share/jive/fonts/"..fontfile) ~= nil then
+		elseif lfs.attributes(luadir.."fonts/"..fontfile) ~= nil then
 			return self:_loadFont("fonts/"..fontfile,fontSize)
 		else
 			local req = nil
@@ -2419,7 +2420,7 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 			cacheName = cacheName.."-h"..height
 		end
 		if _getString(dynamic,"false") == "false" and lfs.attributes(appletdir.."CustomClock/images/"..cacheName) then
-			log:warn("Image found in cache: "..cacheName)
+			log:debug("Image found in cache: "..cacheName)
 			local fh = io.open(appletdir.."CustomClock/images/"..cacheName, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
@@ -2430,7 +2431,7 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 			local req = RequestHttp(function(chunk, err)
 					if chunk then
 						if _getString(dynamic,"false") == "false" then
-							os.execute("mkdir -p \""..appletdir.."CustomClock/images\"")
+							lfs.mkdir(appletdir.."CustomClock/images")
 					                local fh = io.open(appletdir.."CustomClock/images/"..cacheName, "w")
 					                fh:write(chunk)
 							fh:close()
@@ -2445,8 +2446,8 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 		end
 	else
 		local luadir = _getLuaDir()
-		if lfs.attributes(luadir.."share/jive/"..url) ~= nil then
-			local fh = io.open(luadir.."share/jive/"..url, "rb")
+		if lfs.attributes(luadir..url) ~= nil then
+			local fh = io.open(luadir..url, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
 			self:_retrieveImageData(url,imageType,chunk)
