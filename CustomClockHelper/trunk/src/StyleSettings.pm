@@ -191,7 +191,7 @@ sub handler {
 			};
 			if($item->{'itemtype'} =~ /sdttext$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").$item->{'sdtformat'};
-			}elsif($item->{'itemtype'} =~ /sdtsporttext$/) {
+			}elsif($item->{'itemtype'} =~ /^sdtsport/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
@@ -403,6 +403,7 @@ sub handler {
 				$request = Slim::Control::Request::executeRequest(undef,['can','sdtVersion','?']);
 				$result = $request->getResult("_can");
 				if($result) {
+					push @values,{id=>'sdtsporttexticon',name=>'sdtsporttexticon'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
@@ -476,6 +477,30 @@ sub handler {
 				for my $entry (@$result) {
 					push @values,{id=>$entry->{'id'}, name=>$entry->{'title'}};
 				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^layout$/ &&  $itemtype eq 'sdtsporttexticon') {
+				$item->{'type'} = 'singlelist';
+				my @values = ();
+				push @values,{id=>'vertical',name=>'vertical'};				
+				push @values,{id=>'horizontal',name=>'horizontal'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtsporttexticon') {
+				$item->{'type'} = 'optionalsinglelist';
+				my @values = ();
+				push @values,{id=>'team',name=>'team'};				
+				push @values,{id=>'league',name=>'league'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^teamorder$/ &&  $itemtype =~ /^sdtsport/) {
+				$item->{'type'} = 'singlelist';
+				my @values = ();
+				push @values,{id=>'home-away',name=>'home-away'};				
+				push @values,{id=>'away-home',name=>'away-home'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^show(icon|name|score|time)$/ &&  $itemtype eq 'sdtsporttexticon') {
+				$item->{'type'} = 'singlelist';
+				my @values = ();
+				push @values,{id=>'true',name=>'true'};				
+				push @values,{id=>'false',name=>'false'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -667,7 +692,9 @@ sub getItemTypeParameters {
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime text interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime text teamorder separator interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtsporttexticon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime layout showicon showname showscore showtime logotype separator separatorwidth scorewidth timewidth scoreheight reverseteams text interval sport gamestatus scorecolor color posx posy width fonturl fontfile timefontsize scorefontsize fontsize teamorder timeheight textheight iconsize margin animate order);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
