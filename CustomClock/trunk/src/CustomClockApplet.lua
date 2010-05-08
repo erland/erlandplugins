@@ -276,6 +276,42 @@ function openScreensaver(self,mode, transition)
 				}
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
+			elseif string.find(item.itemtype,"sporttexticon$") then
+				self.items[no] = {
+					multipleitems = 1,
+					homeicon = Group("homeicon"..no,{
+						icon = Icon("iconitem"..no)
+					}),
+					hometext = Group("hometext"..no,{
+						text = Label("textitem"..no,""),
+					}),
+					homescore = Group("homescore"..no,{
+						text = Label("textitem"..no,"")
+					}),
+					separatoritem = Group("separatorgroup"..no,{
+						text = Label("textitem"..no,""),
+					}),
+					awayicon = Group("awayicon"..no,{
+						icon = Icon("iconitem"..no)
+					}),
+					awaytext = Group("awaytext"..no,{
+						text = Label("textitem"..no,""),
+					}),
+					awayscore = Group("awayscore"..no,{
+						text = Label("textitem"..no,"")
+					}),
+					timeitem = Group("timegroup"..no,{
+						text = Label("textitem"..no,""),
+					}),
+				}
+				self.window:addWidget(self.items[no].homeicon)
+				self.window:addWidget(self.items[no].hometext)
+				self.window:addWidget(self.items[no].homescore)
+				self.window:addWidget(self.items[no].awayicon)
+				self.window:addWidget(self.items[no].awaytext)
+				self.window:addWidget(self.items[no].awayscore)
+				self.window:addWidget(self.items[no].separatoritem)
+				self.window:addWidget(self.items[no].timeitem)
 			elseif string.find(item.itemtype,"icon$") then
 				local childItems = {
 					itemno = Icon("item"..no)
@@ -420,6 +456,7 @@ function openScreensaver(self,mode, transition)
 		self.vumeterimages = {}
 		self.galleryimages = {}
 		self.sdtimages = {}
+		self.sdtsportimages = {}
 		self.songinfoimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
@@ -442,6 +479,10 @@ function openScreensaver(self,mode, transition)
 		for no,item in pairs(self.configItems) do
 			if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
 				self.items[no]:getWidget("itemno"):animate(true)
+			elseif string.find(item.itemtype,"sporttextitem$") and _getString(item.animate,"true") == "true" then
+				self.items[no].hometext:getWidget("text"):animate(true)
+				self.items[no].awaytext:getWidget("text"):animate(true)
+				self.items[no].timeitem:getWidget("text"):animate(true)
 			end
 		end
 	end
@@ -468,8 +509,20 @@ function _updateVisibilityGroups(self)
 
 			for no,item in ipairs(group.items) do
 				if group.current == no then
-					if not self.items[item.item]:getWindow() then
+					if self.items[no].multipleitems then
+						for key,item in pairs(self.items[no]) do
+							if type(item) ~= 'string' and not item:getWindow() then
+								self.window:addWidget(item)
+							end
+						end
+					elseif not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
+					end
+				elseif self.items[no].multipleitems then
+					for key,item in pairs(self.items[no]) do
+						if type(item) ~= 'string' and item:getWindow() then
+							self.window:removeWidget(item)
+						end
 					end
 				elseif self.items[item.item]:getWindow() then
 					self.window:removeWidget(self.items[item.item])
@@ -543,15 +596,15 @@ function openSettings(self)
 			})
 	end
 
-	local luadir = _getLuaDir()
-	if lfs.attributes(luadir.."share/jive/applets/CustomClock/fonts") or lfs.attributes(luadir.."share/jive/applets/CustomClock/images") then
+	local appletdir = _getAppletDir()
+	if lfs.attributes(appletdir.."CustomClock/fonts") or lfs.attributes(appletdir.."CustomClock/images") then
 		menu:addItem(
 			{
 				text = self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CLEAR_CACHE"), 
 				sound = "WINDOWSHOW",
 				callback = function(event, menuItem)
-					os.execute("rm -rf \""..luadir.."share/jive/applets/CustomClock/fonts\"")
-					os.execute("rm -rf \""..luadir.."share/jive/applets/CustomClock/images\"")
+					os.execute("rm -rf \""..appletdir.."CustomClock/fonts\"")
+					os.execute("rm -rf \""..appletdir.."CustomClock/images\"")
 					self.settingsWindow:hide()
 					self.settingsWindow = nil
 					self:openSettings()
@@ -933,6 +986,29 @@ function _getMode(self)
 	end
 end
 
+function _getAppletDir()
+	local appletdir = nil
+	if lfs.attributes("/usr/share/jive/applets") ~= nil then
+		luadir = "/usr/share/jive/applets/"
+	else
+		-- find the applet directory
+		for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
+		        dir = dir .. "applets"
+		        local mode = lfs.attributes(dir, "mode")
+		        if mode == "directory" then
+		                appletdir = dir.."/"
+		                break
+		        end
+		end
+	end
+	if appletdir then
+		log:debug("Applet dir is: "..appletdir)
+	else
+		log:error("Can't locate lua \"applets\" directory")
+	end
+	return appletdir
+end
+
 function _getLuaDir()
 	local luadir = nil
 	if lfs.attributes("/usr/share/jive/applets") ~= nil then
@@ -947,6 +1023,11 @@ function _getLuaDir()
 			end
 		end
 	end
+	if luadir then
+		log:debug("Lua dir is: "..luadir)
+	else
+		log:error("Can't locate lua \"share\" directory")
+	end
 	return luadir
 end
 
@@ -958,19 +1039,20 @@ function _retrieveFont(self,fonturl,fontfile,fontSize)
 		end
 
 		local luadir = _getLuaDir()
-		os.execute("mkdir -p \""..luadir.."share/jive/applets/CustomClock/fonts\"")
-		if lfs.attributes(luadir.."share/jive/applets/CustomClock/fonts/"..fontfile) ~= nil then
-			return self:_loadFont("applets/CustomClock/fonts/"..fontfile,fontSize)
+		local appletdir = _getAppletDir()
+		os.execute("mkdir -p \""..appletdir.."CustomClock/fonts\"")
+		if lfs.attributes(appletdir.."CustomClock/fonts/"..fontfile) ~= nil then
+			return self:_loadFont(appletdir.."CustomClock/fonts/"..fontfile,fontSize)
 		elseif lfs.attributes(luadir.."share/jive/fonts/"..fontfile) ~= nil then
 			return self:_loadFont("fonts/"..fontfile,fontSize)
 		else
 			local req = nil
 			log:debug("Getting "..fonturl)
 			if not string.find(fonturl,"%.ttf$") and not string.find(fonturl,"%.TTF$")then
-				local sink = ltn12.sink.chain(zip.filter(),self:_downloadFontZipFile(luadir.."share/jive/applets/CustomClock/fonts/"))
+				local sink = ltn12.sink.chain(zip.filter(),self:_downloadFontZipFile(appletdir.."CustomClock/fonts/"))
 				req = RequestHttp(sink, 'GET', fonturl, {stream = true})
 			else
-				req = RequestHttp(self:_downloadFontFile(luadir.."share/jive/applets/CustomClock/fonts/",fontfile), 'GET', fonturl, {stream = true})
+				req = RequestHttp(self:_downloadFontFile(appletdir.."CustomClock/fonts/",fontfile), 'GET', fonturl, {stream = true})
 			end
 			local uri = req:getURI()
 
@@ -1285,7 +1367,7 @@ function _updateSDTText(self,widget,format,period)
 	end
 end
 
-function _updateSDTSportText(self,widget,item)
+function _updateSDTSportItem(self,widget,item,id)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or 0 
 	local server = player:getSlimServer()
@@ -1297,7 +1379,7 @@ function _updateSDTSportText(self,widget,item)
 					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self.sdtSuperDateTimeInstalled = true
-						self:_updateSDTSportText(widget,item)
+						self:_updateSDTSportItem(widget,item,id)
 					else	
 						self.sdtSuperDateTimeInstalled = false
 					end
@@ -1307,14 +1389,16 @@ function _updateSDTSportText(self,widget,item)
 			nil,
 			{'can','SuperDateTime', '?'}
 		)
-	elseif self.sdtSuperDateTimeInstalled and _getString(item.sport,nil) then
+	elseif self.sdtSuperDateTimeInstalled then
 		server:userRequest(
 			function(chunk, err)
 				if err then
 					log:warn(err)
 				elseif chunk then
 					local sportsData = chunk.data.selsports
-					self:_changeSDTTextItem(widget,item,sportsData)
+					item.results = self:_getSDTGames(item,sportsData)
+					item.currentResult = nil
+					self:_changeSDTSportItem(widget,item,id)
 				end
 			end,
 			player and player:getId(),
@@ -1323,37 +1407,154 @@ function _updateSDTSportText(self,widget,item)
 	end
 end
 
-function _changeSDTTextItem(self,widget,item,sportsData)
+function _getSDTGames(self,item,sportsData)
 	local games = {}
 	local no = 1
 	if _getString(item.sport,nil) then
-		for _,value in pairs(sportsData[string.upper(item.sport)]) do
-			if not _getString(item.status,nil) or 
-				(string.find(item.status,"final$") and _getNumber(games[no].homeScore,nil) and string.find(games[no].gameTime,"^F")) or 
-				(string.find(item.status,"^active") and _getNumber(games[no].homeScore,nil) and not string.find(games[no].gameTime,"^F")) then
-				games[no] = value
-				no = no + 1
-			end
-		end
-	else
-		for _,sport in ipairs(sportsData) do
-			for _,value in pairs(sportsData[string.upper(sport)]) do
-				if not _getString(item.status,nil) or 
-					(string.find(item.status,"final$") and _getNumber(games[no].homeScore,nil) and string.find(games[no].gameTime,"^F")) or 
-					(string.find(item.status,"^active") and _getNumber(games[no].homeScore,nil) and not string.find(games[no].gameTime,"^F")) then
+		local logoURL = nil
+		if sportsData[string.upper(item.sport)] then
+			for key,value in pairs(sportsData[string.upper(item.sport)]) do
+				if type(value) == 'string' then
+					if key == 'logoURL' then
+						logoURL = value
+					end
+				elseif not _getString(item.gamestatus,nil) or 
+					(string.find(item.gamestatus,"final$") and _getNumber(value.homeScore,nil) and string.find(value.gameTime,"^F")) or 
+					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
 					no = no + 1
 				end
 			end
+			if logoURL then
+				for idx,value in ipairs(games) do
+					value.logoURL = logoURL
+				end
+			end
+		end
+	else
+		for sport,_ in pairs(sportsData) do
+			local logoURL = nil
+			for key,value in pairs(sportsData[string.upper(sport)]) do
+				if type(value) == 'string' then
+					if key == 'logoURL' then
+						logoURL = value
+					end
+				elseif not _getString(item.gamestatus,nil) or 
+					(string.find(item.gamestatus,"final$") and _getNumber(value.homeScore,nil) and string.find(value.gameTime,"^F")) or 
+					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
+					games[no] = value
+					games[no].sport = string.upper(sport)
+					no = no + 1
+				end
+			end
+			if logoURL then
+				for idx,value in ipairs(games) do
+					if value.sport == sport then
+						value.logoURL = logoURL
+					end
+				end
+			end
 		end
 	end
-	item.results = games
-	if #games>0 then
+	return games
+end
+
+function _changeSDTSportItem(self,widget,item,id)
+	if item.currentResult then
+		local length = _getNumber(item.noofscores,1)
+		if length == 1 and item.itemtype == 'sdtsporttext' and _getString(item.scrolling,"false") == "true" then
+			length = #item.results
+		elseif item.itemtype == 'sdtsporttexticon' then
+			length = 1
+		end
+		if #item.results > (item.currentResult+length-1) then
+			item.currentResult = item.currentResult + length
+		else
+			item.currentResult = 1
+		end
+	elseif #item.results>0 then
 		item.currentResult = 1
-		widget:setWidgetValue("itemno",self:_getGamesString(item))
+	end
+	if item.currentResult then
+		if item.itemtype == 'sdtsporttext' then
+			local gamesString = self:_getGamesString(item)
+			if widget:getWidgetValue("itemno") ~= gamesString then
+				widget:setWidgetValue("itemno",gamesString)
+			end
+		elseif item.itemtype == 'sdtsporttexticon' then
+			widget.separatoritem:setWidgetValue("text",_getString(item.separator,""))
+			if _getNumber(item.results[item.currentResult].homeScore,nil) then
+				if _getString(item.showscore,"true") == "true" then
+					widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam))
+					widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam))
+				else
+					widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam).." "..item.results[item.currentResult].homeScore)
+					widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam).." "..item.results[item.currentResult].awayScore)
+				end
+				widget.homescore:setWidgetValue("text",item.results[item.currentResult].homeScore)
+				widget.awayscore:setWidgetValue("text",item.results[item.currentResult].awayScore)
+			else
+				widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam))
+				widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam))
+				widget.homescore:setWidgetValue("text","")
+				widget.awayscore:setWidgetValue("text","")
+			end
+			if _getString(item.results[item.currentResult].gameTime,nil) then
+				widget.timeitem:setWidgetValue("text",tostring(item.results[item.currentResult].gameTime))
+			end
+			if _getString(item.showicon,"true") == "true" then
+				local player = appletManager:callService("getCurrentPlayer")
+				local server = player:getSlimServer()
+				local homeURL
+				if _getString(item.logotype,"team") == "team" and _getString(item.results[item.currentResult].homeLogoURL,nil) then
+					homeURL = item.results[item.currentResult].homeLogoURL
+				elseif _getString(item.results[item.currentResult].logoURL,nil) then
+					local ip,port = server:getIpPort()
+					homeURL = "http://"..ip..":"..port.."/"..item.results[item.currentResult].logoURL
+					local iconsize = _getNumber(item.iconsize,50)
+					homeURL = string.gsub(homeURL,".png$","_"..iconsize.."x"..iconsize.."_p.png")
+					homeURL = string.gsub(homeURL,".jpg$","_"..iconsize.."x"..iconsize.."_p.jpg")
+					homeURL = string.gsub(homeURL,".jpeg$","_"..iconsize.."x"..iconsize.."_p.jpeg")
+				end
+				if homeURL then
+					self.sdtsportimages[self.mode.."item"..id..".home"] = id
+					self:_retrieveImage(homeURL,self.mode.."item"..id..".home","false",_getNumber(item.iconsize,nil),_getNumber(item.iconsize,nil))
+				else
+					widget.homeicon:setWidgetValue("icon",nil)
+				end
+
+				local awayURL
+				if _getString(item.logotype,"team") == "team" and _getString(item.results[item.currentResult].awayLogoURL,nil) then
+					awayURL = item.results[item.currentResult].awayLogoURL
+				elseif _getString(item.results[item.currentResult].logoURL,nil) then
+					local ip,port = server:getIpPort()
+					awayURL = "http://"..ip..":"..port.."/"..item.results[item.currentResult].logoURL
+					local iconsize = _getNumber(item.iconsize,50)
+					awayURL = string.gsub(homeURL,".png$","_"..iconsize.."x"..iconsize.."_p.png")
+					awayURL = string.gsub(homeURL,".jpg$","_"..iconsize.."x"..iconsize.."_p.jpg")
+					awayURL = string.gsub(homeURL,".jpeg$","_"..iconsize.."x"..iconsize.."_p.jpeg")
+				end
+				if awayURL then
+					self.sdtsportimages[self.mode.."item"..id..".away"] = id
+					self:_retrieveImage(awayURL,self.mode.."item"..id..".away","false",_getNumber(item.iconsize,nil),_getNumber(item.iconsize,nil))
+				else
+					widget.awayicon:setWidgetValue("icon",nil)
+				end
+			end
+		end
 	else
-		widget:setWidgetValue("itemno","")
-		item.currentResult = nil
+		if item.itemtype == 'sdtsporttext' then
+			widget:setWidgetValue("itemno","")
+		elseif item.itemtype == 'sdtsporttexticon' then
+			widget.timeitem:setWidgetValue("text","")
+			widget.separatoritem:setWidgetValue("text","")
+			widget.hometext:setWidgetValue("text","")
+			widget.homeicon:setWidgetValue("icon",nil)
+			widget.homescore:setWidgetValue("text","")
+			widget.awaytext:setWidgetValue("text","")
+			widget.awayicon:setWidgetValue("icon",nil)
+			widget.awayscore:setWidgetValue("text","")
+		end
 	end
 end
 
@@ -1373,9 +1574,17 @@ function _getGamesString(self,item)
 				result = result.."      "
 			end
 			if _getNumber(results[i].homeScore,nil) then
-				result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." @ "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
+				if _getString(item.teamorder,"home-away") == "home-away" then
+					result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." ".._getString(item.separator,"-").." "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
+				else
+					result = result.._getString(item.text,"")..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ".._getString(item.separator,"@").." "..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." ("..tostring(results[i].gameTime)..")"
+				end
 			else
-				result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." @ "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
+				if _getString(item.teamorder,"home-away") == "home-away" then
+					result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getString(item.separator,"-").." "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
+				else
+					result = result.._getString(item.text,"")..tostring(results[i].awayTeam).." ".._getString(item.separator,"@").." "..tostring(results[i].homeTeam).." ("..tostring(results[i].gameTime)..")"
+				end
 			end
 		end
 	end
@@ -1798,24 +2007,29 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtsporttext" then
 			if forcedUpdate or self.lastminute!=minute then
-				self:_updateSDTSportText(self.items[no],item)
+				self:_updateSDTSportItem(self.items[no],item,no)
 			elseif second % _getNumber(item.interval,3) == 0 then
 				if item.results and #item.results>0 then
-					local length = _getNumber(item.noofscores,1)
-					if length == 1 and _getString(item.scrolling,"false") == "true" then
-						length = #item.results
-					end
-					if #item.results > (item.currentResult+length-1) then
-						item.currentResult = item.currentResult + length
-					else
-						item.currentResult = 1
-					end
-					local gamesString = self:_getGamesString(item)
-					if self.items[no]:getWidgetValue("itemno") ~= gamesString then
-						self.items[no]:setWidgetValue("itemno",gamesString)
-					end
+					self:_changeSDTSportItem(self.items[no],item,no)
 				else
 					self.items[no]:setWidgetValue("itemno","")
+				end
+			end
+		elseif item.itemtype == "sdtsporttexticon" then
+			if forcedUpdate or self.lastminute!=minute then
+				self:_updateSDTSportItem(self.items[no],item,no)
+			elseif second % _getNumber(item.interval,3) == 0 then
+				if item.results and #item.results>0 then
+					self:_changeSDTSportItem(self.items[no],item,no)
+				else
+					self.items[no].timeitem:setWidgetValue("text","")
+					self.items[no].separatoritem:setWidgetValue("text","")
+					self.items[no].hometext:setWidgetValue("text","")
+					self.items[no].awaytext:setWidgetValue("text","")
+					self.items[no].homeicon:setWidgetValue("icon",nil)
+					self.items[no].awayicon:setWidgetValue("icon",nil)
+					self.items[no].homescore:setWidgetValue("text","")
+					self.items[no].awayscore:setWidgetValue("text","")
 				end
 			end
 		elseif item.itemtype == "covericon" then
@@ -2196,7 +2410,7 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 			end				
                 end
 		log:debug("Getting image for "..imageType.." from "..imagehost.." and "..imageport.." and "..imagepath)
-		local luadir = _getLuaDir()
+		local appletdir = _getAppletDir()
 		local cacheName = string.urlEncode(url)
 		if width then
 			cacheName = cacheName.."-w"..width
@@ -2204,19 +2418,20 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 		if height then
 			cacheName = cacheName.."-h"..height
 		end
-		if _getString(dynamic,"false") == "false" and lfs.attributes(luadir.."share/jive/applets/CustomClock/images/"..cacheName) then
-			log:debug("Image found in cache")
-			local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..cacheName, "rb")
+		if _getString(dynamic,"false") == "false" and lfs.attributes(appletdir.."CustomClock/images/"..cacheName) then
+			log:warn("Image found in cache: "..cacheName)
+			local fh = io.open(appletdir.."CustomClock/images/"..cacheName, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
 			self:_retrieveImageData(url,imageType,chunk)
 		else
+			log:debug("Image not found in cache, getting from source: "..url)
 			local http = SocketHttp(jnt, imagehost, imageport)
 			local req = RequestHttp(function(chunk, err)
 					if chunk then
 						if _getString(dynamic,"false") == "false" then
-							os.execute("mkdir -p \""..luadir.."share/jive/applets/CustomClock/images\"")
-					                local fh = io.open(luadir.."share/jive/applets/CustomClock/images/"..string.urlEncode(url), "w")
+							os.execute("mkdir -p \""..appletdir.."CustomClock/images\"")
+					                local fh = io.open(appletdir.."CustomClock/images/"..cacheName, "w")
 					                fh:write(chunk)
 							fh:close()
 						end
@@ -2272,6 +2487,12 @@ function _retrieveImageData(self,url,imageType,chunk)
 		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
 	elseif self.sdtimages[imageType] ~= nil then
 		self.items[self.sdtimages[imageType]]:getWidget("itemno"):setValue(image)
+	elseif self.sdtsportimages[imageType] ~= nil then
+		if string.find(imageType,"home$") then
+			self.items[self.sdtsportimages[imageType]].homeicon:getWidget("icon"):setValue(image)
+		else
+			self.items[self.sdtsportimages[imageType]].awayicon:getWidget("icon"):setValue(image)
+		end
 	elseif self.songinfoimages[imageType] ~= nil then
 		self.items[self.songinfoimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
@@ -2512,6 +2733,327 @@ function _getClockSkin(self,skin)
 					align = _getString(item.align,"center"),
 					w = _getNumber(item.size,defaultSize)
 				}
+		elseif string.find(item.itemtype,"sporttexticon$") then
+			local timewidth = 0
+			local timeheight = 0
+			local separatorwidth = 0
+			local textgroupwidth = 0
+			local icongroupwidth = 0
+			local scoregroupwidth = 0
+			local textheight = 0
+			local iconheight = 0
+			local iconalign
+			local textalign
+			local scorealign
+			local separatoralign
+			local timealign
+			local separatorposx
+			local separatorposy
+			local timeposx
+			local timeposy
+			local scoreheight = 0
+
+			local home = {}
+			local away = {}
+
+			local showicon = _getString(item.showicon,"true")
+			local showname = _getString(item.showname,"true")
+			local showscore = _getString(item.showscore,"true")
+			local showtime = _getString(item.showtime,"true")
+
+			if showicon == "true" then
+				iconheight = _getNumber(item.iconsize,50)
+			end
+
+			local font = nil
+			local scorefont = nil
+			local timefont = nil
+			if _getString(item.fonturl,nil) then
+				font = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.fontsize,20))
+				timefont = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.timefontsize,_getNumber(item.fontsize,20)))
+			end
+			if _getString(item.scorefonturl,_getString(item.fonturl,nil)) then
+				scorefont = self:_retrieveFont(_getString(item.scorefonturl,item.fonturl),_getString(item.scorefontfile,item.fontfile),_getNumber(item.fontsize,_getNumber(item.scorefontsize,20)))
+			end
+			if not font then
+				font = self:_loadFont(self:getSettings()["font"],_getNumber(item.fontsize,20))
+			end
+			if not timefont then
+				timefont = self:_loadFont(self:getSettings()["font"],_getNumber(item.timefontsize,_getNumber(item.fontsize,20)))
+			end
+			if not scorefont then
+				scorefont = self:_loadFont(self:getSettings()["font"],_getNumber(item.scorefontsize,_getNumber(item.fontsize,20)))
+			end
+
+			local layout = _getString(item.layout,"vertical")
+			if layout == "vertical" then
+				if showtime == "true" then
+					timewidth = _getNumber(item.timewidth,_getNumber(item.fontsize,20)*4.5)
+				end
+				if _getString(item.separator,nil) or _getNumber(item.separatorwidth,nil) then
+					separatorwidth = _getNumber(item.separatorwidth,_getNumber(item.fontsize,20)*2)
+				end
+				textgroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2
+				icongroupwidth = textgroupwidth
+				scoregroupwidth = textgroupwidth
+				if showname == "true" then
+					textheight = _getNumber(item.lineheight,_getNumber(fontsize,20))
+				end
+				if showscore == "true" then
+					scoreheight = _getNumber(item.scoreheight,_getNumber(item.scorefontsize,_getNumber(item.fontsize,_getNumber(item.fontsize,20))))
+				end
+
+				iconalign = "center"
+				textalign = "center"
+				timealign = "center"
+				separatoralign = "center"
+				scorealign = "center"
+
+				home = {
+					textposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
+					scoreposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
+					iconposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
+					textposy = _getString(item.posy,0)+iconheight,
+					scoreposy = _getString(item.posy,0)+iconheight + textheight,
+					iconposy = _getString(item.posy,0)+0,
+				}
+
+				away = {
+					textposx = _getString(item.posx,0),
+					scoreposx = _getString(item.posx,0),
+					iconposx = _getString(item.posx,0),
+					textposy = _getString(item.posy,0)+iconheight,
+					scoreposy = _getString(item.posy,0) + iconheight + textheight,
+					iconposy = _getString(item.posy,0),
+				}
+
+				if _getString(item.reverseteams,"false") == "true" then
+					local tmp = home
+					home = away
+					away = tmp
+				end
+				separatorposx = textgroupwidth
+				separatorposy = iconheight
+				timeposx = _getString(item.posx,0)+textgroupwidth-timewidth/2+separatorwidth/2
+				if showicon == "true" then
+					timeheight = iconheight
+					timeposy = _getString(item.posy,0)
+				elseif showscore == "true" then
+					timeheight = scoreheight
+					timeposy = home.scoreposy
+				else
+					timeheight = textheight
+					timeposy = home.textposy
+				end
+			elseif layout == "horizontal" then
+				if showtime == "true" then
+					timewidth = _getNumber(item.timewidth,_getNumber(item.fontsize,20)*4.5)
+				end
+				if _getString(item.separator,nil) or _getNumber(item.separatorwidth,nil) then
+					separatorwidth = _getNumber(item.separatorwidth,_getNumber(item.fontsize,20)*2)
+				end
+				icongroupwidth = iconheight
+				if showscore == "true" then
+					scoregroupwidth = _getNumber(item.scorewidth,_getNumber(item.scorefontsize,_getNumber(item.fontsize,20))*2)
+				end
+				if showname == "true" then
+					textgroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2-icongroupwidth-scoregroupwidth-timewidth/2
+				elseif showscore == "true" then
+					scoregroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2-icongroupwidth-timewidth/2
+				end
+				if showname == "true" then
+					textheight = _getNumber(item.textheight,_getNumber(fontsize,20))
+					if iconheight > textheight then
+						textheight = iconheight
+					end
+				end
+				if showscore == "true" then
+					scoreheight = _getNumber(item.scoreheight,_getNumber(item.scorefontsize,_getNumber(item.fontsize,_getNumber(item.fontsize,20))))
+					if iconheight > scoreheight then
+						scoreheight = iconheight
+					end
+					if textheight > scoreheight then
+						scoreheight = textheight
+					end
+				end				
+				if scoreheight > textheight then
+					textheight = scoreheight
+				end
+
+				iconalign = "center"
+				textalign = "left"
+				timealign = "right"
+				scorealign = "center"
+				separatoralign = "center"
+
+				away = {
+					textposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth,
+					scoreposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth+textgroupwidth,
+					iconposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth,
+					textposy = _getString(item.posy,0),
+					scoreposy = _getString(item.posy,0),
+					iconposy = _getString(item.posy,0),
+				}
+
+				home = {
+					textposx = _getString(item.posx,0)+icongroupwidth,
+					scoreposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth,
+					iconposx = _getString(item.posx,0),
+					textposy = _getString(item.posy,0),
+					scoreposy = _getString(item.posy,0),
+					iconposy = _getString(item.posy,0),
+				}
+
+				if _getString(item.teamorder,"home-away") == "home-away" then
+					local tmp = home
+					home = away
+					away = tmp
+				end
+
+				separatorposx = icongroupwidth+textgroupwidth+scoregroupwidth
+				separatorposy = 0
+				timeposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth+textgroupwidth+scoregroupwidth
+				timeheight = textheight
+				timeposy = _getString(item.posy,0)
+			end
+
+			if _getString(item.separator,nil) then
+				s.window["separatorgroup"..no] = {
+					position = LAYOUT_NONE,
+					x = separatorposx,
+					y = separatorposy,
+					w = separatorwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["separatorgroup"..no]["textitem"..no] = {
+					border = {5,0,5,0},
+					font = font,
+					align = separatoralign,
+					w = WH_FILL,
+					h = textheight,
+					fg = _getColor(item.color),
+				}
+			end
+			
+			if showtime == "true" then
+				s.window["timegroup"..no] = {
+					position = LAYOUT_NONE,
+					x = timeposx,
+					y = timeposy,
+					w = timewidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["timegroup"..no]["textitem"..no] = {
+					border = {5,0,5,0},
+					font = timefont,
+					align = timealign,
+					w = WH_FILL,
+					h = timeheight,
+					fg = _getColor(item.color),
+				}
+			end
+			
+			if showicon == "true" then
+				s.window["homeicon"..no] = {
+					position = LAYOUT_NONE,
+					x = home.iconposx,
+					y = home.iconposy,
+					w = icongroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["homeicon"..no]["iconitem"..no] = {
+					align = iconalign,
+					w = WH_FILL,
+				}
+				s.window["awayicon"..no] = {
+					position = LAYOUT_NONE,
+					x = away.iconposx,
+					y = away.iconposy,
+					w = icongroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["awayicon"..no]["iconitem"..no] = {
+					align = iconalign,
+					w = WH_FILL,
+				}
+			end
+			if _getString(item.showname,"true") == "true" then
+				s.window["hometext"..no] = {
+					position = LAYOUT_NONE,
+					x = home.textposx,
+					y = home.textposy,
+					w = textgroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["hometext"..no]["textitem"..no] = {
+					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
+					font = font,
+					align = textalign,
+					w = WH_FILL,
+					h = textheight,
+					fg = _getColor(item.color),
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["awaytext"..no] = {
+					position = LAYOUT_NONE,
+					x = away.textposx,
+					y = away.textposy,
+					w = textgroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["awaytext"..no]["textitem"..no] = {
+					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
+					font = font,
+					align = textalign,
+					w = WH_FILL,
+					h = textheight,
+					fg = _getColor(item.color),
+				}
+			end
+			if _getString(item.showscore,"true") == "true" then
+				s.window["homescore"..no] = {
+					position = LAYOUT_NONE,
+					x = home.scoreposx,
+					y = home.scoreposy,
+					w = scoregroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["homescore"..no]["textitem"..no] = {
+					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
+					font = scorefont,
+					align = scorealign,
+					w = WH_FILL,
+					h = scoreheight,
+					fg = _getColor(_getString(item.scorecolor,item.color)),
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["awayscore"..no] = {
+					position = LAYOUT_NONE,
+					x = away.scoreposx,
+					y = away.scoreposy,
+					w = scoregroupwidth,
+					zOrder = _getNumber(item.order,4),
+				}
+				s.window["awayscore"..no]["textitem"..no] = {
+					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
+					font = scorefont,
+					align = scorealign,
+					w = WH_FILL,
+					h = scoreheight,
+					fg = _getColor(_getString(item.scorecolor,item.color)),
+				}
+			end
+			if s.window["hometext"..no] then
+				s.window["hometext"..no]["textitem"..no].lineHeight = _getNumber(item.textheight,nil)
+				s.window["awaytext"..no]["textitem"..no].lineHeight = _getNumber(item.textheight,nil)
+			end
+			if s.window["homescore"..no] then
+				s.window["homescore"..no]["textitem"..no].lineHeight = _getNumber(item.scoreheight,_getNumber(item.textheight,nil))
+				s.window["awayscore"..no]["textitem"..no].lineHeight = _getNumber(item.scoreheight,_getNumber(item.textheight,nil))
+			end
+			if s.window["timegroup"..no] then
+				s.window["timegroup"..no]["textitem"..no].lineHeight = _getNumber(item.timeheight,_getNumber(item.textheight,nil))
+			end
 		elseif string.find(item.itemtype,"icon$") then
 			s.window["item"..no] = {
 				position = LAYOUT_NONE,
