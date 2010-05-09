@@ -254,6 +254,7 @@ function openScreensaver(self,mode, transition)
 		local no = 1
 		self.switchingNowPlaying = false
 		self.visibilityGroups = {}
+		self.sdtsportcache = {}
 		for _,item in pairs(self.configItems) do
 			if _getString(item.visibilitygroup,nil) then
 				if not self.visibilityGroups[item.visibilitygroup] then
@@ -276,42 +277,6 @@ function openScreensaver(self,mode, transition)
 				}
 				self.items[no] = Group("item"..no,childItems)
 				self.window:addWidget(self.items[no])
-			elseif string.find(item.itemtype,"sporttexticon$") then
-				self.items[no] = {
-					multipleitems = 1,
-					homeicon = Group("homeicon"..no,{
-						icon = Icon("iconitem"..no)
-					}),
-					hometext = Group("hometext"..no,{
-						text = Label("textitem"..no,""),
-					}),
-					homescore = Group("homescore"..no,{
-						text = Label("textitem"..no,"")
-					}),
-					separatoritem = Group("separatorgroup"..no,{
-						text = Label("textitem"..no,""),
-					}),
-					awayicon = Group("awayicon"..no,{
-						icon = Icon("iconitem"..no)
-					}),
-					awaytext = Group("awaytext"..no,{
-						text = Label("textitem"..no,""),
-					}),
-					awayscore = Group("awayscore"..no,{
-						text = Label("textitem"..no,"")
-					}),
-					timeitem = Group("timegroup"..no,{
-						text = Label("textitem"..no,""),
-					}),
-				}
-				self.window:addWidget(self.items[no].homeicon)
-				self.window:addWidget(self.items[no].hometext)
-				self.window:addWidget(self.items[no].homescore)
-				self.window:addWidget(self.items[no].awayicon)
-				self.window:addWidget(self.items[no].awaytext)
-				self.window:addWidget(self.items[no].awayscore)
-				self.window:addWidget(self.items[no].separatoritem)
-				self.window:addWidget(self.items[no].timeitem)
 			elseif string.find(item.itemtype,"icon$") then
 				local childItems = {
 					itemno = Icon("item"..no)
@@ -479,10 +444,6 @@ function openScreensaver(self,mode, transition)
 		for no,item in pairs(self.configItems) do
 			if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
 				self.items[no]:getWidget("itemno"):animate(true)
-			elseif string.find(item.itemtype,"sporttextitem$") and _getString(item.animate,"true") == "true" then
-				self.items[no].hometext:getWidget("text"):animate(true)
-				self.items[no].awaytext:getWidget("text"):animate(true)
-				self.items[no].timeitem:getWidget("text"):animate(true)
 			end
 		end
 	end
@@ -509,20 +470,8 @@ function _updateVisibilityGroups(self)
 
 			for no,item in ipairs(group.items) do
 				if group.current == no then
-					if self.items[no].multipleitems then
-						for key,item in pairs(self.items[no]) do
-							if type(item) ~= 'string' and not item:getWindow() then
-								self.window:addWidget(item)
-							end
-						end
-					elseif not self.items[item.item]:getWindow() then
+					if not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
-					end
-				elseif self.items[no].multipleitems then
-					for key,item in pairs(self.items[no]) do
-						if type(item) ~= 'string' and item:getWindow() then
-							self.window:removeWidget(item)
-						end
 					end
 				elseif self.items[item.item]:getWindow() then
 					self.window:removeWidget(self.items[item.item])
@@ -1368,10 +1317,10 @@ function _updateSDTText(self,widget,format,period)
 	end
 end
 
-function _updateSDTSportItem(self,widget,item,id)
+function _updateSDTSportItem(self,items)
 	local player = appletManager:callService("getCurrentPlayer")
-	period = _getString(period,nil) or 0 
 	local server = player:getSlimServer()
+
 	if not self.sdtSuperDateTimeChecked then
 		server:userRequest(function(chunk,err)
 				if err then
@@ -1380,7 +1329,7 @@ function _updateSDTSportItem(self,widget,item,id)
 					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self.sdtSuperDateTimeInstalled = true
-						self:_updateSDTSportItem(widget,item,id)
+						self:_updateSDTSportItem(items)
 					else	
 						self.sdtSuperDateTimeInstalled = false
 					end
@@ -1397,9 +1346,21 @@ function _updateSDTSportItem(self,widget,item,id)
 					log:warn(err)
 				elseif chunk then
 					local sportsData = chunk.data.selsports
-					item.results = self:_getSDTGames(item,sportsData)
-					item.currentResult = nil
-					self:_changeSDTSportItem(widget,item,id)
+					self.sdtsportcache = {}
+					for no,item in pairs(items) do
+						local key = self:_getSDTSportCacheKey(item)
+						if not self.sdtsportcache[key] then
+							self.sdtsportcache[key] = {
+								current = nil,
+								data = self:_getSDTGames(item,sportsData)
+							}
+						end
+						if not self.sdtsportcache[key].current then
+							self.sdtsportcache[key].current = self:_getNextSDTSportItem(item)
+						end
+						item.currentResult = self.sdtsportcache[key].current
+						self:_changeSDTSportItem(item,self.items[no],no)
+					end
 				end
 			end,
 			player and player:getId(),
@@ -1407,6 +1368,33 @@ function _updateSDTSportItem(self,widget,item,id)
 		)
 	end
 end
+
+function _getSDTSportCacheKey(self,item)
+	if item.itemtype == "sdtsporttext" and item.scrolling then
+		return "scrolling".._getString(item.sport,"all").._getString(item.gamestatus,"")
+	else
+		return _getString(item.sport,"all").._getString(item.gamestatus,"")
+	end
+end
+
+function _getSDTSportCacheData(self,item)
+	local key = self:_getSDTSportCacheKey(item)
+	if self.sdtsportcache[key] then
+		return self.sdtsportcache[key].data
+	else
+		return {}
+	end
+end
+
+function _getSDTSportCacheIndex(self,item)
+	local key = self:_getSDTSportCacheKey(item)
+	if self.sdtsportcache[key] then
+		return self.sdtsportcache[key].current
+	else
+		return nil
+	end
+end
+
 
 function _getSDTGames(self,item,sportsData)
 	local games = {}
@@ -1423,6 +1411,9 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"final$") and _getNumber(value.homeScore,nil) and string.find(value.gameTime,"^F")) or 
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
+					games[no].sport=string.upper(item.sport)
+					games[no].homeScore=1
+					games[no].awayScore=2
 					no = no + 1
 				end
 			end
@@ -1435,7 +1426,7 @@ function _getSDTGames(self,item,sportsData)
 	else
 		for sport,_ in pairs(sportsData) do
 			local logoURL = nil
-			for key,value in pairs(sportsData[string.upper(sport)]) do
+			for key,value in pairs(sportsData[sport]) do
 				if type(value) == 'string' then
 					if key == 'logoURL' then
 						logoURL = value
@@ -1444,7 +1435,9 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"final$") and _getNumber(value.homeScore,nil) and string.find(value.gameTime,"^F")) or 
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
-					games[no].sport = string.upper(sport)
+					games[no].sport = sport
+					games[no].homeScore=1
+					games[no].awayScore=2
 					no = no + 1
 				end
 			end
@@ -1460,113 +1453,80 @@ function _getSDTGames(self,item,sportsData)
 	return games
 end
 
-function _changeSDTSportItem(self,widget,item,id)
-	if item.currentResult then
+function _getNextSDTSportItem(self,item)
+	local results = self:_getSDTSportCacheData(item)
+	local currentResult = self:_getSDTSportCacheIndex(item)
+	if currentResult then
 		local length = _getNumber(item.noofscores,1)
 		if length == 1 and item.itemtype == 'sdtsporttext' and _getString(item.scrolling,"false") == "true" then
-			length = #item.results
-		elseif item.itemtype == 'sdtsporttexticon' then
-			length = 1
+			length = #results
 		end
-		if #item.results > (item.currentResult+length-1) then
-			item.currentResult = item.currentResult + length
+		if #results > (currentResult+length-1) then
+			currentResult = item.currentResult + length
 		else
-			item.currentResult = 1
+			currentResult = 1
 		end
-	elseif #item.results>0 then
-		item.currentResult = 1
+	elseif #results>0 then
+		currentResult = 1
 	end
-	if item.currentResult then
+	return currentResult
+end
+
+function _changeSDTSportItem(self,item,widget,id)
+	local results = self:_getSDTSportCacheData(item)
+	local currentResult = self:_getSDTSportCacheIndex(item)
+	if currentResult then
 		if item.itemtype == 'sdtsporttext' then
 			local gamesString = self:_getGamesString(item)
 			if widget:getWidgetValue("itemno") ~= gamesString then
 				widget:setWidgetValue("itemno",gamesString)
 			end
-		elseif item.itemtype == 'sdtsporttexticon' then
-			widget.separatoritem:setWidgetValue("text",_getString(item.separator,""))
-			if _getNumber(item.results[item.currentResult].homeScore,nil) then
-				if _getString(item.showscore,"true") == "true" then
-					widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam))
-					widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam))
-				else
-					widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam).." "..item.results[item.currentResult].homeScore)
-					widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam).." "..item.results[item.currentResult].awayScore)
+		elseif item.itemtype == 'sdtsporticon' then
+			local player = appletManager:callService("getCurrentPlayer")
+			local server = player:getSlimServer()
+			local url = nil
+			if string.find(item.logotype,"orlogoURL$") then
+				url = results[currentResult][string.gsub(item.logotype,"orlogoURL$","")]
+				if not url then
+					url = results[currentResult]['logoURL']
 				end
-				widget.homescore:setWidgetValue("text",item.results[item.currentResult].homeScore)
-				widget.awayscore:setWidgetValue("text",item.results[item.currentResult].awayScore)
 			else
-				widget.hometext:setWidgetValue("text",tostring(item.results[item.currentResult].homeTeam))
-				widget.awaytext:setWidgetValue("text",tostring(item.results[item.currentResult].awayTeam))
-				widget.homescore:setWidgetValue("text","")
-				widget.awayscore:setWidgetValue("text","")
+				url = results[currentResult][item.logotype]
 			end
-			if _getString(item.results[item.currentResult].gameTime,nil) then
-				widget.timeitem:setWidgetValue("text",tostring(item.results[item.currentResult].gameTime))
+			if url and not string.find(url,"^http") then
+				local ip,port = server:getIpPort()
+				url = "http://"..ip..":"..port.."/"..url
+				local width = _getNumber(item.width,50)
+				local height = _getNumber(item.height,50)
+				url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
+				url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
+				url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
 			end
-			if _getString(item.showicon,"true") == "true" then
-				local player = appletManager:callService("getCurrentPlayer")
-				local server = player:getSlimServer()
-				local homeURL
-				if _getString(item.logotype,"team") == "team" and _getString(item.results[item.currentResult].homeLogoURL,nil) then
-					homeURL = item.results[item.currentResult].homeLogoURL
-				elseif _getString(item.results[item.currentResult].logoURL,nil) then
-					local ip,port = server:getIpPort()
-					homeURL = "http://"..ip..":"..port.."/"..item.results[item.currentResult].logoURL
-					local iconsize = _getNumber(item.iconsize,50)
-					homeURL = string.gsub(homeURL,".png$","_"..iconsize.."x"..iconsize.."_p.png")
-					homeURL = string.gsub(homeURL,".jpg$","_"..iconsize.."x"..iconsize.."_p.jpg")
-					homeURL = string.gsub(homeURL,".jpeg$","_"..iconsize.."x"..iconsize.."_p.jpeg")
-				end
-				if homeURL then
-					self.sdtsportimages[self.mode.."item"..id..".home"] = id
-					self:_retrieveImage(homeURL,self.mode.."item"..id..".home","false",_getNumber(item.iconsize,nil),_getNumber(item.iconsize,nil))
-				else
-					widget.homeicon:setWidgetValue("icon",nil)
-				end
-
-				local awayURL
-				if _getString(item.logotype,"team") == "team" and _getString(item.results[item.currentResult].awayLogoURL,nil) then
-					awayURL = item.results[item.currentResult].awayLogoURL
-				elseif _getString(item.results[item.currentResult].logoURL,nil) then
-					local ip,port = server:getIpPort()
-					awayURL = "http://"..ip..":"..port.."/"..item.results[item.currentResult].logoURL
-					local iconsize = _getNumber(item.iconsize,50)
-					awayURL = string.gsub(homeURL,".png$","_"..iconsize.."x"..iconsize.."_p.png")
-					awayURL = string.gsub(homeURL,".jpg$","_"..iconsize.."x"..iconsize.."_p.jpg")
-					awayURL = string.gsub(homeURL,".jpeg$","_"..iconsize.."x"..iconsize.."_p.jpeg")
-				end
-				if awayURL then
-					self.sdtsportimages[self.mode.."item"..id..".away"] = id
-					self:_retrieveImage(awayURL,self.mode.."item"..id..".away","false",_getNumber(item.iconsize,nil),_getNumber(item.iconsize,nil))
-				else
-					widget.awayicon:setWidgetValue("icon",nil)
-				end
+			if url then
+				self.sdtsportimages[self.mode.."item"..id] = id
+				self:_retrieveImage(url,self.mode.."item"..id,"false",_getNumber(item.width,nil),_getNumber(item.height,nil))
+			else
+				widget:setWidgetValue("itemno",nil)
 			end
 		end
 	else
 		if item.itemtype == 'sdtsporttext' then
 			widget:setWidgetValue("itemno","")
-		elseif item.itemtype == 'sdtsporttexticon' then
-			widget.timeitem:setWidgetValue("text","")
-			widget.separatoritem:setWidgetValue("text","")
-			widget.hometext:setWidgetValue("text","")
-			widget.homeicon:setWidgetValue("icon",nil)
-			widget.homescore:setWidgetValue("text","")
-			widget.awaytext:setWidgetValue("text","")
-			widget.awayicon:setWidgetValue("icon",nil)
-			widget.awayscore:setWidgetValue("text","")
+		elseif item.itemtype == 'sdtsporticon' then
+			widget:setWidgetValue("itemno",nil)
 		end
 	end
 end
 
 function _getGamesString(self,item)
+	local results = self:_getSDTSportCacheData(item)
 	local result = ""
 	local length = _getNumber(item.noofscores,1)
 	if length == 1 and _getString(item.scrolling,"false") == "true" then
-		length = #item.results
+		length = #results
+		item.currentResult = 1
 	end
 	local first = item.currentResult
-	local results = item.results
 	for i=first,(first+length-1) do
 		if #results>=i then
 			if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofscores,1))>1) then
@@ -1574,19 +1534,14 @@ function _getGamesString(self,item)
 			elseif i>first then
 				result = result.."      "
 			end
-			if _getNumber(results[i].homeScore,nil) then
-				if _getString(item.teamorder,"home-away") == "home-away" then
-					result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." ".._getString(item.separator,"-").." "..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ("..tostring(results[i].gameTime)..")"
-				else
-					result = result.._getString(item.text,"")..tostring(results[i].awayTeam).." ".._getNumber(results[i].awayScore,0).." ".._getString(item.separator,"@").." "..tostring(results[i].homeTeam).." ".._getNumber(results[i].homeScore,0).." ("..tostring(results[i].gameTime)..")"
+			local tmp = _getString(item.sdtformat,"%awayTeam %awayScore @ %homeTeam %homeScore (%gameTime)")
+			for key,value in pairs(results[i]) do
+				if not _getString(value,nil) then
+					tmp = string.gsub(tmp,"%(%%"..key.."%)",_getString(value,""))
 				end
-			else
-				if _getString(item.teamorder,"home-away") == "home-away" then
-					result = result.._getString(item.text,"")..tostring(results[i].homeTeam).." ".._getString(item.separator,"-").." "..tostring(results[i].awayTeam).." ("..tostring(results[i].gameTime)..")"
-				else
-					result = result.._getString(item.text,"")..tostring(results[i].awayTeam).." ".._getString(item.separator,"@").." "..tostring(results[i].homeTeam).." ("..tostring(results[i].gameTime)..")"
-				end
+				tmp = string.gsub(tmp,"%%"..key,_getString(value,""))
 			end
+			result = result..tmp
 		end
 	end
 	return result
@@ -1850,6 +1805,10 @@ function _tick(self,forcedUpdate)
 
 	local minute = os.date("%M")
 
+	local updatesdtsport = false
+	local changesdtsport = false
+	local updatesdtsportitems = {}
+	local changesdtsportitems = {}
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
@@ -2008,29 +1967,28 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtsporttext" then
 			if forcedUpdate or self.lastminute!=minute then
-				self:_updateSDTSportItem(self.items[no],item,no)
+				updatesdtsport = true
+				updatesdtsportitems[no] = item
 			elseif second % _getNumber(item.interval,3) == 0 then
-				if item.results and #item.results>0 then
-					self:_changeSDTSportItem(self.items[no],item,no)
+				local results = self:_getSDTSportCacheData(item)
+				if results and #results>0 then
+					changesdtsport = true
+					changesdtsportitems[no] = item
 				else
 					self.items[no]:setWidgetValue("itemno","")
 				end
 			end
-		elseif item.itemtype == "sdtsporttexticon" then
+		elseif item.itemtype == "sdtsporticon" then
 			if forcedUpdate or self.lastminute!=minute then
-				self:_updateSDTSportItem(self.items[no],item,no)
+				updatesdtsport = true
+				updatesdtsportitems[no] = item
 			elseif second % _getNumber(item.interval,3) == 0 then
-				if item.results and #item.results>0 then
-					self:_changeSDTSportItem(self.items[no],item,no)
+				local results = self:_getSDTSportCacheData(item)
+				if results and #results>0 then
+					changesdtsport = true
+					changesdtsportitems[no] = item
 				else
-					self.items[no].timeitem:setWidgetValue("text","")
-					self.items[no].separatoritem:setWidgetValue("text","")
-					self.items[no].hometext:setWidgetValue("text","")
-					self.items[no].awaytext:setWidgetValue("text","")
-					self.items[no].homeicon:setWidgetValue("icon",nil)
-					self.items[no].awayicon:setWidgetValue("icon",nil)
-					self.items[no].homescore:setWidgetValue("text","")
-					self.items[no].awayscore:setWidgetValue("text","")
+					self.items[no]:setWidgetValue("itemno",nil)
 				end
 			end
 		elseif item.itemtype == "covericon" then
@@ -2084,6 +2042,20 @@ function _tick(self,forcedUpdate)
 		no = no +1
 	end
 
+	if updatesdtsport then
+		self:_updateSDTSportItem(updatesdtsportitems)
+	end
+	if changesdtsport then
+		for no,item in pairs(changesdtsportitems) do
+			local key = self:_getSDTSportCacheKey(item)
+			if item.currentResult == self.sdtsportcache[key].current then
+				self.sdtsportcache[key].current = self:_getNextSDTSportItem(item)
+			end
+			item.currentResult = self.sdtsportcache[key].current
+			self:_changeSDTSportItem(item,self.items[no],no)
+		end
+	end
+	
 	if forcedUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
 		self:_imageUpdate()
 	end
@@ -2489,11 +2461,7 @@ function _retrieveImageData(self,url,imageType,chunk)
 	elseif self.sdtimages[imageType] ~= nil then
 		self.items[self.sdtimages[imageType]]:getWidget("itemno"):setValue(image)
 	elseif self.sdtsportimages[imageType] ~= nil then
-		if string.find(imageType,"home$") then
-			self.items[self.sdtsportimages[imageType]].homeicon:getWidget("icon"):setValue(image)
-		else
-			self.items[self.sdtsportimages[imageType]].awayicon:getWidget("icon"):setValue(image)
-		end
+		self.items[self.sdtsportimages[imageType]]:getWidget("itemno"):setValue(image)
 	elseif self.songinfoimages[imageType] ~= nil then
 		self.items[self.songinfoimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
@@ -2734,327 +2702,6 @@ function _getClockSkin(self,skin)
 					align = _getString(item.align,"center"),
 					w = _getNumber(item.size,defaultSize)
 				}
-		elseif string.find(item.itemtype,"sporttexticon$") then
-			local timewidth = 0
-			local timeheight = 0
-			local separatorwidth = 0
-			local textgroupwidth = 0
-			local icongroupwidth = 0
-			local scoregroupwidth = 0
-			local textheight = 0
-			local iconheight = 0
-			local iconalign
-			local textalign
-			local scorealign
-			local separatoralign
-			local timealign
-			local separatorposx
-			local separatorposy
-			local timeposx
-			local timeposy
-			local scoreheight = 0
-
-			local home = {}
-			local away = {}
-
-			local showicon = _getString(item.showicon,"true")
-			local showname = _getString(item.showname,"true")
-			local showscore = _getString(item.showscore,"true")
-			local showtime = _getString(item.showtime,"true")
-
-			if showicon == "true" then
-				iconheight = _getNumber(item.iconsize,50)
-			end
-
-			local font = nil
-			local scorefont = nil
-			local timefont = nil
-			if _getString(item.fonturl,nil) then
-				font = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.fontsize,20))
-				timefont = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.timefontsize,_getNumber(item.fontsize,20)))
-			end
-			if _getString(item.scorefonturl,_getString(item.fonturl,nil)) then
-				scorefont = self:_retrieveFont(_getString(item.scorefonturl,item.fonturl),_getString(item.scorefontfile,item.fontfile),_getNumber(item.fontsize,_getNumber(item.scorefontsize,20)))
-			end
-			if not font then
-				font = self:_loadFont(self:getSettings()["font"],_getNumber(item.fontsize,20))
-			end
-			if not timefont then
-				timefont = self:_loadFont(self:getSettings()["font"],_getNumber(item.timefontsize,_getNumber(item.fontsize,20)))
-			end
-			if not scorefont then
-				scorefont = self:_loadFont(self:getSettings()["font"],_getNumber(item.scorefontsize,_getNumber(item.fontsize,20)))
-			end
-
-			local layout = _getString(item.layout,"vertical")
-			if layout == "vertical" then
-				if showtime == "true" then
-					timewidth = _getNumber(item.timewidth,_getNumber(item.fontsize,20)*4.5)
-				end
-				if _getString(item.separator,nil) or _getNumber(item.separatorwidth,nil) then
-					separatorwidth = _getNumber(item.separatorwidth,_getNumber(item.fontsize,20)*2)
-				end
-				textgroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2
-				icongroupwidth = textgroupwidth
-				scoregroupwidth = textgroupwidth
-				if showname == "true" then
-					textheight = _getNumber(item.lineheight,_getNumber(fontsize,20))
-				end
-				if showscore == "true" then
-					scoreheight = _getNumber(item.scoreheight,_getNumber(item.scorefontsize,_getNumber(item.fontsize,_getNumber(item.fontsize,20))))
-				end
-
-				iconalign = "center"
-				textalign = "center"
-				timealign = "center"
-				separatoralign = "center"
-				scorealign = "center"
-
-				home = {
-					textposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
-					scoreposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
-					iconposx = _getString(item.posx,0)+textgroupwidth+separatorwidth,
-					textposy = _getString(item.posy,0)+iconheight,
-					scoreposy = _getString(item.posy,0)+iconheight + textheight,
-					iconposy = _getString(item.posy,0)+0,
-				}
-
-				away = {
-					textposx = _getString(item.posx,0),
-					scoreposx = _getString(item.posx,0),
-					iconposx = _getString(item.posx,0),
-					textposy = _getString(item.posy,0)+iconheight,
-					scoreposy = _getString(item.posy,0) + iconheight + textheight,
-					iconposy = _getString(item.posy,0),
-				}
-
-				if _getString(item.reverseteams,"false") == "true" then
-					local tmp = home
-					home = away
-					away = tmp
-				end
-				separatorposx = textgroupwidth
-				separatorposy = iconheight
-				timeposx = _getString(item.posx,0)+textgroupwidth-timewidth/2+separatorwidth/2
-				if showicon == "true" then
-					timeheight = iconheight
-					timeposy = _getString(item.posy,0)
-				elseif showscore == "true" then
-					timeheight = scoreheight
-					timeposy = home.scoreposy
-				else
-					timeheight = textheight
-					timeposy = home.textposy
-				end
-			elseif layout == "horizontal" then
-				if showtime == "true" then
-					timewidth = _getNumber(item.timewidth,_getNumber(item.fontsize,20)*4.5)
-				end
-				if _getString(item.separator,nil) or _getNumber(item.separatorwidth,nil) then
-					separatorwidth = _getNumber(item.separatorwidth,_getNumber(item.fontsize,20)*2)
-				end
-				icongroupwidth = iconheight
-				if showscore == "true" then
-					scoregroupwidth = _getNumber(item.scorewidth,_getNumber(item.scorefontsize,_getNumber(item.fontsize,20))*2)
-				end
-				if showname == "true" then
-					textgroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2-icongroupwidth-scoregroupwidth-timewidth/2
-				elseif showscore == "true" then
-					scoregroupwidth = _getNumber(item.width,_getNumber(width-_getString(item.posx,0),nil))/2-separatorwidth/2-icongroupwidth-timewidth/2
-				end
-				if showname == "true" then
-					textheight = _getNumber(item.textheight,_getNumber(fontsize,20))
-					if iconheight > textheight then
-						textheight = iconheight
-					end
-				end
-				if showscore == "true" then
-					scoreheight = _getNumber(item.scoreheight,_getNumber(item.scorefontsize,_getNumber(item.fontsize,_getNumber(item.fontsize,20))))
-					if iconheight > scoreheight then
-						scoreheight = iconheight
-					end
-					if textheight > scoreheight then
-						scoreheight = textheight
-					end
-				end				
-				if scoreheight > textheight then
-					textheight = scoreheight
-				end
-
-				iconalign = "center"
-				textalign = "left"
-				timealign = "right"
-				scorealign = "center"
-				separatoralign = "center"
-
-				away = {
-					textposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth,
-					scoreposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth+textgroupwidth,
-					iconposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth,
-					textposy = _getString(item.posy,0),
-					scoreposy = _getString(item.posy,0),
-					iconposy = _getString(item.posy,0),
-				}
-
-				home = {
-					textposx = _getString(item.posx,0)+icongroupwidth,
-					scoreposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth,
-					iconposx = _getString(item.posx,0),
-					textposy = _getString(item.posy,0),
-					scoreposy = _getString(item.posy,0),
-					iconposy = _getString(item.posy,0),
-				}
-
-				if _getString(item.teamorder,"home-away") == "home-away" then
-					local tmp = home
-					home = away
-					away = tmp
-				end
-
-				separatorposx = icongroupwidth+textgroupwidth+scoregroupwidth
-				separatorposy = 0
-				timeposx = _getString(item.posx,0)+icongroupwidth+textgroupwidth+scoregroupwidth+separatorwidth+icongroupwidth+textgroupwidth+scoregroupwidth
-				timeheight = textheight
-				timeposy = _getString(item.posy,0)
-			end
-
-			if _getString(item.separator,nil) then
-				s.window["separatorgroup"..no] = {
-					position = LAYOUT_NONE,
-					x = separatorposx,
-					y = separatorposy,
-					w = separatorwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["separatorgroup"..no]["textitem"..no] = {
-					border = {5,0,5,0},
-					font = font,
-					align = separatoralign,
-					w = WH_FILL,
-					h = textheight,
-					fg = _getColor(item.color),
-				}
-			end
-			
-			if showtime == "true" then
-				s.window["timegroup"..no] = {
-					position = LAYOUT_NONE,
-					x = timeposx,
-					y = timeposy,
-					w = timewidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["timegroup"..no]["textitem"..no] = {
-					border = {5,0,5,0},
-					font = timefont,
-					align = timealign,
-					w = WH_FILL,
-					h = timeheight,
-					fg = _getColor(item.color),
-				}
-			end
-			
-			if showicon == "true" then
-				s.window["homeicon"..no] = {
-					position = LAYOUT_NONE,
-					x = home.iconposx,
-					y = home.iconposy,
-					w = icongroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["homeicon"..no]["iconitem"..no] = {
-					align = iconalign,
-					w = WH_FILL,
-				}
-				s.window["awayicon"..no] = {
-					position = LAYOUT_NONE,
-					x = away.iconposx,
-					y = away.iconposy,
-					w = icongroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["awayicon"..no]["iconitem"..no] = {
-					align = iconalign,
-					w = WH_FILL,
-				}
-			end
-			if _getString(item.showname,"true") == "true" then
-				s.window["hometext"..no] = {
-					position = LAYOUT_NONE,
-					x = home.textposx,
-					y = home.textposy,
-					w = textgroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["hometext"..no]["textitem"..no] = {
-					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
-					font = font,
-					align = textalign,
-					w = WH_FILL,
-					h = textheight,
-					fg = _getColor(item.color),
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["awaytext"..no] = {
-					position = LAYOUT_NONE,
-					x = away.textposx,
-					y = away.textposy,
-					w = textgroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["awaytext"..no]["textitem"..no] = {
-					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
-					font = font,
-					align = textalign,
-					w = WH_FILL,
-					h = textheight,
-					fg = _getColor(item.color),
-				}
-			end
-			if _getString(item.showscore,"true") == "true" then
-				s.window["homescore"..no] = {
-					position = LAYOUT_NONE,
-					x = home.scoreposx,
-					y = home.scoreposy,
-					w = scoregroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["homescore"..no]["textitem"..no] = {
-					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
-					font = scorefont,
-					align = scorealign,
-					w = WH_FILL,
-					h = scoreheight,
-					fg = _getColor(_getString(item.scorecolor,item.color)),
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["awayscore"..no] = {
-					position = LAYOUT_NONE,
-					x = away.scoreposx,
-					y = away.scoreposy,
-					w = scoregroupwidth,
-					zOrder = _getNumber(item.order,4),
-				}
-				s.window["awayscore"..no]["textitem"..no] = {
-					border = {_getNumber(item.margin,5),0,_getNumber(item.margin,5),0},
-					font = scorefont,
-					align = scorealign,
-					w = WH_FILL,
-					h = scoreheight,
-					fg = _getColor(_getString(item.scorecolor,item.color)),
-				}
-			end
-			if s.window["hometext"..no] then
-				s.window["hometext"..no]["textitem"..no].lineHeight = _getNumber(item.textheight,nil)
-				s.window["awaytext"..no]["textitem"..no].lineHeight = _getNumber(item.textheight,nil)
-			end
-			if s.window["homescore"..no] then
-				s.window["homescore"..no]["textitem"..no].lineHeight = _getNumber(item.scoreheight,_getNumber(item.textheight,nil))
-				s.window["awayscore"..no]["textitem"..no].lineHeight = _getNumber(item.scoreheight,_getNumber(item.textheight,nil))
-			end
-			if s.window["timegroup"..no] then
-				s.window["timegroup"..no]["textitem"..no].lineHeight = _getNumber(item.timeheight,_getNumber(item.textheight,nil))
-			end
 		elseif string.find(item.itemtype,"icon$") then
 			s.window["item"..no] = {
 				position = LAYOUT_NONE,
