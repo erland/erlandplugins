@@ -266,7 +266,7 @@ function openScreensaver(self,mode, transition)
 				self.visibilityGroups[item.visibilitygroup].items[idx] = {}
 				self.visibilityGroups[item.visibilitygroup].items[idx].item = no
 				self.visibilityGroups[item.visibilitygroup].items[idx].delay = _getNumber(item.visibilitytime,1)	
-				self.visibilityGroups[item.visibilitygroup].items[idx].order = _getNumber(item.visibilityorder,100)	
+				self.visibilityGroups[item.visibilitygroup].items[idx].order = _getNumber(item.visibilityorder,100+idx)	
 			end
 			if string.find(item.itemtype,"^switchingtrack") then
 				self.switchingNowPlaying = true
@@ -319,7 +319,14 @@ function openScreensaver(self,mode, transition)
 			for no,item in ipairs(group.items) do
 				table.insert(sortedItems,item)
 			end
-			table.sort(sortedItems, function(a,b) return a.order<b.order end)
+			table.sort(sortedItems, function(a,b) 
+				if a.order==b.order then 
+					return a.delay<b.delay
+				else
+					return a.order<b.order 
+				end
+			end
+			)
 			group.items = sortedItems
 		end
 
@@ -461,15 +468,27 @@ function _updateVisibilityGroups(self)
 	for key,group in pairs(self.visibilityGroups) do
 		-- We need an extra 0.1 seconds because the timer triggering once per second isn't as accurate as socket.gettime()
 		if not group.lastswitchtime or group.lastswitchtime+group.items[group.current].delay<now+0.1 then
+			local previous = group.items[group.current]
 			if group.current >= #group.items then
 				group.current = 1
 			else
 				group.current = group.current + 1
+				while group.current<=#group.items and previous and group.items[group.current].order==previous.order and group.items[group.current].delay==previous.delay do
+					group.current = group.current + 1
+				end
+				if group.current>#group.items then
+					group.current = 1
+				elseif previous and group.items[group.current].order==previous.order and group.items[group.current].delay>previous.delay then
+					now = now-previous.delay
+				end
 			end
 			group.lastswitchtime = now
-
+			
+			local currentorder = nil
+			local currentdelay = nil
 			for no,item in ipairs(group.items) do
-				if group.current == no then
+				if group.current == no or (currentorder and item.order==currentorder) then
+					currentorder = item.order
 					if not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
 					end
