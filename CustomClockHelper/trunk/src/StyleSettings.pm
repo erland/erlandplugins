@@ -62,17 +62,60 @@ sub pages {
 	my @pages = ();
 	my $styles = Plugins::CustomClockHelper::Plugin::getStyles();
 
+	my $galleryicon = 0;
+	my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','random','?']);
+	my $result = $request->getResult("_can");
+	if($result) {
+		$galleryicon = 1
+	}
+
+	my $sdtnew = 0;
+	$request = Slim::Control::Request::executeRequest(undef,['can','sdtVersion','?']);
+	$result = $request->getResult("_can");
+	if($result) {
+		$sdtnew = 1
+	}
+
+	my $sdtold = 0;
+	$request = Slim::Control::Request::executeRequest(undef,['can','SuperDateTime','?']);
+	$result = $request->getResult("_can");
+	if($result) {
+		$sdtold = 1
+	}
+
+	my $songinfo = 0;
+	my $request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
+	my $result = $request->getResult("_can");
+	if($result) {
+		$songinfo = 1
+	}
+
 	my %page = (
 		'name' => Slim::Utils::Strings::string('PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS')." ".Slim::Utils::Strings::string('SETUP_PLUGIN_CUSTOMCLOCKHELPER_NEWSTYLE'),
 		'page' => page(),
 	);
 	push @pages,\%page;
 	for my $key (keys %$styles) {
-		my %page = (
-			'name' => Slim::Utils::Strings::string('PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS')." ".$key,
-			'page' => page()."?style=".escape($key),
-		);
-		push @pages,\%page;
+		my $styleItems = $styles->{$key}->{'items'};
+		my $enabled = 1;
+		for my $item (@$styleItems) {
+			if($item->{'itemtype'} eq 'galleryicon' && !$galleryicon) {
+				$enabled = 0;
+			}elsif(($item->{'itemtype'} =~ /^sdtsport/ || $item->{'itemtype'} =~ /^sdttext/ || $item->{'itemtype'} =~ /^sdtweather/) && !$sdtnew) {
+				$enabled = 0;
+			}elsif($item->{'itemtype'} =~ /^songinfo/ && !$songinfo) {
+				$enabled = 0;
+			}elsif($item->{'itemtype'} =~ /^sdticon/ && !$sdtold) {
+				$enabled = 0;
+			} 
+		}
+		if($enabled) {
+			my %page = (
+				'name' => Slim::Utils::Strings::string('PLUGIN_CUSTOMCLOCKHELPER_STYLESETTINGS')." ".$key,
+				'page' => page()."?style=".escape($key),
+			);
+			push @pages,\%page;
+		}
 	}
 	return \@pages;
 }
