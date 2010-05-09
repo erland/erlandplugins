@@ -1431,8 +1431,6 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
 					games[no].sport=string.upper(item.sport)
-					games[no].homeScore=1
-					games[no].awayScore=2
 					no = no + 1
 				end
 			end
@@ -1455,8 +1453,6 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
 					games[no].sport = sport
-					games[no].homeScore=1
-					games[no].awayScore=2
 					no = no + 1
 				end
 			end
