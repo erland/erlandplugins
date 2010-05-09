@@ -238,6 +238,10 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtsporticon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtstocktext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtstockicon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtsport/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
@@ -389,6 +393,23 @@ sub handler {
 				push @values,{id=>'%gameTime',name=>'%gameTime'};				
 				push @values,{id=>'%sport',name=>'%sport'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtstocktext/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%name (%ticker) %lasttrade %change %pchange %volume',name=>'<Name> (<Ticker Symbol>) <Last trade> <Change> <Percent Change> <Volume>'};
+				push @values,{id=>'%lastdate',name=>'Last trade date'};				
+				push @values,{id=>'%volume',name=>'Volume'};				
+				push @values,{id=>'%change',name=>'Change'};				
+				push @values,{id=>'%pchange',name=>'Percent Change'};				
+				push @values,{id=>'%name',name=>'Name'};				
+				push @values,{id=>'%prevclose',name=>'Previous close'};				
+				push @values,{id=>'%ticker',name=>'Ticker Symbol'};				
+				push @values,{id=>'%open',name=>'Open'};				
+				push @values,{id=>'%high',name=>'High'};				
+				push @values,{id=>'%low',name=>'Low'};				
+				push @values,{id=>'%lasttrade',name=>'Last trade'};				
+				push @values,{id=>'%lasttime',name=>'Last trade time'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sport') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
@@ -464,7 +485,9 @@ sub handler {
 				$result = $request->getResult("_can");
 				if($result) {
 					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
+					push @values,{id=>'sdtstocktext',name=>'sdtstocktext'};				
 					push @values,{id=>'sdtsporticon',name=>'sdtsporticon'};				
+					push @values,{id=>'sdtstockicon',name=>'sdtstockicon'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
@@ -547,6 +570,11 @@ sub handler {
 				push @values,{id=>'awayLogoURL',name=>'Away team logo'};				
 				push @values,{id=>'homeLogoURLorlogoURL',name=>'Home team logo (or league logo)'};				
 				push @values,{id=>'awayLogoURLorlogoURL',name=>'Away team logo (or league logo)'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtstockicon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'daychartURL',name=>'Daychart'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -738,9 +766,13 @@ sub getItemTypeParameters {
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtsporticon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval sport gamestatus);
+	}elsif($itemType eq 'sdtstocktext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtstockicon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
