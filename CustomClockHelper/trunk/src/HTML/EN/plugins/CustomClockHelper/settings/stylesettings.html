@@ -106,7 +106,7 @@
 					[% ELSIF property.type == 'optionalsinglecombobox' %]
 						<table border="0">
 							<tr><td>
-								<input type="text" name="[% propertyid %]" value="[% property.value %]" size="10" /><br>
+								<input type="text" name="[% propertyid %]" value="[% property.value %]" size="50" /><br>
 								<select name="combobox_[% propertyid %]" onChange="document.settingsForm.[% propertyid %].value=options[selectedIndex].value;">
 									<option name="" id="" value="" [% IF property.value == "" %]selected[% END %]></option>
 								[%- FOREACH item = property.values %]
