@@ -426,11 +426,7 @@ function openScreensaver(self,mode, transition)
 		self.offset = math.random(15)
 		self.images = {}
 		self.vumeterimages = {}
-		self.galleryimages = {}
-		self.sdtimages = {}
-		self.sdtsportimages = {}
-		self.sdtstockimages = {}
-		self.songinfoimages = {}
+		self.referenceimages = {}
 		if player then
 			self:_checkAndUpdateTitleFormatInfo(player)
 			self:_updateCustomTitleFormatInfo(player)
@@ -1368,7 +1364,7 @@ function _updateSDTSportItem(self,items)
 					local sportsData = chunk.data.selsports
 					self.sdtcache["sport"] = {}
 					for no,item in pairs(items) do
-						local key = self:_getSDTSportCacheKey(item)
+						local key = self:_getSDTCacheKey("sport",item)
 						if not self.sdtcache["sport"][key] then
 							self.sdtcache["sport"][key] = {
 								current = nil,
@@ -1376,10 +1372,10 @@ function _updateSDTSportItem(self,items)
 							}
 						end
 						if not self.sdtcache["sport"][key].current then
-							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",_getSDTSportCacheKey(self,item),item)
+							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",item)
 						end
 						item.currentResult = self.sdtcache["sport"][key].current
-						self:_changeSDTSportItem(item,self.items[no],no)
+						self:_changeSDTItem("sport",item,self.items[no],no)
 					end
 				end
 			end,
@@ -1389,7 +1385,7 @@ function _updateSDTSportItem(self,items)
 	end
 end
 
-function _updateSDTStockItem(self,items)
+function _updateSDTMiscItem(self,category,items,selectionattribute)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 
@@ -1401,7 +1397,7 @@ function _updateSDTStockItem(self,items)
 					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self.sdtSuperDateTimeInstalled = true
-						self:_updateSDTStockItem(items)
+						self:_updateSDTMiscItem(category,items,selectionattribute)
 					else	
 						self.sdtSuperDateTimeInstalled = false
 					end
@@ -1417,22 +1413,22 @@ function _updateSDTStockItem(self,items)
 				if err then
 					log:warn(err)
 				elseif chunk then
-					local stocksData = chunk.data.miscData.stocks
-					self.sdtcache["stock"] = {}
-					if stocksData then
+					local miscData = chunk.data.miscData[category]
+					self.sdtcache[category] = {}
+					if miscData then
 						for no,item in pairs(items) do
-							local key = self:_getSDTStockCacheKey(item)
-							if not self.sdtcache["stock"][key] then
-								self.sdtcache["stock"][key] = {
+							local key = self:_getSDTCacheKey(category,item)
+							if not self.sdtcache[category][key] then
+								self.sdtcache[category][key] = {
 									current = nil,
-									data = self:_getSDTStocks(item,stocksData)
+									data = self:_getSDTMiscData(item,selectionattribute,miscData)
 								}
 							end
-							if not self.sdtcache["stock"][key].current then
-								self.sdtcache["stock"][key].current = self:_getNextSDTItem("stock",_getSDTStockCacheKey(self,item),item)
+							if not self.sdtcache[category][key].current then
+								self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 							end
-							item.currentResult = self.sdtcache["stock"][key].current
-							self:_changeSDTStockItem(item,self.items[no],no)
+							item.currentResult = self.sdtcache[category][key].current
+							self:_changeSDTItem(category,item,self.items[no],no)
 						end
 					end
 				end
@@ -1443,23 +1439,24 @@ function _updateSDTStockItem(self,items)
 	end
 end
 
-function _getSDTSportCacheKey(self,item)
-	if item.itemtype == "sdtsporttext" and item.scrolling then
-		return "scrolling".._getString(item.sport,"all").._getString(item.gamestatus,"")
-	else
-		return _getString(item.sport,"all").._getString(item.gamestatus,"")
+function _getSDTCacheKey(self,category,item)
+	if category == "sport" then
+		if item.itemtype == "sdtsporttext" and item.scrolling then
+			return "scrolling".._getString(item.sport,"all").._getString(item.gamestatus,"")
+		else
+			return _getString(item.sport,"all").._getString(item.gamestatus,"")
+		end
+	elseif category == "stocks" then
+		if item.itemtype == "sdtstocktext" and item.scrolling then
+			return "scrolling".._getString(item.stock,"")
+		else
+			return "switching".._getString(item.stock,"")
+		end
 	end
 end
 
-function _getSDTStockCacheKey(self,item)
-	if item.itemtype == "sdtsporttext" and item.scrolling then
-		return "scrolling"
-	else
-		return "switching"
-	end
-end
-
-function _getSDTCacheData(self,category,key)
+function _getSDTCacheData(self,category,item)
+	local key = self:_getSDTCacheKey(category,item)
 	if self.sdtcache[category] and self.sdtcache[category][key] then
 		return self.sdtcache[category][key].data
 	else
@@ -1467,7 +1464,8 @@ function _getSDTCacheData(self,category,key)
 	end
 end
 
-function _getSDTCacheIndex(self,category,key)
+function _getSDTCacheIndex(self,category,item)
+	local key = self:_getSDTCacheKey(category,item)
 	if self.sdtcache[category] and self.sdtcache[category][key] then
 		return self.sdtcache[category][key].current
 	else
@@ -1528,27 +1526,27 @@ function _getSDTGames(self,item,sportsData)
 	return games
 end
 
-function _getSDTStocks(self,item,stocksData)
-	local stocks = {}
+function _getSDTMiscData(self,item,selectionattribute,totalResults)
+	local results = {}
 	local no = 1
-	if _getString(item.stock,nil) then
-		if stocksData[string.upper(item.stock)] then
-			stocks[no] = stocksData[string.upper(item.stock)]
+	if _getString(item[selectionattribute],nil) then
+		if totalResults[item[selectionattribute]] then
+			results[no] = totalResults[item[selectionattribute]]
 			no = no + 1
 		end
 	else
-		for stock,value in pairs(stocksData) do
-			stocks[no] = value
-			stocks[no].stock = stock
+		for selection,value in pairs(totalResults) do
+			results[no] = value
+			results[no][selectionattribute] = selection
 			no = no + 1
 		end
 	end
-	return stocks
+	return results
 end
 
-function _getNextSDTItem(self,category,key,item)
-	local results = self:_getSDTCacheData(category,key)
-	local currentResult = self:_getSDTCacheIndex(category,key)
+function _getNextSDTItem(self,category,item)
+	local results = self:_getSDTCacheData(category,item)
+	local currentResult = self:_getSDTCacheIndex(category,item)
 	if currentResult then
 		local length = _getNumber(item.noofrows,1)
 		if length == 1 and item.itemtype == 'sdt'..category..'text' and _getString(item.scrolling,"false") == "true" then
@@ -1566,16 +1564,16 @@ function _getNextSDTItem(self,category,key,item)
 	return currentResult
 end
 
-function _changeSDTSportItem(self,item,widget,id)
-	local results = self:_getSDTCacheData("sport",_getSDTSportCacheKey(self,item))
-	local currentResult = self:_getSDTCacheIndex("sport",_getSDTSportCacheKey(self,item))
+function _changeSDTItem(self,category,item,widget,id)
+	local results = self:_getSDTCacheData(category,item)
+	local currentResult = self:_getSDTCacheIndex(category,item)
 	if currentResult then
-		if item.itemtype == 'sdtsporttext' then
-			local gamesString = self:_getGamesString(item,self:_getSDTCacheData("sport",_getSDTSportCacheKey(self,item)))
-			if widget:getWidgetValue("itemno") ~= gamesString then
-				widget:setWidgetValue("itemno",gamesString)
+		if string.find(item.itemtype,'text$') then
+			local sdtString = self:_getSDTString(item,self:_getSDTCacheData(category,item))
+			if widget:getWidgetValue("itemno") ~= sdtString then
+				widget:setWidgetValue("itemno",sdtString)
 			end
-		elseif item.itemtype == 'sdtsporticon' then
+		elseif string.find(item.itemtype,'icon$') then
 			local player = appletManager:callService("getCurrentPlayer")
 			local server = player:getSlimServer()
 			local url = nil
@@ -1597,51 +1595,22 @@ function _changeSDTSportItem(self,item,widget,id)
 				url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
 			end
 			if url then
-				self.sdtsportimages[self.mode.."item"..id] = id
+				self.referenceimages[self.mode.."item"..id] = id
 				self:_retrieveImage(url,self.mode.."item"..id,"false",_getNumber(item.width,nil),_getNumber(item.height,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 			end
 		end
 	else
-		if item.itemtype == 'sdtsporttext' then
+		if string.find(item.itemtype,'text$') then
 			widget:setWidgetValue("itemno","")
-		elseif item.itemtype == 'sdtsporticon' then
+		elseif string.find(item.itemtype,'icon$') then
 			widget:setWidgetValue("itemno",nil)
 		end
 	end
 end
 
-function _changeSDTStockItem(self,item,widget,id)
-	local results = self:_getSDTCacheData("stock",_getSDTStockCacheKey(self,item))
-	local currentResult = self:_getSDTCacheIndex("stock",_getSDTStockCacheKey(self,item))
-	if currentResult then
-		if item.itemtype == 'sdtstocktext' then
-			local stocksString = self:_getStocksString(item,self:_getSDTCacheData("stock",_getSDTStockCacheKey(self,item)))
-			if widget:getWidgetValue("itemno") ~= stocksString then
-				widget:setWidgetValue("itemno",stocksString)
-			end
-		elseif item.itemtype == 'sdtstockicon' then
-			local player = appletManager:callService("getCurrentPlayer")
-			local server = player:getSlimServer()
-			local url = results[currentResult][item.logotype]
-			if url then
-				self.sdtstockimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,"true",_getNumber(item.width,nil),_getNumber(item.height,nil))
-			else
-				widget:setWidgetValue("itemno",nil)
-			end
-		end
-	else
-		if item.itemtype == 'sdtstocktext' then
-			widget:setWidgetValue("itemno","")
-		elseif item.itemtype == 'sdtstockicon' then
-			widget:setWidgetValue("itemno",nil)
-		end
-	end
-end
-
-function _getGamesString(self,item,results)
+function _getSDTString(self,item,results)
 	local result = ""
 	local length = _getNumber(item.noofrows,1)
 	if length == 1 and _getString(item.scrolling,"false") == "true" then
@@ -1656,35 +1625,7 @@ function _getGamesString(self,item,results)
 			elseif i>first then
 				result = result.."      "
 			end
-			local tmp = _getString(item.sdtformat,"%awayTeam %awayScore @ %homeTeam %homeScore (%gameTime)")
-			for key,value in pairs(results[i]) do
-				if not _getString(value,nil) then
-					tmp = string.gsub(tmp,"%(%%"..key.."%)",_getString(value,""))
-				end
-				tmp = string.gsub(tmp,"%%"..key,_getString(value,""))
-			end
-			result = result..tmp
-		end
-	end
-	return result
-end
-
-function _getStocksString(self,item,results)
-	local result = ""
-	local length = _getNumber(item.noofrows,1)
-	if length == 1 and _getString(item.scrolling,"false") == "true" then
-		length = #results
-		item.currentResult = 1
-	end
-	local first = item.currentResult
-	for i=first,(first+length-1) do
-		if #results>=i then
-			if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofrows,1))>1) then
-				result = result.."\n"
-			elseif i>first then
-				result = result.."      "
-			end
-			local tmp = _getString(item.sdtformat,"%name (%ticker) %lasttrade %change %pchange %volume")
+			local tmp = _getString(item.sdtformat,"")
 			for key,value in pairs(results[i]) do
 				local escapedValue = value
 				if not _getString(value,nil) then
@@ -1699,6 +1640,7 @@ function _getStocksString(self,item,results)
 	end
 	return result
 end
+
 
 function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 	local player = appletManager:callService("getCurrentPlayer")
@@ -1741,7 +1683,7 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 							url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
 							url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
 						end
-						self.sdtimages[self.mode.."item"..id] = id
+						self.referenceimages[self.mode.."item"..id] = id
 						self:_retrieveImage(url,self.mode.."item"..id,dynamic)
 					end
 				end
@@ -1785,7 +1727,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
 					end
 					if url then
 						self.configItems[id].url = url
-						self.sdtimages[self.mode.."item"..id] = id
+						self.referenceimages[self.mode.."item"..id] = id
 						self:_retrieveImage(url,self.mode.."item"..id,"true",width,height)
 					end
 				end
@@ -1828,7 +1770,7 @@ function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 							self.configItems[id].urls[no] = item.url
 						end
 						local imageNo = math.random(1,#self.configItems[id].urls)
-						self.songinfoimages[self.mode.."item"..id] = id
+						self.referenceimages[self.mode.."item"..id] = id
 						self:_retrieveImage(self.configItems[id].urls[imageNo],self.mode.."item"..id,dynamic,_getNumber(width,nil),_getNumber(height,nil))
 					else
 						self.configItems[id].urls = nil
@@ -1861,8 +1803,8 @@ function _updateGalleryImage(self,widget,id,width,height,favorite)
 								local url = string.gsub(chunk.data.image,"{resizeParams}","_".._getNumber(width,maxwidth).."x".._getNumber(height,maxheight).."_p")
 								local ip,port = server:getIpPort()
 								url = "http://"..ip..":"..port.."/"..url
-								self.galleryimages[self.mode.."item"..id] = id
-								self:_retrieveImage(url,self.mode.."item"..id,true)
+								self.referenceimages[self.mode.."item"..id] = id
+								self:_retrieveImage(url,self.mode.."item"..id,"true")
 							end
 						end,
 						nil,
@@ -1958,14 +1900,8 @@ function _tick(self,forcedUpdate)
 
 	local minute = os.date("%M")
 
-	local updatesdtsport = false
-	local changesdtsport = false
-	local updatesdtsportitems = {}
-	local changesdtsportitems = {}
-	local updatesdtstock = false
-	local changesdtstock = false
-	local updatesdtstockitems = {}
-	local changesdtstockitems = {}
+	local updatesdtitems = {}
+	local changesdtitems = {}
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
@@ -2122,56 +2058,52 @@ function _tick(self,forcedUpdate)
 			if forcedUpdate or self.lastminute!=minute then
 				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
 			end
-		elseif item.itemtype == "sdtsporttext" then
+		elseif item.itemtype == "sdtsporttext" or item.itemtype == "sdtsporticon" then
 			if forcedUpdate or self.lastminute!=minute then
-				updatesdtsport = true
-				updatesdtsportitems[no] = item
+				if not updatesdtitems["sport"] then
+					updatesdtitems["sport"] = {
+						attribute = "sport",
+						items = {}
+					}
+				end
+				updatesdtitems["sport"].items[no] = item
 			elseif second % _getNumber(item.interval,3) == 0 then
-				local results = self:_getSDTCacheData("sport",_getSDTSportCacheKey(self,item))
+				local results = self:_getSDTCacheData("sport",item)
 				if results and #results>0 then
-					changesdtsport = true
-					changesdtsportitems[no] = item
+					if not changesdtitems["sport"] then
+						changesdtitems["sport"] = {}
+					end
+					changesdtitems["sport"][no] = item
 				else
-					self.items[no]:setWidgetValue("itemno","")
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
 				end
 			end
-		elseif item.itemtype == "sdtsporticon" then
+		elseif item.itemtype == "sdtstocktext" or item.itemtype == "sdtstockicon" then
 			if forcedUpdate or self.lastminute!=minute then
-				updatesdtsport = true
-				updatesdtsportitems[no] = item
-			elseif second % _getNumber(item.interval,3) == 0 then
-				local results = self:_getSDTCacheData("sport",_getSDTSportCacheKey(self,item))
-				if results and #results>0 then
-					changesdtsport = true
-					changesdtsportitems[no] = item
-				else
-					self.items[no]:setWidgetValue("itemno",nil)
+				if not updatesdtitems["stocks"] then
+					updatesdtitems["stocks"] = {
+						attribute = "stock",
+						items = {}
+					}
 				end
-			end
-		elseif item.itemtype == "sdtstocktext" then
-			if forcedUpdate or self.lastminute!=minute then
-				updatesdtstock = true
-				updatesdtstockitems[no] = item
+				updatesdtitems["stocks"].items[no] = item
 			elseif second % _getNumber(item.interval,3) == 0 then
-				local results = self:_getSDTCacheData("stock",_getSDTStockCacheKey(self,item))
+				local results = self:_getSDTCacheData("stocks",item)
 				if results and #results>0 then
-					changesdtstock = true
-					changesdtstockitems[no] = item
+					if not changesdtitems["stocks"] then
+						changesdtitems["stocks"] = {}
+					end
+					changesdtitems["stocks"][no] = item
 				else
-					self.items[no]:setWidgetValue("itemno","")
-				end
-			end
-		elseif item.itemtype == "sdtstockicon" then
-			if forcedUpdate or self.lastminute!=minute then
-				updatesdtstock = true
-				updatesdtstockitems[no] = item
-			elseif second % _getNumber(item.interval,3) == 0 then
-				local results = self:_getSDTCacheData("stock",_getSDTStockCacheKey(self,item))
-				if results and #results>0 then
-					changesdtstock = true
-					changesdtstockitems[no] = item
-				else
-					self.items[no]:setWidgetValue("itemno",nil)
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
 				end
 			end
 		elseif item.itemtype == "covericon" then
@@ -2205,7 +2137,7 @@ function _tick(self,forcedUpdate)
 				self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
 			elseif self.lastminute!=minute and (not item.url or (minute % 15 == 0 and not _getNumber(item.interval,nil)) or (_getNumber(item.interval,nil) and minute % tonumber(item.interval)==0)) then
 				if item.url then
-					self.sdtimages[self.mode.."item"..no] = no
+					self.referenceimages[self.mode.."item"..no] = no
 					self:_retrieveImage(item.url,self.mode.."item"..no,"true",item.width,item.height)
 				else
 					self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
@@ -2218,37 +2150,29 @@ function _tick(self,forcedUpdate)
 			elseif second % _getNumber(item.interval,10) == 0 and item.urls and #item.urls>0 then
 				local width,height = Framework.getScreenSize()
 				local imageNo = math.random(1,#item.urls)
-				self.songinfoimages[self.mode.."item"..no] = no
+				self.referenceimages[self.mode.."item"..no] = no
 				self:_retrieveImage(item.urls[imageNo],self.mode.."item"..no,"true",_getNumber(item.width,width),_getNumber(item.height,height))
 			end
 		end
 		no = no +1
 	end
 
-	if updatesdtsport then
-		self:_updateSDTSportItem(updatesdtsportitems)
-	end
-	if updatesdtstock then
-		self:_updateSDTStockItem(updatesdtstockitems)
-	end
-	if changesdtsport then
-		for no,item in pairs(changesdtsportitems) do
-			local key = self:_getSDTSportCacheKey(item)
-			if self.sdtcache["sport"] and self.sdtcache["sport"][key] and item.currentResult == self.sdtcache["sport"][key].current then
-				self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",_getSDTSportCacheKey(self,item),item)
-			end
-			item.currentResult = self.sdtcache["sport"][key].current
-			self:_changeSDTSportItem(item,self.items[no],no)
+	for category,data in pairs(updatesdtitems) do
+		if category == "sport" then
+			self:_updateSDTSportItem(data.items)
+		else
+			self:_updateSDTMiscItem(category,data.items,data.attribute)
 		end
 	end
-	if changesdtstock then
-		for no,item in pairs(changesdtstockitems) do
-			local key = self:_getSDTStockCacheKey(item)
-			if self.sdtcache["stock"] and self.sdtcache["stock"][key] and item.currentResult == self.sdtcache["stock"][key].current then
-				self.sdtcache["stock"][key].current = self:_getNextSDTItem("stock",_getSDTStockCacheKey(self,item),item)
+
+	for category,data in pairs(changesdtitems) do
+		for no,item in pairs(data) do
+			local key = self:_getSDTCacheKey(category,item)
+			if self.sdtcache[category] and self.sdtcache[category][key] and item.currentResult == self.sdtcache[category][key].current then
+				self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 			end
-			item.currentResult = self.sdtcache["stock"][key].current
-			self:_changeSDTStockItem(item,self.items[no],no)
+			item.currentResult = self.sdtcache[category][key].current
+			self:_changeSDTItem(category,item,self.items[no],no)
 		end
 	end
 	
@@ -2652,16 +2576,8 @@ function _retrieveImageData(self,url,imageType,chunk)
 		end
 		log:debug("Setting visualizer image: "..id)
 		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
-	elseif self.galleryimages[imageType] ~= nil then
-		self.items[self.galleryimages[imageType]]:getWidget("itemno"):setValue(image)
-	elseif self.sdtimages[imageType] ~= nil then
-		self.items[self.sdtimages[imageType]]:getWidget("itemno"):setValue(image)
-	elseif self.sdtsportimages[imageType] ~= nil then
-		self.items[self.sdtsportimages[imageType]]:getWidget("itemno"):setValue(image)
-	elseif self.sdtstockimages[imageType] ~= nil then
-		self.items[self.sdtstockimages[imageType]]:getWidget("itemno"):setValue(image)
-	elseif self.songinfoimages[imageType] ~= nil then
-		self.items[self.songinfoimages[imageType]]:getWidget("itemno"):setValue(image)
+	elseif self.referenceimages[imageType] ~= nil then
+		self.items[self.referenceimages[imageType]]:getWidget("itemno"):setValue(image)
 	end
 	log:debug("image ready")
 end
