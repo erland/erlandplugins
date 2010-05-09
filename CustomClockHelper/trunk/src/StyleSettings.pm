@@ -191,6 +191,10 @@ sub handler {
 			};
 			if($item->{'itemtype'} =~ /sdttext$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").$item->{'sdtformat'};
+			}elsif($item->{'itemtype'} =~ /^sdtsporttext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtsporticon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtsport/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
@@ -271,7 +275,7 @@ sub handler {
 				push @values,{id=>'green',name=>'green'};				
 				push @values,{id=>'darkgreen',name=>'darkgreen'};				
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} eq 'sdtformat') {
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdttext/) {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				if($currentItem->{'period'} !~ /^d\d+/) {
@@ -328,13 +332,27 @@ sub handler {
 					push @values,{id=>'%_0',name=>'dx Condition'};
 				}
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtsporttext/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%homeTeam %homeScore - %awayTeam %awayScore (%gameTime)',name=>'%homeTeam %homeScore - %awayTeam %awayScore (%gameTime)'};				
+				push @values,{id=>'%awayTeam %awayScore @ %homeTeam %homeScore (%gameTime)',name=>'%awayTeam %awayScore @ %homeTeam %homeScore (%gameTime)'};				
+				push @values,{id=>'%homeTeam %homeScore - %awayTeam %awayScore',name=>'%homeTeam %homeScore - %awayTeam %awayScore'};				
+				push @values,{id=>'%awayTeam %awayScore @ %homeTeam %homeScore',name=>'%awayTeam %awayScore @ %homeTeam %homeScore'};				
+				push @values,{id=>'%awayTeam',name=>'%awayTeam'};				
+				push @values,{id=>'%awayScore',name=>'%awayScore'};				
+				push @values,{id=>'%homeTeam',name=>'%homeTeam'};				
+				push @values,{id=>'%homeScore',name=>'%homeScore'};				
+				push @values,{id=>'%gameTime',name=>'%gameTime'};				
+				push @values,{id=>'%sport',name=>'%sport'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sport') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
-				push @values,{id=>'mlb',name=>'Baseball (MLB)'};				
-				push @values,{id=>'nfl',name=>'Football (NFL)'};				
-				push @values,{id=>'nba',name=>'Basketball (NBA)'};				
-				push @values,{id=>'nhl',name=>'Hockey (NHL)'};				
+				push @values,{id=>'MLB',name=>'Baseball (MLB)'};				
+				push @values,{id=>'NFL',name=>'Football (NFL)'};				
+				push @values,{id=>'NBA',name=>'Basketball (NBA)'};				
+				push @values,{id=>'NHL',name=>'Hockey (NHL)'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'gamestatus') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -398,12 +416,12 @@ sub handler {
 				$result = $request->getResult("_can");
 				if($result) {
 					push @values,{id=>'sdticon',name=>'sdticon'};				
-					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','sdtVersion','?']);
 				$result = $request->getResult("_can");
 				if($result) {
-					push @values,{id=>'sdtsporttexticon',name=>'sdtsporttexticon'};				
+					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
+					push @values,{id=>'sdtsporticon',name=>'sdtsporticon'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
@@ -478,29 +496,14 @@ sub handler {
 					push @values,{id=>$entry->{'id'}, name=>$entry->{'title'}};
 				}
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^layout$/ &&  $itemtype eq 'sdtsporttexticon') {
-				$item->{'type'} = 'singlelist';
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtsporticon') {
+				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
-				push @values,{id=>'vertical',name=>'vertical'};				
-				push @values,{id=>'horizontal',name=>'horizontal'};				
-				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtsporttexticon') {
-				$item->{'type'} = 'optionalsinglelist';
-				my @values = ();
-				push @values,{id=>'team',name=>'team'};				
-				push @values,{id=>'league',name=>'league'};				
-				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^teamorder$/ &&  $itemtype =~ /^sdtsport/) {
-				$item->{'type'} = 'singlelist';
-				my @values = ();
-				push @values,{id=>'home-away',name=>'home-away'};				
-				push @values,{id=>'away-home',name=>'away-home'};				
-				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^show(icon|name|score|time)$/ &&  $itemtype eq 'sdtsporttexticon') {
-				$item->{'type'} = 'singlelist';
-				my @values = ();
-				push @values,{id=>'true',name=>'true'};				
-				push @values,{id=>'false',name=>'false'};				
+				push @values,{id=>'logoURL',name=>'League logo'};				
+				push @values,{id=>'homeLogoURL',name=>'Home team logo'};				
+				push @values,{id=>'awayLogoURL',name=>'Away team logo'};				
+				push @values,{id=>'homeLogoURLorlogoURL',name=>'Home team logo (or league logo)'};				
+				push @values,{id=>'awayLogoURLorlogoURL',name=>'Away team logo (or league logo)'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -692,9 +695,9 @@ sub getItemTypeParameters {
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime text teamorder separator interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
-	}elsif($itemType eq 'sdtsporttexticon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime layout showicon showname showscore showtime logotype separator separatorwidth scorewidth timewidth scoreheight reverseteams text interval sport gamestatus scorecolor color posx posy width fonturl fontfile timefontsize scorefontsize fontsize teamorder timeheight textheight iconsize margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofscores scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtsporticon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval sport gamestatus);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order);
 	}elsif($itemType =~ /^cover/) {
