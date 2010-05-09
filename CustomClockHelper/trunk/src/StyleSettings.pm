@@ -101,7 +101,7 @@ sub pages {
 		for my $item (@$styleItems) {
 			if($item->{'itemtype'} eq 'galleryicon' && !$galleryicon) {
 				$enabled = 0;
-			}elsif(($item->{'itemtype'} =~ /^sdtsport/ || $item->{'itemtype'} =~ /^sdttext/ || $item->{'itemtype'} =~ /^sdtweather/) && !$sdtnew) {
+			}elsif(($item->{'itemtype'} =~ /^sdtstock/ || $item->{'itemtype'} =~ /^sdtsport/ || $item->{'itemtype'} =~ /^sdttext/ || $item->{'itemtype'} =~ /^sdtweather/) && !$sdtnew) {
 				$enabled = 0;
 			}elsif($item->{'itemtype'} =~ /^songinfo/ && !$songinfo) {
 				$enabled = 0;
