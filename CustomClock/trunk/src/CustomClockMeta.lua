@@ -44,7 +44,7 @@ end
 function configureApplet(self)
 	for i=1,9 do
 		appletManager:callService("addScreenSaver", 
-			tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..i, 
+			tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..i..": "..self:getSettings()["config"..i.."style"], 
 			"CustomClock",
 			"openScreensaver"..i, 
 			self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 

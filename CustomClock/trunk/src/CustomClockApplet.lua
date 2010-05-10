@@ -910,6 +910,14 @@ function defineSettingStyleSink(self,title,mode,data)
 									elseif mode == "configalarmactive" then
 										appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
 									end
+									appletManager:callService("addScreenSaver", 
+										tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..string.gsub(mode,"^config","")..": "..self:getSettings()[mode.."style"], 
+										"CustomClock",
+										"openScreensaver"..string.gsub(mode,"^config",""), 
+										self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
+										"openSettings", 
+										90,
+										"closeScreensaver")
 								end,
 								style == entry.name
 							),
