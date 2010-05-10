@@ -1153,6 +1153,111 @@
 			},
 			{
 				"models":["touch"],
+				"name":"Dark Blue Glow VU Meters",
+				"contributors":"jstraw/Gazjam (Graphics)",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/DarkBlueGlowVUMeter/share/jive/applets/WQVGAsmallSkin/images/UNOFFICIAL/VUMeter/vu_analog_25seq_b.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"color":"white",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"white",
+						"posy":"230",
+						"fontsize":"35",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"white",
+						"posy":"60",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Light Blue Glow VU Meters",
+				"contributors":"jstraw/Gazjam (Graphics)",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/LightBlueGlowVUMeter/share/jive/applets/WQVGAsmallSkin/images/UNOFFICIAL/VUMeter/vu_analog_25seq_b.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"color":"white",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"black",
+						"posy":"230",
+						"fontsize":"35",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"white",
+						"posy":"60",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
+				"name":"Vintage Darker Gold VU Meters",
+				"contributors":"jstraw/Gazjam (Graphics)",
+				"items":[
+					{
+						"itemtype":"analogvumeter",
+						"url":"http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/VintageDarkerGoldVUMeter/share/jive/applets/WQVGAsmallSkin/images/UNOFFICIAL/VUMeter/vu_analog_25seq_b.png"
+					},		
+					{
+						"itemtype":"trackplayingtext",
+						"color":"black",
+						"posy":"10",
+						"fontsize":"45",
+						"text":"ARTIST",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"black",
+						"posy":"230",
+						"fontsize":"35",
+						"text":"ALBUM",
+						"animate":"true"
+					},
+					{
+						"itemtype":"trackplayingtext",
+						"color":"black",
+						"posy":"60",
+						"fontsize":"25",
+						"text":"TITLE",
+						"animate":"true"
+					}
+				]
+			},
+			{
+				"models":["touch"],
 				"name":"Spectrum Meter",
 				"contributors":"Erland",
 				"items":[
