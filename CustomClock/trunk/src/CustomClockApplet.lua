@@ -816,13 +816,14 @@ function defineSettingStyleSink(self,title,mode,data)
 
 	local window = Window("icon_list", title, 'settingstitle')
 	local menu = SimpleMenu("menu")
-	menu:setComparator(menu.itemComparatorAlpha)
+	menu:setComparator(menu.itemComparatorWeightAlpha)
 	window:addWidget(menu)
 	local group = RadioGroup()
 	if mode == "confignowplaying" then
 		menu:addItem({
 			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_STYLE")).."\n(Logitech)",
 			style = 'item_no_icon',
+			weight = 1,
 			check = RadioButton(
 				"radio",
 				group,
@@ -839,6 +840,7 @@ function defineSettingStyleSink(self,title,mode,data)
 		menu:addItem({
 			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE")).."\n(Logitech)",
 			style = 'item_no_icon',
+			weight = 1,
 			check = RadioButton(
 				"radio",
 				group,
@@ -846,6 +848,44 @@ function defineSettingStyleSink(self,title,mode,data)
 					self:getSettings()[mode.."style"] = nil
 					self:storeSettings()
 					appletManager:callService("registerAlternativeAlarmWindow",nil)
+				end,
+				style == nil
+			),
+		})
+	else
+		menu:addItem({
+			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE")),
+			style = 'item_no_icon',
+			weight = 1,
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					for attribute,value in pairs(self:getSettings()) do
+						if string.find(attribute,"^"..mode) then
+							self:getSettings()[attribute] = nil
+						end
+					end
+					if self.images then
+						for attribute,value in pairs(self.images) do
+							if string.find(attribute,"^"..mode) then
+								self.images[attribute] = nil
+							end
+						end
+					end
+					if self.window then
+						self.window:hide()
+						self.window=nil
+					end
+					self:storeSettings()
+					appletManager:callService("addScreenSaver", 
+						tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..string.gsub(mode,"^config",""), 
+						"CustomClock",
+						"openScreensaver"..string.gsub(mode,"^config",""), 
+						self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
+						"openSettings", 
+						90,
+						"closeScreensaver")
 				end,
 				style == nil
 			),
@@ -878,6 +918,7 @@ function defineSettingStyleSink(self,title,mode,data)
 						menu:addItem({
 							text = name,
 							style = 'item_no_icon',
+							weight = 2,
 							check = RadioButton(
 								"radio",
 								group,
@@ -909,15 +950,16 @@ function defineSettingStyleSink(self,title,mode,data)
 										self:_installCustomNowPlaying()
 									elseif mode == "configalarmactive" then
 										appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
+									else
+										appletManager:callService("addScreenSaver", 
+											tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..string.gsub(mode,"^config","")..": "..self:getSettings()[mode.."style"], 
+											"CustomClock",
+											"openScreensaver"..string.gsub(mode,"^config",""), 
+											self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
+											"openSettings", 
+											90,
+											"closeScreensaver")
 									end
-									appletManager:callService("addScreenSaver", 
-										tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..string.gsub(mode,"^config","")..": "..self:getSettings()[mode.."style"], 
-										"CustomClock",
-										"openScreensaver"..string.gsub(mode,"^config",""), 
-										self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
-										"openSettings", 
-										90,
-										"closeScreensaver")
 								end,
 								style == entry.name
 							),
