@@ -1502,6 +1502,12 @@ function _getSDTCacheKey(self,category,item)
 		else
 			return "switching".._getString(item.stock,"")
 		end
+	else
+		if string.find(item.itemtype,"text$") and item.scrolling then
+			return "scrolling".._getString(item.selected,"")
+		else
+			return "switching".._getString(item.selected,"")
+		end
 	end
 end
 
@@ -2148,6 +2154,31 @@ function _tick(self,forcedUpdate)
 						changesdtitems["stocks"] = {}
 					end
 					changesdtitems["stocks"][no] = item
+				else
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
+				end
+			end
+		elseif item.itemtype == "sdtmisctext" then
+			local infotype = _getString(item.infotype,"default")
+			if forcedUpdate or self.lastminute!=minute then
+				if not updatesdtitems[infotype] then
+					updatesdtitems[infotype] = {
+						attribute = "selected",
+						items = {}
+					}
+				end
+				updatesdtitems[infotype].items[no] = item
+			elseif second % _getNumber(item.interval,3) == 0 then
+				local results = self:_getSDTCacheData(infotype,item)
+				if results and #results>0 then
+					if not changesdtitems[infotype] then
+						changesdtitems[infotype] = {}
+					end
+					changesdtitems[infotype][no] = item
 				else
 					if string.find(item.itemtype,"text$") then
 						self.items[no]:setWidgetValue("itemno","")
