@@ -101,7 +101,7 @@ sub pages {
 		for my $item (@$styleItems) {
 			if($item->{'itemtype'} eq 'galleryicon' && !$galleryicon) {
 				$enabled = 0;
-			}elsif(($item->{'itemtype'} =~ /^sdtstock/ || $item->{'itemtype'} =~ /^sdtsport/ || $item->{'itemtype'} =~ /^sdttext/ || $item->{'itemtype'} =~ /^sdtweather/) && !$sdtnew) {
+			}elsif(($item->{'itemtype'} =~ /^sdtstock/ || $item->{'itemtype'} =~ /^sdtmisc/ || $item->{'itemtype'} =~ /^sdtsport/ || $item->{'itemtype'} =~ /^sdttext/ || $item->{'itemtype'} =~ /^sdtweather/) && !$sdtnew) {
 				$enabled = 0;
 			}elsif($item->{'itemtype'} =~ /^songinfo/ && !$songinfo) {
 				$enabled = 0;
@@ -242,6 +242,8 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtstockicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtmisctext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtsport/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
@@ -393,6 +395,12 @@ sub handler {
 				push @values,{id=>'%gameTime',name=>'%gameTime'};				
 				push @values,{id=>'%sport',name=>'%sport'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtmisctext/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%line1',name=>'Line 1'};				
+				push @values,{id=>'%line2',name=>'Line 2'};				
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtstocktext/) {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
@@ -486,6 +494,7 @@ sub handler {
 				if($result) {
 					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
 					push @values,{id=>'sdtstocktext',name=>'sdtstocktext'};				
+					push @values,{id=>'sdtmisctext',name=>'sdtmisctext'};				
 					push @values,{id=>'sdtsporticon',name=>'sdtsporticon'};				
 					push @values,{id=>'sdtstockicon',name=>'sdtstockicon'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
@@ -575,6 +584,12 @@ sub handler {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'daychartURL',name=>'Daychart'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^infotype$/ &&  $itemtype eq 'sdtmisctext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'getLongWeather',name=>'Long Weather Forcasts'};				
+				push @values,{id=>'CTABusTracker',name=>'CTA Bus Tracker'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -771,6 +786,8 @@ sub getItemTypeParameters {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval sport gamestatus);
 	}elsif($itemType eq 'sdtstocktext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtmisctext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
