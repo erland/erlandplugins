@@ -884,7 +884,7 @@ function defineSettingStyleSink(self,title,mode,data)
 						"openScreensaver"..string.gsub(mode,"^config",""), 
 						self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
 						"openSettings", 
-						90,
+						nil,
 						"closeScreensaver")
 				end,
 				style == nil
@@ -957,7 +957,7 @@ function defineSettingStyleSink(self,title,mode,data)
 											"openScreensaver"..string.gsub(mode,"^config",""), 
 											self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 
 											"openSettings", 
-											90,
+											nil,
 											"closeScreensaver")
 									end
 								end,
