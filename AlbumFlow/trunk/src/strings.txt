@@ -27,7 +27,7 @@ SCREENSAVER_ALBUMFLOW_VIEW_ARTIST
 	EN	All albums (by artist)
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST
-	EN	Albums for current artist
+	EN	Albums by current artist
 
 SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE
 	EN	Albums in current genre
