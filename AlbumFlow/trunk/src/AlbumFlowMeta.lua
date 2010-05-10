@@ -45,13 +45,19 @@ end
 
 function configureApplet(self)
 	for i=1,5 do
+		local name = ""
+		if self:getSettings()["config"..i.."name"] then
+			name = ": "..self:getSettings()["config"..i.."name"]
+		elseif self:getSettings()["config"..i.."mode"] then
+			name = ": "..self:getSettings()["config"..i.."mode"]
+		end
 		appletManager:callService("addScreenSaver", 
-			tostring(self:string("SCREENSAVER_ALBUMFLOW")).." #"..i, 
+			tostring(self:string("SCREENSAVER_ALBUMFLOW")).." #"..i..name, 
 			"AlbumFlow",
 			"openScreensaver"..i, 
 			self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
 			"openScreensaverSettings", 
-			90,
+			nil,
 			"closeScreensaver")
 	end
 	if self:getSettings()["screensaverstyle"] then
@@ -76,10 +82,15 @@ function defaultSettings(self)
         defaultSetting["config4style"] = "circular"
         defaultSetting["config5style"] = "circular"
         defaultSetting["config1mode"] = "random"
+        defaultSetting["config1name"] = "All albums (random)"
         defaultSetting["config2mode"] = "currentplaylist"
+        defaultSetting["config2name"] = "Albums in current playlist"
         defaultSetting["config3mode"] = "currentartist"
+        defaultSetting["config3name"] = "Albums by current artist"
         defaultSetting["config4mode"] = "currentgenre"
+        defaultSetting["config4name"] = "Albums in current genre"
         defaultSetting["config5mode"] = "currentyear"
+        defaultSetting["config5name"] = "Albums in current year"
         defaultSetting["browsealbumsstyle"] = "circular"
         defaultSetting["browsealbumsmode"] = "byartist"
         return defaultSetting

@@ -281,9 +281,15 @@ function openScreensaverSettings(self)
 
 	local menu = SimpleMenu("menu");
 	for i = 1,5 do
+		local name = ""
+		if self:getSettings()["config"..i.."name"] then
+			name = ": "..self:getSettings()["config"..i.."name"]
+		elseif self:getSettings()["config"..i.."mode"] then
+			name = ": "..self:getSettings()["config"..i.."mode"]
+		end
 		menu:addItem(
 			{
-				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i, 
+				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i..name, 
 				sound = "WINDOWSHOW",
 				callback = function(event, menuItem)
 					self:defineSettingConfig(menuItem,"config"..i)
@@ -436,6 +442,21 @@ function fetchGalleryFavorites(self,title,mode,songInfoItems)
 	)
 end
 
+function updateMenuName(self,mode)
+	local name = ""
+	if self:getSettings()[mode.."name"] then
+		name = ": "..self:getSettings()[mode.."name"]
+	end
+	appletManager:callService("addScreenSaver", 
+		tostring(self:string("SCREENSAVER_ALBUMFLOW")).." #"..string.gsub(mode,"^config","")..name, 
+		"AlbumFlow",
+		"openScreensaver"..string.gsub(mode,"^config",""), 
+		self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 
+		"openScreensaverSettings", 
+		nil,
+		"closeScreensaver")
+end
+
 function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems)
 	if self.popup then
 		self.popup:hide()
@@ -457,11 +478,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "album"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "album"
 		),
@@ -474,11 +497,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "random"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "random"
 		),
@@ -491,11 +516,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "byartist"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "byartist"
 		),
@@ -508,11 +535,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "currentplaylist"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "currentplaylist"
 		),
@@ -525,11 +554,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "currentartist"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "currentartist"
 		),
@@ -542,11 +573,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "currentgenre"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "currentgenre"
 		),
@@ -559,11 +592,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			group,
 			function()
 				self:getSettings()[mode.."mode"] = "currentyear"
+				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"))
 				if self.window then
 					self.window:hide()
 					self.window = nil
 				end
 				self:storeSettings()
+				self:updateMenuName(mode)
 			end,
 			modesetting == "currentyear"
 		),
@@ -580,11 +615,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 						group,
 						function()
 							self:getSettings()[mode.."mode"] = "artists"
+							self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTISTS"))
 							if self.window then
 								self.window:hide()
 								self.window = nil
 							end
 							self:storeSettings()
+							self:updateMenuName(mode)
 						end,
 						modesetting == "artists"
 					),
@@ -597,11 +634,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 						group,
 						function()
 							self:getSettings()[mode.."mode"] = "randomartists"
+							self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOMARTISTS"))
 							if self.window then
 								self.window:hide()
 								self.window = nil
 							end
 							self:storeSettings()
+							self:updateMenuName(mode)
 						end,
 						modesetting == "randomartists"
 					),
@@ -615,11 +654,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 					group,
 					function()
 						self:getSettings()[mode.."mode"] = "songinfo"..entry.id
+						self:getSettings()[mode.."name"] = entry.name.." "..tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_SONGINFO"))
 						if self.window then
 							self.window:hide()
 							self.window = nil
 						end
 						self:storeSettings()
+						self:updateMenuName(mode)
 					end,
 					modesetting == "songinfo"..entry.id
 				),
@@ -636,11 +677,13 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 					group,
 					function()
 						self:getSettings()[mode.."mode"] = "picturegallery"..entry.id
+						self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_PICTURE_GALLERY"))..": "..entry.title
 						if self.window then
 							self.window:hide()
 							self.window = nil
 						end
 						self:storeSettings()
+						self:updateMenuName(mode)
 					end,
 					modesetting == "picturegallery"..entry.id
 				),
