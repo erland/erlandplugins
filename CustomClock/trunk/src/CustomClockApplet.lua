@@ -315,19 +315,7 @@ function openScreensaver(self,mode, transition)
 			no = no +1
 		end
 		for key,group in pairs(self.visibilityGroups) do
-			local sortedItems = {}
-			for no,item in ipairs(group.items) do
-				table.insert(sortedItems,item)
-			end
-			table.sort(sortedItems, function(a,b) 
-				if a.order==b.order then 
-					return a.delay<b.delay
-				else
-					return a.order<b.order 
-				end
-			end
-			)
-			group.items = sortedItems
+			group.items = self:_resortItems(group.items)
 		end
 
 		local backgroundItems = {
@@ -453,6 +441,43 @@ function openScreensaver(self,mode, transition)
 	end
 end
 
+function _recalculateVisibilityTimes(self,items)
+	local maxdely = nil
+	for no,item in pairs(items) do
+		if not _getString(self.configItems[item.item].visibilitytime,nil) and _getString(self.configItems[item.item].interval,nil) then
+			if string.find(self.configItems[item.item].itemtype,"^sdt") and not string.find(self.configItems[item.item].itemtype,"sdtweathermapicon") then
+				local results = nil
+				if string.find(self.configItems[item.item].itemtype,"^sdtsport") then
+					results = self:_getSDTCacheData("sport",self.configItems[item.item])
+				elseif string.find(self.configItems[item.item].itemtype,"^sdtstock") then
+					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
+				elseif string.find(self.configItems[item.item].itemtype,"^sdtmisc") and _getString(self.configItems[item.item].infotype,nil) then
+					results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+				end
+				if results then
+					item.delay = tonumber(self.configItems[item.item].interval) * tonumber(#results)
+				end
+			end
+		end
+	end
+end
+
+function _resortItems(self,items)
+	local sortedItems = {}
+	for no,item in ipairs(items) do
+		table.insert(sortedItems,item)
+	end
+	table.sort(sortedItems, function(a,b) 
+		if a.order==b.order then 
+			return a.delay<b.delay
+		else
+			return a.order<b.order 
+		end
+	end
+	)
+	return sortedItems
+end
+
 function closeScreensaver(self)
 	if self.window then
 		self.window:hide()
@@ -468,6 +493,8 @@ function _updateVisibilityGroups(self)
 			local previous = group.items[group.current]
 			if group.current >= #group.items then
 				group.current = 1
+				self:_recalculateVisibilityTimes(group.items)
+				group.items = self:_resortItems(group.items)
 			else
 				group.current = group.current + 1
 				while group.current<=#group.items and previous and group.items[group.current].order==previous.order and group.items[group.current].delay==previous.delay do
@@ -475,8 +502,13 @@ function _updateVisibilityGroups(self)
 				end
 				if group.current>#group.items then
 					group.current = 1
+					self:_recalculateVisibilityTimes(group.items)
+					group.items = self:_resortItems(group.items)
 				elseif previous and group.items[group.current].order==previous.order and group.items[group.current].delay>previous.delay then
 					now = now-previous.delay
+				else
+					self:_recalculateVisibilityTimes(group.items)
+					group.items = self:_resortItems(group.items)
 				end
 			end
 			group.lastswitchtime = now
@@ -1586,14 +1618,36 @@ function _getSDTMiscData(self,item,selectionattribute,totalResults)
 	local results = {}
 	local no = 1
 	if _getString(item[selectionattribute],nil) then
+		local icons = {}
+		for key,value in pairs(totalResults) do
+			if type(value) == 'string' then
+				icons[key] = value
+			end
+		end
 		if totalResults[item[selectionattribute]] then
 			results[no] = totalResults[item[selectionattribute]]
+			for key,icon in pairs(icons) do
+				if not results[no][key] then
+					results[no][key] = icon
+				end
+			end
 			no = no + 1
 		end
 	else
+		local icons = {}
+		for key,value in pairs(totalResults) do
+			if type(value) == 'string' then
+				icons[key] = value
+			end
+		end
 		for selection,value in pairs(totalResults) do
 			results[no] = value
 			results[no][selectionattribute] = selection
+			for key,icon in pairs(icons) do
+				if not results[no][key] then
+					results[no][key] = icon
+				end
+			end
 			no = no + 1
 		end
 	end
@@ -1643,7 +1697,10 @@ function _changeSDTItem(self,category,item,widget,id)
 			end
 			if url and not string.find(url,"^http") then
 				local ip,port = server:getIpPort()
-				url = "http://"..ip..":"..port.."/"..url
+				if not string.find(url,"^/") then
+					url = "/"..url
+				end
+				url = "http://"..ip..":"..port..url
 				local width = _getNumber(item.width,50)
 				local height = _getNumber(item.height,50)
 				url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
@@ -1733,6 +1790,9 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 					end
 					if url then
 						local ip,port = server:getIpPort()
+						if not string.find(url,"^/") then
+							url = "/"..url
+						end
 						url = "http://"..ip..":"..port..url
 						if width and height then
 							url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
@@ -1858,7 +1918,10 @@ function _updateGalleryImage(self,widget,id,width,height,favorite)
 								local maxwidth,maxheight = self:_getUsableWallpaperArea()
 								local url = string.gsub(chunk.data.image,"{resizeParams}","_".._getNumber(width,maxwidth).."x".._getNumber(height,maxheight).."_p")
 								local ip,port = server:getIpPort()
-								url = "http://"..ip..":"..port.."/"..url
+								if not string.find(url,"^/") then
+									url = "/"..url
+								end
+								url = "http://"..ip..":"..port..url
 								self.referenceimages[self.mode.."item"..id] = id
 								self:_retrieveImage(url,self.mode.."item"..id,"true")
 							end
@@ -2162,7 +2225,7 @@ function _tick(self,forcedUpdate)
 					end
 				end
 			end
-		elseif item.itemtype == "sdtmisctext" then
+		elseif item.itemtype == "sdtmisctext" or item.itemtype == "sdtmiscicon" then
 			local infotype = _getString(item.infotype,"default")
 			if forcedUpdate or self.lastminute!=minute then
 				if not updatesdtitems[infotype] then
