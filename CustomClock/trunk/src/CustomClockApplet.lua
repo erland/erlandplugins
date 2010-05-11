@@ -1457,7 +1457,7 @@ function _updateSDTSportItem(self,items)
 							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",item)
 						end
 						item.currentResult = self.sdtcache["sport"][key].current
-						self:_changeSDTItem("sport",item,self.items[no],no)
+						self:_changeSDTItem("sport",item,self.items[no],no,"true")
 					end
 				end
 			end,
@@ -1510,7 +1510,7 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 								self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 							end
 							item.currentResult = self.sdtcache[category][key].current
-							self:_changeSDTItem(category,item,self.items[no],no)
+							self:_changeSDTItem(category,item,self.items[no],no,"false")
 						end
 					end
 				end
@@ -1528,7 +1528,7 @@ function _getSDTCacheKey(self,category,item)
 		else
 			return _getString(item.sport,"all").._getString(item.gamestatus,"")
 		end
-	elseif category == "stocks" then
+	elseif category == "stocks" and string.find(item.itemtype,"^sdtstock") then
 		if item.itemtype == "sdtstocktext" and item.scrolling then
 			return "scrolling".._getString(item.stock,"")
 		else
@@ -1674,7 +1674,7 @@ function _getNextSDTItem(self,category,item)
 	return currentResult
 end
 
-function _changeSDTItem(self,category,item,widget,id)
+function _changeSDTItem(self,category,item,widget,id,dynamic)
 	local results = self:_getSDTCacheData(category,item)
 	local currentResult = self:_getSDTCacheIndex(category,item)
 	if currentResult then
@@ -1709,7 +1709,7 @@ function _changeSDTItem(self,category,item,widget,id)
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,"false",_getNumber(item.width,nil),_getNumber(item.height,nil))
+				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 			end
@@ -2316,7 +2316,11 @@ function _tick(self,forcedUpdate)
 				self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 			end
 			item.currentResult = self.sdtcache[category][key].current
-			self:_changeSDTItem(category,item,self.items[no],no)
+			if category == "sport" then
+				self:_changeSDTItem(category,item,self.items[no],no,"false")
+			else
+				self:_changeSDTItem(category,item,self.items[no],no,"true")
+			end
 		end
 	end
 	
