@@ -1457,7 +1457,7 @@ function _updateSDTSportItem(self,items)
 							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",item)
 						end
 						item.currentResult = self.sdtcache["sport"][key].current
-						self:_changeSDTItem("sport",item,self.items[no],no,"true")
+						self:_changeSDTItem("sport",item,self.items[no],no,"false")
 					end
 				end
 			end,
@@ -1510,7 +1510,7 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 								self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 							end
 							item.currentResult = self.sdtcache[category][key].current
-							self:_changeSDTItem(category,item,self.items[no],no,"false")
+							self:_changeSDTItem(category,item,self.items[no],no,"true")
 						end
 					end
 				end
