@@ -235,17 +235,17 @@ sub handler {
 			if($item->{'itemtype'} =~ /sdttext$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").$item->{'sdtformat'};
 			}elsif($item->{'itemtype'} =~ /^sdtsporttext$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtsporticon$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtstocktext$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtstockicon$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}:"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtmisctext$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}:"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
-			}elsif($item->{'itemtype'} =~ /^sdtsport/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'sport'} ne ""?$item->{'sport'}:"");
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtmiscicon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
 			}elsif($item->{'itemtype'} =~ /image$/) {
@@ -395,11 +395,31 @@ sub handler {
 				push @values,{id=>'%gameTime',name=>'%gameTime'};				
 				push @values,{id=>'%sport',name=>'%sport'};				
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtmisctext/) {
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtmisc/) {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
-				push @values,{id=>'%line1',name=>'Line 1'};				
-				push @values,{id=>'%line2',name=>'Line 2'};				
+				if(defined($currentItem->{'infotype'}) && $currentItem->{'infotype'} ne "") {
+					my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','misc']);
+					my $result = $request->getResult("miscData");
+					my %hashValues = ();
+					if(defined($result->{$currentItem->{'infotype'}}) && $result->{$currentItem->{'infotype'}} ne "") {
+						my $infoTypeResult = $result->{$currentItem->{'infotype'}};
+						for my $key (keys %$infoTypeResult) {
+							my $entry=$infoTypeResult->{$key};
+							if(ref($entry)) {
+								for my $attr (keys %$entry) {
+									$hashValues{$attr} = $entry->{$attr};
+								}
+							}
+						}
+						for my $entry (keys %hashValues) {
+							push @values,{id=>'%'.$entry,name=>$entry." (".$hashValues{$entry}.")"};				
+						}
+					}
+				}else {
+					push @values,{id=>'%line1',name=>'line1'};				
+					push @values,{id=>'%line2',name=>'line2'};				
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtstocktext/) {
 				$item->{'type'} = 'optionalsinglecombobox';
@@ -495,6 +515,7 @@ sub handler {
 					push @values,{id=>'sdtsporttext',name=>'sdtsporttext'};				
 					push @values,{id=>'sdtstocktext',name=>'sdtstocktext'};				
 					push @values,{id=>'sdtmisctext',name=>'sdtmisctext'};				
+					push @values,{id=>'sdtmiscicon',name=>'sdtmiscicon'};				
 					push @values,{id=>'sdtsporticon',name=>'sdtsporticon'};				
 					push @values,{id=>'sdtstockicon',name=>'sdtstockicon'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
@@ -585,11 +606,45 @@ sub handler {
 				my @values = ();
 				push @values,{id=>'daychartURL',name=>'Daychart'};				
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^infotype$/ &&  $itemtype eq 'sdtmisctext') {
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtmiscicon') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
-				push @values,{id=>'getLongWeather',name=>'Long Weather Forcasts'};				
-				push @values,{id=>'CTABusTracker',name=>'CTA Bus Tracker'};				
+				if( defined($currentItem->{'infotype'}) && $currentItem->{'infotype'} ne "") {
+					my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','misc']);
+					my $result = $request->getResult("miscData");
+					my %hashValues = ();
+					if(defined($result->{$currentItem->{'infotype'}}) && $result->{$currentItem->{'infotype'}} ne "") {
+						my $infoTypeResult = $result->{$currentItem->{'infotype'}};
+						for my $key (keys %$infoTypeResult) {
+							my $entry=$infoTypeResult->{$key};
+							if(!ref($entry)) {
+								$hashValues{$entry} = 1;
+							}else {
+								for my $attr (keys %$entry) {
+									my $subkeyentry = $entry->{$attr};
+									if(lc($attr) =~ /^icon/ || lc($attr) =~ /icon$/ || lc($attr) =~ /^logo/ || lc($attr) =~ /logo$/ || lc($attr) =~ /url$/) {
+										$hashValues{$attr} = 1;
+									}
+								}
+							}
+						}
+					}
+					for my $entry (keys %hashValues) {
+						push @values,{id=>$entry,name=>$entry};				
+					}
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^infotype$/ &&  $itemtype =~ /^sdtmisc/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','misc']);
+				my $result = $request->getResult("miscData");
+				my @values = ();
+				for my $entry (keys %$result) {
+					push @values,{id=>$entry,name=>$entry};				
+				}
+				if(scalar(@values)==0) {
+					push @values,{id=>'%getWeatherLong',name=>'getWeatherLong'};
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
 				$item->{'type'} = 'optionalsinglelist';
@@ -788,6 +843,8 @@ sub getItemTypeParameters {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtmisctext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtmiscicon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order url url.background logotype interval selected);
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
