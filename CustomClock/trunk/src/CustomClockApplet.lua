@@ -163,6 +163,7 @@ function openScreensaver(self,mode, transition)
 	if player then
 		player:unsubscribe('/slim/customclock/titleformatsupdated')
 		player:unsubscribe('/slim/customclock/changedstyles')
+		player:unsubscribe('/slim/SuperDateTimeState/dataRefreshState')
 		player:subscribe(
 			'/slim/customclock/changedstyles',
 			function(chunk)
@@ -209,6 +210,62 @@ function openScreensaver(self,mode, transition)
 			end,
 			player:getId(),
 			{'customclock','changedstyles'}
+		)
+		player:subscribe(
+			'/slim/SuperDateTimeState/dataRefreshState',
+			function(chunk)
+				if chunk.data[3] and chunk.data[3]["state"] and (chunk.data[3]["state"] == "Success" or chunk.data[3]["state"] == "Errors") then
+					local updatesdtitems = {}
+					local no = 1
+					for _,item in pairs(self.configItems) do
+						local category = nil
+						local selectionattribute = nil
+						if string.find(item.itemtype,"^sdtsport") then
+							category = "sport"
+							selectionattribute = category
+						elseif string.find(item.itemtype,"^sdtstock") then
+							category = "stocks"
+							selectionattribute = "stock"
+						elseif string.find(item.itemtype,"^sdtmisc") and _getString(item.infotype,nil) then
+							category = item.infotype
+							selectionattribute = selected
+						elseif item.itemtype == "sdttext" then
+							log:debug("Refreshing sdttext:".._getString(item.period,"-1")..",".._getString(item.sdtformat,""))
+							self:_updateSDTText(self.items[no],item.sdtformat,item.period)
+						elseif item.itemtype == "sdticon" then
+							log:debug("Refreshing sdticon:".._getString(item.period,"-1"))
+							self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
+						end
+	
+						if category then
+							if not updatesdtitems[category] then
+								updatesdtitems[category] = {
+									attribute = selectionattribute,
+									items = {}
+								}
+							end
+							updatesdtitems[category].items[no] = item
+						end
+						no = no + 1
+					end
+					for category,data in pairs(updatesdtitems) do
+						log:debug("Refreshing sdt item for category:"..category)
+						if category == "sport" then
+							self:_updateSDTSportItem(data.items)
+						else
+							self:_updateSDTMiscItem(category,data.items,data.attribute)
+						end
+					end
+				elseif chunk.data[3] and chunk.data[3]["state"] and chunk.data[3]["state"] == "MapRefreshSuccess" then
+					log:debug("Ignoring SuperDateTime map refresh event="..tostring(chunk.data[3]["state"]))
+				elseif chunk.data[3] and chunk.data[3]["state"] and chunk.data[3]["state"] == "Refreshing" then
+					log:debug("Ignoring SuperDateTime refresh start event")
+				else
+					log:warn("Uknown SuperDateTime event state="..tostring(chunk.data[3]["state"]))
+				end 
+			end,
+			player:getId(),
+			{'SuperDateTimeState','dataRefreshState'}
 		)
 		player:subscribe(
 			'/slim/customclock/titleformatsupdated',
@@ -442,7 +499,7 @@ function openScreensaver(self,mode, transition)
 end
 
 function _recalculateVisibilityTimes(self,items)
-	local maxdely = nil
+	local maxdelay = {}
 	for no,item in pairs(items) do
 		if not _getString(self.configItems[item.item].visibilitytime,nil) and _getString(self.configItems[item.item].interval,nil) then
 			if string.find(self.configItems[item.item].itemtype,"^sdt") and not string.find(self.configItems[item.item].itemtype,"sdtweathermapicon") then
@@ -455,9 +512,19 @@ function _recalculateVisibilityTimes(self,items)
 					results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
 				end
 				if results then
+					recalculated = true
 					item.delay = tonumber(self.configItems[item.item].interval) * tonumber(#results)
+					if not maxdelay[item.order] or maxdelay[item.order]<item.delay then
+						log:debug("Recalculate visibility times: "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
+						maxdelay[item.order] = item.delay
+					end
 				end
 			end
+		end
+	end
+	for no,item in pairs(items) do
+		if maxdelay[item.order] then
+			item.delay = maxdelay[item.order]
 		end
 	end
 end
@@ -495,6 +562,7 @@ function _updateVisibilityGroups(self)
 				group.current = 1
 				self:_recalculateVisibilityTimes(group.items)
 				group.items = self:_resortItems(group.items)
+				log:debug("Switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
 			else
 				group.current = group.current + 1
 				while group.current<=#group.items and previous and group.items[group.current].order==previous.order and group.items[group.current].delay==previous.delay do
@@ -504,11 +572,13 @@ function _updateVisibilityGroups(self)
 					group.current = 1
 					self:_recalculateVisibilityTimes(group.items)
 					group.items = self:_resortItems(group.items)
+					log:debug("Switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
 				elseif previous and group.items[group.current].order==previous.order and group.items[group.current].delay>previous.delay then
 					now = now-previous.delay
 				else
 					self:_recalculateVisibilityTimes(group.items)
 					group.items = self:_resortItems(group.items)
+					log:debug("Switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
 				end
 			end
 			group.lastswitchtime = now
@@ -1373,7 +1443,7 @@ end
 
 function _updateSDTText(self,widget,format,period)
 	local player = appletManager:callService("getCurrentPlayer")
-	period = _getString(period,nil) or 0 
+	period = _getString(period,nil) or "-1" 
 	local server = player:getSlimServer()
 	if not self.sdtMacroChecked then
 		server:userRequest(function(chunk,err)
@@ -1444,6 +1514,7 @@ function _updateSDTSportItem(self,items)
 					log:warn(err)
 				elseif chunk then
 					local sportsData = chunk.data.selsports
+					local oldCache = self.sdtcache["sport"]
 					self.sdtcache["sport"] = {}
 					for no,item in pairs(items) do
 						local key = self:_getSDTCacheKey("sport",item)
@@ -1454,6 +1525,25 @@ function _updateSDTSportItem(self,items)
 							}
 						end
 						if not self.sdtcache["sport"][key].current then
+							if oldCache and oldCache[key] and oldCache[key].current then
+								if oldCache[key].data[oldCache[key].current].uniqueID then
+									oldItemNo = 1
+									for _,item in ipairs(self.sdtcache["sport"][key].data) do
+										if item.uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+											break
+										end
+										oldItemNo = oldItemNo + 1
+									end
+									if self.sdtcache["sport"][key].data[oldItemNo].uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+										self.sdtcache["sport"][key].current = oldItemNo
+									end
+								end
+							end
+							if self.sdtcache["sport"][key].current then
+								log:debug("Reselecting sports: "..tostring(self.sdtcache["sport"][key].data[self.sdtcache["sport"][key].current].uniqueID))
+							else
+								log:debug("Resetting sports:   "..tostring(self.sdtcache["sport"][key].data[1].uniqueID))
+							end
 							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",item)
 						end
 						item.currentResult = self.sdtcache["sport"][key].current
@@ -1496,6 +1586,7 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 					log:warn(err)
 				elseif chunk then
 					local miscData = chunk.data.miscData[category]
+					local oldCache = self.sdtcache[category]
 					self.sdtcache[category] = {}
 					if miscData then
 						for no,item in pairs(items) do
@@ -1507,6 +1598,25 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 								}
 							end
 							if not self.sdtcache[category][key].current then
+								if oldCache and oldCache[key] and oldCache[key].current then
+									if oldCache[key].data[oldCache[key].current].uniqueID then
+										oldItemNo = 1
+										for _,item in ipairs(self.sdtcache[category][key].data) do
+											if item.uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+												break
+											end
+											oldItemNo = oldItemNo + 1
+										end
+										if self.sdtcache[category][key].data[oldItemNo].uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+											self.sdtcache[category][key].current = oldItemNo
+										end
+									end
+								end
+								if self.sdtcache[category][key].current then
+									log:debug("Reselecting "..category..": "..tostring(self.sdtcache[category][key].data[self.sdtcache[category][key].current].uniqueID))
+								else
+									log:debug("Resetting "..category..":   "..tostring(self.sdtcache[category][key].data[1].uniqueID))
+								end
 								self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 							end
 							item.currentResult = self.sdtcache[category][key].current
@@ -1577,6 +1687,7 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
 					games[no].sport=string.upper(item.sport)
+					games[no].uniqueID=key
 					no = no + 1
 				end
 			end
@@ -1599,6 +1710,7 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
 					games[no].sport = sport
+					games[no].uniqueID=key
 					no = no + 1
 				end
 			end
@@ -1626,6 +1738,8 @@ function _getSDTMiscData(self,item,selectionattribute,totalResults)
 		end
 		if totalResults[item[selectionattribute]] then
 			results[no] = totalResults[item[selectionattribute]]
+			results[no][selectionattribute] = item[selectionattribute]
+			results[no].uniqueID=item[selectionattribute]
 			for key,icon in pairs(icons) do
 				if not results[no][key] then
 					results[no][key] = icon
@@ -1643,6 +1757,7 @@ function _getSDTMiscData(self,item,selectionattribute,totalResults)
 		for selection,value in pairs(totalResults) do
 			results[no] = value
 			results[no][selectionattribute] = selection
+			results[no].uniqueID=item[selectionattribute]
 			for key,icon in pairs(icons) do
 				if not results[no][key] then
 					results[no][key] = icon
@@ -2174,11 +2289,11 @@ function _tick(self,forcedUpdate)
 		elseif item.itemtype == "trackstoppedtext" then
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
 		elseif item.itemtype == "sdttext" then
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate then
 				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
 			end
 		elseif item.itemtype == "sdtsporttext" or item.itemtype == "sdtsporticon" then
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate then
 				if not updatesdtitems["sport"] then
 					updatesdtitems["sport"] = {
 						attribute = "sport",
@@ -2202,7 +2317,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "sdtstocktext" or item.itemtype == "sdtstockicon" then
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate then
 				if not updatesdtitems["stocks"] then
 					updatesdtitems["stocks"] = {
 						attribute = "stock",
@@ -2227,7 +2342,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtmisctext" or item.itemtype == "sdtmiscicon" then
 			local infotype = _getString(item.infotype,"default")
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate then
 				if not updatesdtitems[infotype] then
 					updatesdtitems[infotype] = {
 						attribute = "selected",
@@ -2273,7 +2388,7 @@ function _tick(self,forcedUpdate)
 				self:_updateGalleryImage(self.items[no],no,item.width,item.height,item.favorite)
 			end
 		elseif item.itemtype == "sdticon" then
-			if forcedUpdate or self.lastminute!=minute then
+			if forcedUpdate then
 				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
 			end
 		elseif item.itemtype == "sdtweathermapicon" then
