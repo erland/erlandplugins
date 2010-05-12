@@ -1106,7 +1106,7 @@ end
 function _getAppletDir()
 	local appletdir = nil
 	if lfs.attributes("/usr/share/jive/applets") ~= nil then
-		luadir = "/usr/share/jive/applets/"
+		appletdir = "/usr/share/jive/applets/"
 	else
 		-- find the applet directory
 		for dir in package.path:gmatch("([^;]*)%?[^;]*;") do
