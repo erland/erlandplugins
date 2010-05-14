@@ -85,6 +85,7 @@ sub getSportResultsResponse {
 
 	my $content = $http->content();
 	my @result = ();
+	my $logoURLs = {};
 	if(defined($content)) {
 		my $tree = HTML::TreeBuilder->new;
 		$tree->parse($content);
@@ -188,6 +189,12 @@ sub getSportResultsResponse {
 					$availableLeagues->{escape($sport.$country.$league)} = getSportName($sport, $country, $league);
 				}
 				if(isCountryEnabled($country) && isSportEnabled($sport) && isLeagueEnabled($sport,$country,$league)) {
+					if(!defined($logoURLs->{getSportName($sport,$country,$league)})) {
+						my $logo = getLeagueLogo($sport, $country, $league);
+						if(defined($logo)) {
+							$logoURLs->{getSportName($sport,$country,$league)} = $logo;
+						}
+					}
 					if($homescore ne "") {
 						$log->debug("$sport $country $league: $time $hometeam - $awayteam ($homescore-$awayscore) $status");
 						$game = {
@@ -195,8 +202,10 @@ sub getSportResultsResponse {
 							gameID => $hometeam.$awayteam.$time,
 							gameTime => $timeStatus,
 							homeTeam => $hometeam,
+							homeLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($hometeam)),
 							homeScore => $homescore,
 							awayTeam => $awayteam,
+							awayLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($awayteam)),
 							homeScore => $homescore,
 						};
 						push @result,$game;
@@ -207,7 +216,9 @@ sub getSportResultsResponse {
 							gameID => $hometeam.$awayteam.$time,
 							gameTime => $timeStatus,
 							homeTeam => $hometeam,
+							homeLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($hometeam)),
 							awayTeam => $awayteam,
+							awayLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($awayteam)),
 						};
 						push @result,$game;
 					}
@@ -215,12 +226,52 @@ sub getSportResultsResponse {
 			}
 		}
 		for my $game (@result) {
-			Plugins::SuperDateTime::Plugin::addCustomSportLogo($game->{'sport'},"plugins/SportResults/html/images/goalwire_button80.jpg");
+			if(defined($logoURLs->{$game->{'sport'}})) {
+				Plugins::SuperDateTime::Plugin::addCustomSportLogo($game->{'sport'},$logoURLs->{$game->{'sport'}});
+			}else {
+				Plugins::SuperDateTime::Plugin::addCustomSportLogo($game->{'sport'},"plugins/SportResults/html/images/goalwire_button80.jpg");
+			}
 			Plugins::SuperDateTime::Plugin::addCustomSportScore($game);
 		}
 		Plugins::SuperDateTime::Plugin::refreshData(undef,$client,$refreshId);
 	}else {
 		$log->warn("Error, got no results");
+	}
+}
+
+
+sub getLeagueLogo {
+	my $sport = shift;
+	my $country = shift;
+	my $league = shift;
+
+	if(!defined($prefs->get('leaguelogos'))) {
+		return undef;
+	}
+	if(defined($prefs->get('leaguelogos')->{$sport."_".$country."_".$league})) {
+		return $prefs->get('leaguelogos')->{$sport."_".$country."_".$league};
+	}elsif(defined($prefs->get('leaguelogos')->{$sport."_".$league})) {
+		return $prefs->get('leaguelogos')->{$sport."_".$league};
+	}else {
+		return undef;
+	}
+}
+
+sub getTeamLogo {
+	my $sport = shift;
+	my $country = shift;
+	my $league = shift;
+	my $team = shift;
+
+	if(!defined($prefs->get('teamlogos'))) {
+		return undef;
+	}
+	if(defined($prefs->get('teamlogos')->{$sport."_".$country."_".$league."_".$team})) {
+		return $prefs->get('teamlogos')->{$sport."_".$country."_".$league."_".$team};
+	}elsif(defined($prefs->get('teamlogos')->{$sport."_".$league."_".$team})) {
+		return $prefs->get('teamlogos')->{$sport."_".$league."_".$team};
+	}else {
+		return undef;
 	}
 }
 
