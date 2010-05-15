@@ -246,10 +246,12 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtmiscicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^appleticon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'icontype'} ne ""?$item->{'icontype'}.":":"").($item->{'image'} ne ""?$item->{'image'}:"");
+			}elsif($item->{'itemtype'} =~ /^applettext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'texttype'} ne ""?$item->{'texttype'}.":":"").($item->{'text'} ne ""?$item->{'text'}:"");
 			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
-			}elsif($item->{'itemtype'} =~ /image$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}.")";
 			}elsif($item->{'itemtype'} =~ /sdticon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'period'};
 			}elsif($item->{'itemtype'} =~ /sdtweathermapicon$/) {
@@ -490,6 +492,9 @@ sub handler {
 				push @values,{id=>'analogvumeter',name=>'analogvumeter'};				
 				push @values,{id=>'digitalvumeter',name=>'digitalvumeter'};				
 				push @values,{id=>'spectrummeter',name=>'spectrummeter'};				
+				push @values,{id=>'appleticon',name=>'appleticon'};				
+				push @values,{id=>'applettext',name=>'applettext'};				
+				push @values,{id=>'imageicon',name=>'imageicon'};				
 				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','random','?']);
 				my $result = $request->getResult("_can");
 				if($result) {
@@ -605,6 +610,42 @@ sub handler {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'daychartURL',name=>'Daychart'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^icontype$/ &&  $itemtype eq 'appleticon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'daylight',name=>'Daylight Clock image'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^texttype$/ &&  $itemtype eq 'applettext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^text$/ &&  $itemtype eq 'applettext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^image$/ &&  $itemtype eq 'appleticon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				if( defined($currentItem->{'icontype'}) && $currentItem->{'icontype'} eq 'daylight') {
+					push @values,{id=>'/moon',name=>'Moon'};				
+					push @values,{id=>'/earth/mercator',name=>'Mercator'};				
+					push @values,{id=>'/earth/mercator-cloudless',name=>'Mercator cloudless'};				
+					push @values,{id=>'/earth/peters',name=>'Peters'};				
+					push @values,{id=>'/earth/peters-cloudless',name=>'Peters cloudless'};				
+					push @values,{id=>'/earth/rectangular',name=>'Equirectangular'};				
+					push @values,{id=>'/earth/rectangular-cloudless',name=>'Equirectangular cloudless'};				
+					push @values,{id=>'/earth/mollweide',name=>'Mollweide'};				
+					push @values,{id=>'/earth/mollweide-cloudless',name=>'Mollweide cloudless'};				
+					push @values,{id=>'/earth/hemisphere',name=>'Hemisphere'};				
+					push @values,{id=>'/earth/hemisphere-cloudless',name=>'Hemisphere cloudless'};				
+					push @values,{id=>'/earth/hemispheredawn',name=>'Dawn'};				
+					push @values,{id=>'/earth/hemispheredawn-cloudless',name=>'Dawn cloudless'};				
+					push @values,{id=>'/earth/hemispheredusk',name=>'Dusk'};				
+					push @values,{id=>'/earth/hemispheredusk-cloudless',name=>'Dusk cloudless'};				
+					push @values,{id=>'/earth/hemispheredawnduskmoon',name=>'Dawn/dusk/moon'};				
+					push @values,{id=>'/earth/hemispheredawnduskmoon-cloudless',name=>'Dawn/dusk/moon cloudless'};				
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtmiscicon') {
 				$item->{'type'} = 'optionalsinglecombobox';
@@ -835,6 +876,12 @@ sub getItemTypeParameters {
 
 	if($itemType eq 'sdttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat period color posx posy width align fonturl fontfile fontsize margin animate order);
+	}elsif($itemType eq 'appleticon') {	
+		return qw(itemtype icontype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order image interval);
+	}elsif($itemType eq 'applettext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime texttype text interval color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'imageicon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order url interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'sdtsporttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtsporticon') {	
