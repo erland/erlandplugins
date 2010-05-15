@@ -316,6 +316,7 @@ function defineSettingScreensaver(self,menuItem,state,index)
 
 	local window = Window("text_list", menuItem.text, 'settingstitle')
 	local menu = SimpleMenu("menu")
+	menu:setComparator(menu.itemComparatorWeightAlpha)
 	local group = RadioGroup()
 
 	window:addWidget(menu)
@@ -329,6 +330,7 @@ function defineSettingScreensaver(self,menuItem,state,index)
 				menu:addItem({
 					text = screensaver.displayName,
 					style = 'item_choice',
+					weight = 2,
 					check = RadioButton(
 						"radio",
 						group,
@@ -350,6 +352,7 @@ function defineSettingScreensaver(self,menuItem,state,index)
 				menu:addItem({
 					text = screensaver.displayName,
 					style = 'item_choice',
+					weight = 1,
 					check = RadioButton(
 						"radio",
 						group,
