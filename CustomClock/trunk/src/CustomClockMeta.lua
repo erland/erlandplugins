@@ -39,6 +39,10 @@ function registerApplet(self)
 	jiveMain:addItem(self:menuItem('appletCustomClock', 'home', "SCREENSAVER_CUSTOMCLOCK", function(applet, ...) applet:openMenu(...) end, 900))
 	jiveMain:disableItemById('appletCustomClock')
 	jiveMain:addItem(self:menuItem('appletExtrasCustomClock', 'extras', "SCREENSAVER_CUSTOMCLOCK", function(applet, ...) applet:openMenu(...) end, 900))
+	self:registerService("addCustomClockImageType")
+	self:registerService("addCustomClockTextType")
+	self:registerService("refreshCustomClockTextType")
+	self:registerService("refreshCustomClockImageType")
 end
 
 function configureApplet(self)

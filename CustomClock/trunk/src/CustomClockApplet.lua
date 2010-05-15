@@ -117,6 +117,7 @@ function openCustomClockAlarmWindow(self)
 end
 function openMenu(self,transition)
 	local window = Window("text_list",self:string("SCREENSAVER_CUSTOMCLOCK"), 'settingstitle')
+	self.customItemTypes = self:getSettings()["customitemtypes"]
 
 	local menu = SimpleMenu("menu")
 	for i = 1,9 do
@@ -496,6 +497,48 @@ function openScreensaver(self,mode, transition)
 			end
 		end
 	end
+end
+
+function refreshCustomClockImageType(self,itemType)
+	if not self.refreshCustomItemTypes then
+		self.refreshCustomItemTypes = {}
+	end
+	self.refreshCustomItemTypes[itemType.."icon"] = true
+end
+
+function refreshCustomClockTextType(self,itemType)
+	if not self.refreshCustomItemTypes then
+		self.refreshCustomItemTypes = {}
+	end
+	self.refreshCustomItemTypes[itemType.."text"] = true
+end
+
+function addCustomClockImageType(self,itemType,applet,method,data)
+	if not self.customItemTypes then
+		self.customItemTypes = {}
+	end
+
+	self.customItemTypes[itemType.."icon"] = {
+		data = data,
+		applet = applet,
+		method = method
+	}
+	self:getSettings()["customitemtypes"] = self.customItemTypes
+	self:storeSettings()
+end
+
+function addCustomClockTextType(self,itemType,applet,method,data)
+	if not self.customItemTypes then
+		self.customItemTypes = {}
+	end
+
+	self.customItemTypes[itemType.."text"] = {
+		data = data,
+		applet = applet,
+		method = method
+	}
+	self:getSettings()["customitemtypes"] = self.customItemTypes
+	self:storeSettings()
 end
 
 function _recalculateVisibilityTimes(self,items)
@@ -1824,7 +1867,7 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil))
+				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 			end
@@ -1925,9 +1968,8 @@ function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
 	end
 end
 
-function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
+function _updateSDTWeatherMapIcon(self,widget,id,item)
 	local player = appletManager:callService("getCurrentPlayer")
-	location = _getString(location,nil)
 	local server = player:getSlimServer()
 	if not self.sdtVersionChecked then
 		server:userRequest(function(chunk,err)
@@ -1937,7 +1979,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
 					self.sdtVersionChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self.sdtVersionInstalled = true
-						self:_updateSDTWeatherMapIcon(widget,id,width,height,maptype,location)
+						self:_updateSDTWeatherMapIcon(widget,id,item)
 					else	
 						self.sdtVersionInstalled = false
 					end
@@ -1953,13 +1995,13 @@ function _updateSDTWeatherMapIcon(self,widget,id,width,height,maptype,location)
 					log:warn(err)
 				else
 					local url = nil
-					if location and chunk.data.wetmapURL[location] and chunk.data.wetmapURL[location].URL then
-						url = chunk.data.wetmapURL[location].URL
+					if _getString(item.location,nil) and chunk.data.wetmapURL[item.location] and chunk.data.wetmapURL[item.location].URL then
+						url = chunk.data.wetmapURL[item.location].URL
 					end
 					if url then
 						self.configItems[id].url = url
 						self.referenceimages[self.mode.."item"..id] = id
-						self:_retrieveImage(url,self.mode.."item"..id,"true",width,height)
+						self:_retrieveImage(url,self.mode.."item"..id,"true",_getNumber(width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					end
 				end
 			end,
@@ -2137,6 +2179,8 @@ function _tick(self,forcedUpdate)
 	local updatesdtitems = {}
 	local changesdtitems = {}
 	local no = 1
+	local refreshCustomItemTypes = self.refreshCustomItemTypes
+	self.refreshCustomItemTypes = {}
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
 			self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(nil,_getString(item.text,"%H:%M")))
@@ -2393,13 +2437,13 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtweathermapicon" then
 			if forcedUpdate then
-				self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
+				self:_updateSDTWeatherMapIcon(self.items[no],no,item)
 			elseif self.lastminute!=minute and (not item.url or (minute % 15 == 0 and not _getNumber(item.interval,nil)) or (_getNumber(item.interval,nil) and minute % tonumber(item.interval)==0)) then
 				if item.url then
 					self.referenceimages[self.mode.."item"..no] = no
-					self:_retrieveImage(item.url,self.mode.."item"..no,"true",item.width,item.height)
+					self:_retrieveImage(item.url,self.mode.."item"..no,"true",item.width,item.height,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 				else
-					self:_updateSDTWeatherMapIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.maptype,item.location)
+					self:_updateSDTWeatherMapIcon(self.items[no],no,item)
 				end
 			end
 		elseif item.itemtype == "songinfoicon" then
@@ -2412,6 +2456,43 @@ function _tick(self,forcedUpdate)
 				self.referenceimages[self.mode.."item"..no] = no
 				self:_retrieveImage(item.urls[imageNo],self.mode.."item"..no,"true",_getNumber(item.width,width),_getNumber(item.height,height))
 			end
+		elseif item.itemtype == "imageicon" and _getString(item.url,nil) then
+			if forcedUpdate or (minute % _getNumber(item.interval,30) == 0 and self.lastminute!=minute) then
+				self.referenceimages[self.mode.."item"..no] = no
+				self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.dynamic,"true"),_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+			end
+		elseif item.itemtype == "appleticon" then
+			if self.customItemTypes and _getString(item.icontype,nil) and self.customItemTypes[item.icontype.."icon"] then
+				if forcedUpdate or (refreshCustomItemTypes and refreshCustomItemTypes[item.icontype.."icon"]) or (_getString(item.interval,nil) and second % item.interval == 0) or self.lastminute!=minute then
+					local instance = appletManager:loadApplet(self.customItemTypes[item.icontype.."icon"].applet)
+					if instance and instance[self.customItemTypes[item.icontype.."icon"].method] then
+						log:debug("Getting image for appleticon of type: "..item.icontype.. " and image: "..tostring(item.image))
+						instance[self.customItemTypes[item.icontype.."icon"].method](instance,instance[self.customItemTypes[item.icontype.."icon"].data],no,_getString(item.image,nil),_getString(item.width,nil),_getString(item.height,nil),function (no,image)
+							self.items[no]:setWidgetValue("itemno",image)
+						end)
+					end
+				end
+			else
+				log:warn("Unknown appleticon, ignoring "..tostring(item.icontype).."...")
+			end
+		elseif item.itemtype == "applettext" then
+			if self.customItemTypes and _getString(item.texttype,nil) and self.customItemTypes[item.texttype.."text"] then
+				if forcedUpdate or (refreshCustomItemTypes and refreshCustomItemTypes[item.texttype.."text"]) or (_getString(item.interval,nil) and second % item.interval == 0) or self.lastminute!=minute then
+					local instance = appletManager:loadApplet(self.customItemTypes[item.texttype.."text"].applet)
+					if instance and instance[self.customItemTypes[item.texttype.."text"].method] then
+						log:debug("Getting text for applettext of type: "..item.texttype.. " and text: "..tostring(item.text))
+						instance[self.customItemTypes[item.texttype.."text"].method](instance,instance[self.customItemTypes[item.texttype.."text"].data],no,_getString(item.text,nil),function (no,text)
+							if self.items[no]:getWidgetValue("itemno") ~= text then
+								self.items[no]:setWidgetValue("itemno",text)
+							end
+						end)
+					end
+				end
+			else
+				log:warn("Unknown appleticon, ignoring "..tostring(item.texttype).."...")
+			end
+		else
+			log:warn("Unknown item type, ignoring "..tostring(item.itemtype).."...")
 		end
 		no = no +1
 	end
@@ -2728,11 +2809,14 @@ function _reDrawAnalog(self,screen)
 	end
 end
 
-function _retrieveImage(self,url,imageType,dynamic,width,height)
+function _retrieveImage(self,url,imageType,dynamic,width,height,clipX,clipY,clipWidth,clipHeight)
 	local imagehost = ""
 	local imageport = tonumber("80")
 	local imagepath = ""
 
+	if not _getString(url,nil) then
+		return
+	end
 	local start,stop,value = string.find(url,"http://([^/]+)")
 	if value and value != "" then
 		imagehost = value
@@ -2779,7 +2863,7 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 			local fh = io.open(appletdir.."CustomClock/images/"..cacheName, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
-			self:_retrieveImageData(url,imageType,chunk)
+			self:_retrieveImageData(url,imageType,chunk,clipX,clipY,clipWidth,clipHeight)
 		else
 			log:debug("Image not found in cache, getting from source: "..url)
 			local http = SocketHttp(jnt, imagehost, imageport)
@@ -2791,7 +2875,7 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 					                fh:write(chunk)
 							fh:close()
 						end
-						self:_retrieveImageData(url,imageType,chunk)
+						self:_retrieveImageData(url,imageType,chunk,clipX,clipY,clipWidth,clipHeight)
 					elseif err then
 						log:warn("error loading picture " .. url)
 					end
@@ -2805,16 +2889,22 @@ function _retrieveImage(self,url,imageType,dynamic,width,height)
 			local fh = io.open(luadir..url, "rb")
 			local chunk = fh:read("*all")
 			fh:close()
-			self:_retrieveImageData(url,imageType,chunk)
+			self:_retrieveImageData(url,imageType,chunk,clipX,clipY,clipWidth,clipHeight)
 		else 
 			log:warn("Unable to parse url "..url..", got: "..imagehost..", "..imagepath)
 		end
 	end
 end
 
-function _retrieveImageData(self,url,imageType,chunk)
+function _retrieveImageData(self,url,imageType,chunk,clipX,clipY,clipWidth,clipHeight)
 	local width,height = self:_getUsableWallpaperArea()
 	local image = Surface:loadImageData(chunk, #chunk)
+	if clipWidth and clipHeight and clipX and clipY then
+		local newImg = Surface:newRGBA(clipWidth, clipHeight)
+        newImg:filledRectangle(0, 0, clipWidth, clipHeight, 0x000000FF)
+		image:blitClip(clipX,clipY,clipWidth,clipHeight,newImg,0,0)
+		image = newImg
+	end
 	if string.find(imageType,"background$") then
 		local w,h = image:getSize()
 
@@ -2850,18 +2940,18 @@ function _imageUpdate(self)
 
 	local no = 1
 	for _,item in pairs(self.configItems) do
-		if string.find(item.itemtype,"icon$") then
+		if string.find(item.itemtype,"icon$") and item.itemtype ~= "imageicon" then
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -2871,14 +2961,14 @@ function _imageUpdate(self)
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -2889,7 +2979,7 @@ function _imageUpdate(self)
 				if attr == "url" then
 					self.vumeterimages[self.mode.."item"..no] = no
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic)
+						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
@@ -2897,7 +2987,7 @@ function _imageUpdate(self)
 					local id = string.gsub(attr,"^url%.","")
 					self.vumeterimages[self.mode.."item"..no.."."..id] = no
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic)
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
