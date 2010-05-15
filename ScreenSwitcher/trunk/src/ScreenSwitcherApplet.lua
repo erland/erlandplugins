@@ -129,14 +129,11 @@ function _updateScreensaver(self, forced)
 		local ssApplet = appletManager:loadApplet(ssData.applet)
 
 		local windowsToHide = {}
+		local prevSSData = nil
 		if self.currentScreensaver then
 			local oldSSData = screensaversApplet["screensavers"][self.currentScreensaver]
 			if oldSSData.applet then
-				local oldSSApplet = appletManager:loadApplet(oldSSData.applet)
-				if oldSSData.closeMethod then
-					log:debug("Closing screensaver "..self.currentScreensaver)
-					oldSSApplet[oldSSData.closeMethod](oldSSApplet, oldSSData.methodParam)
-				end
+				prevSSData = oldSSData
 				local activeWindows = screensaversApplet["active"]
 				if activeWindows and #activeWindows > 0 then
 					for i, window in ipairs(activeWindows) do
@@ -152,11 +149,21 @@ function _updateScreensaver(self, forced)
 		local status,err = pcall(ssApplet[ssData.method], ssApplet, force, ssData.methodParam)
 		self.currentScreensaver = ssKey
 	        log:debug("activating " .. ssData.applet .. " "..tostring(ssData.displayName).." screensaver")
-		for i,window in ipairs(windowsToHide) do
-			-- We do this with pcall just for safety to make sure our switching isn't stopped if there is an error
-			log:debug("Hiding windows...")
-			local status,err = pcall(Window.hide,window,Window.transitionNone)
-		end
+		local timer = Timer(400,function()
+			if prevSSData then
+				local oldSSApplet = appletManager:loadApplet(prevSSData.applet)
+				if prevSSData.closeMethod then
+					log:debug("Closing screensaver "..self.currentScreensaver)
+					oldSSApplet[prevSSData.closeMethod](oldSSApplet, prevSSData.methodParam)
+				end
+			end
+			for i,window in ipairs(windowsToHide) do
+				-- We do this with pcall just for safety to make sure our switching isn't stopped if there is an error
+				log:debug("Hiding windows...")
+				local status,err = pcall(Window.hide,window,Window.transitionNone)
+			end
+		end,true)
+		timer:start()
 	end
 	if ss then
 		log:debug("Start new timer, trigger after "..ss.delay.." seconds")
