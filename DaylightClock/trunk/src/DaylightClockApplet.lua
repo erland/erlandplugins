@@ -129,10 +129,11 @@ function openScreensaver(self)
 		local manager = appletManager:getAppletInstance("ScreenSavers")
 		manager:screensaverWindow(self.window)
 		self.window:addTimer(1000, function() self:_tick() end)
-		self.offset = math.random(15)
-		self.lasttime = 0
+		self.offsets = {}
+		self.imageCache = {}
+		self.lasttimes = {}
 	end
-	self.lastminute = 0
+	self.lastminutes = {}
 	self.nowPlaying = 0
 	self:_tick()
 
@@ -824,52 +825,89 @@ function _tick(self)
 		self.item4Label:setWidgetValue("item4","")	
 	end
 
+	local width,height = self:_getUsableWallpaperArea()
+
+	local perspective = self:getSettings()["perspective"]
+	self:getDaylightClockImage(nil,nil,perspective,width,height,function (reference,image)
+			self.wallpaperImage:setWidgetValue("background",image)
+		end)
+end
+
+function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 	local minute = os.date("%M")
-	if (self.lasttime == 0 or os.time()-self.lasttime>900) or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
-		log:info("Initiating wallpaper update (offset="..self.offset.. " minutes)")
+	if not imageType then
+		imageType = "/earth/hemispheredawn"
+	end
 
-		local width,height = self:_getUsableWallpaperArea()
+	if not self.offsets then
+		self.offsets = {}
+	end
+	if not self.imageCache then
+		self.imageCache = {}
+	end
+	if not self.lasttimes then
+		self.lasttimes = {}
+	end
+	if not self.lastminutes then
+		self.lastminutes = {}
+	end
 
-		local perspective = self:getSettings()["perspective"]
-		local perspectiveurl = perspective
-		if string.find(perspective,"dawnduskmoon") then
-			local hour = tonumber(os.date("%H"))
-			if hour >= 21 or hour <= 3 then
-				perspectiveurl = "/moon"
-				perspective = perspectiveurl
-			elseif hour >= 3 and hour <= 12 then
-				perspectiveurl = string.gsub(perspectiveurl,"dawnduskmoon","")
-				perspective = string.gsub(perspective,"dawnduskmoon","dawn")
-			else
-				perspectiveurl = string.gsub(perspectiveurl,"dawnduskmoon","")
-				perspective = string.gsub(perspective,"dawnduskmoon","dusk")
-			end
+	if not width then
+		width,_ = Framework.getScreenSize()
+	end
+	if not height then
+		_,height = Framework.getScreenSize()
+	end
+
+	local perspectiveurl = imageType
+	if string.find(imageType,"dawnduskmoon") then
+		local hour = tonumber(os.date("%H"))
+		if hour >= 21 or hour <= 3 then
+			perspectiveurl = "/moon"
+			imageType = perspectiveurl
+		elseif hour >= 3 and hour <= 12 then
+			perspectiveurl = string.gsub(perspectiveurl,"dawnduskmoon","")
+			imageType = string.gsub(imageType,"dawnduskmoon","dawn")
 		else
-			perspectiveurl = string.gsub(perspectiveurl,"dawn","")
-			perspectiveurl = string.gsub(perspectiveurl,"dusk","")
+			perspectiveurl = string.gsub(perspectiveurl,"dawnduskmoon","")
+			imageType = string.gsub(imageType,"dawnduskmoon","dusk")
 		end
+	else
+		perspectiveurl = string.gsub(perspectiveurl,"dawn","")
+		perspectiveurl = string.gsub(perspectiveurl,"dusk","")
+	end
+
+	if string.find(perspectiveurl,"moon") then
+		width = width -15
+		height = height -15
+	end
+
+	local cacheKey = imageType..width..height
+	if not self.offsets[cacheKey] then
+		self.offsets[cacheKey] = math.random(15)
+	end
+
+	if (not self.imageCache[cacheKey] or not self.lasttimes[cacheKey] or self.lasttimes[cacheKey] == 0 or os.time()-self.lasttimes[cacheKey]>900) or ((minute + self.offsets[cacheKey]) % 3 == 0 and (not self.lastminutes[cacheKey] or self.lastminutes[cacheKey]!=minute)) then
+		self.lasttimes[cacheKey] = os.time()
+		log:debug("Initiating image update of "..perspectiveurl.." (offset="..self.offsets[cacheKey].. " minutes)")
 
 		local http = SocketHttp(jnt, "static.die.net", 80)
 		local req = RequestHttp(function(chunk, err)
 				if chunk then
 				        local image = Surface:loadImageData(chunk, #chunk)
 					local w,h = image:getSize()
-					if string.find(perspective,"dawn") then
+					if string.find(imageType,"dawn") then
 						local newImg = Surface:newRGBA(w/2, h)
 				                newImg:filledRectangle(0, 0, w/2, h, 0x000000FF)
 						image:blit(newImg,0,0)
 						image = newImg
 						w,h = image:getSize()
-					elseif string.find(perspective,"dusk") then 
+					elseif string.find(imageType,"dusk") then 
 						local newImg = Surface:newRGBA(w/2, h)
 				                newImg:filledRectangle(0, 0, w/2, h, 0x000000FF)
 						image:blit(newImg,-w/2,0)
 						image = newImg
 						w,h = image:getSize()
-					end
-
-					if self.model == "controller" and string.find(perspectiveurl,"moon") then
-						width = width -15
 					end
 
 					local zoom
@@ -881,7 +919,8 @@ function _tick(self)
 						zoom = height/h
 					end
 					image = image:rotozoom(0,zoom,1)
-				        self.wallpaperImage:setWidgetValue("background",image)
+					self.imageCache[cacheKey] = image
+					sink(reference,image)
 				        log:debug("image ready")
 				elseif err then
 				        log:error("error loading picture " .. perspectiveurl)
@@ -889,9 +928,11 @@ function _tick(self)
 			end,
 			'GET', perspectiveurl .. "/480.jpg")
 		http:fetch(req)
-		self.lasttime = os.time()
+		self.lasttimes[cacheKey] = os.time()
+		self.lastminutes[cacheKey] = minute
+	else
+		sink(reference,self.imageCache[cacheKey])
 	end
-	self.lastminute = minute
 end
 
 function _getClockSkin(self,skin)
