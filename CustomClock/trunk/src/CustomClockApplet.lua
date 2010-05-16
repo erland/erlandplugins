@@ -927,7 +927,7 @@ end
 
 function _uses(parent, value)
         if parent == nil then
-                log:warn("nil parent in _uses at:\n", debug.traceback())
+                log:warn("nil parent in _uses")
         end
         local style = {}
         setmetatable(style, { __index = parent })
@@ -1584,7 +1584,7 @@ function _updateSDTSportItem(self,items)
 							end
 							if self.sdtcache["sport"][key].current then
 								log:debug("Reselecting sports: "..tostring(self.sdtcache["sport"][key].data[self.sdtcache["sport"][key].current].uniqueID))
-							else
+							elseif self.sdtcache["sport"][key].data[1] then
 								log:debug("Resetting sports:   "..tostring(self.sdtcache["sport"][key].data[1].uniqueID))
 							end
 							self.sdtcache["sport"][key].current = self:_getNextSDTItem("sport",item)
@@ -1657,7 +1657,7 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 								end
 								if self.sdtcache[category][key].current then
 									log:debug("Reselecting "..category..": "..tostring(self.sdtcache[category][key].data[self.sdtcache[category][key].current].uniqueID))
-								else
+								elseif self.sdtcache[category][key].data[1] then
 									log:debug("Resetting "..category..":   "..tostring(self.sdtcache[category][key].data[1].uniqueID))
 								end
 								self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
@@ -1719,8 +1719,11 @@ function _getSDTGames(self,item,sportsData)
 	local no = 1
 	if _getString(item.sport,nil) then
 		local logoURL = nil
-		if sportsData[string.upper(item.sport)] then
-			for key,value in pairs(sportsData[string.upper(item.sport)]) do
+		if not sportsData[item.sport] and sportsData[string.upper(item.sport)] then
+			item.sport = string.upper(item.sport)
+		end
+		if sportsData[item.sport] then
+			for key,value in pairs(sportsData[item.sport]) do
 				if type(value) == 'string' then
 					if key == 'logoURL' then
 						logoURL = value
@@ -1729,7 +1732,7 @@ function _getSDTGames(self,item,sportsData)
 					(string.find(item.gamestatus,"final$") and _getNumber(value.homeScore,nil) and string.find(value.gameTime,"^F")) or 
 					(string.find(item.gamestatus,"^active") and _getNumber(value.homeScore,nil) and not string.find(value.gameTime,"^F")) then
 					games[no] = value
-					games[no].sport=string.upper(item.sport)
+					games[no].sport=item.sport
 					games[no].uniqueID=key
 					no = no + 1
 				end
@@ -2491,6 +2494,8 @@ function _tick(self,forcedUpdate)
 			else
 				log:warn("Unknown appleticon, ignoring "..tostring(item.texttype).."...")
 			end
+		elseif string.find(item.itemtype,"vumeter$") or string.find(item.itemtype,"spectrummeter$") then
+			-- Do nothing, vu/spectrum meters are updated separately
 		else
 			log:warn("Unknown item type, ignoring "..tostring(item.itemtype).."...")
 		end
