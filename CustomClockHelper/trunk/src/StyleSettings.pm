@@ -615,14 +615,38 @@ sub handler {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'daylight',name=>'Daylight Clock image'};				
+				push @values,{id=>'weather',name=>'Weather image'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^texttype$/ &&  $itemtype eq 'applettext') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
+				push @values,{id=>'weather',name=>'Weather text'};				
+				push @values,{id=>'texttime',name=>'Time as words'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^text$/ &&  $itemtype eq 'applettext') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
+				if( defined($currentItem->{'texttype'}) && $currentItem->{'texttype'} eq 'weather') {
+					push @values,{id=>'%description',name=>'Current condition'};				
+					push @values,{id=>'%temp',name=>'Current temperature'};				
+					push @values,{id=>'%humidity',name=>'Current humidity'};				
+					push @values,{id=>'%observation_epoch',name=>'Observation time'};				
+
+					push @values,{id=>'%dayName.1',name=>'Weekday today'};				
+					push @values,{id=>'%highTemp.1',name=>'Highest temperature today'};				
+					push @values,{id=>'%lowTemp.1',name=>'Lowest temperature today'};				
+					push @values,{id=>'%dayName.2',name=>'Weekday tomorrow'};				
+					push @values,{id=>'%highTemp.2',name=>'Highest temperature tomorrow'};				
+					push @values,{id=>'%lowTemp.2',name=>'Lowest temperature tomorrow'};				
+					push @values,{id=>'%dayName.3',name=>'Weekday day after tomorrow'};				
+					push @values,{id=>'%highTemp.3',name=>'Highest temperature day after tomorrow'};				
+					push @values,{id=>'%lowTemp.4',name=>'Lowest temperature day after tomorrow'};				
+
+					push @values,{id=>'%scaletemp',name=>'Temperature scale C/F'};				
+				}elsif( defined($currentItem->{'texttype'}) && $currentItem->{'texttype'} eq 'texttime') {
+					push @values,{id=>'singlerow',name=>'Single row'};				
+					push @values,{id=>'multirow',name=>'Multiple rows'};				
+				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^image$/ &&  $itemtype eq 'appleticon') {
 				$item->{'type'} = 'optionalsinglecombobox';
@@ -645,6 +669,14 @@ sub handler {
 					push @values,{id=>'/earth/hemispheredusk-cloudless',name=>'Dusk cloudless'};				
 					push @values,{id=>'/earth/hemispheredawnduskmoon',name=>'Dawn/dusk/moon'};				
 					push @values,{id=>'/earth/hemispheredawnduskmoon-cloudless',name=>'Dawn/dusk/moon cloudless'};				
+				}elsif( defined($currentItem->{'icontype'}) && $currentItem->{'icontype'} eq 'weather') {
+					push @values,{id=>'%icon',name=>'Today'};				
+					push @values,{id=>'%icon1',name=>'Later today'};				
+					push @values,{id=>'%skyicon1',name=>'Tonight'};				
+					push @values,{id=>'%icon2',name=>'Tomorrow'};				
+					push @values,{id=>'%skyicon2',name=>'Tomorrow Night'};				
+					push @values,{id=>'%icon3',name=>'Day after tomorrow'};				
+					push @values,{id=>'%skyicon3',name=>'The night day after tomorrow'};				
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtmiscicon') {
@@ -879,7 +911,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'appleticon') {	
 		return qw(itemtype icontype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order image interval);
 	}elsif($itemType eq 'applettext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime texttype text interval color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime texttype text interval color posx posy width align fonturl fontfile fontsize lineheight height margin animate order line1fontsize line1height line2fontsize line2height line3fontsize line3height);
 	}elsif($itemType eq 'imageicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order url interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'sdtsporttext') {	
@@ -895,7 +927,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order line1fontsize line1height line2fontsize line2height line3fontsize line3height);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy size align order);
 	}elsif($itemType =~ /^elapsedimage$/) {
