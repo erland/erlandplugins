@@ -45,6 +45,7 @@ function configureApplet(self)
 		self:string("SCREENSAVER_DAYLIGHTCLOCK_SETTINGS"), 
 		"openSettings", 
 		90)
+	appletManager:callService("addCustomClockImageType","daylight","DaylightClock","getDaylightClockImage")
 end
 
 function defaultSettings(self)
