@@ -3159,6 +3159,30 @@ function _getClockSkin(self,skin)
 			if _getNumber(item.lineheight,nil) then
 				s.window["item"..no]["item"..no].lineHeight = _getNumber(item.lineheight,nil)
 			end
+			if _getNumber(item.line1height,nil) or _getNumber(item.line1fontsize,nil) then
+				local line1font = self:_loadFont(_getString(item.fonturl,self:getSettings()["font"]),_getNumber(item.line1fontsize,_getNumber(item.fontsize,20)))
+				s.window["item"..no]["item"..no].line = {}
+				s.window["item"..no]["item"..no].line[1] = {
+					font = line1font,
+					height = _getNumber(item.line1height,_getNumber(item.line1fontsize,_getNumber(item.fontsize,20)))
+				}
+			end
+			if _getNumber(item.line2height,nil) or _getNumber(item.line2fontsize,nil) then
+				local line2font = self:_loadFont(_getString(item.fonturl,self:getSettings()["font"]),_getNumber(item.line2fontsize,_getNumber(item.fontsize,20)))
+				s.window["item"..no]["item"..no].line = s.window["item"..no]["item"..no].line or {}
+				s.window["item"..no]["item"..no].line[2] = {
+					font = line2font,
+					height = _getNumber(item.line2height,_getNumber(item.line2fontsize,_getNumber(item.fontsize,20)))
+				}
+			end
+			if _getNumber(item.line3height,nil) or _getNumber(item.line3fontsize,nil) then
+				local line3font = self:_loadFont(_getString(item.fonturl,self:getSettings()["font"]),_getNumber(item.line3fontsize,_getNumber(item.fontsize,20)))
+				s.window["item"..no]["item"..no].line = s.window["item"..no]["item"..no].line or {}
+				s.window["item"..no]["item"..no].line[3] = {
+					font = line3font,
+					height = _getNumber(item.line3height,_getNumber(item.line3fontsize,_getNumber(item.fontsize,20)))
+				}
+			end
 		elseif string.find(item.itemtype,"^cover") then
 			local defaultSize = WH_FILL
 			if _getNumber(item.posx,nil) then
