@@ -44,7 +44,7 @@ function configureApplet(self)
 		"openScreensaver", 
 		self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS"), 
 		"openSettings", 
-		90,
+		nil,
 		"closeScreensaver")
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_SCREENSWITCHER_RANDOM"), 
@@ -52,7 +52,7 @@ function configureApplet(self)
 		"openRandomScreensaver", 
 		self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS"), 
 		"openSettings", 
-		90,
+		nil,
 		"closeScreensaver",
 		true,
 		"random")
