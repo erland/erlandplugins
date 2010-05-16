@@ -195,7 +195,7 @@ sub getSportResultsResponse {
 							$logoURLs->{getSportName($sport,$country,$league)} = $logo;
 						}
 					}
-					if($homescore ne "") {
+					if($homescore ne "" || ($hometeam ne "" && $awayteam ne "")) {
 						$log->debug("$sport $country $league: $time $hometeam - $awayteam ($homescore-$awayscore) $status");
 						$game = {
 							sport => getSportName($sport, $country, $league),
@@ -206,19 +206,7 @@ sub getSportResultsResponse {
 							homeScore => $homescore,
 							awayTeam => $awayteam,
 							awayLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($awayteam)),
-							homeScore => $homescore,
-						};
-						push @result,$game;
-					}elsif($hometeam ne "" && $awayteam ne "") {
-						$log->debug("$sport $country $league: $time $hometeam - $awayteam $status");
-						$game = {
-							sport => getSportName($sport, $country, $league),
-							gameID => $hometeam.$awayteam.$time,
-							gameTime => $timeStatus,
-							homeTeam => $hometeam,
-							homeLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($hometeam)),
-							awayTeam => $awayteam,
-							awayLogoURL => getTeamLogo($sport, escape($country), escape($league),escape($awayteam)),
+							awayScore => $awayscore,
 						};
 						push @result,$game;
 					}
