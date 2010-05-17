@@ -670,13 +670,13 @@ sub handler {
 					push @values,{id=>'/earth/hemispheredawnduskmoon',name=>'Dawn/dusk/moon'};				
 					push @values,{id=>'/earth/hemispheredawnduskmoon-cloudless',name=>'Dawn/dusk/moon cloudless'};				
 				}elsif( defined($currentItem->{'icontype'}) && $currentItem->{'icontype'} eq 'weather') {
-					push @values,{id=>'%icon',name=>'Today'};				
-					push @values,{id=>'%icon1',name=>'Later today'};				
-					push @values,{id=>'%skyicon1',name=>'Tonight'};				
-					push @values,{id=>'%icon2',name=>'Tomorrow'};				
-					push @values,{id=>'%skyicon2',name=>'Tomorrow Night'};				
-					push @values,{id=>'%icon3',name=>'Day after tomorrow'};				
-					push @values,{id=>'%skyicon3',name=>'The night day after tomorrow'};				
+					push @values,{id=>'icon',name=>'Today'};				
+					push @values,{id=>'icon1',name=>'Later today'};				
+					push @values,{id=>'skyicon1',name=>'Tonight'};				
+					push @values,{id=>'icon2',name=>'Tomorrow'};				
+					push @values,{id=>'skyicon2',name=>'Tomorrow Night'};				
+					push @values,{id=>'icon3',name=>'Day after tomorrow'};				
+					push @values,{id=>'skyicon3',name=>'The night day after tomorrow'};				
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtmiscicon') {
@@ -961,7 +961,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdticon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate width height period dynamic);
 	}elsif($itemType eq 'sdtweathermapicon') {
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height location interval);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height location interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'songinfoicon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height songinfomodule interval);
 	}elsif($itemType =~ /icon$/) {
