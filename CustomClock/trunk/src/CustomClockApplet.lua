@@ -54,6 +54,8 @@ local SocketHttp       = require("jive.net.SocketHttp")
 local RequestHttp      = require("jive.net.RequestHttp")
 local json             = require("json")
 
+local debug            = require("jive.utils.debug")
+
 local ltn12            = require("ltn12")
 local lfs              = require("lfs")
 local socket           = require("socket")
@@ -165,6 +167,7 @@ function openScreensaver(self,mode, transition)
 		player:unsubscribe('/slim/customclock/titleformatsupdated')
 		player:unsubscribe('/slim/customclock/changedstyles')
 		player:unsubscribe('/slim/SuperDateTimeState/dataRefreshState')
+		player:unsubscribe('/slim/customclock/changedcustomitems')
 		player:subscribe(
 			'/slim/customclock/changedstyles',
 			function(chunk)
@@ -271,6 +274,41 @@ function openScreensaver(self,mode, transition)
 			{'SuperDateTimeState','dataRefreshState'}
 		)
 		player:subscribe(
+			'/slim/customclock/changedcustomitems',
+			function(chunk)
+				local categories = {}
+				for _,item in ipairs(chunk.data[3]) do
+					categories[item] = item
+				end
+				if categories then
+					local updatepluginitems = {}
+					local no = 1
+					for _,item in pairs(self.configItems) do
+						local category = nil
+						if string.find(item.itemtype,"^plugin") and item.infotype and categories[item.infotype] then
+							category = item.infotype
+						end
+	
+						if category then
+							if not updatepluginitems[category] then
+								updatepluginitems[category] = {
+									items = {}
+								}
+							end
+							updatepluginitems[category].items[no] = item
+						end
+						no = no + 1
+					end
+					for category,data in pairs(updatepluginitems) do
+						log:debug("Refreshing plugin item for category:"..category)
+						self:_updatePluginItem(category,data.items)
+					end
+				end 
+			end,
+			player:getId(),
+			{'customclock','changedcustomitems'}
+		)
+		player:subscribe(
 			'/slim/customclock/titleformatsupdated',
 			function(chunk)
 				self.customtitleformats = chunk.data[3]
@@ -315,6 +353,7 @@ function openScreensaver(self,mode, transition)
 		self.switchingNowPlaying = false
 		self.visibilityGroups = {}
 		self.sdtcache = {}
+		self.pluginitemcache = {}
 		for _,item in pairs(self.configItems) do
 			if _getString(item.visibilitygroup,nil) then
 				if not self.visibilityGroups[item.visibilitygroup] then
@@ -1753,6 +1792,88 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 	end
 end
 
+function _updatePluginItem(self,category,items)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+
+	if not self.ccPluginItemsChecked and not self:getSettings()['ccPluginItemsInstalled'] then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtSuperDateTimeChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self:getSettings()['ccPluginItemsInstalled'] = true
+						self:_updatePluginItem(category,items)
+					else	
+						self:getSettings()['ccPluginItemsInstalled'] = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','customclock', 'customitems','?'}
+		)
+	elseif self:getSettings()['ccPluginItemsInstalled'] then
+		server:userRequest(
+			function(chunk, err)
+				if err then
+					log:warn(err)
+				elseif chunk then
+					local itemsData = chunk.data.items[category]
+					local oldCache = self.pluginitemcache[category]
+					self.pluginitemcache[category] = {}
+					if itemsData then
+						for no,item in pairs(items) do
+							local key = self:_getPluginItemCacheKey(category,item)
+							if not self.pluginitemcache[category][key] then
+								self.pluginitemcache[category][key] = {
+									current = nil,
+									data = self:_getPluginItemData(item,itemsData)
+								}
+							end
+							if not self.pluginitemcache[category][key].current then
+								if oldCache and oldCache[key] and oldCache[key].current then
+									if oldCache[key].data[oldCache[key].current].uniqueID then
+										oldItemNo = 1
+										for _,item in ipairs(self.pluginitemcache[category][key].data) do
+											if item.uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+												break
+											end
+											oldItemNo = oldItemNo + 1
+										end
+										if self.pluginitemcache[category][key].data[oldItemNo].uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+											self.pluginitemcache[category][key].current = oldItemNo
+										end
+									end
+								end
+								if self.pluginitemcache[category][key].current then
+									log:debug("Reselecting "..category..": "..tostring(self.pluginitemcache[category][key].data[self.pluginitemcache[category][key].current].uniqueID))
+								elseif self.pluginitemcache[category][key].data[1] then
+									log:debug("Resetting "..category..":   "..tostring(self.pluginitemcache[category][key].data[1].uniqueID))
+								end
+								self.pluginitemcache[category][key].current = self:_getNextPluginItem(category,item)
+							end
+							item.currentResult = self.pluginitemcache[category][key].current
+							self:_changePluginItem(category,item,self.items[no],no,"true")
+						end
+					end
+				end
+			end,
+			player and player:getId(),
+			{ 'customclock', 'customitems','category:'..category}
+		)
+	end
+end
+
+function _getPluginItemCacheKey(self,category,item)
+	if string.find(item.itemtype,"text$") and item.scrolling then
+		return "scrolling".._getString(item.selected,"")
+	else
+		return "switching".._getString(item.selected,"")
+	end
+end
+
 function _getSDTCacheKey(self,category,item)
 	if category == "sport" then
 		if item.itemtype == "sdtsporttext" and item.scrolling then
@@ -1790,6 +1911,24 @@ function _getSDTCacheIndex(self,category,item)
 	local key = self:_getSDTCacheKey(category,item)
 	if self.sdtcache[category] and self.sdtcache[category][key] then
 		return self.sdtcache[category][key].current
+	else
+		return nil
+	end
+end
+
+function _getPluginItemCacheData(self,category,item)
+	local key = self:_getPluginItemCacheKey(category,item)
+	if self.pluginitemcache[category] and self.pluginitemcache[category][key] then
+		return self.pluginitemcache[category][key].data
+	else
+		return {}
+	end
+end
+
+function _getPluginItemCacheIndex(self,category,item)
+	local key = self:_getPluginItemCacheKey(category,item)
+	if self.pluginitemcache[category] and self.pluginitemcache[category][key] then
+		return self.pluginitemcache[category][key].current
 	else
 		return nil
 	end
@@ -1896,6 +2035,30 @@ function _getSDTMiscData(self,item,selectionattribute,totalResults)
 	return results
 end
 
+function _getPluginItemData(self,item,totalResults)
+	local results = {}
+	local no = 1
+	if _getString(item.selected,nil) then
+		if totalResults[item.selected] then
+			results[no] = totalResults[item.selected]
+			results[no].uniqueID=item.selected
+			for key,icon in pairs(icons) do
+				if not results[no][key] then
+					results[no][key] = icon
+				end
+			end
+			no = no + 1
+		end
+	else
+		for selection,value in pairs(totalResults) do
+			results[no] = value
+			results[no].uniqueID=selection
+			no = no + 1
+		end
+	end
+	return results
+end
+
 function _getSDTWeatherData(self,item,totalResults)
 	local results = {}
 	local no = 1
@@ -1965,11 +2128,11 @@ function _getNextSDTItem(self,category,item)
 	local currentResult = self:_getSDTCacheIndex(category,item)
 	if currentResult then
 		local length = _getNumber(item.noofrows,1)
-		if length == 1 and item.itemtype == 'sdt'..category..'text' and _getString(item.scrolling,"false") == "true" then
+		if length == 1 and string.find(item.itemtype,category..'text$') and _getString(item.scrolling,"false") == "true" then
 			length = #results
 		end
-		if #results > (currentResult+length-1) then
-			currentResult = currentResult + length
+		if #results > (currentResult+length+_getNumber(item.step,1)-2) then
+			currentResult = currentResult + length +_getNumber(item.step,1) -1
 		else
 			currentResult = 1
 		end
@@ -1980,12 +2143,33 @@ function _getNextSDTItem(self,category,item)
 	return currentResult
 end
 
+function _getNextPluginItem(self,category,item)
+	local results = self:_getPluginItemCacheData(category,item)
+	local currentResult = self:_getPluginItemCacheIndex(category,item)
+	if currentResult then
+		local length = _getNumber(item.noofrows,1)
+		if length == 1 and string.find(item.itemtype,category..'text$') and _getString(item.scrolling,"false") == "true" then
+			length = #results
+		end
+		if #results > (currentResult+length+_getNumber(item.step,1)-2) then
+			currentResult = currentResult + length +_getNumber(item.step,1) -1
+		else
+			currentResult = 1
+		end
+	elseif #results>0 then
+		currentResult = 1
+	else
+	end
+	return currentResult
+end
+
+
 function _changeSDTItem(self,category,item,widget,id,dynamic)
 	local results = self:_getSDTCacheData(category,item)
 	local currentResult = self:_getSDTCacheIndex(category,item)
 	if currentResult then
 		if string.find(item.itemtype,'text$') then
-			local sdtString = self:_getSDTString(item,self:_getSDTCacheData(category,item))
+			local sdtString = self:_getResultString(item,results,"sdtformat")
 			if widget:getWidgetValue("itemno") ~= sdtString then
 				widget:setWidgetValue("itemno",sdtString)
 				self:_storeInCache(id,sdtString)
@@ -1994,13 +2178,16 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 			local player = appletManager:callService("getCurrentPlayer")
 			local server = player:getSlimServer()
 			local url = nil
-			if string.find(item.logotype,"orlogoURL$") then
-				url = results[currentResult][string.gsub(item.logotype,"orlogoURL$","")]
-				if not url then
-					url = results[currentResult]['logoURL']
+			local url = nil
+			if #results>=currentResult+_getNumber(item.offset,0) then
+				if string.find(item.logotype,"orlogoURL$") then
+					url = results[currentResult+_getNumber(item.offset,0)][string.gsub(item.logotype,"orlogoURL$","")]
+					if not url then
+						url = results[currentResult+_getNumber(item.offset,0)]['logoURL']
+					end
+				else
+					url = results[currentResult+_getNumber(item.offset,0)][item.logotype]
 				end
-			else
-				url = results[currentResult][item.logotype]
 			end
 			if url and not string.find(url,"^http") then
 				local ip,port = server:getIpPort()
@@ -2035,32 +2222,87 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 	end
 end
 
-function _getSDTString(self,item,results)
+function _changePluginItem(self,category,item,widget,id,dynamic)
+	local results = self:_getPluginItemCacheData(category,item)
+	local currentResult = self:_getPluginItemCacheIndex(category,item)
+	if currentResult then
+		if string.find(item.itemtype,'text$') then
+			local combinedString = self:_getResultString(item,results,"format")
+			if widget:getWidgetValue("itemno") ~= combinedString then
+				widget:setWidgetValue("itemno",combinedString)
+				self:_storeInCache(id,combinedString)
+			end
+		elseif string.find(item.itemtype,'icon$') then
+			local player = appletManager:callService("getCurrentPlayer")
+			local server = player:getSlimServer()
+			local url = nil
+			if #results>=(currentResult+_getNumber(item.offset,0)) then
+				url = results[currentResult+_getNumber(item.offset,0)][item.logotype]
+			end
+			if url and not string.find(url,"^http") then
+				local ip,port = server:getIpPort()
+				if not string.find(url,"^/") then
+					url = "/"..url
+				end
+				url = "http://"..ip..":"..port..url
+				local width = _getNumber(item.width,nil)
+				local height = _getNumber(item.height,nil)
+				if width and height then
+					url = string.gsub(url,".png","_"..width.."x"..height.."_p.png")
+					url = string.gsub(url,".jpg","_"..width.."x"..height.."_p.jpg")
+					url = string.gsub(url,".jpeg","_"..width.."x"..height.."_p.jpeg")
+				end
+			end
+			if url then
+				self.referenceimages[self.mode.."item"..id] = id
+				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+			else
+				widget:setWidgetValue("itemno",nil)
+				self:_removeFromCache(id)
+			end
+		end
+	else
+		if string.find(item.itemtype,'text$') then
+			widget:setWidgetValue("itemno","")
+			self:_removeFromCache(id)
+		elseif string.find(item.itemtype,'icon$') then
+			widget:setWidgetValue("itemno",nil)
+			self:_removeFromCache(id)
+		end
+	end
+end
+
+function _getResultString(self,item,results,attribute)
 	local result = ""
 	local length = _getNumber(item.noofrows,1)
+	local offset = 0
 	if length == 1 and _getString(item.scrolling,"false") == "true" then
 		length = #results
 		item.currentResult = 1
+	else
+		offset = _getNumber(item.offset,0)
 	end
-	local first = item.currentResult
-	for i=first,(first+length-1) do
-		if #results>=i then
-			if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofrows,1))>1) then
-				result = result.."\n"
-			elseif i>first then
-				result = result.."      "
-			end
-			local tmp = _getString(item.sdtformat,"")
-			for key,value in pairs(results[i]) do
-				local escapedValue = value
-				if not _getString(value,nil) then
-					tmp = string.gsub(tmp,"%(%%"..key.."%)","")
-				else
-					escapedValue = string.gsub(_getString(value,""),"%%","%%%%")
+	if #results>=item.currentResult+offset then
+		local first = item.currentResult+offset
+		for i=first,(first+length-1) do
+			if #results>=i then
+				if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofrows,1))>1) then
+					result = result.."\n"
+				elseif i>first then
+					result = result.."      "
 				end
-				tmp = string.gsub(tmp,"%%"..key,escapedValue)
+				local tmp = _getString(item[attribute],"")
+				for key,value in pairs(results[i]) do
+					local escapedValue = value
+					if not _getString(value,nil) then
+						tmp = string.gsub(tmp,"%(%%"..key.."%)","")
+					else
+						escapedValue = string.gsub(_getString(value,""),"%%","%%%%")
+					end
+					tmp = string.gsub(tmp,"%%"..key,escapedValue)
+				end
+				result = result..tmp
 			end
-			result = result..tmp
 		end
 	end
 	return result
@@ -2276,6 +2518,8 @@ function _tick(self,forcedUpdate)
 
 	local updatesdtitems = {}
 	local changesdtitems = {}
+	local updatepluginitems = {}
+	local changepluginitems = {}
 	local no = 1
 	local refreshCustomItemTypes = self.refreshCustomItemTypes
 	self.refreshCustomItemTypes = {}
@@ -2536,6 +2780,32 @@ function _tick(self,forcedUpdate)
 					end
 				end
 			end
+		elseif item.itemtype == "plugintext" or item.itemtype == "pluginicon" then
+			local infotype = _getString(item.infotype,"default")
+			if forcedUpdate then
+				self:_updateFromCache(no)		
+				if not updatepluginitems[infotype] then
+					updatepluginitems[infotype] = {
+						attribute = "selected",
+						items = {}
+					}
+				end
+				updatepluginitems[infotype].items[no] = item
+			elseif second % _getNumber(item.interval,3) == 0 then
+				local results = self:_getPluginItemCacheData(infotype,item)
+				if results and #results>0 then
+					if not changepluginitems[infotype] then
+						changepluginitems[infotype] = {}
+					end
+					changepluginitems[infotype][no] = item
+				else
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
+				end
+			end
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
 			-- Pre-load next artwork
@@ -2648,6 +2918,10 @@ function _tick(self,forcedUpdate)
 		end
 	end
 
+	for category,data in pairs(updatepluginitems) do
+		self:_updatePluginItem(category,data.items)
+	end
+
 	for category,data in pairs(changesdtitems) do
 		for no,item in pairs(data) do
 			local key = self:_getSDTCacheKey(category,item)
@@ -2663,6 +2937,17 @@ function _tick(self,forcedUpdate)
 		end
 	end
 	
+	for category,data in pairs(changepluginitems) do
+		for no,item in pairs(data) do
+			local key = self:_getPluginItemCacheKey(category,item)
+			if self.pluginitemcache[category] and self.pluginitemcache[category][key] and item.currentResult == self.pluginitemcache[category][key].current then
+				self.pluginitemcache[category][key].current = self:_getNextPluginItem(category,item)
+			end
+			item.currentResult = self.pluginitemcache[category][key].current
+			self:_changePluginItem(category,item,self.items[no],no,"true")
+		end
+	end
+
 	if forcedUpdate or ((minute + self.offset) % 15 == 0 and self.lastminute!=minute) then
 		self:_imageUpdate()
 	end
