@@ -105,6 +105,21 @@ sub initPlugin {
 	addTitleFormat("MYTHTVPENDINGRECORDING");
 }
 
+sub postinitPlugin {
+	my $customClockInstalled;
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+		$customClockInstalled = Slim::Utils::PluginManager->isEnabled("Plugins::CustomClockHelper::Plugin");
+	}else {
+		$customClockInstalled = grep(/CustomClockHelper/, Slim::Utils::PluginManager->enabledPlugins(undef));
+	}
+	if ($customClockInstalled) {
+		if(UNIVERSAL::can("Plugins::CustomClockHelper::Plugin","addCustomClockCustomItemProvider")) {
+			Plugins::CustomClockHelper::Plugin::addCustomClockCustomItemProvider("mythtvactive","MythTV Active Recordings", \&refreshCustomClockActiveRecordings);
+			Plugins::CustomClockHelper::Plugin::addCustomClockCustomItemProvider("mythtvpending","MythTV Pending Recordings", \&refreshCustomClockPendingRecordings);
+		}		
+	}
+}
+
 sub addTitleFormat
 {
 	my $titleformat = shift;
@@ -607,6 +622,59 @@ sub getRecording {
 	}
 	return \%entry;
 }
+
+sub refreshCustomClockActiveRecordings {
+	my $reference = shift;
+	my $callback = shift;
+	
+	my $recordings = getCachedActiveRecordings();
+
+	my $result = {};
+	my $idx = 10000;
+	foreach my $recording (@$recordings) {
+		my $recStatus = ((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording})?'Rec':'');
+
+		my $entry = {
+			'title' => $recording->{'title'},
+			'channel' => $recording->{'channel'},
+			'startdate' => $recording->{'startdate'},
+			'starttime' => $recording->{'starttime'},
+			'endtime' => $recording->{'endtime'},
+			'recstatus' => $recStatus,
+			'icon' => '/plugins/MythTV/geticon.png?ChanId='.$recording->{'icon'}
+		};
+		$result->{$idx}=$entry;
+		$idx = $idx + 1;
+	}
+	&{$callback}($reference,$result);
+}
+
+sub refreshCustomClockPendingRecordings {
+	my $reference = shift;
+	my $callback = shift;
+	
+	my $recordings = getCachedPendingRecordings();
+
+	my $result = {};
+	my $idx = 10000;
+	foreach my $recording (@$recordings) {
+		my $recStatus = ((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording})?'Rec':'');
+
+		my $entry = {
+			'title' => $recording->{'title'},
+			'channel' => $recording->{'channel'},
+			'startdate' => $recording->{'startdate'},
+			'starttime' => $recording->{'starttime'},
+			'endtime' => $recording->{'endtime'},
+			'recstatus' => $recStatus,
+			'icon' => '/plugins/MythTV/geticon.png?ChanId='.$recording->{'icon'}
+		};
+		$result->{$idx}=$entry;
+		$idx = $idx + 1;
+	}
+	&{$callback}($reference,$result);
+}
+
 
 sub getCachedActiveRecordings {
 	my $cachedData = undef;
