@@ -524,7 +524,7 @@ function addCustomClockImageType(self,itemType,applet,method,data)
 		method = method
 	}
 	self:getSettings()["customitemtypes"] = self.customItemTypes
-	self:storeSettings()
+	--We don't need to call self:storeSettings() it will just wast flash write cycles
 end
 
 function addCustomClockTextType(self,itemType,applet,method,data)
@@ -538,7 +538,7 @@ function addCustomClockTextType(self,itemType,applet,method,data)
 		method = method
 	}
 	self:getSettings()["customitemtypes"] = self.customItemTypes
-	self:storeSettings()
+	--We don't need to call self:storeSettings() it will just wast flash write cycles
 end
 
 function _recalculateVisibilityTimes(self,items)
