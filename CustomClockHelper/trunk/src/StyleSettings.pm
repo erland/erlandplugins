@@ -242,6 +242,10 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtstockicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'stock'} ne ""?$item->{'stock'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtweathertext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
+			}elsif($item->{'itemtype'} =~ /^sdtweathericon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'period'} ne ""?$item->{'period'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtmisctext$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtmiscicon$/) {
@@ -440,6 +444,65 @@ sub handler {
 				push @values,{id=>'%lasttrade',name=>'Last trade'};				
 				push @values,{id=>'%lasttime',name=>'Last trade time'};				
 				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'sdtformat' &&  $itemtype =~ /^sdtweathertext/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				if($currentItem->{'period'} !~ /^d\d+/) {
+					push @values,{id=>'%average_F',name=>'Average High/Low (F)'};				
+					push @values,{id=>'%average_C',name=>'Average High/Low (C)'};				
+					push @values,{id=>'%forecastTempF',name=>'High/Low (F)'};				
+					push @values,{id=>'%forecastTempC',name=>'High/Low (C)'};				
+					push @values,{id=>'%forecastType',name=>'Forecast type'};				
+					push @values,{id=>'%forecastPrec',name=>'Precipitation'};				
+					push @values,{id=>'%forecastTOD',name=>'Period Covered (ie Today)'};				
+					push @values,{id=>'%record_F',name=>'Record High/Low (F)'};				
+					push @values,{id=>'%record_C',name=>'Record High/Low (C)'};				
+					push @values,{id=>'%record_year',name=>'Record High/Low Year'};				
+					push @values,{id=>'%sunrise',name=>'Sunrise'};				
+					push @values,{id=>'%sunset',name=>'Sunset'};				
+					push @values,{id=>'%skyCondition',name=>'Brief Forecast (ie Sunny)'};				
+					
+					if(defined($currentItem->{'period'}) && $currentItem->{'period'} eq "-1") {
+						push @values,{id=>'%wu_temperatureF',name=>'Temperature (F)'};				
+						push @values,{id=>'%wu_temperatureC',name=>'Temperature (C)'};				
+						push @values,{id=>'%temperatureF',name=>'Temperature (F)'};				
+						push @values,{id=>'%temperatureC',name=>'Temperature (C)'};
+						push @values,{id=>'%wu_dewpointF',name=>'Dew Point (F)'};				
+						push @values,{id=>'%wu_dewpointC',name=>'Dew Point (C)'};				
+						push @values,{id=>'%dewpointF',name=>'Dew Point (F)'};				
+						push @values,{id=>'%dewpointC',name=>'Dew Point (C)'};				
+						push @values,{id=>'%feelslikeF',name=>'Feels-Like Temperature (F)'};				
+						push @values,{id=>'%feelslikeC',name=>'Feels-Like Temperature (C)'};				
+						push @values,{id=>'%humidity',name=>'Humidity'};				
+						push @values,{id=>'%wu_humidity',name=>'Humidity'};				
+						push @values,{id=>'%wu_windspeed_mh',name=>'Wind Speed (mi/hr)'};				
+						push @values,{id=>'%wu_windspeed_kh',name=>'Wind Speed (km/hr)'};				
+						push @values,{id=>'%wu_windspeed_kth',name=>'Wind Speed (kt/hr)'};				
+						push @values,{id=>'%wu_windspeed_ms',name=>'Wind Speed (m/s)'};				
+						push @values,{id=>'%windspeed_mh',name=>'Wind Speed (mi/hr)'};				
+						push @values,{id=>'%windspeed_kh',name=>'Wind Speed (km/hr)'};				
+						push @values,{id=>'%windspeed_kth',name=>'Wind Speed (kt/hr)'};				
+						push @values,{id=>'%windspeed_ms',name=>'Wind Speed (m/s)'};
+						push @values,{id=>'%wu_pressureIN',name=>'Barometric Preassure (inHg)'};				
+						push @values,{id=>'%pressureIN',name=>'Barometric Preassure (inHg)'};				
+						push @values,{id=>'%wu_pressureMB',name=>'Barometric Preassure (hPa)'};				
+						push @values,{id=>'%pressureMB',name=>'Barometric Preassure (hPa)'};				
+						push @values,{id=>'%UVindexNum',name=>'UV Index (Value)'};				
+						push @values,{id=>'%UVindexTxt',name=>'UV Index (Text)'};				
+						push @values,{id=>'%rain',name=>'Past 24-hr Precip'};				
+						push @values,{id=>'%snow',name=>'Past 24-hr Snowfall'};
+					}
+				}elsif($currentItem->{'period'} =~ /^d\d+/) {
+					push @values,{id=>'%date',name=>'dx Date'};				
+					push @values,{id=>'%day',name=>'dx Weekday'};				
+					push @values,{id=>'%highC',name=>'dx High (C)'};				
+					push @values,{id=>'%highF',name=>'dx High (F)'};				
+					push @values,{id=>'%lowC',name=>'dx Low (C)'};				
+					push @values,{id=>'%lowF',name=>'dx Low (F)'};				
+					push @values,{id=>'%precip',name=>'dx Precip'};				
+					push @values,{id=>'%condition',name=>'dx Condition'};				
+				}
+				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'sport') {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
@@ -523,6 +586,8 @@ sub handler {
 					push @values,{id=>'sdtmiscicon',name=>'sdtmiscicon'};				
 					push @values,{id=>'sdtsporticon',name=>'sdtsporticon'};				
 					push @values,{id=>'sdtstockicon',name=>'sdtstockicon'};				
+					push @values,{id=>'sdtweathericon',name=>'sdtweathericon'};				
+					push @values,{id=>'sdtweathertext',name=>'sdtweathertext'};				
 					push @values,{id=>'sdtweathermapicon',name=>'sdtweathermapicon'};				
 				}
 				$request = Slim::Control::Request::executeRequest(undef,['can','songinfoitems','?']);
@@ -552,6 +617,11 @@ sub handler {
 			}elsif($item->{'id'} =~ /^period$/) {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
+				if($itemtype eq 'sdtweathericon' or $itemtype eq 'sdtweathertext') {
+					push @values,{id=>'0-2',name=>'1-3'};				
+					push @values,{id=>'d1-d5',name=>'d1-d5'};				
+					push @values,{id=>'d1-d10',name=>'d1-d10'};				
+				}
 				push @values,{id=>'-1',name=>'C'};				
 				push @values,{id=>'0',name=>'1'};				
 				push @values,{id=>'1',name=>'2'};				
@@ -610,6 +680,11 @@ sub handler {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'daychartURL',name=>'Daychart'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtweathericon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'forecastIconURLSmall',name=>'Forcast icon'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^icontype$/ &&  $itemtype eq 'appleticon') {
 				$item->{'type'} = 'optionalsinglecombobox';
@@ -917,15 +992,19 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdtsporttext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtsporticon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval sport gamestatus);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval sport gamestatus);
 	}elsif($itemType eq 'sdtstocktext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtweathertext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval period noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+	}elsif($itemType eq 'sdtweathericon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order framewidth framerate logotype interval period);
 	}elsif($itemType eq 'sdtmisctext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
 	}elsif($itemType eq 'sdtmiscicon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order url url.background logotype interval selected);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected);
 	}elsif($itemType eq 'sdtstockicon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order url url.background logotype interval stock);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order line1fontsize line1height line2fontsize line2height line3fontsize line3height);
 	}elsif($itemType =~ /^cover/) {
