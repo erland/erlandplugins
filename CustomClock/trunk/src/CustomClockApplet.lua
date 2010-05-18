@@ -230,12 +230,12 @@ function openScreensaver(self,mode, transition)
 						elseif string.find(item.itemtype,"^sdtmisc") and _getString(item.infotype,nil) then
 							category = item.infotype
 							selectionattribute = selected
+						elseif string.find(item.itemtype,"^sdtweathericon") or string.find(item.itemtype,"^sdtweathertext") or item.itemtype == "sdticon" then
+							category = "weather"
+							selectionattribute = "period"
 						elseif item.itemtype == "sdttext" then
 							log:debug("Refreshing sdttext:".._getString(item.period,"-1")..",".._getString(item.sdtformat,""))
 							self:_updateSDTText(self.items[no],item.sdtformat,item.period)
-						elseif item.itemtype == "sdticon" then
-							log:debug("Refreshing sdticon:".._getString(item.period,"-1"))
-							self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
 						end
 	
 						if category then
@@ -253,6 +253,8 @@ function openScreensaver(self,mode, transition)
 						log:debug("Refreshing sdt item for category:"..category)
 						if category == "sport" then
 							self:_updateSDTSportItem(data.items)
+						elseif category == "weather" then
+							self:_updateSDTWeatherItem(data.items)
 						else
 							self:_updateSDTMiscItem(category,data.items,data.attribute)
 						end
@@ -481,6 +483,7 @@ function openScreensaver(self,mode, transition)
 	self.sdtSuperDateTimeChecked = false
 	self.sdtMacroChecked = false
 	self.sdtVersionChecked = false
+	self.sdtSongInfoChecked = false
 	self.lastminute = 0
 	self.nowPlaying = 1
 	self:_tick(1)
@@ -549,6 +552,8 @@ function _recalculateVisibilityTimes(self,items)
 				local results = nil
 				if string.find(self.configItems[item.item].itemtype,"^sdtsport") then
 					results = self:_getSDTCacheData("sport",self.configItems[item.item])
+				elseif string.find(self.configItems[item.item].itemtype,"^sdtweathericon") or string.find(self.configItems[item.item].itemtype,"^sdtweathertext") then
+					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
 				elseif string.find(self.configItems[item.item].itemtype,"^sdtstock") then
 					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
 				elseif string.find(self.configItems[item.item].itemtype,"^sdtmisc") and _getString(self.configItems[item.item].infotype,nil) then
@@ -806,28 +811,37 @@ end
 function _updateCustomTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
 	if server then
-		server:userRequest(function(chunk,err)
-				if err then
-					log:warn(err)
-				else
-					server:userRequest(function(chunk,err)
-							if err then
-								log:warn(err)
-							else
-								self.customtitleformats = chunk.data.titleformats
-								for attribute,value in pairs(self.customtitleformats) do
-									log:debug("Title format: "..tostring(attribute).."="..tostring(value))
-								end
+		if not self:getSettings()['customClockHelperInstalled'] then
+			server:userRequest(function(chunk,err)
+					if err then
+						log:warn(err)
+					else
+						if tonumber(chunk.data._can) == 1 then
+							self:getSettings()['customClockHelperInstalled'] = true
+							self:_updateCustomTitleFormatInfo(player)
+						else
+							self:getSettings()['customClockHelperInstalled'] = false
+						end
+					end
+				end,
+				player and player:getId(),
+				{'can','customclock','titleformats','?'}
+			)
+		else
+				server:userRequest(function(chunk,err)
+						if err then
+							log:warn(err)
+						else
+							self.customtitleformats = chunk.data.titleformats
+							for attribute,value in pairs(self.customtitleformats) do
+								log:debug("Title format: "..tostring(attribute).."="..tostring(value))
 							end
-						end,
-						player and player:getId(),
-						{'customclock','titleformats'}
-					)
-				end
-			end,
-			player and player:getId(),
-			{'can','customclock','titleformats','?'}
-		)
+						end
+					end,
+					player and player:getId(),
+					{'customclock','titleformats'}
+				)
+		end
 	end
 end
 
@@ -1488,17 +1502,17 @@ function _updateSDTText(self,widget,format,period)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or "-1" 
 	local server = player:getSlimServer()
-	if not self.sdtMacroChecked then
+	if not self.sdtMacroChecked and not self:getSettings()['sdtMacroInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					self.sdtMacroChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtMacroInstalled = true
+						self:getSettings()['sdtMacroInstalled'] = true
 						self:_updateSDTText(widget,format,period)
 					else	
-						self.sdtMacroInstalled = false
+						self:getSettings()['sdtMacroInstalled'] = false
 					end
 					
 				end
@@ -1506,7 +1520,7 @@ function _updateSDTText(self,widget,format,period)
 			nil,
 			{'can','sdtMacroString', '?'}
 		)
-	elseif self.sdtMacroInstalled then
+	elseif self:getSettings()['sdtMacroInstalled'] then
 		server:userRequest(
 			function(chunk, err)
 				if err then
@@ -1532,17 +1546,17 @@ function _updateSDTSportItem(self,items)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 
-	if not self.sdtSuperDateTimeChecked then
+	if not self.sdtSuperDateTimeChecked and not self:getSettings()['sdtSuperDateTimeInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtSuperDateTimeInstalled = true
+						self:getSettings()['sdtSuperDateTimeInstalled'] = true
 						self:_updateSDTSportItem(items)
 					else	
-						self.sdtSuperDateTimeInstalled = false
+						self:getSettings()['sdtSuperDateTimeInstalled'] = false
 					end
 					
 				end
@@ -1550,7 +1564,7 @@ function _updateSDTSportItem(self,items)
 			nil,
 			{'can','SuperDateTime', '?'}
 		)
-	elseif self.sdtSuperDateTimeInstalled then
+	elseif self:getSettings()['sdtSuperDateTimeInstalled'] then
 		server:userRequest(
 			function(chunk, err)
 				if err then
@@ -1600,21 +1614,21 @@ function _updateSDTSportItem(self,items)
 	end
 end
 
-function _updateSDTMiscItem(self,category,items,selectionattribute)
+function _updateSDTWeatherItem(self,items)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 
-	if not self.sdtSuperDateTimeChecked then
+	if not self.sdtSuperDateTimeChecked and not self:getSettings()['sdtSuperDateTimeInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					self.sdtSuperDateTimeChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtSuperDateTimeInstalled = true
-						self:_updateSDTMiscItem(category,items,selectionattribute)
+						self:getSettings()['sdtSuperDateTimeInstalled'] = true
+						self:_updateSDTWeatherItem(items)
 					else	
-						self.sdtSuperDateTimeInstalled = false
+						self:getSettings()['sdtSuperDateTimeInstalled'] = false
 					end
 					
 				end
@@ -1622,7 +1636,62 @@ function _updateSDTMiscItem(self,category,items,selectionattribute)
 			nil,
 			{'can','SuperDateTime', '?'}
 		)
-	elseif self.sdtSuperDateTimeInstalled then
+	elseif self:getSettings()['sdtSuperDateTimeInstalled'] then
+		server:userRequest(
+			function(chunk, err)
+				if err then
+					log:warn(err)
+				elseif chunk then
+					local wetData = chunk.data.wetData
+					self.sdtcache["weather"] = {}
+					for no,item in pairs(items) do
+						local key = self:_getSDTCacheKey("weather",item)
+						if not self.sdtcache["weather"][key] then
+							self.sdtcache["weather"][key] = {
+								current = nil,
+								data = self:_getSDTWeatherData(item,wetData)
+							}
+						end
+						if not self.sdtcache["weather"][key].current then
+							self.sdtcache["weather"][key].current = self:_getNextSDTItem("weather",item)
+						end
+						if string.find(item.itemtype,"icon$") and not _getString(item.logotype,nil) then
+							item.logotype = 'forecastIconURLSmall'
+						end
+						item.currentResult = self.sdtcache["weather"][key].current
+						self:_changeSDTItem("weather",item,self.items[no],no,"false")
+					end
+				end
+			end,
+			player and player:getId(),
+			{ 'SuperDateTime', 'weather'}
+		)
+	end
+end
+
+function _updateSDTMiscItem(self,category,items,selectionattribute)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+
+	if not self.sdtSuperDateTimeChecked and not self:getSettings()['sdtSuperDateTimeInstalled'] then
+		server:userRequest(function(chunk,err)
+				if err then
+					log:warn(err)
+				else
+					self.sdtSuperDateTimeChecked = true
+					if tonumber(chunk.data._can) == 1 then
+						self:getSettings()['sdtSuperDateTimeInstalled'] = true
+						self:_updateSDTMiscItem(category,items,selectionattribute)
+					else	
+						self:getSettings()['sdtSuperDateTimeInstalled'] = false
+					end
+					
+				end
+			end,
+			nil,
+			{'can','SuperDateTime', '?'}
+		)
+	elseif self:getSettings()['sdtSuperDateTimeInstalled'] then
 		server:userRequest(
 			function(chunk, err)
 				if err then
@@ -1687,6 +1756,8 @@ function _getSDTCacheKey(self,category,item)
 		else
 			return "switching".._getString(item.stock,"")
 		end
+	elseif category == "weather" then
+		return "weather".._getString(item.period,"")
 	else
 		if string.find(item.itemtype,"text$") and item.scrolling then
 			return "scrolling".._getString(item.selected,"")
@@ -1803,13 +1874,77 @@ function _getSDTMiscData(self,item,selectionattribute,totalResults)
 		for selection,value in pairs(totalResults) do
 			results[no] = value
 			results[no][selectionattribute] = selection
-			results[no].uniqueID=item[selectionattribute]
+			results[no].uniqueID=selection
 			for key,icon in pairs(icons) do
 				if not results[no][key] then
 					results[no][key] = icon
 				end
 			end
 			no = no + 1
+		end
+	end
+	return results
+end
+
+function _getSDTWeatherData(self,item,totalResults)
+	local results = {}
+	local no = 1
+	if _getString(item.period,nil) then
+		if totalResults[item.period] then
+			results[no] = totalResults[item.period]
+			results[no].period = item.period
+			results[no].uniqueID=item.period
+			if tostring(item.period) == "-1" then
+				for selection,value in pairs(totalResults) do
+		 			if type(value) ~= 'table' then
+		 				if results[1] then
+							results[1][selection] = value
+						end
+					end
+				end
+			end
+			log:debug("Getting specific item for "..item.period)
+		elseif string.find(item.period,"^%d+-%d+$") then
+			local last = string.gsub(item.period,"^%d+-","")
+			local first = string.gsub(item.period,"-%d+$","")
+			for i = tonumber(first),tonumber(last) do
+				if totalResults[tostring(i)] then
+					results[no] = totalResults[tostring(i)]
+					results[no].period = tostring(i)
+					results[no].uniqueID=tostring(i)
+					no = no + 1
+				end
+			end
+			log:debug("Getting interval between "..first.." and "..last)
+		elseif string.find(item.period,"^d%d+-d%d+$") then
+			local last = string.gsub(item.period,"^d%d+-d","")
+			local first = string.gsub(item.period,"-d%d+$","")
+			first = string.gsub(first,"^d","")
+			for i = tonumber(first),tonumber(last) do
+				if totalResults["d"..tostring(i)] then
+					results[no] = totalResults["d"..tostring(i)]
+					results[no].period = "d"..tostring(i)
+					results[no].uniqueID="d"..tostring(i)
+					no = no + 1
+				end
+			end
+			log:debug("Getting interval between d"..first.." and d"..last)
+		end
+	else
+		for selection,value in pairs(totalResults) do
+			if type(value) == 'table' then
+				results[no] = value
+				results[no].period = selection
+				results[no].uniqueID=selection
+				no = no + 1
+			end
+		end
+		for selection,value in pairs(totalResults) do
+ 			if type(value) ~= 'table' then
+ 				if results[1] then
+					results[1][selection] = value
+				end
+			end
 		end
 	end
 	return results
@@ -1862,11 +1997,13 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 					url = "/"..url
 				end
 				url = "http://"..ip..":"..port..url
-				local width = _getNumber(item.width,50)
-				local height = _getNumber(item.height,50)
-				url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
-				url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
-				url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
+				local width = _getNumber(item.width,nil)
+				local height = _getNumber(item.height,nil)
+				if width and height then
+					url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
+					url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
+					url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
+				end
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
@@ -1915,76 +2052,20 @@ function _getSDTString(self,item,results)
 	return result
 end
 
-
-function _updateSDTIcon(self,widget,id,width,height,period,dynamic)
-	local player = appletManager:callService("getCurrentPlayer")
-	period = _getString(period,nil) or "-1" 
-	local server = player:getSlimServer()
-	if not self.sdtSuperDateTimeChecked then
-		server:userRequest(function(chunk,err)
-				if err then
-					log:warn(err)
-				else
-					self.sdtSuperDateTimeChecked = true
-					if tonumber(chunk.data._can) == 1 then
-						self.sdtSuperDateTimeInstalled = true
-						self:_updateSDTIcon(widget,id,width,height,period,dynamic)
-					else	
-						self.sdtSuperDateTimeInstalled = false
-					end
-					
-				end
-			end,
-			nil,
-			{'can','SuperDateTime', '?'}
-		)
-	elseif self.sdtSuperDateTimeInstalled then
-		server:userRequest(function(chunk,err)
-				if err then
-					log:warn(err)
-				else
-					local url = nil
-					if chunk.data.wetData[tostring(period)] and chunk.data.wetData[tostring(period)].forecastIconURLSmall then
-						url = chunk.data.wetData[tostring(period)].forecastIconURLSmall
-					elseif chunk.data.wetData[tostring(period)] and chunk.data.wetData[tostring(period)].forecastIcon then
-						url = "/plugins/SuperDateTime/html/images/"..chunk.data.wetData[tostring(period)].forecastIcon..".png"
-					end
-					if url then
-						local ip,port = server:getIpPort()
-						if not string.find(url,"^/") then
-							url = "/"..url
-						end
-						url = "http://"..ip..":"..port..url
-						if width and height then
-							url = string.gsub(url,".png$","_"..width.."x"..height.."_p.png")
-							url = string.gsub(url,".jpg$","_"..width.."x"..height.."_p.jpg")
-							url = string.gsub(url,".jpeg$","_"..width.."x"..height.."_p.jpeg")
-						end
-						self.referenceimages[self.mode.."item"..id] = id
-						self:_retrieveImage(url,self.mode.."item"..id,dynamic)
-					end
-				end
-			end,
-			player and player:getId(),
-			{'SuperDateTime','weather'}
-		)
-	end
-end
-
 function _updateSDTWeatherMapIcon(self,widget,id,item)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
-	if not self.sdtVersionChecked then
+	if not self.sdtVersionChecked and not self:getSettings()['sdtVersionInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					self.sdtVersionChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtVersionInstalled = true
+						self:getSettings()['sdtVersionInstalled'] = true
 						self:_updateSDTWeatherMapIcon(widget,id,item)
 					else	
-						self.sdtVersionInstalled = false
+						self:getSettings()['sdtVersionInstalled'] = false
 					end
 					
 				end
@@ -1992,7 +2073,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,item)
 			nil,
 			{'can','sdtVersion', '?'}
 		)
-	elseif self.sdtVersionInstalled then
+	elseif self:getSettings()['sdtVersionInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
@@ -2017,17 +2098,17 @@ end
 function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
-	if not self.sdtSongInfoChecked then
+	if not self.sdtSongInfoChecked and not self:getSettings()['sdtSongInfoInstalled'] then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					self.sdtSongInfoChecked = true
 					if tonumber(chunk.data._can) == 1 then
-						self.sdtSongInfoInstalled = true
+						self:getSettings()['sdtSongInfoInstalled'] = true
 						self:_updateSongInfoIcon(widget,id,width,height,module,dynamic)
 					else	
-						self.sdtSongInfoInstalled = false
+						self:getSettings()['sdtSongInfoInstalled'] = false
 					end
 					
 				end
@@ -2035,7 +2116,7 @@ function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 			nil,
 			{'can','songinfoitems', '?'}
 		)
-	elseif self.sdtSongInfoInstalled and _getString(module,nil) then
+	elseif self:getSettings()['sdtSongInfoInstalled'] and _getString(module,nil) then
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
@@ -2339,6 +2420,30 @@ function _tick(self,forcedUpdate)
 			if forcedUpdate then
 				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
 			end
+		elseif item.itemtype == "sdtweathertext" or item.itemtype == "sdtweathericon" then
+			if forcedUpdate then
+				if not updatesdtitems["weather"] then
+					updatesdtitems["weather"] = {
+						attribute = "weather",
+						items = {}
+					}
+				end
+				updatesdtitems["weather"].items[no] = item
+			elseif second % _getNumber(item.interval,3) == 0 then
+				local results = self:_getSDTCacheData("weather",item)
+				if results and #results>0 then
+					if not changesdtitems["weather"] then
+						changesdtitems["weather"] = {}
+					end
+					changesdtitems["weather"][no] = item
+				else
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
+				end
+			end
 		elseif item.itemtype == "sdtsporttext" or item.itemtype == "sdtsporticon" then
 			if forcedUpdate then
 				if not updatesdtitems["sport"] then
@@ -2436,7 +2541,13 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdticon" then
 			if forcedUpdate then
-				self:_updateSDTIcon(self.items[no],no,_getNumber(item.width,nil),_getNumber(item.height,nil),item.period,_getString(item.dynamic,"false"))
+				if not updatesdtitems["weather"] then
+					updatesdtitems["weather"] = {
+						attribute = "weather",
+						items = {}
+					}
+				end
+				updatesdtitems["weather"].items[no] = item
 			end
 		elseif item.itemtype == "sdtweathermapicon" then
 			if forcedUpdate then
@@ -2505,6 +2616,8 @@ function _tick(self,forcedUpdate)
 	for category,data in pairs(updatesdtitems) do
 		if category == "sport" then
 			self:_updateSDTSportItem(data.items)
+		elseif category == "weather" then
+			self:_updateSDTWeatherItem(data.items)
 		else
 			self:_updateSDTMiscItem(category,data.items,data.attribute)
 		end
@@ -2517,7 +2630,7 @@ function _tick(self,forcedUpdate)
 				self.sdtcache[category][key].current = self:_getNextSDTItem(category,item)
 			end
 			item.currentResult = self.sdtcache[category][key].current
-			if category == "sport" then
+			if category == "sport" or category == "weather" then
 				self:_changeSDTItem(category,item,self.items[no],no,"false")
 			else
 				self:_changeSDTItem(category,item,self.items[no],no,"true")
