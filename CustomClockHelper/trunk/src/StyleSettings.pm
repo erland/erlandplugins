@@ -250,6 +250,10 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'sdtformat'} ne ""?$item->{'sdtformat'}:"");
 			}elsif($item->{'itemtype'} =~ /^sdtmiscicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^plugintext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'format'} ne ""?$item->{'format'}:"");
+			}elsif($item->{'itemtype'} =~ /^pluginicon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /^appleticon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'icontype'} ne ""?$item->{'icontype'}.":":"").($item->{'image'} ne ""?$item->{'image'}:"");
 			}elsif($item->{'itemtype'} =~ /^applettext$/) {
@@ -557,6 +561,8 @@ sub handler {
 				push @values,{id=>'spectrummeter',name=>'spectrummeter'};				
 				push @values,{id=>'appleticon',name=>'appleticon'};				
 				push @values,{id=>'applettext',name=>'applettext'};				
+				push @values,{id=>'pluginicon',name=>'pluginicon'};				
+				push @values,{id=>'plugintext',name=>'plugintext'};				
 				push @values,{id=>'imageicon',name=>'imageicon'};				
 				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','random','?']);
 				my $result = $request->getResult("_can");
@@ -761,7 +767,58 @@ sub handler {
 					my $request = Slim::Control::Request::executeRequest($client,['SuperDateTime','misc']);
 					my $result = $request->getResult("miscData");
 					my %hashValues = ();
-					if(defined($result->{$currentItem->{'infotype'}}) && $result->{$currentItem->{'infotype'}} ne "") {
+					if(defined($result->{$currentItem->{'infotype'}})) {
+						my $infoTypeResult = $result->{$currentItem->{'infotype'}};
+						for my $key (keys %$infoTypeResult) {
+							my $entry=$infoTypeResult->{$key};
+							if(!ref($entry)) {
+								$hashValues{$entry} = 1;
+							}else {
+								for my $attr (keys %$entry) {
+									my $subkeyentry = $entry->{$attr};
+									if(lc($attr) =~ /^icon/ || lc($attr) =~ /icon$/ || lc($attr) =~ /^logo/ || lc($attr) =~ /logo$/ || lc($attr) =~ /url$/) {
+										$hashValues{$attr} = 1;
+									}
+								}
+							}
+						}
+					}
+					for my $entry (keys %hashValues) {
+						push @values,{id=>$entry,name=>$entry};				
+					}
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'format' &&  $itemtype eq 'plugintext') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				if(defined($currentItem->{'infotype'}) && $currentItem->{'infotype'} ne "") {
+					my $request = Slim::Control::Request::executeRequest($client,['customclock','customitems','category:'.$currentItem->{'infotype'}]);
+					my $result = $request->getResult("items");
+					my %hashValues = ();
+					if(defined($result->{$currentItem->{'infotype'}})) {
+						my $infoTypeResult = $result->{$currentItem->{'infotype'}};
+						for my $key (keys %$infoTypeResult) {
+							my $entry=$infoTypeResult->{$key};
+							if(ref($entry)) {
+								for my $attr (keys %$entry) {
+									$hashValues{$attr} = $entry->{$attr};
+								}
+							}
+						}
+						for my $entry (keys %hashValues) {
+							push @values,{id=>'%'.$entry,name=>$entry." (".$hashValues{$entry}.")"};				
+						}
+					}
+				}
+				$item->{'values'} = \@values;			
+			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'pluginicon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				if( defined($currentItem->{'infotype'}) && $currentItem->{'infotype'} ne "") {
+					my $request = Slim::Control::Request::executeRequest($client,['customclock','customitems','category:'.$currentItem->{'infotype'}]);
+					my $result = $request->getResult("items");
+					my %hashValues = ();
+					if(defined($result->{$currentItem->{'infotype'}})) {
 						my $infoTypeResult = $result->{$currentItem->{'infotype'}};
 						for my $key (keys %$infoTypeResult) {
 							my $entry=$infoTypeResult->{$key};
@@ -792,6 +849,15 @@ sub handler {
 				}
 				if(scalar(@values)==0) {
 					push @values,{id=>'%getWeatherLong',name=>'getWeatherLong'};
+				}
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^infotype$/ &&  $itemtype =~ /^plugin/) {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my $request = Slim::Control::Request::executeRequest($client,['customclock','customitems']);
+				my $result = $request->getResult("items");
+				my @values = ();
+				for my $entry (keys %$result) {
+					push @values,{id=>$entry,name=>$entry};				
 				}
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^location$/ &&  $itemtype eq 'sdtweathermapicon') {
@@ -990,19 +1056,23 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'imageicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order url interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'sdtsporttext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval sport gamestatus noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
 	}elsif($itemType eq 'sdtsporticon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval sport gamestatus);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval sport gamestatus offset step);
 	}elsif($itemType eq 'sdtstocktext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval stock noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
 	}elsif($itemType eq 'sdtweathertext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval period noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval period noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
 	}elsif($itemType eq 'sdtweathericon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order framewidth framerate logotype interval period);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order framewidth framerate logotype interval period offset step);
 	}elsif($itemType eq 'sdtmisctext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime sdtformat interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
 	}elsif($itemType eq 'sdtmiscicon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected offset step);
+	}elsif($itemType eq 'plugintext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime format interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
+	}elsif($itemType eq 'pluginicon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected offset step);
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
