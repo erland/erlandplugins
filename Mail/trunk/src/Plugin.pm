@@ -88,6 +88,33 @@ sub initPlugin {
 	addTitleFormat("NEWMAIL");
 }
 
+sub postinitPlugin {
+	my $sdtInstalled;
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+		$sdtInstalled = Slim::Utils::PluginManager->isEnabled("Plugins::SuperDateTime::Plugin");
+	}else {
+		$sdtInstalled = grep(/DynamicPlayList/, Slim::Utils::PluginManager->enabledPlugins(undef));
+	}
+	if ($sdtInstalled) {
+		if(UNIVERSAL::can("Plugins::SuperDateTime::Plugin","addCustomDisplayItemHash")) {
+#			Let's enabled this when SDT integration works correctly
+#			Plugins::SuperDateTime::Plugin::registerProvider(\&refreshSDT)
+		}		
+	}
+
+	my $customClockInstalled;
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+		$customClockInstalled = Slim::Utils::PluginManager->isEnabled("Plugins::CustomClockHelper::Plugin");
+	}else {
+		$customClockInstalled = grep(/CustomClockHelper/, Slim::Utils::PluginManager->enabledPlugins(undef));
+	}
+	if ($customClockInstalled) {
+		if(UNIVERSAL::can("Plugins::CustomClockHelper::Plugin","addCustomClockCustomItemProvider")) {
+			Plugins::CustomClockHelper::Plugin::addCustomClockCustomItemProvider("mail","Mail", \&refreshCustomClock);
+		}		
+	}
+}
+
 sub addTitleFormat
 {
 	my $titleformat = shift;
@@ -132,6 +159,48 @@ sub handleWebList {
 	}else {
 		return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 	}
+}
+
+sub refreshCustomClock {
+	my $reference = shift;
+	my $callback = shift;
+
+	my $messages = getMailMessagesWithDefaultCredentials(1);
+
+	my $result = {};
+	my $idx = 10000;
+	for my $message (@$messages) {
+		my $mail = {
+			'date' => $message->{'Date'},
+			'subject' => $message->{'Subject'},
+			'from' => $message->{'From'},
+		};
+		$result->{$idx} = $mail;
+		$idx = $idx + 1;
+	}
+	&{$callback}($reference,$result);
+}
+
+sub refreshSDT {
+	my $timer = shift;
+	my $client = shift;
+	my $refreshId = shift;
+
+	my $messages = getMailMessagesWithDefaultCredentials(1);
+
+	# Plugins::SuperDateTime::Plugin::delCustomSport($sport);
+
+	for my $message (@$messages) {
+		my $mail = {
+			'line1' => $message->{'Date'}." ".$message->{'From'},
+			'line2' => $message->{'Subject'},
+			'date' => $message->{'Date'},
+			'subject' => $message->{'Subject'},
+			'from' => $message->{'From'},
+		};
+		Plugins::SuperDateTime::Plugin::addCustomDisplayItemHash("Mail", $message->{'Date'}.$message->{'From'},$mail);
+	}
+	Plugins::SuperDateTime::Plugin::refreshData(undef,$client,$refreshId);
 }
 
 sub getMailMessagesWithDefaultCredentials {
