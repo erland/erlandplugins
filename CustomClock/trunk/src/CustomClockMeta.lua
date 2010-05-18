@@ -73,6 +73,11 @@ function configureApplet(self)
 			appletManager:callService("registerAlternativeAlarmWindow","openCustomClockAlarmWindow")
 		end
 	end
+	self:getSettings()['sdtVersionInstalled'] = false
+	self:getSettings()['sdtMacroInstalled'] = false
+	self:getSettings()['sdtSuperDateTimeInstalled'] = false
+	self:getSettings()['sdtSongInfoInstalled'] = false
+	self:getSettings()['customClockHelperInstalled'] = false
 end
 
 function defaultSettings(self)
