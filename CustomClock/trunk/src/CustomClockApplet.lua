@@ -198,7 +198,7 @@ function openScreensaver(self,mode, transition)
 					end
 					if updateStyle then
 						log:debug("Storing modified styles")
-						self:storeSettings()
+						self:_storeSettingsWithoutCache()
 						if updatedModes[mode] and self.window then
 							log:debug("Reopening screen saver with mode: "..mode)
 							self.window:hide()
@@ -235,7 +235,7 @@ function openScreensaver(self,mode, transition)
 							selectionattribute = "period"
 						elseif item.itemtype == "sdttext" then
 							log:debug("Refreshing sdttext:".._getString(item.period,"-1")..",".._getString(item.sdtformat,""))
-							self:_updateSDTText(self.items[no],item.sdtformat,item.period)
+							self:_updateSDTText(self.items[no],no,item.sdtformat,item.period)
 						end
 	
 						if category then
@@ -528,6 +528,15 @@ function addCustomClockImageType(self,itemType,applet,method,data)
 	}
 	self:getSettings()["customitemtypes"] = self.customItemTypes
 	--We don't need to call self:storeSettings() it will just wast flash write cycles
+end
+
+function _storeSettingsWithoutCache(self)
+	for attr,value in pairs(self:getSettings()) do
+		if string.find(attr,"^itemCache") or string.find(attr,"Installed$") then
+			self:getSettings()[attr] = nil
+		end
+	end
+	self:storeSettings()
 end
 
 function addCustomClockTextType(self,itemType,applet,method,data)
@@ -988,7 +997,7 @@ function defineSettingStyleSink(self,title,mode,data)
 				group,
 				function()
 					self:getSettings()[mode.."style"] = nil
-					self:storeSettings()
+					self:_storeSettingsWithoutCache()
 					log:info("Changing to standard Now Playing applet")
 					appletManager:registerService("NowPlaying",'goNowPlaying')
 				end,
@@ -1005,7 +1014,7 @@ function defineSettingStyleSink(self,title,mode,data)
 				group,
 				function()
 					self:getSettings()[mode.."style"] = nil
-					self:storeSettings()
+					self:_storeSettingsWithoutCache()
 					appletManager:callService("registerAlternativeAlarmWindow",nil)
 				end,
 				style == nil
@@ -1036,7 +1045,7 @@ function defineSettingStyleSink(self,title,mode,data)
 						self.window:hide()
 						self.window=nil
 					end
-					self:storeSettings()
+					self:_storeSettingsWithoutCache()
 					appletManager:callService("addScreenSaver", 
 						tostring(self:string("SCREENSAVER_CUSTOMCLOCK")).."#"..string.gsub(mode,"^config",""), 
 						"CustomClock",
@@ -1102,7 +1111,7 @@ function defineSettingStyleSink(self,title,mode,data)
 										self.window:hide()
 										self.window=nil
 									end
-									self:storeSettings()
+									self:_storeSettingsWithoutCache()
 									if mode == "confignowplaying" then
 										log:info("Changing to custom Now Playing applet")
 										appletManager:registerService("CustomClock",'goNowPlaying')
@@ -1498,7 +1507,7 @@ function _getCoverSize(self,size)
 	end
 end
 
-function _updateSDTText(self,widget,format,period)
+function _updateSDTText(self,widget,id,format,period)
 	local player = appletManager:callService("getCurrentPlayer")
 	period = _getString(period,nil) or "-1" 
 	local server = player:getSlimServer()
@@ -1510,7 +1519,7 @@ function _updateSDTText(self,widget,format,period)
 					self.sdtMacroChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self:getSettings()['sdtMacroInstalled'] = true
-						self:_updateSDTText(widget,format,period)
+						self:_updateSDTText(widget,id,format,period)
 					else	
 						self:getSettings()['sdtMacroInstalled'] = false
 					end
@@ -1533,6 +1542,7 @@ function _updateSDTText(self,widget,format,period)
 						text = self:_getLocalizedDateInfo(nil,_getString(text,""))
 					end
 					widget:setWidgetValue("itemno",text)
+					self:_storeInCache(id,text)
 					log:debug("Result from macroString: "..text)
 				end
 			end,
@@ -1978,6 +1988,7 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 			local sdtString = self:_getSDTString(item,self:_getSDTCacheData(category,item))
 			if widget:getWidgetValue("itemno") ~= sdtString then
 				widget:setWidgetValue("itemno",sdtString)
+				self:_storeInCache(id,sdtString)
 			end
 		elseif string.find(item.itemtype,'icon$') then
 			local player = appletManager:callService("getCurrentPlayer")
@@ -2010,13 +2021,16 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
+				self:_removeFromCache(id)
 			end
 		end
 	else
 		if string.find(item.itemtype,'text$') then
 			widget:setWidgetValue("itemno","")
+			self:_removeFromCache(id)
 		elseif string.find(item.itemtype,'icon$') then
 			widget:setWidgetValue("itemno",nil)
+			self:_removeFromCache(id)
 		end
 	end
 end
@@ -2418,10 +2432,12 @@ function _tick(self,forcedUpdate)
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
 		elseif item.itemtype == "sdttext" then
 			if forcedUpdate then
-				self:_updateSDTText(self.items[no],item.sdtformat,item.period)
+				self:_updateFromCache(no)		
+				self:_updateSDTText(self.items[no],no,item.sdtformat,item.period)
 			end
 		elseif item.itemtype == "sdtweathertext" or item.itemtype == "sdtweathericon" then
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				if not updatesdtitems["weather"] then
 					updatesdtitems["weather"] = {
 						attribute = "weather",
@@ -2446,6 +2462,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtsporttext" or item.itemtype == "sdtsporticon" then
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				if not updatesdtitems["sport"] then
 					updatesdtitems["sport"] = {
 						attribute = "sport",
@@ -2470,6 +2487,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtstocktext" or item.itemtype == "sdtstockicon" then
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				if not updatesdtitems["stocks"] then
 					updatesdtitems["stocks"] = {
 						attribute = "stock",
@@ -2495,6 +2513,7 @@ function _tick(self,forcedUpdate)
 		elseif item.itemtype == "sdtmisctext" or item.itemtype == "sdtmiscicon" then
 			local infotype = _getString(item.infotype,"default")
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				if not updatesdtitems[infotype] then
 					updatesdtitems[infotype] = {
 						attribute = "selected",
@@ -2537,10 +2556,12 @@ function _tick(self,forcedUpdate)
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2)
 		elseif item.itemtype == "galleryicon" then
 			if forcedUpdate or self.lastminute!=minute or (_getNumber(item.interval,nil) and second % tonumber(item.interval) == 0) then
+				self:_updateFromCache(no)		
 				self:_updateGalleryImage(self.items[no],no,item.width,item.height,item.favorite)
 			end
 		elseif item.itemtype == "sdticon" then
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				if not updatesdtitems["weather"] then
 					updatesdtitems["weather"] = {
 						attribute = "weather",
@@ -2551,6 +2572,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "sdtweathermapicon" then
 			if forcedUpdate then
+				self:_updateFromCache(no)		
 				self:_updateSDTWeatherMapIcon(self.items[no],no,item)
 			elseif self.lastminute!=minute and (not item.url or (minute % 15 == 0 and not _getNumber(item.interval,nil)) or (_getNumber(item.interval,nil) and minute % tonumber(item.interval)==0)) then
 				if item.url then
@@ -2562,6 +2584,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "songinfoicon" then
 			if forcedUpdate or (minute % 3 == 0 and self.lastminute!=minute) then
+				self:_updateFromCache(no)		
 				local width,height = Framework.getScreenSize()
 				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true")
 			elseif second % _getNumber(item.interval,10) == 0 and item.urls and #item.urls>0 then
@@ -2572,6 +2595,7 @@ function _tick(self,forcedUpdate)
 			end
 		elseif item.itemtype == "imageicon" and _getString(item.url,nil) then
 			if forcedUpdate or (minute % _getNumber(item.interval,30) == 0 and self.lastminute!=minute) then
+				self:_updateFromCache(no)		
 				self.referenceimages[self.mode.."item"..no] = no
 				self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.dynamic,"true"),_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			end
@@ -2605,11 +2629,12 @@ function _tick(self,forcedUpdate)
 			else
 				log:warn("Unknown appleticon, ignoring "..tostring(item.texttype).."...")
 			end
-		elseif string.find(item.itemtype,"vumeter$") or string.find(item.itemtype,"spectrummeter$") then
+		elseif string.find(item.itemtype,"vumeter$") or string.find(item.itemtype,"spectrummeter$") or string.find(item.itemtype,"image$")then
 			-- Do nothing, vu/spectrum meters are updated separately
 		else
 			log:warn("Unknown item type, ignoring "..tostring(item.itemtype).."...")
 		end
+
 		no = no +1
 	end
 
@@ -2653,6 +2678,19 @@ function _tick(self,forcedUpdate)
 	if hasImages then
 		self.canvas:reSkin()
 		self.canvas:reDraw()
+	end
+end
+
+function _updateFromCache(self,no)		
+	item = self.configItems[no]
+	self:getSettings()['itemCache'..self.mode] = self:getSettings()['itemCache'..self.mode] or {}
+	local cachedItem = self:getSettings()['itemCache'..self.mode][no]
+	if cachedItem and cachedItem.value then
+		if string.find(item.itemtype,"text$") and (not self.items[no]:getWidgetValue("itemno") or self.items[no]:getWidgetValue("itemno") == "") then
+			self.items[no]:setWidgetValue("itemno",cachedItem.value)
+		elseif string.find(item.itemtype,"icon$") and self.items[no]:getWidget("itemno") and not self.items[no]:getWidget("itemno"):getImage() then
+			self.items[no]:setWidgetValue("itemno",cachedItem.value)
+		end
 	end
 end
 
@@ -3049,8 +3087,22 @@ function _retrieveImageData(self,url,imageType,chunk,clipX,clipY,clipWidth,clipH
 		self.items[self.vumeterimages[imageType]]:getWidget("itemno"):setImage(id,image)
 	elseif self.referenceimages[imageType] ~= nil then
 		self.items[self.referenceimages[imageType]]:getWidget("itemno"):setValue(image)
+		self:_storeInCache(self.referenceimages[imageType],image)
 	end
 	log:debug("image ready")
+end
+
+function _removeFromCache(self,id)
+	if self:getSettings()['itemCache'..self.mode] then
+		self:getSettings()['itemCache'..self.mode][id] = nil
+	end
+end
+
+function _storeInCache(self,id,value)
+	self:getSettings()['itemCache'..self.mode] = self:getSettings()['itemCache'..self.mode] or {}
+	self:getSettings()['itemCache'..self.mode][id] = {
+		value = value
+	}
 end
 
 function _imageUpdate(self)
