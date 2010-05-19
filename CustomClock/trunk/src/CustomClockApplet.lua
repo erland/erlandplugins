@@ -594,9 +594,10 @@ end
 
 function _recalculateVisibilityTimes(self,items)
 	local maxdelay = {}
+	local nodelay = {}
 	for no,item in pairs(items) do
 		if not _getString(self.configItems[item.item].visibilitytime,nil) and _getString(self.configItems[item.item].interval,nil) then
-			if string.find(self.configItems[item.item].itemtype,"^sdt") and not string.find(self.configItems[item.item].itemtype,"sdtweathermapicon") then
+			if (string.find(self.configItems[item.item].itemtype,"^plugin") or string.find(self.configItems[item.item].itemtype,"^sdt")) and not string.find(self.configItems[item.item].itemtype,"sdtweathermapicon") and not string.find(self.configItems[item.item].itemtype,"sdttext")then
 				local results = nil
 				if string.find(self.configItems[item.item].itemtype,"^sdtsport") then
 					results = self:_getSDTCacheData("sport",self.configItems[item.item])
@@ -606,13 +607,19 @@ function _recalculateVisibilityTimes(self,items)
 					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
 				elseif string.find(self.configItems[item.item].itemtype,"^sdtmisc") and _getString(self.configItems[item.item].infotype,nil) then
 					results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+				elseif string.find(self.configItems[item.item].itemtype,"^plugin") and _getString(self.configItems[item.item].infotype,nil) then
+					results = self:_getPluginItemCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
 				end
 				if results then
 					recalculated = true
 					item.delay = tonumber(self.configItems[item.item].interval) * tonumber(#results)
 					if not maxdelay[item.order] or maxdelay[item.order]<item.delay then
-						log:debug("Recalculate visibility times: "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
+						log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
 						maxdelay[item.order] = item.delay
+					end
+					if item.delay==0 then
+						log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
+						nodelay[item.order] = true
 					end
 				end
 			end
@@ -621,6 +628,8 @@ function _recalculateVisibilityTimes(self,items)
 	for no,item in pairs(items) do
 		if maxdelay[item.order] then
 			item.delay = maxdelay[item.order]
+		elseif nodelay[item.order] then
+			item.delay = 0
 		end
 	end
 end
@@ -654,22 +663,30 @@ function _updateVisibilityGroups(self)
 		-- We need an extra 0.1 seconds because the timer triggering once per second isn't as accurate as socket.gettime()
 		if not group.lastswitchtime or group.lastswitchtime+group.items[group.current].delay<now+0.1 then
 			local previous = group.items[group.current]
+			local restarted = false
 			if group.current >= #group.items then
 				group.current = 1
+				restarted = true
 				self:_recalculateVisibilityTimes(group.items)
 				group.items = self:_resortItems(group.items)
-				log:debug("Switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
-			else
+				log:debug("Possibly switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
+			end
+			if not restarted or (group.items[group.current].delay and group.items[group.current].delay==0 and group.current<#group.items) then
+				local previousCurrent = group.current
 				group.current = group.current + 1
-				while group.current<=#group.items and previous and group.items[group.current].order==previous.order and group.items[group.current].delay==previous.delay do
+				while group.current<=#group.items and ((previous and group.items[group.current].order==previous.order and group.items[group.current].delay==previous.delay) or (group.items[group.current].delay == 0 and previousCurrent!=group.current)) do
 					group.current = group.current + 1
 				end
 				if group.current>#group.items then
 					group.current = 1
+					while (group.items[group.current].delay == 0 and previousCurrent!=group.current) do
+						group.current = group.current + 1
+					end
 					self:_recalculateVisibilityTimes(group.items)
 					group.items = self:_resortItems(group.items)
 					log:debug("Switching to : "..key.."="..group.current.." with visibility time: "..group.items[group.current].delay)
 				elseif previous and group.items[group.current].order==previous.order and group.items[group.current].delay>previous.delay then
+					log:debug("Continue a while longer, decreasing visibility with :"..previous.delay)
 					now = now-previous.delay
 				else
 					self:_recalculateVisibilityTimes(group.items)
@@ -682,7 +699,7 @@ function _updateVisibilityGroups(self)
 			local currentorder = nil
 			local currentdelay = nil
 			for no,item in ipairs(group.items) do
-				if group.current == no or (currentorder and item.order==currentorder) then
+				if (group.current == no or (currentorder and item.order==currentorder)) and item.delay>0 then
 					currentorder = item.order
 					if not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
