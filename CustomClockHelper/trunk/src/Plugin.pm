@@ -108,7 +108,7 @@ sub addingCustomItems {
 	my $reference = shift;
 	my $items = shift;
 	
-	$log->warn("Got refresh answer from $reference with ".(scalar(keys %$items))." number of items");
+	$log->info("Got refresh answer from $reference with ".(scalar(keys %$items))." number of items");
 	$refreshCustomItems->{$reference} = $items;
 	delete $customItemProviders->{$reference}->{refreshing};
 	$customItemProviders->{$reference}->{refreshed} = 1;
@@ -120,7 +120,7 @@ sub addingCustomItems {
 		}
 	}
 	if($lastProvider) {
-		$log->warn("This was the last one, finishing...");
+		$log->info("This was the last one, finishing...");
 		my @providers = ();
 		for my $key (keys %$refreshCustomItems) {
 			$customItems->{$key} = $refreshCustomItems->{$key};
@@ -128,11 +128,11 @@ sub addingCustomItems {
 		}
 		$refreshCustomItems = undef;
 		Slim::Control::Request::notifyFromArray(undef,['customclock','changedcustomitems',\@providers]);
-		$log->warn("Scheduling next refresh...");
+		$log->debug("Scheduling next refresh...");
 		my $interval = $prefs->get('customitemsrefreshinterval') || 300;
 		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
 	}else {
-		$log->warn("Scheduling refresh of next provider");
+		$log->debug("Scheduling refresh of next provider");
 		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 0.1, \&refreshNextProvider);	
 	}
 }
@@ -143,7 +143,7 @@ sub refreshNextProvider {
 	for my $id (keys %$customItemProviders) {
 		if(defined($customItemProviders->{$id}->{refreshing}) && !$customItemProviders->{$id}->{refreshed}) {
 			$refreshInProgress = 1;
-			$log->warn("Start refreshing $id");
+			$log->info("Start refreshing $id");
 			eval { 
 				&{$customItemProviders->{$id}->{callback}}($id,\&addingCustomItems); 
 			};
@@ -160,15 +160,15 @@ sub refreshNextProvider {
 
 sub refreshCustomItems {
 	my $provider = shift;
-	$log->warn("Refreshing custom items: ".($provider?$provider:""));
+	$log->debug("Refreshing custom items: ".($provider?$provider:""));
 	Slim::Utils::Timers::killTimers(undef, \&refreshCustomItems); #Paranoia check
 	if(scalar(keys %$customItemProviders)>0 && (!defined($provider) || $provider eq "" || defined($customItemProviders->{$provider}))) {
-		$log->warn("Preparing for refresh");
+		$log->debug("Preparing for refresh");
 		for my $id (keys %$customItemProviders) {
 			if((!defined($customItemProviders->{$id}->{refreshing}) || !$customItemProviders->{$id}->{refreshing}) && 
 				(!defined($provider) || $provider eq "" || $provider eq $id)) {
 					
-				$log->warn("Mark $id for refresh");
+				$log->debug("Mark $id for refresh");
 
 				$customItemProviders->{$id}->{refreshing} = 1;
 				$customItemProviders->{$id}->{refreshed} = 0;
@@ -177,13 +177,13 @@ sub refreshCustomItems {
 		}	
 		if(!defined($refreshCustomItems)) {
 			$refreshCustomItems = {};
-			$log->warn("Scheduling refresh of next provider");
+			$log->debug("Scheduling refresh of next provider");
 			Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 0.1, \&refreshNextProvider);	
 		}else {
-			$log->warn("Refresh already in progress, no need to schedule any provider for refresh");
+			$log->info("Refresh already in progress, no need to schedule any provider for refresh");
 		}
 	}elsif(!defined($provider) || $provider eq "") {
-		$log->warn("Nothing to refresh, scheduling next refresh...");
+		$log->debug("Nothing to refresh, scheduling next refresh...");
 		my $interval = $prefs->get('customitemsrefreshinterval') || 300;
 		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
 	}
@@ -195,10 +195,10 @@ sub changedSong {
 	my $client = $request->client();
 
 	if($request->isCommand([['playlist'],['newsong']])) {
-		$log->warn("Got playlist newsong");
+		$log->debug("Got playlist newsong");
 
 	}else {
-		$log->warn("Got ".$request->getRequestString());
+		$log->debug("Got ".$request->getRequestString());
 	}
 
 	my $titleFormatsHash = {};
