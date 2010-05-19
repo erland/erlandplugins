@@ -597,30 +597,28 @@ function _recalculateVisibilityTimes(self,items)
 	local nodelay = {}
 	for no,item in pairs(items) do
 		if not _getString(self.configItems[item.item].visibilitytime,nil) and _getString(self.configItems[item.item].interval,nil) then
-			if (string.find(self.configItems[item.item].itemtype,"^plugin") or string.find(self.configItems[item.item].itemtype,"^sdt")) and not string.find(self.configItems[item.item].itemtype,"sdtweathermapicon") and not string.find(self.configItems[item.item].itemtype,"sdttext")then
-				local results = nil
-				if string.find(self.configItems[item.item].itemtype,"^sdtsport") then
-					results = self:_getSDTCacheData("sport",self.configItems[item.item])
-				elseif string.find(self.configItems[item.item].itemtype,"^sdtweathericon") or string.find(self.configItems[item.item].itemtype,"^sdtweathertext") then
-					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
-				elseif string.find(self.configItems[item.item].itemtype,"^sdtstock") then
-					results = self:_getSDTCacheData("stocks",self.configItems[item.item])
-				elseif string.find(self.configItems[item.item].itemtype,"^sdtmisc") and _getString(self.configItems[item.item].infotype,nil) then
-					results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
-				elseif string.find(self.configItems[item.item].itemtype,"^plugin") and _getString(self.configItems[item.item].infotype,nil) then
-					results = self:_getPluginItemCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+			local results = nil
+			if string.find(self.configItems[item.item].itemtype,"^sdtsport") then
+				results = self:_getSDTCacheData("sport",self.configItems[item.item])
+			elseif string.find(self.configItems[item.item].itemtype,"^sdtweathericon") or string.find(self.configItems[item.item].itemtype,"^sdtweathertext") then
+				results = self:_getSDTCacheData("stocks",self.configItems[item.item])
+			elseif string.find(self.configItems[item.item].itemtype,"^sdtstock") then
+				results = self:_getSDTCacheData("stocks",self.configItems[item.item])
+			elseif string.find(self.configItems[item.item].itemtype,"^sdtmisc") and _getString(self.configItems[item.item].infotype,nil) then
+				results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+			elseif string.find(self.configItems[item.item].itemtype,"^plugin") and _getString(self.configItems[item.item].infotype,nil) then
+				results = self:_getPluginItemCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+			end
+			if results then
+				recalculated = true
+				item.delay = tonumber(self.configItems[item.item].interval) * tonumber(#results)
+				if not maxdelay[item.order] or maxdelay[item.order]<item.delay then
+					log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
+					maxdelay[item.order] = item.delay
 				end
-				if results then
-					recalculated = true
-					item.delay = tonumber(self.configItems[item.item].interval) * tonumber(#results)
-					if not maxdelay[item.order] or maxdelay[item.order]<item.delay then
-						log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
-						maxdelay[item.order] = item.delay
-					end
-					if item.delay==0 then
-						log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
-						nodelay[item.order] = true
-					end
+				if item.delay==0 then
+					log:debug("Recalculate visibility times order="..item.order..": "..tonumber(self.configItems[item.item].interval).."*"..tonumber(#results).."="..item.delay)
+					nodelay[item.order] = true
 				end
 			end
 		end
