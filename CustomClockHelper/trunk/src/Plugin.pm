@@ -56,6 +56,12 @@ my $customItems = {};
 my $refreshCustomItems = undef;
 my $customItemProviders = {};
 
+$prefs->migrate(2, sub {
+	$prefs->set('customitemsstartuprefreshinterval', 60);
+	$prefs->set('customitemsrefreshinterval', 300);
+	1;
+});
+
 sub getDisplayName()
 {
 	return string('PLUGIN_CUSTOMCLOCKHELPER'); 
@@ -83,8 +89,8 @@ sub initPlugin
 }
 
 sub postinitPlugin {
-	my $interval = $prefs->get('customitemsstartuprefreshinterval') || 1;
-	Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval * 10), \&refreshCustomItems);
+	my $interval = $prefs->get('customitemsstartuprefreshinterval') || 60;
+	Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
 }
 
 sub addCustomClockCustomItemProvider {
@@ -123,8 +129,8 @@ sub addingCustomItems {
 		$refreshCustomItems = undef;
 		Slim::Control::Request::notifyFromArray(undef,['customclock','changedcustomitems',\@providers]);
 		$log->warn("Scheduling next refresh...");
-		my $interval = $prefs->get('customitemsrefreshinterval') || 5;
-		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval * 60), \&refreshCustomItems);
+		my $interval = $prefs->get('customitemsrefreshinterval') || 300;
+		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
 	}else {
 		$log->warn("Scheduling refresh of next provider");
 		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 0.1, \&refreshNextProvider);	
@@ -178,8 +184,8 @@ sub refreshCustomItems {
 		}
 	}elsif(!defined($provider) || $provider eq "") {
 		$log->warn("Nothing to refresh, scheduling next refresh...");
-		my $interval = $prefs->get('customitemsrefreshinterval') || 5;
-		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval * 60), \&refreshCustomItems);
+		my $interval = $prefs->get('customitemsrefreshinterval') || 300;
+		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
 	}
 }
 

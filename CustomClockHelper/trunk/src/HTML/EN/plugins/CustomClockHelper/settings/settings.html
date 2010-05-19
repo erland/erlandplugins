@@ -20,4 +20,12 @@
 		</table>
         [% END %]
 
+        [% WRAPPER setting title="SETUP_PLUGIN_CUSTOMCLOCKHELPER_SETTINGS_REFRESHCUSTOMITEMSINTERVAL" desc="SETUP_PLUGIN_CUSTOMCLOCKHELPER_SETTINGS_REFRESHCUSTOMITEMSINTERVAL_DESC" %]
+		<input type="text" class="stdedit" name="pref_customitemsrefreshinterval" id="customitemsrefreshinterval" value="[% prefs.customitemsrefreshinterval %]" size="4">
+	[% END %]
+
+        [% WRAPPER setting title="SETUP_PLUGIN_CUSTOMCLOCKHELPER_SETTINGS_STARTUPREFRESHCUSTOMITEMSINTERVAL" desc="SETUP_PLUGIN_CUSTOMCLOCKHELPER_SETTINGS_STARTUPREFRESHCUSTOMITEMSINTERVAL_DESC" %]
+		<input type="text" class="stdedit" name="pref_customitemsstartuprefreshinterval" id="customitemsstartuprefreshinterval" value="[% prefs.customitemsstartuprefreshinterval %]" size="4">
+	[% END %]
+
 [% PROCESS settings/footer.html %]
