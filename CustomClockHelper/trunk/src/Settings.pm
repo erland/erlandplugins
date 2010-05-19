@@ -64,6 +64,10 @@ sub pages {
 	return \@pages;
 }
 
+sub prefs {
+        return ($prefs, qw(customitemsstartuprefreshinterval customitemsrefreshinterval));
+}
+
 sub handler {
 	my ($class, $client, $params) = @_;
 
