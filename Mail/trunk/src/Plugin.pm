@@ -111,6 +111,7 @@ sub postinitPlugin {
 	if ($customClockInstalled) {
 		if(UNIVERSAL::can("Plugins::CustomClockHelper::Plugin","addCustomClockCustomItemProvider")) {
 			Plugins::CustomClockHelper::Plugin::addCustomClockCustomItemProvider("mail","Mail", \&refreshCustomClock);
+			Plugins::CustomClockHelper::Plugin::addCustomClockCustomItemProvider("mailindication","Mail Indication", \&refreshCustomClockIndication);
 		}		
 	}
 }
@@ -174,9 +175,35 @@ sub refreshCustomClock {
 			'date' => $message->{'Date'},
 			'subject' => $message->{'Subject'},
 			'from' => $message->{'From'},
+			'to' => $message->{'To'},
 		};
 		$result->{$idx} = $mail;
 		$idx = $idx + 1;
+	}
+	&{$callback}($reference,$result);
+}
+
+sub refreshCustomClockIndication {
+	my $reference = shift;
+	my $callback = shift;
+
+	my $messages = getMailMessagesWithDefaultCredentials(0,1);
+
+	my $result = {};
+	if(scalar(@$messages)>0) {
+		my $message = $messages->[0];
+		my $mail = {
+			'newmails' => $message->{'new'},
+			'totalmails' => $message->{'total'},
+		};
+		if($mail->{'newmails'} && $mail->{'newmails'}>0) {
+			$mail->{'icon'} = '/plugins/Mail/html/images/newmail.png';
+			$result->{'newmail'} = $mail;
+		}elsif($mail->{'totalmails'} && $mail->{'totalmails'}>0) {
+			$result->{'oldmail'} = $mail;
+		}else {
+			$result->{'nomail'} = $mail;
+		}
 	}
 	&{$callback}($reference,$result);
 }
@@ -219,7 +246,7 @@ sub getMailMessagesWithDefaultCredentials {
 	my @empty = ();
 	my $messages = \@empty;
 	if($mailHost && $mailAccount && $mailType && $mailPassword) {
-		$messages = getMailMessages($mailHost,$mailType,$mailAccount,$mailPassword,$mailFolder,$onlyHeaders);
+		$messages = getMailMessages($mailHost,$mailType,$mailAccount,$mailPassword,$mailFolder,$onlyHeaders,$onlyIndication);
 	}
 	return $messages;
 }
@@ -251,10 +278,11 @@ sub getMailMessages {
 	my $messages = \@empty;
 
 	my $cachedMessages = undef;
-	if($onlyHeaders) {
+	if($onlyHeaders && !$onlyIndication) {
 		my $timestamp = $cache->get("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp");
 		my $pollingInterval = $prefs->get('pollinginterval');
 		if(!defined($timestamp) || $timestamp>(time()-($prefs->get('pollinginterval')*60))) {
+			$log->debug("Getting mail from cache instead of accessing server");
 			$cachedMessages = $cache->get("$mailHost:$mailType:$mailAccount:$mailFolder-headers");
 		}
 	}
@@ -313,8 +341,10 @@ sub getMailMessages {
 					};
 					push @$messages,$message;
 				}
-				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
-				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp",time());
+				if($onlyHeaders && !$onlyIndication) {
+					$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
+					$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp",time());
+				}
 			}else {
 				$log->error("Login failed: ".$imap->errstr);
 			}
@@ -350,8 +380,10 @@ sub getMailMessages {
 				};
 				push @$messages,$message;
 			}
-			$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
-			$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp",time());
+			if($onlyHeaders && !$onlyIndication) {
+				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers",$messages);
+				$cache->set("$mailHost:$mailType:$mailAccount:$mailFolder-headers-timestamp",time());
+			}
 		}else {
 			$log->error("Unable to connect or login to $mailHost");
 		}
