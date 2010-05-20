@@ -261,7 +261,7 @@ sub handler {
 			}elsif($item->{'itemtype'} =~ /text$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'text'};
 			}elsif($item->{'itemtype'} =~ /sdticon$/) {
-				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'period'};
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'period'}.($item->{'logotype'} ne ""?$item->{'logotype'}:"");
 			}elsif($item->{'itemtype'} =~ /sdtweathermapicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".$item->{'location'};
 			}else {
@@ -687,7 +687,7 @@ sub handler {
 				my @values = ();
 				push @values,{id=>'daychartURL',name=>'Daychart'};				
 				$item->{'values'} = \@values;
-			}elsif($item->{'id'} =~ /^logotype$/ &&  $itemtype eq 'sdtweathericon') {
+			}elsif($item->{'id'} =~ /^logotype$/ &&  ($itemtype eq 'sdtweathericon' || $itemtype eq 'sdticon')) {
 				$item->{'type'} = 'optionalsinglecombobox';
 				my @values = ();
 				push @values,{id=>'forecastIconURLSmall',name=>'Forcast icon'};				
@@ -1108,7 +1108,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'galleryicon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height interval favorite);
 	}elsif($itemType eq 'sdticon') {
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate width height period dynamic);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order framewidth framerate logotype width height period dynamic);
 	}elsif($itemType eq 'sdtweathermapicon') {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy order width height location interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'songinfoicon') {
