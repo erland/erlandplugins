@@ -3613,12 +3613,16 @@ function _getClockSkin(self,skin)
 			if not font then
 				font = self:_loadFont(self:getSettings()["font"],_getNumber(item.fontsize,20))
 			end
+			local extraHeight = 0
+			if _getString(item.animate,"true") == "true" then
+				extraHeight = math.ceil(_getNumber(item.fontsize,20)/5)
+			end
 			s.window["item"..no]["item"..no] = {
 					border = {_getNumber(item.margin,10),0,_getNumber(item.margin,10),0},
 					font = font,
 					align = _getString(item.align,"center"),
 					w = _getNumber(item.width,WH_FILL),
-					h = _getNumber(item.height,_getNumber(item.fontsize,20)),
+					h = _getNumber(item.height,_getNumber(item.fontsize,20)+extraHeight),
 					fg = _getColor(item.color),
 				}
 			if _getNumber(item.lineheight,nil) then
