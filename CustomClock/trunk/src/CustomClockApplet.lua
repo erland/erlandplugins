@@ -232,7 +232,7 @@ function openScreensaver(self,mode, transition)
 							selectionattribute = "stock"
 						elseif string.find(item.itemtype,"^sdtmisc") and _getString(item.infotype,nil) then
 							category = item.infotype
-							selectionattribute = selected
+							selectionattribute = "selected"
 						elseif string.find(item.itemtype,"^sdtweathericon") or string.find(item.itemtype,"^sdtweathertext") or item.itemtype == "sdticon" then
 							category = "weather"
 							selectionattribute = "period"
