@@ -97,8 +97,7 @@ sub postinitPlugin {
 	}
 	if ($sdtInstalled) {
 		if(UNIVERSAL::can("Plugins::SuperDateTime::Plugin","addCustomDisplayItemHash")) {
-#			Let's enabled this when SDT integration works correctly
-#			Plugins::SuperDateTime::Plugin::registerProvider(\&refreshSDT)
+			Plugins::SuperDateTime::Plugin::registerProvider(\&refreshSDT)
 		}		
 	}
 
@@ -215,7 +214,7 @@ sub refreshSDT {
 
 	my $messages = getMailMessagesWithDefaultCredentials(1);
 
-	# Plugins::SuperDateTime::Plugin::delCustomSport($sport);
+	Plugins::SuperDateTime::Plugin::delCustomDisplayGroup("Mail");
 
 	for my $message (@$messages) {
 		my $mail = {
@@ -224,6 +223,7 @@ sub refreshSDT {
 			'date' => $message->{'Date'},
 			'subject' => $message->{'Subject'},
 			'from' => $message->{'From'},
+			'to' => $message->{'To'},
 		};
 		Plugins::SuperDateTime::Plugin::addCustomDisplayItemHash("Mail", $message->{'Date'}.$message->{'From'},$mail);
 	}
