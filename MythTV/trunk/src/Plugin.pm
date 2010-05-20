@@ -106,6 +106,18 @@ sub initPlugin {
 }
 
 sub postinitPlugin {
+	my $sdtInstalled;
+	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
+		$sdtInstalled = Slim::Utils::PluginManager->isEnabled("Plugins::SuperDateTime::Plugin");
+	}else {
+		$sdtInstalled = grep(/DynamicPlayList/, Slim::Utils::PluginManager->enabledPlugins(undef));
+	}
+	if ($sdtInstalled) {
+		if(UNIVERSAL::can("Plugins::SuperDateTime::Plugin","addCustomDisplayItemHash")) {
+			Plugins::SuperDateTime::Plugin::registerProvider(\&refreshSDT)
+		}		
+	}
+
 	my $customClockInstalled;
 	if(UNIVERSAL::can("Slim::Utils::PluginManager","isEnabled")) {
 		$customClockInstalled = Slim::Utils::PluginManager->isEnabled("Plugins::CustomClockHelper::Plugin");
@@ -352,6 +364,7 @@ sub getPendingRecordings {
 
 	my @lines = ();
 	my $i=0;
+	my $iconURLs = {};
 	foreach my $row (@{$rows{'rows'}}) {
 		if($i>$maxEntries) {
 			last;
@@ -366,20 +379,47 @@ sub getPendingRecordings {
 			if(defined($program)) {
 				push @lines,$program if defined $program;
 				$i++;
-
 				if($program->{'icon'}) {
 					my $url = "http://$host:$port/Myth/GetChannelIcon?ChanId=".$program->{'icon'};
-					cacheIcon($url,$program->{'icon'});
+					$iconURLs->{$program->{'icon'}} = $url;
 				}
 			}
 		}
 	}
+	
+	retrieveIcons($iconURLs);
+
 	$mythtv = undef;
 	return \@lines;
 }
 
-sub cacheIcon {
-        my ( $iconurl, $iconid ) = @_;
+sub retrieveIcons {
+	my $iconURLs = shift;
+
+	my @iconURLArray = ();
+	for my $id (keys %$iconURLs) {
+		my $entry = {
+			'id' => $id,
+			'url' => $iconURLs->{$id},
+		};
+		push @iconURLArray,$entry;
+	}
+	if(scalar(@iconURLArray)>0) {
+		$log->debug("Initiating icon caching logic");
+		my @args = (\@iconURLArray);
+		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 0.1, \&cacheNextIcon, @args);	
+	}else {
+		$log->debug("No icons to cache");
+	}
+}
+
+sub cacheNextIcon {
+	my $client = shift;
+        my $iconsToGet  = shift;
+
+	my $icon = pop @$iconsToGet;
+	my $iconurl = $icon->{'url'};
+	my $iconid = $icon->{'id'};
         
 	my $cachedir = $serverPrefs->get('cachedir');
         my $icondir  = catdir( $cachedir, 'MythTVIcons' );
@@ -397,8 +437,17 @@ sub cacheIcon {
         
         $ICONS->{$iconid} = $iconpath;
         
+	$log->debug("Caching icon $iconid");
         my $http = Slim::Networking::SimpleAsyncHTTP->new(
-                sub {},
+                sub {
+			$log->debug("Successfully cached icon");
+			if(scalar(@$iconsToGet)>0) {
+				my @args = ($iconsToGet);
+				Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + 0.1, \&cacheNextIcon, @args);	
+			}else {
+				$log->debug("Last icon cached");
+			}
+		},
                 \&cacheIconError,
                 {
                         saveAs => $iconpath,
@@ -451,6 +500,7 @@ sub getPreviousRecordings {
 
 	my @lines = ();
 	my $i=0;
+	my $iconURLs = {};
 	foreach my $row (@{$rows{'rows'}}) {
 		if($i>$maxEntries) {
 			last;
@@ -467,11 +517,14 @@ sub getPreviousRecordings {
 
 				if($program->{'icon'}) {
 					my $url = "http://$host:$port/Myth/GetChannelIcon?ChanId=".$program->{'icon'};
-					cacheIcon($url,$program->{'icon'});
+					$iconURLs->{$program->{'icon'}} = $url;
 				}
 			}
 		}
 	}
+
+	retrieveIcons($iconURLs);
+
 	$mythtv = undef;
 	return \@lines;
 }
@@ -621,6 +674,55 @@ sub getRecording {
 		delete $entry{'description'};
 	}
 	return \%entry;
+}
+
+sub refreshSDT {
+	my $timer = shift;
+	my $client = shift;
+	my $refreshId = shift;
+
+	my $recordings = getCachedActiveRecordings();
+
+	Plugins::SuperDateTime::Plugin::delCustomDisplayGroup("mythtvactive");
+
+	my $idx = 10000;
+	foreach my $recording (@$recordings) {
+		my $recStatus = ((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording})?'Rec':'');
+
+		my $entry = {
+			'title' => $recording->{'title'},
+			'channel' => $recording->{'channel'},
+			'startdate' => $recording->{'startdate'},
+			'starttime' => $recording->{'starttime'},
+			'endtime' => $recording->{'endtime'},
+			'recstatus' => $recStatus,
+			'icon' => '/plugins/MythTV/geticon.png?ChanId='.$recording->{'icon'}
+		};
+		Plugins::SuperDateTime::Plugin::addCustomDisplayItemHash("mythtvactive", $idx,$entry);
+		$idx = $idx + 1;
+	}
+
+	$recordings = getCachedPendingRecordings();
+
+	Plugins::SuperDateTime::Plugin::delCustomDisplayGroup("mythtvpending");
+
+	$idx = 10000;
+	foreach my $recording (@$recordings) {
+		my $recStatus = ((defined($recording->{'recstatus'}) && $recording->{'recstatus'} eq $MythTV::RecStatus_Types{$MythTV::recstatus_recording})?'Rec':'');
+
+		my $entry = {
+			'title' => $recording->{'title'},
+			'channel' => $recording->{'channel'},
+			'startdate' => $recording->{'startdate'},
+			'starttime' => $recording->{'starttime'},
+			'endtime' => $recording->{'endtime'},
+			'recstatus' => $recStatus,
+			'icon' => '/plugins/MythTV/geticon.png?ChanId='.$recording->{'icon'}
+		};
+		Plugins::SuperDateTime::Plugin::addCustomDisplayItemHash("mythtvpending", $idx,$entry);
+		$idx = $idx + 1;
+	}
+	Plugins::SuperDateTime::Plugin::refreshData(undef,$client,$refreshId);
 }
 
 sub refreshCustomClockActiveRecordings {
