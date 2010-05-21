@@ -29,53 +29,71 @@
                         <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="DaylightClock" version="1.0.2" minTarget="7.4" maxTarget="*">
+                <applet name="DaylightClock" version="1.1.3181" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
-                        <changes lang="EN">- Moved settings page under Settings/Screen/Screensavers
-			- Updated so it doesn't refresh the image each time screen saver is activated
+                        <changes lang="EN">- Added integration with Custom Clock
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.0.2.zip</url>
-                        <sha>1b1d5762717efbef3bbdc0b26515eedbc83bd9f2</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3181.zip</url>
+                        <sha>6a45abbe038e2491a6a40ecd1363ccd9ce0a80d1</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.7.3081" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.8.3181" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added support for sdttext,sdticon,sdtsporttext item types if SuperDateTime is installed
-			- Added support for integration with Song Info plugin, for example showing artist images from LastFM
-			- Added support for spectrum meter visualizer
-			- Added support for %H1, %I1, %m1, %d1 keyword in timetext item for 5 instead of 05
-			- Added support for showing visualier for a single channel
-			- Added integration with Picture Gallery plugin to show random images from a favorite
+                        <changes lang="EN">- Added support for new sleepicon item type
+			- Added support for scrollable sdtsporttext item
+			- Added information about contributors in style list
+			- Increased so 9 configurations can be configured
+			- Corrected sorting in style list
+			- Show style name instead of just Custom Clock #4 in lists
+			- Added sdtweathermapicon items (requires new Super Date Time version)
+			- Added sdtsporticon and sdtsporttext items (requires new Super Date Time version)
+			- Added sdtstockicon and sdtstocktext items (requires new Super Date Time version)
+			- Added sdtmiscicon and sdtmisctext items (requires new Super Date Time version)
+			- Added sdtweathericon and sdtweathertext items (requires new Super Date Time version)
+			- Added appleticon and applettext items (used by Weather, Daylight Clock and Text Clock applets)
+			- Added pluginicon and plugintext items (used by MythTV and Mail plugins)
+			- Corrected artifacts on scrolling text (might require adjustments on some styles)
+			- Added support for having different fontsizes on multiple row items
+			- Added support for visibility group concept
+			- Added Custom Clock to Extras menu and made it possible to enable it on Home menu
+			- Corrected so it might work on SqueezePlay on Windows
+			- Optimize usage with Screen Switcher applet to avoid delays when switching screen savers continuously
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.7.3081.zip</url>
-                        <sha>97fe992ad63358291c23ad94fc823455f81bfa1d</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.8.3181.zip</url>
+                        <sha>65434109dfd12a210658d49d5d1d0f14188d09dd</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-				<applet name="PatchInstaller" version="1.0.28" minTarget="7.5" maxTarget="*">
+				<applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
 					<title lang="EN">Patch Installer</title>
 					<desc lang="EN">Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
-					<changes lang="EN">No changes since latest beta</changes>
+					<changes lang="EN">- Removed recommended concept
+					- Added information about creators
+					</changes>
 					<creator>Erland Isaksson</creator>
 					<email>erland_i@hotmail.com</email>
-					<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.0.28.zip</url>
-					<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
+					<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
+					<sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
 					<link>http://erland.isaksson.info</link>
 				</applet>
-                <applet name="ScreenSwitcher" version="1.0.2867" minTarget="7.4" maxTarget="*">
+                <applet name="ScreenSwitcher" version="1.1.3181" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher</title>
                         <desc lang="EN">Switch continuously between different screen savers.
                         </desc>
-                        <changes lang="EN">No changes since latest beta</changes>
+                        <changes lang="EN">- Corrected bug with random mode and Flickr screen saver
+			- Added support for showing different screen saver on different week days or times
+			- Improved switching so it doesn't show the menu for a few milliseconds
+			- Made sure screen savers are sorted correctly
+			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.0.2867.zip</url>
-                        <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3181.zip</url>
+                        <sha>06528f4f6e0ecd8c172841f60051130c82e522d8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="SettingsRemover" target="jive|fab4|baby" version="1.0.30" minTarget="7.4" maxTarget="*">
@@ -86,6 +104,18 @@
                         <email>erland_i@hotmail.com</email>
                         <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-1.0.30.zip</url>
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
+                <applet name="TextClock" version="1.0.55" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">Text Clock</title>
+                        <desc lang="EN">Screen saver that displays time with words, like "quarter past four" instead of 16:15
+                        </desc>
+                        <changes lang="EN">- Initial version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.55.zip</url>
+                        <sha>9dba4f11d07ce15fba44257553378564c3f1994b</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
@@ -352,18 +382,29 @@
                         <sha>5d58baac67ff9b8ff965ed9c0f5a55646140cd9f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
-		<plugin name="CustomClockHelper" version="2.7.3080" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomClockHelper" version="2.8.3181" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Clock Helper</title>
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for predefined time formats to ease configuration
-			- Added support for sdttext, sdticon, sdtsporttext items if SuperDateTime plugin is installed
-			- Added support for galleryicon if Picture Gallery plugin is installed
-			- Added support for songinfoicon if Song Info plugin is installed
+			<changes lang="EN">- Added support for dx keywords for sdttext item
+			- Added support for entering information about contributors to a style
+			- Added sdtweathermapicon (requires new Super Date Time version)
+			- Added support for visibility group concept on all item types
+			- Added sleep icon
+			- Added sdtsporticon item (requires new Super Date Time version)
+			- Added sdtstockicon and sdtstocktext items (requires new Super Date Time version)
+			- Added sdtmiscicon and sdtmisctext items (requires new Super Date Time version)
+			- Added appleticon and applettext items (used by Weather, Daylight Clock and Text Clock applets)
+			- Added imageicon item with possiblity to only show a part of an image
+			- Added support for different fontsizes on multiple row items
+			- Added sdtweathericon and sdtweathertext items (requires new Super Date Time version)
+			- Added pluginicon and plugintext items (used by MythTV and Mail plugins)
+			- Added information provider API which third party plugins can use to provide information for pluginicon and plugintext items
+			- Added possibility to specify logotype on sdticon (required for future support for animated weather icons)
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.7.3080.zip</url>
-                        <sha>02ea01221527d0a901fefc6f2e25c3a9b562b310</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.8.3181.zip</url>
+                        <sha>725446fd0a8d9571304fe2b12a37c27beb11e3b2</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
 				<plugin name="SongInfo" version="1.0.2999" minTarget="7.4.0" maxTarget="*">
