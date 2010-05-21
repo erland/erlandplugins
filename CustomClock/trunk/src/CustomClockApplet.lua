@@ -998,7 +998,7 @@ function _getOnlineStylesSink(self,title,mode)
 				self:defineSettingStyleSink(title,mode,chunk.data)
 			end
 		end,
-		'GET', "/svn/CustomClock/trunk/clockstyles4.json")
+		'GET', "/svn/CustomClock/trunk/clockstyles5.json")
 	http:fetch(req)
 end
 
