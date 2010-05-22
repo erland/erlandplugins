@@ -76,6 +76,16 @@
                         <sha>bea4a8dfe3d01b0f4b1375621e3b0da88313a400</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+                <applet name="ProximityAction" target="fab4" version="0.1.57" minTarget="7.5" maxTarget="*">
+                        <title lang="EN">Proximity Action *Alpha*</title>
+                        <desc lang="EN">*** THIS IS A ALPHA VERSION ***. Make it possible to stop a message when you are getting close to a Touch</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-proximityaction&amp;filename=ProximityAction-0.1.57.zip</url>
+                        <sha>72b3e845a4f8c97603063504a7b729976494e0f5</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
+
 	</applets>
 	<plugins>
                 <plugin name="WebProxy" version="0.1.3182" minTarget="7.4.0" maxTarget="*">
