@@ -141,7 +141,8 @@
 						"itemtype": "timetext",
 						"fontsize": 85,
 						"posy": 100,
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -166,7 +167,8 @@
 						"itemtype": "timetext",
 						"fontsize": 110,
 						"posy": 60,
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -191,7 +193,8 @@
 						"itemtype": "timetext",
 						"fontsize": 180,
 						"posy": 40,
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -221,7 +224,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -249,7 +253,8 @@
 						"fontsize": 110,
 						"posy": 60,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -277,7 +282,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -310,7 +316,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "red",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -339,7 +346,8 @@
 						"fontsize": 110,
 						"posy": 60,
 						"color": "red",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -368,7 +376,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "red",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -407,7 +416,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -442,7 +452,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -477,7 +488,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -512,7 +524,8 @@
 						"fontsize": 110,
 						"posy": 60,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -547,7 +560,8 @@
 						"fontsize": 110,
 						"posy": 60,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -582,7 +596,8 @@
 						"fontsize": 110,
 						"posy": 60,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -617,7 +632,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -656,7 +672,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -695,7 +712,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -729,7 +747,7 @@
 						"color":"lightgreen",
 						"fontsize":"180",
 						"text":"%H:%M",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"left",
@@ -775,7 +793,7 @@
 						"posy":"250",
 						"color":"green",
 						"text":"Now Playing - X_OF_Y",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"left",
@@ -876,7 +894,8 @@
 						"fontsize": 180,
 						"posy": 40,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -942,7 +961,8 @@
 						"fontsize": 85,
 						"posy": 100,
 						"color": "white",
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -1040,13 +1060,15 @@
 						"itemtype": "timetext",
 						"fontsize": 80,
 						"posy": 130,
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
 						"posy": 210,
 						"fontsize": 20,
-						"text": "%A"
+						"text": "%A",
+						"animate": "false"
 					},
 					{	
 						"itemtype": "timetext",
@@ -1103,7 +1125,8 @@
 						"itemtype": "timetext",
 						"fontsize": 150,
 						"posy": 70,
-						"text": "%H:%M"
+						"text": "%H:%M",
+						"animate": "false"
 					},
 					{
 						"itemtype": "timetext",
@@ -1581,9 +1604,9 @@
 					{
 						"width":"55",
 						"itemtype":"timetext",
-						"posy":"27",
+						"posy":"29",
 						"color":"red",
-						"fontsize":"45",
+						"fontsize":"43",
 						"text":"%d",
 						"animate":"false",
 						"posx":"23"
@@ -1843,7 +1866,7 @@
 						"color":"yellow",
 						"fontsize":"90",
 						"text":"%l:%M %p",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -1868,7 +1891,7 @@
 						"sdtformat":"%t",
 						"color":"white",
 						"fontsize":"110",
-						"animate":"true",
+						"animate":"false",
 						"posx":"120"
 					},
 					{
@@ -1922,7 +1945,7 @@
 						"color":"yellow",
 						"fontsize":"65",
 						"text":"%l:%M %p",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -1938,7 +1961,7 @@
 						"sdtformat":"(Sunset %S)",
 						"color":"lightyellow",
 						"fontsize":"20",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"center",
@@ -1947,7 +1970,7 @@
 						"sdtformat":"%2",
 						"color":"lightyellow",
 						"fontsize":"20",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"center",
@@ -1956,7 +1979,7 @@
 						"sdtformat":"%t",
 						"color":"white",
 						"fontsize":"80",
-						"animate":"true",
+						"animate":"false",
 						"posx":"80"
 					},
 					{
@@ -1965,7 +1988,7 @@
 						"posy":"140",
 						"sdtformat":"%z",
 						"fontsize":"20",
-						"animate":"true",
+						"animate":"false",
 						"posx":"180",
 						"width":"80"
 					},
@@ -1976,7 +1999,7 @@
 						"sdtformat":"Precip %x",
 						"color":"lightgray",
 						"fontsize":"20",
-						"animate":"true",
+						"animate":"false",
 						"posx":"80"
 					},
 					{
@@ -2011,7 +2034,7 @@
 						"color":"yellow",
 						"fontsize":"90",
 						"text":"%H1:%M",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -2036,7 +2059,7 @@
 						"sdtformat":"%T",
 						"color":"white",
 						"fontsize":"110",
-						"animate":"true",
+						"animate":"false",
 						"posx":"120"
 					},
 					{
@@ -2090,7 +2113,7 @@
 						"color":"yellow",
 						"fontsize":"75",
 						"text":"%H1:%M",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -2106,7 +2129,7 @@
 						"sdtformat":"(Sunset %S)",
 						"color":"lightyellow",
 						"fontsize":"20",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"center",
@@ -2115,7 +2138,7 @@
 						"sdtformat":"%2",
 						"color":"lightyellow",
 						"fontsize":"20",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"align":"center",
@@ -2124,7 +2147,7 @@
 						"sdtformat":"%T",
 						"color":"white",
 						"fontsize":"80",
-						"animate":"true",
+						"animate":"false",
 						"posx":"80"
 					},
 					{
@@ -2133,7 +2156,7 @@
 						"posy":"140",
 						"sdtformat":"%z",
 						"fontsize":"20",
-						"animate":"true",
+						"animate":"false",
 						"posx":"180",
 						"width":"80"
 					},
@@ -2144,7 +2167,7 @@
 						"sdtformat":"Precip %x",
 						"color":"lightgray",
 						"fontsize":"20",
-						"animate":"true",
+						"animate":"false",
 						"posx":"80"
 					},
 					{
@@ -2438,7 +2461,7 @@
 						"color":"white",
 						"fontsize":"45",
 						"text":"%l:%M %p",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -2455,7 +2478,7 @@
 						"sdtformat":"%t",
 						"color":"white",
 						"fontsize":"75",
-						"animate":"true",
+						"animate":"false",
 						"posx":"100"
 					},
 					{
@@ -2591,7 +2614,7 @@
 						"color":"white",
 						"fontsize":"45",
 						"text":"%H1:%M",
-						"animate":"true"
+						"animate":"false"
 					},
 					{
 						"period":"-1",
@@ -2608,7 +2631,7 @@
 						"sdtformat":"%T",
 						"color":"white",
 						"fontsize":"75",
-						"animate":"true",
+						"animate":"false",
 						"posx":"100"
 					},
 					{
@@ -2845,6 +2868,994 @@
 						"url.AC":"http://home.roadrunner.com/~tcutting/images/icon_battery_AC.png",
 						"url":"http://home.roadrunner.com/~tcutting/images/icon_wireless_0.png",
 						"posx":"145"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"OffClockSaver SDT Weather Fahrenheit",
+				"backgrounddynamic":"false",
+				"contributors":"tcutting",
+				"backgroundtype":"black",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"5",
+						"color":"lightgray",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%B %e - %A",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"30",
+						"color":"lightgray",
+						"fontsize":"95",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"10"
+					},
+					{
+						"align":"left",
+						"itemtype":"timetext",
+						"posy":"90",
+						"color":"lightgray",
+						"fontsize":"25",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%p",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"2"
+					},
+					{
+						"url.set":"http://home.roadrunner.com/~tcutting/images/AlarmIcon.png",
+						"itemtype":"alarmicon",
+						"posy":"220",
+						"url.active":"http://home.roadrunner.com/~tcutting/images/AlarmIcon_Active.png",
+						"url.snooze":"http://home.roadrunner.com/~tcutting/images/AlarmIconSnooze.png",
+						"posx":"130"
+					},
+					{
+						"align":"left",
+						"itemtype":"alarmtimetext",
+						"posy":"221",
+						"color":"lightgray",
+						"fontsize":"15",
+						"text":"%l:%M %p",
+						"animate":"true",
+						"posx":"140"
+					},
+					{
+						"url.2":"http://home.roadrunner.com/~tcutting/images/icon_wireless_2.png",
+						"itemtype":"wirelessicon",
+						"posy":"219",
+						"url.1":"http://home.roadrunner.com/~tcutting/images/icon_wireless_1.png",
+						"url.3":"http://home.roadrunner.com/~tcutting/images/icon_wireless_3.png",
+						"url":"http://home.roadrunner.com/~tcutting/images/icon_wireless_4.png",
+						"posx":"294"
+					},
+					{
+						"url.stop":"http://home.roadrunner.com/~tcutting/images/icon_mode_stop.png",
+						"itemtype":"playstatusicon",
+						"posy":"219",
+						"url.play":"http://home.roadrunner.com/~tcutting/images/icon_mode_play.png",
+						"url.pause":"http://home.roadrunner.com/~tcutting/images/icon_mode_pause.png",
+						"posx":"10"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"35",
+						"color":"darkgray",
+						"fontsize":"95",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"3",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"15"
+					},
+					{
+						"url.2":"http://home.roadrunner.com/~tcutting/images/icon_battery_2.png",
+						"url.CHARGING":"http://home.roadrunner.com/~tcutting/images/icon_battery_charging.png",
+						"itemtype":"batteryicon",
+						"posy":"223",
+						"url.1":"http://home.roadrunner.com/~tcutting/images/icon_battery_1.png",
+						"url.4":"http://home.roadrunner.com/~tcutting/images/icon_battery_4.png",
+						"framerate":"1",
+						"url.0":"http://home.roadrunner.com/~tcutting/images/icon_battery_0.png",
+						"url.3":"http://home.roadrunner.com/~tcutting/images/icon_battery_3.png",
+						"url.AC":"http://home.roadrunner.com/~tcutting/images/icon_battery_AC.png",
+						"url":"http://home.roadrunner.com/~tcutting/images/icon_wireless_0.png",
+						"posx":"260",
+						"framewidth":"24"
+					},
+					{
+						"period":"-1",
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"125",
+						"sdtformat":"%t",
+						"color":"lightgray",
+						"fontsize":"45",
+						"fonturl":"FreeSansBold.ttf",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-50"
+					},
+					{
+						"width":"150",
+						"period":"-1",
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"170",
+						"sdtformat":"%v",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"5"
+					},
+					{
+						"width":"150",
+						"period":"-1",
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"%z Pr: %x",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"posx":"5"
+					},
+					{
+						"width":"45",
+						"period":"-1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"125",
+						"height":"45",
+						"posx":"10"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%z",
+						"visibilityorder":"1",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%z",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%z",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%_3 %_4",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_5 / %_7",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%_3 %_4",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_5 / %_7",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"sdtformat":"%_3 %_4",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"align":"center",
+						"period":"d5",
+						"posy":"130",
+						"visibilityorder":"6",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_5 / %_7",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"itemtype":"sleepicon",
+						"posy":"220",
+						"url.ON":"http://home.roadrunner.com/~tcutting/images/icon_mode_sleep_on.png",
+						"posx":"225"
+					}
+				]
+			},
+			{
+				"models":["radio"],
+				"name":"OffClockSaver SDT Weather Celsius",
+				"backgrounddynamic":"false",
+				"contributors":"tcutting",
+				"backgroundtype":"black",
+				"items":[
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"5",
+						"color":"lightgray",
+						"fontsize":"22",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%B %e - %A",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"30",
+						"color":"lightgray",
+						"fontsize":"95",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"10"
+					},
+					{
+						"align":"left",
+						"itemtype":"timetext",
+						"posy":"90",
+						"color":"lightgray",
+						"fontsize":"25",
+						"fonturl":"FreeSansBold.ttf",
+						"text":"%p",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"2"
+					},
+					{
+						"url.set":"http://home.roadrunner.com/~tcutting/images/AlarmIcon.png",
+						"itemtype":"alarmicon",
+						"posy":"220",
+						"url.active":"http://home.roadrunner.com/~tcutting/images/AlarmIcon_Active.png",
+						"url.snooze":"http://home.roadrunner.com/~tcutting/images/AlarmIconSnooze.png",
+						"posx":"130"
+					},
+					{
+						"align":"left",
+						"itemtype":"alarmtimetext",
+						"posy":"221",
+						"color":"lightgray",
+						"fontsize":"15",
+						"text":"%l:%M %p",
+						"animate":"true",
+						"posx":"140"
+					},
+					{
+						"url.2":"http://home.roadrunner.com/~tcutting/images/icon_wireless_2.png",
+						"itemtype":"wirelessicon",
+						"posy":"219",
+						"url.1":"http://home.roadrunner.com/~tcutting/images/icon_wireless_1.png",
+						"url.3":"http://home.roadrunner.com/~tcutting/images/icon_wireless_3.png",
+						"url":"http://home.roadrunner.com/~tcutting/images/icon_wireless_4.png",
+						"posx":"294"
+					},
+					{
+						"url.stop":"http://home.roadrunner.com/~tcutting/images/icon_mode_stop.png",
+						"itemtype":"playstatusicon",
+						"posy":"219",
+						"url.play":"http://home.roadrunner.com/~tcutting/images/icon_mode_play.png",
+						"url.pause":"http://home.roadrunner.com/~tcutting/images/icon_mode_pause.png",
+						"posx":"10"
+					},
+					{
+						"align":"center",
+						"itemtype":"timetext",
+						"posy":"35",
+						"color":"darkgray",
+						"fontsize":"95",
+						"fonturl":"FreeSansBold.ttf",
+						"order":"3",
+						"text":"%l:%M",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"15"
+					},
+					{
+						"url.2":"http://home.roadrunner.com/~tcutting/images/icon_battery_2.png",
+						"url.CHARGING":"http://home.roadrunner.com/~tcutting/images/icon_battery_charging.png",
+						"itemtype":"batteryicon",
+						"posy":"223",
+						"url.1":"http://home.roadrunner.com/~tcutting/images/icon_battery_1.png",
+						"url.4":"http://home.roadrunner.com/~tcutting/images/icon_battery_4.png",
+						"framerate":"1",
+						"url.0":"http://home.roadrunner.com/~tcutting/images/icon_battery_0.png",
+						"url.3":"http://home.roadrunner.com/~tcutting/images/icon_battery_3.png",
+						"url.AC":"http://home.roadrunner.com/~tcutting/images/icon_battery_AC.png",
+						"url":"http://home.roadrunner.com/~tcutting/images/icon_wireless_0.png",
+						"posx":"260",
+						"framewidth":"24"
+					},
+					{
+						"period":"-1",
+						"align":"center",
+						"itemtype":"sdttext",
+						"posy":"125",
+						"sdtformat":"%T",
+						"color":"lightgray",
+						"fontsize":"45",
+						"fonturl":"FreeSansBold.ttf",
+						"animate":"true",
+						"fontfile":"FreeSansBold.ttf",
+						"posx":"-50"
+					},
+					{
+						"width":"150",
+						"period":"-1",
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"170",
+						"sdtformat":"%v",
+						"color":"lightgray",
+						"fontsize":"20",
+						"animate":"true",
+						"posx":"5"
+					},
+					{
+						"width":"150",
+						"period":"-1",
+						"align":"left",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"%Z Pr: %x",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"posx":"5"
+					},
+					{
+						"width":"45",
+						"period":"-1",
+						"itemtype":"sdticon",
+						"dynamic":"false",
+						"posy":"125",
+						"height":"45",
+						"posx":"10"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%Z",
+						"visibilityorder":"1",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"0",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"1",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%Z",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"1",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"2",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%y",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%v",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%Z",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"2",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %x",
+						"visibilityorder":"3",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%_3 %_4",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_6 / %_8",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d3",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"4",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"130",
+						"sdtformat":"%_3 %_4",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_6 / %_8",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d4",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"5",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"sdtformat":"%_3 %_4",
+						"color":"lightgray",
+						"fontsize":"16",
+						"animate":"true",
+						"visibilitytime":"7",
+						"align":"center",
+						"period":"d5",
+						"posy":"130",
+						"visibilityorder":"6",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"151",
+						"sdtformat":"%_0",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"173",
+						"sdtformat":"%_6 / %_8",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"period":"d5",
+						"align":"center",
+						"visibilitygroup":"Forecast",
+						"itemtype":"sdttext",
+						"posy":"195",
+						"sdtformat":"Pr: %_9",
+						"visibilityorder":"6",
+						"color":"lightgray",
+						"fontsize":"18",
+						"animate":"true",
+						"visibilitytime":"7",
+						"posx":"80"
+					},
+					{
+						"itemtype":"sleepicon",
+						"posy":"220",
+						"url.ON":"http://home.roadrunner.com/~tcutting/images/icon_mode_sleep_on.png",
+						"posx":"225"
 					}
 				]
 			}
