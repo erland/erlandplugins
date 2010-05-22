@@ -3864,8 +3864,7 @@
 				"name":"SDT Stocks",
 				"contributors":"Erland, GoCubs (Super Date Time)",
 				"backgrounddynamic":"false",
-				"items":
-				[
+				"items": [
 					{
 						"itemtype":"sdtstockicon",
 						"posy":"10",
