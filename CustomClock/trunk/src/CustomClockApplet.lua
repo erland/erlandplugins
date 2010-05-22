@@ -175,7 +175,18 @@ function openScreensaver(self,mode, transition)
 					local updateStyle = false
 					local updatedModes = {}
 					for attribute,value in pairs(self:getSettings()) do
-						if string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
+						local correctModel = false
+						for attribute,value in pairs(entry) do
+							if attribute == "models" then
+								for _,model in ipairs(value) do
+									if model == self.model then
+										correctModel = true
+										break
+									end
+								end
+							end
+						end
+						if correctModel and string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
 							log:debug("Updating "..attribute.."="..tostring(value))
 							local config = string.gsub(attribute,"style$","")
 							updatedModes[config]=true
