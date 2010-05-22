@@ -174,40 +174,42 @@ function openScreensaver(self,mode, transition)
 				for i,entry in pairs(chunk.data[3]) do
 					local updateStyle = false
 					local updatedModes = {}
-					for attribute,value in pairs(self:getSettings()) do
-						local correctModel = false
-						for attribute,value in pairs(entry) do
-							if attribute == "models" then
-								for _,model in ipairs(value) do
-									if model == self.model then
-										correctModel = true
-										break
-									end
-								end
-							end
-						end
-						if correctModel and string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
-							log:debug("Updating "..attribute.."="..tostring(value))
-							local config = string.gsub(attribute,"style$","")
-							updatedModes[config]=true
-							for attribute,value in pairs(self:getSettings()) do
-								if string.find(attribute,"^"..config) and attribute != config.."style" then
-									self:getSettings()[attribute] = nil
-								end
-							end
+					if type(entry) != "string" then
+						for attribute,value in pairs(self:getSettings()) do
+							local correctModel = false
 							for attribute,value in pairs(entry) do
-								self:getSettings()[config..attribute] = value
-							end
-							if self.images then
-								for attribute,value in pairs(self.images) do
-									if string.find(attribute,"^"..config) then
-										self.images[attribute] = nil
+								if attribute == "models" then
+									for _,model in ipairs(value) do
+										if model == self.model then
+											correctModel = true
+											break
+										end
 									end
 								end
 							end
-							updateStyle = true
-						else
-							log:debug("Ignoring "..attribute.."="..tostring(value))
+							if correctModel and string.find(attribute,"style$") and self:getSettings()[attribute] == entry.name then
+								log:debug("Updating "..attribute.."="..tostring(value))
+								local config = string.gsub(attribute,"style$","")
+								updatedModes[config]=true
+								for attribute,value in pairs(self:getSettings()) do
+									if string.find(attribute,"^"..config) and attribute != config.."style" then
+										self:getSettings()[attribute] = nil
+									end
+								end
+								for attribute,value in pairs(entry) do
+									self:getSettings()[config..attribute] = value
+								end
+								if self.images then
+									for attribute,value in pairs(self.images) do
+										if string.find(attribute,"^"..config) then
+											self.images[attribute] = nil
+										end
+									end
+								end
+								updateStyle = true
+							else
+								log:debug("Ignoring "..attribute.."="..tostring(value))
+							end
 						end
 					end
 					if updateStyle then
