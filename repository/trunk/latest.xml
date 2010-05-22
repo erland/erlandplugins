@@ -40,33 +40,15 @@
                         <sha>6a45abbe038e2491a6a40ecd1363ccd9ce0a80d1</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.8.3181" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.8.3192" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added support for new sleepicon item type
-			- Added support for scrollable sdtsporttext item
-			- Added information about contributors in style list
-			- Increased so 9 configurations can be configured
-			- Corrected sorting in style list
-			- Show style name instead of just Custom Clock #4 in lists
-			- Added sdtweathermapicon items (requires new Super Date Time version)
-			- Added sdtsporticon and sdtsporttext items (requires new Super Date Time version)
-			- Added sdtstockicon and sdtstocktext items (requires new Super Date Time version)
-			- Added sdtmiscicon and sdtmisctext items (requires new Super Date Time version)
-			- Added sdtweathericon and sdtweathertext items (requires new Super Date Time version)
-			- Added appleticon and applettext items (used by Weather, Daylight Clock and Text Clock applets)
-			- Added pluginicon and plugintext items (used by MythTV and Mail plugins)
-			- Corrected artifacts on scrolling text (might require adjustments on some styles)
-			- Added support for having different fontsizes on multiple row items
-			- Added support for visibility group concept
-			- Added Custom Clock to Extras menu and made it possible to enable it on Home menu
-			- Corrected so it might work on SqueezePlay on Windows
-			- Optimize usage with Screen Switcher applet to avoid delays when switching screen savers continuously
+                        <changes lang="EN">- Corrected so it only changes configuration for style with correct model
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.8.3181.zip</url>
-                        <sha>65434109dfd12a210658d49d5d1d0f14188d09dd</sha>
+                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.8.3192.zip</url>
+                        <sha>dfef2e74803c18a16f9a19129107ec325ff75335</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
 				<applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
