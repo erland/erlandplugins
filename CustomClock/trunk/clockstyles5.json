@@ -3858,6 +3858,65 @@
 						"posx":"225"
 					}
 				]
+			},
+			{
+				"models":["radio"],
+				"name":"SDT Stocks",
+				"contributors":"Erland, GoCubs (Super Date Time)",
+				"backgrounddynamic":"false",
+				"items":
+				[
+					{
+						"itemtype":"sdtstockicon",
+						"posy":"10",
+						"interval":"10",
+						"logotype":"daychartURL",
+						"posx":"60"
+					},
+					{
+						"scrolling":"false",
+						"itemtype":"sdtstocktext",
+						"sdtformat":"%name (%ticker)",
+						"animate":"true",
+						"posy":"110",
+						"interval":"10"
+					},
+					{
+						"scrolling":"false",
+						"itemtype":"sdtstocktext",
+						"sdtformat":"Last (%lastdate %lasttime): %lasttrade",
+						"animate":"true",
+						"align":"left",
+						"posy":"130",
+						"interval":"10"
+					},
+					{
+						"scrolling":"false",
+						"itemtype":"sdtstocktext",
+						"sdtformat":"%change %pchange %volume",
+						"animate":"true",
+						"posy":"150",
+						"interval":"10"
+					},
+					{
+						"width":"200",
+						"itemtype":"timetext",
+						"fontsize":"60",
+						"text":"%I1:%M",
+						"animate":"false",
+						"align":"right",
+						"posy":"173"
+					},
+					{
+						"itemtype":"timetext",
+						"fontsize":"20",
+						"text":"%p",
+						"animate":"false",
+						"align":"left",
+						"posy":"181",
+						"posx":"205"
+					}
+				]
 			}
 		]
 	}
