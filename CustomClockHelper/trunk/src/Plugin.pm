@@ -83,7 +83,7 @@ sub initPlugin
 	Slim::Control::Request::addDispatch(['customclock', 'titleformatsupdated'],[0, 1, 0, undef]);
 	Slim::Control::Request::addDispatch(['customclock', 'changedcustomitems'],[0, 1, 0, undef]);
 	Slim::Control::Request::subscribe(\&changedSong,[['playlist'],['newsong','delete','clear']]);
-	Slim::Control::Request::subscribe(\&changedSong,[['trackstat'],['changedrating']]);
+	Slim::Control::Request::subscribe(\&changedRating,[['trackstat'],['changedrating']]);
 	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
 	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
 }
@@ -189,6 +189,15 @@ sub refreshCustomItems {
 	}
 }
 
+sub changedRating {
+	my $request = shift;
+
+	my $client = $request->client();
+	my $trackId = $request->getParam('_trackid');
+	my $track = Slim::Schema->resultset('Track')->find($trackId);
+	updateTitleFormats($client,$track);
+}
+
 sub changedSong {
 	my $request = shift;
 
@@ -200,11 +209,18 @@ sub changedSong {
 	}else {
 		$log->debug("Got ".$request->getRequestString());
 	}
+	my $songIndex = Slim::Player::Source::playingSongIndex($client);
+	my $song = Slim::Player::Playlist::song($client,$songIndex);
+
+	updateTitleFormats($client,$song);
+}
+
+sub updateTitleFormats {
+	my $client = shift;
+	my $song = shift;
 
 	my $titleFormatsHash = {};
 	my $formats = $prefs->get("titleformats");
-	my $songIndex = Slim::Player::Source::playingSongIndex($client);
-	my $song = Slim::Player::Playlist::song($client,$songIndex);
 	for my $format (@$formats) {
 		my $value = undef;
 		if(defined($song)) {
@@ -213,10 +229,12 @@ sub changedSong {
 		if(defined($value) && $value ne "") {
 			$titleFormatsHash->{$format} = $value;
 		}else {
-			$titleFormatsHash->{$format} = $value;
+			$titleFormatsHash->{$format} = "";
 		}
 	}
-	Slim::Control::Request::notifyFromArray($client,['customclock','titleformatsupdated',$titleFormatsHash]);
+	if(defined($song) && $song->can('url')) {
+		Slim::Control::Request::notifyFromArray(undef,['customclock','titleformatsupdated', $titleFormatsHash, $song->url]);
+	}
 }
 
 sub webPages {
