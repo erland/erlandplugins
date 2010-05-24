@@ -370,6 +370,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
 		</patch>
 -->
+<!--
 		<patch name="AppletInstallerUpgradeAll" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Upgrade all applets</title>
 			<desc lang="EN">Add upgrade all applets option to make it posible to upgrade multiple applets at the same time</desc>
@@ -377,6 +378,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/AppletInstallerUpgradeAll/AppletInstallerUpgradeAll-1.0.patch</url>
 			<sha>04c44f0bc1c5070dc905f313e87b254838a70b34</sha> 
 		</patch>
+-->
 	</patches>
 </extensions>
 
