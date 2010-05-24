@@ -16,11 +16,11 @@
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
-				select tracks.id,[% IF playlistnameprefix and hideplaylistnameprefix %]substr(tracks.title,[% playlistnameprefix.length %])[% ELSE %]tracks.title[% END %],substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 
+				select tracks.id,[% IF playlistnameprefix and hideplaylistnameprefix %]substr(tracks.title,[% playlistnameprefix.length %])[% ELSE %]tracks.title[% END %],substr(tracks.titlesort,1,1) from playlist_track,tracks[% IF library or activelibrary %],multilibrary_track,tracks librarytracks[% END %] 
 				where 
 					[%- IF library or activelibrary %]
-					playlist_track.track=tracks.url and
-					tracks.id=multilibrary_track.track and
+					playlist_track.track=librarytracks.url and
+					librarytracks.id=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
 					[% IF playlistnameprefix %]
