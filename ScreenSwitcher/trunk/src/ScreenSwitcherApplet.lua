@@ -171,7 +171,7 @@ function _updateScreensaver(self, forced)
 	end
 	if ss then
 		log:debug("Start new timer, trigger after "..ss.delay.." seconds")
-		self.timer = Timer(5*1000, function() 
+		self.timer = Timer(tonumber(ss.delay)*1000, function() 
 			local screensaversApplet = appletManager:loadApplet("ScreenSavers") 
 			local activeWindows = screensaversApplet["active"]
 			if #activeWindows>0 then
