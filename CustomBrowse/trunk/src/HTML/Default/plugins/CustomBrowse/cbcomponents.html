@@ -84,7 +84,7 @@
 [% END %]
 
 [% BLOCK cbcontentitem %]
-		[% IF item.itemobj %]
+		[% IF item.trackobj %]
 			[% PROCESS trackinfo %]
 		[% ELSE %]
 			[% IF !artwork && pluginCustomBrowseArtworkSupported %]
