@@ -991,7 +991,7 @@ sub initPlugin {
 	if(UNIVERSAL::can("Slim::Utils::UPnPMediaServer","registerCallback")) {
 		Slim::Utils::UPnPMediaServer::registerCallback( \&uPNPCallback );
 	}
-
+	registerTitleFormats();
 	my %choiceFunctions =  %{Slim::Buttons::Input::Choice::getFunctions()};
 	$choiceFunctions{'createmix'} = sub {callCallbackWithArg('onCreateMix', @_)};
 	$choiceFunctions{'saveRating'} = sub {
@@ -1107,6 +1107,85 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','stdmixjive'], [1, 1, 1, \&cliJiveStandardMixesHandler]);
 
 	Plugins::CustomBrowse::iPeng::Reader::read("CustomBrowse","iPengConfiguration");
+}
+
+sub registerTitleFormats {
+	Slim::Music::TitleFormatter::addFormat("CUSTOMBROWSE_ARTIST",
+		sub {
+			$log->debug("Retreiving title format: CUSTOMBROWSE_ARTIST\n");
+			my $track = shift;
+			if(ref($track) eq 'HASH' || ref($track) ne 'Slim::Schema::Track') {
+				return undef;
+			}
+			my $result = '';
+			my @output = ();
+			for my $contributorTrack ($track->contributorTracks) {
+				if($contributorTrack->role == 1 || $contributorTrack->role == 6) {
+					my $name = $contributorTrack->contributor->name;
+					next if $name eq Slim::Utils::Strings::string('NO_ARTIST');
+					push @output, $name
+				}
+			}
+			$log->debug("Returning title format: CUSTOMBROWSE_ARTIST\n");
+			return (scalar @output ? join(' & ',@output) : '');
+		});
+	Slim::Music::TitleFormatter::addFormat("CUSTOMBROWSE_BAND",
+		sub {
+			$log->debug("Retreiving title format: CUSTOMBROWSE_BAND\n");
+			my $track = shift;
+			if(ref($track) eq 'HASH' || ref($track) ne 'Slim::Schema::Track') {
+				return undef;
+			}
+			my $result = '';
+			my @output = ();
+			for my $contributorTrack ($track->contributorTracks) {
+				if($contributorTrack->role == 4) {
+					my $name = $contributorTrack->contributor->name;
+					next if $name eq Slim::Utils::Strings::string('NO_ARTIST');
+					push @output, $name
+				}
+			}
+			$log->debug("Returning title format: CUSTOMBROWSE_BAND\n");
+			return (scalar @output ? join(' & ',@output) : '');
+		});
+	Slim::Music::TitleFormatter::addFormat("CUSTOMBROWSE_COMPOSER",
+		sub {
+			$log->debug("Retreiving title format: CUSTOMBROWSE_COMPOSER\n");
+			my $track = shift;
+			if(ref($track) eq 'HASH' || ref($track) ne 'Slim::Schema::Track') {
+				return undef;
+			}
+			my $result = '';
+			my @output = ();
+			for my $contributorTrack ($track->contributorTracks) {
+				if($contributorTrack->role == 2) {
+					my $name = $contributorTrack->contributor->name;
+					next if $name eq Slim::Utils::Strings::string('NO_ARTIST');
+					push @output, $name
+				}
+			}
+			$log->debug("Returning title format: CUSTOMBROWSE_COMPOSER\n");
+			return (scalar @output ? join(' & ',@output) : '');
+		});
+	Slim::Music::TitleFormatter::addFormat("CUSTOMBROWSE_CONDUCTOR",
+		sub {
+			$log->debug("Retreiving title format: CUSTOMBROWSE_CONDUCTOR\n");
+			my $track = shift;
+			if(ref($track) eq 'HASH' || ref($track) ne 'Slim::Schema::Track') {
+				return undef;
+			}
+			my $result = '';
+			my @output = ();
+			for my $contributorTrack ($track->contributorTracks) {
+				if($contributorTrack->role == 3) {
+					my $name = $contributorTrack->contributor->name;
+					next if $name eq Slim::Utils::Strings::string('NO_ARTIST');
+					push @output, $name
+				}
+			}
+			$log->debug("Returning title format: CUSTOMBROWSE_CONDUCTOR\n");
+			return (scalar @output ? join(' & ',@output) : '');
+		});
 }
 
 sub postinitPlugin {
@@ -3664,6 +3743,11 @@ sub cliJiveHandlerImpl {
 		my $actions = {
 			'go' => undef,
 			'add-hold' => undef,
+			'do' => {
+				'cmd' => ['custombrowse', 'play'],
+				'params' => \%itemParams,
+				'itemsParams' => 'params',
+			},
 		};
 		$request->addResultLoop('item_loop',$cnt,'playAction','play');
 		$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');

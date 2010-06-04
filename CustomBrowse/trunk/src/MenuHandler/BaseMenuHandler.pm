@@ -897,6 +897,49 @@ sub getPageItemsForContext {
 		$result{'playable'} = 1;
 		my $anchorText;
 		my $lastAnchor = '';
+
+		my $itemCache = {
+			'track' => {},
+			'album' => {},
+		};
+		my $albumCache = {};
+		for my $it (@$items) {
+			if(defined($itemsPerPage) && $itemsPerPage>0) {
+				$count = $count + 1;
+				if($count>$itemsPerPage) {
+					$count = $count - 1;
+					last;
+				}
+			}
+			if(defined($it->{'itemformat'})) {
+				my $format = $it->{'itemformat'};
+				if($format =~ /^album/) {
+					$itemCache->{'album'}->{$it->{'itemid'}} = undef;
+				}elsif($format =~ /^track/ || $format =~ /^titleformatconcat/ ) {
+					$itemCache->{'track'}->{$it->{'itemid'}} = undef;
+				}
+			}
+		}
+		$self->logHandler->info("Getting item data for ".$count." items");
+		$count = 0;
+		if(scalar(keys %{$itemCache->{'track'}})>0) {
+			my @trackIds = keys %{$itemCache->{'track'}};
+			my @tracks = Slim::Schema->resultset('Track')->search({'me.id' => {'in' => \@trackIds}},{
+							'prefetch' => [{'contributorTracks' => 'contributor'},'album'],
+				});
+			for my $track (@tracks) {
+				$itemCache->{'track'}->{$track->id} = $track;
+			}
+		}
+		if(scalar(keys %{$itemCache->{'album'}})>0) {
+			my @albumIds = keys %{$itemCache->{'album'}};
+			my @albums = Slim::Schema->resultset('Album')->search({'me.id' => {'in' => \@albumIds}},{
+                    		'prefetch' => {'contributorAlbums' => 'contributor'},
+				});
+			for my $album (@albums) {
+				$itemCache->{'album'}->{$album->id} = $album;
+			}
+		}
 		for my $it (@$items) {
 			if(!defined $menulinks || $menulinks ne 'alpha') {
 				delete $it->{'itemlink'};
@@ -922,7 +965,9 @@ sub getPageItemsForContext {
 				$it->{'valueseparator'} =~ s/\\\\/\\/;
 				$it->{'valueseparator'} =~ s/\\n/\n/;
 			}
-			$it->{'itemname'} = $self->getItemText($client,$it,undef,$interfaceType);
+			$self->logHandler->debug("Get item text: ".$it->{'itemid'});
+			$it->{'itemname'} = $self->getItemText($client,$it,undef,$interfaceType,$itemCache);
+			$self->logHandler->debug("Got item text: ".$it->{'itemid'});
 			if(defined($it->{'itemseparator'})) {
 				my $separator = $it->{'itemseparator'};
 				if($it->{'itemname'} =~ /^(.*?)$separator(.*)$/ms) {
@@ -999,42 +1044,40 @@ sub getPageItemsForContext {
 			if(defined($menuurl) && ((defined($client) && $client->modeParam('mainBrowseMenu')) || $params->{'mainBrowseMenu'})) {
 				$menuurl .= "&mainBrowseMenu=1";
 			}
-
-			if(defined($it->{'menu'}) || defined($it->{'menufunction'})) {
-				my $hasExternalUrl = undef;
-				if(defined($it->{'menu'}) && ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'})) {
-					my $menuHandler = $self->menuHandlers->{$it->{'menu'}->{'menutype'}};
-					if(defined($menuHandler) && $menuHandler->hasCustomUrl($it->{'menu'})) {
-						$hasExternalUrl = 1;
-						my $customUrl = $menuHandler->getCustomUrl($client,$it,$params,$item,$contextParams);
-						if(defined($customUrl)) {
-							$it->{'slimserverurl'} = $customUrl;
-						}
-					}
-				}
-				if(!$hasExternalUrl) {
-					$it->{'url'} = $menuurl;
-				}
-			}
-			
+			$self->logHandler->debug("Get item format: ".$it->{'itemid'});
 			if(defined($it->{'itemformat'})) {
 				my $format = $it->{'itemformat'};
 				if($format eq 'track') {
-					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
-					$track->displayAsHTML($it);
+					my $track = undef;
+					if(defined($itemCache->{'track'}->{$it->{'itemid'}})) {
+						$track = $itemCache->{'track'}->{$it->{'itemid'}};
+					}else {
+						$track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
+					}
+					$self->displayTrackAsHTML($track,$it,$interfaceType);
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;
 					}
 				}elsif($format eq 'trackconcat' || $format eq 'trackcustom') {
-					my $track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
-					$track->displayAsHTML($it);
+					my $track = undef;
+					if(defined($itemCache->{'track'}->{$it->{'itemid'}})) {
+						$track = $itemCache->{'track'}->{$it->{'itemid'}};
+					}else {
+						$track = Slim::Schema->resultset('Track')->find($it->{'itemid'});
+					}
+					$self->displayTrackAsHTML($track,$it,$interfaceType);
 					delete $it->{'itemobj'};
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;
 					}
 				}elsif($format eq 'albumconcat' || $format eq 'albumcustom' || $format eq 'album') {
-					my $album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
-					$album->displayAsHTML($it);
+					my $album = undef;
+					if(defined($itemCache->{'album'}->{$it->{'itemid'}})) {
+						$album = $itemCache->{'album'}->{$it->{'itemid'}};
+					}else {
+						$album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
+					}
+					$self->displayAlbumAsHTML($album,$it);
 					if(!defined($result{'artwork'})) {
 						 $result{'artwork'} = 1;
 					}
@@ -1105,6 +1148,25 @@ sub getPageItemsForContext {
 					$result{'artwork'} = 0;
 				}
 			}
+			$self->logHandler->debug("Got item format: ".$it->{'itemid'});
+			if((defined($it->{'menu'}) || defined($it->{'menufunction'})) && $interfaceType ne 'jive') {
+			$self->logHandler->debug("Get item custom url: ".$it->{'itemid'});
+				my $hasExternalUrl = undef;
+				if(defined($it->{'menu'}) && ref($it->{'menu'}) ne 'ARRAY' && defined($it->{'menu'}->{'menutype'})) {
+					my $menuHandler = $self->menuHandlers->{$it->{'menu'}->{'menutype'}};
+					if(defined($menuHandler) && $menuHandler->hasCustomUrl($it->{'menu'})) {
+						$hasExternalUrl = 1;
+						my $customUrl = $menuHandler->getCustomUrl($client,$it,$params,$item,$contextParams);
+						if(defined($customUrl)) {
+							$it->{'slimserverurl'} = $customUrl;
+						}
+					}
+				}
+				if(!$hasExternalUrl) {
+					$it->{'url'} = $menuurl;
+				}
+			$self->logHandler->debug("Got item custom url: ".$it->{'itemid'});
+			}
 			if(defined($it->{'itemtype'})) {
 				if($it->{'itemtype'} eq "track") {
 					$it->{'attributes'} = sprintf('&%s=%d', 'track.id',$it->{'itemid'});
@@ -1124,18 +1186,24 @@ sub getPageItemsForContext {
 					}
 				}
 			}
-			my $mixes = $self->getPreparedMixes($client,$it,$interfaceType);
-			if(scalar(@$mixes)>0) {
-				$it->{'mixes'} = $mixes;
+			if($interfaceType ne 'jive') {
+			$self->logHandler->debug("Get item mixes: ".$it->{'itemid'});
+				my $mixes = $self->getPreparedMixes($client,$it,$interfaceType);
+				if(scalar(@$mixes)>0) {
+					$it->{'mixes'} = $mixes;
+				}
+			$self->logHandler->debug("Got item mixes: ".$it->{'itemid'});
 			}
 			if($result{'playable'} && ((defined($it->{'playtype'}) && $it->{'playtype'} eq 'none') || (defined($it->{'playtypeall'}) && $it->{'playtypeall'} eq 'none'))) {
 				$result{'playable'} = 0;
 			}
 			if(defined($menuurl) && defined($it->{'playtype'}) && $it->{'playtype'} ne 'none') {
+			$self->logHandler->debug("Get item play handler: ".$it->{'itemid'});
 				my $playHandler = $self->playHandlers->{$it->{'playtype'}};
 				if(defined($playHandler)) {
 					$it->{'playurl'} = $menuurl;
 				}
+			$self->logHandler->debug("Got item play handler: ".$it->{'itemid'});
 			}
 			if(defined($currentMenu) && defined($menulinks) && $menulinks eq 'alpha') {
 				$anchorText = $it->{'itemlink'};
@@ -1163,11 +1231,165 @@ sub getPageItemsForContext {
 		$result{'pageinfo'}->{'enditem'} = 0;
 		$result{'pageinfo'}->{'startitem'} = 0;
 	}
+	$self->logHandler->debug("Get item menu options");
 	my $options = $self->_getMenuOptions($currentMenu);
+	$self->logHandler->debug("Got item menu options");
+
 	if(scalar(@$options)>0) {
 		$result{'options'} = $options;
 	}
+	$self->logHandler->info("Returning ".(scalar(@{$result{'items'}}))." items");
 	return \%result;
+}
+
+sub displayAlbumAsHTML {
+	my $self = shift;
+	my $album = shift;
+	my $form = shift;
+	my $descend = shift;
+	my $sort = shift;
+
+	$form->{'text'}       = $album->title;
+	$form->{'coverThumb'} = $album->artwork || 0;
+	$form->{'size'}       = $serverPrefs->get('thumbSize');
+
+	$form->{'item'}       = $album->title;
+	$form->{'itemobj'}       = $album;
+
+	# Show the year if pref set or storted by year first
+	if (my $showYear = $serverPrefs->get('showYear') || ($sort && $sort =~ /^album\.year/)) {
+
+		$form->{'showYear'} = $showYear;
+		$form->{'year'}     = $album->year;
+	}
+
+	# Show the artist in the album view
+	my $showArtists = ($sort && $sort =~ /^contributor\.namesort/);
+
+	if ($serverPrefs->get('showArtist') || $showArtists) {
+		# XXX - only show the contributor when there are multiple
+		# contributors in the album view.
+		# if ($form->{'hierarchy'} ne 'contributor,album,track') {
+
+		my @artists = $self->albumArtists($album);
+
+		if (@artists) {
+
+			$form->{'artist'}   = $artists[0];
+			#$form->{'includeArtist'} = defined $findCriteria->{'artist'} ? 0 : 1;
+			$form->{'noArtist'} = Slim::Utils::Strings::string('NO_ARTIST');
+
+			if ($showArtists) {
+				# override default field for anchors with contributor.namesort
+#				$$anchortextRef = $artists[0]->namesort;
+			}
+		}
+
+		my @info;
+		my $vaString = Slim::Music::Info::variousArtistString();
+
+		for my $contributor (@artists) {
+			push @info, {
+				'artist'     => $contributor,
+				'name'       => $contributor->name,
+				'attributes' => 'contributor.id=' . $contributor->id . ($contributor->name eq $vaString ? "&album.compilation=1" : ''),
+			};
+		}
+
+		$form->{'artistsWithAttributes'} = \@info;
+	}
+}
+
+sub albumArtists {
+	my $self = shift;
+	my $album = shift;
+
+	my @artists = ();
+	for my $contributorAlbums ($album->contributorAlbums) {
+		if($contributorAlbums->role == 5) {
+			push @artists,$contributorAlbums->contributor;
+		}
+	}
+	if (scalar @artists == 0 && $serverPrefs->get('useBandAsAlbumArtist')) {
+		for my $contributorAlbums ($album->contributorAlbums) {
+			if($contributorAlbums->role == 4) {
+				push @artists,$contributorAlbums->contributor;
+			}
+		}
+	}
+	if (scalar @artists == 0 && (!$serverPrefs->get('variousArtistAutoIdentification') || !$album->compilation)) {
+		for my $contributorAlbums ($album->contributorAlbums) {
+			if($contributorAlbums->role == 1) {
+				push @artists,$contributorAlbums->contributor;
+			}
+		}
+	}
+	if (scalar @artists == 0 && $album->compilation) {
+			@artists = Slim::Schema->variousArtistsObject;
+	}elsif (scalar @artists == 0) {
+		for my $contributorAlbums ($album->contributorAlbums) {
+			push @artists,$contributorAlbums->contributor;
+		}
+	}
+	return @artists;
+}
+
+sub displayTrackAsHTML {
+	my $self = shift;
+	my $track = shift;
+	my $form = shift;
+	my $interfaceType = shift;
+
+	my $format = $serverPrefs->get('titleFormat')->[ $serverPrefs->get('titleFormatWeb') ];
+		$self->logHandler->debug("Format is: ".$format);
+	# Commented 'text' value as we don't want to retrieve extra information from the database, this is already handled in the getItemText method
+	if($interfaceType ne 'jive') {
+		# Go directly to infoFormat, as standardTitle is more client oriented.
+		$self->logHandler->debug("Get item infoFormat($format): ".$track->id);
+		$form->{'text'}     = Slim::Music::TitleFormatter::infoFormat($track, $format, 'TITLE');
+		$self->logHandler->debug("Got item infoFormat($format): ".$track->id);
+	}
+	$form->{'item'}     = $track->id;
+	$form->{'itemobj'}  = $track;
+	$form->{'trackobj'}  = $track;
+	# Only include Artist & Album if the user doesn't have them defined in a custom title format.
+	if ($format !~ /ARTIST/) {
+
+		$self->logHandler->debug("Get item display HTML contributors: ".$track->id);
+		my @contributors = ();
+		for my $contributorTrack ($track->contributorTracks) {
+			if($contributorTrack->role == 1 || $contributorTrack->role == 6) {
+				push @contributors,$contributorTrack->contributor;
+			}
+		}
+			$self->logHandler->debug("Got item display HTML contributors: ".$track->id);
+		if (scalar(@contributors)>0) {
+
+                        my $artist = $contributors[0];
+
+                        $form->{'includeArtist'} = 1;
+                        $form->{'artist'} = $artist;
+
+                        my @info;
+
+                        for my $contributor (@contributors) {
+                                push @info, {
+                                        'artist'     => $contributor,
+                                        'name'       => $contributor->name,
+                                        'attributes' => 'contributor.id=' . $contributor->id,
+                                };
+                        }
+
+                        $form->{'artistsWithAttributes'} = \@info;
+                }
+        }
+
+        if ($format !~ /ALBUM/) {
+                $form->{'includeAlbum'}  = 1;
+        }
+
+        $form->{'noArtist'} = Slim::Utils::Strings::string('NO_ARTIST');
+        $form->{'noAlbum'}  = Slim::Utils::Strings::string('NO_ALBUM');
 }
 
 sub getPreparedMixes {
@@ -1647,7 +1869,7 @@ sub _createMix {
 }
 
 sub executeMix {
-        my ($self, $client, $mixer, $addOnly,$item, $interfaceType) = @_;
+        my ($self, $client, $mixer, $addOnly,$item, $interfaceType, $obj) = @_;
 
 	if(!defined($item)) {
 		$item = $client->modeParam('item');
@@ -1667,7 +1889,7 @@ sub executeMix {
 	}
 	my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 
-	$self->mixHandler->executeMix($client,$mixer,$keywords,$interfaceType,$addOnly);
+	$self->mixHandler->executeMix($client,$mixer,$keywords,$addOnly,$interfaceType,$obj);
 }
 
 sub getItemOverlay {
@@ -1725,12 +1947,30 @@ sub getCustomUrl {
 	}
 	return undef;
 }
+
+sub standardTitle {
+	my $self = shift;
+	my $client = shift;
+	my $track = shift;
+	my $format = shift;
+
+	if(!defined($format)) {
+		$format = Slim::Music::Info::standardTitleFormat($client) || 'TITLE';
+	}
+	$format =~ s/\bARTIST\b/CUSTOMBROWSE_ARTIST/g;
+	$format =~ s/\bCOMPOSER\b/CUSTOMBROWSE_COMPOSER/g;
+	$format =~ s/\bBAND\b/CUSTOMBROWSE_BAND/g;
+	$format =~ s/\bCONDUCTOR\b/CUSTOMBROWSE_CONDUCTOR/g;
+	my $name = Slim::Music::Info::displayText($client, $track,$format);
+	return $name;
+}
 sub getItemText {
 	my $self = shift;
 	my $client = shift;
 	my $item = shift;
 	my $context = shift;
 	my $interfaceType = shift;
+	my $itemCache = shift || {'track' => {},'album' => {}};
 
 	if(!defined($item)) {
 		return '';
@@ -1740,27 +1980,53 @@ sub getItemText {
 	my $prefix = '';
 	if(defined($format)) {
 		if($format eq 'track') {
-			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
-			$name = Slim::Music::Info::standardTitle(undef, $track);
-                }elsif($format eq 'trackconcat') {
-			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
-			$prefix = Slim::Music::Info::standardTitle(undef, $track)." ";
-                }elsif($format eq 'titleformat' && defined($item->{'itemformatdata'})) {
-			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
-			$name = Slim::Music::Info::displayText($client,$track,$item->{'itemformatdata'});
+			my $track = undef;
+			if(defined($itemCache->{'track'}->{$item->{'itemid'}})) {
+				$track = $itemCache->{'track'}->{$item->{'itemid'}};
+			}else {
+				$track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
+			}
+			$name = $self->standardTitle(undef,$track);
+		}elsif($format eq 'trackconcat') {
+			my $track = undef;
+			if(defined($itemCache->{'track'}->{$item->{'itemid'}})) {
+				$track = $itemCache->{'track'}->{$item->{'itemid'}};
+			}else {
+				$track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
+			}
+			$prefix = $self->standardTitle(undef,$track)." ";
+		}elsif($format eq 'titleformat' && defined($item->{'itemformatdata'})) {
+			my $track = undef;
+			if(defined($itemCache->{'track'}->{$item->{'itemid'}})) {
+				$track = $itemCache->{'track'}->{$item->{'itemid'}};
+			}else {
+				$track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
+			}
+			$name = $self->standardTitle($client,$track,$item->{'itemformatdata'});
 		}elsif($format eq 'titleformatconcat' && defined($item->{'itemformatdata'})) {
-			my $track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
-			$prefix = Slim::Music::Info::displayText($client,$track,$item->{'itemformatdata'})." "
+			my $track = undef;
+			if(defined($itemCache->{'track'}->{$item->{'itemid'}})) {
+				$track = $itemCache->{'track'}->{$item->{'itemid'}};
+			}else {
+				$track = Slim::Schema->resultset('Track')->find($item->{'itemid'});
+			}
+			$prefix = $self->standardTitle($client,$track,$item->{'itemformatdata'})." "
 		}elsif($format eq 'function' && defined($item->{'itemformatdata'})) {
 			$name = $self->_getFunctionItemFormat($client,$item,$interfaceType);
 		}elsif($format eq 'functionconcat' && defined($item->{'itemformatdata'})) {
 			$prefix = $self->_getFunctionItemFormat($client,$item,$interfaceType)." ";
 		}elsif($format eq 'album') {
-			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+			my $album = undef;
+			if(defined($itemCache->{'album'}->{$item->{'itemid'}})) {
+				$album = $itemCache->{'album'}->{$item->{'itemid'}};
+			}else {
+				$album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+			}
 			$name = $album->title;
 			if((defined($item->{'jivepattern'}) || defined($item->{'albumjivepattern'}))&& $interfaceType eq 'jive') {
-				my @artists = $album->artists;
-				if(@artists) {
+				# This code is copied from Slim::Schema::Album->artists and rewritten to make use of cache
+				my @artists = $self->albumArtists($album);
+				if(scalar @artists > 0) {
 					$name.=" (";
 					my $first = 1;
 					for my $artist (@artists) {
@@ -1774,10 +2040,15 @@ sub getItemText {
 					$name.=")";
 				}
 			}
-                }elsif($format eq 'albumconcat') {
-			my $album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+		}elsif($format eq 'albumconcat') {
+			my $album = undef;
+			if(defined($itemCache->{'album'}->{$item->{'itemid'}})) {
+				$album = $itemCache->{'album'}->{$item->{'itemid'}};
+			}else {
+				$album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
+			}
 			$prefix = $album->title." ";
-                }
+		}
 	}
 	if((!defined($name) || $name eq '') && defined($item->{'itemname'})) {
 		$name = $prefix.$item->{'itemname'};
