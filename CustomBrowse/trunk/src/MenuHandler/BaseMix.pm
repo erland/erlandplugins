@@ -54,6 +54,7 @@ sub checkMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
+	my $obj = shift;
 
 	#Override in your own implementation
 	return 1;
@@ -76,7 +77,7 @@ sub prepareMix {
 	my $mix = shift;
 	my $item = shift;
 	my $interfaceType = shift;
-
+	
 	return $mix;
 }
 

@@ -68,9 +68,10 @@ sub checkMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
+	my $obj = shift;
 
 
-	return $self->mixHandler->checkMix($self, $client, $mix, $keywords);
+	return $self->mixHandler->checkMix($self, $client, $mix, $keywords,$obj);
 }
 
 sub getMixData {

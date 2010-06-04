@@ -278,7 +278,11 @@ sub checkMix {
 			addStandardParameters($parameters);
 			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 			
-			return $mixHandler->checkMix($client,$mix,$keywords);
+			if(defined($item->{'itemobj'})) {
+				return $mixHandler->checkMix($client,$mix,$keywords,$item->{'itemobj'});
+			}else {
+				return $mixHandler->checkMix($client,$mix,$keywords,undef);
+			}
 		}else {
 			return 1;
 		}
@@ -293,13 +297,14 @@ sub executeMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
-	my $interfaceType = shift;
 	my $addOnly = shift;
-
+	my $interfaceType = shift;
+	my $obj = shift;
+	
 	if(defined($mix->{'mixtype'})) {
 		my $mixHandler = $self->mixHandlers->{$mix->{'mixtype'}};
 		if(defined($mixHandler)) {
-			$mixHandler->executeMix($client,$mix,$keywords,$addOnly,$interfaceType);
+			$mixHandler->executeMix($client,$mix,$keywords,$addOnly,$interfaceType,$obj);
 		}
 	}
 }

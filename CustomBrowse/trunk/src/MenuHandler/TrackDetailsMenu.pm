@@ -95,7 +95,12 @@ sub getCustomUrl {
 	if(@parameters->[1]) {
 		return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
 	}else {
-		my $track = Slim::Schema->resultset('Track')->find($id);
+		my $track = undef;
+		if(defined($item->{'itemobj'})) {
+			$track = $item->{'itemobj'};
+		}else {
+			$track = Slim::Schema->resultset('Track')->find($id);
+		}
 		return 'plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&contextid='.escape($id).'&contexttype=track&contextname='.escape($track->title).(defined($params->{'player'})?'&player='.$params->{'player'}:'');
 	}
 }

@@ -84,23 +84,48 @@ sub checkMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
+	my $obj = shift;
 
 	if($mix->{'mixcheckdata'} =~ /^(.+)::([^:].*)$/) {
 		my $class = $1;
 		my $function = $2;
 		my $itemObj = undef;
 		if($keywords->{'itemtype'} eq "track") {
-			$itemObj = Slim::Schema->resultset('Track')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Track')->find($keywords->{'itemid'});
+			}
 		}elsif($keywords->{'itemtype'} eq "album") {
-			$itemObj = Slim::Schema->resultset('Album')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Album')->find($keywords->{'itemid'});
+			}
 		}elsif($keywords->{'itemtype'} eq "artist") {
-			$itemObj = Slim::Schema->resultset('Contributor')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Contributor')->find($keywords->{'itemid'});
+			}
 		}elsif($keywords->{'itemtype'} eq "year") {
-			$itemObj = Slim::Schema->resultset('Year')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Year')->find($keywords->{'itemid'});
+			}
 		}elsif($keywords->{'itemtype'} eq "genre") {
-			$itemObj = Slim::Schema->resultset('Genre')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Genre')->find($keywords->{'itemid'});
+			}
 		}elsif($keywords->{'itemtype'} eq "playlist") {
-			$itemObj = Slim::Schema->resultset('Playlist')->find($keywords->{'itemid'});
+			if(defined($obj)) {
+				$itemObj = $obj;
+			}else {
+				$itemObj = Slim::Schema->resultset('Playlist')->find($keywords->{'itemid'});
+			}
 		}elsif(defined($keywords->{'itemtype'})) {
 			$itemObj = {};
 			$itemObj->{'type'} = $keywords->{'itemtype'};

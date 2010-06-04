@@ -65,6 +65,7 @@ sub checkMix {
 	my $client = shift;
 	my $mix = shift;
 	my $keywords = shift;
+	my $obj = shift;
 
 	my $mixcheckdata = undef;
 	if(defined($mix->{'mixcheckdata'})) {
