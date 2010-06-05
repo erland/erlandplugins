@@ -330,7 +330,7 @@ sub scanTrack {
 				$tag = uc($tag);
 				if($customTagsHash{$tag} || $virtualTagsHash{$tag}) {
 					my $values = $tags->{$tag};
-					if(!defined($singleValueTagsHash{$tag})) {
+					if(!defined($singleValueTagsHash{$tag}) && !defined($virtualTagsHash{$tag})) {
 						my @arrayValues = splitTag($tags->{$tag});
 						$values = \@arrayValues;
 					}
@@ -539,16 +539,22 @@ sub scanTrack {
 							my $sortTag = $customSortTagsHash{$tag};
 							my $index = 0;
 							for my $value (@values) {
-								my %item = (
-									'name' => $tag,
-									'value' => $value
-								);
-								if(defined($sortTag)) {
-									$item{'sorttag'} = $sortTag;
-									$item{'sorttagindex'} = $index;
+								my @subvalues = ($value);
+								if(!defined($singleValueTagsHash{$tag})) {
+									@subvalues = splitTag($value)
 								}
-								push @result,\%item;
-								$index++;
+								for my $subvalue (@subvalues) {
+									my %item = (
+										'name' => $tag,
+										'value' => $subvalue
+									);
+									if(defined($sortTag)) {
+										$item{'sorttag'} = $sortTag;
+										$item{'sorttagindex'} = $index;
+									}
+									push @result,\%item;
+									$index++;
+								}
 							}
 						}
 					}
