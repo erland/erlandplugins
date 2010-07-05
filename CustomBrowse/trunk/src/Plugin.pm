@@ -3736,35 +3736,36 @@ sub cliJiveHandlerImpl {
 	$request->addResult('base',$baseMenu);
 
 	my $cnt = 0;
-	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext) && $start==0) {
-		my %itemParams = ();
-		%itemParams = %{$currentContext->{'parameters'}};
-		$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
-		my $actions = {
-			'go' => undef,
-			'add-hold' => undef,
-			'do' => {
-				'cmd' => ['custombrowse', 'play'],
-				'params' => \%itemParams,
-				'itemsParams' => 'params',
-			},
-		};
-		$request->addResultLoop('item_loop',$cnt,'playAction','play');
-		$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');
-		$request->addResultLoop('item_loop',$cnt,'style','itemplay');
-		$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
+	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext)) {
+		$count++;
+		if($start==0) {
+			my %itemParams = ();
+			%itemParams = %{$currentContext->{'parameters'}};
+			$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
+			my $actions = {
+				'go' => undef,
+				'add-hold' => undef,
+				'do' => {
+					'cmd' => ['custombrowse', 'play'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				},
+			};
+			$request->addResultLoop('item_loop',$cnt,'playAction','play');
+			$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');
+			$request->addResultLoop('item_loop',$cnt,'style','itemplay');
+			$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
 
-		$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-		$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-		$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
-		$cnt++;
+			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+			$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
+			$cnt++;
 
-		if(defined($itemsPerPage) && scalar(@$menuItems)>=$itemsPerPage) {
-			$log->debug("Removing item to make space for play all item, requested $itemsPerPage and got ".(scalar(@$menuItems))." items");
-			# Remove last menu item
-			my $popped = pop @$menuItems;
-		}else {
-			$count++;
+			if(defined($itemsPerPage) && scalar(@$menuItems)>=$itemsPerPage) {
+				$log->debug("Removing item to make space for play all item, requested $itemsPerPage and got ".(scalar(@$menuItems))." items");
+				# Remove last menu item
+				my $popped = pop @$menuItems;
+			}
 		}
 	}
 	foreach my $item (@$menuItems) {
