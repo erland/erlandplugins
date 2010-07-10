@@ -2301,7 +2301,7 @@ sub objectInfoHandler {
 				mode => 'PLUGIN.DynamicPlayList.Mixer',
 				modeParams => {
 					'dynamicplaylist_parameter_1' => $paramItem,
-					'playlisttype' => $objectName,
+					'playlisttype' => $objectType,
 					'flatlist' => 1,
 					'extrapopmode' => 1,
 				},
@@ -3530,6 +3530,9 @@ sub cliMixJiveHandler {
 	}elsif($request->getParam('playlist')) {
 		$playlisttype = 'playlist';
 		$itemId = $request->getParam('playlist');
+	}elsif($request->getParam('track_id')) {
+		$playlisttype = 'track';
+		$itemId = $request->getParam('track_id');
 	}
 
 	$log->debug("Executing CLI mixjive command\n");
