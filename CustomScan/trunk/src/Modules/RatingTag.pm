@@ -151,7 +151,7 @@ sub scanTrack {
 					}
 				}elsif(defined($ratingTagsHash{uc($tag)})) {
 					$ratingNumber = $tags->{$tag};
-					if($ratingNumber && $ratingNumber =~ /^\d+.?\d+$/) {
+					if($ratingNumber && $ratingNumber =~ /^\d+.?\d*$/) {
 						$ratingNumber =~ s/,/./;
 						$ratingNumber = floor($ratingNumber*100/$ratingtagmax);
 						if($ratingNumber>100) {
