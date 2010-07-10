@@ -564,9 +564,9 @@ sub mixerlink {
 			}
 		}
 		if(defined($currentMenu)) {
-			$form->{'mixercontexttype'} = $contextType;
-			$form->{'mixercontextid'} = $contextId;
-			$form->{'mixercontextname'} = $contextName;
+			$form->{'cbmixercontexttype'} = $contextType;
+			$form->{'cbmixercontextid'} = $contextId;
+			$form->{'cbmixercontextname'} = $contextName;
 			$form->{'mixerlinks'}{'CUSTOMBROWSE'} = "plugins/CustomBrowse/mixerlink.html";
 		}
 	}
