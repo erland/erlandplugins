@@ -1,4 +1,4 @@
-[% IF mixeritems %]
+[% IF mixeritems and item.mixercontexttype != 'track' %]
         [%- tmpitem = item -%][%# store item object so we don't lose it for good %]
         [%- item = mixeritems -%]
 [% END %]
