@@ -2038,9 +2038,9 @@ sub mixerlink {
 
 		if($playListTypes->{$contextType} && ($contextType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $item->id)) {
 			if(defined($contextType) && defined($contextId)) {
-				$form->{'mixercontexttype'} = $contextType;
-				$form->{'mixercontextid'} = $contextId;
-				$form->{'mixercontextname'} = $contextName;
+				$form->{'dplmixercontexttype'} = $contextType;
+				$form->{'dplmixercontextid'} = $contextId;
+				$form->{'dplmixercontextname'} = $contextName;
 				$form->{'mixerlinks'}{'DYNAMICPLAYLIST'} = "plugins/DynamicPlayList/mixerlink65.html";
 			}
 		}
