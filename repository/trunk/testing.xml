@@ -88,6 +88,12 @@
 
 	</applets>
 	<plugins>
+		<plugin name="SuperDateTime" creator="Greg Brown" link="http://gregbrown.net/squeeze/superdatetime.htm" maxTarget="7.6+" minTarget="7.4" sha="f49ae96afb4750aa5be7ac95b38e58eccc6ef90b" url="http://erland.isaksson.info/arkiv/superdatetime/SuperDateTime-2.9.3pre1.zip" version="5.9.3pre1">
+      			<changes lang="EN">Unofficial temporary fix for weather.com site layout changes</changes>
+			<desc lang="EN">Displays local time, date, weather, sports, and stocks information.</desc>
+      			<title lang="EN">SuperDateTime</title>
+		</plugin>
+
                 <plugin name="WebProxy" version="0.1.3182" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Web Proxy *Alpha*</title>
                         <desc lang="EN">*** ALPHA VERSION ***. Plugin to that makes it possible to retrieve dynamic url information from web sites and offer it as a static url to applets (Controller, Radio, Touch, SqueezePlay)</desc>
@@ -370,7 +376,6 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<sha>23f6e45bc3509ea88357c85dcddbdc3793cbfb49</sha>
 		</patch>
 -->
-<!--
 		<patch name="AppletInstallerUpgradeAll" version="1.0" minTarget="7.5" maxTarget="7.5">
 			<title lang="EN">Upgrade all applets</title>
 			<desc lang="EN">Add upgrade all applets option to make it posible to upgrade multiple applets at the same time</desc>
@@ -378,7 +383,6 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/AppletInstallerUpgradeAll/AppletInstallerUpgradeAll-1.0.patch</url>
 			<sha>04c44f0bc1c5070dc905f313e87b254838a70b34</sha> 
 		</patch>
--->
 	</patches>
 </extensions>
 
