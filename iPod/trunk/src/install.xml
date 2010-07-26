@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_IPOD_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
-  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>1936C5B8-F3E7-11DC-A788-90792DAD7856</id>
   <module>Plugins::iPod::Plugin</module>
   <optionsURL>plugins/iPod/settings/basic.html</optionsURL>
