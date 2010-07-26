@@ -52,7 +52,7 @@ my $driver;
 $prefs->migrate(1, sub {
 	$prefs->set('library_directory', Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_library_directory') || $serverPrefs->get('playlistdir')  );
 	$prefs->set('template_directory',  Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_template_directory')   || ''  );
-	$prefs->set('download_url',  Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_download_url')   || 'http://erland.homeip.net/datacollection/services/DataCollection'  );
+	$prefs->set('download_url',  Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_download_url')   || 'http://erland.isaksson.info/datacollection/services/DataCollection'  );
 	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_refresh_startup'))) {
 		$prefs->set('refresh_startup', Slim::Utils::Prefs::OldPrefs->get('plugin_portablesync_refresh_startup'));
 	}
@@ -67,6 +67,13 @@ $prefs->migrate(1, sub {
 	}
 	1;
 });
+$prefs->migrate(2, sub {
+        my $url = $prefs->get('download_url');
+        if(!defined($url) || $url eq 'http://erland.homeip.net/datacollection/services/DataCollection') {
+                $prefs->set('download_url','http://erland.isaksson.info/datacollection/services/DataCollection');
+        }
+});
+
 $prefs->setValidate('dir', 'library_directory'  );
 $prefs->setValidate('dir', 'template_directory'  );
 
@@ -826,7 +833,7 @@ sub checkDefaults {
 	}
 	$prefVal = $prefs->get('download_url');
 	if (! defined $prefVal) {
-		$prefs->set('download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
+		$prefs->set('download_url', 'http://erland.isaksson.info/datacollection/services/DataCollection');
 	}
 }
 
