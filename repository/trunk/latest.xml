@@ -51,18 +51,18 @@
                         <sha>f6b3f9d77f3860cff082217146babb766e18d3ed</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-				<applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
-					<title lang="EN">Patch Installer</title>
-					<desc lang="EN">Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
-					<changes lang="EN">- Removed recommended concept
-					- Added information about creators
-					</changes>
-					<creator>Erland Isaksson</creator>
-					<email>erland_i@hotmail.com</email>
-					<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
-					<sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
-					<link>http://erland.isaksson.info</link>
-				</applet>
+                <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
+                        <title lang="EN">Patch Installer</title>
+                        <desc lang="EN">Easy installation of third party patches on Radio/Touch/Controller firmware.</desc>
+                        <changes lang="EN">- Removed recommended concept
+                        - Added information about creators
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
+                        <sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
                 <applet name="ScreenSwitcher" version="1.1.3202" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher</title>
                         <desc lang="EN">Switch continuously between different screen savers.
