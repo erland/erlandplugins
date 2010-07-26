@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_CUSTOMSKIP_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
-  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>FA87A728-7C67-11DC-9F9A-ED3C72BE5BF4</id>
   <module>Plugins::CustomSkip::Plugin</module>
   <optionsURL>plugins/CustomSkip/settings/basic.html</optionsURL>
