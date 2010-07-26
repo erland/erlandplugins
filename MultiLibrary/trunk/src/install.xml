@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_MULTILIBRARY_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
-  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>2E1DA6F6-7550-11DC-95B2-C4C703ACF9F8</id>
   <module>Plugins::MultiLibrary::Plugin</module>
   <optionsURL>plugins/MultiLibrary/settings/basic.html</optionsURL>
