@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_DATABASEQUERY_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
-  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>DE694626-7615-11DC-A0C3-B4E713E2CF55</id>
   <module>Plugins::DatabaseQuery::Plugin</module>
   <optionsURL>plugins/DatabaseQuery/settings/basic.html</optionsURL>
