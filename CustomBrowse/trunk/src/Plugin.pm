@@ -94,7 +94,7 @@ $prefs->migrate(1, sub {
 	$prefs->set('menu_directory', Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_directory') || $serverPrefs->get('playlistdir')  );
 	$prefs->set('template_directory',  Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_template_directory')   || ''  );
 	$prefs->set('context_template_directory',  Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_context_template_directory')   || ''  );
-	$prefs->set('download_url',  Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_download_url')   || 'http://erland.homeip.net/datacollection/services/DataCollection'  );
+	$prefs->set('download_url',  Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_download_url')   || 'http://erland.isaksson.info/datacollection/services/DataCollection'  );
 	$prefs->set('image_cache', Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_image_cache') || ''  );
 	if(defined(Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_menuinsidebrowse'))) {
 		$prefs->set('menuinsidebrowse', Slim::Utils::Prefs::OldPrefs->get('plugin_custombrowse_menuinsidebrowse'));
@@ -149,6 +149,12 @@ $prefs->migrate(1, sub {
 		$prefs->set('properties', \%propertiesHash);
 	}
 	1;
+});
+$prefs->migrate(2, sub {
+        my $url = $prefs->get('download_url');
+        if(!defined($url) || $url eq 'http://erland.homeip.net/datacollection/services/DataCollection') {
+                $prefs->set('download_url','http://erland.isaksson.info/datacollection/services/DataCollection');
+        }
 });
 
 $prefs->setValidate('dir', 'menu_directory');
@@ -1826,7 +1832,7 @@ sub checkDefaults {
 	$prefVal = $prefs->get('download_url');
 	if (! defined $prefVal) {
 		$log->debug("Defaulting plugin_custombrowse_download_url\n");
-		$prefs->set('download_url', 'http://erland.homeip.net/datacollection/services/DataCollection');
+		$prefs->set('download_url', 'http://erland.isaksson.info/datacollection/services/DataCollection');
 	}
 	$prefVal = $prefs->get('override_trackinfo');
 	if (! defined $prefVal) {
