@@ -14,7 +14,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.3.2971.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.3.2971.zip</url>
                         <sha>7c8d5b2e8f97112cc3c4407dad82159d1bb60432</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -28,7 +28,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-0.1.2867.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-0.1.2867.zip</url>
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -40,7 +40,7 @@
 			<changes lang="EN">Corrected so replacement patches are reinstalled correctly</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.28.zip</url>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.28.zip</url>
 			<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
@@ -50,7 +50,7 @@
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to configure any screen saver as alarm popup window instead of the standard snooze window</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-alarmsavers&amp;filename=AlarmSavers-0.1.14.zip</url>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-alarmsavers&amp;filename=AlarmSavers-0.1.14.zip</url>
 			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
@@ -62,7 +62,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.2.30.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.2.30.zip</url>
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -72,7 +72,7 @@
                         <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to remotely access preferences and files on a Radio, Touch or Controller</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdmin-0.1.39.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdmin-0.1.39.zip</url>
                         <sha>bea4a8dfe3d01b0f4b1375621e3b0da88313a400</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -81,7 +81,7 @@
                         <desc lang="EN">*** THIS IS A ALPHA VERSION ***. Make it possible to stop a message when you are getting close to a Touch</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.homeip.net/download/do/downloadapplication?name=slimserver-proximityaction&amp;filename=ProximityAction-0.1.57.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-proximityaction&amp;filename=ProximityAction-0.1.57.zip</url>
                         <sha>72b3e845a4f8c97603063504a7b729976494e0f5</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
