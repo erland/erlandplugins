@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_MEDIAMONKEY_GROUP_DESC</description>
   <email>erland_i@hotmail.com</email>
-  <homepageURL>http://wiki.erland.homeip.net</homepageURL>
+  <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <icon>plugins/MediaMonkey/html/images/mediamonkey.png</icon>
   <id>93DAF244-C808-11DD-B58A-ED95B98B4E4E</id>
   <module>Plugins::MediaMonkey::Plugin</module>
