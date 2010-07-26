@@ -17,7 +17,7 @@
   
   <organization>
         <name>Erland Isaksson</name>
-        <url>http://erland.homeip.net</url>
+        <url>http://erland.isaksson.info</url>
   </organization>
 
   <!-- the year the project started -->
@@ -27,7 +27,7 @@
   which will not be cleared during a complete rescan of the music library. Ratings and statistic data can also
   be imported from an iTunes Music Library xml-file. You can make backup/restore of your ratings and statistic data
   to a separate xml file to make it easier to backup the information to other storages. To be able to view the ratings
-  when listening to music it is recomended to install the patched MusicInfoSCR plugin provided at http://erland.homeip.net/download.
+  when listening to music it is recomended to install the patched MusicInfoSCR plugin provided at http://erland.isaksson.info/download.
   Se README.txt file provided with this plugin for more details.
   </description>
   <!-- a short description of what the project does -->
@@ -42,7 +42,7 @@
   	<developer>
 	  	<name>Erland Isaksson</name>
 	  	<email>erland_i@hotmail.com</email>
-	  	<url>http://erland.homeip.net</url>
+	  	<url>http://erland.isaksson.info</url>
 	</developer>
   </developers>
 
