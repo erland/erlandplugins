@@ -119,8 +119,12 @@ function _initApplet(self, ss,config,forced)
 			self.model = "touch"
 		elseif width == 320 then
 			self.model = "radio"
-		else
+		elseif width == 240 then
 			self.model = "controller"
+		else
+			self.model = "custom"
+			self.width = width;
+			self.height = height;
 		end
 
 		self.images = {}
@@ -1049,13 +1053,16 @@ function _refresh(self)
 			self.selectedAlbum = self.currentPos+1
 		end
 	end
-	if self.model == "touch" then
-		local textWithoutLinebreak = string.gsub(text,"\n"," - ")
-		self.titleGroup:setWidgetValue("albumtext",textWithoutLinebreak)
+	if self.style == "single" then
+		self.titleGroup:setWidgetValue("albumtext","")
 	else
-		self.titleGroup:setWidgetValue("albumtext",text)
+		if self.model == "touch" or self.model == "custom" then
+			local textWithoutLinebreak = string.gsub(text,"\n"," - ")
+			self.titleGroup:setWidgetValue("albumtext",textWithoutLinebreak)
+		else
+			self.titleGroup:setWidgetValue("albumtext",text)
+		end
 	end
-
 	self.canvas:reSkin()
 end
 
@@ -1882,11 +1889,17 @@ function _getArtworkSize(self)
 		else
 			return 160
 		end
-	else
+	elseif self.model == "controller" then
 		if self.style == "single" then
 			return "240x296"
 		else
 			return 120
+		end
+	else 
+		if self.style == "single" then
+			return self.width.."x"..self.height
+		else
+			return self.width / 2
 		end
 	end		
 end
@@ -2099,7 +2112,7 @@ function _loadRefreshAlbumsSink(self,result,params)
 				if err then
 					log:debug(err)
 				elseif chunk then
-					self:_loadRefreshImagesSink(chunk.data,params)
+					self:_loadRefreshAlbumsSink(chunk.data,params)
 					self:_sortByRandom(self.refreshImages,self.currentPos)
 					if self.refreshCount == self.refreshMaxLoadedIndex then
 						self:_finishRefreshImages()
@@ -2168,7 +2181,7 @@ function _getSkin(self,skin)
 	local width,height = Framework.getScreenSize()
 
 	local textPosition
-	if self.model == "touch" then
+	if self.model == "touch" or self.model == "custom" then
 		textPosition = height-30
 	elseif self.model == "radio" then
 		textPosition = height-65
