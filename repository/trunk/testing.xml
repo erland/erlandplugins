@@ -299,15 +299,15 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>49f7903c44247dc5b221affd4c8e9259fcd5844d</sha>
                         <link>http://wiki.slimdevices.com/index.php/SqueezePlay_Admin_plugin</link>
                 </plugin>
-                <plugin name="DuplicateDetector" version="0.2" minTarget="7.5.0" maxTarget="*">
+                <plugin name="DuplicateDetector" version="0.3" minTarget="7.5.0" maxTarget="*">
                         <title lang="EN">Duplicate Detector *Beta*</title>                        
 			<desc lang="EN">*** BETA VERSION ***. Makes it possible to detect duplicate audio files in your library even though their tags differs.</desc>
-			<changes lang="EN">- Added support for identifying incorrect duplicates
+			<changes lang="EN">- Added support for md5_offset and cue sheets
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=smd-duplicatedetector&amp;filename=DuplicateDetector-0.2.zip</url>                        
-			<sha>7459504cf69a8568c212a9cd42521980e3c4d3bd</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=smd-duplicatedetector&amp;filename=DuplicateDetector-0.3.zip</url>                        
+			<sha>21d08d80f58684d7357912457ca4a509c0682590</sha>
                         <link>http://wiki.slimdevices.com/index.php/Duplicate_Detector_plugin</link>
                 </plugin>
 	</plugins>
