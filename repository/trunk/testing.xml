@@ -307,7 +307,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=smd-duplicatedetector&amp;filename=DuplicateDetector-0.3.zip</url>                        
-			<sha>21d08d80f58684d7357912457ca4a509c0682590</sha>
+			<sha>9c7a601bcca4ff4d003ccaa9dca61301bbbd8d7c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Duplicate_Detector_plugin</link>
                 </plugin>
 	</plugins>
