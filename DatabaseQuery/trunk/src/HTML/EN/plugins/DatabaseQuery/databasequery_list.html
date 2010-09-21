@@ -51,14 +51,16 @@
 			<tr>
 				<td colspan="4"><hr></td>
 			</tr>
-
-			<tr>
-				<td colspan="4"><br><a href="[% webroot %]plugins/DatabaseQuery/webadminmethods_newitemtypes.html?player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_NEW_ITEM" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/DatabaseQuery/databasequery_refreshdataqueries.html?cleancache=1&player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_REFRESH_DATAQUERIES" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/DatabaseQuery/webadminmethods_downloadnewitems.html?player=[% player | uri %]" [% IF pluginDatabaseQueryDownloadMessage %]onClick="alert('[% pluginDatabaseQueryDownloadMessage %]');return false;"[% ELSE %]onClick="return confirm('[% "PLUGIN_DATABASEQUERY_DOWNLOAD_QUESTION" |string %]');"[% END %]>[% "PLUGIN_DATABASEQUERY_REFRESH_DOWNLOADED_ITEMS" | string %]</a><div style="float:right;">([% "PLUGIN_DATABASEQUERY" | string %] [% pluginDatabaseQueryVersion %])</div></td>
-			</tr>
+<div id="pageFooterInfo">
+			<p><a href="[% webroot %]plugins/DatabaseQuery/webadminmethods_newitemtypes.html?player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_NEW_ITEM" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/DatabaseQuery/databasequery_refreshdataqueries.html?cleancache=1&player=[% player | uri %]">[% "PLUGIN_DATABASEQUERY_REFRESH_DATAQUERIES" | string %]</a>&nbsp;&nbsp;&nbsp;<a href="[% webroot %]plugins/DatabaseQuery/webadminmethods_downloadnewitems.html?player=[% player | uri %]" [% IF pluginDatabaseQueryDownloadMessage %]onClick="alert('[% pluginDatabaseQueryDownloadMessage %]');return false;"[% ELSE %]onClick="return confirm('[% "PLUGIN_DATABASEQUERY_DOWNLOAD_QUESTION" |string %]');"[% END %]>[% "PLUGIN_DATABASEQUERY_REFRESH_DOWNLOADED_ITEMS" | string %]</a><div style="float:right;">([% "PLUGIN_DATABASEQUERY" | string %] [% pluginDatabaseQueryVersion %])</div>
+			</p>
+			
 			[% IF pluginDatabaseQueryError %]
-				<tr><td colspan="4"><br><br><strong>[% pluginDatabaseQueryError %]</strong></td></tr>
+				<p><br><br><strong>[% pluginDatabaseQueryError %]</strong></p>
 			[% END %]
 			[% IF pluginDatabaseQueryMessage %]
-				<tr><td colspan="4"><br><br>[% pluginDatabaseQueryMessage %]</td></tr>
+				<p><br><br>[% pluginDatabaseQueryMessage %]</p>
 			[% END %]
+<br>
+</div>
 [% PROCESS pagefooter.html %]
