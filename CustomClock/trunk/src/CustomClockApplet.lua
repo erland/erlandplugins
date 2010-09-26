@@ -164,17 +164,17 @@ function openScreensaver(self,mode, transition)
 	self.titleformats = {}
 	self.customtitleformats = {}
 	if player then
-		player:unsubscribe('/slim/customclock/titleformatsupdated')
-		player:unsubscribe('/slim/customclock/changedstyles')
+		player:unsubscribe('/slim/customclocktitleformatsupdated')
+		player:unsubscribe('/slim/customclockchangedstyles')
 		player:unsubscribe('/slim/SuperDateTimeState/dataRefreshState')
-		player:unsubscribe('/slim/customclock/changedcustomitems')
+		player:unsubscribe('/slim/customclockchangedcustomitems')
 		player:subscribe(
-			'/slim/customclock/changedstyles',
+			'/slim/customclockchangedstyles',
 			function(chunk)
-				if not chunk.data[1] or chunk.data[1] ~= "customclock" or not chunk.data[2] or chunk.data[2] ~= "changedstyles" then
+				if not chunk.data[1] or chunk.data[1] ~= "customclockchangedstyles" then
 					return
 				end
-				for i,entry in pairs(chunk.data[3]) do
+				for i,entry in pairs(chunk.data[2]) do
 					local updateStyle = false
 					local updatedModes = {}
 					for attribute,value in pairs(self:getSettings()) do
@@ -227,7 +227,7 @@ function openScreensaver(self,mode, transition)
 
 			end,
 			player:getId(),
-			{'customclock','changedstyles'}
+			{'customclockchangedstyles'}
 		)
 		player:subscribe(
 			'/slim/SuperDateTimeState/dataRefreshState',
@@ -291,13 +291,13 @@ function openScreensaver(self,mode, transition)
 			{'SuperDateTimeState','dataRefreshState'}
 		)
 		player:subscribe(
-			'/slim/customclock/changedcustomitems',
+			'/slim/customclockchangedcustomitems',
 			function(chunk)
-				if not chunk.data[1] or chunk.data[1] ~= "customclock" or not chunk.data[2] or chunk.data[2] ~= "changedcustomitems" then
+				if not chunk.data[1] or chunk.data[1] ~= "customclockchangedcustomitems" then
 					return
 				end
 				local categories = {}
-				for _,item in ipairs(chunk.data[3]) do
+				for _,item in ipairs(chunk.data[2]) do
 					categories[item] = item
 				end
 				if categories then
@@ -326,12 +326,12 @@ function openScreensaver(self,mode, transition)
 				end 
 			end,
 			player:getId(),
-			{'customclock','changedcustomitems'}
+			{'customclockchangedcustomitems'}
 		)
 		player:subscribe(
-			'/slim/customclock/titleformatsupdated',
+			'/slim/customclocktitleformatsupdated',
 			function(chunk)
-				if not chunk.data[1] or chunk.data[1] ~= "customclock" or not chunk.data[2] or chunk.data[2] ~= "titleformatsupdated" then
+				if not chunk.data[1] or chunk.data[1] ~= "customclocktitleformatsupdated" then
 					return
 				end
 				local player = appletManager:callService("getCurrentPlayer")
@@ -340,7 +340,7 @@ function openScreensaver(self,mode, transition)
 				end
 			end,
 			player:getId(),
-			{'customclock','titleformatsupdated'}
+			{'customclocktitleformatsupdated'}
 		)
 	end
         -- Create the main window if it doesn't already exist
