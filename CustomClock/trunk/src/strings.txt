@@ -4,42 +4,54 @@
 
 SCREENSAVER_CUSTOMCLOCK
 	EN	Custom Clock
+	IT	Orologio personalizzato
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS
 	EN	Custom Clock Settings
+	IT	Impostazioni Orologio personalizzato
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_STYLE
 	EN	Style
+	IT	Stile
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG
 	EN	Config
+	IT	Configurazione
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM_ACTIVE
 	EN	When alarm
+	IT	Quando attiva
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_ALARM_SNOOZE
 	EN	Alarm snoozed
+	IT	Sveglia tacitata
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_CLEAR_CACHE
 	EN	Clear cache (images/fonts)
+	IT	Pulisci la cache (immagini/fonts)
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_NONE
 	EN	None
+	IT	Niente
 
 SCREENSAVER_CUSTOMCLOCK_X_OF_Y
 	EN	%s of %s
+	IT	%s di %s
 
 SCREENSAVER_CUSTOMCLOCK_X_Y
 	EN	%s/%s
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING
 	EN	Replace Now Playing
+	IT	Sostituisci Now Playing
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING_STYLE
 	EN	Standard (No replacement)
+	IT	Standard (nessuna sostituzione)
 
 SCREENSAVER_CUSTOMCLOCK_SETTINGS_FETCHING
 	EN	Fetching clock styles...
+	IT	Raccolta stili...
 
 WEEKDAY_0
 	CS	Neděle
