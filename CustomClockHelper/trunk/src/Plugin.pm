@@ -79,9 +79,9 @@ sub initPlugin
 	Slim::Control::Request::addDispatch(['customclock', 'titleformats'],[0, 1, 0, \&getTitleFormats]);
 	Slim::Control::Request::addDispatch(['customclock', 'customitems'],[0, 1, 0, \&getCustomItems]);
 	Slim::Control::Request::addDispatch(['customclock', 'refreshcustomitems'],[0, 1, 0, \&refreshCustomItems]);
-	Slim::Control::Request::addDispatch(['customclock', 'changedstyles'],[0, 1, 0, undef]);
-	Slim::Control::Request::addDispatch(['customclock', 'titleformatsupdated'],[0, 1, 0, undef]);
-	Slim::Control::Request::addDispatch(['customclock', 'changedcustomitems'],[0, 1, 0, undef]);
+	Slim::Control::Request::addDispatch(['customclockchangedstyles'],[0, 1, 0, undef]);
+	Slim::Control::Request::addDispatch(['customclocktitleformatsupdated'],[0, 1, 0, undef]);
+	Slim::Control::Request::addDispatch(['customclockchangedcustomitems'],[0, 1, 0, undef]);
 	Slim::Control::Request::subscribe(\&changedSong,[['playlist'],['newsong','delete','clear']]);
 	Slim::Control::Request::subscribe(\&changedRating,[['trackstat'],['changedrating']]);
 	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
@@ -127,7 +127,7 @@ sub addingCustomItems {
 			push @providers,$key;
 		}
 		$refreshCustomItems = undef;
-		Slim::Control::Request::notifyFromArray(undef,['customclock','changedcustomitems',\@providers]);
+		Slim::Control::Request::notifyFromArray(undef,['customclockchangedcustomitems',\@providers]);
 		$log->debug("Scheduling next refresh...");
 		my $interval = $prefs->get('customitemsrefreshinterval') || 300;
 		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + ($interval), \&refreshCustomItems);
@@ -233,7 +233,7 @@ sub updateTitleFormats {
 		}
 	}
 	if(defined($song) && $song->can('url')) {
-		Slim::Control::Request::notifyFromArray(undef,['customclock','titleformatsupdated', $titleFormatsHash, $song->url]);
+		Slim::Control::Request::notifyFromArray(undef,['customclocktitleformatsupdated', $titleFormatsHash, $song->url]);
 	}
 }
 
@@ -334,7 +334,7 @@ sub setStyle {
 	for my $style (keys %$styles) {
 		push @stylesArray,$styles->{$style}
 	}
-	Slim::Control::Request::notifyFromArray(undef,['customclock','changedstyles',\@stylesArray]);
+	Slim::Control::Request::notifyFromArray(undef,['customclockchangedstyles',\@stylesArray]);
 }
 
 sub renameAndSetStyle {
@@ -353,7 +353,7 @@ sub renameAndSetStyle {
 	for my $style (keys %$styles) {
 		push @stylesArray,$styles->{$style}
 	}
-	Slim::Control::Request::notifyFromArray(undef,['customclock','changedstyles',\@stylesArray]);
+	Slim::Control::Request::notifyFromArray(undef,['customclockchangedstyles',\@stylesArray]);
 }
 
 sub getClockStyles {
