@@ -275,16 +275,14 @@
                         <sha>4c18394463689af4a2ac9c68f77eb471274dc7ae</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
-		<plugin name="MultiLibrary" version="2.4" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="MultiLibrary" version="2.5.3278" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Multi Library</title>
                         <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added minbitrate and maxbitrate to library definition
-			- Added better error messages when failed to write file
-			- Updated so url is used in playlist_track.track column</changes>
+			<changes lang="EN">- Added intersect library template</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.4.zip</url>
-                        <sha>bb1b73ff22023be7b21c1e14cc64624f35f5db7a</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.5.3278.zip</url>
+                        <sha>6e7ac687e288dbe0c663470e3a43b46749b7908d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
 		<plugin name="SQLPlayList" version="2.4" minTarget="7.1.0" maxTarget="7.3.*">
