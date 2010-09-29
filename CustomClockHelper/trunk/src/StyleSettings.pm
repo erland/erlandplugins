@@ -254,6 +254,10 @@ sub handler {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'format'} ne ""?$item->{'format'}:"");
 			}elsif($item->{'itemtype'} =~ /^pluginicon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'infotype'} ne ""?$item->{'infotype'}.":":"").($item->{'logotype'} ne ""?$item->{'logotype'}:"");
+			}elsif($item->{'itemtype'} =~ /^rsstext$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'format'} ne ""?$item->{'format'}.":":"").($item->{'url'} ne ""?$item->{'url'}:"");
+			}elsif($item->{'itemtype'} =~ /^rssicon$/) {
+				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'url'} ne ""?$item->{'url'}:"");
 			}elsif($item->{'itemtype'} =~ /^appleticon$/) {
 				$entry->{'name'} = "Item #".$id." (".$item->{'itemtype'}."): ".($item->{'icontype'} ne ""?$item->{'icontype'}.":":"").($item->{'image'} ne ""?$item->{'image'}:"");
 			}elsif($item->{'itemtype'} =~ /^applettext$/) {
@@ -564,6 +568,8 @@ sub handler {
 				push @values,{id=>'pluginicon',name=>'pluginicon'};				
 				push @values,{id=>'plugintext',name=>'plugintext'};				
 				push @values,{id=>'imageicon',name=>'imageicon'};				
+				push @values,{id=>'rssicon',name=>'rssicon'};				
+				push @values,{id=>'rsstext',name=>'rsstext'};				
 				my $request = Slim::Control::Request::executeRequest(undef,['can','gallery','random','?']);
 				my $result = $request->getResult("_can");
 				if($result) {
@@ -609,6 +615,12 @@ sub handler {
 				push @values,{id=>'false',name=>'false'};				
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} =~ /^scrolling$/) {
+				$item->{'type'} = 'singlelist';
+				my @values = ();
+				push @values,{id=>'false',name=>'false'};				
+				push @values,{id=>'true',name=>'true'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} =~ /^decodehtml$/) {
 				$item->{'type'} = 'singlelist';
 				my @values = ();
 				push @values,{id=>'false',name=>'false'};				
@@ -1070,9 +1082,13 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdtmiscicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected offset step);
 	}elsif($itemType eq 'plugintext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime format interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime format interval infotype selected noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step linelength separator decodehtml);
 	}elsif($itemType eq 'pluginicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy infotype width height order framewidth framerate logotype interval selected offset step);
+	}elsif($itemType eq 'rsstext') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime format interval refreshinterval url noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step linelength separator decodehtml);
+	}elsif($itemType eq 'rssicon') {	
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy url width height order framewidth framerate logotype interval refreshinterval offset step);
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
