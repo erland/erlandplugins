@@ -28,6 +28,7 @@ local math             = require("math")
 local string           = require("jive.utils.string")
 local table            = require("jive.utils.table")
 local zip              = require("zipfilter")
+local lxp              = require("lxp")
 
 local datetime         = require("jive.utils.datetime")
 
@@ -76,6 +77,128 @@ local LAYOUT_NONE       = jive.ui.LAYOUT_NONE
 module(..., Framework.constants)
 oo.class(_M, Applet)
 
+local html_tags = {
+	["br"] = '\n',
+	["/br"] = '\n',
+	["li"] = '',
+	["/li"] = '',
+	["ul"] = "",
+	["/ul"] = "",
+	["ol"] = "",
+	["/ol"] = "",
+	["img"] = '',
+	["/tr"] = '',
+	["pre"] = "",
+	["/pre"] = "",
+	["b"] = "*",
+	["/b"] = "*",
+	["i"] = "/",
+	["/i"] = "/",
+	["big"] = "",
+	["/big"] = "",
+	["small"] = "",
+	["/small"] = "",
+	["strong"] = "*",
+	["/strong"] = "*",
+	["em"] = "/",
+	["/em"] = "/",
+	["u"] = "",
+	["/u"] = "",
+	["div"] = "",
+	["/div"] = "",
+	["html"] = "",
+	["/html"] = "",
+	["head"] = "",
+	["/head"] = "",
+	["body"] = "",
+	["/body"] = "",
+	["p"] = "",
+	["/p"] = "",
+	["a"] = "",
+	["/a"] = "",
+	["hr"] = "\n" .. string.rep("-",44) .. "\n",
+	["font"] = "",
+	["/font"] = "",
+	["!doctype"] = "",
+	["void"] = "",
+	["/void"] = "",
+	["comment"] = "",
+	["/comment"] = "",
+	["style"] = "",
+	["/style"] = "",
+	["meta"] = "",
+	["tr"] = "",
+	["td"] = "\t",
+	["/td"] = "",
+	["table"] = "",
+	["/table"] ="",
+	["th"] = "",
+	["/th"] = "",
+}
+
+local html_coded = {
+
+	["szlig"]	= "ß",
+	["Ntilde"]	= "Ñ",
+	["ntilde"]	= "ñ",
+	["Ccedil"]	= "Ç",
+	["ccedil"]	= "ç",
+	
+	["auml"]	= "ä",
+	["euml"]	= "ë",
+	["iuml"]	= "ï",
+	["ouml"]	= "ö",
+	["uuml"]	= "ü",
+	["Auml"]	= "Ä",
+	["Euml"]	= "Ë",
+	["Iuml"]	= "Ï",
+	["Ouml"]	= "Ö",
+	["Uuml"]	= "Ü",
+	["aacute"]	= "á",
+	["eacute"]	= "é",
+	["iacute"]	= "í",
+	["oacute"]	= "ó",
+	["uacute"]	= "ú",
+	["Aacute"]	= "Á",
+	["Eacute"]	= "É",
+	["Iacute"]	= "Í",
+	["Oacute"]	= "Ó",
+	["Uacute"]	= "Ú",
+	["acirc"]	= "â",
+	["ecirc"]	= "ê",
+	["icirc"]	= "î",
+	["ocirc"]	= "ô",
+	["ucirc"]	= "û",
+	["Acirc"]	= "Â",
+	["Ecirc"]	= "Ê",
+	["Icirc"]	= "Î",
+	["Ocirc"]	= "Ô",
+	["Ucirc"]	= "Û",
+	["agrave"]	= "à",
+	["igrave"]	= "ì",
+	["egrave"]	= "è",
+	["ograve"]	= "ò",
+	["ugrave"]	= "ù",
+	["Agrave"]	= "À",
+	["Igrave"]	= "Ì",
+	["Egrave"]	= "È",
+	["Ograve"]	= "Ò",
+	["Ugrave"]	= "Ù",
+
+	["euro"]	= '',
+	["pound"]	= '£',
+	["yen"]		= '¥',
+	["cent"]	= '¢',
+	["iquest"]	= '¿',
+	["iexcl"]	= '¡',
+	["quot"]	= '"',
+	["lt"]		= '<',
+	["gt"]		= '>',
+	["nbsp"]	= ' ',
+	["amp"]		= '&',
+	["ndash"]       = '-',
+        ["mdash"]       = '—',
+}
 
 ----------------------------------------------------------------------------------------
 -- Helper Functions
@@ -377,6 +500,7 @@ function openScreensaver(self,mode, transition)
 		self.visibilityGroups = {}
 		self.sdtcache = {}
 		self.pluginitemcache = {}
+		self.rssitemcache = {}
 		for _,item in pairs(self.configItems) do
 			if _getString(item.visibilitygroup,nil) then
 				if not self.visibilityGroups[item.visibilitygroup] then
@@ -631,6 +755,8 @@ function _recalculateVisibilityTimes(self,items)
 				results = self:_getSDTCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
 			elseif string.find(self.configItems[item.item].itemtype,"^plugin") and _getString(self.configItems[item.item].infotype,nil) then
 				results = self:_getPluginItemCacheData(self.configItems[item.item].infotype,self.configItems[item.item])
+			elseif string.find(self.configItems[item.item].itemtype,"^rss") and _getString(self.configItems[item.item].url,nil) then
+				results = self:_getRSSItemCacheData(self.configItems[item.item].url,self.configItems[item.item])
 			end
 			if results then
 				recalculated = true
@@ -1904,7 +2030,161 @@ function _updatePluginItem(self,category,items)
 	end
 end
 
+function _updateRSSItem(self,category,items)
+	local player = appletManager:callService("getCurrentPlayer")
+	local server = player:getSlimServer()
+
+	local req = RequestHttp(function(chunk, err)
+			if err then
+				log:warn(err)
+			elseif chunk then
+				local title = ""
+				local description = ""
+				local guid = ""
+				local url = ""
+				local pubDate = ""
+				local source = ""
+				local credit = ""
+				local captureTitle = false
+				local captureDescription = false
+				local captureGUID = false
+				local capturePubDate = false
+				local captureSource = false
+				local captureCredit = false
+				local itemsData = {}
+				local index = 0
+				local p = lxp.new({
+					StartElement = function (parser, name, attr)
+						if name == "media:content" and attr.url and (attr.type=="image/jpeg" or attr.type=="image/png" or string.find(attr.url,"jpeg$") or string.find(attr.url,"jpg$") or string.find(attr.url,"png$")) then
+							url = attr.url
+						elseif name == "enclusure" and attr.url and (attr.type=="image/jpeg" or attr.type=="image/png" or string.find(attr.url,"jpeg$") or string.find(attr.url,"jpg$") or string.find(attr.url,"png$")) then
+							url = attr.url
+						elseif name =="title" then
+							title = ""
+							captureTitle = true
+						elseif name =="description" then
+							description = ""
+							captureDescription = true
+						elseif name =="guid" then
+							guid = ""
+							captureGUID = true
+						elseif name =="pubDate" then
+							pubDate = ""
+							capturePubDate = true
+						elseif name =="source" then
+							source = ""
+							captureSource = true
+						elseif name =="media:credit" then
+							credit = ""
+							captureCredit = true
+						end
+					end,
+					CharacterData = function (parser, text)
+						if captureTitle then
+							title = title .. text
+						elseif captureDescription then
+							description = description .. text
+						elseif captureGUID then
+							guid = guid .. text
+						elseif capturePubDate then
+							pubDate = pubDate .. text
+						elseif captureSource then
+							source = source .. text
+						elseif captureCredit then
+							credit = credit .. text
+						end
+					end,
+					EndElement = function(parser, name)
+						if name == "title" then
+							captureTitle = false
+						elseif name == "description" then
+							captureDescription = false
+						elseif name == "guid" then
+							captureGUID = false
+						elseif name =="pubDate" then
+							capturePubDate = false
+						elseif name == "source" then
+							captureSource = false
+						elseif name == "media:credit" then
+							captureCredit = false
+						end
+						if name == "item" then
+							local id = guid
+							if id == "" then
+								if title != "" then
+									id = title
+								end
+								if description != "" then
+									id = id..description
+								end
+							end
+							itemsData[index] = {
+								uniqueID = id,
+								pubDate = pubDate,
+								source = source,
+								title = title,
+								description = description,
+								credot = credit,
+								url = url
+							}
+							index=index+1
+						end
+					end,
+				})
+				p:parse(chunk)
+				p:close()
+				local oldCache = self.rssitemcache[category]
+				self.rssitemcache[category] = {}
+				for no,item in pairs(items) do
+					local key = self:_getRSSItemCacheKey(category,item)
+					if not self.rssitemcache[category][key] then
+						self.rssitemcache[category][key] = {
+							current = nil,
+							data = self:_getRSSItemData(item,itemsData)
+						}
+					end
+					if not self.rssitemcache[category][key].current then
+						if oldCache and oldCache[key] and oldCache[key].current then
+							if oldCache[key].data[oldCache[key].current].uniqueID then
+								oldItemNo = 1
+								for _,item in ipairs(self.rssitemcache[category][key].data) do
+									if item.uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+										break
+									end
+									oldItemNo = oldItemNo + 1
+								end
+								if self.rssitemcache[category][key].data[oldItemNo].uniqueID == oldCache[key].data[oldCache[key].current].uniqueID then
+									self.rssitemcache[category][key].current = oldItemNo
+								end
+							end
+						end
+						if self.rssitemcache[category][key].current then
+							log:debug("Reselecting "..category..": "..tostring(self.rssitemcache[category][key].data[self.rssitemcache[category][key].current].uniqueID))
+						elseif self.rssitemcache[category][key].data[1] then
+							log:debug("Resetting "..category..":   "..tostring(self.rssitemcache[category][key].data[1].uniqueID))
+						end
+						self.rssitemcache[category][key].current = self:_getNextRSSItem(category,item)
+					end
+					item.currentResult = self.rssitemcache[category][key].current
+					self:_changeRSSItem(category,item,self.items[no],no,"true")
+				end
+			end
+		end,
+		'GET', category)
+	local uri = req:getURI()
+	local http = SocketHttp(jnt, uri.host, uri.port, uri.host)
+	http:fetch(req)
+end
+
 function _getPluginItemCacheKey(self,category,item)
+	if string.find(item.itemtype,"text$") and item.scrolling then
+		return "scrolling".._getString(item.selected,"")
+	else
+		return "switching".._getString(item.selected,"")
+	end
+end
+
+function _getRSSItemCacheKey(self,category,item)
 	if string.find(item.itemtype,"text$") and item.scrolling then
 		return "scrolling".._getString(item.selected,"")
 	else
@@ -1967,6 +2247,24 @@ function _getPluginItemCacheIndex(self,category,item)
 	local key = self:_getPluginItemCacheKey(category,item)
 	if self.pluginitemcache[category] and self.pluginitemcache[category][key] then
 		return self.pluginitemcache[category][key].current
+	else
+		return nil
+	end
+end
+
+function _getRSSItemCacheData(self,category,item)
+	local key = self:_getRSSItemCacheKey(category,item)
+	if self.rssitemcache[category] and self.rssitemcache[category][key] then
+		return self.rssitemcache[category][key].data
+	else
+		return {}
+	end
+end
+
+function _getRSSItemCacheIndex(self,category,item)
+	local key = self:_getRSSItemCacheKey(category,item)
+	if self.rssitemcache[category] and self.rssitemcache[category][key] then
+		return self.rssitemcache[category][key].current
 	else
 		return nil
 	end
@@ -2097,6 +2395,30 @@ function _getPluginItemData(self,item,totalResults)
 	return results
 end
 
+function _getRSSItemData(self,item,totalResults)
+	local results = {}
+	local no = 1
+	if _getString(item.selected,nil) then
+		if totalResults[item.selected] then
+			results[no] = totalResults[item.selected]
+			results[no].uniqueID=item.selected
+			for key,icon in pairs(icons) do
+				if not results[no][key] then
+					results[no][key] = icon
+				end
+			end
+			no = no + 1
+		end
+	else
+		for selection,value in pairs(totalResults) do
+			results[no] = value
+			results[no].uniqueID=selection
+			no = no + 1
+		end
+	end
+	return results
+end
+
 function _getSDTWeatherData(self,item,totalResults)
 	local results = {}
 	local no = 1
@@ -2201,6 +2523,26 @@ function _getNextPluginItem(self,category,item)
 	return currentResult
 end
 
+
+function _getNextRSSItem(self,category,item)
+	local results = self:_getRSSItemCacheData(category,item)
+	local currentResult = self:_getRSSItemCacheIndex(category,item)
+	if currentResult then
+		local length = _getNumber(item.noofrows,1)
+		if length == 1 and string.find(item.itemtype,category..'text$') and _getString(item.scrolling,"false") == "true" then
+			length = #results
+		end
+		if #results > (currentResult+length+_getNumber(item.step,1)-2) then
+			currentResult = currentResult + length +_getNumber(item.step,1) -1
+		else
+			currentResult = 1
+		end
+	elseif #results>0 then
+		currentResult = 1
+	else
+	end
+	return currentResult
+end
 
 function _changeSDTItem(self,category,item,widget,id,dynamic)
 	local results = self:_getSDTCacheData(category,item)
@@ -2310,6 +2652,56 @@ function _changePluginItem(self,category,item,widget,id,dynamic)
 	end
 end
 
+function _changeRSSItem(self,category,item,widget,id,dynamic)
+	local results = self:_getRSSItemCacheData(category,item)
+	local currentResult = self:_getRSSItemCacheIndex(category,item)
+	if currentResult then
+		if string.find(item.itemtype,'text$') then
+			local combinedString = self:_getResultString(item,results,"format")
+			if widget:getWidgetValue("itemno") ~= combinedString then
+				widget:setWidgetValue("itemno",combinedString)
+				self:_storeInCache(id,combinedString)
+			end
+		elseif string.find(item.itemtype,'icon$') then
+			local player = appletManager:callService("getCurrentPlayer")
+			local server = player:getSlimServer()
+			local url = nil
+			if #results>=(currentResult+_getNumber(item.offset,0)) then
+				url = results[currentResult+_getNumber(item.offset,0)].url
+			end
+			if url and not string.find(url,"^http") then
+				local ip,port = server:getIpPort()
+				if not string.find(url,"^/") then
+					url = "/"..url
+				end
+				url = "http://"..ip..":"..port..url
+				local width = _getNumber(item.width,nil)
+				local height = _getNumber(item.height,nil)
+				if width and height then
+					url = string.gsub(url,".png","_"..width.."x"..height.."_p.png")
+					url = string.gsub(url,".jpg","_"..width.."x"..height.."_p.jpg")
+					url = string.gsub(url,".jpeg","_"..width.."x"..height.."_p.jpeg")
+				end
+			end
+			if url then
+				self.referenceimages[self.mode.."item"..id] = id
+				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+			else
+				widget:setWidgetValue("itemno",nil)
+				self:_removeFromCache(id)
+			end
+		end
+	else
+		if string.find(item.itemtype,'text$') then
+			widget:setWidgetValue("itemno","")
+			self:_removeFromCache(id)
+		elseif string.find(item.itemtype,'icon$') then
+			widget:setWidgetValue("itemno",nil)
+			self:_removeFromCache(id)
+		end
+	end
+end
+
 function _getResultString(self,item,results,attribute)
 	local result = ""
 	local length = _getNumber(item.noofrows,1)
@@ -2324,10 +2716,22 @@ function _getResultString(self,item,results,attribute)
 		local first = item.currentResult+offset
 		for i=first,(first+length-1) do
 			if #results>=i then
-				if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofrows,1))>1) then
-					result = result.."\n"
+				if i>first and (_getString(item.scrolling,"false") == "false" or tonumber(_getNumber(item.noofrows,1))>1 or tonumber(_getNumber(item.linelength,0))>0) then
+					if _getString(item.separator,nil) then
+						local separator = _getString(item.separator,nil)
+						separator = string.gsub(separator,"\\n","\n")
+						result = result..separator
+					else
+						result = result.."\n"
+					end
 				elseif i>first then
-					result = result.."      "
+					if _getString(item.separator,nil) then
+						local separator = _getString(item.separator,nil)
+						separator = string.gsub(separator,"\\n","\n")
+						result = result..separator
+					else
+						result = result.."      "
+					end
 				end
 				local tmp = _getString(item[attribute],"")
 				for key,value in pairs(results[i]) do
@@ -2339,11 +2743,103 @@ function _getResultString(self,item,results,attribute)
 					end
 					tmp = string.gsub(tmp,"%%"..key,escapedValue)
 				end
+				if _getString(item.decodehtml,"false") == "true" then
+					tmp = _html2txt(tmp)
+				end
+				if _getString(item.scrolling,"false") == "false" and tonumber(_getNumber(item.linelength,0))>0 and string.len(tmp)>tonumber(_getNumber(item.linelength,0)) then
+					tmp = _wordwrap(tmp,tonumber(_getNumber(item.linelength,0)))
+				end
+				tmp = string.gsub(tmp,"\\n","\n")
 				result = result..tmp
 			end
 		end
 	end
 	return result
+end
+function _token_of(c)
+	local x,y = string.match(c,"^%s*([/!]?)%s*(%a+)%s*")
+	return (x or "") .. (y or "")
+end
+
+function _html2txt(s)
+	s = string.gsub(s,"<%s*[Ss][Cc][Rr][Ii][Pp][Tt].->.-<%s*/%s*[Ss][Cc][Rr][Ii][Pp][Tt].->","")
+	s = string.gsub(s,"<%s*[Ss][Tt][Yy][Ll][Ee].->.-<%s*/%s*[Ss][Tt][Yy][Ll][Ee].->","")
+	s = string.gsub(s,"<([^>]-)>",function(c)
+		c = string.lower(c)
+		local t = _token_of(c)
+		local r = html_tags[t]
+		return r
+	end)
+	s = string.gsub(s,"&(%a-);",function(c)
+		c = string.lower(c)
+		return html_coded[c] or ("["..c.."]")
+	end)
+	s = string.gsub(s,"&#(%d-);", function(c)
+--	  log.dbg("html2txt &#(%d-); substitution: "..tostring(c))
+      if tonumber(c) < 256 then
+	    return string.char(c)
+	  end
+	  -- FIXME: handle unicode characters?
+	  return "?"
+	end)
+	return s
+end
+
+function _explode ( str, seperator ) 
+ 	local pos, arr = 0, {}
+	for st, sp in function() return string.find( str, seperator, pos, true ) end do -- for each divider found
+		table.insert( arr, string.sub( str, pos, st-1 ) ) -- Attach chars left of current divider
+		pos = sp + 1 -- Jump past current divider
+	end
+	table.insert( arr, string.sub( str, pos ) ) -- Attach chars right of last divider
+	return arr
+end
+
+function _wordwrap(strText,intMaxLength)
+    local tblOutput = {}
+    
+    local intIndex
+    local strBuffer = ""
+    local tblLines = _explode(strText,"\n")
+
+    for k,strLine in pairs(tblLines) do
+        local tblWords = _explode(strLine," ")
+        
+        if (#tblWords > 0) then
+            intIndex = 1
+            
+            while tblWords[intIndex] do
+                local strWord = " " .. tblWords[intIndex]
+                if (strBuffer:len() >= intMaxLength) then
+                    table.insert(tblOutput,strBuffer:sub(1,intMaxLength))
+                    strBuffer = strBuffer:sub(intMaxLength + 1)
+                    intIndex = intIndex+1
+                else
+                    if (strWord:len() > intMaxLength) then
+                        strBuffer = strBuffer .. strWord
+                    elseif (strBuffer:len() + strWord:len() >= intMaxLength) then
+                        table.insert(tblOutput,strBuffer)
+                        strBuffer = ""
+                    else
+                        if (strBuffer == "") then
+                            strBuffer = strWord:sub(2)
+                        else
+                            strBuffer = strBuffer .. strWord
+                        end
+                        
+                        intIndex = intIndex + 1
+                    end
+                end
+            end
+            
+            if (strBuffer != "") then
+                table.insert(tblOutput,strBuffer)
+                strBuffer = ""
+            end
+        end
+    end
+    
+    return table.concat(tblOutput,"\n")
 end
 
 function _updateSDTWeatherMapIcon(self,widget,id,item)
@@ -2557,7 +3053,9 @@ function _tick(self,forcedUpdate)
 	local updatesdtitems = {}
 	local changesdtitems = {}
 	local updatepluginitems = {}
+	local updaterssitems = {}
 	local changepluginitems = {}
+	local changerssitems = {}
 	local no = 1
 	local refreshCustomItemTypes = self.refreshCustomItemTypes
 	self.refreshCustomItemTypes = {}
@@ -2844,6 +3342,32 @@ function _tick(self,forcedUpdate)
 					end
 				end
 			end
+		elseif item.itemtype == "rsstext" or item.itemtype == "rssicon" then
+			local url = _getString(item.url,"default")
+			if forcedUpdate or (self.lastminute!=minute  and minute % _getNumber(item.refreshinterval,30) == 0) then
+				self:_updateFromCache(no)		
+				if not updaterssitems[url] then
+					updaterssitems[url] = {
+						attribute = "selected",
+						items = {}
+					}
+				end
+				updaterssitems[url].items[no] = item
+			elseif second % _getNumber(item.interval,3) == 0 then
+				local results = self:_getRSSItemCacheData(url,item)
+				if results and #results>0 then
+					if not changerssitems[url] then
+						changerssitems[url] = {}
+					end
+					changerssitems[url][no] = item
+				else
+					if string.find(item.itemtype,"text$") then
+						self.items[no]:setWidgetValue("itemno","")
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
+				end
+			end
 		elseif item.itemtype == "covericon" then
 			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
 			-- Pre-load next artwork
@@ -2960,6 +3484,10 @@ function _tick(self,forcedUpdate)
 		self:_updatePluginItem(category,data.items)
 	end
 
+	for category,data in pairs(updaterssitems) do
+		self:_updateRSSItem(category,data.items)
+	end
+
 	for category,data in pairs(changesdtitems) do
 		for no,item in pairs(data) do
 			local key = self:_getSDTCacheKey(category,item)
@@ -2983,6 +3511,17 @@ function _tick(self,forcedUpdate)
 			end
 			item.currentResult = self.pluginitemcache[category][key].current
 			self:_changePluginItem(category,item,self.items[no],no,"true")
+		end
+	end
+
+	for category,data in pairs(changerssitems) do
+		for no,item in pairs(data) do
+			local key = self:_getRSSItemCacheKey(category,item)
+			if self.rssitemcache[category] and self.rssitemcache[category][key] and item.currentResult == self.rssitemcache[category][key].current then
+				self.rssitemcache[category][key].current = self:_getNextRSSItem(category,item)
+			end
+			item.currentResult = self.rssitemcache[category][key].current
+			self:_changeRSSItem(category,item,self.items[no],no,"true")
 		end
 	end
 
