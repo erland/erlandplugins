@@ -11,7 +11,7 @@
   <module>Plugins::CustomClockHelper::Plugin</module>
   <optionsURL>plugins/CustomClockHelper/settings/stylesettings.html</optionsURL>
   <targetApplication>
-    <id>SqueezeCenter</id>
+     <id>SqueezeCenter</id>
     <maxVersion>*</maxVersion>
     <minVersion>7.4.0</minVersion>
   </targetApplication>
