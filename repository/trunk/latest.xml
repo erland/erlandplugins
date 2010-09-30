@@ -40,15 +40,15 @@
                         <sha>6a45abbe038e2491a6a40ecd1363ccd9ce0a80d1</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.8.3197" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.9.3288" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected so title formats are updated correctly
+                        <changes lang="EN">- Added support for rssitem and rsstext items
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.8.3197.zip</url>
-                        <sha>f6b3f9d77f3860cff082217146babb766e18d3ed</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3288.zip</url>
+                        <sha>8ff15713bbed3aae2dac8cc8e743a58947a2a51a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
@@ -360,15 +360,15 @@
                         <sha>5d58baac67ff9b8ff965ed9c0f5a55646140cd9f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
-		<plugin name="CustomClockHelper" version="2.8.3197" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomClockHelper" version="2.9.3288" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Clock Helper</title>
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected title format notifications
+			<changes lang="EN">- Added support for rsstext and rssicon items
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.8.3197.zip</url>
-                        <sha>659d3e360fb39206cbe6aca934b510d8ce72fd1c</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3288.zip</url>
+                        <sha>01db77992732208a9cf19147ccff3f38d970b37a</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
 				<plugin name="SongInfo" version="1.0.2999" minTarget="7.4.0" maxTarget="*">
