@@ -200,6 +200,14 @@ local html_coded = {
         ["mdash"]       = '—',
 }
 
+local html_coded_numeric = {
+	["8230"]	= '…',
+	["8217"]	= '’',
+	["8212"]	= '—',
+	["8220"]	= '“',
+	["8221"]	= '”',
+}
+
 ----------------------------------------------------------------------------------------
 -- Helper Functions
 --
@@ -671,6 +679,8 @@ function openScreensaver(self,mode, transition)
 	self.sdtVersionChecked = false
 	self.sdtSongInfoChecked = false
 	self.lastminute = 0
+	self.lastsecond = 0
+	self.secondoffset = 0
 	self.nowPlaying = 1
 	self:_tick(1)
 
@@ -1147,7 +1157,7 @@ function _getOnlineStylesSink(self,title,mode)
 				self:defineSettingStyleSink(title,mode,chunk.data)
 			end
 		end,
-		'GET', "/svn/CustomClock/trunk/clockstyles5.json")
+		'GET', "/svn/CustomClock/trunk/clockstyles6.json")
 	http:fetch(req)
 end
 
@@ -2118,6 +2128,11 @@ function _updateRSSItem(self,category,items)
 									id = id..description
 								end
 							end
+							local text = title
+							if not text then
+								text = description
+							end
+							log:debug("Retrieved("..index.."): "..text)
 							itemsData[index] = {
 								uniqueID = id,
 								pubDate = pubDate,
@@ -2750,6 +2765,9 @@ function _getResultString(self,item,results,attribute)
 					tmp = _wordwrap(tmp,tonumber(_getNumber(item.linelength,0)))
 				end
 				tmp = string.gsub(tmp,"\\n","\n")
+				if _getString(item.animate,"true") == "true" then
+					tmp = string.gsub(tmp,"\n"," ")
+				end
 				result = result..tmp
 			end
 		end
@@ -2776,11 +2794,10 @@ function _html2txt(s)
 	end)
 	s = string.gsub(s,"&#(%d-);", function(c)
 --	  log.dbg("html2txt &#(%d-); substitution: "..tostring(c))
-      if tonumber(c) < 256 then
+      	  if tonumber(c) < 256 then
 	    return string.char(c)
 	  end
-	  -- FIXME: handle unicode characters?
-	  return "?"
+	  return html_coded_numeric[c] or "?"
 	end)
 	return s
 end
@@ -3030,6 +3047,9 @@ function _tick(self,forcedUpdate)
 	log:debug("Updating time")
 
 	local second = os.date("%S")
+	if tonumber(second)<tonumber(self.lastsecond) then
+		self.secondoffset = tonumber(self.secondoffset) + 60
+	end
 	if second % 3 == 0 then
 		if self.nowPlaying>=3 then
 			self.nowPlaying = 1
@@ -3353,7 +3373,7 @@ function _tick(self,forcedUpdate)
 					}
 				end
 				updaterssitems[url].items[no] = item
-			elseif second % _getNumber(item.interval,3) == 0 then
+			elseif (self.secondoffset+second) % _getNumber(item.interval,3) == 0 then
 				local results = self:_getRSSItemCacheData(url,item)
 				if results and #results>0 then
 					if not changerssitems[url] then
@@ -3529,6 +3549,8 @@ function _tick(self,forcedUpdate)
 		self:_imageUpdate()
 	end
 	self.lastminute = minute
+	self.lastsecond = second
+	
 
 	local hasImages = false
 	for key,image in pairs(self.images) do
