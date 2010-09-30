@@ -1088,7 +1088,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'rsstext') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime format interval refreshinterval url noofrows scrolling color posx posy width align fonturl fontfile fontsize lineheight height margin animate order offset step linelength separator decodehtml);
 	}elsif($itemType eq 'rssicon') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy url width height order framewidth framerate logotype interval refreshinterval offset step);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy url width height order framewidth framerate interval refreshinterval offset step);
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
