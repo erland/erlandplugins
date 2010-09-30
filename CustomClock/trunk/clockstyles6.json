@@ -4247,19 +4247,19 @@
                                 "models": ["touch"],
 				"items": [
 					{
+						"itemtype":"rssicon",
+						"height":"272",
+						"width":"280",
+						"url":"http://feeds.feedburner.com/seanreiser/flickrinterestingness?format=rss2",
+						"interval":"30"
+					},
+					{
 						"itemtype": "timetext",
 						"fontsize": "35",
 						"color": "white",
 						"posy": "230",
 						"text": "%H1:%M",
 						"animate": "false"
-					},
-					{
-						"itemtype":"rssicon",
-						"height":"272",
-						"width":"280",
-						"url":"http://feeds.feedburner.com/seanreiser/flickrinterestingness?format=rss2",
-						"interval":"30"
 					}
 
 				]
@@ -4270,21 +4270,20 @@
                                 "models": ["radio"],
 				"items": [
 					{
+						"itemtype":"rssicon",
+						"height":"240",
+						"width":"320",
+						"url":"http://feeds.feedburner.com/seanreiser/flickrinterestingness?format=rss2",
+						"interval":"30"
+					},
+					{
 						"itemtype": "timetext",
 						"fontsize": "35",
 						"color": "white",
 						"posy": "200",
 						"text": "%H1:%M",
 						"animate": "false"
-					},
-					{
-						"itemtype":"rssicon",
-						"height":"240",
-						"width":"320",
-						"url":"http://feeds.feedburner.com/seanreiser/flickrinterestingness?format=rss2",
-						"interval":"30"
 					}
-
 				]
                         }
 		]
