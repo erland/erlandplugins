@@ -4249,7 +4249,7 @@
 					{
 						"itemtype":"rssicon",
 						"height":"272",
-						"width":"280",
+						"width":"480",
 						"url":"http://feeds.feedburner.com/seanreiser/flickrinterestingness?format=rss2",
 						"interval":"30"
 					},
