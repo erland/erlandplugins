@@ -48,6 +48,15 @@
 				tracks.album={context.itemid}
 			group by tracks.album
 			[% END %]
+			[% IF includefileformat %]
+			[% IF includetitle or includetitleandyear or includeduration or includealbumvolumeadjustment or includefilesize %]union[% END %]
+			select 6,concat('File Format: ',group_concat(distinct tracks.content_type separator ',')) from albums,tracks
+			where
+				albums.id=tracks.album and
+				tracks.content_type is not null and
+				tracks.album={context.itemid}
+			group by tracks.album
+			[% END %]
 		</menudata>
 	</menu>
 </custombrowse>
