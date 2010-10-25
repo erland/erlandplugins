@@ -13,6 +13,7 @@
 		<parameter type="checkbox" id="includeduration" name="Duration" value="1"/>
 		<parameter type="checkbox" id="includealbumvolumeadjustment" name="Volume adjustment" value="1"/>
 		<parameter type="checkbox" id="includefilesize" name="File size" value="1"/>
+		<parameter type="checkbox" id="includefileformat" name="File format" value="0"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
 		<parameter type="sqloptionalmultiplelist" id="includedlibraries" requireplugins="MultiLibrary::Plugin" name="Only include when these libraries are active (empty = all)" value="" data="select id,name,id from multilibrary_libraries"/>
