@@ -3730,6 +3730,7 @@ sub cliJiveHandlerImpl {
 				'cmd' => ['custombrowse', 'play'],
 				'params' => \%baseParams,
 				'itemsParams' => 'params',
+				'nextWindow' => 'nowPlaying',
 			},
 		}
 	};
@@ -3755,6 +3756,7 @@ sub cliJiveHandlerImpl {
 					'cmd' => ['custombrowse', 'play'],
 					'params' => \%itemParams,
 					'itemsParams' => 'params',
+					'nextWindow' => 'nowPlaying',
 				},
 			};
 			$request->addResultLoop('item_loop',$cnt,'playAction','play');
