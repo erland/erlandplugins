@@ -784,7 +784,7 @@ sub albumImages {
 	for my $track (@tracks) {
 		my $path = Slim::Utils::Misc::pathFromFileURL($track->url);
 		if($path) {
-			$path =~ s/^(.*)\/(.*?)$/$1/;
+			$path =~ s/^(.*)[\/\\](.*?)$/$1/;
 			if(!$dirs{$path}) {
 				$dirs{$path} = $path;
 			}
@@ -827,7 +827,7 @@ sub albumFiles {
 	for my $track (@tracks) {
 		my $path = Slim::Utils::Misc::pathFromFileURL($track->url);
 		if($path) {
-			$path =~ s/^(.*)\/(.*?)$/$1/;
+			$path =~ s/^(.*)[\/\\](.*?)$/$1/;
 			if(!$dirs{$path}) {
 				$dirs{$path} = $path;
 			}
@@ -2493,7 +2493,7 @@ sub handleWebAlbumImage {
 	for my $track (@tracks) {
 		my $path = Slim::Utils::Misc::pathFromFileURL($track->url);
 		if($path) {
-			$path =~ s/^(.*)\/(.*?)$/$1/;
+			$path =~ s/^(.*)[\/\\](.*?)$/$1/;
 			if(!$dirs{$path}) {
 				$dirs{$path} = $path;
 			}
@@ -2519,7 +2519,7 @@ sub handleWebAlbumFile {
 	for my $track (@tracks) {
 		my $path = Slim::Utils::Misc::pathFromFileURL($track->url);
 		if($path) {
-			$path =~ s/^(.*)\/(.*?)$/$1/;
+			$path =~ s/^(.*)[\/\\](.*?)$/$1/;
 			if(!$dirs{$path}) {
 				$dirs{$path} = $path;
 			}
