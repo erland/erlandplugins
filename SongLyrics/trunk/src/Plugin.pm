@@ -37,6 +37,10 @@ use JSON::XS;
 use Data::Dumper;
 use Crypt::Tea;
 
+use Plugins::SongLyrics::Modules::LyricsFly;
+use Plugins::SongLyrics::Modules::ChartLyrics;
+use Plugins::SongLyrics::Modules::Musixmatch;
+
 my $prefs = preferences('plugin.songlyrics');
 my $serverPrefs = preferences('server');
 my $log = Slim::Utils::Log->addLogCategory({
@@ -47,15 +51,22 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my $PLUGINVERSION = undef;
 
-#Please don't use this key in other applications, you can apply for one for free at lyricsfly.com
-my $API_KEY="YOZVbVbovftAlDGdSg6-M43wGmtbi4yA37cJ28pCiKpA0Ne_\n37cPPKE1vSpgIFUrn44iDd56NtIyl6Bj8nnVkw";
+my $KEY = undef;
 
-my $prevRequest = Time::HiRes::time();
-my $lastRequest = Time::HiRes::time();
+my @lyricsHandlers = (
+	\&Plugins::SongLyrics::Modules::LyricsFly::getLyrics, 
+	\&Plugins::SongLyrics::Modules::ChartLyrics::getLyrics,
+	\&Plugins::SongLyrics::Modules::Musixmatch::getLyrics, 
+);
 
 sub getDisplayName()
 {
 	return string('PLUGIN_SONGLYRICS'); 
+}
+
+sub getKey {
+	my $key = shift;
+	return Crypt::Tea::decrypt($key,$KEY);
 }
 
 sub initPlugin
@@ -63,15 +74,19 @@ sub initPlugin
 	my $class = shift;
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
+	$KEY = Slim::Utils::PluginManager->dataForPlugin($class)->{'id'};
+
+	Plugins::SongLyrics::Modules::LyricsFly::init();
+	Plugins::SongLyrics::Modules::ChartLyrics::init();
+	Plugins::SongLyrics::Modules::Musixmatch::init();
 
 	if(UNIVERSAL::can("Plugins::SongInfo::Plugin","registerInformationModule")) {
                 Plugins::SongInfo::Plugin::registerInformationModule('songlyrics',{
                         'name' => 'Song Lyrics',
-                        'description' => "This module gets song lyrics for the specified song, the lyrics are provided by http://lyricsfly.com",
+                        'description' => "This module gets song lyrics for the specified song, the lyrics are provided by http://lyricsfly.com or http://chartlyrics.com or http://musixmatch.com",
                         'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
-			'dataproviderlink' => 'http://lyricsfly.com',
-			'dataprovidername' => 'lyricsfly.com',
+			'dataprovidername' => 'lyricsfly.com or chartlyrics.com or musixmatch.com',
                         'function' => \&getSongLyrics,
                         'type' => 'text',
                         'context' => 'track',
@@ -82,9 +97,6 @@ sub initPlugin
                         ]
                 });
         }
-	if($API_KEY !~ /temporary.API.access/) {
-		$API_KEY = Crypt::Tea::decrypt($API_KEY,Slim::Utils::PluginManager->dataForPlugin($class)->{'id'});
-	}
 }
 
 sub getSongLyrics {
@@ -98,90 +110,68 @@ sub getSongLyrics {
 	my $albumTitle = shift;
 	my $artistName = shift;
 
-	my $query = "";
-	if($artistName) {
-		$query="&a=".$artistName."&t=".$trackTitle;
-	}else {
-		$query="&l=".$trackTitle;
-	}
-
-	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&getSongLyricsResponse, \&gotErrorViaHTTP, {
-                client => $client, 
-		errorCallback => $errorCallback,
-                callback => $callback, 
-                callbackParams => $callbackParams,
-		params => $params,
-		track => $track,
-        });
-	$prevRequest = $lastRequest;
-	$lastRequest = Time::HiRes::time;
-	$log->debug("Making call to: http://api.lyricsfly.com/api/api.php?i=???".$query);
-	$http->get("http://api.lyricsfly.com/api/api.php?i=".$API_KEY.$query);
+	my $paramsStructure = {
+		'current' => -1,
+		'callback' => $callback,
+		'errorCallback' => $errorCallback,
+		'callbackParams' => $callbackParams,
+		'params' => $params,
+	};
+	executeNextHandler($client,$paramsStructure,$track,$trackTitle,$albumTitle,$artistName);
 }
 
-sub getSongLyricsResponse {
-	my $http = shift;
-	my $params = $http->params();
+sub executeNextHandler {
+	my $client = shift;
+	my $params = shift;
+	my $track = shift;
+	my $trackTitle = shift;
+	my $albumTitle = shift;
+	my $artistName = shift;
 
-	my $content = $http->content();
-	my @result = ();
-	if(defined($content)) {
-		my $xml = eval { XMLin($content, forcearray => ["sg"], keyattr => []) };
-		if($xml->{'status'} eq '200' || $xml->{'status'} eq '300') {
-			$log->debug("Got lyrics: ".Dumper($xml));
-			my $lyrics = $xml->{'sg'};
-			if($lyrics && scalar(@$lyrics)>0) {
-				my $firstLyrics = pop @$lyrics;
-				my $text = $firstLyrics->{'tx'};
-				$text =~ s/\[br\]//mg;
-				$text =~ s/Lyrics delivered by lyricsfly.com//mg;
-				my %item = (
-					'type' => 'text',
-					'text' => $text,
-					'providername' => "Lyrics delivered by lyricsfly.com",
-					'providerlink' => "http://lyricsfly.com",
-				);
-				push @result,\%item;
-			}
-		}elsif($xml->{'status'} eq '204') {
-			$log->info("Failed to get lyrics, not found");
-		}elsif($xml->{'status'} eq '402') {
-			# Our request is too soon, let's request again in the specified time interval
-			my $nextCall = $prevRequest+($xml->{'delay'}/1000)+0.5;
-			$log->info("Request too soon after ".$prevRequest." at ".Time::HiRes::time().", needs to wait ".$xml->{'delay'}.", requesting again at $nextCall");
-			my @timerParams = ();
-			push @timerParams, $params->{'callback'};
-			push @timerParams, $params->{'errorCallback'};
-			push @timerParams, $params->{'callbackParams'};
-			push @timerParams, $params->{'track'};
-			push @timerParams, $params->{'params'};
-
-			Slim::Utils::Timers::setTimer($params->{'client'}, $nextCall, \&getSongLyrics,@timerParams);
-			return;
-		}else {
-			$log->warn("Failed to get lyrics, status: ".$xml->{'status'});
-		}
+	$params->{'current'} = $params->{'current'}+1;
+	$log->debug("Getting lyrics from handler: ".$params->{'current'});
+	if(scalar(@lyricsHandlers)>$params->{'current'}) {
+		my $handler = $lyricsHandlers[$params->{'current'}];
+		$handler->($client,
+			$params,
+			$track,
+			$trackTitle,
+			$albumTitle,
+			$artistName);
+	}else {	
+		returnResult($client,$params,undef);
 	}
+}
 
+sub returnResult {
+	my $client = shift;
+	my $params = shift;
+	my $result = shift;
+
+	my @resultArray = ();
+	if(defined($result)) {
+		push @resultArray,$result;
+	}
 	eval { 
-		&{$params->{'callback'}}($params->{'client'},$params->{'callbackParams'},\@result); 
+		&{$params->{'callback'}}($client,$params->{'callbackParams'},\@resultArray); 
 	};
 	if( $@ ) {
 	    $log->error("Error sending response: $@");
 	}
 }
 
-sub gotErrorViaHTTP {
-	my $http = shift;
-	my $params = $http->params();
+sub returnError {
+	my $client = shift;
+	my $params = shift;
 
 	eval { 
-		&{$params->{'errorCallback'}}($params->{'client'},$params->{'callbackParams'}); 
+		&{$params->{'errorCallback'}}($client,$params->{'callbackParams'}); 
 	};
 	if( $@ ) {
 	    $log->error("Error sending response: $@");
 	}
 }
+
 
 *escape   = \&URI::Escape::uri_escape_utf8;
 
