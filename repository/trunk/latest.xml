@@ -160,16 +160,18 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.10.3222" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.10.3296" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected missing entries in iPeng menus longer than 100 items
-			- Corrected Browse by selected mixer so it works correctly on track level
+			<changes lang="EN">- Corrected so Now Playing window is opened after you hit play
+			- Corrected so albumimage and albumfiles header templates works on Windows
+			- Added support for showing file formats in album headers
+			- Corrected Cyrillic character problem in browse menus (there are still problem in configuration pages)
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.3222.zip</url>
-                        <sha>6279074966fc8e569e35b5f239f7f9da6d605820</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.3296.zip</url>
+                        <sha>4c9fdd91e8426f77a0a6a55068b44f88e89e863c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -382,15 +384,16 @@
                         <sha>f727ff461710a8d68e156393c15f7f6e1843e822</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="SongLyrics" version="1.0.2997" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SongLyrics" version="1.1.3297" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics</title>
                         <desc lang="EN">A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">No changes since latest beta
+                        <changes lang="EN">- Added so lyrics are also retrieved from chartlyrics.com
+			- Added so lyrics are also retrieved from musixmatch.com
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.0.2997_fixed.zip</url>
-                        <sha>958330039031f1d9fdd62d4e2d5cbd6bacacbaa9</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3297.zip</url>
+                        <sha>c5b520a554c351dff279760b77fb987c9f411d9e</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
