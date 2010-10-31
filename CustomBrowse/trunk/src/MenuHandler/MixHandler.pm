@@ -151,6 +151,7 @@ sub getPreparedMixes {
 			}
 			$parameters->{'itemid'} = $item->{'itemid'};
 			$parameters->{'itemname'} = escape(defined($item->{'itemvalue'})?$item->{'itemvalue'}:$item->{'itemname'});
+			$parameters->{'itemnameuri'} = escape($parameters->{'itemname'});
 			addStandardParameters($parameters);
 			my $keywords = _combineKeywords($item->{'keywordparameters'},$item->{'parameters'},$parameters);
 

@@ -99,21 +99,21 @@ sub _execute {
 				while( $sth->fetch() ) {
 					if($newUnicodeHandling) {
 		                            my %item = (
-		                                'id' => $id?Slim::Utils::Unicode::utf8decode($id,'utf8'):$id
+		                                'id' => $id?Slim::Utils::Unicode::utf8on($id):$id
 					    );
 					    if(defined($name)) {
-		                                $item{'name'} = Slim::Utils::Unicode::utf8decode($name,'utf8');
+		                                $item{'name'} = Slim::Utils::Unicode::utf8on($name);
 		                            }else {
 						$item{'name'} = '';
 					    }
 					    if(defined($link)) {
-						$item{'link'} = Slim::Utils::Unicode::utf8decode($link,'utf8');
+						$item{'link'} = Slim::Utils::Unicode::utf8on($link);
 		                            }
 					    if(defined($valuetype)) {
-						$item{'type'} = Slim::Utils::Unicode::utf8decode($valuetype,'utf8');
+						$item{'type'} = Slim::Utils::Unicode::utf8on($valuetype);
 		                            }
 					    if(defined($valueformat)) {
-						$item{'format'} = Slim::Utils::Unicode::utf8decode($valueformat,'utf8');
+						$item{'format'} = Slim::Utils::Unicode::utf8on($valueformat);
 		                            }
 		                            push @result, \%item;
 					}else {

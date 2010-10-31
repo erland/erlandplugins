@@ -1030,7 +1030,7 @@ sub getPageItemsForContext {
 					}else {
 						$name = escape($it->{'itemname'});
 					}
-					$menuurl .= "&contextname=$name";
+					$menuurl .= "&contextname=".escape($name);
 				}
 				$regExp = "&"."contextid=";
 				if(defined($menuurl) && $contextParams->{'itemurl'} !~ /$regExp/) {
@@ -1507,7 +1507,13 @@ sub _getSubContext {
 			}
 			my $currentValueUnescaped = unescape($params->{$group}) if defined($params->{$group});
 			if($newUnicodeHandling) {
-				$currentValueUnescaped = Slim::Utils::Unicode::utf8decode($currentValueUnescaped) if defined($currentValueUnescaped);
+				if(defined($currentValueUnescaped)) {
+					if(Slim::Utils::Unicode::encodingFromString($currentValueUnescaped) ne 'utf8') {
+						$currentValueUnescaped = Slim::Utils::Unicode::utf8on($currentValueUnescaped);
+					}else {
+						$currentValueUnescaped = Slim::Utils::Unicode::utf8decode($currentValueUnescaped);
+					}
+				}
 			}else {
 				$currentValueUnescaped = Slim::Utils::Unicode::utf8on(Slim::Utils::Unicode::utf8decode($currentValueUnescaped)) if defined			}
 			my %parameters = ();
