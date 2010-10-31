@@ -333,6 +333,8 @@ sub getSimilarArtistsResponse {
 						);
 						push @result,\%item;
 					}
+				}elsif(ref($artists) eq 'HASH') {
+					$log->debug("Skipping ".$artist->{'name'}." ".($artist->{'match'}*100)." is below $limit");
 				}
 			}
 		}
