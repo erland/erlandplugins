@@ -9,7 +9,7 @@
 		<mixchecktype>function</mixchecktype>
 		<mixcheckdata>Plugins::CustomBrowse::Plugin::browseByMixable</mixcheckdata>
 		<mixdata>Plugins::CustomBrowse::Plugin::browseByMix</mixdata>
-		<mixurl>plugins/CustomBrowse/custombrowse_contextlist.html?contextname={itemname}&amp;contexttype={itemtype}&amp;contextid={itemid}</mixurl>
+		<mixurl>plugins/CustomBrowse/custombrowse_contextlist.html?contextname={itemnameuri}&amp;contexttype={itemtype}&amp;contextid={itemid}</mixurl>
 		<mixjive>custombrowse browsejivecontext contextid:{itemid} contexttype:{itemtype}</mixjive>
 		<miximage>html/images/browsebyselected.gif</miximage>
 	</mix>

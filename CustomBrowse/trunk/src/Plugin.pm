@@ -2166,7 +2166,6 @@ sub addWebMenus {
 # Draws the plugin's web page
 sub handleWebList {
         my ($client, $params) = @_;
-
 	$sqlerrors = '';
 	if(defined($params->{'cleancache'}) && $params->{'cleancache'}) {
 		my $cache = Slim::Utils::Cache->new("FileCache/CustomBrowse");
@@ -2385,7 +2384,7 @@ sub handleWebContextList {
 		my %c = (
 			'itemid' => $params->{'contextid'},
 			'itemtype' => $params->{'contexttype'},
-			'itemname' => $params->{'contextname'}
+			'itemname' => Slim::Utils::Unicode::utf8on(unescape($params->{'contextname'})),
 		);
 		my $contextString = '';
 		if(defined($c{'itemid'})) {
@@ -2395,7 +2394,7 @@ sub handleWebContextList {
 			$contextString .= "&contexttype=".$c{'itemtype'};
 		}
 		if(defined($c{'itemname'})) {
-			$contextString .= "&contextname=".escape($c{'itemname'});
+			$contextString .= "&contextname=".escape(escape($c{'itemname'}));
 		}
 		$c{'itemurl'} = $contextString;
 		if($params->{'noitems'}) {
