@@ -4285,7 +4285,36 @@
 						"animate": "false"
 					}
 				]
-                        }
+                        },
+			{
+				"name":"Children Clock",
+				"contributors":"doubleugk",
+				"models":["radio"],
+				"backgroundtype":"black",
+				"items":[
+					{
+						"itemtype":"clockimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/ChildrenClock/clockface_jmk02.png"
+					},
+					{
+						"itemtype":"hourimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/ChildrenClock/hourhand_pen.png"
+					},
+					{
+						"itemtype":"minuteimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/ChildrenClock/minutehand_pen.png"
+					},
+					{
+						"itemtype":"alarmicon",
+						"posy":"20",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/ChildrenClock/Alarm_jmk.png",
+						"posx":"280"
+					}
+				]
+			}
 		]
 	}
 }
