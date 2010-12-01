@@ -38,6 +38,10 @@ sub isAudioURL {
 	return 1;
 }
 
+sub isRemote { 
+	return 0; 
+}
+
 sub contentType {
 	return 'dynamicplaylist';
 }
