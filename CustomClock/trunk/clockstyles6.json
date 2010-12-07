@@ -4314,6 +4314,36 @@
 						"posx":"280"
 					}
 				]
+			},
+			{
+				"name":"Grandfather Clock",
+				"models":["radio"],
+				"backgrounddynamic":"false",
+				"contributors":"doubleugk featuring huw",
+				"backgroundtype":"black",
+				"items":[
+					{
+						"itemtype":"clockimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/GrandfatherClock/Grandfather_cf.png"
+					},
+					{
+						"itemtype":"hourimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/GrandfatherClock/Grandfather_hh.png"
+					},
+					{
+						"itemtype":"minuteimage",
+						"dynamic":"false",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/GrandfatherClock/Grandfather_mh.png"
+					},
+					{
+						"itemtype":"alarmicon",
+						"posy":"140",
+						"url":"http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/GrandfatherClock/Grandfather_ai.png",
+						"posx":"150"
+					}
+				]
 			}
 		]
 	}
