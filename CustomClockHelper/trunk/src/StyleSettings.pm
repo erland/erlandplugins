@@ -530,6 +530,7 @@ sub handler {
 				$item->{'type'} = 'singlelist';
 				my @values = ();
 				push @values,{id=>'text',name=>'text'};				
+				push @values,{id=>'timeicon',name=>'timeicon'};
 				push @values,{id=>'timetext',name=>'timetext'};				
 				push @values,{id=>'tracktext',name=>'tracktext'};				
 				push @values,{id=>'trackplayingtext',name=>'trackplayingtext'};				
@@ -903,6 +904,18 @@ sub handler {
 				push @values,{id=>'%A %m1 %B',name=>'Wednesday 15 April'};				
 				push @values,{id=>'%a %m1 %b',name=>'Wed 15 Apr'};				
 				push @values,{id=>'%H:%M:%S',name=>'17:46:13'};				
+				$item->{'values'} = \@values;
+			}elsif($item->{'id'} eq 'text' && $itemtype eq 'timeicon') {
+				$item->{'type'} = 'optionalsinglecombobox';
+				my @values = ();
+				push @values,{id=>'%S',name=>'Seconds, 60 frames (00-59)'};
+				push @values,{id=>'%I',name=>'12 hour clock, 13 frames (00-12)'};
+				push @values,{id=>'%H',name=>'24 hour clock, 24 frames (00-23)'};
+				push @values,{id=>'%M',name=>'Minutes, 60 frames (00-59)'};
+				push @values,{id=>'%d',name=>'Day of month, 32 frames (00-31)'};
+				push @values,{id=>'%w',name=>'Weekday, 7 frames (Sun-Sat)'};
+				push @values,{id=>'%m',name=>'Month, 13 frames (00-12)'};
+				push @values,{id=>'%y',name=>'2 digit year, 100 frames (00-99)'};
 				$item->{'values'} = \@values;
 			}elsif($item->{'id'} eq 'text' && $itemtype eq 'alarmtimetext') {
 				$item->{'type'} = 'optionalsinglecombobox';
