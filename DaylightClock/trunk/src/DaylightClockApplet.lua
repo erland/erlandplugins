@@ -24,7 +24,7 @@ local pairs, ipairs, tostring, tonumber = pairs, ipairs, tostring, tonumber
 local oo               = require("loop.simple")
 local os               = require("os")
 local math             = require("math")
-local string           = require("string")
+local string           = require("jive.utils.string")
 local table            = require("jive.utils.table")
 
 local datetime         = require("jive.utils.datetime")
@@ -891,7 +891,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 		self.lasttimes[cacheKey] = os.time()
 		log:debug("Initiating image update of "..perspectiveurl.." (offset="..self.offsets[cacheKey].. " minutes)")
 
-		local http = SocketHttp(jnt, "static.die.net", 80)
+		local http = SocketHttp(jnt, jnt:getSNHostname(), 80)
 		local req = RequestHttp(function(chunk, err)
 				if chunk then
 				        local image = Surface:loadImageData(chunk, #chunk)
@@ -926,7 +926,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 				        log:error("error loading picture " .. perspectiveurl)
 				end
 			end,
-			'GET', perspectiveurl .. "/480.jpg")
+			'GET', '/public/imageproxy?u=' .. string.urlEncode("http://static.die.net"..perspectiveurl .. "/480.jpg"))
 		http:fetch(req)
 		self.lasttimes[cacheKey] = os.time()
 		self.lastminutes[cacheKey] = minute
