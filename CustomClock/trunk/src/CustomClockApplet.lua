@@ -1001,7 +1001,7 @@ function _updateSongInfoIcons(self,player)
 		local width,height = Framework.getScreenSize()
 		for no,item in pairs(self.configItems) do
 			if item.itemtype == "songinfoicon" then
-				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true")
+				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true",_updateSongInfoIcon(item.allowproxy,"true"))
 			end
 		end
 	end
@@ -2584,7 +2584,9 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 					url = results[currentResult+_getNumber(item.offset,0)][item.logotype]
 				end
 			end
+			local allowProxy = "true"
 			if url and not string.find(url,"^http") then
+				allowProxy = "false"
 				local ip,port = server:getIpPort()
 				if not string.find(url,"^/") then
 					url = "/"..url
@@ -2600,7 +2602,7 @@ function _changeSDTItem(self,category,item,widget,id,dynamic)
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+				self:_retrieveImage(url,self.mode.."item"..id,_getString(item.allowproxy,allowProxy),dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 				self:_removeFromCache(id)
@@ -2634,7 +2636,9 @@ function _changePluginItem(self,category,item,widget,id,dynamic)
 			if #results>=(currentResult+_getNumber(item.offset,0)) then
 				url = results[currentResult+_getNumber(item.offset,0)][item.logotype]
 			end
+			local allowProxy = "true"
 			if url and not string.find(url,"^http") then
+				allowProxy = "false"
 				local ip,port = server:getIpPort()
 				if not string.find(url,"^/") then
 					url = "/"..url
@@ -2650,7 +2654,7 @@ function _changePluginItem(self,category,item,widget,id,dynamic)
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+				self:_retrieveImage(url,self.mode.."item"..id,_getString(item.allowproxy,allowProxy),dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 				self:_removeFromCache(id)
@@ -2684,7 +2688,9 @@ function _changeRSSItem(self,category,item,widget,id,dynamic)
 			if #results>=(currentResult+_getNumber(item.offset,0)) then
 				url = results[currentResult+_getNumber(item.offset,0)].url
 			end
+			local allowProxy = "true"
 			if url and not string.find(url,"^http") then
+				allowProxy = "false"
 				local ip,port = server:getIpPort()
 				if not string.find(url,"^/") then
 					url = "/"..url
@@ -2700,7 +2706,7 @@ function _changeRSSItem(self,category,item,widget,id,dynamic)
 			end
 			if url then
 				self.referenceimages[self.mode.."item"..id] = id
-				self:_retrieveImage(url,self.mode.."item"..id,dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+				self:_retrieveImage(url,self.mode.."item"..id,_getString(item.allowproxy,allowProxy),dynamic,_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			else
 				widget:setWidgetValue("itemno",nil)
 				self:_removeFromCache(id)
@@ -2892,7 +2898,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,item)
 					if url then
 						self.configItems[id].url = url
 						self.referenceimages[self.mode.."item"..id] = id
-						self:_retrieveImage(url,self.mode.."item"..id,"true",_getNumber(width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(url,self.mode.."item"..id,_getString(item.allowproxy,"true"),"true",_getNumber(width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					end
 				end
 			end,
@@ -2902,7 +2908,7 @@ function _updateSDTWeatherMapIcon(self,widget,id,item)
 	end
 end
 
-function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
+function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic,allowproxy)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
 	if not self.sdtSongInfoChecked and not self:getSettings()['sdtSongInfoInstalled'] then
@@ -2913,7 +2919,7 @@ function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 					self.sdtSongInfoChecked = true
 					if tonumber(chunk.data._can) == 1 then
 						self:getSettings()['sdtSongInfoInstalled'] = true
-						self:_updateSongInfoIcon(widget,id,width,height,module,dynamic)
+						self:_updateSongInfoIcon(widget,id,width,height,module,dynamic,allowproxy)
 					else	
 						self:getSettings()['sdtSongInfoInstalled'] = false
 					end
@@ -2935,7 +2941,7 @@ function _updateSongInfoIcon(self,widget,id,width,height,module,dynamic)
 						end
 						local imageNo = math.random(1,#self.configItems[id].urls)
 						self.referenceimages[self.mode.."item"..id] = id
-						self:_retrieveImage(self.configItems[id].urls[imageNo],self.mode.."item"..id,dynamic,_getNumber(width,nil),_getNumber(height,nil))
+						self:_retrieveImage(self.configItems[id].urls[imageNo],self.mode.."item"..id,allowproxy,dynamic,_getNumber(width,nil),_getNumber(height,nil))
 					else
 						self.configItems[id].urls = nil
 					end
@@ -2971,7 +2977,7 @@ function _updateGalleryImage(self,widget,id,width,height,favorite)
 								end
 								url = "http://"..ip..":"..port..url
 								self.referenceimages[self.mode.."item"..id] = id
-								self:_retrieveImage(url,self.mode.."item"..id,"true")
+								self:_retrieveImage(url,self.mode.."item"..id,"false","true")
 							end
 						end,
 						nil,
@@ -3429,7 +3435,7 @@ function _tick(self,forcedUpdate)
 			elseif self.lastminute!=minute and (not item.url or (minute % 15 == 0 and not _getNumber(item.interval,nil)) or (_getNumber(item.interval,nil) and minute % tonumber(item.interval)==0)) then
 				if item.url then
 					self.referenceimages[self.mode.."item"..no] = no
-					self:_retrieveImage(item.url,self.mode.."item"..no,"true",item.width,item.height,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+					self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.allowproxy,"true"),"true",item.width,item.height,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 				else
 					self:_updateSDTWeatherMapIcon(self.items[no],no,item)
 				end
@@ -3438,18 +3444,18 @@ function _tick(self,forcedUpdate)
 			if forcedUpdate or (minute % 3 == 0 and self.lastminute!=minute) then
 				self:_updateFromCache(no)		
 				local width,height = Framework.getScreenSize()
-				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true")
+				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true",_getString(item.allowproxy,"true"))
 			elseif second % _getNumber(item.interval,10) == 0 and item.urls and #item.urls>0 then
 				local width,height = Framework.getScreenSize()
 				local imageNo = math.random(1,#item.urls)
 				self.referenceimages[self.mode.."item"..no] = no
-				self:_retrieveImage(item.urls[imageNo],self.mode.."item"..no,"true",_getNumber(item.width,width),_getNumber(item.height,height))
+				self:_retrieveImage(item.urls[imageNo],self.mode.."item"..no,_getString(item.allowproxy,"true"),"true",_getNumber(item.width,width),_getNumber(item.height,height))
 			end
 		elseif item.itemtype == "imageicon" and _getString(item.url,nil) then
 			if forcedUpdate or (minute % _getNumber(item.interval,30) == 0 and self.lastminute!=minute) then
 				self:_updateFromCache(no)		
 				self.referenceimages[self.mode.."item"..no] = no
-				self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.dynamic,"true"),_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+				self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.allowproxy,"true"),_getString(item.dynamic,"true"),_getNumber(item.width,nil),_getNumber(item.height,nil),_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 			end
 		elseif item.itemtype == "appleticon" then
 			if self.customItemTypes and _getString(item.icontype,nil) and self.customItemTypes[item.icontype.."icon"] then
@@ -3849,7 +3855,7 @@ function _reDrawAnalog(self,screen)
 	end
 end
 
-function _retrieveImage(self,url,imageType,dynamic,width,height,clipX,clipY,clipWidth,clipHeight)
+function _retrieveImage(self,url,imageType,allowProxy,dynamic,width,height,clipX,clipY,clipWidth,clipHeight)
 	local imagehost = ""
 	local imageport = tonumber("80")
 	local imagepath = ""
@@ -3872,12 +3878,14 @@ function _retrieveImage(self,url,imageType,dynamic,width,height,clipX,clipY,clip
 	end
 
 	if imagepath != "" and imagehost != "" then
- 		if string.find(url, "^http://192%.168") or
+ 		if allowProxy == "false" or
+			string.find(url, "^http://192%.168") or
 			string.find(url, "^http://172%.16%.") or
 			string.find(url, "^http://10%.") then
 			-- Use direct url
 		else
                         imagehost = jnt:getSNHostname()
+			imageport = tonumber(80)
 			imagepath = '/public/imageproxy?u=' .. string.urlEncode(url)
 			if width then
 				imagepath = imagepath.."&w="..width
@@ -3994,18 +4002,18 @@ function _imageUpdate(self)
 
 	local no = 1
 	for _,item in pairs(self.configItems) do
-		if string.find(item.itemtype,"icon$") and item.itemtype ~= "imageicon" then
+		if string.find(item.itemtype,"icon$") and item.itemtype ~= "imageicon" and item.itemtype ~= "rssicon" then
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -4015,14 +4023,14 @@ function _imageUpdate(self)
 			for attr,value in pairs(item) do
 				if attr == "url" then
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
 				elseif string.find(attr,"^url%.") then
 					local id = string.gsub(attr,"^url%.","")
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -4033,7 +4041,7 @@ function _imageUpdate(self)
 				if attr == "url" then
 					self.vumeterimages[self.mode.."item"..no] = no
 					if _getString(item.url,nil) then
-						self:_retrieveImage(item.url,self.mode.."item"..no,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(item.url,self.mode.."item"..no,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no] = nil
 					end
@@ -4041,7 +4049,7 @@ function _imageUpdate(self)
 					local id = string.gsub(attr,"^url%.","")
 					self.vumeterimages[self.mode.."item"..no.."."..id] = no
 					if _getString(value,nil) then
-						self:_retrieveImage(value,self.mode.."item"..no.."."..id,item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
+						self:_retrieveImage(value,self.mode.."item"..no.."."..id,_getString(item.allowproxy,"true"),item.dynamic,_getNumber(item.clipx,nil),_getNumber(item.clipy,nil),_getNumber(item.clipwidth,nil),_getNumber(item.clipheight,nil))
 					else
 						self.images[self.mode.."item"..no.."."..id] = nil
 					end
@@ -4051,7 +4059,7 @@ function _imageUpdate(self)
 		no = no +1
 	end
 	if _getString(self:getSettings()[self.mode.."background"],nil) then
-		self:_retrieveImage(self:getSettings()[self.mode.."background"],self.mode.."background",self:getSettings()[self.mode.."backgrounddynamic"])
+		self:_retrieveImage(self:getSettings()[self.mode.."background"],self.mode.."background","true",self:getSettings()[self.mode.."backgrounddynamic"])
 	else
 		self.images[self.mode.."background"] = nil
 	end
