@@ -2833,7 +2833,7 @@ sub registerJiveMenu {
 	my $client = shift;
 	my @menuItems = (
 		{
-			text => Slim::Utils::Strings::string(getDisplayName()),
+			text => Slim::Utils::Strings::string('PLUGIN_TRACKSTAT'),
 			weight => 85,
 			id => 'trackstat',
 			menuIcon => 'iPeng/plugins/TrackStat/html/images/trackstat.png',
