@@ -82,7 +82,7 @@ sub initPlugin
 
 	if(UNIVERSAL::can("Plugins::SongInfo::Plugin","registerInformationModule")) {
                 Plugins::SongInfo::Plugin::registerInformationModule('songlyrics',{
-                        'name' => 'Song Lyrics',
+                        'name' => string('SONGLYRICS'),
                         'description' => "This module gets song lyrics for the specified song, the lyrics are provided by http://lyricsfly.com or http://chartlyrics.com or http://musixmatch.com",
                         'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
