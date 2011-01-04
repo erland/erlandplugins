@@ -433,11 +433,15 @@ sub getInformationModules {
 					my $item = $data->{$key};
 					if(defined($item->{'name'})) {
 						if(!defined($data->{'minpluginversion'}) || isAllowedVersion($data->{'minpluginversion'})) {
+							my $prop;
 							$items{$key} = $item;
 							$items{$key}->{'id'} = $key;
-							$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
-							$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
-							$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
+							$prop = getSongInfoProperty($key."webmenu");
+							$items{$key}->{'webmenu'} = $prop unless not defined $prop;
+							$prop = getSongInfoProperty($key."playermenu");
+							$items{$key}->{'playermenu'} = $prop unless not defined $prop;
+							$prop = getSongInfoProperty($key."jivemenu");
+							$items{$key}->{'jivemenu'} = $prop unless not defined $prop;
 						}
 					}
 				}
@@ -450,11 +454,15 @@ sub getInformationModules {
 		my $item = $externalModules->{$key};
 		if(defined($item->{'name'})) {
 			if(!defined($item->{'minpluginversion'}) || isAllowedVersion($item->{'minpluginversion'})) {
+				my $prop;
 				$items{$key} = $item;
 				$items{$key}->{'id'} = $key;
-				$items{$key}->{'webmenu'} = getSongInfoProperty($key."webmenu")||$items{$key}->{'webmenu'};
-				$items{$key}->{'playermenu'} = getSongInfoProperty($key."playermenu")||$items{$key}->{'playermenu'};
-				$items{$key}->{'jivemenu'} = getSongInfoProperty($key."jivemenu")||$items{$key}->{'jivemenu'};
+				$prop = getSongInfoProperty($key."webmenu");
+				$items{$key}->{'webmenu'} = $prop unless not defined $prop;
+				$prop = getSongInfoProperty($key."playermenu");
+				$items{$key}->{'playermenu'} = $prop unless not defined $prop;
+				$prop = getSongInfoProperty($key."jivemenu");
+				$items{$key}->{'jivemenu'} = $prop unless not defined $prop;
 			}
 		}
 	}
