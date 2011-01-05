@@ -30,6 +30,7 @@ use XML::Simple;
 use File::Spec::Functions qw(:ALL);
 #use Data::Dumper;
 use Slim::Utils::Prefs;
+use Slim::Utils::Strings qw(string);
 use Plugins::SongInfo::Validators;
 use LWP::UserAgent;
 my $prefs = preferences('plugin.songinfo');
@@ -49,8 +50,8 @@ my $API_KEY = "719216c369dd619aa30debb89e96fdba";
 sub getSongInfoFunctions {
 	my $functions = {
 		'lastfmsimilarartists' => {
-			'name' => 'LastFM Similar Artists',
-			'description' => "This module gets information about similar artists",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTISTS'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTISTS_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -64,8 +65,8 @@ sub getSongInfoFunctions {
 			'properties' => [
 				{
 					'id' => 'lastfmsimilarartistpercent',
-					'name' => 'Similarity percentage',
-					'description' => 'The percentage of similarity that an artist must have to be included as a similar artist',
+					'name' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_PERCENTAGE'),
+					'description' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_PERCENTAGE_DESC'),
 					'type' => 'text',
 					'validate' => \&Plugins::SongInfo::Validators::isInt,
 					'value' => 80
@@ -73,8 +74,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmsimilarartistsimages' => {
-			'name' => 'LastFM Similar Artists Images',
-			'description' => "This module gets images of similar artists",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_IMAGES'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_IMAGES_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -88,8 +89,8 @@ sub getSongInfoFunctions {
 			'properties' => [
 				{
 					'id' => 'lastfmsimilarartistpercent',
-					'name' => 'Similarity percentage',
-					'description' => 'The percentage of similarity that an artist must have to be included as a similar artist',
+					'name' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_PERCENTAGE'),
+					'description' => string('PLUGIN_SONGINFO_LASTFM_SIMILAR_ARTIST_PERCENTAGE_DESC'),
 					'type' => 'text',
 					'validate' => \&Plugins::SongInfo::Validators::isInt,
 					'value' => 80
@@ -97,8 +98,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmtracktags' => {
-			'name' => 'LastFM Song Tags',
-			'description' => "This module gets information about LastFM tags of a song",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_SONG_TAGS'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_SONG_TAGS_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -113,8 +114,8 @@ sub getSongInfoFunctions {
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',
-					'name' => 'Tag percentage',
-					'description' => 'The percentage a tag must have to be included',
+					'name' => string('PLUGIN_SONGINFO_LASTFM_TAG_PERCENTAGE'),
+					'description' => string('PLUGIN_SONGINFO_LASTFM_TAG_PERCENTAGE_DESC'),
 					'type' => 'text',
 					'validate' => \&Plugins::SongInfo::Validators::isInt,
 					'value' => 10
@@ -122,8 +123,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmartisttags' => {
-			'name' => 'LastFM Artist Tags',
-			'description' => "This module gets information about LastFM tags of an artist",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_TAGS'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_TAGS_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -138,8 +139,8 @@ sub getSongInfoFunctions {
 			'properties' => [
 				{
 					'id' => 'lastfmtagspercent',
-					'name' => 'Tag percentage',
-					'description' => 'The percentage a tag must have to be included',
+					'name' => string('PLUGIN_SONGINFO_LASTFM_TAG_PERCENTAGE'),
+					'description' => string('PLUGIN_SONGINFO_LASTFM_TAG_PERCENTAGE_DESC'),
 					'type' => 'text',
 					'validate' => \&Plugins::SongInfo::Validators::isInt,
 					'value' => 10
@@ -147,8 +148,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmartistimages' => {
-			'name' => 'LastFM Artist Images',
-			'description' => "This module gets artist images from LastFM tags",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_IMAGES'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_IMAGES_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -163,8 +164,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmalbumimage' => {
-			'name' => 'LastFM Album Image',
-			'description' => "This module gets album image from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ALBUM_IMAGE'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ALBUM_IMAGE_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -179,8 +180,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmartistbio' => {
-			'name' => 'LastFM Artist Biography',
-			'description' => "This module gets artist biography from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_BIO'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_BIO_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -195,8 +196,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmartistevents' => {
-			'name' => 'LastFM Artist Events',
-			'description' => "This module gets artist events from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_EVENTS'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ARTIST_EVENTS_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -211,8 +212,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmalbumdesc' => {
-			'name' => 'LastFM Album Description',
-			'description' => "This module gets album description from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_ALBUM_DESCRIPTION'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_ALBUM_DESCRIPTION_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -227,8 +228,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmtrackdesc' => {
-			'name' => 'LastFM Track Description',
-			'description' => "This module gets track description from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_TRACK_DESCRIPTION'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_TRACK_DESCRIPTION_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
@@ -243,8 +244,8 @@ sub getSongInfoFunctions {
 			]
 		},
 		'lastfmtrackimage' => {
-			'name' => 'LastFM Track Image',
-			'description' => "This module gets album image from LastFM",
+			'name' => string('PLUGIN_SONGINFO_LASTFM_TRACK_IMAGE'),
+			'description' => string('PLUGIN_SONGINFO_LASTFM_TRACK_IMAGE_DESC'),
 			'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
 			'dataproviderlink' => 'http://www.last.fm',
