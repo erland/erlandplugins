@@ -386,7 +386,7 @@
                 </plugin>
                 <plugin name="SongLyrics" version="1.1.3297" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics</title>
-                        <desc lang="EN">A plugin that shows lyrics from lyricsfly.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <desc lang="EN">A plugin that shows lyrics from lyricsfly.com, chartlyrics.com and musixmatch.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Added so lyrics are also retrieved from chartlyrics.com
 			- Added so lyrics are also retrieved from musixmatch.com
                         </changes>
