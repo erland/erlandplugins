@@ -37,8 +37,22 @@
 					<option>
 						<id>byyear</id>
 						<name>Sort by year</name>
+						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
-						<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
+						<menudata>
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+							where 
+								[%- IF library or activelibrary %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+								[%- END %]
+								tracks.audio=1 and 
+								albums.id=tracks.album and 
+								tracks.id=genre_track.track and 
+								genre_track.genre={genre} 
+							group by albums.id 
+							order by albums.year desc,albums.titlesort asc,albums.disc asc
+						</menudata>
 					</option>
 					<option>
 						<id>bytitle</id>
@@ -138,8 +152,23 @@
 					<option>
 						<id>byyear</id>
 						<name>Sort by year</name>
-						<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
+						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
+						<menudata>
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) albums,genre_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+							where
+								[%- IF library or activelibrary %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+								[%- END %]
+								tracks.audio=1 and
+								tracks.album=albums.id and
+								tracks.id=genre_track.track and
+								genre_track.genre={genre} and
+								albums.compilation = 1
+							group by albums.id
+							order by albums.year desc,albums.titlesort asc,albums.disc asc
+						</menudata>
 					</option>
 					<option>
 						<id>bytitle</id>
@@ -233,8 +262,24 @@
 					<option>
 						<id>byyear</id>
 						<name>Sort by year</name>
+						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
-						<keyword name="orderby" value="albums.year desc,albums.titlesort asc,albums.disc asc"/>
+						<menudata>
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,contributor_album,albums,genre_track[% IF library or activelibrary %],multilibrary_track[% END %] 
+							where 
+								[%- IF library or activelibrary %]
+								tracks.id=multilibrary_track.track and
+								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
+								[%- END %]
+								tracks.audio=1 and 
+								albums.id=tracks.album and 
+								tracks.album=contributor_album.album and 
+								contributor_album.contributor={artist} and 
+								tracks.id=genre_track.track and 
+								genre_track.genre={genre} 
+							group by albums.id 
+							order by albums.year desc,albums.titlesort asc,albums.disc asc
+						</menudata>
 					</option>
 					<option>
 						<id>bytitle</id>
