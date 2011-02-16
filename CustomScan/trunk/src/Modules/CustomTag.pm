@@ -249,6 +249,7 @@ sub scanTrack {
 	my $track = shift;
 	my @result = ();
 	my @resultVirtual = ();
+	my @resultSort = ();
 	$log->debug("Scanning track: ".$track->title."\n");
 	my $tags = Slim::Formats->readTags($track->url);
 	if($log->is_debug) {
@@ -301,6 +302,7 @@ sub scanTrack {
 			}
 
 			my %customSortTagsHash = ();
+			my %customSortTags = ();
 			if(defined($customSortTagProperty) && $customSortTagProperty) {
 				my @customSortTags = split(/\s*,\s*/,$customSortTagProperty);
 				for my $customSortTag (@customSortTags) {
@@ -308,6 +310,7 @@ sub scanTrack {
 						my $tag = $1;
 						my $sortTag = $2;
 						$customSortTagsHash{uc($tag)} = uc($sortTag);
+						$customSortTags{uc($sortTag)} = 1;
 					}
 				}
 			}
@@ -328,7 +331,7 @@ sub scanTrack {
 			}
 			for my $tag (keys %$tags) {
 				$tag = uc($tag);
-				if($customTagsHash{$tag} || $virtualTagsHash{$tag}) {
+				if($customTagsHash{$tag} || $virtualTagsHash{$tag} || $customSortTags{$tag}) {
 					my $values = $tags->{$tag};
 					if(!defined($singleValueTagsHash{$tag}) && !defined($virtualTagsHash{$tag})) {
 						my @arrayValues = splitTag($tags->{$tag});
@@ -352,9 +355,12 @@ sub scanTrack {
 									$item{'sorttagindex'} = $index;
 								}
 
+								if($customSortTags{$tag}) {
+									push @resultSort,\%item;
+								}
 								if($customTagsHash{$tag}) {
 									push @result,\%item;
-								}else {
+								}elsif($virtualTagsHash{$tag}) {
 									push @resultVirtual,\%item;
 								}
 							}
@@ -372,9 +378,12 @@ sub scanTrack {
 								$item{'sorttag'} = $sortTag;
 								$item{'sorttagindex'} = 0;
 							}
+							if($customSortTags{$tag}) {
+								push @resultSort,\%item;
+							}
 							if($customTagsHash{$tag}) {
 								push @result,\%item;
-							}else {
+							}elsif($virtualTagsHash{$tag}) {
 								push @resultVirtual,\%item;
 							}
 						}
@@ -560,12 +569,22 @@ sub scanTrack {
 					}
 				}
 			}
-			$resultHash = createTagHash(\@result,\@resultVirtual);
+			if(scalar(@resultVirtual)>0) {
+				$resultHash = createTagHash(\@result,\@resultVirtual);
+			}else {
+				$resultHash = {};
+			}
+			my $resultSortHash = createTagHash(\@resultSort);
 
 			for my $item (@result) {
 				if(exists $item->{'sorttag'}) {
+					my $values = undef;
 					if(exists $resultHash->{$item->{'sorttag'}}) {
-						my $values = $resultHash->{$item->{'sorttag'}};
+						$values = $resultHash->{$item->{'sorttag'}};
+					}elsif(exists $resultSortHash->{$item->{'sorttag'}}) {
+						$values = $resultSortHash->{$item->{'sorttag'}};
+					}
+					if(defined($values)) {
 						if(ref($values) eq 'ARRAY') {
 							if(scalar(@$values)>$item->{'sorttagindex'}) {
 								$item->{'valuesort'}=$values->[$item->{'sorttagindex'}];
@@ -587,7 +606,10 @@ sub createTagHash {
 
 	my %resultHash = ();
 	my @items = @$array1;
-	push @items,@$array2;
+	if(defined($array2)) {
+		push @items,@$array2;
+	}
+	
 	for my $item (@items) {
 		if(exists $resultHash{$item->{'name'}}) {
 			my $values = undef;
