@@ -315,6 +315,7 @@ sub scanTrack {
 				}
 			}
 			my %virtualTagsHash = ();
+			my %virtualSingleTagsHash = ();
 			my @customTagsMappings = split(/,/,$customTagMappingProperty);
 			for my $customTagMapping (@customTagsMappings) {
 				$customTagMapping =~ s/\\COMMA/,/;
@@ -323,6 +324,7 @@ sub scanTrack {
 					for my $part (@parts) {
 						if($part =~ /^\s*([A-Z0-9_]+)\(.*$/) {
 							$virtualTagsHash{$1} = 1;
+							$virtualSingleTagsHash{$1} = 1;
 						}elsif($part =~ /^\s*([A-Z0-9_]+)\s*$/) {
 							$virtualTagsHash{$1} = 1;
 						}
@@ -333,7 +335,7 @@ sub scanTrack {
 				$tag = uc($tag);
 				if($customTagsHash{$tag} || $virtualTagsHash{$tag} || $customSortTags{$tag}) {
 					my $values = $tags->{$tag};
-					if(!defined($singleValueTagsHash{$tag}) && !defined($virtualTagsHash{$tag})) {
+					if(!defined($singleValueTagsHash{$tag}) && !defined($virtualSingleTagsHash{$tag})) {
 						my @arrayValues = splitTag($tags->{$tag});
 						$values = \@arrayValues;
 					}
