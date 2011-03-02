@@ -54,7 +54,7 @@ my $PLUGINVERSION = undef;
 my $KEY = undef;
 
 my @lyricsHandlers = (
-	\&Plugins::SongLyrics::Modules::LyricsFly::getLyrics, 
+#	\&Plugins::SongLyrics::Modules::LyricsFly::getLyrics, 
 	\&Plugins::SongLyrics::Modules::ChartLyrics::getLyrics,
 	\&Plugins::SongLyrics::Modules::Musixmatch::getLyrics, 
 );
