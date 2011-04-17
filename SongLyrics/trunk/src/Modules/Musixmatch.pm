@@ -63,7 +63,13 @@ sub getLyrics {
 			artistName => $artistName,
 			
 		});
-	$http->get("http://api.musixmatch.com/ws/1.1/track.search?apikey=".$API_KEY."&q_artist=".$artistName."&q_track=".$trackTitle."&format=xml&page_size=1&f_has_lyrics=1");
+	if($trackTitle =~ /\s*\(fea.+\)$/) {
+		$trackTitle =~ s/\s*\(fea.+\)$//;
+	}
+	if($trackTitle =~ /\s*\(Fea.+\)$/) {
+		$trackTitle =~ s/\s*\(Fea.+\)$//;
+	}
+	$http->get("http://api.musixmatch.com/ws/1.1/track.search?apikey=".$API_KEY."&q_artist=".escape($artistName)."&q_track=".$trackTitle."&format=xml&page_size=1&f_has_lyrics=1");
 }
 sub getMusiXmatchTrackResponse {
 	my $http = shift;
@@ -109,14 +115,16 @@ sub getMusiXmatchLyricsResponse {
 		$log->debug("Got MusiXmatch lyrics result: ".Dumper($xml));
 		if(defined($xml) && defined($xml->{'body'}) && defined($xml->{'body'}->{'lyrics'}) && defined($xml->{'body'}->{'lyrics'}->{'lyrics_body'})) {
 			my $text = $xml->{'body'}->{'lyrics'}->{'lyrics_body'};
-			my %item = (
-				'type' => 'text',
-				'text' => $text,
-				'providername' => "Lyrics delivered by musixmatch.com",
-				'providerlink' => "http://musixmatch.com",
-			);
-			Plugins::SongLyrics::Plugin::returnResult($params->{'client'},$params->{'params'},\%item);
-			return;
+			if(ref($text) ne 'HASH') {
+				my %item = (
+					'type' => 'text',
+					'text' => $text,
+					'providername' => "Lyrics delivered by musixmatch.com",
+					'providerlink' => "http://musixmatch.com",
+				);
+				Plugins::SongLyrics::Plugin::returnResult($params->{'client'},$params->{'params'},\%item);
+				return;
+			}
 		}
 	}
 	Plugins::SongLyrics::Plugin::executeNextHandler($params->{'client'},
@@ -131,7 +139,12 @@ sub gotErrorViaHTTP {
 	my $http = shift;
 	my $params = $http->params();
 
-	Plugins::SongLyrics::Plugin::returnError($params->{'client'},$params->{'params'});
+        Plugins::SongLyrics::Plugin::executeNextHandler($params->{'client'},
+                $params->{'params'},
+                $params->{'track'},
+                $params->{'trackTitle'},
+                $params->{'albumTitle'},
+                $params->{'artistName'});
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

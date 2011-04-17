@@ -55,8 +55,8 @@ my $KEY = undef;
 
 my @lyricsHandlers = (
 #	\&Plugins::SongLyrics::Modules::LyricsFly::getLyrics, 
-	\&Plugins::SongLyrics::Modules::ChartLyrics::getLyrics,
 	\&Plugins::SongLyrics::Modules::Musixmatch::getLyrics, 
+	\&Plugins::SongLyrics::Modules::ChartLyrics::getLyrics,
 );
 
 sub getDisplayName()
@@ -86,7 +86,7 @@ sub initPlugin
                         'description' => string('PLUGIN_SONGLYRICS_MODULE_DESC'),
                         'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
-			'dataprovidername' => 'lyricsfly.com or chartlyrics.com or musixmatch.com',
+			'dataprovidername' => 'musixmatch.com or chartlyrics.com',
                         'function' => \&getSongLyrics,
                         'type' => 'text',
                         'context' => 'track',
@@ -151,6 +151,8 @@ sub returnResult {
 	my @resultArray = ();
 	if(defined($result)) {
 		push @resultArray,$result;
+	}else {
+		$log->info("Lyrics could not be found");
 	}
 	eval { 
 		&{$params->{'callback'}}($client,$params->{'callbackParams'},\@resultArray); 

@@ -59,6 +59,12 @@ sub getLyrics {
 			artistName => $artistName,
 			
 		});
+        if($trackTitle =~ /\s*\(fea.+\)$/) {
+                $trackTitle =~ s/\s*\(fea.+\)$//;
+        }
+        if($trackTitle =~ /\s*\(Fea.+\)$/) {
+                $trackTitle =~ s/\s*\(Fea.+\)$//;
+        }
 	$http->get("http://api.chartlyrics.com/apiv1.asmx/SearchLyricDirect?artist=".$artistName."&song=".$trackTitle);
 }
 sub getChartLyricsResponse {
@@ -93,7 +99,12 @@ sub gotErrorViaHTTP {
 	my $http = shift;
 	my $params = $http->params();
 
-	Plugins::SongLyrics::Plugin::returnError($params->{'client'},$params->{'params'});
+        Plugins::SongLyrics::Plugin::executeNextHandler($params->{'client'},
+                $params->{'params'},
+                $params->{'track'},
+                $params->{'trackTitle'},
+                $params->{'albumTitle'},
+                $params->{'artistName'});
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;
