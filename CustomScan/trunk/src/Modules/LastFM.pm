@@ -131,11 +131,11 @@ sub scanArtist {
 			if(ref($similarartists) eq 'ARRAY') {
 				for my $similarartist (@$similarartists) {
 					if(ref($similarartist) eq 'HASH') {
-						if($similarartist->{'match'}>$similarArtistLimit) {
+						if((100*$similarartist->{'match'})>$similarArtistLimit) {
 							my %item = (
 								'name' => 'similarartist',
 								'value' => $similarartist->{'name'},
-								'extravalue' => $similarartist->{'match'}
+								'extravalue' => (100*$similarartist->{'match'})
 							);
 							push @result,\%item;
 							#$log->debug("CustomScan::LastFM: Adding tag: ".$similarartist->{'name'}."\n");
