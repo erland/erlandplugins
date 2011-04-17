@@ -189,15 +189,15 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3323" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3331" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected handling of splitting virtual tags and combining multiple tag values in virtual tags
+			<changes lang="EN">- Corrected handling of similar artists from LastFM
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3323.zip</url>
-                        <sha>d7a74f219e7d3f47008a048143690d513b5c7149</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3331.zip</url>
+                        <sha>e23fed1062d67812d031b2cb321b176fa0cdb3f7</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
@@ -384,15 +384,17 @@
                         <sha>f727ff461710a8d68e156393c15f7f6e1843e822</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="SongLyrics" version="1.1.3326" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SongLyrics" version="1.1.3329" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics</title>
                         <desc lang="EN">A plugin that shows lyrics from chartlyrics.com and musixmatch.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Removed lyricsfly.com, they no longer offer an API
+                        <changes lang="EN">- Corrected so secondary source is used if first fails to find lyrics. 
+			- Changed so musixmatch.com is used as primary source. 
+			- Improved accuracy of musixmatch.com source
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3326.zip</url>
-                        <sha>4e9a29fc1e29936b52ff245f9fe3b787399667eb</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3329.zip</url>
+                        <sha>799aedaada7f0b148d4e546575bc48275ea92d0e</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
