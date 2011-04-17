@@ -11,5 +11,5 @@ SETUP_PLUGIN_SONGLYRICS_GROUP
 	EN	Song Lyrics
 
 SETUP_PLUGIN_SONGLYRICS_GROUP_DESC
-	EN	The Song Lyrics plugin gets song lyrics from online sources and provides them through the Song Info plugin. Lyrics data is provided by chartlyrics.com and musixmatch.com
+	EN	The Song Lyrics plugin gets song lyrics from online sources and provides them through the Song Info plugin. Lyrics data is provided by musixmatch.com and chartlyrics.com
 

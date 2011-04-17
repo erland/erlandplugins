@@ -137,7 +137,12 @@ sub gotErrorViaHTTP {
 	my $http = shift;
 	my $params = $http->params();
 
-	Plugins::SongLyrics::Plugin::returnError($params->{'client'},$params->{'params'});
+        Plugins::SongLyrics::Plugin::executeNextHandler($params->{'client'},
+                $params->{'params'},
+                $params->{'track'},
+                $params->{'trackTitle'},
+                $params->{'albumTitle'},
+                $params->{'artistName'});
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;
