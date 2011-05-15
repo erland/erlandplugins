@@ -187,19 +187,25 @@ sub saveHandler {
 		}
 	}
 	if($params->{'webmenu'}) {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",1)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",1);
+		$module->{'webmenu'} = 1;
 	}else {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",0)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."webmenu",0);
+		$module->{'webmenu'} = 0;
 	}
 	if($params->{'playermenu'}) {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",1)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",1);
+		$module->{'playermenu'} = 1;
 	}else {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",0)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."playermenu",0);
+		$module->{'playermenu'} = 0;
 	}
 	if($params->{'jivemenu'}) {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",1)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",1);
+		$module->{'jivemenu'} = 1;
 	}else {
-		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",0)
+		Plugins::SongInfo::Plugin::setSongInfoProperty($params->{'module'}."jivemenu",0);
+		$module->{'jivemenu'} = 0;
 	}
 
 	if(scalar(keys %errorItems)>0) {
