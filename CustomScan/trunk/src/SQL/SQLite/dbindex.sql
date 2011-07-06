@@ -16,3 +16,4 @@ create index if not exists persistentdb.track_module_attr_extravalue_cstrackidx 
 create index if not exists persistentdb.module_attr_extravalue_cstrackidx on customscan_track_attributes (module,attr,extravalue);
 create index if not exists persistentdb.module_attr_valuesort_cstrackidx on customscan_track_attributes (module,attr,valuesort);
 
+create index if not exists musicbrainzUrlIdCSIndex on tracks (musicbrainz_id,url,id);
