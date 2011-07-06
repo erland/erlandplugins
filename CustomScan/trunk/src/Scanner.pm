@@ -2078,7 +2078,7 @@ sub refreshData
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
-		$sql = "create temp table temp_customscan_track_attributes as select tracks.id,tracks.url,tracks.musicbrainz_id from tracks,customscan_track_attributes where customscan_track_attributes.musicbrainz_id is not null and customscan_track_attributes.musicbrainz_id=tracks.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
+		$sql = "create temp table temp_customscan_track_attributes as select tracks.id as id,tracks.url as url,tracks.musicbrainz_id as musicbrainz_id from tracks,customscan_track_attributes where customscan_track_attributes.musicbrainz_id is not null and customscan_track_attributes.musicbrainz_id=tracks.musicbrainz_id and (customscan_track_attributes.url!=tracks.url or customscan_track_attributes.track!=tracks.id)";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -2086,7 +2086,7 @@ sub refreshData
 			if($count eq '0E0') {
 				$count = 0;
 			}
-			commit($dbh);
+			commit($dbh);			
 		};
 		if( $@ ) {
 		    $log->error("Database error: $DBI::errstr\n");
@@ -2094,7 +2094,7 @@ sub refreshData
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}else {
-			$sql = "UPDATE customscan_track_attributes SET url=(select url from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id),track=(select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id) where exists (select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id)";
+			$sql = "create index if not exists temp_musicbrainz_cstrackidx on temp_customscan_track_attributes (musicbrainz_id)";
 			$sth = $dbh->prepare( $sql );
 			$count = 0;
 			eval {
@@ -2109,18 +2109,35 @@ sub refreshData
 			    eval {
 			    	rollback($dbh); #just die if rollback is failing
 			    };
-			}
-			$sql = "drop table temp_customscan_track_attributes";
-			$sth = $dbh->prepare( $sql );
-			eval {
-				$sth->execute();
-				commit($dbh);
-			};
-			if( $@ ) {
-			    $log->error("Database error: $DBI::errstr\n");
-			    eval {
-			    	rollback($dbh); #just die if rollback is failing
-			    };
+			}else {
+				$sql = "UPDATE customscan_track_attributes SET url=(select url from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id),track=(select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id) where exists (select id from temp_customscan_track_attributes where temp_customscan_track_attributes.musicbrainz_id=customscan_track_attributes.musicbrainz_id)";
+				$sth = $dbh->prepare( $sql );
+				$count = 0;
+				eval {
+					$count = $sth->execute();
+					if($count eq '0E0') {
+						$count = 0;
+					}
+					commit($dbh);
+				};
+				if( $@ ) {
+				    $log->error("Database error: $DBI::errstr\n");
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}
+				$sql = "drop table temp_customscan_track_attributes";
+				$sth = $dbh->prepare( $sql );
+				eval {
+					$sth->execute();
+					commit($dbh);
+				};
+				if( $@ ) {
+				    $log->error("Database error: $DBI::errstr\n");
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}
 			}
 		}
 	}
