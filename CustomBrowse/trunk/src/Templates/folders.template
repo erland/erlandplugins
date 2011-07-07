@@ -10,9 +10,15 @@
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>browseitem</id>
+			[% IF SqueezeCenterVersion >= 7.6 %]
+			<menutype>mode</menutype>
+			<menudata>bmf</menudata>
+			<menuurl>clixmlbrowser/clicmd=browselibrary+items&amp;linktitle=BROWSE_MUSIC_FOLDER&amp;mode=bmf/index.html?mode=bmf</menuurl>
+			[% ELSE %]
 			<menutype>mode</menutype>
 			<menudata>browsetree</menudata>
 			<menuurl>browsetree.html</menuurl>
+			[% END %]
 		</menu>
 	</menu>
 </custombrowse>
