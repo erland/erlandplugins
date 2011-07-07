@@ -513,7 +513,12 @@ sub parseContentImplementation {
 sub addStandardParameters {
 	my $params = shift;
 
-	$params->{'SqueezeCenterVersion'} = $::VERSION;
+	my $version = $::VERSION;
+	if($version =~ /^(\d+)\.(\d+).*/) {
+		$params->{'SqueezeCenterVersion'} = "$1.$2";
+	}else {
+		$params->{'SqueezeCenterVersion'} = $version;
+	}
 	if($driver eq 'mysql') {
 		$params->{'MySQL'} = 1;
 		$params->{'RANDOMFUNCTION'} = "rand()";
