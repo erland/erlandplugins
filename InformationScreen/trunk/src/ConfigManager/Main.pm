@@ -51,6 +51,9 @@ sub new {
 	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
 	$self->downloadVersion($parameters->{'downloadVersion'});
 
+	my ($source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+
 	$self->init();
 	return $self;
 }
@@ -284,10 +287,15 @@ sub postProcessItem {
 	if(ref($item) eq 'HASH') {
 		foreach my $key (keys %$item) {
 			if($key eq 'value' || $key eq 'icon' || $key eq 'name' || $key eq 'preprocessingData') {
-				$self->logHandler->debug("Postprocessing $key to replace \\, \" and \'");
-				$item->{$key} =~ s/\\\\/\\/g;
-				$item->{$key} =~ s/\\\"/\"/g;
-				$item->{$key} =~ s/\\\'/\'/g;
+				if($driver eq 'SQLite') {
+					$self->logHandler->debug("Postprocessing $key to replace \'");
+					$item->{$key} =~ s/\'\'/\'/g;
+				}else {
+					$self->logHandler->debug("Postprocessing $key to replace \\, \" and \'");
+					$item->{$key} =~ s/\\\\/\\/g;
+					$item->{$key} =~ s/\\\"/\"/g;
+					$item->{$key} =~ s/\\\'/\'/g;
+				}
 				my $thisItem = $item->{$key};
 				if($key eq 'value' && ref($thisItem) eq 'HASH' && scalar(keys %$thisItem)==0) {
 					$item->{$key} = '';
