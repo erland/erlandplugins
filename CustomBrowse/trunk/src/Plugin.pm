@@ -1111,6 +1111,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['custombrowse','mixjive'], [1, 1, 1, \&cliJiveMixHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','mixjivecontext'], [1, 1, 1, \&cliJiveMixHandler]);
 	Slim::Control::Request::addDispatch(['custombrowse','stdmixjive'], [1, 1, 1, \&cliJiveStandardMixesHandler]);
+	Slim::Control::Request::addDispatch(['custombrowse','changedconfiguration'],[0, 0, 0, undef]);
 
 	Plugins::CustomBrowse::iPeng::Reader::read("CustomBrowse","iPengConfiguration");
 }
@@ -1770,6 +1771,10 @@ sub addJivePlayerMenus {
 			@menuItems->[0]->{'menuIconID'} = $key;
 		}else {
 			@menuItems->[0]->{'menuIcon'} = 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png';
+		}
+		# Cacheable indicator
+		if(defined($menu->{'cacheable'})) {
+			@menuItems->[0]->{'cacheable'} = 'true';
 		}
 		if($menu->{'id'} ne $key && $prefs->get('replacecontrollermenus')) {
 			Slim::Control::Jive::deleteMenuItem($key,$client);
@@ -3949,6 +3954,10 @@ sub cliJiveHandlerImpl {
 		#iPeng icon
 		if($menuIcon) {
 			$request->addResultLoop('item_loop',$cnt,'menuIcon','iPeng/plugins/CustomBrowse/html/images/custombrowse.png');
+		}
+		#Cacheable indicator
+		if(defined($item->{'cacheable'})) {
+			$request->addResultLoop('item_loop',$cnt,'cacheable','true');
 		}
 		#iPeng support
 		if(defined($item->{'itemtype'})) {

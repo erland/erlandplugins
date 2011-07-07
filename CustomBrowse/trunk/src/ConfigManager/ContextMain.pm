@@ -32,6 +32,7 @@ use Plugins::CustomBrowse::ConfigManager::ParameterHandler;
 use Plugins::CustomBrowse::ConfigManager::MenuWebAdminMethods;
 use FindBin qw($Bin);
 use File::Spec::Functions qw(:ALL);
+use Slim::Control::Request;
 
 __PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
@@ -304,11 +305,13 @@ sub postProcessItem {
 
 sub changedItemConfiguration {
         my ($self, $client, $params) = @_;
+        Slim::Control::Request::notifyFromArray(undef, ['custombrowse', 'changedconfiguration']);
 #	Plugins::CustomBrowse::Plugin::readContextBrowseConfiguration($client);
 }
 
 sub changedTemplateConfiguration {
         my ($self, $client, $params) = @_;
+        Slim::Control::Request::notifyFromArray(undef, ['custombrowse', 'changedconfiguration']);
 #	$self->readTemplateConfiguration($client);
 }
 
