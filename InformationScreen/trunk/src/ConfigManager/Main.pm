@@ -36,6 +36,7 @@ use Slim::Utils::Prefs;
 __PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.informationscreen');
+my $driver;
 
 sub new {
 	my $class = shift;
