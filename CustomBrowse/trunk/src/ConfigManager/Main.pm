@@ -38,6 +38,7 @@ use Slim::Control::Request;
 __PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler mixDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler mixPluginHandler templatePluginHandler parameterHandler templateParser contentParser mixParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.custombrowse');
+my $driver;
 
 sub new {
 	my $class = shift;
@@ -53,6 +54,9 @@ sub new {
 	$self->supportDownloadError($parameters->{'supportDownloadError'});
 	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
 	$self->downloadVersion($parameters->{'downloadVersion'});
+
+	my ($source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
 
 	$self->init();
 	return $self;
@@ -325,14 +329,22 @@ sub postProcessItem {
 	my $item = shift;
 	
 	if(defined($item->{'menuname'})) {
-		$item->{'menuname'} =~ s/\\\\/\\/g;
-		$item->{'menuname'} =~ s/\\\"/\"/g;
-		$item->{'menuname'} =~ s/\\\'/\'/g;
+		if($driver eq 'SQLite') {
+			$item->{'menuname'} =~ s/\'\'/\'/g;
+		}else {
+			$item->{'menuname'} =~ s/\\\\/\\/g;
+			$item->{'menuname'} =~ s/\\\"/\"/g;
+			$item->{'menuname'} =~ s/\\\'/\'/g;
+		}
 	}
 	if(defined($item->{'menugroup'})) {
-		$item->{'menugroup'} =~ s/\\\\/\\/g;
-		$item->{'menugroup'} =~ s/\\\"/\"/g;
-		$item->{'menugroup'} =~ s/\\\'/\'/g;
+		if($driver eq 'SQLite') {
+			$item->{'menuname'} =~ s/\'\'/\'/g;
+		}else {
+			$item->{'menugroup'} =~ s/\\\\/\\/g;
+			$item->{'menugroup'} =~ s/\\\"/\"/g;
+			$item->{'menugroup'} =~ s/\\\'/\'/g;
+		}
 	}
 }
 
