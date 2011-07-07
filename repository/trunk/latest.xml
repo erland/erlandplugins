@@ -160,18 +160,21 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.10.3296" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.11.3358" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected so Now Playing window is opened after you hit play
-			- Corrected so albumimage and albumfiles header templates works on Windows
-			- Added support for showing file formats in album headers
-			- Corrected Cyrillic character problem in browse menus (there are still problem in configuration pages)
+			<changes lang="EN">- Corrected handling of reserved characters with 7.6 and SQLite
+			- Corrected so it's possible to have SBS version dependent menu templates
+			- Corrected incorrect SQL query in Library Statistics menu template
+			- Corrected MusicFolder menu so it works with 7.6
+			- Corrected Album details template so it works with 7.6 and SQLite
+			- Added years to album lists in genres and filteredgenres menu template
+			- Added Filtered Main Artists and Main Artists menu templates
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.10.3296.zip</url>
-                        <sha>4c9fdd91e8426f77a0a6a55068b44f88e89e863c</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3358.zip</url>
+                        <sha>df5aded13c0d2889b2c26c0b1a8f7f3f712ca093</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -189,15 +192,15 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3335" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3357" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Optimized refresh operation so it works with 7.6 and its SQLite database
+			<changes lang="EN">- Corrected LastFM Similar Artists menu template so it works with 7.6 and SQLite
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3335.zip</url>
-                        <sha>8030848db1c36bc317c17c4ecf38dcbfd56b79c7</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3357.zip</url>
+                        <sha>ad5e6ef200b032d795042ee5350d5c52ddcdb662</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
@@ -300,15 +303,15 @@
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.5.3224" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="SQLPlayList" version="2.5.3359" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected possible problem in mixer icons in web interface
+			<changes lang="EN">- Corrected handling of reserved characters with 7.6 and SQLite
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3224.zip</url>
-                        <sha>9c186771dc3f463478191772ac4135af80c988af</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3359.zip</url>
+                        <sha>d96a880562f8c1d460b49eb807542f020dc90ab9</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="*">
