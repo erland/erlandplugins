@@ -1017,8 +1017,9 @@
 				<playtype>none</playtype>
 		                <menutype>sql</menutype>
 				<menudata>
-					select 1,concat("Rated Songs: ",count(distinct id)) from tracks
+					select 1,concat("Rated Songs: ",count(distinct tracks.id)) from tracks,tracks_persistent
 					where 
+						tracks.id=tracks_persistent.id and
 						audio=1 and
 						rating&gt;0
 				</menudata>
@@ -1028,8 +1029,9 @@
 					<playtype>none</playtype>
 			                <menutype>sql</menutype>
 					<menudata>
-						select 1,concat("Rated * (1-29): ",count(distinct id)) from tracks
+						select 1,concat("Rated * (1-29): ",count(distinct tracks.id)) from tracks,tracks_persistent
 						where 
+							tracks.id=tracks_persistent.id and
 							audio=1 and
 							rating&gt;=1 and 
 							rating&lt;29
@@ -1041,8 +1043,9 @@
 					<playtype>none</playtype>
 			                <menutype>sql</menutype>
 					<menudata>
-						select 1,concat("Rated ** (30-49): ",count(distinct id)) from tracks
+						select 1,concat("Rated ** (30-49): ",count(distinct tracks.id)) from tracks,tracks_persistent
 						where 
+							tracks.id=tracks_persistent.id and
 							audio=1 and
 							rating&gt;=30 and 
 							rating&lt;49
@@ -1054,8 +1057,9 @@
 					<playtype>none</playtype>
 			                <menutype>sql</menutype>
 					<menudata>
-						select 1,concat("Rated *** (50-69): ",count(distinct id)) from tracks
+						select 1,concat("Rated *** (50-69): ",count(distinct tracks.id)) from tracks,tracks_persistent
 						where 
+							tracks.id=tracks_persistent.id and
 							audio=1 and
 							rating&gt;=50 and 
 							rating&lt;69
@@ -1067,8 +1071,9 @@
 					<playtype>none</playtype>
 			                <menutype>sql</menutype>
 					<menudata>
-						select 1,concat("Rated **** (70-89): ",count(distinct id)) from tracks
+						select 1,concat("Rated **** (70-89): ",count(distinct tracks.id)) from tracks,tracks_persistent
 						where 
+							tracks.id=tracks_persistent.id and
 							audio=1 and
 							rating&gt;=70 and 
 							rating&lt;89
@@ -1080,8 +1085,9 @@
 					<playtype>none</playtype>
 			                <menutype>sql</menutype>
 					<menudata>
-						select 1,concat("Rated ***** (90-100): ",count(distinct id)) from tracks
+						select 1,concat("Rated ***** (90-100): ",count(distinct tracks.id)) from tracks,tracks_persistent
 						where 
+							tracks.id=tracks_persistent.id and
 							audio=1 and
 							rating&gt;=90 and 
 							rating&lt;=100
@@ -1094,7 +1100,8 @@
 				<playtype>none</playtype>
 		                <menutype>sql</menutype>
 				<menudata>
-					select 1,concat("Unrated Songs: ",count(distinct id)) from tracks
+					select 1,concat("Unrated Songs: ",count(distinct tracks.id)) from tracks
+						left join tracks_persistent on tracks.id=tracks_persistent.id
 					where 
 						audio=1 and
 						(rating=0 or rating is null)
