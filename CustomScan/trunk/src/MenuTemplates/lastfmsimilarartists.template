@@ -16,7 +16,7 @@
 			<menulinks>alpha</menulinks>
 	        	<menudata>
 				[%- IF multipleways %]
-				(select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
+				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
 				join contributor_album on contributor_album.contributor=contributors.id and contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 				join albums on contributor_album.album=albums.id 
 				[%- IF library or activelibrary %]
@@ -40,8 +40,8 @@
 							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
 							name = attr1.value)
-				) union
-				(select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
+				 union
+				select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
 				join contributor_album on contributor_album.contributor=contributors.id and contributor_album.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %])
 				join albums on contributor_album.album=albums.id 
 				[%- IF library or activelibrary %]
@@ -64,7 +64,7 @@
 							relatedcontributor.id=multilibrary_contributor.contributor and
 							multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %])	
 					[%- END %]
-				) order by namesort asc
+				 order by namesort asc
 				[% ELSE %]
 				select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_album,albums,customscan_contributor_attributes[% IF library or activelibrary %],multilibrary_contributor[% END %]
 				where 
