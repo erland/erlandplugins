@@ -865,6 +865,8 @@ sub getPageItemsForContext {
 				$pageItemNo = $pageItemNo + 1;
 			}
 			$result{'pageinfo'}->{'alphamap'}=\%alphaMap;
+			my @index = sort { $a cmp $b } keys %alphaMap;
+			$result{'pageinfo'}->{'alphaindex'}= \@index;
 			$result{'pageinfo'}->{'totalalphapages'} = $pageNo;
 		}
 		my $start = 0;
