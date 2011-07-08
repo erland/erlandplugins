@@ -873,7 +873,11 @@ sub moduleClear {
 					$sth->finish();
 					commit($dbh);
 					$log->debug("Clearing track data, renaming current table...\n");
-					$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					if($driver eq 'SQLite') {
+						$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old as select * from customscan_track_attributes where module!=?");
+					}else {
+						$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					}
 					$sth->bind_param(1,$module->{'id'},SQL_VARCHAR);
 					$sth->execute();
 					$sth->finish();
@@ -983,8 +987,20 @@ sub exitScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $analyzeTracks = 0;
+	my $analyzeAlbums = 0;
+	my $analyzeArtists = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
+		if(defined($module->{'scanTrack'}) || defined($module->{'initScanTrack'}) || defined($module->{'exitScanTrack'})) {
+			$analyzeTracks = 1;
+		}
+		if(defined($module->{'scanAlbum'}) || defined($module->{'initScanAlbum'}) || defined($module->{'exitScanAlbum'})) {
+			$analyzeAlbums = 1;
+		}
+		if(defined($module->{'scanArtist'}) || defined($module->{'initScanArtist'}) || defined($module->{'exitScanArtist'})) {
+			$analyzeArtists = 1;
+		}
 		if(defined($module->{'scanExit'})) {
 			no strict 'refs';
 			$log->debug("Calling: scanExit on $key\n");
@@ -1001,6 +1017,29 @@ sub exitScan {
 		}elsif($scanningModulesInProgress{$key} == -1) {
 			$scanningModulesInProgress{$key}=-2;
 			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, -2]);
+		}
+	}
+	$log->info("Optimizing SQLite database");
+	my $dbh = getCurrentDBH();
+	if($driver eq 'SQLite') {
+		if($analyzeTracks) {
+			$dbh->do("ANALYZE customscan_track_attributes");
+		}
+		if($analyzeAlbums) {
+			$dbh->do("ANALYZE customscan_album_attributes");
+		}
+		if($analyzeArtists) {
+			$dbh->do("ANALYZE customscan_contributor_attributes");
+		}
+	}else {
+		if($analyzeTracks) {
+			$dbh->do("ANALYZE table customscan_track_attributes");
+		}
+		if($analyzeAlbums) {
+			$dbh->do("ANALYZE table customscan_album_attributes");
+		}
+		if($analyzeArtists) {
+			$dbh->do("ANALYZE table customscan_contributor_attributes");
 		}
 	}
 	if(!isScanning(undef)) {
@@ -1329,7 +1368,11 @@ sub initTrackScan {
 					$sth->finish();
 					commit($dbh);
 					$log->debug("Clearing track data, renaming current table...\n");
-					$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					if($driver eq 'SQLite') {
+						$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old as select * from customscan_track_attributes where module!=?");
+					}else {
+						$sth = $dbh->prepare("CREATE TEMPORARY TABLE customscan_track_attributes_old select * from customscan_track_attributes where module!=?");
+					}
 					$sth->bind_param(1,$moduleId,SQL_VARCHAR);
 					$sth->execute();
 					$sth->finish();
