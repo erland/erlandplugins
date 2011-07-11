@@ -322,6 +322,7 @@ sub init {
 							}
 						}
 					
+						$sth->finish();
 					}
 				}
 			}
@@ -1326,6 +1327,15 @@ sub refreshTracks
 	}
 	$sth->finish();
 	$log->debug("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1355,6 +1365,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 	
 	$timeMeasure->clear();
@@ -1392,6 +1411,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished adding tracks without added times in statistic data based on urls, added $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1421,6 +1449,15 @@ sub refreshTracks
 	}
 	$sth->finish();
 	$log->debug("Finished updating ratings in standard slimserver database based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1450,6 +1487,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating added times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1520,6 +1566,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating last played times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1553,6 +1608,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
@@ -1578,6 +1642,15 @@ sub refreshTracks
 
 	$sth->finish();
 	$log->debug("Finished updating unrated ratings in statistic data based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if($count>0 && $driver eq 'SQLite') {
+		$timeMeasure->stop();
+
+		$timeMeasure->clear();
+		$timeMeasure->start();
+		$log->debug("Starting analyzing track_statistics table\n");
+	    	$dbh->do("analyze track_statistics;");
+		$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	}
 	$timeMeasure->stop();
 
 	if($prefs->get("history_enabled")) {
@@ -1608,6 +1681,15 @@ sub refreshTracks
 
 		$sth->finish();
 		$log->debug("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		if($count>0 && $driver eq 'SQLite') {
+			$timeMeasure->stop();
+
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->debug("Starting analyzing track_history table\n");
+		    	$dbh->do("analyze track_history;");
+			$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		}
 		$timeMeasure->stop();
 		
 		$timeMeasure->clear();
@@ -1637,6 +1719,15 @@ sub refreshTracks
 
 		$sth->finish();
 		$log->debug("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		if($count>0 && $driver eq 'SQLite') {
+			$timeMeasure->stop();
+
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->debug("Starting analyzing track_history table\n");
+		    	$dbh->do("analyze track_history;");
+			$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		}
 		$timeMeasure->stop();
 
 		$timeMeasure->clear();
@@ -1662,6 +1753,15 @@ sub refreshTracks
 
 		$sth->finish();
 		$log->debug("Finished adding missing entries to history table, adding $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		if($count>0 && $driver eq 'SQLite') {
+			$timeMeasure->stop();
+
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->debug("Starting analyzing track_history table\n");
+		    	$dbh->do("analyze track_history;");
+			$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		}
 		$timeMeasure->stop();
 
 		$timeMeasure->clear();
@@ -1687,6 +1787,15 @@ sub refreshTracks
 
 		$sth->finish();
 		$log->debug("Finished updating unrated ratings in history table based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		if($count>0 && $driver eq 'SQLite') {
+			$timeMeasure->stop();
+
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->debug("Starting analyzing track_history table\n");
+		    	$dbh->do("analyze track_history;");
+			$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		}
 	}
 	$timeMeasure->stop();
 	$timeMeasure->clear();
