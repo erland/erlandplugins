@@ -1142,6 +1142,15 @@ sub refreshLibraries {
 							$sth->execute();
 							$sth->finish();
 							$log->debug("Added $noOfTracks songs to the library\n");
+							if($driver eq 'SQLite') {
+								$log->debug("Starting analyzing multilibrary tables\n");
+							    	$dbh->do("analyze multilibrary_track;");
+							    	$dbh->do("analyze multilibrary_album;");
+							    	$dbh->do("analyze multilibrary_contributor;");
+							    	$dbh->do("analyze multilibrary_year;");
+							    	$dbh->do("analyze multilibrary_genre;");
+								$log->debug("Finished analyzing multilibrary tables\n");
+							}
 						}
 					}
 				}
