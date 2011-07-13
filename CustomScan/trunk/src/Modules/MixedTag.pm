@@ -464,11 +464,6 @@ sub getMixedTagMenuItems {
 		if(scalar(@items)==0 && !defined($currentItem) && $driver eq 'mysql') {
 			$taggroupssql .= "use index (attr_module_idx) "; 
 		}
-		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
-				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
-		}elsif(defined($parameters->{'library'})) {
-				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'}." ";		
-		}
 		my $i = 1;
 		for my $it (@items) {
 			if(defined($it->{'value'})) {
@@ -478,6 +473,11 @@ sub getMixedTagMenuItems {
 		}
 		if(defined($currentItem)) {
 			$taggroupssql .= "join customscan_track_attributes currentattr on currentattr.module='mixedtag' and customscan_track_attributes.track=currentattr.track and currentattr.attr='".quoteValue($currentItem->{'tag'})."' and currentattr.extravalue='".quoteValue($currentItem->{'value'})."' ";
+		}
+		if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
+				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
+		}elsif(defined($parameters->{'library'})) {
+				$taggroupssql .= " join multilibrary_track on customscan_track_attributes.track=multilibrary_track.track and multilibrary_track.library=".$parameters->{'library'}." ";		
 		}
 		$taggroupssql .= " where ";
 		if(scalar(keys %selectedValues)>0) {
