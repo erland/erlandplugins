@@ -186,19 +186,19 @@
 			select 'Number of songs with replay gain tags' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.replay_gain is not null
 		</query>
 		<query>
-			select 'Number of songs without replay gain tags' as parameter,count(distinct tracks.id) from albums,tracks where tracks.audio=1 and tracks.replay_gain is null
+			select 'Number of songs without replay gain tags' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.replay_gain is null
 		</query>
 		<query>
 			select 'Number of MusicIP mixable songs' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.musicmagic_mixable is not null
 		</query>
 		<query>
-			select 'Number of not MusicIP mixable songs' as parameter,count(distinct tracks.id) from albums,tracks where tracks.audio=1 and tracks.musicmagic_mixable is null
+			select 'Number of not MusicIP mixable songs' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.musicmagic_mixable is null
 		</query>
 		<query>
 			select 'Number of songs with lyrics' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.lyrics is not null
 		</query>
 		<query>
-			select 'Number of songs without lyrics' as parameter,count(distinct tracks.id) from albums,tracks where tracks.audio=1 and tracks.lyrics is null
+			select 'Number of songs without lyrics' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.lyrics is null
 		</query>
 		<query>
 			select 'Number of local songs' as parameter,count(distinct tracks.id) from tracks where tracks.audio=1 and tracks.remote=0
