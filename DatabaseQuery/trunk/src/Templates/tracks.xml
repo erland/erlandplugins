@@ -17,7 +17,7 @@
 		<parameter type="checkbox" id="showmusicbrainz" name="Show musicbrainz tag" value="0"/>
 		<parameter type="checkbox" id="showbitrate" name="Show bitrate" value="0"/>
 		<parameter type="checkbox" id="showalbum" name="Show album" value="1"/>
-		<parameter type="checkbox" id="showartist" name="Show artist" value="1"/>
+		<parameter type="checkbox" id="showartist" name="Show artist (Only MySQL)" value="1"/>
 	</template>
 </databasequery>
 
