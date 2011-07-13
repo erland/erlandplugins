@@ -257,16 +257,15 @@
                         <sha>ef05d5f00298cf4c1a1e1426f9176567e12034f9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
-		<plugin name="DatabaseQuery" version="2.3.3272" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DatabaseQuery" version="2.3.3374" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Database Query</title>
                         <desc lang="EN">Makes it possible to define and execute custom SQL statements towards SqueezeCenter database. The result can be displayed in the browser or exported as CSV or XML files. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added playlist query
-			- Corrected so create query works in default skin
-			- Added possibility to show artists in songs query</changes>
+			<changes lang="EN">- Optimized performance of Squeezebox Server Statistics query
+			- Corrected some 7.6 and SQLite related problems</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3272.zip</url>
-                        <sha>d9eebc378602b95a7a5f2ae836d79be89c90a3c7</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3374.zip</url>
+                        <sha>04ae02bf13a80d7318f9b268e3985ae9333cd6ad</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
 		<plugin name="MultiLibrary" version="2.3.1" minTarget="7.1.0" maxTarget="7.3.*">
