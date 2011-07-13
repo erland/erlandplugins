@@ -15,7 +15,7 @@
 		<parameter type="checkbox" id="showalbumsort" name="Show sort column" value="0"/>
 		<parameter type="checkbox" id="showmusicbrainz" name="Show musicbrainz tag" value="0"/>
 		<parameter type="checkbox" id="showyear" name="Show year" value="1"/>
-		<parameter type="checkboxes" id="roles" name="Show artists with role" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
+		<parameter type="checkboxes" id="roles" name="Show artists with role (Only MySQL)" value="0" data="1=Artist,2=Composer,3=Conductor,4=Band,5=Album artist,6=Track artist"/>
 	</template>
 </databasequery>
 
