@@ -160,21 +160,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.11.3358" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.11.3376" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected handling of reserved characters with 7.6 and SQLite
-			- Corrected so it's possible to have SBS version dependent menu templates
-			- Corrected incorrect SQL query in Library Statistics menu template
-			- Corrected MusicFolder menu so it works with 7.6
-			- Corrected Album details template so it works with 7.6 and SQLite
-			- Added years to album lists in genres and filteredgenres menu template
-			- Added Filtered Main Artists and Main Artists menu templates
+			<changes lang="EN">- Corrected problem with alphabar in 7.6 web interface
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3358.zip</url>
-                        <sha>df5aded13c0d2889b2c26c0b1a8f7f3f712ca093</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3376.zip</url>
+                        <sha>6ce6979e558a23be08a05bf6d4af999259b72483</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
