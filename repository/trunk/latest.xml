@@ -186,15 +186,16 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3378" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3383" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Improved performance to Tags, Dynamic Tags browse menus, thanks to Co1 for patch
+			<changes lang="EN">- Corrected issues with SQLite and 7.6 in Similar Artists based menus and menu headers
+			- Temporarily disabled Similar Artists related mixers and SQL Playlists in 7.6 since the queries doesn't work with SQLite database yet
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3378.zip</url>
-                        <sha>5d12dc0c2362392f128e1cba02da7e3a479aafe1</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3383.zip</url>
+                        <sha>91c578e1f602ff0991f82669dacd92633a9cfb79</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
