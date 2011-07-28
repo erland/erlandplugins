@@ -26,7 +26,7 @@
 		<menulinks>alpha</menulinks>
         	<menudata>
 			[%- IF multipleways %]
-			(select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
+			select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
 			[%- IF library or activelibrary %]
 			join multilibrary_contributor on
 				contributors.id=multilibrary_contributor.contributor and
@@ -52,8 +52,8 @@
 						relatedcontributor.id=multilibrary_contributor.contributor and
 						multilibrary_contributor.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %])	
 				[%- END %]
-			) union
-			(select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
+			 union
+			select distinct contributors.id,contributors.name,substr(contributors.namesort,1,1),contributors.namesort from contributors
 			[%- IF library or activelibrary %]
 			join multilibrary_contributor on
 				contributors.id=multilibrary_contributor.contributor and
@@ -77,7 +77,7 @@
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
 						contributor_track.track={trackid} and
 						contributors.name=attr2.value)
-			) order by namesort asc
+			 order by namesort asc
 			[% ELSE %]
 			select contributors.id,contributors.name,substr(contributors.namesort,1,1) from contributors,contributor_track,customscan_contributor_attributes[% IF library or activelibrary %],multilibrary_contributor[% END %]
 			where 
