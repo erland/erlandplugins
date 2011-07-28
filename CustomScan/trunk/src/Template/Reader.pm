@@ -173,9 +173,6 @@ sub readTemplateConfiguration {
 	}else {
 		$template = parseTemplateContent($templateId,$templateType,$content);
 	}
-	if(!$template) {
-		msg("Unable to read template: $path\n");
-	}
 	return $template;
 }
 

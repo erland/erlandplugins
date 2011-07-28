@@ -2,6 +2,7 @@
 <custombrowse>
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>2.9</minpluginversion>
+	<database>mysql</database>
 	<mix>
 		<mixname>LastFM Similar Artists</mixname>
 		<mixcategory>artist</mixcategory>
