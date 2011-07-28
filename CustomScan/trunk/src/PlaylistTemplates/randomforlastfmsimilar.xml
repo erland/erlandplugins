@@ -2,6 +2,7 @@
 <sqlplaylist>
 	<requireplugins>CustomScan</requireplugins>
 	<minpluginversion>2.5</minpluginversion>
+	<database>mysql</database>
 	<template>
 		<downloadidentifier>81</downloadidentifier>
 		<name>Random for LastFM similar artists</name>
