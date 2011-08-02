@@ -313,9 +313,13 @@ sub updateTags {
 sub quoteValue {
 	my $value = shift;
 	if(defined($value)) {
-		$value =~ s/\\/\\\\/g;
-		$value =~ s/\"/\\\"/g;
-		$value =~ s/\'/\\\'/g;
+		if($driver eq 'SQLite') {
+			$value =~ s/\'/\'\'/g;
+		}else {
+			$value =~ s/\\/\\\\/g;
+			$value =~ s/\"/\\\"/g;
+			$value =~ s/\'/\\\'/g;
+		}
 	}
 	return $value;
 }
