@@ -28,10 +28,13 @@ use Slim::Utils::Prefs;
 __PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion propertyHandler) );
 
 my %prefs = ();
-
+my $driver;
 sub new {
 	my $class = shift;
 	my $parameters = shift;
+
+	my ($source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
 
 	my $self = $class->SUPER::new();
 	$self->logHandler($parameters->{'logHandler'});
@@ -44,9 +47,14 @@ sub new {
 
 sub quoteValue {
 	my $value = shift;
-	$value =~ s/\\/\\\\/g;
-	$value =~ s/\'/\\\'/g;
-	$value =~ s/\"/\\\"/g;
+
+	if($driver eq 'SQLite') {
+		$value =~ s/\'/\'\'/g;
+	}else {
+		$value =~ s/\\/\\\\/g;
+		$value =~ s/\'/\\\'/g;
+		$value =~ s/\"/\\\"/g;
+	}
 	return $value;
 }
 
