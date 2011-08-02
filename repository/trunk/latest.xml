@@ -160,15 +160,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.11.3376" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.11.3389" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected problem with alphabar in 7.6 web interface
+			<changes lang="EN">- Corrected problem with reserved characters in 7.6 with SQLite
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3376.zip</url>
-                        <sha>6ce6979e558a23be08a05bf6d4af999259b72483</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3389.zip</url>
+                        <sha>3e40926a06e4fa4ddfdac68138dbb80b771f4cc0</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -186,16 +186,15 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3383" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3388" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected issues with SQLite and 7.6 in Similar Artists based menus and menu headers
-			- Temporarily disabled Similar Artists related mixers and SQL Playlists in 7.6 since the queries doesn't work with SQLite database yet
+			<changes lang="EN">- Corrected issues with SQLite and 7.6 related to reserved characters
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3383.zip</url>
-                        <sha>91c578e1f602ff0991f82669dacd92633a9cfb79</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3388.zip</url>
+                        <sha>afa015a6f7a9ec90ede60277a20d2143fe1b8773</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
