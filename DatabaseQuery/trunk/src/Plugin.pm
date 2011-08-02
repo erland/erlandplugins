@@ -100,6 +100,61 @@ sub initPlugin {
 
 	${Slim::Music::Info::suffixes}{'binfile'} = 'binfile';
 	${Slim::Music::Info::types}{'binfile'} = 'application/octet-stream';
+
+	my ($driver,$source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+
+	if($driver eq 'SQLite') {
+		createSQLiteFunctions();
+	}
+}
+
+sub createSQLiteFunctions {
+	my $dbh = Slim::Schema->storage->dbh();
+	$dbh->func('repeat', 2, sub {
+		my ($str,$repititions) = @_;
+		return $str x $repititions;
+	    }, 'create_function');
+	$dbh->func('floor', 1, sub {
+		my ($number) = @_;
+		if(!defined($number)) {
+			$number = 0;
+		}
+		$number = floor($number); 
+		return $number;
+	    }, 'create_function');
+	$dbh->func('if', 3, sub {
+		my ($expr,$str1,$str2) = @_;
+		if($expr) {
+			return $str1;
+		}else {
+			return $str2;
+		}
+	    }, 'create_function');
+	$dbh->func('floor', 2, sub {
+		my ($number,$decimals) = @_;
+		if(!defined($number)) {
+			$number = 0;
+		}
+		if($decimals>0) {
+			$number =~s/(^\d{1,}\.\d{$decimals})(.*$)/$1/; 
+		}else {
+			$number =~s/(^\d{1,})(.*$)/$1/; 
+		}
+		return $number;
+	    }, 'create_function');
+	$dbh->func('concat', 2, sub {
+		my ($str1, $str2) = @_;
+		return $str1.$str2;
+	    }, 'create_function');
+	$dbh->func('concat', 3, sub {
+		my ($str1, $str2, $str3) = @_;
+		return $str1.$str2.$str3;
+	    }, 'create_function');
+	$dbh->func('concat', 4, sub {
+		my ($str1, $str2, $str3,$str4) = @_;
+		return $str1.$str2.$str3.$str4;
+	    }, 'create_function');
 }
 
 sub postinitPlugin {
