@@ -1079,7 +1079,9 @@ sub getPageItemsForContext {
 					}else {
 						$album = Slim::Schema->resultset('Album')->find($it->{'itemid'});
 					}
-					$self->displayAlbumAsHTML($album,$it);
+					if(defined($album)) {
+						$self->displayAlbumAsHTML($album,$it);
+					}
 					if(!defined($result{'artwork'})) {
 						 $result{'artwork'} = 1;
 					}
@@ -2030,22 +2032,24 @@ sub getItemText {
 			}else {
 				$album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
 			}
-			$name = $album->title;
-			if((defined($item->{'jivepattern'}) || defined($item->{'albumjivepattern'}))&& $interfaceType eq 'jive') {
-				# This code is copied from Slim::Schema::Album->artists and rewritten to make use of cache
-				my @artists = $self->albumArtists($album);
-				if(scalar @artists > 0) {
-					$name.=" (";
-					my $first = 1;
-					for my $artist (@artists) {
-						if(!$first) {
-							$name.=", ".$artist->name;
-						}else {
-							$name.=$artist->name;
+			if(defined($album)) {
+				$name = $album->title;
+				if((defined($item->{'jivepattern'}) || defined($item->{'albumjivepattern'}))&& $interfaceType eq 'jive') {
+					# This code is copied from Slim::Schema::Album->artists and rewritten to make use of cache
+					my @artists = $self->albumArtists($album);
+					if(scalar @artists > 0) {
+						$name.=" (";
+						my $first = 1;
+						for my $artist (@artists) {
+							if(!$first) {
+								$name.=", ".$artist->name;
+							}else {
+								$name.=$artist->name;
+							}
+							$first = 0;
 						}
-						$first = 0;
+						$name.=")";
 					}
-					$name.=")";
 				}
 			}
 		}elsif($format eq 'albumconcat') {
@@ -2055,7 +2059,9 @@ sub getItemText {
 			}else {
 				$album = Slim::Schema->resultset('Album')->find($item->{'itemid'});
 			}
-			$prefix = $album->title." ";
+			if(defined($album)) {
+				$prefix = $album->title." ";
+			}
 		}
 	}
 	if((!defined($name) || $name eq '') && defined($item->{'itemname'})) {
