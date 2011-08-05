@@ -85,16 +85,16 @@
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="TextClock" version="1.0.55" minTarget="7.4" maxTarget="*">
+                <applet name="TextClock" version="1.0.60" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Text Clock</title>
                         <desc lang="EN">Screen saver that displays time with words, like "quarter past four" instead of 16:15
                         </desc>
-                        <changes lang="EN">- Initial version
+                        <changes lang="EN">- Corrected for all non english languages
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.55.zip</url>
-                        <sha>9dba4f11d07ce15fba44257553378564c3f1994b</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.60.zip</url>
+                        <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
