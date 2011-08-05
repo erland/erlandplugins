@@ -36,6 +36,7 @@ use Slim::Utils::Prefs;
 __PACKAGE__->mk_accessor( rw => qw(logHandler pluginPrefs pluginId pluginVersion downloadApplicationId supportDownloadError contentDirectoryHandler templateContentDirectoryHandler templateDirectoryHandler templateDataDirectoryHandler contentPluginHandler templatePluginHandler parameterHandler templateParser contentParser templateContentParser webAdminMethods addSqlErrorCallback templates items downloadVersion) );
 
 my $prefs = preferences('plugin.multilibrary');
+my $driver;
 
 sub new {
 	my $class = shift;
@@ -50,6 +51,9 @@ sub new {
 	$self->supportDownloadError($parameters->{'supportDownloadError'});
 	$self->addSqlErrorCallback($parameters->{'addSqlErrorCallback'});
 	$self->downloadVersion($parameters->{'downloadVersion'});
+
+	my ($source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
 
 	$self->init();
 	return $self;
@@ -281,9 +285,13 @@ sub postProcessItem {
 	my $item = shift;
 	
 	if(defined($item->{'name'})) {
-		$item->{'name'} =~ s/\\\\/\\/g;
-		$item->{'name'} =~ s/\\\"/\"/g;
-		$item->{'name'} =~ s/\\\'/\'/g;
+		if($driver eq 'SQLite') {
+			$item->{'name'} =~ s/\'\'/\'/g;
+		}else {
+			$item->{'name'} =~ s/\\\\/\\/g;
+			$item->{'name'} =~ s/\\\"/\"/g;
+			$item->{'name'} =~ s/\\\'/\'/g;
+		}
 	}
 }
 
