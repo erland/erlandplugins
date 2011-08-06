@@ -23,30 +23,30 @@
 					[% END %]
 					[% IF directory1 or directory2 or directory3 or directory4 %]([% END %]
 					[%- IF directory1 %]
-					tracks.url like '[% directory1 | fileurl %]%'
+					tracks.url like '[% directory1 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF directory2 %]
-					or tracks.url like '[% directory2 | fileurl %]%'
+					or tracks.url like '[% directory2 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF directory3 %]
-					or tracks.url like '[% directory3 | fileurl %]%'
+					or tracks.url like '[% directory3 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF directory4 %]
-					or tracks.url like '[% directory4 | fileurl %]%'
+					or tracks.url like '[% directory4 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[% IF directory1 or directory2 or directory3 or directory4 %]) and [% END %]
 					[% IF excludedirectory1 or excludedirectory2 or excludedirectory3 or excludedirectory4 %]([% END %]
 					[%- IF excludedirectory1 %]
-					tracks.url not like '[% excludedirectory1 | fileurl %]%'
+					tracks.url not like '[% excludedirectory1 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF excludedirectory2 %]
-					and tracks.url not like '[% excludedirectory2 | fileurl %]%'
+					and tracks.url not like '[% excludedirectory2 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF excludedirectory3 %]
-					and tracks.url not like '[% excludedirectory3 | fileurl %]%'
+					and tracks.url not like '[% excludedirectory3 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[%- IF excludedirectory4 %]
-					and tracks.url not like '[% excludedirectory4 | fileurl %]%'
+					and tracks.url not like '[% excludedirectory4 | fileurl %]%'[% IF SQLite %] ESCAPE '\'[% END %]
 					[%- END %]
 					[% IF excludedirectory1 or excludedirectory2 or excludedirectory3 or excludedirectory4 %]) and [% END %]
 					[%- IF lossless %]
