@@ -273,14 +273,14 @@
                         <sha>4c18394463689af4a2ac9c68f77eb471274dc7ae</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
-		<plugin name="MultiLibrary" version="2.5.3369" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="MultiLibrary" version="2.5.3397" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Multi Library</title>
                         <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Optimized performance of library creation in large databases with 7.6 and SQLite</changes>
+			<changes lang="EN">- Corrected problems with reserved characters with 7.6 and SQLite</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.5.3369.zip</url>
-                        <sha>715eacc8ef0fc7a0d849ec17a20463121fb51a0d</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.5.3397.zip</url>
+                        <sha>9abda9a6e7b6afc62f7986a8469122c605fd69e9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
 		<plugin name="SQLPlayList" version="2.4" minTarget="7.1.0" maxTarget="7.3.*">
