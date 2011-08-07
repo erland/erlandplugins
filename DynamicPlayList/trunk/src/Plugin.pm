@@ -2431,6 +2431,10 @@ sub contextMenuMixer {
 	$client->update();
 }
 
+sub weight {
+	return 85;
+}
+
 sub registerJiveMenu {
 	my $class = shift;
 	my $client = shift;
