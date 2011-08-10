@@ -2160,13 +2160,27 @@ sub addWebMenus {
 		        Slim::Web::Pages->addPageLinks("browse", { $key => $url });
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $url });
 			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
-			$serverPrefs->set("rank-$key",(defined($menu->{'menuorder'})?$menu->{'menuorder'}:80));
+			if(UNIVERSAL::can("Slim::Plugin::Base","addWeight")) {
+				Slim::Plugin::Base->addWeight($key,defined($menu->{'menuorder'})?$menu->{'menuorder'}:80);
+				if($serverPrefs->get("rank-$key")) {
+					$serverPrefs->remove("rank-$key");
+				}
+			}else {
+				$serverPrefs->set("rank-$key",(defined($menu->{'menuorder'})?$menu->{'menuorder'}:80));
+			}
 		}else {
 			$log->debug("Adding menu: $key = $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
-			$serverPrefs->set("rank-$key",(defined($menu->{'menuorder'})?$menu->{'menuorder'}:80));
+			if(UNIVERSAL::can("Slim::Plugin::Base","addWeight")) {
+				Slim::Plugin::Base->addWeight($key,defined($menu->{'menuorder'})?$menu->{'menuorder'}:80);
+				if($serverPrefs->get("rank-$key")) {
+					$serverPrefs->remove("rank-$key");
+				}
+			}else {
+				$serverPrefs->set("rank-$key",(defined($menu->{'menuorder'})?$menu->{'menuorder'}:80));
+			}
 		}
             }else {
 		$log->debug("Removing menu: $name\n");
