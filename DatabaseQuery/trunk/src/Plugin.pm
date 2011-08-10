@@ -33,6 +33,7 @@ use Data::Dumper;
 use HTML::Entities;
 use FindBin qw($Bin);
 use DBI qw(:sql_types);
+use POSIX qw(floor);
 
 use Plugins::DatabaseQuery::Modules::CSV;
 use Plugins::DatabaseQuery::Modules::XML;
