@@ -133,15 +133,15 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.10.3403" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.10.3421" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected menu ordering in 7.6 web interface
+			<changes lang="EN">- Corrected album context menu in 7.6
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.10.3403.zip</url>
-			<sha>8f952e80f29ee7c2ee030cba9f0b6f35a08efeab</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.10.3421.zip</url>
+			<sha>f5c1880e01fa0eb9ee515cda7a56c3634e90f453</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -160,16 +160,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.11.3411" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.11.3419" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Adjusted menu ordering in 7.6 to new API
-			- Added support for decades menu in 7.6 with SQLite
+			<changes lang="EN">- Corrected album context menu in 7.6
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3411.zip</url>
-                        <sha>ed38f6859363207ae38a4b36e6222ea44f32bc89</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.11.3419.zip</url>
+                        <sha>5979fb7c0beb55d1ac466a0887c07acdd46e1017</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -229,15 +228,15 @@
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.8.5" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DynamicPlayList" version="2.8.6" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected menu ordering in 7.6 web interface
+			<changes lang="EN">- Corrected context menu on albums in 7.6
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8.5.zip</url>
-                        <sha>e041393bd90d382a0923dbdf6a54cfffd10178c5</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8.6.zip</url>
+                        <sha>0da7959fb53b6e01ae708ef219374584a4224294</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.2" minTarget="7.1.0" maxTarget="7.3.*">
@@ -370,15 +369,18 @@
                         <sha>8929615904e56e146b96bc8a416de79b5317cf9c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
-				<plugin name="SongInfo" version="1.0.2999" minTarget="7.4.0" maxTarget="*">
+				<plugin name="SongInfo" version="1.1.3422" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Info</title>
                         <desc lang="EN">A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">No changes since latest beta
+                        <changes lang="EN">- Corrected albums context menu in 7.6
+			- Added support for showing artist events from LastFM
+			- Corrected so it's possible to enable/disable specific information items
+			- Added som localization to settings pages
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.0.2999_fixed.zip</url>
-                        <sha>f727ff461710a8d68e156393c15f7f6e1843e822</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3422.zip</url>
+                        <sha>d6c9e67c84d415f5f2fb601501b27e439b75755b</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
                 <plugin name="SongLyrics" version="1.1.3329" minTarget="7.4.0" maxTarget="*">
