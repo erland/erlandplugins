@@ -92,7 +92,7 @@ sub postinitPlugin
 			Slim::Menu::TrackInfo->registerInfoProvider( $itemid => (
 				after => 'middle',
 				func => sub {
-					return objectInfoHandler(@_,$id);
+					return objectInfoHandler(@_,undef,$id);
 				}
 			));
 		}
@@ -104,7 +104,11 @@ sub postinitPlugin
 			Slim::Menu::AlbumInfo->registerInfoProvider( $itemid => (
 				after => 'middle',
 				func => sub {
-					return objectInfoHandler(@_,$id);
+					if(scalar(@_)<6) {
+						return objectInfoHandler(@_,undef,$id);
+					}else {
+						return objectInfoHandler(@_,$id);
+					}
 				}
 			));
 		}
@@ -116,7 +120,7 @@ sub postinitPlugin
 			Slim::Menu::ArtistInfo->registerInfoProvider( $itemid => (
 				after => 'middle',
 				func => sub {
-					return objectInfoHandler(@_,$id);
+					return objectInfoHandler(@_,undef,$id);
 				}
 			));
 		}
@@ -324,7 +328,7 @@ sub getDisplayText {
 	return $item;
 }
 sub objectInfoHandler {
-        my ( $client, $url, $obj, $remoteMeta, $tags, $moduleId) = @_;
+        my ( $client, $url, $obj, $remoteMeta, $tags, $filter, $moduleId) = @_;
         $tags ||= {};
 	my $modules = getInformationModules();
 	my $module = $modules->{$moduleId};
