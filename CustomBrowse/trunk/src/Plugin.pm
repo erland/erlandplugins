@@ -1302,7 +1302,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::TrackInfo->registerInfoProvider( custombrowse => (
 			above => 'favorites',
 			func => sub {
-				return objectInfoHandler(@_,'track');
+				return objectInfoHandler(@_,undef,'track');
 			},
 		));
 	}
@@ -1311,7 +1311,11 @@ sub registerStandardContextMenus {
 		Slim::Menu::AlbumInfo->registerInfoProvider( custombrowse => (
 			below => 'addalbum',
 			func => sub {
-				return objectInfoHandler(@_,'album');
+				if(scalar(@_)<6) {
+					return objectInfoHandler(@_,undef,'album');
+				}else {
+					return objectInfoHandler(@_,'album');
+				}
 			},
 		));
 	}
@@ -1320,7 +1324,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::ArtistInfo->registerInfoProvider( custombrowse => (
 			below => 'addartist',
 			func => sub {
-				return objectInfoHandler(@_,'artist');
+				return objectInfoHandler(@_,undef,'artist');
 			},
 		));
 	}
@@ -1329,7 +1333,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::YearInfo->registerInfoProvider( custombrowse => (
 			below => 'addyear',
 			func => sub {
-				return objectInfoHandler(@_,'year');
+				return objectInfoHandler(@_,undef,'year');
 			},
 		));
 	}
@@ -1338,7 +1342,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::PlaylistInfo->registerInfoProvider( custombrowse => (
 			below => 'addplaylist',
 			func => sub {
-				return objectInfoHandler(@_,'playlist');
+				return objectInfoHandler(@_,undef,'playlist');
 			},
 		));
 	}
@@ -1347,14 +1351,14 @@ sub registerStandardContextMenus {
 		Slim::Menu::GenreInfo->registerInfoProvider( custombrowse => (
 			below => 'addgenre',
 			func => sub {
-				return objectInfoHandler(@_,'genre');
+				return objectInfoHandler(@_,undef,'genre');
 			},
 		));
 	}
 }
 
 sub objectInfoHandler {
-	my ( $client, $url, $obj, $remoteMeta, $tags, $objectType) = @_;
+	my ( $client, $url, $obj, $remoteMeta, $tags, $filter, $objectType) = @_;
 	$tags ||= {};
 
 	my $objectName = undef;
