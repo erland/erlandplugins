@@ -2602,7 +2602,11 @@ sub registerStandardContextMenus {
 		Slim::Menu::AlbumInfo->registerInfoProvider( trackstat => (
 			below => 'addalbum',
 			func => sub {
-				return objectInfoHandler(@_,'album');
+				if(scalar(@_)<6) {
+					return objectInfoHandler(@_,undef,'album');
+				}else {
+					return objectInfoHandler(@_,'album');
+				}
 			},
 		));
 	}
@@ -2645,7 +2649,7 @@ sub registerStandardContextMenus {
 }
 
 sub objectInfoHandler {
-	my ( $client, $url, $obj, $remoteMeta, $tags, $objectType) = @_;
+	my ( $client, $url, $obj, $remoteMeta, $tags, $filter, $objectType) = @_;
 	$tags ||= {};
 
 	my $objectName = undef;
