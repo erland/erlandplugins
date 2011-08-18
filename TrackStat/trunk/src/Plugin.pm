@@ -2615,7 +2615,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::ArtistInfo->registerInfoProvider( trackstat => (
 			below => 'addartist',
 			func => sub {
-				return objectInfoHandler(@_,'artist');
+				return objectInfoHandler(@_,undef,'artist');
 			},
 		));
 	}
@@ -2624,7 +2624,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::YearInfo->registerInfoProvider( trackstat => (
 			below => 'addyear',
 			func => sub {
-				return objectInfoHandler(@_,'year');
+				return objectInfoHandler(@_,undef,'year');
 			},
 		));
 	}
@@ -2633,7 +2633,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::PlaylistInfo->registerInfoProvider( trackstat => (
 			below => 'addplaylist',
 			func => sub {
-				return objectInfoHandler(@_,'playlist');
+				return objectInfoHandler(@_,undef,'playlist');
 			},
 		));
 	}
@@ -2642,7 +2642,7 @@ sub registerStandardContextMenus {
 		Slim::Menu::GenreInfo->registerInfoProvider( trackstat => (
 			below => 'addgenre',
 			func => sub {
-				return objectInfoHandler(@_,'genre');
+				return objectInfoHandler(@_,undef,'genre');
 			},
 		));
 	}
