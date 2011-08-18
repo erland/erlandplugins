@@ -2868,7 +2868,7 @@ sub trackInfoHandler {
 		};
 		$jive->{actions} = $actions;
 		my $text = string('PLUGIN_TRACKSTAT_RATING').string("PLUGIN_TRACKSTAT_UNRATED");
-		if(defined($trackHandle->rating && $trackHandle->rating>0)) {
+		if(defined($trackHandle) && defined($trackHandle->rating) && $trackHandle->rating>0) {
 			my $ratingStars = $trackHandle->rating/20;
 			if($prefs->get("rating_10scale")) {
 				$ratingStars = $trackHandle->rating/10;
