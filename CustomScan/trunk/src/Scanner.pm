@@ -692,6 +692,10 @@ sub isAllowedVersion {
 }
 
 sub fullRescan {
+	my $synchronous = shift;
+	my $changedTrack = shift;
+	my $deletedTrack = shift;
+
 	$log->info("Performing rescan\n");
 	
 	if(scalar(grep (/1/,values %scanningModulesInProgress))>0) {
@@ -728,6 +732,15 @@ sub fullRescan {
 		}
 	}
 	my %scanningContext = ();
+	if(defined($synchronous)) {
+		$scanningContext{'synchronous'} = $synchronous;
+	}
+	if(defined($changedTrack)) {
+		$scanningContext{'changedTrack'} = $changedTrack;
+	}
+	if(defined($deletedTrack)) {
+		$scanningContext{'deletedTrack'} = $deletedTrack;
+	}
 	initArtistScan(undef,\%scanningContext);
 	return;
 }
@@ -1060,6 +1073,13 @@ sub initArtistScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my @contributors = ();
+	if(defined($scanningContext->{'changedTrack'})) {
+		my $track = $scanningContext->{'changedTrack'};
+		for my $contributor ($track->contributors) {
+			push @contributors,$contributor->id;
+		}
+	}
 	my $needToScanArtists = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
@@ -1075,9 +1095,17 @@ sub initArtistScan {
 				$limit = " limit 1000";
 			}
 			eval {
-				my $sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId).$limit);
+				my $sth = undef;
+				if(defined($scanningContext->{'changedTrack'})) {
+					if(scalar(@contributors)>0) {
+						$log->debug("Deleting artist data for $moduleId and contributors ".join(",",@contributors));
+						$sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId)." and contributor IN (".join(",",@contributors).")".$limit);
+					}
+				}else {
+					$sth = $dbh->prepare("DELETE FROM customscan_contributor_attributes where module=".$dbh->quote($moduleId).$limit);
+				}
 				my $count = 1;
-				while (defined($count)) {
+				while (defined($count) && defined($sth)) {
 					$count = $sth->execute();
 					if($count eq '0E0') {
 						$count = undef;
@@ -1086,7 +1114,9 @@ sub initArtistScan {
 					main::idleStreams();
 				}
 				commit($dbh);
-				$sth->finish();
+				if(defined($sth)) {
+					$sth->finish();
+				}
 			};
 			if( $@ ) {
 			    $log->error("Database error: $DBI::errstr\n$@\n");
@@ -1103,20 +1133,50 @@ sub initArtistScan {
 		}
 	}
 	if($needToScanArtists) {
+		my $artists = undef;
 		my @joins = ();
 		push @joins, 'contributorTracks';
-		my $artists = Slim::Schema->resultset('Contributor')->search(
-			{'contributorTracks.role' => {'in' => [1,5]}},
-			{
-				'group_by' => 'me.id',
-				'join' => \@joins
+		if(defined($scanningContext->{'changedTrack'})) {
+			if(scalar(@contributors)>0) {
+				$artists = Slim::Schema->resultset('Contributor')->search(
+					{'contributorTracks.role' => {'in' => [1,5]},
+					 'contributorTracks.contributor' => {'in' => @contributors}
+					},
+					{
+						'group_by' => 'me.id',
+						'join' => \@joins
+					}
+				);
+			}else {
+				# Just a dummy to make sure we don't get any matches
+				$artists = Slim::Schema->resultset('Contributor')->search(
+					{'contributorTracks.role' => {'in' => [1,5]},
+					 'contributorTracks.contributor' => {'in' => [-1]}
+					},
+					{
+						'group_by' => 'me.id',
+						'join' => \@joins
+					}
+				);
 			}
-		);
+		}else {
+			$artists = Slim::Schema->resultset('Contributor')->search(
+				{'contributorTracks.role' => {'in' => [1,5]}},
+				{
+					'group_by' => 'me.id',
+					'join' => \@joins
+				}
+			);
+		}
 		$scanningContext->{'artists'} = $artists;
 		$log->info("Got ".$artists->count." artists\n");
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	if(defined($scanningContext->{'synchronous'})) {
+		initScanArtist($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&initScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}
 }
 
 sub initScanArtist {
@@ -1125,33 +1185,50 @@ sub initScanArtist {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
-
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'initScanArtist'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::initScanArtist\n");
-			eval { $result = &{$module->{'initScanArtist'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call initScanArtist on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
-			}
-			use strict 'refs';
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
 		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey,$scanningContext);
-		return 0;
+
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'initScanArtist'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::initScanArtist\n");
+				eval { $result = &{$module->{'initScanArtist'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call initScanArtist on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
+			}
+		}
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}elsif(scalar(@$moduleKeys)>0) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}else {
+			if(defined($scanningContext->{'synchronous'})) {
+				scanArtist($moduleKey,$scanningContext);
+				return 0;
+			}else {
+				Slim::Utils::Scheduler::add_task(\&scanArtist,$moduleKey,$scanningContext);
+				return 0;
+			}
+		}
 	}
 }
 sub getSortedModuleKeys {
@@ -1206,6 +1283,11 @@ sub initAlbumScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $album = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		my $track = $scanningContext->{'changedTrack'};
+		$album = $track->album;
+	}
 	my $needToScanAlbums = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
@@ -1220,9 +1302,17 @@ sub initAlbumScan {
 				$limit = " limit 1000";
 			}
 			eval {
-				my $sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId).$limit);
+				my $sth = undef;
+				if(defined($scanningContext->{'changedTrack'})) {
+					if(defined($album)) {
+						$log->debug("Deleting album data for $moduleId and album ".$album->id);
+						$sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId)." and album=".$album->id.$limit);
+					}
+				}else {
+					$sth = $dbh->prepare("DELETE FROM customscan_album_attributes where module=".$dbh->quote($moduleId).$limit);
+				}
 				my $count = 1;
-				while (defined($count)) {
+				while (defined($count) && defined($sth)) {
 					$count = $sth->execute();
 					if($count eq '0E0') {
 						$count = undef;
@@ -1231,7 +1321,9 @@ sub initAlbumScan {
 					$log->debug("Clearing album data...\n");
 				}
 				commit($dbh);
-				$sth->finish();
+				if(defined($sth)) {
+					$sth->finish();
+				}
 			};
 			if( $@ ) {
 			    $log->error("Database error: $DBI::errstr\n");
@@ -1258,12 +1350,26 @@ sub initAlbumScan {
 		}
 	}
 	if($needToScanAlbums) {
-		my $albums = Slim::Schema->resultset('Album');
+		my $albums = undef;
+		if(defined($scanningContext->{'changedTrack'})) {
+			if(defined($album)) {
+				$albums = Slim::Schema->resultset('Album')->search({'id' => $album->id});
+			}else {
+				# Just a dummy to make sure we don't get any matches
+				$albums = Slim::Schema->resultset('Album')->search({'id' => -1});
+			}
+		}else {
+			$albums = Slim::Schema->resultset('Album');
+		}
 		$scanningContext->{'albums'} = $albums;
 		$log->info("Got ".$albums->count." albums\n");
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	if(defined($scanningContext->{'synchronous'})) {
+		initScanAlbum($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&initScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}
 }
 
 sub initScanAlbum {
@@ -1272,33 +1378,50 @@ sub initScanAlbum {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
-
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'initScanAlbum'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::initScanAlbum\n");
-			eval { $result = &{$module->{'initScanAlbum'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
-			}
-			use strict 'refs';
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
 		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey,$scanningContext);
-		return 0;
+
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'initScanAlbum'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::initScanAlbum\n");
+				eval { $result = &{$module->{'initScanAlbum'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
+			}
+		}
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}elsif(scalar(@$moduleKeys)>0) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}else {
+			if(defined($scanningContext->{'synchronous'})) {
+				scanAlbum($moduleKey,$scanningContext);
+				return 0;
+			}else {
+				Slim::Utils::Scheduler::add_task(\&scanAlbum,$moduleKey,$scanningContext);
+				return 0;
+			}
+		}
 	}
 }
 
@@ -1314,6 +1437,10 @@ sub initTrackScan {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
+	my $track = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$track = $scanningContext->{'changedTrack'};
+	}
 	my $needToScanTracks = 0;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
@@ -1324,21 +1451,23 @@ sub initTrackScan {
 			$timeMeasure->start();
 			$log->info("Clearing track data for ".$moduleId."\n");
 			my $clearWithDelete=1;
-			eval {
-				my $sth = $dbh->prepare("SELECT COUNT(id) FROM customscan_track_attributes where module=".$dbh->quote($moduleId));
-				my $count = undef;
-				$sth->execute();
-				$sth->bind_col(1, \$count);
-				if($sth->fetch()) {
-					if($count>40000) {
-						$clearWithDelete = 0;
+			if(!defined($track)) {
+				eval {
+					my $sth = $dbh->prepare("SELECT COUNT(id) FROM customscan_track_attributes where module=".$dbh->quote($moduleId));
+					my $count = undef;
+					$sth->execute();
+					$sth->bind_col(1, \$count);
+					if($sth->fetch()) {
+						if($count>40000) {
+							$clearWithDelete = 0;
+						}
 					}
-				}
-				$sth->finish();
-			};
-			if( $@ ) {
-			    $log->error("Database error: $DBI::errstr, $@\n");
-		   	}
+					$sth->finish();
+				};
+				if( $@ ) {
+				    $log->error("Database error: $DBI::errstr, $@\n");
+			   	}
+			}
 			if($clearWithDelete) {
 				$log->info("Start clearing track data with delete\n");
 				my $limit = "";
@@ -1346,7 +1475,13 @@ sub initTrackScan {
 					$limit = " limit 1000";
 				}
 				eval {
-					my $sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId).$limit);
+					my $sth = undef;
+					if(defined($track)) {
+						$log->debug("Deleting data for $moduleId and track ".$track->id);
+						$sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId)." and track=".$track->id.$limit);
+					}else {
+						$sth = $dbh->prepare("DELETE FROM customscan_track_attributes where module=".$dbh->quote($moduleId).$limit);
+					}
 					my $count = 1;
 					while (defined($count)) {
 						$count = $sth->execute();
@@ -1408,12 +1543,26 @@ sub initTrackScan {
 		}
 	}
 	if($needToScanTracks) {
-		my $tracks = Slim::Schema->resultset('Track');
+		my $tracks = undef;
+		if(defined($track)) {
+			if(!defined($scanningContext->{'deletedTrack'})) {
+				$tracks = Slim::Schema->resultset('Track')->search({'id' => $track->id});
+			}else {
+				# Just a dummy to make sure we don't get any matches
+				$tracks = Slim::Schema->resultset('Track')->search({'id' => -1});
+			}
+		}else {
+			$tracks = Slim::Schema->resultset('Track');
+		}
 		$scanningContext->{'tracks'} = $tracks;
 		$log->info("Got ".$tracks->count." tracks\n");
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	if(defined($scanningContext->{'synchronous'})) {
+		initScanTrack($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}
 }
 
 sub initScanTrack {
@@ -1422,50 +1571,61 @@ sub initScanTrack {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
+		}
 
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'initScanTrack'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::initScanTrack\n");
-			eval { $result = &{$module->{'initScanTrack'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call initScanTrack on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'initScanTrack'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::initScanTrack\n");
+				eval { $result = &{$module->{'initScanTrack'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call initScanTrack on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
 			}
-			use strict 'refs';
 		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		if(!$scanningAborted) {
-			return 1;
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(!$scanningAborted) {
+				if(defined($scanningContext->{'synchronous'})) {
+					$stillRunning = 1;
+				}else {
+					return 1;
+				}
+			}
+		}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
 		}
-	}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
-		return 1;
-	}
 
-	Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey,$scanningContext);
-	return 0;
+		if(!$stillRunning) {
+			if(defined($scanningContext->{'synchronous'})) {
+				scanTrack($moduleKey,$scanningContext);
+				return 0;
+			}else {
+				Slim::Utils::Scheduler::add_task(\&scanTrack,$moduleKey,$scanningContext);
+				return 0;
+			}
+		}
+	}
 }
 
 sub scanArtist {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my $artist = undef;
-	if(defined($scanningContext->{'artists'})) {
-		$artist = $scanningContext->{'artists'}->next;
-		if(defined($artist) && $artist->id eq Slim::Schema->variousArtistsObject->id) {
-			$log->debug("CustomScan: Skipping artist ".$artist->name."\n");
-			$artist = $scanningContext->{'artists'}->next;
-		}
-	}
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
@@ -1473,80 +1633,102 @@ sub scanArtist {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
-	if(defined($artist)) {
-		my $dbh = getCurrentDBH();
-		$log->debug("Scanning artist: ".$artist->name."\n");
-		for my $key (@moduleKeys) {
-			my $module = $modules->{$key};
-			my $moduleId = $module->{'id'};
-			if(defined($module->{'scanArtist'})) {
-				my $scan = 1;
-				if(!defined($module->{'alwaysRescanArtist'}) || !$module->{'alwaysRescanArtist'}) {
-					my $sth = $dbh->prepare("SELECT id from customscan_contributor_attributes where module=? and contributor=?");
-					$sth->bind_param(1,$moduleId,SQL_VARCHAR);
-					$sth->bind_param(2, $artist->id , SQL_INTEGER);
-					$sth->execute();
-					if($sth->fetch()) {
-						$scan = 0;
+
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+
+		my $artist = undef;
+		if(defined($scanningContext->{'artists'})) {
+			$artist = $scanningContext->{'artists'}->next;
+			if(defined($artist) && $artist->id eq Slim::Schema->variousArtistsObject->id) {
+				$log->debug("CustomScan: Skipping artist ".$artist->name."\n");
+				$artist = $scanningContext->{'artists'}->next;
+			}
+		}
+		if(defined($artist)) {
+			my $dbh = getCurrentDBH();
+			$log->debug("Scanning artist: ".$artist->name."\n");
+			for my $key (@moduleKeys) {
+				my $module = $modules->{$key};
+				my $moduleId = $module->{'id'};
+				if(defined($module->{'scanArtist'})) {
+					my $scan = 1;
+					if(!defined($module->{'alwaysRescanArtist'}) || !$module->{'alwaysRescanArtist'}) {
+						my $sth = $dbh->prepare("SELECT id from customscan_contributor_attributes where module=? and contributor=?");
+						$sth->bind_param(1,$moduleId,SQL_VARCHAR);
+						$sth->bind_param(2, $artist->id , SQL_INTEGER);
+						$sth->execute();
+						if($sth->fetch()) {
+							$scan = 0;
+						}
+						$sth->finish();
 					}
-					$sth->finish();
-				}
-				if($scan) {
-					no strict 'refs';
-					$log->debug("Calling: ".$key."::scanArtist\n");
-					my $attributes = eval { &{$module->{'scanArtist'}}($artist); };
-					if ($@) {
-						$log->error("CustomScan: Failed to call scanArtist on module $key: $@\n");
-						$scanningModulesInProgress{$key}=-1;
-					}
-					use strict 'refs';
-					if($attributes && scalar(@$attributes)>0) {
-						for my $attribute (@$attributes) {
-							my $sql = undef;
-							$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
-							my $sth = $dbh->prepare( $sql );
-							eval {
-								$sth->bind_param(1, $artist->id , SQL_INTEGER);
-								$sth->bind_param(2, $artist->name , SQL_VARCHAR);
-								if(defined($artist->musicbrainz_id) && $artist->musicbrainz_id =~ /.+-.+/) {
-									$sth->bind_param(3,  $artist->musicbrainz_id, SQL_VARCHAR);
-								}else {
-									$sth->bind_param(3,  undef, SQL_VARCHAR);
-								}
-								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
-								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
-								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
-								if(defined($attribute->{'valuesort'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
-								}elsif(defined($attribute->{'value'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
-								}
-								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
-								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
-								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
-								$sth->execute();
-								commit($dbh);
-							};
-							if( $@ ) {
-							    $log->error("Database error: $DBI::errstr\n");
-							    eval {
-							    	rollback($dbh); #just die if rollback is failing
-							    };
-							    $log->warn("Error values: ".$artist->id.", ".$artist->name.", ".$artist->musicbrainz_id.", ".$moduleId.", ".$attribute->{'name'}.", ".$attribute->{'value'}.", ".$attribute->{'valuesort'}.", ".$attribute->{'extravalue'}.", ".$attribute->{'valuetype'}."\n");
-						   	}
-							$sth->finish();
+					if($scan) {
+						no strict 'refs';
+						$log->debug("Calling: ".$key."::scanArtist\n");
+						my $attributes = eval { &{$module->{'scanArtist'}}($artist); };
+						if ($@) {
+							$log->error("CustomScan: Failed to call scanArtist on module $key: $@\n");
+							$scanningModulesInProgress{$key}=-1;
+						}
+						use strict 'refs';
+						if($attributes && scalar(@$attributes)>0) {
+							for my $attribute (@$attributes) {
+								my $sql = undef;
+								$sql = "INSERT INTO customscan_contributor_attributes (contributor,name,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
+								my $sth = $dbh->prepare( $sql );
+								eval {
+									$sth->bind_param(1, $artist->id , SQL_INTEGER);
+									$sth->bind_param(2, $artist->name , SQL_VARCHAR);
+									if(defined($artist->musicbrainz_id) && $artist->musicbrainz_id =~ /.+-.+/) {
+										$sth->bind_param(3,  $artist->musicbrainz_id, SQL_VARCHAR);
+									}else {
+										$sth->bind_param(3,  undef, SQL_VARCHAR);
+									}
+									$sth->bind_param(4, $moduleId, SQL_VARCHAR);
+									$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
+									$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+									if(defined($attribute->{'valuesort'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+									}elsif(defined($attribute->{'value'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+									}
+									$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
+									$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+									$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
+									$sth->execute();
+									commit($dbh);
+								};
+								if( $@ ) {
+								    $log->error("Database error: $DBI::errstr\n");
+								    eval {
+								    	rollback($dbh); #just die if rollback is failing
+								    };
+								    $log->warn("Error values: ".$artist->id.", ".$artist->name.", ".$artist->musicbrainz_id.", ".$moduleId.", ".$attribute->{'name'}.", ".$attribute->{'value'}.", ".$attribute->{'valuesort'}.", ".$attribute->{'extravalue'}.", ".$attribute->{'valuetype'}."\n");
+							   	}
+								$sth->finish();
+							}
 						}
 					}
 				}
 			}
-		}
-		if(!$scanningAborted) {
-			return 1;
+			if(!$scanningAborted) {
+				if(defined($scanningContext->{'synchronous'})) {
+					$stillRunning = 1;
+				}else {
+					return 1;
+				}
+			}
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
-	return 0;
+	if(defined($scanningContext->{'synchronous'})) {
+		exitScanArtist($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&exitScanArtist,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+		return 0;
+	}
 }
 
 sub exitScanArtist {
@@ -1555,32 +1737,45 @@ sub exitScanArtist {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'exitScanArtist'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::exitScanArtist\n");
-			eval { $result = &{$module->{'exitScanArtist'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
-			}
-			use strict 'refs';
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
 		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		initAlbumScan($moduleKey,$scanningContext);
-		return 0;
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'exitScanArtist'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::exitScanArtist\n");
+				eval { $result = &{$module->{'exitScanArtist'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
+			}
+		}
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}elsif(scalar(@$moduleKeys)>0) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}else {
+			initAlbumScan($moduleKey,$scanningContext);
+			return 0;
+		}
 	}
 }
 
@@ -1588,18 +1783,6 @@ sub scanAlbum {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my $album = undef;
-	if($scanningContext->{'albums'}) {
-		$album = $scanningContext->{'albums'}->next;
-		while(defined($album) && (!$album->title || $album->title eq string('NO_ALBUM'))) {
-			if($album->title) {
-				$log->debug("CustomScan: Skipping album ".$album->title."\n");
-			}else {
-				$log->debug("CustomScan: Skipping album with no title\n");
-			}
-			$album = $scanningContext->{'albums'}->next;
-		}
-	}
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
@@ -1607,79 +1790,105 @@ sub scanAlbum {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
-	if(defined($album)) {
-		my $dbh = getCurrentDBH();
-		$log->debug("Scanning album: ".$album->title."\n");
-		for my $key (@moduleKeys) {
-			my $module = $modules->{$key};
-			my $moduleId = $module->{'id'};
-			if(defined($module->{'scanAlbum'})) {
-				my $scan = 1;
-				if(!defined($module->{'alwaysRescanAlbum'}) || !$module->{'alwaysRescanAlbum'}) {
-					my $sth = $dbh->prepare("SELECT id from customscan_album_attributes where module=? and album=?");
-					$sth->bind_param(1,$moduleId,SQL_VARCHAR);
-					$sth->bind_param(2, $album->id , SQL_INTEGER);
-					$sth->execute();
-					if($sth->fetch()) {
-						$scan = 0;
-					}
-					$sth->finish();
+
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+
+		my $album = undef;
+		if($scanningContext->{'albums'}) {
+			$album = $scanningContext->{'albums'}->next;
+			while(defined($album) && (!$album->title || $album->title eq string('NO_ALBUM'))) {
+				if($album->title) {
+					$log->debug("CustomScan: Skipping album ".$album->title."\n");
+				}else {
+					$log->debug("CustomScan: Skipping album with no title\n");
 				}
-				if($scan) {
-					no strict 'refs';
-					$log->debug("Calling: ".$key."::scanAlbum\n");
-					my $attributes = eval { &{$module->{'scanAlbum'}}($album); };
-					if ($@) {
-						$log->error("CustomScan: Failed to call scanAlbum on module $key: $@\n");
-						$scanningModulesInProgress{$key}=-1;
+				$album = $scanningContext->{'albums'}->next;
+			}
+		}
+		if(defined($album)) {
+			my $dbh = getCurrentDBH();
+			$log->debug("Scanning album: ".$album->title."\n");
+			for my $key (@moduleKeys) {
+				my $module = $modules->{$key};
+				my $moduleId = $module->{'id'};
+				if(defined($module->{'scanAlbum'})) {
+					my $scan = 1;
+					if(!defined($module->{'alwaysRescanAlbum'}) || !$module->{'alwaysRescanAlbum'}) {
+						my $sth = $dbh->prepare("SELECT id from customscan_album_attributes where module=? and album=?");
+						$sth->bind_param(1,$moduleId,SQL_VARCHAR);
+						$sth->bind_param(2, $album->id , SQL_INTEGER);
+						$sth->execute();
+						if($sth->fetch()) {
+							$scan = 0;
+						}
+						$sth->finish();
 					}
-					use strict 'refs';
-					if($attributes && scalar(@$attributes)>0) {
-						for my $attribute (@$attributes) {
-							my $sql = undef;
-							$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
-							my $sth = $dbh->prepare( $sql );
-							eval {
-								$sth->bind_param(1, $album->id , SQL_INTEGER);
-								$sth->bind_param(2, $album->title , SQL_VARCHAR);
-								if(defined($album->musicbrainz_id) && $album->musicbrainz_id =~ /.+-.+/) {
-									$sth->bind_param(3,  $album->musicbrainz_id, SQL_VARCHAR);
-								}else {
-									$sth->bind_param(3,  undef, SQL_VARCHAR);
-								}
-								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
-								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
-								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
-								if(defined($attribute->{'valuesort'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
-								}elsif(defined($attribute->{'value'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
-								}
-								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
-								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
-								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
-								$sth->execute();
-								commit($dbh);
-							};
-							if( $@ ) {
-							    $log->error("Database error: $DBI::errstr\n");
-							    eval {
-							    	rollback($dbh); #just die if rollback is failing
-							    };
-						   	}
-							$sth->finish();
+					if($scan) {
+						no strict 'refs';
+						$log->debug("Calling: ".$key."::scanAlbum\n");
+						my $attributes = eval { &{$module->{'scanAlbum'}}($album); };
+						if ($@) {
+							$log->error("CustomScan: Failed to call scanAlbum on module $key: $@\n");
+							$scanningModulesInProgress{$key}=-1;
+						}
+						use strict 'refs';
+						if($attributes && scalar(@$attributes)>0) {
+							for my $attribute (@$attributes) {
+								my $sql = undef;
+								$sql = "INSERT INTO customscan_album_attributes (album,title,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
+								my $sth = $dbh->prepare( $sql );
+								eval {
+									$sth->bind_param(1, $album->id , SQL_INTEGER);
+									$sth->bind_param(2, $album->title , SQL_VARCHAR);
+									if(defined($album->musicbrainz_id) && $album->musicbrainz_id =~ /.+-.+/) {
+										$sth->bind_param(3,  $album->musicbrainz_id, SQL_VARCHAR);
+									}else {
+										$sth->bind_param(3,  undef, SQL_VARCHAR);
+									}
+									$sth->bind_param(4, $moduleId, SQL_VARCHAR);
+									$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
+									$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+									if(defined($attribute->{'valuesort'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+									}elsif(defined($attribute->{'value'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+									}
+									$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
+									$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+									$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
+									$sth->execute();
+									commit($dbh);
+								};
+								if( $@ ) {
+								    $log->error("Database error: $DBI::errstr\n");
+								    eval {
+								    	rollback($dbh); #just die if rollback is failing
+								    };
+							   	}
+								$sth->finish();
+							}
 						}
 					}
 				}
 			}
-		}
-		if(!$scanningAborted) {
-			return 1;
+			if(!$scanningAborted) {
+				if(defined($scanningContext->{'synchronous'})) {
+					$stillRunning = 1;
+				}else {
+					return 1;
+				}
+			}
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
-	return 0;
+	if(defined($scanningContext->{'synchronous'})) {
+		exitScanAlbum($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&exitScanAlbum,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+		return 0;
+	}
 }
 
 sub exitScanAlbum {
@@ -1688,32 +1897,45 @@ sub exitScanAlbum {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'exitScanAlbum'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::exitScanAlbum\n");
-			eval { $result = &{$module->{'exitScanAlbum'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
-			}
-			use strict 'refs';
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
 		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		return 1;
-	}elsif(scalar(@$moduleKeys)>0) {
-		return 1;
-	}else {
-		initTrackScan($moduleKey,$scanningContext);
-		return 0;
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'exitScanAlbum'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::exitScanAlbum\n");
+				eval { $result = &{$module->{'exitScanAlbum'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
+			}
+		}
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}elsif(scalar(@$moduleKeys)>0) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}else {
+			initTrackScan($moduleKey,$scanningContext);
+			return 0;
+		}
 	}
 }
 
@@ -1721,15 +1943,6 @@ sub scanTrack {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
 
-	my $track = undef;
-	if(defined($scanningContext->{'tracks'})) {
-		$track = $scanningContext->{'tracks'}->next;
-		my $maxCharacters = ($useLongUrls?511:255);
-		# Skip non audio tracks and tracks with url longer than max number of characters
-		while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
-			$track = $scanningContext->{'tracks'}->next;
-		}
-	}
 	my @moduleKeys = ();
 	if(defined($moduleKey)) {
 		push @moduleKeys,$moduleKey;
@@ -1737,79 +1950,102 @@ sub scanTrack {
 		my $array = getSortedModuleKeys();
 		push @moduleKeys,@$array;
 	}
-	if(defined($track)) {
-		my $dbh = getCurrentDBH();
-		$log->debug("Scanning track: ".$track->title."\n");
-		for my $key (@moduleKeys) {
-			my $module = $modules->{$key};
-			my $moduleId = $module->{'id'};
-			if(defined($module->{'scanTrack'})) {
-				my $scan = 1;
-				if(!defined($module->{'alwaysRescanTrack'}) || !$module->{'alwaysRescanTrack'}) {
-					my $sth = $dbh->prepare("SELECT id from customscan_track_attributes where module=? and track=?");
-					$sth->bind_param(1,$moduleId,SQL_VARCHAR);
-					$sth->bind_param(2, $track->id , SQL_INTEGER);
-					$sth->execute();
-					if($sth->fetch()) {
-						$scan = 0;
+
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
+
+		my $track = undef;
+		if(defined($scanningContext->{'tracks'})) {
+			$track = $scanningContext->{'tracks'}->next;
+			my $maxCharacters = ($useLongUrls?511:255);
+			# Skip non audio tracks and tracks with url longer than max number of characters
+			while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
+				$track = $scanningContext->{'tracks'}->next;
+			}
+		}
+		if(defined($track)) {
+			my $dbh = getCurrentDBH();
+			$log->debug("Scanning track: ".$track->title."\n");
+			for my $key (@moduleKeys) {
+				my $module = $modules->{$key};
+				my $moduleId = $module->{'id'};
+				if(defined($module->{'scanTrack'})) {
+					my $scan = 1;
+					if(!defined($module->{'alwaysRescanTrack'}) || !$module->{'alwaysRescanTrack'}) {
+						my $sth = $dbh->prepare("SELECT id from customscan_track_attributes where module=? and track=?");
+						$sth->bind_param(1,$moduleId,SQL_VARCHAR);
+						$sth->bind_param(2, $track->id , SQL_INTEGER);
+						$sth->execute();
+						if($sth->fetch()) {
+							$scan = 0;
+						}
+						$sth->finish();
 					}
-					$sth->finish();
-				}
-				if($scan) {
-					no strict 'refs';
-					$log->debug("Calling: ".$key."::scanTrack\n");
-					my $attributes = eval { &{$module->{'scanTrack'}}($track); };
-					if ($@) {
-						$log->error("CustomScan: Failed to call scanTrack on module $key: $@\n");
-						$scanningModulesInProgress{$key}=-1;
-					}
-					use strict 'refs';
-					if($attributes && scalar(@$attributes)>0) {
-						for my $attribute (@$attributes) {
-							my $sql = undef;
-							$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
-							my $sth = $dbh->prepare( $sql );
-							eval {
-								$sth->bind_param(1, $track->id , SQL_INTEGER);
-								$sth->bind_param(2, $track->url , SQL_VARCHAR);
-								if(defined($track->musicbrainz_id) && $track->musicbrainz_id =~ /.+-.+/) {
-									$sth->bind_param(3,  $track->musicbrainz_id, SQL_VARCHAR);
-								}else {
-									$sth->bind_param(3,  undef, SQL_VARCHAR);
-								}
-								$sth->bind_param(4, $moduleId, SQL_VARCHAR);
-								$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
-								$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
-								if(defined($attribute->{'valuesort'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
-								}elsif(defined($attribute->{'value'})) {
-									$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
-								}
-								$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
-								$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
-								$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
-								$sth->execute();
-								commit($dbh);
-							};
-							if( $@ ) {
-							    $log->error("Database error: $DBI::errstr\n");
-							    eval {
-							    	rollback($dbh); #just die if rollback is failing
-							    };
-						   	}
-							$sth->finish();
+					if($scan) {
+						no strict 'refs';
+						$log->debug("Calling: ".$key."::scanTrack\n");
+						my $attributes = eval { &{$module->{'scanTrack'}}($track); };
+						if ($@) {
+							$log->error("CustomScan: Failed to call scanTrack on module $key: $@\n");
+							$scanningModulesInProgress{$key}=-1;
+						}
+						use strict 'refs';
+						if($attributes && scalar(@$attributes)>0) {
+							for my $attribute (@$attributes) {
+								my $sql = undef;
+								$sql = "INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) values (?,?,?,?,?,?,?,?,?)";
+								my $sth = $dbh->prepare( $sql );
+								eval {
+									$sth->bind_param(1, $track->id , SQL_INTEGER);
+									$sth->bind_param(2, $track->url , SQL_VARCHAR);
+									if(defined($track->musicbrainz_id) && $track->musicbrainz_id =~ /.+-.+/) {
+										$sth->bind_param(3,  $track->musicbrainz_id, SQL_VARCHAR);
+									}else {
+										$sth->bind_param(3,  undef, SQL_VARCHAR);
+									}
+									$sth->bind_param(4, $moduleId, SQL_VARCHAR);
+									$sth->bind_param(5, $attribute->{'name'}, SQL_VARCHAR);
+									$sth->bind_param(6, $attribute->{'value'} , SQL_VARCHAR);
+									if(defined($attribute->{'valuesort'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'valuesort'});
+									}elsif(defined($attribute->{'value'})) {
+										$attribute->{'valuesort'} = Slim::Utils::Text::ignoreCaseArticles($attribute->{'value'});
+									}
+									$sth->bind_param(7, $attribute->{'valuesort'} , SQL_VARCHAR);
+									$sth->bind_param(8, $attribute->{'extravalue'} , SQL_VARCHAR);
+									$sth->bind_param(9, $attribute->{'valuetype'} , SQL_VARCHAR);
+									$sth->execute();
+									commit($dbh);
+								};
+								if( $@ ) {
+								    $log->error("Database error: $DBI::errstr\n");
+								    eval {
+								    	rollback($dbh); #just die if rollback is failing
+								    };
+							   	}
+								$sth->finish();
+							}
 						}
 					}
 				}
 			}
-		}
-		if(!$scanningAborted) {
-			return 1;
+			if(!$scanningAborted) {
+				if(defined($scanningContext->{'synchronous'})) {
+					$stillRunning = 1;
+				}else {
+					return 1;
+				}
+			}
 		}
 	}
 	my %context = ();
-	Slim::Utils::Scheduler::add_task(\&exitScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
-	return 0;
+	if(defined($scanningContext->{'synchronous'})) {
+		exitScanTrack($moduleKey,\@moduleKeys,\%context,$scanningContext);
+	}else {
+		Slim::Utils::Scheduler::add_task(\&exitScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
+		return 0;
+	}
 }
 
 sub exitScanTrack {
@@ -1818,35 +2054,51 @@ sub exitScanTrack {
 	my $context = shift;
 	my $scanningContext = shift;
 
-	my $key = undef;
-	if(ref($moduleKeys) eq 'ARRAY') {
-		$key = shift @$moduleKeys;
-	}
-	my $result = undef;
-	if(defined($key)) {
-		my $module = $modules->{$key};
-		if(defined($module->{'exitScanTrack'})) {
-			no strict 'refs';
-			$log->debug("Calling: ".$key."::exitScanTrack\n");
-			eval { $result = &{$module->{'exitScanTrack'}}($context); };
-			if ($@) {
-				$log->error("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
-				$scanningModulesInProgress{$key}=-1;
-			}
-			use strict 'refs';
-		}
-	}
-	if(defined($result)) {
-		unshift @$moduleKeys,$key;
-		if(!$scanningAborted) {
-			return 1;
-		}
-	}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
-		return 1;
-	}
+	my $stillRunning = 1;
+	while($stillRunning) {
+		$stillRunning = 0;
 
-	exitScan($moduleKey,$scanningContext);
-	return 0;
+		my $key = undef;
+		if(ref($moduleKeys) eq 'ARRAY') {
+			$key = shift @$moduleKeys;
+		}
+		my $result = undef;
+		if(defined($key)) {
+			my $module = $modules->{$key};
+			if(defined($module->{'exitScanTrack'})) {
+				no strict 'refs';
+				$log->debug("Calling: ".$key."::exitScanTrack\n");
+				eval { $result = &{$module->{'exitScanTrack'}}($context); };
+				if ($@) {
+					$log->error("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
+					$scanningModulesInProgress{$key}=-1;
+				}
+				use strict 'refs';
+			}
+		}
+		if(defined($result)) {
+			unshift @$moduleKeys,$key;
+			if(!$scanningAborted) {
+				if(defined($scanningContext->{'synchronous'})) {
+					$stillRunning = 1;
+				}else {
+					return 1;
+				}
+			}else {
+				exitScan($moduleKey,$scanningContext);
+				return 0;
+			}
+		}elsif(scalar(@$moduleKeys)>0 && !$scanningAborted) {
+			if(defined($scanningContext->{'synchronous'})) {
+				$stillRunning = 1;
+			}else {
+				return 1;
+			}
+		}else {
+			exitScan($moduleKey,$scanningContext);
+			return 0;
+		}
+	}
 }
 
 sub refreshData 
