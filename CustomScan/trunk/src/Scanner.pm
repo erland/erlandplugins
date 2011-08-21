@@ -47,6 +47,10 @@ my $log = Slim::Utils::Log::logger('plugin.customscan');
 
 sub initScanner {
 	$PLUGINVERSION = shift;
+	my $refresh = shift;
+	if(!defined($refresh)) {
+		$refresh = 1;
+	}
 
 	$modules = getPluginModules();
 	for my $key (keys %$modules) {
@@ -73,7 +77,7 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
-	if($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan')) {
+	if($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan') && $refresh) {
 		refreshData();
 	}
 }
@@ -691,8 +695,28 @@ sub isAllowedVersion {
 	return $include;
 }
 
+sub startScan {
+	initDatabase();
+	fullRescan(1,1);
+}
+
+sub trackDeleted {
+	my $trackId = shift;
+	my $track = Slim::Schema->resultset('Track')->find($trackId);
+	$log->warn("Rescanning due to deleted track: ".$track->url);
+	fullRescan(1,1,$track,1);
+}
+
+sub trackChanged {
+	my $trackId = shift;
+	my $track = Slim::Schema->resultset('Track')->find($trackId);
+	$log->warn("Rescanning due to updated or added track: ".$track->url);
+	fullRescan(1,1,$track);
+}
+
 sub fullRescan {
 	my $synchronous = shift;
+	my $progress = shift;
 	my $changedTrack = shift;
 	my $deletedTrack = shift;
 
@@ -714,7 +738,7 @@ sub fullRescan {
 	}
 
 	$scanningAborted = 0;
-	refreshData();
+	refreshData(1);
 
 	$modules = getPluginModules();
 
@@ -734,6 +758,9 @@ sub fullRescan {
 	my %scanningContext = ();
 	if(defined($synchronous)) {
 		$scanningContext{'synchronous'} = $synchronous;
+	}
+	if(defined($progress)) {
+		$scanningContext{'progressReporting'} = $progress;
 	}
 	if(defined($changedTrack)) {
 		$scanningContext{'changedTrack'} = $changedTrack;
@@ -1032,27 +1059,57 @@ sub exitScan {
 			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, -2]);
 		}
 	}
+
+	if(defined($scanningContext->{'progressReporting'})) {
+		$scanningContext->{'progress'} = Slim::Utils::Progress->new({
+				'type' => 'importer',
+				'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_OPTIMIZING',
+				'total' => 3,
+				'bar'   => 1,
+			});
+	}
+
 	$log->info("Optimizing SQLite database");
 	my $dbh = getCurrentDBH();
 	if($driver eq 'SQLite') {
 		if($analyzeTracks) {
 			$dbh->do("ANALYZE customscan_track_attributes");
 		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+		}
 		if($analyzeAlbums) {
 			$dbh->do("ANALYZE customscan_album_attributes");
 		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+		}
 		if($analyzeArtists) {
 			$dbh->do("ANALYZE customscan_contributor_attributes");
+		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+			$scanningContext->{'progress'}->final(3);
 		}
 	}else {
 		if($analyzeTracks) {
 			$dbh->do("ANALYZE table customscan_track_attributes");
 		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+		}
 		if($analyzeAlbums) {
 			$dbh->do("ANALYZE table customscan_album_attributes");
 		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+		}
 		if($analyzeArtists) {
 			$dbh->do("ANALYZE table customscan_contributor_attributes");
+		}
+		if(defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'}->update();
+			$scanningContext->{'progress'}->final(3);
 		}
 	}
 	if(!isScanning(undef)) {
@@ -1132,7 +1189,7 @@ sub initArtistScan {
 			$needToScanArtists = 1;
 		}
 	}
-	if($needToScanArtists) {
+	if($needToScanArtists || defined($scanningContext->{'changedTrack'})) {
 		my $artists = undef;
 		my @joins = ();
 		push @joins, 'contributorTracks';
@@ -1170,6 +1227,14 @@ sub initArtistScan {
 		}
 		$scanningContext->{'artists'} = $artists;
 		$log->info("Got ".$artists->count." artists\n");
+		if($artists->count>0 && defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
+					'type' => 'importer',
+					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_ARTISTS',
+					'total' => $artists->count,
+					'bar'   => 1,
+				});
+		}
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -1185,6 +1250,17 @@ sub initScanArtist {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'initprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'artists'}->reset();
+		my @changedArtists = $scanningContext->{'artists'}->all;
+		$incrementalContext = {
+			'artists' => \@changedArtists
+		};
+	}
+
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -1197,14 +1273,26 @@ sub initScanArtist {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'initScanArtist'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_INIT_ARTISTS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::initScanArtist\n");
-				eval { $result = &{$module->{'initScanArtist'}}($context); };
+				eval { $result = &{$module->{'initScanArtist'}}($context, $incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call initScanArtist on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -1221,6 +1309,9 @@ sub initScanArtist {
 				return 1;
 			}
 		}else {
+			if(defined($scanningContext->{'initprogress'})) {
+				$scanningContext->{'initprogress'}->final();
+			}
 			if(defined($scanningContext->{'synchronous'})) {
 				scanArtist($moduleKey,$scanningContext);
 				return 0;
@@ -1349,7 +1440,7 @@ sub initAlbumScan {
 			$needToScanAlbums = 1;
 		}
 	}
-	if($needToScanAlbums) {
+	if($needToScanAlbums || defined($scanningContext->{'changedTrack'})) {
 		my $albums = undef;
 		if(defined($scanningContext->{'changedTrack'})) {
 			if(defined($album)) {
@@ -1363,6 +1454,14 @@ sub initAlbumScan {
 		}
 		$scanningContext->{'albums'} = $albums;
 		$log->info("Got ".$albums->count." albums\n");
+		if($albums->count>0 && defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
+					'type' => 'importer',
+					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_ALBUMS',
+					'total' => $albums->count,
+					'bar'   => 1,
+				});
+		}
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -1378,6 +1477,17 @@ sub initScanAlbum {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'initprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'albums'}->reset();
+		my @changedAlbums = $scanningContext->{'albums'}->all;
+		$incrementalContext = {
+			'albums' => \@changedAlbums
+		};
+	}
+
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -1390,14 +1500,26 @@ sub initScanAlbum {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'initScanAlbum'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_INIT_ALBUMS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::initScanAlbum\n");
-				eval { $result = &{$module->{'initScanAlbum'}}($context); };
+				eval { $result = &{$module->{'initScanAlbum'}}($context, $incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call initScanAlbum on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -1414,6 +1536,9 @@ sub initScanAlbum {
 				return 1;
 			}
 		}else {
+			if(defined($scanningContext->{'initprogress'})) {
+				$scanningContext->{'initprogress'}->final();
+			}
 			if(defined($scanningContext->{'synchronous'})) {
 				scanAlbum($moduleKey,$scanningContext);
 				return 0;
@@ -1542,20 +1667,28 @@ sub initTrackScan {
 			$needToScanTracks = 1;
 		}
 	}
-	if($needToScanTracks) {
+	if($needToScanTracks || defined($scanningContext->{'changedTrack'})) {
 		my $tracks = undef;
 		if(defined($track)) {
 			if(!defined($scanningContext->{'deletedTrack'})) {
-				$tracks = Slim::Schema->resultset('Track')->search({'id' => $track->id});
+				$tracks = Slim::Schema->resultset('Track')->search({'id' => $track->id,'audio' => 1});
 			}else {
 				# Just a dummy to make sure we don't get any matches
-				$tracks = Slim::Schema->resultset('Track')->search({'id' => -1});
+				$tracks = Slim::Schema->resultset('Track')->search({'id' => -1,'audio' => 1});
 			}
 		}else {
-			$tracks = Slim::Schema->resultset('Track');
+			$tracks = Slim::Schema->resultset('Track')->search({'audio' => 1});
 		}
 		$scanningContext->{'tracks'} = $tracks;
 		$log->info("Got ".$tracks->count." tracks\n");
+		if($tracks->count>0 && defined($scanningContext->{'progressReporting'})) {
+			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
+					'type' => 'importer',
+					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_TRACKS',
+					'total' => $tracks->count,
+					'bar'   => 1,
+				});
+		}
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -1571,6 +1704,17 @@ sub initScanTrack {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'initprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'tracks'}->reset();
+		my @changedTracks = $scanningContext->{'tracks'}->all;
+		$incrementalContext = {
+			'tracks' => \@changedTracks
+		};
+	}
+
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -1583,14 +1727,26 @@ sub initScanTrack {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'initScanTrack'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_INIT_TRACKS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::initScanTrack\n");
-				eval { $result = &{$module->{'initScanTrack'}}($context); };
+				eval { $result = &{$module->{'initScanTrack'}}($context, $incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call initScanTrack on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'initprogress'})) {
+					$scanningContext->{'initprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -1611,6 +1767,9 @@ sub initScanTrack {
 		}
 
 		if(!$stillRunning) {
+			if(defined($scanningContext->{'initprogress'})) {
+				$scanningContext->{'initprogress'}->final();
+			}
 			if(defined($scanningContext->{'synchronous'})) {
 				scanTrack($moduleKey,$scanningContext);
 				return 0;
@@ -1714,6 +1873,9 @@ sub scanArtist {
 				}
 			}
 			if(!$scanningAborted) {
+				if(defined($scanningContext->{'progressReporting'})) {
+					$scanningContext->{'progress'}->update();
+				}
 				if(defined($scanningContext->{'synchronous'})) {
 					$stillRunning = 1;
 				}else {
@@ -1721,6 +1883,10 @@ sub scanArtist {
 				}
 			}
 		}
+	}
+	if(defined($scanningContext->{'artists'}) && defined($scanningContext->{'progressReporting'})) {
+		$scanningContext->{'progress'}->update();
+		$scanningContext->{'progress'}->final($scanningContext->{'artists'}->count);
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -1737,6 +1903,17 @@ sub exitScanArtist {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'exitprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'artists'}->reset();
+		my @changedArtists = $scanningContext->{'artists'}->all;
+		$incrementalContext = {
+			'artists' => \@changedArtists
+		};
+	}
+
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -1749,14 +1926,26 @@ sub exitScanArtist {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'exitScanArtist'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_EXIT_ARTISTS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::exitScanArtist\n");
-				eval { $result = &{$module->{'exitScanArtist'}}($context); };
+				eval { $result = &{$module->{'exitScanArtist'}}($context, $incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call exitScanArtist on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -1773,6 +1962,9 @@ sub exitScanArtist {
 				return 1;
 			}
 		}else {
+			if(defined($scanningContext->{'exitprogress'})) {
+				$scanningContext->{'exitprogress'}->final();
+			}
 			initAlbumScan($moduleKey,$scanningContext);
 			return 0;
 		}
@@ -1874,6 +2066,9 @@ sub scanAlbum {
 				}
 			}
 			if(!$scanningAborted) {
+				if(defined($scanningContext->{'progressReporting'})) {
+					$scanningContext->{'progress'}->update();
+				}
 				if(defined($scanningContext->{'synchronous'})) {
 					$stillRunning = 1;
 				}else {
@@ -1881,6 +2076,10 @@ sub scanAlbum {
 				}
 			}
 		}
+	}
+	if(defined($scanningContext->{'albums'}) && defined($scanningContext->{'progressReporting'})) {
+		$scanningContext->{'progress'}->update();
+		$scanningContext->{'progress'}->final($scanningContext->{'albums'}->count);
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -1897,6 +2096,17 @@ sub exitScanAlbum {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'exitprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'albums'}->reset();
+		my @changedAlbums = $scanningContext->{'albums'}->all;
+		$incrementalContext = {
+			'albums' => \@changedAlbums
+		};
+	}
+
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -1909,14 +2119,26 @@ sub exitScanAlbum {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'exitScanAlbum'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_EXIT_ALBUMS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::exitScanAlbum\n");
-				eval { $result = &{$module->{'exitScanAlbum'}}($context); };
+				eval { $result = &{$module->{'exitScanAlbum'}}($context, $incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call exitScanAlbum on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -1933,6 +2155,9 @@ sub exitScanAlbum {
 				return 1;
 			}
 		}else {
+			if(defined($scanningContext->{'exitprogress'})) {
+				$scanningContext->{'exitprogress'}->final();
+			}
 			initTrackScan($moduleKey,$scanningContext);
 			return 0;
 		}
@@ -2031,6 +2256,9 @@ sub scanTrack {
 				}
 			}
 			if(!$scanningAborted) {
+				if(defined($scanningContext->{'progressReporting'})) {
+					$scanningContext->{'progress'}->update();
+				}
 				if(defined($scanningContext->{'synchronous'})) {
 					$stillRunning = 1;
 				}else {
@@ -2038,6 +2266,10 @@ sub scanTrack {
 				}
 			}
 		}
+	}
+	if(defined($scanningContext->{'tracks'}) && defined($scanningContext->{'progressReporting'})) {
+		$scanningContext->{'progress'}->update();
+		$scanningContext->{'progress'}->final($scanningContext->{'tracks'}->count);
 	}
 	my %context = ();
 	if(defined($scanningContext->{'synchronous'})) {
@@ -2054,6 +2286,16 @@ sub exitScanTrack {
 	my $context = shift;
 	my $scanningContext = shift;
 
+	$scanningContext->{'exitprogress'} = undef;
+
+	my $incrementalContext = undef;
+	if(defined($scanningContext->{'changedTrack'})) {
+		$scanningContext->{'tracks'}->reset();
+		my @changedTracks = $scanningContext->{'tracks'}->all;
+		$incrementalContext = {
+			'tracks' => \@changedTracks
+		};
+	}
 	my $stillRunning = 1;
 	while($stillRunning) {
 		$stillRunning = 0;
@@ -2066,14 +2308,26 @@ sub exitScanTrack {
 		if(defined($key)) {
 			my $module = $modules->{$key};
 			if(defined($module->{'exitScanTrack'})) {
+				if(defined($scanningContext->{'progressReporting'}) && !defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'} = Slim::Utils::Progress->new({
+							'type' => 'importer',
+							'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_EXIT_TRACKS',
+							'every' => 1,
+							'total' => 1,
+							'bar'   => 1,
+						});
+				}
 				no strict 'refs';
 				$log->debug("Calling: ".$key."::exitScanTrack\n");
-				eval { $result = &{$module->{'exitScanTrack'}}($context); };
+				eval { $result = &{$module->{'exitScanTrack'}}($context,$incrementalContext); };
 				if ($@) {
 					$log->error("CustomScan: Failed to call exitScanTrack on module $key: $@\n");
 					$scanningModulesInProgress{$key}=-1;
 				}
 				use strict 'refs';
+				if(defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'}->update();
+				}
 			}
 		}
 		if(defined($result)) {
@@ -2085,6 +2339,9 @@ sub exitScanTrack {
 					return 1;
 				}
 			}else {
+				if(defined($scanningContext->{'exitprogress'})) {
+					$scanningContext->{'exitprogress'}->final();
+				}
 				exitScan($moduleKey,$scanningContext);
 				return 0;
 			}
@@ -2095,6 +2352,9 @@ sub exitScanTrack {
 				return 1;
 			}
 		}else {
+			if(defined($scanningContext->{'exitprogress'})) {
+				$scanningContext->{'exitprogress'}->final();
+			}
 			exitScan($moduleKey,$scanningContext);
 			return 0;
 		}
@@ -2103,6 +2363,7 @@ sub exitScanTrack {
 
 sub refreshData 
 {
+	my $progressReporting = shift;
 	my $dbh = getCurrentDBH();
 	my $sth;
 	my $sthupdate;
@@ -2110,6 +2371,8 @@ sub refreshData
 	my $sqlupdate;
 	my $count;
 	my $timeMeasure = Time::Stopwatch->new();
+	my $progress = undef;
+
 	$timeMeasure->clear();
 
 	my $performRefresh = 0;
@@ -2129,6 +2392,16 @@ sub refreshData
 	if(!$performRefresh) {
 		$log->info("CustomScan: No refresh needed\n");
 		return;
+	}
+
+	if($progressReporting) {
+		$progress = Slim::Utils::Progress->new({
+		        'type' => 'importer',
+		        'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_REFRESH',
+			'every' => 1,
+		        'total' => 10,
+		        'bar'   => 1,
+		});
 	}
 
 	$log->warn("CustomScan: Synchronizing Custom Scan data, please wait...\n");
@@ -2158,6 +2431,9 @@ sub refreshData
 
 	$sth->finish();
 	$log->info("Finished updating musicbrainz id's in custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2187,6 +2463,9 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan artist data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 
@@ -2217,6 +2496,9 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan artist data based on names, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 
@@ -2248,6 +2530,9 @@ sub refreshData
 
 	$sth->finish();
 	$log->info("Finished updating musicbrainz id's in custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2277,6 +2562,9 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan album data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2306,6 +2594,9 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan album data based on titles, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2336,6 +2627,9 @@ sub refreshData
 
 	$sth->finish();
 	$log->info("Finished updating musicbrainz id's in custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2438,6 +2732,9 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan track data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+	}
 	main::idleStreams();
 	$timeMeasure->stop();
 	$timeMeasure->clear();
@@ -2467,6 +2764,10 @@ sub refreshData
 	}
 	$sth->finish();
 	$log->info("Finished updating custom scan track data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	if(defined($progress)) {
+		$progress->update();
+		$progress->final(10);
+	}
 	main::idleStreams();
 	$log->warn("CustomScan: Synchronization finished\n");
 	$timeMeasure->stop();
