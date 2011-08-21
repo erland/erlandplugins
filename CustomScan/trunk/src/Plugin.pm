@@ -105,13 +105,22 @@ sub initPlugin {
 }
 
 sub postinitPlugin {
-	Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION);
+	if($::VERSION lt '7.6') {
+		Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION);
+	}else {
+		Plugins::CustomScan::Scanner::initScanner($PLUGINVERSION,0);
+	}
 	if (UNIVERSAL::can("Plugins::CustomBrowse::Plugin","registerMixHandler")) {
 		my %parameters = ();
 		my $mixHandler = Plugins::CustomScan::MixedTagSQLPlayListHandler->new(\%parameters);
 		Plugins::CustomBrowse::Plugin::registerMixHandler('customscan_mixedtag_sqlplaylist',$mixHandler);
 	}
-
+	eval "require Slim::Utils::Scanner::API;";
+	if(!$@) {
+		Slim::Utils::Scanner::API->onNewTrack({'cb' => \&Plugins::CustomScan::Scanner::trackChanged});
+		Slim::Utils::Scanner::API->onChangedTrack({'cb' => \&Plugins::CustomScan::Scanner::trackChanged});
+		Slim::Utils::Scanner::API->onDeletedTrack({'cb' => \&Plugins::CustomScan::Scanner::trackDeleted});
+	}
 }
 
 sub shutdownPlugin {
@@ -130,7 +139,9 @@ sub shutdownPlugin {
 sub installHook()
 {  
 	$log->info("Installing Custom Scan hooks\n");
-	Slim::Control::Request::subscribe(\&Plugins::CustomScan::Plugin::commandCallback,[['rescan']]);
+	if($::VERSION lt '7.6') {
+		Slim::Control::Request::subscribe(\&Plugins::CustomScan::Plugin::commandCallback,[['rescan']]);
+	}
 	Slim::Control::Request::addDispatch(['customscan','status','_module'], [0, 1, 0, \&cliGetStatus]);
 	Slim::Control::Request::addDispatch(['customscan','abort'], [0, 0, 0, \&cliAbortAll]);
 	Slim::Control::Request::addDispatch(['customscan','scan','_module'], [0, 0, 0, \&cliScan]);
