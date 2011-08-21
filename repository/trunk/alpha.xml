@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<extensions>
+	<details>
+		<title lang="EN">Erland's plugins and applets (ALPHA testing versions)</title>
+	</details>
+	<plugins>
+                <plugin name="CustomScan" version="3.0pre3426" minTarget="7.6.0" maxTarget="*">
+                        <title lang="EN">Custom Scan *Alpha*</title>
+                        <desc lang="EN">*** ALPHA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">- Run Custom Scan integrated with main SBS scanner process
+			- Show scanning status in SBS Settings/Information
+			- Support for new/changed files scanning when triggered from a main SBS scanning
+			</changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-3.0pre3426.zip</url>
+                        <sha>4367e7cf134a60a6e7919f63112cca8e38e08811</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
+                </plugin>
+	</plugins>
+</extensions>
+
