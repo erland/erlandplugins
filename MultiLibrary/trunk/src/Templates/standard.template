@@ -61,6 +61,9 @@
 					[%- IF maxbitrate -%]
 					tracks.bitrate&lt;=[% maxbitrate %]*1000 and
 					[%- END %]
+					[%- IF onlyhighresolution %]
+					(tracks.samplerate&gt;44100 or tracks.samplesize&gt;16) and
+					[%- END %]
 					tracks.audio=1
 					[%- IF includedcontenttypes %]
 					and tracks.content_type in ([% includedcontenttypes %])

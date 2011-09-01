@@ -29,6 +29,7 @@
 		<parameter type="checkbox" id="lossy" name="Only lossy format" value="0"/>
 		<parameter type="text" id="minbitrate" name="Min bitrate (in kbps)" value=""/>
 		<parameter type="text" id="maxbitrate" name="Max bitrate (in kbps)" value=""/>
+		<parameter type="checkbox" id="onlyhighresolution" name="Only high resolution" value="0"/>
 		<parameter type="sqlcheckboxes" id="includedcontenttypes" name="Include file types" value="0" data="select content_type,content_type,content_type from tracks where audio=1 group by content_type order by content_type asc" quotevalue="1"/>
 		<parameter type="text" id="includedclients" name="Only include on these players (empty = all)" value=""/>
 		<parameter type="text" id="excludedclients" name="Exclude from these players" value=""/>
