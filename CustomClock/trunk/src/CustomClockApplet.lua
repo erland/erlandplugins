@@ -268,7 +268,7 @@ function openMenu(self,transition)
 		end
 	end
         if menu:numItems() == 0 then
-                self.menu:addItem( {
+                menu:addItem( {
                         text = "No styles configured", 
                         iconStyle = 'item_no_arrow',
                         weight = 2
