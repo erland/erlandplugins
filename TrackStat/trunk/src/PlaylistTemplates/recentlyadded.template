@@ -74,7 +74,11 @@ select url from
 		[%- IF notrepeat %]
 			and dynamicplaylist_history.id is null 
 		[%- END %]
-			and track_statistics.added[% IF addedafter %]>[% ELSE %]<[% END %][% IF noofdays %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -[% noofdays %] DAY))[% ELSE %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -30 DAY))[% END %]
+			[% IF MySQL %]
+				and track_statistics.added[% IF addedafter %]>[% ELSE %]<[% END %][% IF noofdays %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -[% noofdays %] DAY))[% ELSE %]UNIX_TIMESTAMP(DATE_ADD(NOW(),INTERVAL -30 DAY))[% END %]
+			[% ELSE %]
+				and track_statistics.added[% IF addedafter %]>[% ELSE %]<[% END %][% IF noofdays %]STRFTIME("%s",DATE('NOW','-[% noofdays %] DAY'))[% ELSE %]UNIX_TIMESTAMP(DATE('NOW','-30 DAY'))[% END %]
+			[% END %]
 		[%- IF recentlyplayed %]
 			and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
 		[%- END %]
