@@ -2886,29 +2886,33 @@ sub trackInfoHandler {
 			jive      => $jive,
 		};
 	}else {
-		return undef;
-#		my $text = string('PLUGIN_TRACKSTAT_RATING').string("PLUGIN_TRACKSTAT_UNRATED");
-#		my $rating = 0;
-#		if(defined($trackHandle->rating && $trackHandle->rating>0)) {
-#			$rating = $trackHandle->rating;
-#			my $ratingStars = $trackHandle->rating/20;
-#			if($prefs->get("rating_10scale")) {
-#				$ratingStars = $trackHandle->rating/10;
-#			}
-#
-#			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)";
-#		}
-#		return {
-#			type => 'text',
-#			name => $text,
-#			itemvalue => $rating,
-#			itemid => $track->id,
-#			trackstat10scale => $prefs->get("rating_10scale"),
-#			web      => {
-#				'type' => 'htmltemplate',
-#				'value' => 'plugins/TrackStat/stdtrackratinginfo.html'
-#			},
-#		};
+		my $text = string('PLUGIN_TRACKSTAT_RATING').string("PLUGIN_TRACKSTAT_UNRATED");
+		my $rating = 0;
+		if(defined($trackHandle) && defined($trackHandle->rating) && $trackHandle->rating>0) {
+			$rating = $trackHandle->rating;
+			my $ratingStars = $trackHandle->rating/20;
+			if($prefs->get("rating_10scale")) {
+				$ratingStars = $trackHandle->rating/10;
+			}
+
+			$text = string('PLUGIN_TRACKSTAT_RATING').($RATING_CHARACTER x $ratingStars)." (".$trackHandle->rating."/100)";
+		}
+		my $albumId = undef;
+		if($track->album) {
+			$albumId = $track->album->id;
+		}
+		return {
+			type => 'text',
+			name => $text,
+			itemvalue => $rating,
+			itemid => $track->id,
+			album => $albumId,
+			trackstat10scale => $prefs->get("rating_10scale"),
+			web      => {
+				'type' => 'htmltemplate',
+				'value' => 'plugins/TrackStat/stdtrackratinginfo.html'
+			},
+		};
 	}
 }
 
