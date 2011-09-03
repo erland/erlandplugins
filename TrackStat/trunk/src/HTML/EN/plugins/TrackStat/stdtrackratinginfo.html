@@ -50,5 +50,9 @@
 <a href="javascript:changeRating(playerid,[% item.itemid %],0);">
        <img id="ratingremove" src="[% webroot %]plugins/TrackStat/html/images/b_delete.gif" alt="Unrate" title="Unrate">
 </a>
+<img src="[% webroot %]html/images/spacer.gif" width="4" alt="">
+[% IF item.album %]
+[% WRAPPER cmdlink cmdimage='trackstat_mixbutton.gif' cmdtitle='PLUGIN_TRACKSTAT' %]href="[% webroot %]plugins/TrackStat/all.html?album=[% item.album %][% IF item.itemid %]&amp;currenttrackstatitem=[% item.itemid | uri %][% END %]&amp;player=[% playerURI %]&amp;flatlist=1" [% IF browserTarget %]target="[% browserTarget %]"[% END %][% END %]
+[% END %]
 
 
