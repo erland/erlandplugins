@@ -513,6 +513,13 @@
                         <url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/AppletInstallerUpgradeAll/AppletInstallerUpgradeAll-1.0.patch</url>
                         <sha>04c44f0bc1c5070dc905f313e87b254838a70b34</sha>
                 </patch>
+                <patch name="NoAutoRescan" version="1.0" target="fab4" minTarget="7.6" maxTarget="7.6">
+                        <title lang="EN">Disable auto rescan</title>
+                        <desc lang="EN">Disable automatic rescan of mounted USB drives/SD cards</desc>
+                        <creator>Erland Isaksson</creator>
+                        <url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/NoAutoRescan/NoAutoRescan-1.0.patch</url>
+                        <sha>ba3f8ccbfb46aaef9ecc520c06cf132058372b86</sha>
+                </patch>
 	</patches>
 </extensions>
 
