@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<extensions>
+	<details>
+		<title lang="EN">Available licensed plugins</title>
+	</details>
+	<plugins>
+		<plugin name="CustomBrowse">
+                        <title lang="EN">Custom Browse</title>
+                        <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomBrowse</licenseLink>
+                </plugin>
+		<plugin name="CustomScan">
+                        <title lang="EN">Custom Scan</title>
+                        <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomScan</licenseLink>
+                </plugin>
+		<plugin name="CustomSkip">
+                        <title lang="EN">Custom Skip</title>
+                        <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomSkip</licenseLink>
+		</plugin>
+		<plugin name="MultiLibrary" version="2.6.3437" minTarget="7.4.0" maxTarget="7.*">
+                        <title lang="EN">Multi Library</title>
+                        <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=MultiLibrary</licenseLink>
+                </plugin>
+		<plugin name="SQLPlayList" version="2.5.3359" minTarget="7.4.0" maxTarget="7.*">
+                        <title lang="EN">SQL Playlist</title>
+                        <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=SQLPlayList</licenseLink>
+                </plugin>
+		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="*">
+                        <title lang="EN">Title Switcher</title>
+                        <desc lang="EN">Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed. (Boom, Transporter, Classic, SoftSqueeze)</desc>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=TitleSwitcher</licenseLink>
+                </plugin>
+		<plugin name="TrackStat">
+			<title lang="EN">TrackStat</title>
+			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=TrackStat</licenseLink>
+		</plugin>
+	</plugins>	
+</extensions>
