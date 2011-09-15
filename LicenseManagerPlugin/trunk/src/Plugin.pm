@@ -54,9 +54,9 @@ sub getDisplayName {
 
 sub repos {
 	my %repos = (
-		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/repositories/licensedplugins.xml'   => 1,
-		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/repositories/licensedapplets.xml'   => 2,
-		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/repositories/licensedpatches.xml'   => 3,
+		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/trunk/repositories/licensedplugins.xml'   => 1,
+		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/trunk/repositories/licensedapplets.xml'   => 2,
+		'http://erlandplugins.googlecode.com/svn/LicenseManagerPlugin/trunk/repositories/licensedpatches.xml'   => 3,
 	);
 	return \%repos;
 }
