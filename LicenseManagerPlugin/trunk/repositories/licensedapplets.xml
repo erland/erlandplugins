@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<extensions>
+	<details>
+		<title lang="EN">Available licensed applets</title>
+	</details>
+	<applets>
+                <applet name="AlbumFlow">
+                        <title lang="EN">Album Flow</title>
+                        <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
+			</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=AlbumFlow</licenseLink>
+                </applet>
+		<applet name="CustomClock">
+                        <title lang="EN">Custom Clock</title>
+                        <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomClock</licenseLink>
+                </applet>
+                <applet name="ScreenSwitcher">
+                        <title lang="EN">Screen Switcher</title>
+                        <desc lang="EN">Switch continuously between different screen savers.
+                        </desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=ScreenSwitcher</licenseLink>
+                </applet>
+	</applets>
+</extensions>
