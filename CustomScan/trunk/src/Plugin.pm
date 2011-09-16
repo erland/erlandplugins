@@ -577,8 +577,8 @@ sub refreshTitleFormats() {
 					}
 					my $result = '';
 					if($format =~ /^([^_]+)_(.+)$/) {
-						my $module = $1;
-						my $attr = $2;
+						my $module = lc($1);
+						my $attr = uc($2);
 						eval {
 							my $dbh = getCurrentDBH();
 							my $sth = $dbh->prepare("SELECT value from customscan_track_attributes where module=? and attr=? and track=? group by value");
