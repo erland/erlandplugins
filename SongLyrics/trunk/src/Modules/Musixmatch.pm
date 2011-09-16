@@ -116,6 +116,13 @@ sub getMusiXmatchLyricsResponse {
 		if(defined($xml) && defined($xml->{'body'}) && defined($xml->{'body'}->{'lyrics'}) && defined($xml->{'body'}->{'lyrics'}->{'lyrics_body'})) {
 			my $text = $xml->{'body'}->{'lyrics'}->{'lyrics_body'};
 			if(ref($text) ne 'HASH') {
+				if(defined($xml->{'body'}->{'lyrics'}->{'pixel_tracking_url'})) {
+					my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotTrackingResponse, \&gotTrackingError, {
+							trackTitle => $params->{'trackTitle'},
+							artistName => $params->{'artistName'},
+						});
+					$http->get($xml->{'body'}->{'lyrics'}->{'pixel_tracking_url'});
+				}
 				my %item = (
 					'type' => 'text',
 					'text' => $text,
@@ -133,6 +140,17 @@ sub getMusiXmatchLyricsResponse {
 		$params->{'trackTitle'},
 		$params->{'albumTitle'},
 		$params->{'artistName'});
+}
+sub gotTrackingResponse {
+	my $http = shift;
+	my $params = $http->params();
+	$log->debug("Properly tracked song: ".$params->{'trackTitle'}." by ".$params->{'artistName'});
+}
+
+sub gotTrackingError {
+	my $http = shift;
+	my $params = $http->params();
+	$log->warn("Not properly tracked song: ".$params->{'trackTitle'}." by ".$params->{'artistName'});
 }
 
 sub gotErrorViaHTTP {
