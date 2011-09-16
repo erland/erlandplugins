@@ -384,17 +384,15 @@
                         <sha>d6c9e67c84d415f5f2fb601501b27e439b75755b</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="SongLyrics" version="1.1.3329" minTarget="7.4.0" maxTarget="*">
+                <plugin name="SongLyrics" version="1.1.3445" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Lyrics</title>
                         <desc lang="EN">A plugin that shows lyrics from chartlyrics.com and musixmatch.com through the Song Info plugin. This plugin requires that the Song Info plugin also is installed. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected so secondary source is used if first fails to find lyrics. 
-			- Changed so musixmatch.com is used as primary source. 
-			- Improved accuracy of musixmatch.com source
+                        <changes lang="EN">- Added tracking to comply to Musixmatch license aggreement 
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3329.zip</url>
-                        <sha>799aedaada7f0b148d4e546575bc48275ea92d0e</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3445.zip</url>
+                        <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
