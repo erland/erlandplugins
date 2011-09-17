@@ -7,7 +7,7 @@
 	<applets>
                 <applet name="AlbumFlow">
                         <title lang="EN">Album Flow</title>
-                        <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
+                        <desc lang="EN">Currently free of charge but you can make a free payment now to encourage further development
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
@@ -16,7 +16,8 @@
                 </applet>
 		<applet name="CustomClock">
                         <title lang="EN">Custom Clock</title>
-                        <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
+                        <desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
 			<licenseHelp>http://license.isaksson.info</licenseHelp>
@@ -24,12 +25,30 @@
                 </applet>
                 <applet name="ScreenSwitcher">
                         <title lang="EN">Screen Switcher</title>
-                        <desc lang="EN">Switch continuously between different screen savers.
-                        </desc>
+                        <desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
 			<licenseHelp>http://license.isaksson.info</licenseHelp>
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=ScreenSwitcher</licenseLink>
+                </applet>
+                <applet name="SettingsRemover" target="jive|fab4|baby">
+                        <title lang="EN">Settings Remover</title>
+                        <desc lang="EN">Currently free of charge but you can make a voluntary payment now to encourage further development
+			</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=SettingsRemover</licenseLink>
+                </applet>
+                <applet name="TextClock">
+                        <title lang="EN">Text Clock</title>
+                        <desc lang="EN">Currently free of charge but you can make a voluntary payment now to encourage further development
+			</desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+			<licenseHelp>http://license.isaksson.info</licenseHelp>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=TextClock</licenseLink>
                 </applet>
 	</applets>
 </extensions>
