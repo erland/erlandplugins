@@ -189,7 +189,7 @@ sub loadLicense {
 		$version = "";
 	}
 
-	$log->warn("Retrieving license for $applicationId");
+	$log->info("Retrieving license for $applicationId");
 	my $http = LWP::UserAgent->new;
 	my $response = $http->get("http://license.isaksson.info/getlicense.php?user=$accountId&application=$applicationId$versionString");
 	if($response->is_success) {
