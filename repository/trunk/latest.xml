@@ -97,6 +97,18 @@
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
+                <applet name="LicenseManager" version="1.0.3449" minTarget="7.4" maxTarget="*">
+                        <title lang="EN">License Manager</title>
+                        <desc lang="EN">License Manager applet, this is required for licensed applets to work and it will give you and overview of installed licensed applets and their licensing status.
+                        </desc>
+                        <changes lang="EN">- Initial version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.0.3449.zip</url>
+                        <sha>c84d2779c11489d782c87f2a0e05518603f9aff1</sha>
+                        <link>http://erland.isaksson.info</link>
+                </applet>
         </applets>
 	<plugins>
                 <plugin name="InformationScreen" version="1.0.1" minTarget="7.4.0" maxTarget="7.*">
@@ -393,6 +405,17 @@
                         <email>erland_i@hotmail.com</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3445.zip</url>
                         <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
+                        <link>http://erland.isaksson.info</link>
+                </plugin>
+                <plugin name="LicenseManagerPlugin" version="1.0.3449" minTarget="7.4.0" maxTarget="*">
+                        <title lang="EN">License Manager</title>
+                        <desc lang="EN">A plugin that's required for licensed plugins to work, it will give you an overview of licensed plugins available and their current licensing status and links to pay for them. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">- Initial version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland_i@hotmail.com</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3449.zip</url>
+                        <sha>6e60726abd4be2839cc3b4a51394d736423b7e60</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
