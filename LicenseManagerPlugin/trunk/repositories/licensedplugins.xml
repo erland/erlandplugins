@@ -61,7 +61,7 @@
                 </plugin>
 		<plugin name="SQLPlayList">
                         <title lang="EN">SQL Playlist</title>
-                        <desc lang="EN">Alpha version requires a license but the latest official release is currently free of charge but will be changed to forced licensing in the future when alpha version is released, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+                        <desc lang="EN">Beta version requires a license but the latest official release is currently free of charge but will be changed to forced licensing in the future when alpha version is released, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
