@@ -185,21 +185,19 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 -->
-<!--
-                <plugin name="SQLPlayList" version="2.5pre3" minTarget="7.4.0" maxTarget="*">
+
+                <plugin name="SQLPlayList" version="2.5.3452" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">SQL Playlist *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected problem with non ascii characters
-			- Corrected so check against dependent plugins work
-			- Corrected unix_timestamp problem in some templates when SQLite is used
+                        <changes lang="EN">- Added support for License Manager plugin, the License Manager plugin must be installed for this version to work.
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5pre3.zip</url>
-                        <sha>ef1fdc0c8676d478a2adc80d707196124264df91</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3452.zip</url>
+                        <sha>68698d39a3b44dab60815055cb3d21986f750bcf</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
--->
+
 <!--
                 <plugin name="CustomScan" version="2.7pre3" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Beta*</title>
