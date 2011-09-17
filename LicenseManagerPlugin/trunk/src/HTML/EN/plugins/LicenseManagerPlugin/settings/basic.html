@@ -53,28 +53,34 @@
 
 	[% WRAPPER settingSection %]
 		[% WRAPPER settingGroup title="SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT" desc="SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_DESC" %]
-			<ol>
-			<li>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_NAME" |string %]: [% accountName %]
-			<li>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_ID" |string %]: [% accountId %]
-			</ol>
+			[% IF accountId %]
+				<ol>
+				<li>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_NAME" |string %]: [% accountName %]
+				<li>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_ID" |string %]: [% accountId %]
+				</ol>
+			[% ELSE %]
+				<p><b>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_ID_MISSING" | string %]</b></p>
+			[% END %]
 		[% END %]
 	[% END %]
 
-	<div class="settingsSmallIndention">
-	[% FOREACH repo = avail %]
+	[% IF accountId %]
+		<div class="settingsSmallIndention">
+		[% FOREACH repo = avail %]
 
-		[% WRAPPER settingSection %]
-			<div class="prefHead collapsableSection" id="otherPlugins[% loop.index %]_Header"><img class="disclosure_repos" 
-				src="[% webroot %]html/images/spacer.gif"/>[% repo.title %]</div>
-		[%- END -%]	
+			[% WRAPPER settingSection %]
+				<div class="prefHead collapsableSection" id="otherPlugins[% loop.index %]_Header"><img class="disclosure_repos" 
+					src="[% webroot %]html/images/spacer.gif"/>[% repo.title %] ([% "SETUP_PLUGIN_LICENSEMANAGER_LICENSE_SAVE_TO_REFRESH" | string %])</div>
+			[%- END -%]	
 	
-		[% WRAPPER pluginGroup id="otherPlugins" _ loop.index %]
-			[% FOREACH plugin = repo.entries.sort('title') %]
-				[% PROCESS pluginDetails type = (repo.weight == 1 ? 'safe' : 'unsafe') %]
-			[% END %]
-		[%- END -%]
+			[% WRAPPER pluginGroup id="otherPlugins" _ loop.index %]
+				[% FOREACH plugin = repo.entries.sort('title') %]
+					[% PROCESS pluginDetails type = (repo.weight == 1 ? 'safe' : 'unsafe') %]
+				[% END %]
+			[%- END -%]
 		
-	[%- END -%]
-	</div>
+		[%- END -%]
+		</div>
+	[% END %]
 
 [% PROCESS settings/footer.html %]
