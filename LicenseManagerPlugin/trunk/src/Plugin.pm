@@ -67,8 +67,8 @@ sub initPlugin {
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
 	Plugins::LicenseManagerPlugin::Settings->new();
 
-	Slim::Control::Request::addDispatch(['licensemanager','validate'], [1, 1, 1, \&validateLicense]);
-	Slim::Control::Request::addDispatch(['licensemanager','applications'], [1, 1, 1, \&getApplications]);
+	Slim::Control::Request::addDispatch(['licensemanager','validate'], [0, 1, 1, \&validateLicense]);
+	Slim::Control::Request::addDispatch(['licensemanager','applications'], [0, 1, 1, \&getApplications]);
 }
 
 sub getAccountId() {
@@ -94,8 +94,6 @@ sub getAccountName() {
 sub validateLicense {
 	my $request = shift;
 	$log->debug("Entering validateLicense");
-
-	my $client = $request->client();
 
 	if ($request->isNotQuery([['licensemanager'],['validate']])) {
 		$log->warn("Incorrect command");
@@ -237,7 +235,6 @@ sub getApplications {
 	for my $repo (keys %$repos) {
 
 		getExtensions({
-			'client' => $request->client(),
 			'name'   => $repo, 
 			'type'   => $type, 
 			'target' => $targetPlat,
@@ -355,7 +352,6 @@ sub _parseXML {
 	my $version = $args->{'version'};
 	my $lang    = $args->{'lang'};
 	my $details = $args->{'details'};
-	my $client = $args->{'client'};
 	my $forcedCheck = $args->{'forcedCheck'} || 0;
 
 	my $types = {};
@@ -396,7 +392,7 @@ sub _parseXML {
 
 				$debug && $log->debug("entry $new->{name}");
 
-				my $request = Slim::Control::Request::executeRequest($args->{'client'},['licensemanager','validate','application:'.$entry->{'name'},'version:'.$entry->{'version'},'force:'.$forcedCheck]);
+				my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:'.$entry->{'name'},'version:'.$entry->{'version'},'force:'.$forcedCheck]);
 				my $result = $request->getResult("result");
 				if($result) {
 					$new->{'licensed'} = 1
