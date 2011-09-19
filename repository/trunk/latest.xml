@@ -407,15 +407,15 @@
                         <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="LicenseManagerPlugin" version="1.0.3449" minTarget="7.4.0" maxTarget="*">
+                <plugin name="LicenseManagerPlugin" version="1.0.3457" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">A plugin that's required for licensed plugins to work, it will give you an overview of licensed plugins available and their current licensing status and links to pay for them. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Initial version
+                        <changes lang="EN">- Corrected so SQL Playlist plugin works after server restart
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3449.zip</url>
-                        <sha>6e60726abd4be2839cc3b4a51394d736423b7e60</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3457.zip</url>
+                        <sha>1e36298ed006a0c115ec21200cbc69f5d087f00a</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
