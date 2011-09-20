@@ -130,9 +130,11 @@ function _initApplet(self, ss,config,forced)
 	self.speed = self:getSettings()[config.."speed"]
 
 	local player = appletManager:callService("getCurrentPlayer")
-	if self.player and player:getId() ~= self.player:getId() then
+	if (self.player and player:getId() ~= self.player:getId()) or self.licensed~=licensed then
 		self.window = nil
 	end
+
+	self.licensed = licensed
 
 	if not ss or (ss and not self.screensaver) or not self.window or self.mode ~= mode or forced then
 		log:debug("Recreating screensaver window for "..config.." with mode "..mode)
