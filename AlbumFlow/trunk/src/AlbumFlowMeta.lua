@@ -44,6 +44,8 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
+	appletManager:callService("registerLicensedApplet","AlbumFlow",nil,"Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license")
+	appletManager:callService("isLicensedApplet","AlbumFlow")
 	for i=1,5 do
 		local name = ""
 		if self:getSettings()["config"..i.."name"] then

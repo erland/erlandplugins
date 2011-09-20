@@ -35,6 +35,7 @@ local Group            = require("jive.ui.Group")
 local Label            = require("jive.ui.Label")
 local Canvas           = require("jive.ui.Canvas")
 local Icon             = require("jive.ui.Icon")
+local Textarea         = require("jive.ui.Textarea")
 local Font             = require("jive.ui.Font")
 local Tile             = require("jive.ui.Tile")
 local Popup            = require("jive.ui.Popup")
@@ -79,16 +80,36 @@ function openScreensaver1(self)
 	self:_initApplet(true,"config1")
 end
 function openScreensaver2(self)
-	self:_initApplet(true,"config2")
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed then
+		self:_initApplet(true,"config2")
+	else
+		self:openScreensaver1()
+	end
 end
 function openScreensaver3(self)
-	self:_initApplet(true,"config3")
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed then
+		self:_initApplet(true,"config3")
+	else
+		self:openScreensaver1()
+	end
 end
 function openScreensaver4(self)
-	self:_initApplet(true,"config4")
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed then
+		self:_initApplet(true,"config4")
+	else
+		self:openScreensaver1()
+	end
 end
 function openScreensaver5(self)
-	self:_initApplet(true,"config5")
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed then
+		self:_initApplet(true,"config5")
+	else
+		self:openScreensaver1()
+	end
 end
 
 -- display
@@ -100,6 +121,8 @@ end
 
 function _initApplet(self, ss,config,forced)
 	jnt:subscribe(self)
+
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
 
 	self.config = config
 	local mode = self:getSettings()[config.."mode"]
@@ -282,8 +305,11 @@ end
 function openScreensaverSettings(self)
 	log:debug("Album Flow settings")
 	local window = Window("text_list", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS"), 'settingstitle')
-
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
 	local menu = SimpleMenu("menu");
+	if not licensed then
+		menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_UNLICENSED")))
+	end
 	for i = 1,5 do
 		local name = ""
 		if self:getSettings()["config"..i.."name"] then
@@ -291,17 +317,28 @@ function openScreensaverSettings(self)
 		elseif self:getSettings()["config"..i.."mode"] then
 			name = ": "..self:getSettings()["config"..i.."mode"]
 		end
-		menu:addItem(
-			{
-				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i..name, 
-				sound = "WINDOWSHOW",
-				callback = function(event, menuItem)
-					self:defineSettingConfig(menuItem,"config"..i)
-					return EVENT_CONSUME
-				end
-			})
+		if licensed or i==1 then
+			menu:addItem(
+				{
+					text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i..name, 
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						self:defineSettingConfig(menuItem,"config"..i)
+						return EVENT_CONSUME
+					end
+				})
+		else
+			menu:addItem(
+				{
+					text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_CONFIG")).." #"..i..": "..tostring(self:string("SCREENSAVER_ALBUMFLOW_NEEDS_LICENSE")), 
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						return EVENT_CONSUME
+					end
+				})
+		end
 	end	
-	if System.getMachine() != "fab4" then
+	if licensed and System.getMachine() != "fab4" then
 		menu:addItem(
 			{
 				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_BROWSE_ALBUMS")),
@@ -474,139 +511,148 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 	window:addWidget(menu)
 	local group = RadioGroup()
 
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "album"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "album"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "random"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "random"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "byartist"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "byartist"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "currentplaylist"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "currentplaylist"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "currentartist"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "currentartist"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "currentgenre"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "currentgenre"
-		),
-	})
-	menu:addItem({
-		text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"),
-		style = 'item_choice',
-		check = RadioButton(
-			"radio",
-			group,
-			function()
-				self:getSettings()[mode.."mode"] = "currentyear"
-				self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"))
-				if self.window then
-					self.window:hide()
-					self.window = nil
-				end
-				self:storeSettings()
-				self:updateMenuName(mode)
-			end,
-			modesetting == "currentyear"
-		),
-	})
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed then
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "album"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ALBUM"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "album"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "random"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_RANDOM"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "random"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "byartist"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_ARTIST"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "byartist"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "currentplaylist"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTPLAYLIST"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "currentplaylist"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "currentartist"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTARTIST"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "currentartist"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "currentgenre"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTGENRE"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "currentgenre"
+			),
+		})
+		menu:addItem({
+			text = self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"),
+			style = 'item_choice',
+			check = RadioButton(
+				"radio",
+				group,
+				function()
+					self:getSettings()[mode.."mode"] = "currentyear"
+					self:getSettings()[mode.."name"] = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_CURRENTYEAR"))
+					if self.window then
+						self.window:hide()
+						self.window = nil
+					end
+					self:storeSettings()
+					self:updateMenuName(mode)
+				end,
+				modesetting == "currentyear"
+			),
+		})
+	else
+		if songInfoItems and songInfoItems.item_loop then
+			menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_MORE_MODES_IF_LICENSED")))
+		else
+			menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_ALBUMFLOW_SETTINGS_MORE_MODES_IF_LICENSED_OR_SONG_INFO")))
+		end
+	end
 
 	if songInfoItems and songInfoItems.item_loop then
 		for _,entry in pairs(songInfoItems.item_loop) do
@@ -671,7 +717,7 @@ function defineSettingModeSink(self,title,mode,songInfoItems,pictureGalleryItems
 			})
 		end
 	end
-	if pictureGalleryItems and pictureGalleryItems.item_loop then
+	if licensed and pictureGalleryItems and pictureGalleryItems.item_loop then
 		for _,entry in pairs(pictureGalleryItems.item_loop) do
 			menu:addItem({
 				text = tostring(self:string("SCREENSAVER_ALBUMFLOW_VIEW_PICTURE_GALLERY"))..": "..entry.title,
@@ -1634,7 +1680,8 @@ function _loadImages(self,offset)
 	if offset>0 then
 		amount = 100
 	end
-	if not self.mode or self.mode == "random" or self.mode == "album" then
+	local licensed = appletManager:callService("isLicensedApplet","AlbumFlow")
+	if licensed and (not self.mode or self.mode == "random" or self.mode == "album") then
 		log:debug("Loading album from main list")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1647,7 +1694,7 @@ function _loadImages(self,offset)
 			self.player and self.player:getId(),
 			{'albums',offset,amount,'tags:tj'}
 		)
-	elseif self.mode == "byartist" then
+	elseif licensed and self.mode == "byartist" then
 		log:debug("Loading album from main list sort by artist")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1660,7 +1707,7 @@ function _loadImages(self,offset)
 			self.player and self.player:getId(),
 			{'albums',offset,amount,'tags:tj','sort:artflow'}
 		)
-	elseif self.mode == "currentplaylist" then
+	elseif licensed and self.mode == "currentplaylist" then
 		log:debug("Loading album from current playlist")
 		self.server:userRequest(function(chunk,err)
 				if err then
@@ -1673,7 +1720,7 @@ function _loadImages(self,offset)
 			self.player and self.player:getId(),
 			{'status',offset,amount,"tags:aJKlex"}
 		)
-	elseif self.mode == "currentartist" then
+	elseif licensed and self.mode == "currentartist" then
 		log:debug("Loading album for current artist")
 		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
@@ -1689,7 +1736,7 @@ function _loadImages(self,offset)
 				{'status','-',amount,"tags:s"}
 			)
 		end
-	elseif self.mode == "currentgenre" then
+	elseif licensed and self.mode == "currentgenre" then
 		log:debug("Loading album for current genre")
 		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
@@ -1705,7 +1752,7 @@ function _loadImages(self,offset)
 				{'status','-',amount,"tags:p"}
 			)
 		end
-	elseif self.mode == "currentyear" then
+	elseif licensed and self.mode == "currentyear" then
 		log:debug("Loading album for current year")
 		if self.player:getPlayerStatus()["count"] and tonumber(self.player:getPlayerStatus()["count"]) >=1 then
 			local track_id = self.player:getPlayerStatus().item_loop[1].params.track_id
@@ -1755,7 +1802,7 @@ function _loadImages(self,offset)
 				{'songinfoitems',songinfomode,"track:"..track_id}
 			)
 		end
-	elseif string.find(self.mode,"^picturegallery") then
+	elseif licensed and string.find(self.mode,"^picturegallery") then
 		local favorite = string.gsub(self.mode,"^picturegallery","")
 		log:debug("Loading "..self.mode.." for favorite: "..favorite)
 		self.server:userRequest(function(chunk,err)
@@ -1768,6 +1815,13 @@ function _loadImages(self,offset)
 			nil,
 			{'gallery','slideshow','favid:'..favorite}
 		)
+	elseif not licensed then
+		self.count = 1
+		self.maxLoadedIndex = self.maxLoadedIndex + 1
+		self.maxIndex = 1
+		local entry = {}
+		entry.text = tostring(self:string("SCREENSAVER_ALBUMFLOW_NEEDS_LICENSE"))
+		self.images[self.maxIndex] = entry
 	else
 		log:warn("Unknown view, don't load any albums: "..self.mode)
 	end
