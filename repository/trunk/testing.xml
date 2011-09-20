@@ -6,7 +6,7 @@
 	</details>
 	<applets>
 
-                <applet name="AlbumFlow" version="1.1.3460" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="1.1.3462" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
@@ -15,8 +15,8 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3460.zip</url>
-                        <sha>bd477d2acde9b2e0cdbd4c6ff876a853225307cb</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3462.zip</url>
+                        <sha>520f61fa5472310ec4db75595970c9cca6bc7988</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
 

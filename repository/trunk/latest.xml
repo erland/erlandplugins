@@ -97,16 +97,16 @@
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="LicenseManager" version="1.0.3449" minTarget="7.4" maxTarget="*">
+                <applet name="LicenseManager" version="1.1.64" minTarget="7.4" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">License Manager applet, this is required for licensed applets to work and it will give you and overview of installed licensed applets and their licensing status.
                         </desc>
-                        <changes lang="EN">- Initial version
+                        <changes lang="EN">- Correction of behavior when no mysqueezebox.com account has been set in SBS
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.0.3449.zip</url>
-                        <sha>c84d2779c11489d782c87f2a0e05518603f9aff1</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.64.zip</url>
+                        <sha>13bca9fd7a2501bdd933338695853b42cb3b6263</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
