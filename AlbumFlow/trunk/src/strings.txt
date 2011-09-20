@@ -85,3 +85,15 @@ SCREENSAVER_ALBUMFLOW_SETTINGS
 
 SCREENSAVER_ALBUMFLOW_VIEW_PICTURE_GALLERY
 	EN	Gallery
+
+SCREENSAVER_ALBUMFLOW_SETTINGS_UNLICENSED
+	EN	Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license to get full functionality
+	
+SCREENSAVER_ALBUMFLOW_NEEDS_LICENSE
+	EN	Requires license, see License Manager applet
+
+SCREENSAVER_ALBUMFLOW_SETTINGS_MORE_MODES_IF_LICENSED
+	EN	Note!\nMore modes are available for licensed users
+
+SCREENSAVER_ALBUMFLOW_SETTINGS_MORE_MODES_IF_LICENSED_OR_SONG_INFO
+	EN	Note!\nAlbum Flow is only available to licensed users or users of Song Info plugin
