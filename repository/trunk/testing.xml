@@ -5,20 +5,21 @@
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
 	<applets>
-<!--
-                <applet name="AlbumFlow" version="0.3.2971" minTarget="7.4" maxTarget="*">
+
+                <applet name="AlbumFlow" version="1.1.3460" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">- Corrected so browse mode works
+                        <changes lang="EN">- Added support for 7.6
+			- Requires License Manager plugin
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-0.3.2971.zip</url>
-                        <sha>7c8d5b2e8f97112cc3c4407dad82159d1bb60432</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3460.zip</url>
+                        <sha>bd477d2acde9b2e0cdbd4c6ff876a853225307cb</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
--->
+
 <!--
                 <applet name="ScreenSwitcher" version="0.1.2867" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher *Beta*</title>
