@@ -1645,7 +1645,7 @@ function _loadImages(self,offset)
 				self.loading =  false
 			end,
 			self.player and self.player:getId(),
-			{'albums',offset,amount,'menu:menu'}
+			{'albums',offset,amount,'tags:tj'}
 		)
 	elseif self.mode == "byartist" then
 		log:debug("Loading album from main list sort by artist")
@@ -1658,7 +1658,7 @@ function _loadImages(self,offset)
 				self.loading =  false
 			end,
 			self.player and self.player:getId(),
-			{'albums',offset,amount,'menu:menu','sort:artflow'}
+			{'albums',offset,amount,'tags:tj','sort:artflow'}
 		)
 	elseif self.mode == "currentplaylist" then
 		log:debug("Loading album from current playlist")
@@ -1732,7 +1732,7 @@ function _loadImages(self,offset)
 				self.loading =  false
 			end,
 			self.player and self.player:getId(),
-			{'artists',offset,amount,'menu:menu'}
+			{'artists',offset,amount}
 		)
 	elseif string.find(self.mode,"^songinfo") then
 		log:debug("Loading "..self.mode.." for current song")
@@ -1911,14 +1911,16 @@ function _loadAlbumsSink(self,result,offset)
 
 	self.lastUpdate = os.time()
 
-	for _,item in ipairs(result.item_loop) do
+	local items
+
+	for _,item in ipairs(result.albums_loop) do
 		self.maxLoadedIndex = self.maxLoadedIndex + 1
-		if not self.screensaver or item["icon-id"] then
+		if not self.screensaver or item["artwork_track_id"] then
 			self.maxIndex = #self.images + 1
 			local entry = {}
-			entry.text = item.text
-			entry.album_id = item.params["album_id"]
-			entry["icon-id"] = item["icon-id"]
+			entry.text = item["title"]
+			entry.album_id = item["id"]
+			entry["icon-id"] = item["artwork_track_id"]
 			self.images[self.maxIndex] = entry
 			index = index + 1
 		end
@@ -1935,12 +1937,12 @@ function _loadArtistsSink(self,result,offset)
 	local index=1
 
 	self.lastUpdate = os.time()
-	for _,item in ipairs(result.item_loop) do
+	for _,item in ipairs(result.artists_loop) do
 		self.maxLoadedIndex = self.maxLoadedIndex + 1
 		self.maxIndex = #self.images + 1
 		local entry = {}
-		entry.text = item.text
-		entry.artist_id = item.params["artist_id"]
+		entry.text = item["artist"]
+		entry.artist_id = item["id"]
 		self.images[self.maxIndex] = entry
 		index = index + 1
 	end
@@ -1975,7 +1977,7 @@ function _loadCurrentContextSink(self,result,param)
 					self.loading =  false
 				end,
 				self.player and self.player:getId(),
-				{'albums',0,10,param..':'..param_id,'menu:menu'}
+				{'albums',0,10,param..':'..param_id,'tags:tj'}
 			)
 		end
 	end
@@ -2095,13 +2097,13 @@ function _loadRefreshAlbumsSink(self,result,params)
 	local lastIndex = 1
 	self.refreshCount = tonumber(result.count)
 	local index=1
-	for _,item in ipairs(result.item_loop) do
+	for _,item in ipairs(result.albums_loop) do
 		self.refreshMaxLoadedIndex = self.refreshMaxLoadedIndex + 1
-		if not self.screensaver or item["icon-id"] then
+		if not self.screensaver or item["artwork_track_id"] then
 			local entry = {}
-			entry.text = item.text
-			entry.album_id = item.params["album_id"]
-			entry["icon-id"] = item["icon-id"]
+			entry.text = item["title"]
+			entry.album_id = item["id"]
+			entry["icon-id"] = item["artwork_track_id"]
 			self.refreshImages[#self.refreshImages + 1] = entry
 			index = index + 1
 		end
@@ -2121,7 +2123,7 @@ function _loadRefreshAlbumsSink(self,result,params)
 				self.loading =  false
 			end,
 			self.player and self.player:getId(),
-			{'albums',self.refreshMaxLoadedIndex,200,params,'menu:menu'}
+			{'albums',self.refreshMaxLoadedIndex,200,params,'tags:tj'}
 		)
 	end
 end
