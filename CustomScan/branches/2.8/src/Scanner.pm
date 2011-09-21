@@ -703,7 +703,7 @@ sub fullRescan {
 	push @moduleKeys,@$array;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'} && $module->{'active'}) {
+		if($module->{'enabled'} && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'})) {
 			$scanningModulesInProgress{$key}=1;
 			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, 1]);
 		}
@@ -716,7 +716,7 @@ sub fullRescan {
 
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'} && $module->{'active'} && defined($module->{'scanInit'})) {
+		if($module->{'enabled'} && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'}) && defined($module->{'scanInit'})) {
 			no strict 'refs';
 			$log->debug("Calling: scanInit on $key\n");
 			eval { &{$module->{'scanInit'}}(); };
@@ -743,7 +743,7 @@ sub moduleRescan {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$moduleKey};
-	if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
+	if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'} || $module->{'licensed'}))) {
 		$scanningModulesInProgress{$moduleKey} = 1;
 		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
 		if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
@@ -1157,7 +1157,7 @@ sub initScanArtist {
 sub getSortedModuleKeys {
 	my @moduleArray = ();
 	for my $key (keys %$modules) {
-		if($modules->{$key}->{'enabled'} && $modules->{$key}->{'active'}) {
+		if($modules->{$key}->{'enabled'} && $modules->{$key}->{'active'} && (!defined($modules->{$key}->{'licensed'}) || $modules->{$key}->{'licensed'})) {
 			my %tmp = (
 				'key' => $key,
 				'module' => $modules
@@ -1866,7 +1866,7 @@ sub refreshData
 	}
 	for my $moduleKey (keys %$modules) {
 		my $module = $modules->{$moduleKey};
-		if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
+		if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'})) {
 			if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
 				$log->info("Refresh triggered by module: ".$module->{'name'});				
 				$performRefresh=1;

@@ -566,8 +566,8 @@ sub refreshTitleFormats() {
 					}
 					my $result = '';
 					if($format =~ /^([^_]+)_(.+)$/) {
-						my $module = $1;
-						my $attr = $2;
+						my $module = lc($1);
+						my $attr = uc($2);
 						eval {
 							my $dbh = getCurrentDBH();
 							my $sth = $dbh->prepare("SELECT value from customscan_track_attributes where module=? and attr=? and track=? group by value");
@@ -731,6 +731,18 @@ sub getAvailableTitleFormats {
 	$sth->finish();
 
 	return \%result;
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub getCustomScanProperty {
