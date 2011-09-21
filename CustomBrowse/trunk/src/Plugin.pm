@@ -4559,38 +4559,38 @@ sub prepareCLIBrowseResponse {
 	$count = 0;
 	foreach my $item (@$items) {
 		if(defined($item->{'contextid'})) {
-			$request->addResultLoop('@items', $count,'level', $item->{'contextid'});
+			$request->addResultLoop('items_loop', $count,'level', $item->{'contextid'});
 		}else {
-			$request->addResultLoop('@items', $count,'level', $item->{'id'});
+			$request->addResultLoop('items_loop', $count,'level', $item->{'id'});
 		}
-		$request->addResultLoop('@items', $count,'itemid', $item->{'itemid'});
+		$request->addResultLoop('items_loop', $count,'itemid', $item->{'itemid'});
 		if(defined($item->{'itemvalue'})) {
-			$request->addResultLoop('@items', $count,'itemname', $item->{'itemvalue'});
+			$request->addResultLoop('items_loop', $count,'itemname', $item->{'itemvalue'});
 		}else {
-			$request->addResultLoop('@items', $count,'itemname', $item->{'itemname'});
+			$request->addResultLoop('items_loop', $count,'itemname', $item->{'itemname'});
 		}
 		if(defined($item->{'itemtype'})) {
-			$request->addResultLoop('@items', $count,'itemtype', $item->{'itemtype'});
-			$request->addResultLoop('@items', $count,'itemcontext', $item->{'itemtype'});
+			$request->addResultLoop('items_loop', $count,'itemtype', $item->{'itemtype'});
+			$request->addResultLoop('items_loop', $count,'itemcontext', $item->{'itemtype'});
 		}elsif($item->{'id'} =~ /^group_/) {
-			$request->addResultLoop('@items', $count,'itemtype', 'group');
+			$request->addResultLoop('items_loop', $count,'itemtype', 'group');
 		}else {
-			$request->addResultLoop('@items', $count,'itemtype', 'custom');
+			$request->addResultLoop('items_loop', $count,'itemtype', 'custom');
 		}
 		if(defined($item->{'playtype'}) && $item->{'playtype'} eq 'none') {
-			$request->addResultLoop('@items', $count,'itemplayable', '0');
+			$request->addResultLoop('items_loop', $count,'itemplayable', '0');
 		}else {
-			$request->addResultLoop('@items', $count,'itemplayable', '1');
+			$request->addResultLoop('items_loop', $count,'itemplayable', '1');
 		}
 		if(defined($item->{'playtype'}) && $item->{'playtype'} eq 'none') {
-			$request->addResultLoop('@items', $count,'itemplayable', '0');
+			$request->addResultLoop('items_loop', $count,'itemplayable', '0');
 		}else {
-			$request->addResultLoop('@items', $count,'itemplayable', '1');
+			$request->addResultLoop('items_loop', $count,'itemplayable', '1');
 		}
 		if(defined($item->{'mixes'})) {
-		  	$request->addResultLoop('@items',$count,'itemmixable','1');
+		  	$request->addResultLoop('items_loop',$count,'itemmixable','1');
 		}else {
-		  	$request->addResultLoop('@items',$count,'itemmixable','0');
+		  	$request->addResultLoop('items_loop',$count,'itemmixable','0');
 		}
 		$count++;
 	}
