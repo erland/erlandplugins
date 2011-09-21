@@ -346,3 +346,8 @@ PLUGIN_CUSTOMBROWSE_DOWNLOAD_QUESTION
 PLUGIN_CUSTOMBROWSE_MORE_INFO
 	EN	More information
 
+PLUGIN_CUSTOMBROWSE_LICENSE_REQUIRED
+	EN	License required, see License Manager plugin for more information
+
+PLUGIN_CUSTOMBROWSE_LICENSE_MANAGER_REQUIRED
+	EN	License Manager plugin must be installed
