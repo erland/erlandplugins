@@ -1409,8 +1409,8 @@ sub initTrackScan {
 	}
 	if($needToScanTracks) {
 		my $tracks = Slim::Schema->resultset('Track');
-		$scanningContext->{'tracks'} = $tracks;
 		$log->info("Got ".$tracks->count." tracks\n");
+		$scanningContext->{'currentTrackNo'} = 0;
 	}
 	my %context = ();
 	Slim::Utils::Scheduler::add_task(\&initScanTrack,$moduleKey,\@moduleKeys,\%context,$scanningContext);
@@ -1722,12 +1722,16 @@ sub scanTrack {
 	my $scanningContext = shift;
 
 	my $track = undef;
-	if(defined($scanningContext->{'tracks'})) {
-		$track = $scanningContext->{'tracks'}->next;
+	if(defined($scanningContext->{'currentTrackNo'})) {
+		my $tracks = Slim::Schema->resultset('Track')->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
+		$track = $tracks->next;
+		$scanningContext->{'currentTrackNo'}++;
 		my $maxCharacters = ($useLongUrls?511:255);
 		# Skip non audio tracks and tracks with url longer than max number of characters
 		while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
-			$track = $scanningContext->{'tracks'}->next;
+			$tracks = Slim::Schema->resultset('Track')->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
+			$track = $tracks->next;
+			$scanningContext->{'currentTrackNo'}++;
 		}
 	}
 	my @moduleKeys = ();
