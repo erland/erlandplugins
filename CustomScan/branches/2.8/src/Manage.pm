@@ -72,6 +72,7 @@ sub handler {
 		my %webModule = (
 			'id' => $key,
 			'name' => $module->{'name'},
+			'licensed' => defined($module->{'licensed'})?$module->{'licensed'}:1,
 			'enabled' => $module->{'enabled'},
 			'active' => $module->{'active'},
 			'status' => statusToString(Plugins::CustomScan::Scanner::isScanning($key)),

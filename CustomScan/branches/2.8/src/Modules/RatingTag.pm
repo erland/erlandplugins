@@ -47,6 +47,7 @@ sub getCustomScanFunctions {
 		'alwaysRescanTrack' => 1,
 		'scanInit' => \&scanInit,
 		'scanTrack' => \&scanTrack,
+		'licensed' => 1,
 		'properties' => [
 			{
 				'id' => 'writeratingtag',
@@ -71,8 +72,13 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
-	return \%functions;
+	my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:CustomScan']);
+	my $licensed = $request->getResult("result");
+	if(!$licensed) {
+		$functions{'licensed'} = 0;
+	}
 		
+	return \%functions;
 }
 
 sub scanInit {
