@@ -25,6 +25,7 @@ use File::Next;
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
+use Plugins::CustomBrowse::Plugin;
 
 my $prefs = preferences('plugin.custombrowse');
 my $log   = logger('plugin.custombrowse');
@@ -64,6 +65,9 @@ sub handler {
 	}
 	$params->{'subpages'} = \%currentSubPages;
 	$params->{'subpage'} = $class->currentPage($client,$params);
+	$params->{'licensemanager'} = Plugins::CustomBrowse::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomBrowse']);
+	$params->{'licensed'} = $validateRequest->getResult("result");
 	return $class->SUPER::handler($client, $params);
 }
 		

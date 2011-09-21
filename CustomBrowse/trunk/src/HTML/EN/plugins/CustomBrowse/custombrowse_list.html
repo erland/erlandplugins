@@ -63,6 +63,11 @@ END;
 [% PROCESS plugins/CustomBrowse/cbcomponents.html %]
 [% PROCESS plugins/CustomBrowse/custombrowse.css %]
 
+	[% IF !licensemanager %]
+		<p><b>[% "PLUGIN_CUSTOMBROWSE_LICENSE_MANAGER_REQUIRED" | string %]</b></p>
+	[% ELSIF !licensed %]
+		<p><b>[% "PLUGIN_CUSTOMBROWSE_LICENSE_REQUIRED" | string %]</b></p>
+	[% ELSE %]
 	<div id="browsedbHeader">
 		[% IF pluginCustomBrowsePageInfo && pluginCustomBrowsePageInfo.totalpages > 1 %]
 			[% PROCESS cbitemcount %]
@@ -127,6 +132,7 @@ END;
 				[% odd = (not odd) %]
 		        [% END %]
 		[% END %]
+	[% END %]
 	[% END %]
 <div id="pageFooterInfo">
 	[% PROCESS cbfooter %]

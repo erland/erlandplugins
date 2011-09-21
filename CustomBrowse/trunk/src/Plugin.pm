@@ -255,17 +255,51 @@ sub setModeBrowse {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
-        #readBrowseConfiguration($client);
-        my $params = getMenuHandler()->getMenu($client,undef);
-	if(defined($params)) {
-		if(defined($params->{'useMode'})) {
-			Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+	my $licenseManager = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomBrowse']);
+	my $licensed = $request->getResult("result");
+
+	if($licenseManager && $licensed) {
+		#readBrowseConfiguration($client);
+		my $params = getMenuHandler()->getMenu($client,undef);
+
+		if(defined($params)) {
+			if(defined($params->{'useMode'})) {
+				Slim::Buttons::Common::pushModeLeft($client, $params->{'useMode'}, $params->{'parameters'});
+			}else {
+				Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
+			}
 		}else {
-			Slim::Buttons::Common::pushModeLeft($client, 'PLUGIN.CustomBrowse.Choice', $params);
+			$client->bumpRight();
 		}
+	}elsif(!$licenseManager) {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMBROWSE_LICENSE_MANAGER_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMBROWSE}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomBrowse::Plugin.licenseManagerRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
 	}else {
-	        $client->bumpRight();
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMBROWSE_LICENSE_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMBROWSE}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomBrowse::Plugin.licenseRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
 	}
+
 }
 
 sub setModeContext {
@@ -2248,9 +2282,23 @@ sub handleWebList {
 		$params->{'pluginCustomBrowseScanWarning'} = 1;
 	}
 
+	$params->{'licensemanager'} = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomBrowse']);
+	$params->{'licensed'} = $request->getResult("result");
         return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_list.html', $params);
 }
 
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
+}
 
 sub handleWebHeader {
         my ($client, $params) = @_;
@@ -3526,7 +3574,25 @@ sub cliJiveHandler {
 	}else {
 	}
 
-	cliJiveHandlerImpl($client,$request,$context);
+	my $licenseManager = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomBrowse']);
+	my $licensed = $validateRequest->getResult("result");
+
+	if($licenseManager && $licensed) {
+		cliJiveHandlerImpl($client,$request,$context);
+	}elsif(!$licenseManager) {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_CUSTOMBROWSE_LICENSE_MANAGER_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
+		$request->setStatusDone();
+	}else {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_CUSTOMBROWSE_LICENSE_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
+		$request->setStatusDone();
+	}
 }
 
 sub cliJiveMixHandler {
