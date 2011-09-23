@@ -219,43 +219,44 @@ sub parseTag {
 }
 sub exitScanTrack {
 	$log->debug("Scanning init track\n");
+
 	%friendlyNames = ();
 	%friendlyNamesList = ();
 	my $tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagartisttags");
 	$log->info("MixedTag: Creating ARTIST tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=1 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=1 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagalbumartisttags");
 	$log->info("MixedTag: Creating ALBUMARTIST tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=5 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=5 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagtrackartisttags");
 	$log->info("MixedTag: Creating TRACKARTIST tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=6 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=6 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagconductortags");
 	$log->info("MixedTag: Creating CONDUCTOR tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=3 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=3 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagcomposertags");
 	$log->info("MixedTag: Creating COMPOSER tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=2 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=2 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagbandtags");
 	$log->info("MixedTag: Creating BAND tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=4 and contributor_track.contributor=contributors.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,contributors.name,contributors.namesort,contributors.id,'artist' from tracks,contributor_track,contributors where tracks.audio=1 and tracks.id=contributor_track.track and contributor_track.role=4 and contributor_track.contributor=contributors.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagalbumtags");
 	$log->info("MixedTag: Creating ALBUM tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,albums.title,albums.titlesort,albums.id,'album' from tracks,albums where tracks.audio=1 and tracks.album=albums.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,albums.title,albums.titlesort,albums.id,'album' from tracks,albums where tracks.audio=1 and tracks.album=albums.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtaggenretags");
 	$log->info("MixedTag: Creating GENRE tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,genres.name,genres.namesort,genres.id,'genre' from tracks,genre_track,genres where tracks.audio=1 and tracks.id=genre_track.track and genre_track.genre=genres.id");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,genres.name,genres.namesort,genres.id,'genre' from tracks,genre_track,genres where tracks.audio=1 and tracks.id=genre_track.track and genre_track.genre=genres.id");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagyeartags");
 	$log->info("MixedTag: Creating YEAR tag data");
-	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',?,if(tracks.year=0,'".string('UNK')."',tracks.year),if(tracks.year=0,'".uc(string('UNK'))."',tracks.year),tracks.year,'year' from tracks where tracks.audio=1");
+	updateTags($tags,"INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue,valuetype) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',?,if(tracks.year=0,'".string('UNK')."',tracks.year),if(tracks.year=0,'".uc(string('UNK'))."',tracks.year),tracks.year,'year' from tracks where tracks.audio=1");
 
 	$tags = Plugins::CustomScan::Plugin::getCustomScanProperty("mixedtagcustomtags");
 	if($tags) {
@@ -275,9 +276,9 @@ sub exitScanTrack {
 			my $sth;
 			if(defined($excludedTags)) {
 				$log->debug("Excluding tags $excludedTags\n");
-				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag' and customscan_track_attributes.attr not in ($excludedTags)");
+				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag' and customscan_track_attributes.attr not in ($excludedTags)");
 			}else {
-				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id regexp '.+-.+'>0 then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag'");
+				$sth = $dbh->prepare("INSERT INTO customscan_track_attributes (track,url,musicbrainz_id,module,attr,value,valuesort,extravalue) SELECT tracks.id,tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end,'mixedtag',customscan_track_attributes.attr,customscan_track_attributes.value,customscan_track_attributes.valuesort,customscan_track_attributes.value from tracks,customscan_track_attributes where tracks.audio=1 and tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='customtag'");
 			}
 			$sth->execute();
 			commit($dbh);
