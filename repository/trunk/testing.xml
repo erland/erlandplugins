@@ -200,8 +200,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 
-<!--
-                <plugin name="CustomScan" version="2.7pre3" minTarget="7.4.0" maxTarget="*">
+
+                <plugin name="CustomScan" version="2.8.3478" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Corrected problem with non ascii characters
@@ -209,11 +209,11 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.7pre3.zip</url>
-                        <sha>eff7c1d8be3bcf72b22cd5ffcb90eed6218a7f49</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3478.zip</url>
+                        <sha>f09ea2c71933cb430c82ad779b7273023ed9148d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
--->
+
 
                 <plugin name="CustomBrowse" version="2.12.3468" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Browse *Beta*</title>
