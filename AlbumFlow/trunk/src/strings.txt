@@ -90,7 +90,7 @@ SCREENSAVER_ALBUMFLOW_SETTINGS_UNLICENSED
 	EN	Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license to get full functionality
 	
 SCREENSAVER_ALBUMFLOW_NEEDS_LICENSE
-	EN	Requires license, see License Manager applet
+	EN	Requires license, see License Manager applet, installed through Settings/Advanced/Applet Installer
 
 SCREENSAVER_ALBUMFLOW_SETTINGS_MORE_MODES_IF_LICENSED
 	EN	Note!\nMore modes are available for licensed users
