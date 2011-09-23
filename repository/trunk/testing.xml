@@ -204,8 +204,10 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                 <plugin name="CustomScan" version="2.8.3478" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected problem with non ascii characters
-			- Corrected so automatic rescan works with 7.4 as long as automtic rescans isn't enabled in Squeezebox Server
+                        <changes lang="EN">- Beta version with License Manager support, requires License Manager plugin to work 
+			- Corrected some browsing performance issues with 7.6 and SQLite, at startup and possibly also during normal usage.
+Corrected issue where a lot of temporary harddrive space were used during scanning in 7.6
+			- Corrected title format handling so it works in 7.6 
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
