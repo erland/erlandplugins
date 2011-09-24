@@ -33,6 +33,7 @@ use Date::Parse qw(str2time);
 use LWP::UserAgent;
 use XML::Simple;
 use Slim::Networking::SimpleAsyncHTTP;
+use Slim::Control::Request;
 
 our $PLUGINVERSION =  undef;
 
