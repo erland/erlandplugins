@@ -5,7 +5,7 @@
 		<title lang="EN">Erland's plugins and applets (BETA testing versions)</title>
 	</details>
 	<applets>
-
+<!--
                 <applet name="AlbumFlow" version="1.1.3462" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow *Beta*</title>
                         <desc lang="EN">*** THIS IS A BETA VERSION***. Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
@@ -19,7 +19,7 @@
                         <sha>520f61fa5472310ec4db75595970c9cca6bc7988</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-
+-->
 <!--
                 <applet name="ScreenSwitcher" version="0.1.2867" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher *Beta*</title>
@@ -186,7 +186,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 -->
-
+<!--
                 <plugin name="SQLPlayList" version="2.5.3465" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">SQL Playlist *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
@@ -199,8 +199,8 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         <sha>c00fae98fbc3ce8905a650b638e9ab2b16dd9e99</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-
-
+-->
+<!--
                 <plugin name="CustomScan" version="2.8.3478" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
@@ -215,8 +215,8 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         <sha>f09ea2c71933cb430c82ad779b7273023ed9148d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-
-
+-->
+<!--
                 <plugin name="CustomBrowse" version="2.12.3468" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Custom Browse *Beta*</title>
                         <desc lang="EN">*** BETA VERSION ***. Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
@@ -228,7 +228,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         <sha>b8779627cc1cab9c6fcd77711ab903d7df2658e6</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-
+-->
 <!--
                 <plugin name="DatabaseQuery" version="2.2pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Database Query *Beta*</title>
