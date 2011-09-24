@@ -5,17 +5,20 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
-                <applet name="AlbumFlow" version="1.1.3064" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="1.1.3480" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow</title>
                         <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">- Added support for integration with Picture Gallery plugin
-			- Added option to make it possible to adjust scrolling speed
+                        <changes lang="EN">- Added compatibility for 7.6
+			- Corrected issue when player isn't connected to server
+			- Some small adjustments to make settings behave better
+			- Added support for custom resolution skins on third party hardware
+			- The License Manager applet must be installed for this version to work
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3064.zip</url>
-                        <sha>1054dcaa004fbd64509bda28e9974fabba535e22</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3480.zip</url>
+                        <sha>04ac1fb1c555e5fcb368e7311bc6c2bcaf699eb7</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="InformationScreen" version="1.0" minTarget="7.4" maxTarget="*">
@@ -173,15 +176,16 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.12.3436" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.12.3471" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added bitdepth and sample rate based menu templates
+			<changes lang="EN">- Corrected CLI interface in 7.6
+			- License Manager plugin must be installed for this version to work
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3436.zip</url>
-                        <sha>97e7ddf46515fd4a81e4efb9ce9b7f9f1635c1f2</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3471.zip</url>
+                        <sha>4be338257e8bdabeef8ec72c264f05223113a4c0</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -199,15 +203,18 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3388" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3489" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected issues with SQLite and 7.6 related to reserved characters
+			<changes lang="EN">- Corrected problem where some SQL statements stopped working after a full rescan due to missing SQLite functions
+			- Corrected issue where the MixedTag scanner didn't store Musicbrainz identities properly and caused long startup times at next server restart
+			- Corrected issues related to disc usage during scanning with huge WAL files in 7.6
+			- License Manager Plugin must be installed for this version to provide full functionality
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3388.zip</url>
-                        <sha>afa015a6f7a9ec90ede60277a20d2143fe1b8773</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3489.zip</url>
+                        <sha>b5121c6b04955d0b0e5a61f1b702808a81a1a9c3</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
@@ -309,15 +316,17 @@
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.5.3359" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="SQLPlayList" version="2.5.3487" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected handling of reserved characters with 7.6 and SQLite
+			<changes lang="EN">- Corrected so decade related playlist templates works with 7.6 without Custom Browse installed
+			- Corrected so playlist still works after a full rescan, previous version could cause errors about unknown SQLite functions
+			- License Manager plugin must be installed for this version to work
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3359.zip</url>
-                        <sha>d96a880562f8c1d460b49eb807542f020dc90ab9</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3487.zip</url>
+                        <sha>b4d339547bb4cba0bf3d3779102b5a877d704863</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="*">
@@ -407,15 +416,15 @@
                         <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="LicenseManagerPlugin" version="1.0.3457" minTarget="7.4.0" maxTarget="*">
+                <plugin name="LicenseManagerPlugin" version="1.0.3492" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">A plugin that's required for licensed plugins to work, it will give you an overview of licensed plugins available and their current licensing status and links to pay for them. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected so SQL Playlist plugin works after server restart
+                        <changes lang="EN">- Updated so it works with third party scanning modules (Custom Scan alpha version needs this)
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3457.zip</url>
-                        <sha>1e36298ed006a0c115ec21200cbc69f5d087f00a</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3492.zip</url>
+                        <sha>dd263e3841163116a582e6c85e7b04a9edeee2de</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 	</plugins>
