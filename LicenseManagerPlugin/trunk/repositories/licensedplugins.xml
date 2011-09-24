@@ -61,7 +61,7 @@
                 </plugin>
 		<plugin name="SQLPlayList">
                         <title lang="EN">SQL Playlist</title>
-                        <desc lang="EN">Requires a license, no functionality is available to unlicensed users.
+                        <desc lang="EN">Requires a license, no functionality is available to unlicensed users. If you pay for SQL Playlist you currently get Dynamic Playlist plugin for free during the same license period.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
