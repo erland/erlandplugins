@@ -170,6 +170,7 @@ sub commandCallback($)
 		}elsif($prefs->get("refresh_rescan")) {
 			Plugins::CustomScan::Scanner::refreshData();
 		}
+		Plugins::CustomScan::Scanner::createSQLiteFunctions();
 
 	}
 	$log->debug("Exiting commandCallback\n");

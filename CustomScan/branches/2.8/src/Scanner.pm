@@ -91,7 +91,7 @@ sub initDatabase {
 	$log->debug("Checking if customscan_track_attributes database table exists\n");
 	my $dbh = getCurrentDBH();
 	if($driver eq 'SQLite') {
-		createSQLiteFunctions()
+		createSQLiteFunctions();
 	}
 	my $st = $dbh->table_info();
 	my $tblexists;
@@ -453,14 +453,6 @@ sub initDatabase {
 sub createSQLiteFunctions {
 	if($driver eq 'SQLite') {
 		my $dbh = getCurrentDBH();
-		$dbh->func('regexp', 2, sub {
-			my ($regex, $string) = @_;
-			if(defined($string)) {
-				return $string =~ /$regex/;
-			}else {
-				return 0;
-			}
-		    }, 'create_function');
 		$dbh->func('if', 3, sub {
 			my ($expr,$true,$false) = @_;
 			return $expr?$true:$false;
@@ -713,6 +705,13 @@ sub fullRescan {
 	refreshData();
 
 	$modules = getPluginModules();
+
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		if($module->{'enabled'} && $module->{'active'} && defined($module->{'licensed'}) && !$module->{'licensed'}) {
+			$log->warn("Not using ".$module->{'name'}." module because no license was detected");
+		}
+	}
 
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
