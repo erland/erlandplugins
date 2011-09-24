@@ -26,6 +26,8 @@ use Slim::Utils::Unicode;
 use Slim::Utils::Prefs;
 use Data::Dumper;
 use MP3::Info;
+use Plugins::CustomScan::Plugin;
+
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
@@ -241,8 +243,14 @@ sub getCustomScanFunctions {
 			},
 		]
 	);
-	return \%functions;
+	my $licenseManager = Plugins::CustomScan::Plugin::isPluginsInstalled(undef,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:CustomScan']);
+	my $licensed = $request->getResult("result");
+	if(!$licensed) {
+		$functions{'licensed'} = 0;
+	}
 		
+	return \%functions;
 }
 
 sub scanTrack {
@@ -599,6 +607,7 @@ sub scanTrack {
 			}
 		}
 	}
+	$log->debug("Finished scanning track: ".$track->title);
 	return \@result;
 }
 

@@ -26,8 +26,11 @@ use MP3::Info;
 use POSIX qw(floor);
 use Slim::Utils::Prefs;
 use Plugins::CustomScan::Validators;
+use Plugins::CustomScan::Plugin;
+
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
+
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.customscan',
 	'defaultLevel' => 'WARN',
@@ -47,6 +50,7 @@ sub getCustomScanFunctions {
 		'alwaysRescanTrack' => 1,
 		'scanInit' => \&scanInit,
 		'scanTrack' => \&scanTrack,
+		'licensed' => 1,
 		'properties' => [
 			{
 				'id' => 'writeratingtag',
@@ -71,8 +75,13 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
-	return \%functions;
+	my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:CustomScan']);
+	my $licensed = $request->getResult("result");
+	if(!$licensed) {
+		$functions{'licensed'} = 0;
+	}
 		
+	return \%functions;
 }
 
 sub scanInit {

@@ -26,9 +26,12 @@ use Slim::Utils::Unicode;
 use DBI qw(:sql_types);
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Prefs;
+use Plugins::CustomScan::Plugin;
+
 my $prefs = preferences('plugin.customscan');
 my $serverPrefs = preferences('server');
 use Slim::Utils::Log;
+
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.customscan',
 	'defaultLevel' => 'WARN',
@@ -136,6 +139,13 @@ sub getCustomScanFunctions {
 			}
 		]
 	);
+	my $licenseManager = Plugins::CustomScan::Plugin::isPluginsInstalled(undef,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:CustomScan']);
+	my $licensed = $request->getResult("result");
+	if(!$licensed) {
+		$functions{'licensed'} = 0;
+	}
+		
 	return \%functions;
 }
 

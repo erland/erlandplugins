@@ -40,13 +40,9 @@ use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Plugins::CustomScan::Template::Reader;
-use Plugins::CustomScan::ModuleSettings;
-use Plugins::CustomScan::Settings;
-use Plugins::CustomScan::Manage;
 use Plugins::CustomScan::Scanner;
 use Plugins::CustomScan::MixedTagSQLPlayListHandler;
 use Scalar::Util qw(blessed);
-use Plugins::CustomScan::Plugin;
 
 our $PLUGINVERSION =  undef;
 
