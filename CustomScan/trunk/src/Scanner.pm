@@ -731,7 +731,7 @@ sub fullRescan {
 	push @moduleKeys,@$array;
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'} && $module->{'active'}) {
+		if($module->{'enabled'} && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'})) {
 			$scanningModulesInProgress{$key}=1;
 			Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $key, 1]);
 		}
@@ -742,9 +742,16 @@ sub fullRescan {
 
 	$modules = getPluginModules();
 
+	for my $key (keys %$modules) {
+		my $module = $modules->{$key};
+		if($module->{'enabled'} && $module->{'active'} && defined($module->{'licensed'}) && !$module->{'licensed'}) {
+			$log->warn("Not using ".$module->{'name'}." module because no license was detected");
+		}
+	}
+
 	for my $key (@moduleKeys) {
 		my $module = $modules->{$key};
-		if($module->{'enabled'} && $module->{'active'} && defined($module->{'scanInit'})) {
+		if($module->{'enabled'} && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'}) && defined($module->{'scanInit'})) {
 			no strict 'refs';
 			$log->debug("Calling: scanInit on $key\n");
 			eval { &{$module->{'scanInit'}}(); };
@@ -783,7 +790,7 @@ sub moduleRescan {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$moduleKey};
-	if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
+	if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'} || $module->{'licensed'}))) {
 		$scanningModulesInProgress{$moduleKey} = 1;
 		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
 		if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
@@ -1339,7 +1346,7 @@ sub initScanArtist {
 sub getSortedModuleKeys {
 	my @moduleArray = ();
 	for my $key (keys %$modules) {
-		if($modules->{$key}->{'enabled'} && $modules->{$key}->{'active'}) {
+		if($modules->{$key}->{'enabled'} && $modules->{$key}->{'active'} && (!defined($modules->{$key}->{'licensed'}) || $modules->{$key}->{'licensed'})) {
 			my %tmp = (
 				'key' => $key,
 				'module' => $modules
@@ -1729,7 +1736,7 @@ sub initScanTrack {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $tracks = Slim::Schema::resultset('Track')->search($scanningContext->{'trackFilter'});
+		my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
 		my @changedTracks = $tracks->all;
 		$incrementalContext = {
 			'tracks' => \@changedTracks
@@ -1851,7 +1858,9 @@ sub scanArtist {
 		}
 		if(defined($artist)) {
 			my $dbh = getCurrentDBH();
-			$log->debug("Scanning artist: ".$artist->name."\n");
+			if(scalar(@moduleKeys)>0) {
+				$log->debug("Scanning artist: ".$artist->name."\n");
+			}
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
@@ -2062,7 +2071,9 @@ sub scanAlbum {
 		}
 		if(defined($album)) {
 			my $dbh = getCurrentDBH();
-			$log->debug("Scanning album: ".$album->title."\n");
+			if(scalar(@moduleKeys)>0) {
+				$log->debug("Scanning album: ".$album->title."\n");
+			}
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
@@ -2248,21 +2259,25 @@ sub scanTrack {
 
 		my $track = undef;
 		if(defined($scanningContext->{'currentTrackNo'})) {
-			my $tracks = Slim::Schema::resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
+			my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
 			$track = $tracks->next;
 			$scanningContext->{'currentTrackNo'}++;
 			my $maxCharacters = ($useLongUrls?511:255);
 			# Skip non audio tracks and tracks with url longer than max number of characters
 			while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
-				my $tracks = Slim::Schema::resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
+				my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
 				$track = $tracks->next;
-				$scanningContext->{'currentTrackNo'};
+				$scanningContext->{'currentTrackNo'}++;
 			}
 		}
 		if(defined($track)) {
-			$log->info("Scanning track ".$scanningContext->{'currentTrackNo'}." of ".$scanningContext->{'noOfTracks'});
 			my $dbh = getCurrentDBH();
-			$log->debug("Scanning track: ".$track->title."\n");
+			if(scalar(@moduleKeys)>0) {
+				if($log->is_debug || $scanningContext->{'currentTrackNo'}%100==1) {
+					$log->info("Scanning track ".$scanningContext->{'currentTrackNo'}." of ".$scanningContext->{'noOfTracks'});
+				}
+				$log->debug("Scanning track: ".$track->title."\n");
+			}
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
@@ -2366,7 +2381,7 @@ sub exitScanTrack {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $tracks = Slim::Schema::resultset('Track')->search($scanningContext->{'trackFilter'});
+		my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
 		my @changedTracks = $tracks->all;
 		$incrementalContext = {
 			'tracks' => \@changedTracks
@@ -2462,7 +2477,7 @@ sub refreshData
 	}
 	for my $moduleKey (keys %$modules) {
 		my $module = $modules->{$moduleKey};
-		if(defined($module) && defined($module->{'id'}) && $module->{'active'}) {
+		if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'})) {
 			if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
 				$log->info("Refresh triggered by module: ".$module->{'name'});				
 				$performRefresh=1;

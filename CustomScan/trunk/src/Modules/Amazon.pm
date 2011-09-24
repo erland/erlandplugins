@@ -31,6 +31,8 @@ use POSIX qw(ceil);
 use Slim::Utils::Prefs;
 use Plugins::CustomScan::Validators;
 use LWP::UserAgent;
+use Plugins::CustomScan::Plugin;
+
 my $prefs = preferences('plugin.customscan');
 my $serverPrefs = preferences('server');
 

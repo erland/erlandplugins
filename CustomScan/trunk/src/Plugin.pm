@@ -40,9 +40,11 @@ use File::Spec::Functions qw(:ALL);
 use DBI qw(:sql_types);
 use FindBin qw($Bin);
 use Plugins::CustomScan::Template::Reader;
-use Plugins::CustomScan::ModuleSettings;
-use Plugins::CustomScan::Settings;
-use Plugins::CustomScan::Manage;
+if ( main::WEBUI ) {
+	require Plugins::CustomScan::ModuleSettings;
+	require Plugins::CustomScan::Settings;
+	require Plugins::CustomScan::Manage;
+}
 use Plugins::CustomScan::Scanner;
 use Plugins::CustomScan::MixedTagSQLPlayListHandler;
 use Scalar::Util qw(blessed);
@@ -99,9 +101,11 @@ sub initPlugin {
 		installHook();
 	}
 	checkDefaults();
-	Plugins::CustomScan::Settings->new($class);
-	Plugins::CustomScan::Manage->new($class);
-	Plugins::CustomScan::ModuleSettings->new($class);
+	if ( main::WEBUI ) {
+		Plugins::CustomScan::Settings->new($class);
+		Plugins::CustomScan::Manage->new($class);
+		Plugins::CustomScan::ModuleSettings->new($class);
+	}
 }
 
 sub postinitPlugin {
@@ -742,6 +746,18 @@ sub getAvailableTitleFormats {
 	$sth->finish();
 
 	return \%result;
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub getCustomScanProperty {

@@ -87,6 +87,7 @@ sub handler {
 	$params->{'pluginCustomScanModuleDescription'} = $module->{'description'};
 	$params->{'pluginCustomScanModuleDevelopedBy'} = $module->{'developedBy'} if defined($module->{'developedBy'});
 	$params->{'pluginCustomScanModuleDevelopedByLink'} = $module->{'developedByLink'} if defined($module->{'developedByLink'});
+	$params->{'pluginCustomScanModuleLicensed'} = defined($module->{'licensed'})?$module->{'licensed'}:1;
 	my @properties = ();
 	my $moduleProperties = $module->{'properties'};
 	for my $property (@$moduleProperties) {
