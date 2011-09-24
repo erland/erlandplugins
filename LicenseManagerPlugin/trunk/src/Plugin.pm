@@ -25,7 +25,9 @@ use base qw(Slim::Plugin::Base);
 use Slim::Utils::Prefs;
 use Slim::Utils::Misc;
 use Slim::Utils::Strings qw(string);
-use Plugins::LicenseManagerPlugin::Settings;
+if ( main::WEBUI ) {
+	require Plugins::LicenseManagerPlugin::Settings;
+}
 use Digest::SHA1 qw(sha1_hex);
 use Date::Parse qw(str2time);
 use LWP::UserAgent;
@@ -65,7 +67,9 @@ sub initPlugin {
 	my $class = shift;
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
-	Plugins::LicenseManagerPlugin::Settings->new();
+	if ( main::WEBUI ) {
+		Plugins::LicenseManagerPlugin::Settings->new();
+	}
 
 	Slim::Control::Request::addDispatch(['licensemanager','validate'], [0, 1, 1, \&validateLicense]);
 	Slim::Control::Request::addDispatch(['licensemanager','applications'], [0, 1, 1, \&getApplications]);

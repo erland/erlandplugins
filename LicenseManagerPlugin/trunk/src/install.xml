@@ -8,6 +8,7 @@
   <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>75B3BCC7-A286-434A-900B-80923EB560BC</id>
   <module>Plugins::LicenseManagerPlugin::Plugin</module>
+  <importmodule>Plugins::LicenseManagerPlugin::Plugin</importmodule>
   <optionsURL>plugins/LicenseManagerPlugin/settings/basic.html</optionsURL>
   <targetApplication>
     <id>Squeezebox Server</id>
