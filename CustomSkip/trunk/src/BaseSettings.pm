@@ -63,6 +63,9 @@ sub handler {
 	}
 	$params->{'subpages'} = \%currentSubPages;
 	$params->{'subpage'} = $class->currentPage($client,$params);
+	$params->{'licensemanager'} = Plugins::CustomSkip::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
+	$params->{'licensed'} = $validateRequest->getResult("result");
 	return $class->SUPER::handler($client, $params);
 }
 		
