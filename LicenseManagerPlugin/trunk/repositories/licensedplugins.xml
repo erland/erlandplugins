@@ -25,7 +25,7 @@
                 </plugin>
 		<plugin name="CustomSkip">
                         <title lang="EN">Custom Skip</title>
-                        <desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+                        <desc lang="EN">Requires a license, no functionality in Custom Skip is available for unlicensed users.
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
