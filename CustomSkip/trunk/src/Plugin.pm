@@ -579,6 +579,11 @@ sub executeDynamicPlayListFilter {
 	my $filter = shift;
 	my $track = shift;
 	
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
+	if(!$request->getResult("result")) {
+		$log->warn("Custom Skip requires a license, obtain a license through License Manager plugin");
+		return 1;
+	}
 	if(!defined($filter) || $filter->{'name'} eq 'Custom Skip') {
 		my $filter = getCurrentFilter($client);
 		my $secondaryFilter = getCurrentSecondaryFilter($client);
@@ -789,76 +794,53 @@ sub setMode {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
+	my $licenseManager = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
+	my $licensed = $validateRequest->getResult("result");
 
-	my @listRef = ();
-	initFilters();
-	my $localfilters = getFilters($client);
-	for my $filter (@$localfilters) {
+	if($licenseManager && $licensed) {
+		my @listRef = ();
+		initFilters();
+		my $localfilters = getFilters($client);
+		for my $filter (@$localfilters) {
+			my %item = (
+				'id' => $filter->{'id'},
+				'value' => $filter->{'id'},
+				'filter' => $filter
+			);
+			push @listRef, \%item;
+		}
 		my %item = (
-			'id' => $filter->{'id'},
-			'value' => $filter->{'id'},
-			'filter' => $filter
+			'id' => 'disable',
+			'value' => 'disable'
 		);
 		push @listRef, \%item;
-	}
-	my %item = (
-		'id' => 'disable',
-		'value' => 'disable'
-	);
-	push @listRef, \%item;
 
-	# use INPUT.Choice to display the list of feeds
-	my %params = (
-		header     => '{PLUGIN_CUSTOMSKIP} {count}',
-		listRef    => \@listRef,
-		name       => \&getDisplayText,
-		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.CustomSkip',
-		parentMode => 'PLUGIN.CustomSkip',
-		onPlay     => sub {
-			my ($client, $item) = @_;
-			$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
-			my $key = undef;
-			if(defined($client)) {
-				$key = $client;
-			}
-			if(defined($item->{'filter'}) && defined($key)) {
-				$currentFilter{$key} = $item->{'id'};
-				$prefs->client($client)->set('filter',$item->{'id'});
-				$currentSecondaryFilter{$key} = undef;
-				$client->showBriefly({ 'line' => 
-					[$client->string( 'PLUGIN_CUSTOMSKIP'),
-					$client->string( 'PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER').": ".$item->{'filter'}->{'name'}]},
-					1);
-				
-			}elsif($item->{'id'} eq 'disable' && defined($key)) {
-				$currentFilter{$key} = undef;
-				$prefs->client($client)->set('filter',0);
-				$currentSecondaryFilter{$key} = undef;
-				$client->showBriefly({ 'line' => 
-					[$client->string( 'PLUGIN_CUSTOMSKIP'),
-					$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER')]},
-					1);
-			}
-		},
-		onAdd      => sub {
-			my ($client, $item) = @_;
-			$log->debug("Do nothing on add\n");
-		},
-		onRight    => sub {
-			my ($client, $item) = @_;
-			$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
-			if(defined($item->{'filter'})) {
-				my $filter = $filters->{$item->{'id'}};
-				my $params = getFilterItemsMenu($client, $filter);
-				if(defined($params)) {
-					Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',$params);
-				}else {
-					$client->bumpRight();
-				}
-			}elsif($item->{'id'} eq 'disable') {
+		# use INPUT.Choice to display the list of feeds
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP} {count}',
+			listRef    => \@listRef,
+			name       => \&getDisplayText,
+			overlayRef => \&getOverlay,
+			modeName   => 'PLUGIN.CustomSkip',
+			parentMode => 'PLUGIN.CustomSkip',
+			onPlay     => sub {
+				my ($client, $item) = @_;
+				$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
+				my $key = undef;
 				if(defined($client)) {
-					my $key = $client;
+					$key = $client;
+				}
+				if(defined($item->{'filter'}) && defined($key)) {
+					$currentFilter{$key} = $item->{'id'};
+					$prefs->client($client)->set('filter',$item->{'id'});
+					$currentSecondaryFilter{$key} = undef;
+					$client->showBriefly({ 'line' => 
+						[$client->string( 'PLUGIN_CUSTOMSKIP'),
+						$client->string( 'PLUGIN_CUSTOMSKIP_ACTIVATING_FILTER').": ".$item->{'filter'}->{'name'}]},
+						1);
+				
+				}elsif($item->{'id'} eq 'disable' && defined($key)) {
 					$currentFilter{$key} = undef;
 					$prefs->client($client)->set('filter',0);
 					$currentSecondaryFilter{$key} = undef;
@@ -867,12 +849,66 @@ sub setMode {
 						$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER')]},
 						1);
 				}
-			}else {
-				$client->bumpRight();
-			}
-		},
-	);
-	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+			},
+			onAdd      => sub {
+				my ($client, $item) = @_;
+				$log->debug("Do nothing on add\n");
+			},
+			onRight    => sub {
+				my ($client, $item) = @_;
+				$client = UNIVERSAL::can(ref($client),"masterOrSelf")?$client->masterOrSelf():$client->master();
+				if(defined($item->{'filter'})) {
+					my $filter = $filters->{$item->{'id'}};
+					my $params = getFilterItemsMenu($client, $filter);
+					if(defined($params)) {
+						Slim::Buttons::Common::pushModeLeft($client,'INPUT.Choice',$params);
+					}else {
+						$client->bumpRight();
+					}
+				}elsif($item->{'id'} eq 'disable') {
+					if(defined($client)) {
+						my $key = $client;
+						$currentFilter{$key} = undef;
+						$prefs->client($client)->set('filter',0);
+						$currentSecondaryFilter{$key} = undef;
+						$client->showBriefly({ 'line' => 
+							[$client->string( 'PLUGIN_CUSTOMSKIP'),
+							$client->string( 'PLUGIN_CUSTOMSKIP_DISABLING_FILTER')]},
+							1);
+					}
+				}else {
+					$client->bumpRight();
+				}
+			},
+		);
+		Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+	}elsif(!$licenseManager) {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMSKIP_LICENSE_MANAGER_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomSkip::Plugin.licenseManagerRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}else {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMSKIP_LICENSE_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomSkip::Plugin.licenseRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}
 }
 
 sub setModeMix {
@@ -883,135 +919,167 @@ sub setModeMix {
 		Slim::Buttons::Common::popMode($client);
 		return;
 	}
-	my $selectedFilterType = $client->modeParam('filtertype');
-	my $item = $client->modeParam('item');
+	my $licenseManager = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
+	my $licensed = $validateRequest->getResult("result");
 
-	initFilterTypes();
-	initFilters();
-	my @listRef = ();
-	for my $key (keys %$filterTypes) {
-		my $filterType = $filterTypes->{$key};
-		if((!defined($selectedFilterType) && !$filterType->{'mixonly'})|| (defined($filterType->{'mixtype'}) && $filterType->{'mixtype'} eq $selectedFilterType)) {
-			my %item = (
-				'id' => $filterType->{'id'},
-				'value' => $filterType->{'id'},
-				'name' => $filterType->{'name'},
-				'filtertype' => $filterType
-			);
-			push @listRef, \%item;
+	if($licenseManager && $licensed) {
+		my $selectedFilterType = $client->modeParam('filtertype');
+		my $item = $client->modeParam('item');
+
+		initFilterTypes();
+		initFilters();
+		my @listRef = ();
+		for my $key (keys %$filterTypes) {
+			my $filterType = $filterTypes->{$key};
+			if((!defined($selectedFilterType) && !$filterType->{'mixonly'})|| (defined($filterType->{'mixtype'}) && $filterType->{'mixtype'} eq $selectedFilterType)) {
+				my %item = (
+					'id' => $filterType->{'id'},
+					'value' => $filterType->{'id'},
+					'name' => $filterType->{'name'},
+					'filtertype' => $filterType
+				);
+				push @listRef, \%item;
+			}
 		}
-	}
-	@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
+		@listRef = sort { $a->{'name'} cmp $b->{'name'} } @listRef;
 
-	# use INPUT.Choice to display the list of feeds
-	my %params = (
-		header     => '{PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE} {count}',
-		listRef    => \@listRef,
-		name       => \&getDisplayText,
-		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.CustomSkipMix',
-		parentMode => 'PLUGIN.CustomSkipMix',
-		onPlay     => sub {
-			my ($client, $item) = @_;
-			$log->debug("Do nothing on play\n");
-		},
-		onAdd      => sub {
-			my ($client, $item) = @_;
-			$log->debug("Do nothing on add\n");
-		},
-		onRight    => sub {
-			my ($client, $item) = @_;
-			if(defined($item->{'filtertype'})) {
-				my $filterType = $item->{'filtertype'};
-				if(defined($filterType->{'customskipparameters'})) {
-					my %parameterValues = ();
-					my $i=1;
-					while(defined($client->modeParam('customskip_parameter_'.$i))) {
-						$parameterValues{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
-						$i++;
-					}
-					if(defined($client->modeParam('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
-					}
-					if(defined($client->modeParam('filter'))) {
-						$parameterValues{'filter'} = $client->modeParam('filter');
-					}
+		# use INPUT.Choice to display the list of feeds
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE} {count}',
+			listRef    => \@listRef,
+			name       => \&getDisplayText,
+			overlayRef => \&getOverlay,
+			modeName   => 'PLUGIN.CustomSkipMix',
+			parentMode => 'PLUGIN.CustomSkipMix',
+			onPlay     => sub {
+				my ($client, $item) = @_;
+				$log->debug("Do nothing on play\n");
+			},
+			onAdd      => sub {
+				my ($client, $item) = @_;
+				$log->debug("Do nothing on add\n");
+			},
+			onRight    => sub {
+				my ($client, $item) = @_;
+				if(defined($item->{'filtertype'})) {
+					my $filterType = $item->{'filtertype'};
+					if(defined($filterType->{'customskipparameters'})) {
+						my %parameterValues = ();
+						my $i=1;
+						while(defined($client->modeParam('customskip_parameter_'.$i))) {
+							$parameterValues{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
+							$i++;
+						}
+						if(defined($client->modeParam('extrapopmode'))) {
+							$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
+						}
+						if(defined($client->modeParam('filter'))) {
+							$parameterValues{'filter'} = $client->modeParam('filter');
+						}
 
-					my $filter = undef;
-					if(defined($client->modeParam('filter'))) {
-						$filter = $filters->{$client->modeParam('filter')};
-					}else {
-						$filter = getCurrentFilter($client);
-					}
-					my $filteritems = $filter->{'filter'};
-					my $i = 1;
-					for my $filteritem (@$filteritems) {
-						if($filteritem->{'id'} eq $item->{'id'} && defined($client->modeParam('customskip_parameter_1'))) {
-							my $parameters = $filterType->{'parameters'};
-							my $itemParameters = $filteritem->{'parameter'};
-							if(defined($parameters) && scalar(@$parameters)>0 && defined($itemParameters) && scalar(@$itemParameters)>0) {
-								my $parameter = $parameters->[0];
-								my $itemParameter = $itemParameters->[0];
-								my $itemValues = $itemParameter->{'value'};
-								if(defined($itemValues) && scalar(@$itemValues)==1) {
-									my $itemValue = $itemValues->[0];
-									my %currentValues = (
-										$client->modeParam('customskip_parameter_1') => $client->modeParam('customskip_parameter_1')
-									);
-									addValuesToFilterParameter($parameter,\%currentValues);
-									my $values = $parameter->{'values'};
-									if(defined($values)) {
-										for my $item (@$values) {
-											if($itemValue eq $item->{'value'}) {
-												if($item->{'id'} eq $client->modeParam('customskip_parameter_1')) {
-													$parameterValues{'filteritem'} = $i;
+						my $filter = undef;
+						if(defined($client->modeParam('filter'))) {
+							$filter = $filters->{$client->modeParam('filter')};
+						}else {
+							$filter = getCurrentFilter($client);
+						}
+						my $filteritems = $filter->{'filter'};
+						my $i = 1;
+						for my $filteritem (@$filteritems) {
+							if($filteritem->{'id'} eq $item->{'id'} && defined($client->modeParam('customskip_parameter_1'))) {
+								my $parameters = $filterType->{'parameters'};
+								my $itemParameters = $filteritem->{'parameter'};
+								if(defined($parameters) && scalar(@$parameters)>0 && defined($itemParameters) && scalar(@$itemParameters)>0) {
+									my $parameter = $parameters->[0];
+									my $itemParameter = $itemParameters->[0];
+									my $itemValues = $itemParameter->{'value'};
+									if(defined($itemValues) && scalar(@$itemValues)==1) {
+										my $itemValue = $itemValues->[0];
+										my %currentValues = (
+											$client->modeParam('customskip_parameter_1') => $client->modeParam('customskip_parameter_1')
+										);
+										addValuesToFilterParameter($parameter,\%currentValues);
+										my $values = $parameter->{'values'};
+										if(defined($values)) {
+											for my $item (@$values) {
+												if($itemValue eq $item->{'value'}) {
+													if($item->{'id'} eq $client->modeParam('customskip_parameter_1')) {
+														$parameterValues{'filteritem'} = $i;
+													}
+													last;
 												}
-												last;
 											}
-										}
-									}else {
-										if($itemValue eq $client->modeParam('customskip_parameter_1')) {
-											$parameterValues{'filteritem'} = $i;
+										}else {
+											if($itemValue eq $client->modeParam('customskip_parameter_1')) {
+												$parameterValues{'filteritem'} = $i;
+											}
 										}
 									}
 								}
 							}
+							$i = $i + 1;
 						}
-						$i = $i + 1;
-					}
 
-					requestFirstParameter($client,$filterType,\%parameterValues);
-				}else {
-					my $browseDir = $prefs->get("directory");
-					
-					my $filter = undef;
-					if(defined($client->modeParam('filter'))) {
-						$filter = $filters->{$client->modeParam('filter')};
+						requestFirstParameter($client,$filterType,\%parameterValues);
 					}else {
-						$filter = getCurrentFilter($client);
-					}
-					if (defined $browseDir && -d $browseDir && defined($filter)) {
-						my $file = unescape($filter->{'id'});
-						my $url = catfile($browseDir, $file);
+						my $browseDir = $prefs->get("directory");
+					
+						my $filter = undef;
+						if(defined($client->modeParam('filter'))) {
+							$filter = $filters->{$client->modeParam('filter')};
+						}else {
+							$filter = getCurrentFilter($client);
+						}
+						if (defined $browseDir && -d $browseDir && defined($filter)) {
+							my $file = unescape($filter->{'id'});
+							my $url = catfile($browseDir, $file);
 			
-						saveFilterItem($client,$url,$filter,$filterType);
+							saveFilterItem($client,$url,$filter,$filterType);
+						}
 					}
 				}
-			}
-		},
-	);
-	my $i = 1;
-	while(defined($client->modeParam('customskip_parameter_'.$i))) {
-		$params{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
-		$i++;
+			},
+		);
+		my $i = 1;
+		while(defined($client->modeParam('customskip_parameter_'.$i))) {
+			$params{'customskip_parameter_'.$i} = $client->modeParam('customskip_parameter_'.$i);
+			$i++;
+		}
+		if(defined($client->modeParam('extrapopmode'))) {
+			$params{'extrapopmode'} = $client->modeParam('extrapopmode');
+		}
+		if(defined($client->modeParam('filter'))) {
+			$params{'filter'} = $client->modeParam('filter');
+		}
+		Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+	}elsif(!$licenseManager) {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMSKIP_LICENSE_MANAGER_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomSkip::Plugin.licenseManagerRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}else {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_CUSTOMSKIP_LICENSE_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_CUSTOMSKIP}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::CustomSkip::Plugin.licenseRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
 	}
-	if(defined($client->modeParam('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
-	}
-	if(defined($client->modeParam('filter'))) {
-		$params{'filter'} = $client->modeParam('filter');
-	}
-	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
 }
 
 sub setModeChooseParameters {
@@ -2120,8 +2188,22 @@ sub handleWebList {
 	}
 	
 	$params->{'pluginCustomSkipVersion'} = $PLUGINVERSION;
-
+	$params->{'licensemanager'} = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
+	$params->{'licensed'} = $request->getResult("result");
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub handleWebSelectFilter {
