@@ -34,3 +34,12 @@ SETUP_PLUGIN_TITLESWITCHER_DEFAULTSCROLLSIZE
 SETUP_PLUGIN_TITLESWITCHER_DEFAULTSCROLLSIZE_DESC
 	EN	Standard scrolling length to use if a specific scrolling length hasn't been specified. Values which are longer than this will stay on screen extra time to allow for scrolling to finish. If you set the scrolling length to 0 it means that the item will not wait for scrolling.
 
+PLUGIN_TITLESWITCHER_LICENSE_REQUIRED_SHORT
+	EN	License required
+
+PLUGIN_TITLESWITCHER_LICENSE_REQUIRED
+	EN	License required, see License Manager plugin for more information
+
+PLUGIN_TITLESWITCHER_LICENSE_MANAGER_REQUIRED
+	EN	License Manager plugin must be installed
+
