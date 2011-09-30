@@ -64,6 +64,9 @@ sub handler {
 	}
 	$params->{'subpages'} = \%currentSubPages;
 	$params->{'subpage'} = $class->currentPage($client,$params);
+	$params->{'licensemanager'} = Plugins::MultiLibrary::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:MultiLibrary']);
+	$params->{'licensed'} = $validateRequest->getResult("result");
 	return $class->SUPER::handler($client, $params);
 }
 		

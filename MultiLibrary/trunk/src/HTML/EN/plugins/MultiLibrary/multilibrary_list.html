@@ -8,7 +8,7 @@
 [%- pageHeaderInfo = BLOCK %]
 [% END -%]
 [% PROCESS pageheader.html %]
-[% IF pluginMultiLibraryActiveLibrary %]
+[% IF pluginMultiLibraryActiveLibrary and licensed %]
 	<p>
 	<strong>[% "PLUGIN_MULTILIBRARY_ACTIVE_LIBRARY" | string %]:</strong>
 	<span class="exboldnowplaying">[% pluginMultiLibraryActiveLibrary.name %]</span>
@@ -22,6 +22,10 @@
 		[% WRAPPER contentcontainer %]
 	[% IF player == '' %]
 		[% "NO_PLAYER_FOUND" | string %]
+	[% ELSIF !licensemanager %]
+		<p><b>[% "PLUGIN_MULTILIBRARY_LICENSE_MANAGER_REQUIRED" | string %]</b></p>
+	[% ELSIF !licensed %]
+		<p><b>[% "PLUGIN_MULTILIBRARY_LICENSE_REQUIRED" | string %]</b></p>
 	[% ELSE %]
 		[% "PLUGIN_MULTILIBRARY_CHOOSE_BELOW" | string %]
 

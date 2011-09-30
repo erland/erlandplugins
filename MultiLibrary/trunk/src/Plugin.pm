@@ -186,56 +186,89 @@ sub setMode {
 
 	my @listRef = ();
 	initLibraries();
-	for my $library (keys %$libraries) {
-		if(isLibraryEnabledForClient($client,$libraries->{$library})) {
-			my %item = (
-				'id' => $library,
-				'value' => $library,
-				'libraryname' => $libraries->{$library}->{'name'}
-			);
-			push @listRef, \%item;
-		}
-	}
-	@listRef = sort { $a->{'libraryname'} cmp $b->{'libraryname'} } @listRef;
-	my $currentLibrary = getCurrentLibrary($client);
-	my $i = undef;
-	if(defined($currentLibrary)) {
-		$i = 0;
-		for my $item (@listRef) {
-			if($item->{'id'} eq $currentLibrary->{'id'}) {
-				last;
-			}
-			$i = $i + 1;
-		}
-	}
 
-	# use INPUT.Choice to display the list of feeds
-	my %params = (
-		header     => '{PLUGIN_MULTILIBRARY_SELECT} {count}',
-		listRef    => \@listRef,
-		name       => \&getDisplayText,
-		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.MultiLibrary',
-		parentMode => 'PLUGIN.MultiLibrary',
-		onPlay     => sub {
-			my ($client, $item) = @_;
-			selectLibrary($client,$item->{'id'},1);
-			Slim::Buttons::Common::pushMode($client, 'playlist');
-		},
-		onAdd      => sub {
-			my ($client, $item) = @_;
-			$log->debug("Do nothing on add\n");
-		},
-		onRight    => sub {
-			my ($client, $item) = @_;
-			selectLibrary($client,$item->{'id'},1);
-			Slim::Buttons::Common::pushMode($client, 'playlist');
-		},
-	);
-	if(defined($i)) {
-		$params{'listIndex'} = $i;
+	my $licenseManager = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:MultiLibrary']);
+	my $licensed = $request->getResult("result");
+
+	if($licenseManager && $licensed) {
+		for my $library (keys %$libraries) {
+			if(isLibraryEnabledForClient($client,$libraries->{$library})) {
+				my %item = (
+					'id' => $library,
+					'value' => $library,
+					'libraryname' => $libraries->{$library}->{'name'}
+				);
+				push @listRef, \%item;
+			}
+		}
+		@listRef = sort { $a->{'libraryname'} cmp $b->{'libraryname'} } @listRef;
+		my $currentLibrary = getCurrentLibrary($client);
+		my $i = undef;
+		if(defined($currentLibrary)) {
+			$i = 0;
+			for my $item (@listRef) {
+				if($item->{'id'} eq $currentLibrary->{'id'}) {
+					last;
+				}
+				$i = $i + 1;
+			}
+		}
+
+		# use INPUT.Choice to display the list of feeds
+		my %params = (
+			header     => '{PLUGIN_MULTILIBRARY_SELECT} {count}',
+			listRef    => \@listRef,
+			name       => \&getDisplayText,
+			overlayRef => \&getOverlay,
+			modeName   => 'PLUGIN.MultiLibrary',
+			parentMode => 'PLUGIN.MultiLibrary',
+			onPlay     => sub {
+				my ($client, $item) = @_;
+				selectLibrary($client,$item->{'id'},1);
+				Slim::Buttons::Common::pushMode($client, 'playlist');
+			},
+			onAdd      => sub {
+				my ($client, $item) = @_;
+				$log->debug("Do nothing on add\n");
+			},
+			onRight    => sub {
+				my ($client, $item) = @_;
+				selectLibrary($client,$item->{'id'},1);
+				Slim::Buttons::Common::pushMode($client, 'playlist');
+			},
+		);
+		if(defined($i)) {
+			$params{'listIndex'} = $i;
+		}
+		Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
+	}elsif(!$licenseManager) {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_MULTILIBRARY_LICENSE_MANAGER_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_MULTILIBRARY}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::MultiLibrary::Plugin.licenseManagerRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}else {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_MULTILIBRARY_LICENSE_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_MULTILIBRARY}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::MultiLibrary::Plugin.licenseRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
 	}
-	Slim::Buttons::Common::pushMode($client, 'INPUT.Choice', \%params);
 }
 
 sub selectLibrary {
@@ -1103,7 +1136,8 @@ sub refreshLibraries {
 					$sth->bind_param(1,$id,SQL_INTEGER);
 					$sth->execute();
 					$sth->finish();
-					if(defined($library->{'track'})) {
+					my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:MultiLibrary']);
+					if($request->getResult("result") && defined($library->{'track'})) {
 						my $sql = $library->{'track'}->{'data'};
 						if(defined($sql)) {
 							$log->debug("Adding new data for library ".$library->{'id'}.", running $sql\n");
@@ -1152,6 +1186,8 @@ sub refreshLibraries {
 								$log->debug("Finished analyzing multilibrary tables\n");
 							}
 						}
+					}elsif(!$request->getResult("result")) {
+						$log->warn("Not refreshing Multi Library libraries, license required, see License Manager for more information");
 					}
 				}
 			};
@@ -1454,11 +1490,28 @@ sub handleWebList {
 		$params->{'pluginMultiLibraryDownloadMessage'} = 'You have to specify a template directory before you can download libraries';
 	}
 	$params->{'pluginMultiLibraryVersion'} = $PLUGINVERSION;
+
+	$params->{'licensemanager'} = isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:MultiLibrary']);
+	$params->{'licensed'} = $request->getResult("result");
+
 	if(defined($params->{'redirect'})) {
 		return Slim::Web::HTTP::filltemplatefile('plugins/MultiLibrary/multilibrary_redirect.html', $params);
 	}else {
 		return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 	}
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
 }
 
 sub handleWebRefreshLibraries {
