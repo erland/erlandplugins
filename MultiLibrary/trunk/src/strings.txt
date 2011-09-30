@@ -256,3 +256,9 @@ PLUGIN_MULTILIBRARY_SELECT
 PLUGIN_MULTILIBRARY_NOOFTRACKS
 	EN	Number of songs
 
+PLUGIN_MULTILIBRARY_LICENSE_REQUIRED
+	EN	License required, see License Manager plugin for more information
+
+PLUGIN_MULTILIBRARY_LICENSE_MANAGER_REQUIRED
+	EN	License Manager plugin must be installed
+
