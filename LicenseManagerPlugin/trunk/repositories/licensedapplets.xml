@@ -15,8 +15,8 @@
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=AlbumFlow</licenseLink>
                 </applet>
 		<applet name="CustomClock">
-                        <title lang="EN">Custom Clock</title>
-                        <desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+                        <title lang="EN">Custom Clock (incl. Custom Clock Helper)</title>
+                        <desc lang="EN">Graphical items provided through Song Info plugin and Super Date Time plugin is available free of charge, all other functionality in Custom Clock requires a license. Customization via Custom Clock Helper also requires a license. Note that many styles contains combination of graphical items and then it's possible to use the style but you will get a "License required" text instead of the real value. Custom Clock Helper and Custom Clock uses the same license, so you will always get a license for both when buying one of them. Also note that if you don't have a license you might have to temporarily select another style to get access to all the free items, this will restore your configuration to the online styles which contains a bit more free items.
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>

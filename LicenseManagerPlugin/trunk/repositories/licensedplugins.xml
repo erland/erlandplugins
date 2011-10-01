@@ -14,6 +14,15 @@
 			<licenseHelp>http://license.isaksson.info</licenseHelp>
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomBrowse</licenseLink>
                 </plugin>
+                <plugin name="CustomClock">
+                        <title lang="EN">Custom Clock Helper (incl. Custom Clock)</title>
+                        <desc lang="EN">Requires a license, no functionality in Custom Clock Helper is available for unlicensed users. Custom Clock Helper and Custom Clock uses the same license, so you will always get a license for both when buying one of them.
+                        </desc>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+                        <licenseHelp>http://license.isaksson.info</licenseHelp>
+                        <licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomClock</licenseLink>
+                </plugin>
 		<plugin name="CustomScan">
                         <title lang="EN">Custom Scan</title>
 			<desc lang="EN">The LastFM scanning module is available free of charge, the other scanning modules provided by Custom Scan requires a license and isn't available to unlicensed users.
