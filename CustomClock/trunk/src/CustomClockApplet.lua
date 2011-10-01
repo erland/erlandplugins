@@ -38,6 +38,7 @@ local Group            = require("jive.ui.Group")
 local Label            = require("jive.ui.Label")
 local Canvas           = require("jive.ui.Canvas")
 local Icon             = require("jive.ui.Icon")
+local Textarea         = require("jive.ui.Textarea")
 local Font             = require("jive.ui.Font")
 local Tile             = require("jive.ui.Tile")
 local Popup            = require("jive.ui.Popup")
@@ -219,43 +220,97 @@ function openScreensaver1(self)
 	self:openScreensaver("config1")
 end
 function openScreensaver2(self)
-	self:openScreensaver("config2")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config2")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver3(self)
-	self:openScreensaver("config3")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config3")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver4(self)
-	self:openScreensaver("config4")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config4")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver5(self)
-	self:openScreensaver("config5")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config5")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver6(self)
-	self:openScreensaver("config6")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config6")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver7(self)
-	self:openScreensaver("config7")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config7")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver8(self)
-	self:openScreensaver("config8")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config8")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function openScreensaver9(self)
-	self:openScreensaver("config9")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("config9")
+	else
+		self:openScreensaver("config1")
+	end
 end
 function goNowPlaying(self, transition)
-	self:openScreensaver("confignowplaying",transition)
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("confignowplaying",transition)
+	else
+		self:openScreensaver("config1",transition)
+	end
 end
 function openCustomClockAlarmWindow(self)
-	self:openScreensaver("configalarmactive")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if licensed then
+		self:openScreensaver("configalarmactive")
+	else
+		self:openScreensaver("config1",transition)
+	end
 end
 function openMenu(self,transition)
 	local window = Window("text_list",self:string("SCREENSAVER_CUSTOMCLOCK"), 'settingstitle')
 	self.customItemTypes = self:getSettings()["customitemtypes"]
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 
 	local menu = SimpleMenu("menu")
+	if not licensed then
+		menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_UNLICENSED")))
+	end
 	for i = 1,9 do
 		local name = self:getSettings()["config"..i.."style"];
-		if _getString(name,nil) then
+		if _getString(name,nil) and licensed then
 			menu:addItem(
 				{
 					text = name, 
@@ -267,7 +322,7 @@ function openMenu(self,transition)
 				})
 		end
 	end
-        if menu:numItems() == 0 then
+        if licensed and menu:numItems() == 0 then
                 menu:addItem( {
                         text = "No styles configured", 
                         iconStyle = 'item_no_arrow',
@@ -285,10 +340,13 @@ function openScreensaver(self,mode, transition)
 	local player = appletManager:callService("getCurrentPlayer")
 	local oldMode = self.mode
 	self.mode = mode
-	if oldMode and self.mode != oldMode and self.window then
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if ((oldMode and self.mode != oldMode) or self.licensed~=licensed) and self.window then
 		self.window:hide()
 		self.window = nil
 	end
+	self.licensed = licensed
+
 	if mode != "configalarmactive" then
 		self.prevmode = nil
 	end
@@ -693,6 +751,8 @@ function openScreensaver(self,mode, transition)
 		for no,item in pairs(self.configItems) do
 			if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
 				self.items[no]:getWidget("itemno"):animate(true)
+			elseif not licensed and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
+				self.items[no]:getWidget("itemno"):animate(true)
 			end
 		end
 	end
@@ -881,8 +941,12 @@ function openSettings(self)
 	end
 
 	self.settingsWindow = Window("text_list", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS"), 'settingstitle')
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 
 	local menu = SimpleMenu("menu")
+	if not licensed then
+		menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_UNLICENSED")))
+	end
 	for i = 1,9 do
 		local name = self:getSettings()["config"..i.."style"];
 		if name then
@@ -890,15 +954,26 @@ function openSettings(self)
 		else
 			name = ""
 		end
-		menu:addItem(
-			{
-				text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG")).." #"..i..name, 
-				sound = "WINDOWSHOW",
-				callback = function(event, menuItem)
-					self:defineSettingStyle("config"..i,menuItem)
-					return EVENT_CONSUME
-				end
-			})
+		if licensed or i==1 then
+			menu:addItem(
+				{
+					text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG")).." #"..i..name, 
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						self:defineSettingStyle("config"..i,menuItem)
+						return EVENT_CONSUME
+					end
+				})
+		else
+			menu:addItem(
+				{
+					text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_CONFIG")).." #"..i..": "..tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")),
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						return EVENT_CONSUME
+					end
+				})
+		end
 	end	
 	local name = self:getSettings()["confignowplayingstyle"];
 	if name then
@@ -906,16 +981,18 @@ function openSettings(self)
 	else
 		name = ""
 	end
-	menu:addItem(
-		{
-			text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"))..name, 
-			sound = "WINDOWSHOW",
-			callback = function(event, menuItem)
-				self:defineSettingStyle("confignowplaying",menuItem)
-				return EVENT_CONSUME
-			end
-		})
-	if appletManager:callService("isPatchInstalled","60a51265-1938-4fd7-b703-12d3725870da") then
+	if licensed then
+		menu:addItem(
+			{
+				text = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_SETTINGS_NOWPLAYING"))..name, 
+				sound = "WINDOWSHOW",
+				callback = function(event, menuItem)
+					self:defineSettingStyle("confignowplaying",menuItem)
+					return EVENT_CONSUME
+				end
+			})
+	end
+	if licensed and appletManager:callService("isPatchInstalled","60a51265-1938-4fd7-b703-12d3725870da") then
 		name = self:getSettings()["configalarmactivestyle"];
 		if name then
 			name = ": "..name
@@ -1033,6 +1110,7 @@ end
 function _updateCustomTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
 	if server then
+		local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 		if not self:getSettings()['customClockHelperInstalled'] then
 			server:userRequest(function(chunk,err)
 					if err then
@@ -1057,6 +1135,9 @@ function _updateCustomTitleFormatInfo(self,player)
 							self.customtitleformats = chunk.data.titleformats
 							for attribute,value in pairs(self.customtitleformats) do
 								log:debug("Title format: "..tostring(attribute).."="..tostring(value))
+								if not licensed then
+									self.customtitleformats[attribute] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+								end
 							end
 						end
 					end,
@@ -1070,17 +1151,28 @@ end
 function _updateTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
 	if server then
+		local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
 				else
 					local index = chunk.data.playlist_cur_index
-					if index and chunk.data.playlist_loop[index+1] then
+					if index and chunk.data.playlist_loop[index+1] and licensed then
 						self.titleformats["BAND"] = chunk.data.playlist_loop[index+1].band
 						self.titleformats["COMPOSER"] = chunk.data.playlist_loop[index+1].composer
 						self.titleformats["CONDUCTOR"] = chunk.data.playlist_loop[index+1].conductor
 						self.titleformats["TRACKARTIST"] = chunk.data.playlist_loop[index+1].trackartist
 						self.titleformats["ALBUMARTIST"] = chunk.data.playlist_loop[index+1].albumartist
+						self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
+						self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
+						self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
+						self.titleformats["DISCCOUNT"] = chunk.data.playlist_loop[index+1].disccount
+					elseif not licensed then
+						self.titleformats["BAND"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+						self.titleformats["COMPOSER"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+						self.titleformats["CONDUCTOR"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+						self.titleformats["TRACKARTIST"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+						self.titleformats["ALBUMARTIST"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
 						self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
 						self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
 						self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
@@ -1565,17 +1657,18 @@ end
 function _updateRatingIcon(self,widget,id,mode)
 	local player = appletManager:callService("getCurrentPlayer")
 	if player then
+		local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 			local rating = self.titleformats["RATING"]
 			local trackstatrating = self.customtitleformats["TRACKSTATRATINGNUMBER"]
-			if trackstatrating then
+			if licensed and trackstatrating then
 				if self.images[self.mode..id.."."..trackstatrating] then
 					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..trackstatrating])
 				else
 					widget:setWidgetValue("itemno",nil)
 				end
-			elseif rating then
+			elseif licensed and rating then
 				rating = math.floor((rating + 10)/ 20)
 				if self.images[self.mode..id.."."..rating] then
 					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..rating])
@@ -1594,15 +1687,18 @@ function _updateRatingIcon(self,widget,id,mode)
 		widget:setWidgetValue("itemno",nil)
 	end
 end
-function _updateNowPlaying(itemType,widget,id,mode)
+function _updateNowPlaying(self,itemType,widget,id,mode)
 	local player = appletManager:callService("getCurrentPlayer")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 			if playerStatus.item_loop then
 				local trackInfo = _extractTrackInfo(playerStatus.item_loop[1],itemType)
-				if trackInfo != "" then
+				if licensed and trackInfo != "" then
 					widget:setWidgetValue(id,trackInfo)
+				elseif trackInfo != "" then
+					widget:setWidgetValue(id,tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
 				end
 			else
 				widget:setWidgetValue(id,"")
@@ -1617,6 +1713,7 @@ end
 
 function _updateStaticNowPlaying(self,widget,id,format,mode)
 	local player = appletManager:callService("getCurrentPlayer")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
@@ -1662,7 +1759,11 @@ function _updateStaticNowPlaying(self,widget,id,format,mode)
 					text = string.gsub(text,"X_OF_Y","")
 				end
 
-				widget:setWidgetValue(id,text)
+				if licensed or text == "" then
+					widget:setWidgetValue(id,text)
+				elseif text != "" then
+					widget:setWidgetValue(id,tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))				
+				end
 			else
 				widget:setWidgetValue(id,"")
 			end
@@ -2043,6 +2144,7 @@ end
 function _updateRSSItem(self,category,items)
 	local player = appletManager:callService("getCurrentPlayer")
 	local server = player:getSlimServer()
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 
 	local req = RequestHttp(function(chunk, err)
 			if err then
@@ -2133,6 +2235,10 @@ function _updateRSSItem(self,category,items)
 								text = description
 							end
 							log:debug("Retrieved("..index.."): "..text)
+							if not licensed then
+								title = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+								description = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+							end
 							itemsData[index] = {
 								uniqueID = id,
 								pubDate = pubDate,
@@ -2993,10 +3099,11 @@ end
 
 function _updateAlbumCover(self,widget,id,size,mode,index)
 	local player = appletManager:callService("getCurrentPlayer")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-			if playerStatus.item_loop then
+			if playerStatus.item_loop and licensed then
 				local iconId = nil
 				if playerStatus.item_loop[index] then
 					iconId = playerStatus.item_loop[index]["icon-id"] or playerStatus.item_loop[index]["icon"]
@@ -3084,14 +3191,23 @@ function _tick(self,forcedUpdate)
 	local changerssitems = {}
 	local no = 1
 	local refreshCustomItemTypes = self.refreshCustomItemTypes
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	self.refreshCustomItemTypes = {}
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
-			self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(nil,_getString(item.text,"%H:%M")))
+			if licensed then
+				self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(nil,_getString(item.text,"%H:%M")))
+			else
+				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
+			end
 		elseif item.itemtype == "text" then
-			self.items[no]:setWidgetValue("itemno",item.text)
+			if licensed then
+				self.items[no]:setWidgetValue("itemno",item.text)
+			else
+				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
+			end
 		elseif item.itemtype == "alarmtimetext" then
-			if player then
+			if licensed and player then
 				local alarmtime = player:getPlayerStatus()["alarm_next"]
 				local alarmstate = player:getPlayerStatus()["alarm_state"]
 
@@ -3100,136 +3216,160 @@ function _tick(self,forcedUpdate)
 				else
 					self.items[no]:setWidgetValue("itemno","")
 				end
-			else
+			elseif licensed then
 				self.items[no]:setWidgetValue("itemno","")
+			else
+				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
 			end
 		elseif item.itemtype == "wirelessicon" then
-			local wirelessMode = string.gsub(iconbar.iconWireless:getStyle(),"^button_wireless_","")
-			log:debug("Wireless status is "..tostring(wirelessMode))
-			if self.images[self.mode.."item"..no.."."..wirelessMode] then
-				log:debug("Wireless status is "..wirelessMode)
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..wirelessMode])
-			elseif wirelessMode != "NONE" then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
+			if licensed then
+				local wirelessMode = string.gsub(iconbar.iconWireless:getStyle(),"^button_wireless_","")
+				log:debug("Wireless status is "..tostring(wirelessMode))
+				if self.images[self.mode.."item"..no.."."..wirelessMode] then
+					log:debug("Wireless status is "..wirelessMode)
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..wirelessMode])
+				elseif wirelessMode != "NONE" then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			end
 		elseif item.itemtype == "sleepicon" then
-			local sleepMode = string.gsub(iconbar.iconSleep:getStyle(),"^button_sleep_","")
-			log:debug("Sleep status is "..tostring(sleepMode))
-			if self.images[self.mode.."item"..no.."."..sleepMode] then
-				log:debug("Sleep status is "..sleepMode)
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..sleepMode])
-			elseif sleepMode == "ON" then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
+			if licensed then
+				local sleepMode = string.gsub(iconbar.iconSleep:getStyle(),"^button_sleep_","")
+				log:debug("Sleep status is "..tostring(sleepMode))
+				if self.images[self.mode.."item"..no.."."..sleepMode] then
+					log:debug("Sleep status is "..sleepMode)
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..sleepMode])
+				elseif sleepMode == "ON" then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			end
 		elseif item.itemtype == "batteryicon" then
-			local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
-			log:debug("Battery status is "..tostring(batteryMode))
-			if self.images[self.mode.."item"..no.."."..batteryMode] then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..batteryMode])
-			elseif batteryMode != "NONE" then
-				self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
+			if licensed then
+				local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
+				log:debug("Battery status is "..tostring(batteryMode))
+				if self.images[self.mode.."item"..no.."."..batteryMode] then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..batteryMode])
+				elseif batteryMode != "NONE" then
+					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+				else
+					self.items[no]:setWidgetValue("itemno",nil)
+				end
 			end
 		elseif item.itemtype == "alarmicon" then
-			if player then
-				local alarmstate = player:getPlayerStatus()["alarm_state"]
+			if licensed then
+				if player then
+					local alarmstate = player:getPlayerStatus()["alarm_state"]
 
-				log:debug("Alarm state is "..tostring(alarmstate))
-				if alarmstate=="active" or alarmstate=="snooze" or alarmstate=="set" then
-					if self.images[self.mode.."item"..no.."."..alarmstate] then
-						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..alarmstate])
+					log:debug("Alarm state is "..tostring(alarmstate))
+					if alarmstate=="active" or alarmstate=="snooze" or alarmstate=="set" then
+						if self.images[self.mode.."item"..no.."."..alarmstate] then
+							self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..alarmstate])
+						else
+							self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+						end
 					else
-						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no])
+						self.items[no]:setWidgetValue("itemno",nil)
 					end
 				else
 					self.items[no]:setWidgetValue("itemno",nil)
 				end
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "shufflestatusicon" then
-			if player then
-				local status = tonumber(player:getPlayerStatus()["playlist shuffle"])
-				if status == 1 then
-					status = "songs"
-				elseif status == 2 then
-					status = "albums"
-				else
-					status = nil
-				end
-				log:debug("Shuffle state is "..tostring(status))
-				if status and self.images[self.mode.."item"..no.."."..status] then
-					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+			if licensed then
+				if player then
+					local status = tonumber(player:getPlayerStatus()["playlist shuffle"])
+					if status == 1 then
+						status = "songs"
+					elseif status == 2 then
+						status = "albums"
+					else
+						status = nil
+					end
+					log:debug("Shuffle state is "..tostring(status))
+					if status and self.images[self.mode.."item"..no.."."..status] then
+						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
 				else
 					self.items[no]:setWidgetValue("itemno",nil)
 				end
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "repeatstatusicon" then
-			if player then
-				local status = tonumber(player:getPlayerStatus()["playlist repeat"])
-				if status == 1 then
-					status = "song"
-				elseif status == 2 then
-					status = "playlist"
-				else
-					status = nil
-				end
-				log:debug("Repeat state is "..tostring(status))
-				if status and self.images[self.mode.."item"..no.."."..status] then
-					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+			if licensed then
+				if player then
+					local status = tonumber(player:getPlayerStatus()["playlist repeat"])
+					if status == 1 then
+						status = "song"
+					elseif status == 2 then
+						status = "playlist"
+					else
+						status = nil
+					end
+					log:debug("Repeat state is "..tostring(status))
+					if status and self.images[self.mode.."item"..no.."."..status] then
+						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..status])
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
 				else
 					self.items[no]:setWidgetValue("itemno",nil)
 				end
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "playstatusicon" then
-			if player then
-				local mode = player:getPlayerStatus()["mode"]
-				log:debug("Play state is "..tostring(mode))
-				if mode and self.images[self.mode.."item"..no.."."..mode] then
-					self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..mode])
+			if licensed then
+				if player then
+					local mode = player:getPlayerStatus()["mode"]
+					log:debug("Play state is "..tostring(mode))
+					if mode and self.images[self.mode.."item"..no.."."..mode] then
+						self.items[no]:setWidgetValue("itemno",self.images[self.mode.."item"..no.."."..mode])
+					else
+						self.items[no]:setWidgetValue("itemno",nil)
+					end
 				else
 					self.items[no]:setWidgetValue("itemno",nil)
 				end
-			else
-				self.items[no]:setWidgetValue("itemno",nil)
 			end
 		elseif item.itemtype == "timeicon" then
-			if _getString(item.text,nil) ~= nil then
-				local number = _getNumber(os.date(item.text),0)
-				if self.images[self.mode.."item"..no] then
-					local w,h = self.images[self.mode.."item"..no]:getSize()
-					if self.items[no]:getWidget("itemno"):getImage() == nil then
-						self.items[no]:setWidgetValue("itemno",Surface:newRGB(item.width,h))
-					end
-					if self.images[self.mode.."item"..no..".background"] ~= nil then
-						self.images[self.mode.."item"..no..".background"]:blit(self.items[no]:getWidget("itemno"):getImage(),0,0)
-					end
-					if number*item.width<w then
-						self.images[self.mode.."item"..no]:blitClip(number*item.width,0,item.width,h,self.items[no]:getWidget("itemno"):getImage(),0,0)
+			if licensed then
+				if _getString(item.text,nil) ~= nil then
+					local number = _getNumber(os.date(item.text),0)
+					if self.images[self.mode.."item"..no] then
+						local w,h = self.images[self.mode.."item"..no]:getSize()
+						if self.items[no]:getWidget("itemno"):getImage() == nil then
+							self.items[no]:setWidgetValue("itemno",Surface:newRGB(item.width,h))
+						end
+						if self.images[self.mode.."item"..no..".background"] ~= nil then
+							self.images[self.mode.."item"..no..".background"]:blit(self.items[no]:getWidget("itemno"):getImage(),0,0)
+						end
+						if number*item.width<w then
+							self.images[self.mode.."item"..no]:blitClip(number*item.width,0,item.width,h,self.items[no]:getWidget("itemno"):getImage(),0,0)
+						end
 					end
 				end
 			end
 		elseif item.itemtype == "ratingicon" then
-			self:_updateRatingIcon(self.items[no],"item"..no,nil)
+			if licensed then
+				self:_updateRatingIcon(self.items[no],"item"..no,nil)
+			end
 		elseif item.itemtype == "ratingplayingicon" then
-			self:_updateRatingIcon(self.items[no],"item"..no,"play")
+			if licensed then
+				self:_updateRatingIcon(self.items[no],"item"..no,"play")
+			end
 		elseif item.itemtype == "ratingstoppedicon" then
-			self:_updateRatingIcon(self.items[no],"item"..no,"stop")
+			if licensed then
+				self:_updateRatingIcon(self.items[no],"item"..no,"stop")
+			end
 		elseif item.itemtype == "switchingtrackplayingtext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop")
 		elseif item.itemtype == "switchingtrackstoppedtext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play")
 		elseif item.itemtype == "switchingtracktext" then
-			_updateNowPlaying(self.nowPlaying,self.items[no],"itemno")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno")
 		elseif item.itemtype == "tracktext" then
 			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text)
 		elseif item.itemtype == "trackplayingtext" then
@@ -4000,6 +4140,7 @@ end
 function _imageUpdate(self)
 	log:debug("Initiating image update (offset="..self.offset.. " minutes)")
 
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"icon$") and item.itemtype ~= "imageicon" and item.itemtype ~= "rssicon" then
@@ -4189,6 +4330,7 @@ function _getClockSkin(self,skin)
 		},			
 	}
 	
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	local no = 1
 	for _,item in pairs(self.configItems) do
 		if string.find(item.itemtype,"text$") then
@@ -4198,12 +4340,16 @@ function _getClockSkin(self,skin)
 				x = _getNumber(item.posx,0),
 				zOrder = _getNumber(item.order,4),
 			}
+			local fontSize = _getNumber(item.fontsize,20)
+			if not licensed and fontSize>20 and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
+				fontSize = 20
+			end
 			local font = nil
 			if _getString(item.fonturl,nil) then
-				font = self:_retrieveFont(item.fonturl,item.fontfile,_getNumber(item.fontsize,20))
+				font = self:_retrieveFont(item.fonturl,item.fontfile,fontSize)
 			end
 			if not font then
-				font = self:_loadFont(self:getSettings()["font"],_getNumber(item.fontsize,20))
+				font = self:_loadFont(self:getSettings()["font"],fontSize)
 			end
 			local extraHeight = 0
 			if _getString(item.animate,"true") == "true" then

@@ -46,6 +46,8 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
+	appletManager:callService("registerLicensedApplet","CustomClock",nil,"Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license")
+	appletManager:callService("isLicensedApplet","CustomClock")
 	for i=1,9 do
 		local style = ""
 		if self:getSettings()["config"..i.."style"] then
