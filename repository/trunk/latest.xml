@@ -43,15 +43,15 @@
                         <sha>2a06ce923e506f0fb77527a33e41d32262ec689e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.9.3431" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.9.3516" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected so it's possible to access Extras/CustomClock with no styles configured
+                        <changes lang="EN">- The License Manager applet must be installed for this version to work
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3431.zip</url>
-                        <sha>ec4ff8bb54c9829f4e55e29c3584d1eee2d49ed7</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3516.zip</url>
+                        <sha>dc8f4c1e49b37cb14065bf57a3345366b1ec876d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
@@ -100,16 +100,16 @@
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="LicenseManager" version="1.1.64" minTarget="7.4" maxTarget="*">
+                <applet name="LicenseManager" version="1.1.66" minTarget="7.4" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">License Manager applet, this is required for licensed applets to work and it will give you and overview of installed licensed applets and their licensing status.
                         </desc>
-                        <changes lang="EN">- Correction of behavior when no mysqueezebox.com account has been set in SBS
+                        <changes lang="EN">- Correction so settings aren't stored more often than necessary
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.64.zip</url>
-                        <sha>13bca9fd7a2501bdd933338695853b42cb3b6263</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.66.zip</url>
+                        <sha>19c782a47342dca8b479127299c2b935ff25cc4d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
@@ -391,15 +391,15 @@
                         <sha>5d58baac67ff9b8ff965ed9c0f5a55646140cd9f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
-		<plugin name="CustomClockHelper" version="2.9.3306" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomClockHelper" version="2.9.3516" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Clock Helper</title>
                         <desc lang="EN">This is a helper plugin for the Custom Clock screen saver applet, it makes it possible to create your own clock styles and modify the existing styles (Controller, Radio, Touch, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for timeicon, was accidentally removed in previous release
+			<changes lang="EN">- License Manager plugin must be installed for this version to work
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3306.zip</url>
-                        <sha>8929615904e56e146b96bc8a416de79b5317cf9c</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3516.zip</url>
+                        <sha>553ee284e15db0f918da9b1895a5a7e7fb81c4ea</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
 				<plugin name="SongInfo" version="1.1.3422" minTarget="7.4.0" maxTarget="*">
