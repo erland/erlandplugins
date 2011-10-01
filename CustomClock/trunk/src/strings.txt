@@ -629,3 +629,6 @@ SCREENSAVER_CUSTOMCLOCK_SETTINGS_UNLICENSED
 SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE
 	EN	Requires license, see License Manager applet, installed through Settings/Advanced/Applet Installer
 
+SCREENSAVER_CUSTOMCLOCK_LICENSE_MORE_STYLES
+	EN	To get full functionality in all styles and possibility to customize styles from Custom Clock Helper plugin you need a license.
+
