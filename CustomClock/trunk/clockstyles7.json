@@ -759,7 +759,7 @@
 						"url": "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/black50_touch.png"
 					},
 					{
-						"itemtype": "coverplayingicon"
+						"itemtype": "coverplayingicon",
 						"free": 1
 					},
 					{
