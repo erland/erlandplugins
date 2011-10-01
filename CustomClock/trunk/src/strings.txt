@@ -623,3 +623,9 @@ MONTH_SHORT_12
 	RU	Дек
 	SV	dec
 
+SCREENSAVER_CUSTOMCLOCK_SETTINGS_UNLICENSED
+	EN	Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license to get full functionality
+	
+SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE
+	EN	Requires license, see License Manager applet, installed through Settings/Advanced/Applet Installer
+
