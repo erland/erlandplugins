@@ -1280,6 +1280,10 @@ function defineSettingStyleSink(self,title,mode,data)
 	local window = Window("icon_list", title, 'settingstitle')
 	local menu = SimpleMenu("menu")
 	menu:setComparator(menu.itemComparatorWeightAlpha)
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
+	if not licensed then
+		menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_CUSTOMCLOCK_LICENSE_MORE_STYLES")))
+	end
 	window:addWidget(menu)
 	local group = RadioGroup()
 	if mode == "confignowplaying" then
