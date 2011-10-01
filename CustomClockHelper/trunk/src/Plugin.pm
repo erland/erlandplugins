@@ -274,7 +274,7 @@ sub getStyles {
 	my $styles = {};
 	if(!$localOnly) {
 		my $http = LWP::UserAgent->new;
-		my $response = $http->get("http://erlandplugins.googlecode.com/svn/CustomClock/trunk/clockstyles6.json");
+		my $response = $http->get("http://erlandplugins.googlecode.com/svn/CustomClock/trunk/clockstyles7.json");
 		if($response->is_success) {
 			my $jsonStyles = $response->content;
 			eval {
@@ -406,6 +406,18 @@ sub getTitleFormats {
 
 	$request->addResult('titleformats', $titleFormatsHash);
 	$request->setStatusDone();
+}
+
+sub isPluginsInstalled {
+	my $client = shift;
+	my $pluginList = shift;
+	my $enabledPlugin = 1;
+	foreach my $plugin (split /,/, $pluginList) {
+		if($enabledPlugin) {
+			$enabledPlugin = grep(/$plugin/, Slim::Utils::PluginManager->enabledPlugins($client));
+		}
+	}
+	return $enabledPlugin;
 }
 
 *escape   = \&URI::Escape::uri_escape_utf8;

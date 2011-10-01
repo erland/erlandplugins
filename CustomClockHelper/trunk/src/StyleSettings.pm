@@ -1077,7 +1077,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'appleticon') {	
 		return qw(itemtype icontype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order image interval);
 	}elsif($itemType eq 'applettext') {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime texttype text interval color posx posy width align fonturl fontfile fontsize lineheight height margin animate order line1fontsize line1height line2fontsize line2height line3fontsize line3height);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime texttype text interval color posx posy width align fonturl fontfile fontsize lineheight height margin animate order linelength line1fontsize line1height line2fontsize line2height line3fontsize line3height);
 	}elsif($itemType eq 'imageicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime framewidth framerate posx posy width height order url interval clipx clipy clipwidth clipheight);
 	}elsif($itemType eq 'sdtsporttext') {	
@@ -1105,7 +1105,7 @@ sub getItemTypeParameters {
 	}elsif($itemType eq 'sdtstockicon') {	
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy width height order logotype interval stock);
 	}elsif($itemType =~ /text$/) {	
-		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order line1fontsize line1height line2fontsize line2height line3fontsize line3height);
+		return qw(itemtype visibilitygroup visibilityorder visibilitytime text color posx posy width align fonturl fontfile fontsize margin animate order lineheight linelength line1fontsize line1height line2fontsize line2height line3fontsize line3height);
 	}elsif($itemType =~ /^cover/) {
 		return qw(itemtype visibilitygroup visibilityorder visibilitytime posx posy size align order);
 	}elsif($itemType =~ /^elapsedimage$/) {
