@@ -751,7 +751,7 @@ function openScreensaver(self,mode, transition)
 		for no,item in pairs(self.configItems) do
 			if string.find(item.itemtype,"text$") and _getString(item.animate,"true") == "true" then
 				self.items[no]:getWidget("itemno"):animate(true)
-			elseif not licensed and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
+			elseif not licensed and not item.free and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
 				self.items[no]:getWidget("itemno"):animate(true)
 			end
 		end
@@ -1151,7 +1151,6 @@ end
 function _updateTitleFormatInfo(self,player)
 	local server = player:getSlimServer()
 	if server then
-		local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 		server:userRequest(function(chunk,err)
 				if err then
 					log:warn(err)
@@ -1163,16 +1162,6 @@ function _updateTitleFormatInfo(self,player)
 						self.titleformats["CONDUCTOR"] = chunk.data.playlist_loop[index+1].conductor
 						self.titleformats["TRACKARTIST"] = chunk.data.playlist_loop[index+1].trackartist
 						self.titleformats["ALBUMARTIST"] = chunk.data.playlist_loop[index+1].albumartist
-						self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
-						self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
-						self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
-						self.titleformats["DISCCOUNT"] = chunk.data.playlist_loop[index+1].disccount
-					elseif not licensed then
-						self.titleformats["BAND"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
-						self.titleformats["COMPOSER"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
-						self.titleformats["CONDUCTOR"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
-						self.titleformats["TRACKARTIST"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
-						self.titleformats["ALBUMARTIST"] = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
 						self.titleformats["RATING"] = chunk.data.playlist_loop[index+1].rating
 						self.titleformats["TRACKNUM"] = chunk.data.playlist_loop[index+1].tracknum
 						self.titleformats["DISC"] = chunk.data.playlist_loop[index+1].disc
@@ -1191,6 +1180,7 @@ end
 function defineSettingStyle(self,mode,menuItem)
 	
 	local player = appletManager:callService("getCurrentPlayer")
+	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
 		local server = player:getSlimServer()
 		if server then
@@ -1198,7 +1188,7 @@ function defineSettingStyle(self,mode,menuItem)
 					if err then
 						log:warn(err)
 					else
-						if tonumber(chunk.data._can) == 1 then
+						if licensed and tonumber(chunk.data._can) == 1 then
 							log:info("CustomClockHelper is installed retrieving local styles")
 							server:userRequest(function(chunk,err)
 									if err then
@@ -1249,7 +1239,7 @@ function _getOnlineStylesSink(self,title,mode)
 				self:defineSettingStyleSink(title,mode,chunk.data)
 			end
 		end,
-		'GET', "/svn/CustomClock/trunk/clockstyles6.json")
+		'GET', "/svn/CustomClock/trunk/clockstyles7.json")
 	http:fetch(req)
 end
 
@@ -1654,7 +1644,7 @@ function _extractTrackInfo(_track, _itemType)
         end
 end
 
-function _updateRatingIcon(self,widget,id,mode)
+function _updateRatingIcon(self,widget,id,mode,free)
 	local player = appletManager:callService("getCurrentPlayer")
 	if player then
 		local licensed = appletManager:callService("isLicensedApplet","CustomClock")
@@ -1662,13 +1652,13 @@ function _updateRatingIcon(self,widget,id,mode)
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 			local rating = self.titleformats["RATING"]
 			local trackstatrating = self.customtitleformats["TRACKSTATRATINGNUMBER"]
-			if licensed and trackstatrating then
+			if (licensed or free) and trackstatrating then
 				if self.images[self.mode..id.."."..trackstatrating] then
 					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..trackstatrating])
 				else
 					widget:setWidgetValue("itemno",nil)
 				end
-			elseif licensed and rating then
+			elseif (licensed or free) and rating then
 				rating = math.floor((rating + 10)/ 20)
 				if self.images[self.mode..id.."."..rating] then
 					widget:setWidgetValue("itemno",self.images[self.mode..id.."."..rating])
@@ -1687,7 +1677,7 @@ function _updateRatingIcon(self,widget,id,mode)
 		widget:setWidgetValue("itemno",nil)
 	end
 end
-function _updateNowPlaying(self,itemType,widget,id,mode)
+function _updateNowPlaying(self,itemType,widget,id,mode,free)
 	local player = appletManager:callService("getCurrentPlayer")
 	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
@@ -1695,7 +1685,7 @@ function _updateNowPlaying(self,itemType,widget,id,mode)
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 			if playerStatus.item_loop then
 				local trackInfo = _extractTrackInfo(playerStatus.item_loop[1],itemType)
-				if licensed and trackInfo != "" then
+				if (licensed or free) and trackInfo != "" then
 					widget:setWidgetValue(id,trackInfo)
 				elseif trackInfo != "" then
 					widget:setWidgetValue(id,tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
@@ -1711,7 +1701,7 @@ function _updateNowPlaying(self,itemType,widget,id,mode)
 	end
 end
 
-function _updateStaticNowPlaying(self,widget,id,format,mode)
+function _updateStaticNowPlaying(self,widget,id,format,mode,free)
 	local player = appletManager:callService("getCurrentPlayer")
 	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
@@ -1759,7 +1749,7 @@ function _updateStaticNowPlaying(self,widget,id,format,mode)
 					text = string.gsub(text,"X_OF_Y","")
 				end
 
-				if licensed or text == "" then
+				if licensed or free or text == "" then
 					widget:setWidgetValue(id,text)
 				elseif text != "" then
 					widget:setWidgetValue(id,tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))				
@@ -2236,8 +2226,8 @@ function _updateRSSItem(self,category,items)
 							end
 							log:debug("Retrieved("..index.."): "..text)
 							if not licensed then
-								title = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
-								description = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))
+								title = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))..": "..title
+								description = tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE"))..": "..description
 							end
 							itemsData[index] = {
 								uniqueID = id,
@@ -3097,13 +3087,13 @@ function _updateGalleryImage(self,widget,id,width,height,favorite)
 	end
 end
 
-function _updateAlbumCover(self,widget,id,size,mode,index)
+function _updateAlbumCover(self,widget,id,size,mode,index,free)
 	local player = appletManager:callService("getCurrentPlayer")
 	local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 	if player then
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
-			if playerStatus.item_loop and licensed then
+			if playerStatus.item_loop and (licensed or free) then
 				local iconId = nil
 				if playerStatus.item_loop[index] then
 					iconId = playerStatus.item_loop[index]["icon-id"] or playerStatus.item_loop[index]["icon"]
@@ -3195,19 +3185,19 @@ function _tick(self,forcedUpdate)
 	self.refreshCustomItemTypes = {}
 	for _,item in pairs(self.configItems) do
 		if item.itemtype == "timetext" then
-			if licensed then
+			if licensed or item.free then
 				self.items[no]:setWidgetValue("itemno",self:_getLocalizedDateInfo(nil,_getString(item.text,"%H:%M")))
 			else
 				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
 			end
 		elseif item.itemtype == "text" then
-			if licensed then
+			if licensed or item.free then
 				self.items[no]:setWidgetValue("itemno",item.text)
 			else
 				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
 			end
 		elseif item.itemtype == "alarmtimetext" then
-			if licensed and player then
+			if (licensed or item.free) and player then
 				local alarmtime = player:getPlayerStatus()["alarm_next"]
 				local alarmstate = player:getPlayerStatus()["alarm_state"]
 
@@ -3216,13 +3206,13 @@ function _tick(self,forcedUpdate)
 				else
 					self.items[no]:setWidgetValue("itemno","")
 				end
-			elseif licensed then
+			elseif (licensed or item.free) then
 				self.items[no]:setWidgetValue("itemno","")
 			else
 				self.items[no]:setWidgetValue("itemno",tostring(self:string("SCREENSAVER_CUSTOMCLOCK_NEEDS_LICENSE")))
 			end
 		elseif item.itemtype == "wirelessicon" then
-			if licensed then
+			if licensed or item.free then
 				local wirelessMode = string.gsub(iconbar.iconWireless:getStyle(),"^button_wireless_","")
 				log:debug("Wireless status is "..tostring(wirelessMode))
 				if self.images[self.mode.."item"..no.."."..wirelessMode] then
@@ -3235,7 +3225,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "sleepicon" then
-			if licensed then
+			if licensed or item.free then
 				local sleepMode = string.gsub(iconbar.iconSleep:getStyle(),"^button_sleep_","")
 				log:debug("Sleep status is "..tostring(sleepMode))
 				if self.images[self.mode.."item"..no.."."..sleepMode] then
@@ -3248,7 +3238,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "batteryicon" then
-			if licensed then
+			if licensed or item.free then
 				local batteryMode = string.gsub(iconbar.iconBattery:getStyle(),"^button_battery_","")
 				log:debug("Battery status is "..tostring(batteryMode))
 				if self.images[self.mode.."item"..no.."."..batteryMode] then
@@ -3260,7 +3250,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "alarmicon" then
-			if licensed then
+			if licensed or item.free then
 				if player then
 					local alarmstate = player:getPlayerStatus()["alarm_state"]
 
@@ -3279,7 +3269,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "shufflestatusicon" then
-			if licensed then
+			if licensed or item.free then
 				if player then
 					local status = tonumber(player:getPlayerStatus()["playlist shuffle"])
 					if status == 1 then
@@ -3300,7 +3290,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "repeatstatusicon" then
-			if licensed then
+			if licensed or item.free then
 				if player then
 					local status = tonumber(player:getPlayerStatus()["playlist repeat"])
 					if status == 1 then
@@ -3321,7 +3311,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "playstatusicon" then
-			if licensed then
+			if licensed or item.free then
 				if player then
 					local mode = player:getPlayerStatus()["mode"]
 					log:debug("Play state is "..tostring(mode))
@@ -3335,7 +3325,7 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "timeicon" then
-			if licensed then
+			if licensed or item.free then
 				if _getString(item.text,nil) ~= nil then
 					local number = _getNumber(os.date(item.text),0)
 					if self.images[self.mode.."item"..no] then
@@ -3353,29 +3343,29 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "ratingicon" then
-			if licensed then
-				self:_updateRatingIcon(self.items[no],"item"..no,nil)
+			if licensed or item.free then
+				self:_updateRatingIcon(self.items[no],"item"..no,nil,item.free)
 			end
 		elseif item.itemtype == "ratingplayingicon" then
-			if licensed then
-				self:_updateRatingIcon(self.items[no],"item"..no,"play")
+			if licensed or item.free then
+				self:_updateRatingIcon(self.items[no],"item"..no,"play",item.free)
 			end
 		elseif item.itemtype == "ratingstoppedicon" then
-			if licensed then
-				self:_updateRatingIcon(self.items[no],"item"..no,"stop")
+			if licensed or item.free then
+				self:_updateRatingIcon(self.items[no],"item"..no,"stop",item.free)
 			end
 		elseif item.itemtype == "switchingtrackplayingtext" then
-			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","stop",item.free)
 		elseif item.itemtype == "switchingtrackstoppedtext" then
-			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno","play",item.free)
 		elseif item.itemtype == "switchingtracktext" then
-			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno")
+			self:_updateNowPlaying(self.nowPlaying,self.items[no],"itemno",nil,item.free)
 		elseif item.itemtype == "tracktext" then
-			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text)
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,nil,item.free)
 		elseif item.itemtype == "trackplayingtext" then
-			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"play")
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"play",item.free)
 		elseif item.itemtype == "trackstoppedtext" then
-			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop")
+			self:_updateStaticNowPlaying(self.items[no],"itemno",item.text,"stop",item.free)
 		elseif item.itemtype == "sdttext" then
 			if forcedUpdate then
 				self:_updateFromCache(no)		
@@ -3535,23 +3525,23 @@ function _tick(self,forcedUpdate)
 				end
 			end
 		elseif item.itemtype == "covericon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,1,item.free)
 			-- Pre-load next artwork
-			self:_updateAlbumCover(nil,"itemno",item.size,nil,2)
+			self:_updateAlbumCover(nil,"itemno",item.size,nil,2,item.free)
 		elseif item.itemtype == "coverplayingicon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",1)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",1,item.free)
 			-- Pre-load next artwork
-			self:_updateAlbumCover(nil,"itemno",item.size,"play",2)
+			self:_updateAlbumCover(nil,"itemno",item.size,"play",2,item.free)
 		elseif item.itemtype == "coverstoppedicon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",1)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",1,item.free)
 			-- Pre-load next artwork
-			self:_updateAlbumCover(nil,"itemno",item.size,"stop",2)
+			self:_updateAlbumCover(nil,"itemno",item.size,"stop",2,item.free)
 		elseif item.itemtype == "covernexticon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,2)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,nil,2,item.free)
 		elseif item.itemtype == "covernextplayingicon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",2)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,"play",2,item.free)
 		elseif item.itemtype == "covernextstoppedicon" then
-			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2)
+			self:_updateAlbumCover(self.items[no],"itemno",item.size,"stop",2,item.free)
 		elseif item.itemtype == "galleryicon" then
 			if forcedUpdate or self.lastminute!=minute or (_getNumber(item.interval,nil) and second % tonumber(item.interval) == 0) then
 				self:_updateFromCache(no)		
@@ -4341,7 +4331,7 @@ function _getClockSkin(self,skin)
 				zOrder = _getNumber(item.order,4),
 			}
 			local fontSize = _getNumber(item.fontsize,20)
-			if not licensed and fontSize>20 and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
+			if not item.free and not licensed and fontSize>20 and (item.itemtype == "text" or string.find(item.itemtype,"timetext$") or string.find(item.itemtype,"track.*text$")) then
 				fontSize = 20
 			end
 			local font = nil
