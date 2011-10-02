@@ -52,7 +52,7 @@
                 </plugin>
 		<plugin name="DynamicPlayList">
                         <title lang="EN">Dynamic Playlist</title>
-                        <desc lang="EN">Currently free of charge but you can make a voluntary payment now to encourage further development
+                        <desc lang="EN">Requires a license, no functionality in Dynamic Playlist is available for unlicensed users. Note that Dynamic Playlist is included for free if you purchase a license to SQL Playlist plugin.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
@@ -69,7 +69,7 @@
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=MultiLibrary</licenseLink>
                 </plugin>
 		<plugin name="SQLPlayList">
-                        <title lang="EN">SQL Playlist</title>
+                        <title lang="EN">SQL Playlist (Incl. Dynamic Playlist)</title>
                         <desc lang="EN">Requires a license, no functionality is available to unlicensed users. If you pay for SQL Playlist you currently get Dynamic Playlist plugin for free during the same license period.
 			</desc>
 			<creator>Erland Isaksson</creator>
