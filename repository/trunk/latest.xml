@@ -66,16 +66,16 @@
                         <sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="ScreenSwitcher" version="1.1.3202" minTarget="7.4" maxTarget="*">
+                <applet name="ScreenSwitcher" version="1.1.3519" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher</title>
                         <desc lang="EN">Switch continuously between different screen savers.
                         </desc>
-                        <changes lang="EN">- Corrected so screen switching time can be configured
+                        <changes lang="EN">- The License Manager applet must be installed for this version to work
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3202.zip</url>
-                        <sha>dfffa496b201f7d94cfe4575d873da6e3239077f</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3519.zip</url>
+                        <sha>58edb1bf8a47ef701f838cc3db74c0e7d89828c7</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="SettingsRemover" target="jive|fab4|baby" version="1.0.30" minTarget="7.4" maxTarget="*">
