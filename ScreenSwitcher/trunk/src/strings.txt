@@ -101,3 +101,6 @@ SCREENSAVER_SCREENSWITCHER_SETTINGS_WEEKDAYS_SHORT_5
 SCREENSAVER_SCREENSWITCHER_SETTINGS_WEEKDAYS_SHORT_6
 	EN	Sat
 
+SCREENSAVER_SCREENSWITCHER_SETTINGS_UNLICENSED
+	EN	Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license to get full functionality
+

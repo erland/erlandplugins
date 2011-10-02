@@ -33,6 +33,7 @@ local Applet           = require("jive.Applet")
 local System           = require("jive.System")
 local Window           = require("jive.ui.Window")
 local Group            = require("jive.ui.Group")
+local Textarea         = require("jive.ui.Textarea")
 local Framework        = require("jive.ui.Framework")
 local SimpleMenu       = require("jive.ui.SimpleMenu")
 local RadioGroup       = require("jive.ui.RadioGroup")
@@ -73,7 +74,8 @@ end
 function openScreensaver(self,random)
 	self.random = false
 	self.player = appletManager:callService("getCurrentPlayer")
-	if random then
+	local licensed = appletManager:callService("isLicensedApplet","ScreenSwitcher")
+	if random or not licensed then
 		self.random = true
 	end
 	if not self.currentPosition then
@@ -291,56 +293,36 @@ function openSettings(self)
 	})
 	local window = Window("icon_list", self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS"), 'settingstitle')
 
+	local licensed = appletManager:callService("isLicensedApplet","ScreenSwitcher")
 	local menu = SimpleMenu("menu")
+	if not licensed then
+		menu:setHeaderWidget(Textarea("help_text", self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_UNLICENSED")))
+	end
 	window:addWidget(menu)
-
-	for i = 1,3 do
-		local name = " "
-		local timelimited = true
-		local no = i
-		if i == 3 then
-			name = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_DEFAULT"))
-			timelimited = false
-			no = ""
-		else
-			name = name .. self:_getDateTimeSelectionString("playing"..i)
+	if licensed then
+		for i = 1,3 do
+			local name = " "
+			local timelimited = true
+			local no = i
+			if i == 3 then
+				name = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_DEFAULT"))
+				timelimited = false
+				no = ""
+			else
+				name = name .. self:_getDateTimeSelectionString("playing"..i)
+			end
+			menu:addItem(
+				{
+					text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_PLAYING")).." #"..i.."\n"..name, 
+					style = 'item_no_icon',
+					sound = "WINDOWSHOW",
+					callback = function(event, menuItem)
+						self:defineSettingScreens(menuItem,"playing"..no,timelimited)
+						return EVENT_CONSUME
+					end
+				}
+			)
 		end
-		menu:addItem(
-			{
-				text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_PLAYING")).." #"..i.."\n"..name, 
-				style = 'item_no_icon',
-				sound = "WINDOWSHOW",
-				callback = function(event, menuItem)
-					self:defineSettingScreens(menuItem,"playing"..no,timelimited)
-					return EVENT_CONSUME
-				end
-			}
-		)
-	end
-	for i = 1,3 do
-		local name = ""
-		local timelimited = true
-		local no = i
-		if i == 3 then
-			name = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_DEFAULT"))
-			timelimited = false
-			no = ""
-		else
-			name = name .. self:_getDateTimeSelectionString("stopped"..i)
-		end
-		menu:addItem(
-			{
-				text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_STOPPED")).." #"..i.."\n"..name, 
-				style = 'item_no_icon',
-				sound = "WINDOWSHOW",
-				callback = function(event, menuItem)
-					self:defineSettingScreens(menuItem,"stopped"..no,timelimited)
-					return EVENT_CONSUME
-				end
-			}
-		)
-	end
-	if System:getMachine() ~= "jive" then
 		for i = 1,3 do
 			local name = ""
 			local timelimited = true
@@ -350,22 +332,46 @@ function openSettings(self)
 				timelimited = false
 				no = ""
 			else
-				name = name .. self:_getDateTimeSelectionString("off"..i)
+				name = name .. self:_getDateTimeSelectionString("stopped"..i)
 			end
 			menu:addItem(
 				{
-					text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_OFF")).." #"..i.."\n"..name, 
+					text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_STOPPED")).." #"..i.."\n"..name, 
 					style = 'item_no_icon',
 					sound = "WINDOWSHOW",
 					callback = function(event, menuItem)
-						self:defineSettingScreens(menuItem,"off"..no,timelimited)
+						self:defineSettingScreens(menuItem,"stopped"..no,timelimited)
 						return EVENT_CONSUME
 					end
 				}
 			)
 		end
+		if System:getMachine() ~= "jive" then
+			for i = 1,3 do
+				local name = ""
+				local timelimited = true
+				local no = i
+				if i == 3 then
+					name = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_DEFAULT"))
+					timelimited = false
+					no = ""
+				else
+					name = name .. self:_getDateTimeSelectionString("off"..i)
+				end
+				menu:addItem(
+					{
+						text = tostring(self:string("SCREENSAVER_SCREENSWITCHER_SETTINGS_OFF")).." #"..i.."\n"..name, 
+						style = 'item_no_icon',
+						sound = "WINDOWSHOW",
+						callback = function(event, menuItem)
+							self:defineSettingScreens(menuItem,"off"..no,timelimited)
+							return EVENT_CONSUME
+						end
+					}
+				)
+			end
+		end
 	end
-
 	self:tieAndShowWindow(window)
 	return window
 end
