@@ -148,16 +148,15 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.11.3435" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.11.3525" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added possibility to rate track directly from Song Info page
-			- Corrected SQL Playlist templates for recently added tracks/albums so they work with 7.6
+			<changes lang="EN">- License Manager plugin must be installed for this version to work
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3435.zip</url>
-			<sha>d16cc09580e6ac78dd54bcbf71df3768a989f9b2</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3525.zip</url>
+			<sha>eac257edd98b3d8da819f4019dcc3af78b9c7d5e</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -203,18 +202,15 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3489" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.8.3526" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected problem where some SQL statements stopped working after a full rescan due to missing SQLite functions
-			- Corrected issue where the MixedTag scanner didn't store Musicbrainz identities properly and caused long startup times at next server restart
-			- Corrected issues related to disc usage during scanning with huge WAL files in 7.6
-			- License Manager Plugin must be installed for this version to provide full functionality
+			<changes lang="EN">- Corrected so running an individual scanning module (like RatingTag) indicates scanning status in Custom Scan settings page
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3489.zip</url>
-                        <sha>b5121c6b04955d0b0e5a61f1b702808a81a1a9c3</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3526.zip</url>
+                        <sha>394c108164dd97b571bef8e6c9aa83a698447ad0</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
