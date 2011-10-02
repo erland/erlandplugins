@@ -969,7 +969,10 @@ sub initPlayLists {
 		}
 	}
 	use strict 'refs';
-	addAlarmPlaylists(\%localPlayLists);
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:DynamicPlayList']);
+	if($validateRequest->getResult("result")) {
+		addAlarmPlaylists(\%localPlayLists);
+	}
 	$playLists = \%localPlayLists;
 	$playListItems = \%localPlayListItems;
 
@@ -1209,101 +1212,128 @@ sub setModeMixer {
 
 	my $masterClient = masterOrSelf($client);
 
-	my @listRef = ();
-	initFilters();
-	initPlayLists($client);
-	initPlayListTypes();
-	my $playlisttype = $client->modeParam('playlisttype');
-	my $showFlat = $prefs->get('flatlist');
-	if($showFlat || defined($client->modeParam('flatlist'))) {
-		foreach my $flatItem (sort keys %$playLists) {
-			my $playlist = $playLists->{$flatItem};
-			if($playlist->{'dynamicplaylistenabled'}) {
-				my %flatPlaylistItem = (
-					'playlist' => $playlist,
-					'dynamicplaylistenabled' => 1,
-					'value' => $playlist->{'dynamicplaylistid'}
-				);
-				if(!defined($playlisttype)) {
-					push @listRef, \%flatPlaylistItem;
-				}else {
-					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
+	my $licenseManager = Plugins::DynamicPlayList::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:DynamicPlayList']);
+	my $licensed = $validateRequest->getResult("result");
+
+	if($licenseManager && $licensed) {
+		my @listRef = ();
+		initFilters();
+		initPlayLists($client);
+		initPlayListTypes();
+		my $playlisttype = $client->modeParam('playlisttype');
+		my $showFlat = $prefs->get('flatlist');
+		if($showFlat || defined($client->modeParam('flatlist'))) {
+			foreach my $flatItem (sort keys %$playLists) {
+				my $playlist = $playLists->{$flatItem};
+				if($playlist->{'dynamicplaylistenabled'}) {
+					my %flatPlaylistItem = (
+						'playlist' => $playlist,
+						'dynamicplaylistenabled' => 1,
+						'value' => $playlist->{'dynamicplaylistid'}
+					);
+					if(!defined($playlisttype)) {
 						push @listRef, \%flatPlaylistItem;
+					}else {
+						if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
+							push @listRef, \%flatPlaylistItem;
+						}
 					}
 				}
 			}
-		}
-	}else {
-		foreach my $menuItemKey (sort keys %$playListItems) {
-			if($playListItems->{$menuItemKey}->{'dynamicplaylistenabled'}) {
-				if(!defined($playlisttype)) {
-					push @listRef, $playListItems->{$menuItemKey};
-				}else {
-					if(defined($playListItems->{$menuItemKey}->{'playlist'})) {
-						my $playlist = $playListItems->{$menuItemKey}->{'playlist'};
-						if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
+		}else {
+			foreach my $menuItemKey (sort keys %$playListItems) {
+				if($playListItems->{$menuItemKey}->{'dynamicplaylistenabled'}) {
+					if(!defined($playlisttype)) {
+						push @listRef, $playListItems->{$menuItemKey};
+					}else {
+						if(defined($playListItems->{$menuItemKey}->{'playlist'})) {
+							my $playlist = $playListItems->{$menuItemKey}->{'playlist'};
+							if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
+								push @listRef, $playListItems->{$menuItemKey};
+							}
+						}else {
 							push @listRef, $playListItems->{$menuItemKey};
 						}
+					}
+				}
+			}
+			my $playlistgroup = $client->modeParam('selectedgroup');
+			if($playlistgroup) {
+				my @playlistGroups = split(/\//,$playlistgroup);
+				if(enterSelectedGroup($client,\@listRef,\@playlistGroups)) {
+					return;
+				}
+			}
+		}
+
+		@listRef = sort { 
+			if(defined($a->{'name'}) && defined($b->{'name'})) {
+				return $a->{'name'} cmp $b->{'name'};
+			}
+			if(defined($a->{'name'}) && !defined($b->{'name'})) {
+				return $a->{'name'} cmp $b->{'playlist'}->{'name'};
+			}
+			if(!defined($a->{'name'}) && defined($b->{'name'})) {
+				return $a->{'playlist'}->{'name'} cmp $b->{'name'};
+			}
+			return $a->{'playlist'}->{'name'} cmp $b->{'playlist'}->{'name'} 
+		} @listRef;
+
+		# use PLUGIN.DynamicPlayList.Choice to display the list of feeds
+		my %params = (
+			header     => '{PLUGIN_DYNAMICPLAYLIST} {count}',
+			listRef    => \@listRef,
+			name       => \&getDisplayText,
+			overlayRef => \&getOverlay,
+			modeName   => 'PLUGIN.DynamicPlayList',
+			onPlay     => sub {
+				my ($client, $item) = @_;
+				if(defined($item->{'playlist'})) {
+					my $playlist = $item->{'playlist'};
+					if(defined($playlist->{'parameters'})) {
+						my %parameterValues = ();
+						my $i=1;
+						while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+							$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
+							$i++;
+						}
+						if(defined($client->modeParam('extrapopmode'))) {
+							$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
+						}
+						requestFirstParameter($client,$playlist,0,\%parameterValues);
 					}else {
-						push @listRef, $playListItems->{$menuItemKey};
+						handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
 					}
 				}
-			}
-		}
-		my $playlistgroup = $client->modeParam('selectedgroup');
-		if($playlistgroup) {
-			my @playlistGroups = split(/\//,$playlistgroup);
-			if(enterSelectedGroup($client,\@listRef,\@playlistGroups)) {
-				return;
-			}
-		}
-	}
-
-	@listRef = sort { 
-		if(defined($a->{'name'}) && defined($b->{'name'})) {
-			return $a->{'name'} cmp $b->{'name'};
-		}
-		if(defined($a->{'name'}) && !defined($b->{'name'})) {
-			return $a->{'name'} cmp $b->{'playlist'}->{'name'};
-		}
-		if(!defined($a->{'name'}) && defined($b->{'name'})) {
-			return $a->{'playlist'}->{'name'} cmp $b->{'name'};
-		}
-		return $a->{'playlist'}->{'name'} cmp $b->{'playlist'}->{'name'} 
-	} @listRef;
-
-	# use PLUGIN.DynamicPlayList.Choice to display the list of feeds
-	my %params = (
-		header     => '{PLUGIN_DYNAMICPLAYLIST} {count}',
-		listRef    => \@listRef,
-		name       => \&getDisplayText,
-		overlayRef => \&getOverlay,
-		modeName   => 'PLUGIN.DynamicPlayList',
-		onPlay     => sub {
-			my ($client, $item) = @_;
-			if(defined($item->{'playlist'})) {
+			},
+			onAdd      => sub {
+				my ($client, $item) = @_;
 				my $playlist = $item->{'playlist'};
-				if(defined($playlist->{'parameters'})) {
-					my %parameterValues = ();
-					my $i=1;
-					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
-						$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
-						$i++;
+				if(defined($item->{'playlist'})) {
+					if(defined($playlist->{'parameters'})) {
+						my %parameterValues = ();
+						my $i=1;
+						while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+							$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
+							$i++;
+						}
+						if(defined($client->modeParam('extrapopmode'))) {
+							$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
+						}
+						requestFirstParameter($client,$playlist,1,\%parameterValues);
+					}else {
+						handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
 					}
-					if(defined($client->modeParam('extrapopmode'))) {
-						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
-					}
-					requestFirstParameter($client,$playlist,0,\%parameterValues);
-				}else {
+				}
+			},
+			onRight    => sub {
+				my ($client, $item) = @_;
+				if(defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
 					handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
-				}
-			}
-		},
-		onAdd      => sub {
-			my ($client, $item) = @_;
-			my $playlist = $item->{'playlist'};
-			if(defined($item->{'playlist'})) {
-				if(defined($playlist->{'parameters'})) {
+				}elsif(defined($item->{'childs'})) {
+					Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
+				}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
 					my %parameterValues = ();
 					my $i=1;
 					while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
@@ -1313,59 +1343,64 @@ sub setModeMixer {
 					if(defined($client->modeParam('extrapopmode'))) {
 						$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
 					}
-					requestFirstParameter($client,$playlist,1,\%parameterValues);
+					requestFirstParameter($client,$item->{'playlist'},0,\%parameterValues)
 				}else {
-					handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 1);
+					$client->bumpRight();
 				}
-			}
-		},
-		onRight    => sub {
-			my ($client, $item) = @_;
-			if(defined($item->{'playlist'}) && $item->{'playlist'}->{'dynamicplaylistid'} eq 'disable') {
-				handlePlayOrAdd($client, $item->{'playlist'}->{'dynamicplaylistid'}, 0);
-			}elsif(defined($item->{'childs'})) {
-				Slim::Buttons::Common::pushModeLeft($client,'PLUGIN.DynamicPlayList.Choice',getSetModeDataForSubItems($client,$item,$item->{'childs'}));
-			}elsif(defined($item->{'playlist'}) && defined($item->{'playlist'}->{'parameters'})) {
-				my %parameterValues = ();
-				my $i=1;
-				while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
-					$parameterValues{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
-					$i++;
-				}
-				if(defined($client->modeParam('extrapopmode'))) {
-					$parameterValues{'extrapopmode'} = $client->modeParam('extrapopmode');
-				}
-				requestFirstParameter($client,$item->{'playlist'},0,\%parameterValues)
-			}else {
-				$client->bumpRight();
-			}
-		},
-		onFavorites	=> sub {
-			my ($client, $item, $arg) = @_;
-			if (defined $arg && $arg =~ /^add$|^add(\d+)/) {
-				addFavorite($client,$item,$1);
-			} elsif (Slim::Buttons::Common::mode($client) ne 'FAVORITES') {
-				Slim::Buttons::Common::setMode($client, 'home');
-				Slim::Buttons::Home::jump($client, 'FAVORITES');
-				Slim::Buttons::Common::pushModeLeft($client, 'FAVORITES');
-	                }
-		},
-	);
-	my $i=1;
-	while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
-		$params{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
-		$i++;
-	}
-	if(defined($client->modeParam('extrapopmode'))) {
-		$params{'extrapopmode'} = $client->modeParam('extrapopmode');
-	}
+			},
+			onFavorites	=> sub {
+				my ($client, $item, $arg) = @_;
+				if (defined $arg && $arg =~ /^add$|^add(\d+)/) {
+					addFavorite($client,$item,$1);
+				} elsif (Slim::Buttons::Common::mode($client) ne 'FAVORITES') {
+					Slim::Buttons::Common::setMode($client, 'home');
+					Slim::Buttons::Home::jump($client, 'FAVORITES');
+					Slim::Buttons::Common::pushModeLeft($client, 'FAVORITES');
+			        }
+			},
+		);
+		my $i=1;
+		while(defined($client->modeParam('dynamicplaylist_parameter_'.$i))) {
+			$params{'dynamicplaylist_parameter_'.$i} = $client->modeParam('dynamicplaylist_parameter_'.$i);
+			$i++;
+		}
+		if(defined($client->modeParam('extrapopmode'))) {
+			$params{'extrapopmode'} = $client->modeParam('extrapopmode');
+		}
 	
-	# if we have an active mode, temporarily add the disable option to the list.
-	if ($mixInfo{$masterClient} && $mixInfo{$masterClient}->{'type'} ne "") {
-		push @{$params{listRef}},\%disable;
-	}
+		# if we have an active mode, temporarily add the disable option to the list.
+		if ($mixInfo{$masterClient} && $mixInfo{$masterClient}->{'type'} ne "") {
+			push @{$params{listRef}},\%disable;
+		}
 
-	Slim::Buttons::Common::pushMode($client, 'PLUGIN.DynamicPlayList.Choice', \%params);
+		Slim::Buttons::Common::pushMode($client, 'PLUGIN.DynamicPlayList.Choice', \%params);
+	}elsif(!$licenseManager) {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_DYNAMICPLAYLIST_LICENSE_MANAGER_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_DYNAMICPLAYLIST}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::DynamicPlayList::Plugin.licenseManagerRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}else {
+		my @listRef = ();
+		push @listRef,$client->string("PLUGIN_DYNAMICPLAYLIST_LICENSE_REQUIRED");
+		my %params = (
+			header     => '{PLUGIN_DYNAMICPLAYLIST}',
+			listRef    => \@listRef,
+			name       => sub {
+					my ($client, $item) = @_;
+					return $item;
+				},
+			modeName   => 'Plugins::DynamicPlayList::Plugin.licenseRequired',
+		);
+		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
+	}
 }
 
 sub addFavorite {
@@ -2611,6 +2646,9 @@ sub handleWebList {
 	$params->{'pluginDynamicPlayListContinuousMode'} = $prefs->get('keep_adding_tracks');
 	$params->{'pluginDynamicPlayListNowPlaying'} = $name;
 	$params->{'pluginDynamicPlayListVersion'} = $PLUGINVERSION;
+	$params->{'licensemanager'} = Plugins::DynamicPlayList::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:DynamicPlayList']);
+	$params->{'licensed'} = $validateRequest->getResult("result");
 	
 	return Slim::Web::HTTP::filltemplatefile($htmlTemplate, $params);
 }
@@ -3245,124 +3283,140 @@ sub cliJiveHandler {
 		$log->debug("Exiting cliJiveHandler\n");
 		return;
 	}
-	if(!$playLists) {
-		initPlayLists($client);
-	}
-	my $params = $request->getParamsCopy();
+	my $licenseManager = Plugins::DynamicPlayList::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:DynamicPlayList']);
+	my $licensed = $validateRequest->getResult("result");
 
-	for my $k (keys %$params) {
-		$log->debug("Got: $k=".$params->{$k}."\n");
-	}
-
-	$log->debug("Executing CLI browsejive command\n");
-	my $menuGroupResult;
-	my $showFlat = $prefs->get('flatlist');
-	if($showFlat) {
-		my @empty = ();
-		$menuGroupResult = \@empty;
-	}else {
-		$menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
-	}
-	my $menuResult = getPlayListsForContext($client,$params,$playListItems,1);
-	my $count = scalar(@$menuGroupResult)+scalar(@$menuResult);
-
-	my %baseParams = ();
-	my $nextGroup = 1;
-	foreach my $param (keys %$params) {
-		if($param !~ /^_/) {
-			$baseParams{$param} = $params->{$param};
+	if($licenseManager && $licensed) {
+		if(!$playLists) {
+			initPlayLists($client);
 		}
-		if($param =~ /^group/) {
-			$nextGroup++;
-		}
-	}
-	my $baseMenu = {
-		'actions' => {
-			'play' => {
-				'cmd' => ['dynamicplaylist', 'playlist', 'play'],
-				'itemsParams' => 'params',
-			},
-			'add' => {
-				'cmd' => ['dynamicplaylist', 'playlist', 'add'],
-				'itemsParams' => 'params',
-			},
-		},
-	};
-	$request->addResult('base',$baseMenu);
+		my $params = $request->getParamsCopy();
 
-	my $cnt = 0;
-	foreach my $item (@$menuGroupResult) {
-		if($item->{'dynamicplaylistenabled'}) {
-			my $name;
-			my $id;
-			$name = $item->{'name'};
-			$id = escape($item->{'name'});
-		
-			my %itemParams = ();
-			foreach my $p (keys %baseParams) {
-				if($p =~ /^group/) {
-					$itemParams{$p}=$baseParams{$p}
-				}
+		for my $k (keys %$params) {
+			$log->debug("Got: $k=".$params->{$k}."\n");
+		}
+
+		$log->debug("Executing CLI browsejive command\n");
+		my $menuGroupResult;
+		my $showFlat = $prefs->get('flatlist');
+		if($showFlat) {
+			my @empty = ();
+			$menuGroupResult = \@empty;
+		}else {
+			$menuGroupResult = getPlayListGroupsForContext($client,$params,$playListItems,1);
+		}
+		my $menuResult = getPlayListsForContext($client,$params,$playListItems,1);
+		my $count = scalar(@$menuGroupResult)+scalar(@$menuResult);
+
+		my %baseParams = ();
+		my $nextGroup = 1;
+		foreach my $param (keys %$params) {
+			if($param !~ /^_/) {
+				$baseParams{$param} = $params->{$param};
 			}
-			$itemParams{'group'.$nextGroup} = $id;
-	
-			my $actions = {
-				'play' => undef,
-				'add' => undef,
-				'go' => {
-					'cmd' => ['dynamicplaylist', 'browsejive'],
-					'params' => \%itemParams,
+			if($param =~ /^group/) {
+				$nextGroup++;
+			}
+		}
+		my $baseMenu = {
+			'actions' => {
+				'play' => {
+					'cmd' => ['dynamicplaylist', 'playlist', 'play'],
 					'itemsParams' => 'params',
 				},
-			};
-			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-			$request->addResultLoop('item_loop',$cnt,'text',$name."/");
-			$cnt++;
-		}
-	}
+				'add' => {
+					'cmd' => ['dynamicplaylist', 'playlist', 'add'],
+					'itemsParams' => 'params',
+				},
+			},
+		};
+		$request->addResult('base',$baseMenu);
 
-	foreach my $item (@$menuResult) {
-		if($item->{'dynamicplaylistenabled'}) {
-			my $name;
-			my $id;
-			$name = $item->{'name'};
-			$id = $item->{'dynamicplaylistid'};
-			
-			my %itemParams = (
-				'playlistid'=>$id,
-			);
+		my $cnt = 0;
+		foreach my $item (@$menuGroupResult) {
+			if($item->{'dynamicplaylistenabled'}) {
+				my $name;
+				my $id;
+				$name = $item->{'name'};
+				$id = escape($item->{'name'});
+		
+				my %itemParams = ();
+				foreach my $p (keys %baseParams) {
+					if($p =~ /^group/) {
+						$itemParams{$p}=$baseParams{$p}
+					}
+				}
+				$itemParams{'group'.$nextGroup} = $id;
 	
-			if(exists $item->{'parameters'} && exists $item->{'parameters'}->{'1'}) {
 				my $actions = {
-					'go' => {
-						'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
-						'params' => \%itemParams,
-						'itemsParams' => 'params',
-					},
 					'play' => undef,
 					'add' => undef,
-				};
-				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-			}else {
-				my $actions = {
-					'do' => {
-						'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+					'go' => {
+						'cmd' => ['dynamicplaylist', 'browsejive'],
 						'params' => \%itemParams,
 						'itemsParams' => 'params',
 					},
 				};
 				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-				$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+				$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+				$request->addResultLoop('item_loop',$cnt,'text',$name."/");
+				$cnt++;
 			}
-			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-			$request->addResultLoop('item_loop',$cnt,'text',$name);
-			$cnt++;
 		}
-	}
 
-	$request->addResult('offset',0);
-	$request->addResult('count',$cnt);
+		foreach my $item (@$menuResult) {
+			if($item->{'dynamicplaylistenabled'}) {
+				my $name;
+				my $id;
+				$name = $item->{'name'};
+				$id = $item->{'dynamicplaylistid'};
+			
+				my %itemParams = (
+					'playlistid'=>$id,
+				);
+	
+				if(exists $item->{'parameters'} && exists $item->{'parameters'}->{'1'}) {
+					my $actions = {
+						'go' => {
+							'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
+							'params' => \%itemParams,
+							'itemsParams' => 'params',
+						},
+						'play' => undef,
+						'add' => undef,
+					};
+					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				}else {
+					my $actions = {
+						'do' => {
+							'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+							'params' => \%itemParams,
+							'itemsParams' => 'params',
+						},
+					};
+					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+					$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+				}
+				$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+				$request->addResultLoop('item_loop',$cnt,'text',$name);
+				$cnt++;
+			}
+		}
+
+		$request->addResult('offset',0);
+		$request->addResult('count',$cnt);
+	}elsif(!$licenseManager) {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_DYNAMICPLAYLIST_LICENSE_MANAGER_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
+	}else {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_DYNAMICPLAYLIST_LICENSE_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
+	}
 
 	$request->setStatusDone();
 	$log->debug("Exiting cliJiveHandler\n");
@@ -3509,90 +3563,107 @@ sub cliMixJiveHandler {
 		$log->debug("Exiting cliMixJiveHandler\n");
 		return;
 	}
-	if(!$playListTypes) {
-		initPlayLists($client);
-	}
-	my $params = $request->getParamsCopy();
+	my $licenseManager = Plugins::DynamicPlayList::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:DynamicPlayList']);
+	my $licensed = $validateRequest->getResult("result");
 
-	for my $k (keys %$params) {
-		$log->debug("Got: $k=".$params->{$k}."\n");
-	}
+	if($licenseManager && $licensed) {
+		if(!$playListTypes) {
+			initPlayLists($client);
+		}
+		my $params = $request->getParamsCopy();
 
-	my $playlisttype = undef;
-	my $itemId = undef;
-	if($request->getParam('album_id')) {
-		$playlisttype = 'album';
-		$itemId = $request->getParam('album_id');
-	}elsif($request->getParam('artist_id')) {
-		$playlisttype = 'artist';
-		$itemId = $request->getParam('artist_id');
-	}elsif($request->getParam('contributor_id')) {
-		$playlisttype = 'artist';
-		$itemId = $request->getParam('contributor_id');
-	}elsif($request->getParam('genre_id')) {
-		$playlisttype = 'genre';
-		$itemId = $request->getParam('genre_id');
-	}elsif($request->getParam('year')) {
-		$playlisttype = 'year';
-		$itemId = $request->getParam('year');
-	}elsif($request->getParam('playlist')) {
-		$playlisttype = 'playlist';
-		$itemId = $request->getParam('playlist');
-	}elsif($request->getParam('track_id')) {
-		$playlisttype = 'track';
-		$itemId = $request->getParam('track_id');
-	}
+		for my $k (keys %$params) {
+			$log->debug("Got: $k=".$params->{$k}."\n");
+		}
 
-	$log->debug("Executing CLI mixjive command\n");
+		my $playlisttype = undef;
+		my $itemId = undef;
+		if($request->getParam('album_id')) {
+			$playlisttype = 'album';
+			$itemId = $request->getParam('album_id');
+		}elsif($request->getParam('artist_id')) {
+			$playlisttype = 'artist';
+			$itemId = $request->getParam('artist_id');
+		}elsif($request->getParam('contributor_id')) {
+			$playlisttype = 'artist';
+			$itemId = $request->getParam('contributor_id');
+		}elsif($request->getParam('genre_id')) {
+			$playlisttype = 'genre';
+			$itemId = $request->getParam('genre_id');
+		}elsif($request->getParam('year')) {
+			$playlisttype = 'year';
+			$itemId = $request->getParam('year');
+		}elsif($request->getParam('playlist')) {
+			$playlisttype = 'playlist';
+			$itemId = $request->getParam('playlist');
+		}elsif($request->getParam('track_id')) {
+			$playlisttype = 'track';
+			$itemId = $request->getParam('track_id');
+		}
 
-	my $cnt = 0;
-	if(defined($playlisttype)) {
-		foreach my $flatItem (sort keys %$playLists) {
-			my $playlist = $playLists->{$flatItem};
-			if($playlist->{'dynamicplaylistenabled'}) {
-				if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
+		$log->debug("Executing CLI mixjive command\n");
+
+		my $cnt = 0;
+		if(defined($playlisttype)) {
+			foreach my $flatItem (sort keys %$playLists) {
+				my $playlist = $playLists->{$flatItem};
+				if($playlist->{'dynamicplaylistenabled'}) {
+					if(defined($playlist->{'parameters'}) && defined($playlist->{'parameters'}->{'1'}) && ($playlist->{'parameters'}->{'1'}->{'type'} eq $playlisttype || ($playlist->{'parameters'}->{'1'}->{'type'} =~ /^custom(.+)$/ && $1 eq $playlisttype))) {
 	
-					my $name;
-					my $id;
-					$name = $playlist->{'name'};
-					$id = $playlist->{'dynamicplaylistid'};
+						my $name;
+						my $id;
+						$name = $playlist->{'name'};
+						$id = $playlist->{'dynamicplaylistid'};
 					
-					my %itemParams = (
-						'playlistid'=>$id,
-						'dynamicplaylist_parameter_1' => $itemId,
-					);
+						my %itemParams = (
+							'playlistid'=>$id,
+							'dynamicplaylist_parameter_1' => $itemId,
+						);
 			
 					
-					if(exists $playlist->{'parameters'}->{'2'}) {
-						my $actions = {
-							'go' => {
-								'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
-								'params' => \%itemParams,
-								'itemsParams' => 'params',
-							},
-						};
-						$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-					}else {
-						my $actions = {
-							'do' => {
-								'cmd' => ['dynamicplaylist', 'playlist', 'play'],
-								'params' => \%itemParams,
-								'itemsParams' => 'params',
-							},
-						};
-						$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-						$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
-						$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+						if(exists $playlist->{'parameters'}->{'2'}) {
+							my $actions = {
+								'go' => {
+									'cmd' => ['dynamicplaylist', 'jiveplaylistparameters'],
+									'params' => \%itemParams,
+									'itemsParams' => 'params',
+								},
+							};
+							$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+						}else {
+							my $actions = {
+								'do' => {
+									'cmd' => ['dynamicplaylist', 'playlist', 'play'],
+									'params' => \%itemParams,
+									'itemsParams' => 'params',
+								},
+							};
+							$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+							$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+							$request->addResultLoop('item_loop',$cnt,'nextWindow','parent');
+						}
+						$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+						$request->addResultLoop('item_loop',$cnt,'text',$name);
+						$cnt++;
 					}
-					$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-					$request->addResultLoop('item_loop',$cnt,'text',$name);
-					$cnt++;
 				}
 			}
 		}
+		$request->addResult('offset',0);
+		$request->addResult('count',$cnt);
+
+	}elsif(!$licenseManager) {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_DYNAMICPLAYLIST_LICENSE_MANAGER_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
+	}else {
+		$request->addResultLoop('item_loop',0,'style','itemNoAction');
+		$request->addResultLoop('item_loop',0,'text',string('PLUGIN_DYNAMICPLAYLIST_LICENSE_REQUIRED'));
+		$request->addResult('offset',0);
+		$request->addResult('count',1);
 	}
-	$request->addResult('offset',0);
-	$request->addResult('count',$cnt);
 
 	$request->setStatusDone();
 	$log->debug("Exiting cliJiveHandler\n");
