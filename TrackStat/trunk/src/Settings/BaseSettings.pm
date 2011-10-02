@@ -62,6 +62,9 @@ sub handler {
 			$currentSubPages{$page->{'name'}} = $page->{'page'};
 		}
 	}
+	$params->{'licensemanager'} = Plugins::TrackStat::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
+	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
+	$params->{'licensed'} = $validateRequest->getResult("result");
 	$params->{'subpages'} = \%currentSubPages;
 	$params->{'subpage'} = $class->currentPage($client,$params);
 	return $class->SUPER::handler($client, $params);
