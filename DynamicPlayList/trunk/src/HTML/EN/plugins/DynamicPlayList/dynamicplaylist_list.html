@@ -44,7 +44,11 @@ href="[% webroot %][%- IF customurl -%]
 							return false;'
 		[%- END -%]
 [% END %]
-
+	[% IF !licensemanager %]
+		<p><b>[% "PLUGIN_DYNAMICPLAYLIST_LICENSE_MANAGER_REQUIRED" | string %]</b></p>
+	[% ELSIF !licensed %]
+		<p><b>[% "PLUGIN_DYNAMICPLAYLIST_LICENSE_REQUIRED" | string %]</b></p>
+	[% ELSE %]
 	[% WRAPPER dpcontentcontainer %]
 		[% IF player == '' %]
 			[% "NO_PLAYER_FOUND" | string %]
@@ -73,6 +77,7 @@ href="[% webroot %][%- IF customurl -%]
 				[% END %]
 			[% END %]
 		[% END %]
+	[% END %]
 	[% END %]
 [%- IF !ajaxUpdate %]
 [% PROCESS pagefooter.html %]

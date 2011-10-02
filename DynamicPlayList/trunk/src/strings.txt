@@ -292,3 +292,9 @@ SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE
 SETUP_PLUGIN_DYNAMICPLAYLIST_REMEMBER_SHUFFLE_DESC
 	EN	Remember shuffle state, if set to Yes this can result in strange behavior if you add tracks manually to the dynamic playlist which is currently playing.
 	DA	Husk bland tilstand, hvis dette er valgt så kan det resultere i en underlig opførsel, hvis du tilføjer numre manuelt til den dynamiske playliste, som der afspilles lige nu.
+
+PLUGIN_DYNAMICPLAYLIST_LICENSE_REQUIRED
+	EN	License required, see License Manager plugin for more information
+
+PLUGIN_DYNAMICPLAYLIST_LICENSE_MANAGER_REQUIRED
+	EN	License Manager plugin must be installed
