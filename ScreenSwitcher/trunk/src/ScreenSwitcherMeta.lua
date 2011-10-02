@@ -38,6 +38,8 @@ function registerApplet(self)
 end
 
 function configureApplet(self)
+	appletManager:callService("registerLicensedApplet","ScreenSwitcher",nil,"Use License Manager plugin in Squeezebox Server or goto http://license.isaksson.info to get license")
+	appletManager:callService("isLicensedApplet","ScreenSwitcher")
 	appletManager:callService("addScreenSaver", 
 		self:string("SCREENSAVER_SCREENSWITCHER"), 
 		"ScreenSwitcher",
