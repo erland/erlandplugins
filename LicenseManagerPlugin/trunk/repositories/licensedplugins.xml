@@ -88,7 +88,7 @@
                 </plugin>
 		<plugin name="TrackStat">
 			<title lang="EN">TrackStat</title>
-			<desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+			<desc lang="EN">Changing and viewing rating for a single song is currently free of charge but this might change in the future. All possibilities to browse TrackStat data, import/export to iTunes/MusicIP, dynamic playlists and statistic related Custom Skip filters and Custom Browse menus will require a license already now.
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
