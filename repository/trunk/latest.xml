@@ -245,15 +245,15 @@
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.8.6" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DynamicPlayList" version="2.9.3530" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected context menu on albums in 7.6
+			<changes lang="EN">- License Manager plugin must be installed for this version to work
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8.6.zip</url>
-                        <sha>0da7959fb53b6e01ae708ef219374584a4224294</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3530.zip</url>
+                        <sha>bc0ed03f2c72403f26ba222a731bcb8ada1dd093</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.2" minTarget="7.1.0" maxTarget="7.3.*">
