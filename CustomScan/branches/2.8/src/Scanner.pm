@@ -742,7 +742,7 @@ sub moduleRescan {
 		$modules = getPluginModules();
 	}
 	my $module = $modules->{$moduleKey};
-	if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'} || $module->{'licensed'}))) {
+	if(defined($module) && defined($module->{'id'}) && $module->{'active'} && (!defined($module->{'licensed'}) || $module->{'licensed'})) {
 		$scanningModulesInProgress{$moduleKey} = 1;
 		Slim::Control::Request::notifyFromArray(undef, ['customscan', 'changedstatus', $moduleKey, 1]);
 		if(!defined($module->{'requiresRefresh'}) || $module->{'requiresRefresh'}) {
