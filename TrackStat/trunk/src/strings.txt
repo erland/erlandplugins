@@ -3598,3 +3598,8 @@ PLUGIN_TRACKSTAT_UNRATED
 PLUGIN_TRACKSTAT_BROWSEBYSELECTED
 	EN	Statistics by selected
 
+PLUGIN_TRACKSTAT_LICENSE_REQUIRED
+	EN	License required, see License Manager plugin for more information
+
+PLUGIN_TRACKSTAT_LICENSE_MANAGER_REQUIRED
+	EN	License Manager plugin must be installed

@@ -62,7 +62,7 @@ sub getCustomScanFunctions {
 		'order' => '75',
 		'defaultenabled' => 0,
 		'name' => 'MusicIP Statistics Export',
-		'description' => "This module exports statistic information in Squeezebox Server to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and Squeezebox Server, for example the MusicIP library can be on a Windows computer in mp3 format and the Squeezebox Server library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and Squeezebox Server on the same computer towards the same library the music path and file extension parameters can typically be left empty.",
+		'description' => "This module exports statistic information in Squeezebox Server to MusicIP Mixer. The information exported are ratings, playcounts, last played time<br><br>The export module is prepared for having separate libraries in MusicIP and Squeezebox Server, for example the MusicIP library can be on a Windows computer in mp3 format and the Squeezebox Server library can be on a Linux computer with flac format. The music path and file extension parameters will in this case be used to convert the exported data so it corresponds to the paths and files used in MusicIP. If you are running MusicIP and Squeezebox Server on the same computer towards the same library the music path and file extension parameters can typically be left empty.<br><br>This module is only available to users with a license to TrackStat",
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
@@ -158,6 +158,12 @@ sub getCustomScanFunctions {
 			'value' => 1
 		);
 		push @$properties,\%dynamiclibrary,
+	}
+	my $licenseManager = Plugins::TrackStat::Plugin::isPluginsInstalled(undef,'LicenseManagerPlugin');
+	my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:TrackStat']);
+	my $licensed = $request->getResult("result");
+	if(!$licensed) {
+		$functions{'licensed'} = 0;
 	}
 	return \%functions;
 		

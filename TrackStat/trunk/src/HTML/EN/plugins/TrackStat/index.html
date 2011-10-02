@@ -111,6 +111,11 @@
 	<tr>
 		<td>&nbsp;</td>
 	</tr>
+	[% IF !licensemanager %]
+		<div><b>[% "PLUGIN_TRACKSTAT_LICENSE_MANAGER_REQUIRED" | string %]</b></div>
+	[% ELSIF !licensed %]
+		<div><b>[% "PLUGIN_TRACKSTAT_LICENSE_REQUIRED" | string %]</b></div>
+	[% ELSE %]
 	<div>
 		<a href="[% webroot %]plugins/TrackStat/index.htm?player=[% player | uri %]"><strong>[% "PLUGIN_TRACKSTAT_SONGLIST_MENUHEADER" | string %]</strong></a>
 		[% FOREACH group IN pluginTrackStatStatisticContext %]
@@ -276,6 +281,7 @@
 		<br>[% "PLUGIN_TRACKSTAT_NOMATCHINGITEMS" | string %]
 		[% END %]
 		[% END %]
+	[% END %]
 	[% END %]
 	<tr><td><div id="pageFooterInfo" style="float:right;">([% "PLUGIN_TRACKSTAT" | string %] [% pluginTrackStatVersion %])</div></td></tr>
 <!-- end plugins output -->
