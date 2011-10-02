@@ -1203,7 +1203,9 @@ sub webPages {
 	Slim::Web::Pages->addPageLinks("browse", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
 	Slim::Web::Pages->addPageLinks("browseiPeng", { 'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/index.htm' });
 	Slim::Web::Pages->addPageLinks("icons", {'PLUGIN_TRACKSTAT' => 'plugins/TrackStat/html/images/trackstat.png'});
-	Slim::Plugin::Base->addWeight("PLUGIN_TRACKSTAT",85);
+	if(UNIVERSAL::can("Slim::Plugin::Base","addWeight")) {
+		Slim::Plugin::Base->addWeight("PLUGIN_TRACKSTAT",85);
+	}
 }
 
 sub baseWebPage {
