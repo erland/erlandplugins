@@ -25,7 +25,7 @@
                 </applet>
                 <applet name="ScreenSwitcher">
                         <title lang="EN">Screen Switcher</title>
-                        <desc lang="EN">Currently free of charge but will likely be changed to forced licensing in the future, you can make a voluntary payment already now to get extra licensing time later if/when licensing is needed
+                        <desc lang="EN">Random switching screen saver mode is free of charge but any customization of exactly which screen savers that it should switch between requires a license.
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
