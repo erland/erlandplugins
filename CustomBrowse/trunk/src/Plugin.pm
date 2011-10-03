@@ -3845,7 +3845,12 @@ sub cliJiveHandlerImpl {
 			%itemParams = %{$currentContext->{'parameters'}};
 			$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
 			my $actions = {
-				'go' => undef,
+				'go' => {
+					'cmd' => ['custombrowse', 'play'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+					'nextWindow' => 'nowPlaying',
+				},
 				'add-hold' => undef,
 				'do' => {
 					'cmd' => ['custombrowse', 'play'],
@@ -3854,8 +3859,8 @@ sub cliJiveHandlerImpl {
 					'nextWindow' => 'nowPlaying',
 				},
 			};
-			$request->addResultLoop('item_loop',$cnt,'playAction','play');
-			$request->addResultLoop('item_loop',$cnt,'playHoldAction','play');
+			$request->addResultLoop('item_loop',$cnt,'playAction','do');
+			$request->addResultLoop('item_loop',$cnt,'playHoldAction','do');
 			$request->addResultLoop('item_loop',$cnt,'style','itemplay');
 			$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
 
