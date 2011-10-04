@@ -175,16 +175,16 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.12.3534" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.12.3537" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected issue with Play all buttons
+			<changes lang="EN">- Corrected so it's possible to show artists with albums also in 7.6 with SQLite
 			- License Manager plugin must be installed for this version to work
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3534.zip</url>
-                        <sha>9f18b63dec32a2e495384830ea57a8e49e74af0a</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3537.zip</url>
+                        <sha>3450e0521010d98b4c8198bbadaffb5f5004d837</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
