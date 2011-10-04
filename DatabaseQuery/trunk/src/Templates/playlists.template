@@ -4,7 +4,7 @@
 		<name>[% queryname %]</name>
 		<queryid>track</queryid>
 		<query>
-			select playlist.title,playlist_track.position[% IF showalbum %],albums.title as album,tracks.disc,tracks.tracknum[% END %],tracks.title[% IF showtracksort %],tracks.titlesort[% END %][% IF showmusicbrainz %],tracks.musicbrainz_id[% END %][% IF showbitrate %],concat(round(tracks.bitrate/1000),' kbit/s') as bitrate[% END %][% IF showartist and MySQL %],group_concat(distinct contributors.name order by contributors.namesort separator ',') as artists[% END %] from tracks
+			select playlist.title,playlist_track.position[% IF showalbum %],albums.title as album,tracks.disc,tracks.tracknum[% END %],tracks.title[% IF showtracksort %],tracks.titlesort[% END %][% IF showmusicbrainz %],tracks.musicbrainz_id[% END %][% IF showbitrate %],concat(round(tracks.bitrate/1000),' kbit/s') as bitrate[% END %][% IF showartist %],group_concat(distinct contributors.name[% IF MySQL %] order by contributors.namesort[% END %]) as artists[% END %] from tracks
 				join playlist_track on
 					playlist_track.track=tracks.url
 				join tracks playlist on
@@ -14,7 +14,7 @@
 				[% END %]
 				join albums on
 					albums.id=tracks.album
-				[% IF showartist and MySQL %]
+				[% IF showartist %]
 				left join contributor_track on
 					contributor_track.track=tracks.id 
 					[% IF roles %]and contributor_track.role in ([% roles %])[% END %]
