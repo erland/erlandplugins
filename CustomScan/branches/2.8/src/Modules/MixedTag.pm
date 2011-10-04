@@ -830,7 +830,7 @@ sub getMixedTagMenuItems {
 			'menudata' => $albumssql,
 			'menu' => \%menutracks
 		);
-		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'} && $driver eq 'mysql') {
+		if(defined($parameters->{'showartistwithalbum'}) && $parameters->{'showartistwithalbum'}) {
 			$menualbums{'itemformat'} = 'albumconcat';
 		}
 		if(defined($parameters->{'defaultalbumsort'}) && $parameters->{'defaultalbumsort'}) {
@@ -858,9 +858,7 @@ sub getMixedTagMenuItems {
 		my @options = ();
 		push @options, \%menualbumsbytitle;
 		push @options, \%menualbumsbyyear;
-		if($driver eq 'mysql') {
-			push @options, \%menualbumsbyartists;
-		}
+		push @options, \%menualbumsbyartists;
 		$menualbums{'option'} = \@options;
 
 		my %allalbums = (
