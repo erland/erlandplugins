@@ -436,7 +436,7 @@
 								<id>album</id>
 								<menuname>Songs</menuname>
 								<itemtype>album</itemtype>
-								[%- IF showartistwithalbum AND MySQL %]
+								[%- IF showartistwithalbum %]
 								<itemformat>albumconcat</itemformat>
 								[% ELSE %]
 								<itemformat>album</itemformat>
@@ -456,8 +456,8 @@
 								</option>
 								<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 								<menudata>
-									[%- IF showartistwithalbum AND MySQL %]
-									select albums.id,concat('(', group_concat(distinct contributors.name separator ',') ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][%- IF customtag5 %],customscan_track_attributes attr5[% END %][% IF library or activelibrary %],multilibrary_track[% END %] 
+									[%- IF showartistwithalbum %]
+									select albums.id,concat('(', group_concat(distinct contributors.name) ,')') ,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors,customscan_track_attributes attr1[%- IF customtag2 %],customscan_track_attributes attr2[% END %][%- IF customtag3 %],customscan_track_attributes attr3[% END %][%- IF customtag4 %],customscan_track_attributes attr4[% END %][%- IF customtag5 %],customscan_track_attributes attr5[% END %][% IF library or activelibrary %],multilibrary_track[% END %] 
 									where 
 										tracks.id=contributor_track.track and
 										contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
