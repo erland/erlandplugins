@@ -12,7 +12,7 @@
 	                <id>album</id>
 			<menuname>Songs</menuname>
 			<itemtype>album</itemtype>
-			[%- IF showartistwithalbum AND MySQL %]
+			[%- IF showartistwithalbum %]
 			<itemformat>albumconcat</itemformat>
 			[%- ELSE %]
 			<itemformat>album</itemformat>
@@ -31,8 +31,8 @@
 				<itemformat>albumconcat</itemformat>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,if(albums.year=0,' ',concat('(',albums.year,')')),concat(if(albums.year=0,'(',concat('(',albums.year,',')), group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 					where
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
@@ -53,14 +53,13 @@
 					order by albums.year desc, albums.titlesort asc,albums.disc asc
 				</menudata>
 			</option>
-			[%- IF MySQL  %]
 			<option>
 				<id>byartist</id>
 				<name>Sort by artist</name>
 				<itemformat>albumconcat</itemformat>
 				<menulinks>number</menulinks>
 				<menudata>
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 					where 
 						[%- IF library or activelibrary %]
 						albums.id=multilibrary_album.album and
@@ -73,15 +72,14 @@
 					order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 				</menudata>
 			</option>
-			[%- END %]
 			[% IF trackstat %]
 			<option>
 				<id>byadded</id>
 				<name>Sort by last added</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
@@ -112,8 +110,8 @@
 				<name>Sort by last played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
@@ -144,8 +142,8 @@
 				<name>Sort by most played</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
@@ -176,8 +174,8 @@
 				<name>Sort by top rated</name>
 				<menulinks>number</menulinks>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_track,tracks,contributors,track_statistics[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
@@ -206,8 +204,8 @@
 			[% END %]
 			<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 			<menudata>
-				[%- IF showartistwithalbum AND MySQL %]
-				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
+				[%- IF showartistwithalbum %]
+				select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors[% IF library or activelibrary %],multilibrary_album[% END %]
 				where
 					[%- IF library or activelibrary %]
 					albums.id=multilibrary_album.album and

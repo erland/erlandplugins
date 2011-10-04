@@ -56,7 +56,6 @@
 					<menulinks>alpha</menulinks>
 					<keyword name="orderby" value="tracks.titlesort asc"/>
 				</option>
-				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
@@ -68,7 +67,7 @@
 					<itemformat>trackconcat</itemformat>
 					[%- END %]
 					<menudata>
-						select tracks.id,concat('(', group_concat(distinct contributors.name separator ',') ,')') from contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+						select tracks.id,concat('(', group_concat(distinct contributors.name) ,')') from contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
@@ -83,11 +82,10 @@
 						order by contributors.namesort asc, tracks.titlesort asc
 					</menudata>
 				</option>
-				[%- END %]
 				<menutype>sql</menutype>
 				<menudata>
-					[%- IF showartistwithsong AND MySQL %]
-					select tracks.id,concat('(', group_concat(distinct contributors.name separator ',') ,')') from contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+					[%- IF showartistwithsong %]
+					select tracks.id,concat('(', group_concat(distinct contributors.name) ,')') from contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and

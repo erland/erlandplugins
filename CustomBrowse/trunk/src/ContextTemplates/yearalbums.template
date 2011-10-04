@@ -21,7 +21,7 @@
 		[%- END %]
 		<menuheader>{context.itemname} {count}</menuheader>
 		<itemtype>album</itemtype>
-		[% IF showartistwithalbum AND MySQL %]
+		[% IF showartistwithalbum %]
 		<itemformat>albumconcat</itemformat>
 		[% ELSE %]
 		<itemformat>album</itemformat>
@@ -30,8 +30,8 @@
 		<contextid>album</contextid>
 		[% IF menugroup %]<jivepattern>^(.*)\s\((.*)\)$</jivepattern>[% END %]
 		<menudata>
-			[%- IF showartistwithalbum AND MySQL %]
-			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
+			[%- IF showartistwithalbum %]
+			select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from albums,contributor_album,contributors,tracks[% IF library or activelibrary or contextlibrary %],multilibrary_album[% END %]
 			where
 				tracks.year={yearid} and
 				tracks.album=albums.id and

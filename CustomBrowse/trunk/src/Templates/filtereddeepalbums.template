@@ -77,13 +77,12 @@
                                         <name>Sort by title</name>
                                         <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
                                 </option>
-				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
 					<itemformat>albumconcat</itemformat>
 					<menudata>
-						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
+						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]
 						where
 							albums.id=tracks.album and
 							substr(albums.titlesort,1,1)='{albumletter}' and
@@ -131,7 +130,6 @@
 						order by contributors.namesort asc,albums.titlesort desc
 					</menudata>
 				</option>
-				[%- END %]
 				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %]

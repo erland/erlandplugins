@@ -180,14 +180,13 @@
 		                                <id>bytitle</id>
                 		                <name>Sort by title</name>
 		                        </option>
-					[%- IF MySQL %]
 		                        <option>
 		                                <id>byartist</id>
 		                                <name>Sort by artist</name>
 		                                <menulinks>number</menulinks>
 						<itemformat>albumconcat</itemformat>
 		                                <menudata>
-		                                        select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors
+		                                        select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from tracks,albums,contributor_track,contributors
 		                                        where
 		                                                tracks.id=contributor_track.track and
 								tracks.album=albums.id and
@@ -198,7 +197,6 @@
 		                                        order by contributors.namesort asc,albums.year desc
 		                                </menudata>
 		                        </option>
-					[%- END %]
 		                        <jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 		                                select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums
