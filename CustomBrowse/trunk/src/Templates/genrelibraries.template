@@ -224,7 +224,7 @@
 	                        <id>album</id>
 				<menuname>Songs</menuname>
 	                        <itemtype>album</itemtype>
-				[%- IF showartistwithalbum AND MySQL %]
+				[%- IF showartistwithalbum %]
 				<itemformat>albumconcat</itemformat>
 				[%- ELSE %]
 				<itemformat>album</itemformat>
@@ -235,14 +235,13 @@
 	                                <id>bytitle</id>
                		                <name>Sort by title</name>
 	                        </option>
-				[%- IF MySQL %]
 	                        <option>
 	                                <id>byartist</id>
 	                                <name>Sort by artist</name>
 	                                <menulinks>number</menulinks>
 					<itemformat>albumconcat</itemformat>
 	                                <menudata>
-						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
+						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
 						where
 							tracks.id=contributor_track.track and
 							contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and
@@ -264,11 +263,10 @@
 						order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 	                                </menudata>
 	                        </option>
-				[%- END %]
 	                        <jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
-					[%- IF showartistwithalbum AND MySQL %]
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
+					[%- IF showartistwithalbum %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(albums.titlesort,1,1) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %]
 					where
 						tracks.id=contributor_track.track and
 						contributor_track.role in ([% IF roles %][% roles %][% ELSE %]1,5[% END %]) and

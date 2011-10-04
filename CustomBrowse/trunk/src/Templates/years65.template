@@ -34,14 +34,13 @@
 					<name>Sort by title</name>
 					<menulinks>alpha</menulinks>
 				</option>
-				[%- IF MySQL %]
 				<option>
 					<id>byartist</id>
 					<name>Sort by artist</name>
 					<menulinks>number</menulinks>
 					<itemformat>albumconcat</itemformat>
 					<menudata>
-						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from albums,contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+						select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,contributor_track,contributors,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
@@ -56,7 +55,6 @@
 						order by contributors.namesort asc
 					</menudata>
 				</option>
-				[%- END %]
 				<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 				<menudata>
 					select albums.id,albums.title,substr(albums.titlesort,1,1) from albums,tracks[% IF library or activelibrary %],multilibrary_track[% END %] 

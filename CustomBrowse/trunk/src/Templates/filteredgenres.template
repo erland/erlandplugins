@@ -137,14 +137,13 @@
 	                                        <menulinks>alpha</menulinks>
 	                                        <keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 	                                </option>
-					[%- IF MySQL %]
 					<option>
 						<id>byartist</id>
 						<name>Sort by artist</name>
 						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
 						<menudata>
-							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name separator ',') ,')')) from tracks,albums,genre_track,contributor_track,contributors[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from tracks,albums,genre_track,contributor_track,contributors[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
@@ -199,7 +198,6 @@
 							order by contributors.namesort asc,albums.year desc,albums.titlesort asc,albums.disc asc
 						</menudata>
 					</option>
-					[%- END %]
 					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
 						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
