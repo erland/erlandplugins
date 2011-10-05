@@ -138,3 +138,6 @@ SETUP_PLUGIN_CUSTOMSCAN_NOT_LICENSED
 
 SETUP_PLUGIN_CUSTOMSCAN_NOT_LICENSED_MESSAGE
 	EN	Note! Some scanning modules are disabled because you haven't payed for a license
+
+PLUGIN_CUSTOMSCAN_CUSTOMTAG
+	EN	Custom Scan Custom Tag

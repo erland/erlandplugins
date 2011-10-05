@@ -29,9 +29,9 @@ use MP3::Info;
 my $prefs = preferences('plugin.customscan');
 use Slim::Utils::Log;
 my $log = Slim::Utils::Log->addLogCategory({
-	'category'     => 'plugin.customscan',
+	'category'     => 'plugin.customscan.customtag',
 	'defaultLevel' => 'WARN',
-	'description'  => 'PLUGIN_CUSTOMSCAN',
+	'description'  => 'PLUGIN_CUSTOMSCAN_CUSTOMTAG',
 });
 
 my %rawTagNames = (
