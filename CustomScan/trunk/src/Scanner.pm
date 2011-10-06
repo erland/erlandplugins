@@ -1198,53 +1198,24 @@ sub initArtistScan {
 	}
 	if($needToScanArtists || defined($scanningContext->{'changedTrack'})) {
 		my $artists = undef;
-		my @joins = ();
-		push @joins, 'contributorTracks';
 		if(defined($scanningContext->{'changedTrack'})) {
 			if(scalar(@contributors)>0) {
-				$scanningContext->{'artistFilter'} = {
-					'contributorTracks.role' => {'in' => [1,5]},
-					'contributorTracks.contributor' => {'in' => @contributors}
-				};
-				$artists = Slim::Schema->resultset('Contributor')->search(
-					$scanningContext->{'artistFilter'},
-					{
-						'group_by' => 'me.id',
-						'join' => \@joins
-					}
-				);
+				$scanningContext->{'artistFilter'} = " LEFT JOIN contributor_track on contributors.id=contributor_track.contributor and contributor_track.role in (1,5) WHERE contributors.id in (".join(',',@contributors).") ";
 			}else {
 				# Just a dummy to make sure we don't get any matches
-				$scanningContext->{'artistFilter'} = {
-					'contributorTracks.role' => {'in' => [1,5]},
-					'contributorTracks.contributor' => {'in' => [-1]}
-				};
-				$artists = Slim::Schema->resultset('Contributor')->search(
-					$scanningContext->{'artistFilter'},
-					{
-						'group_by' => 'me.id',
-						'join' => \@joins
-					}
-				);
+				$scanningContext->{'artistFilter'} = " WHERE id = -1 ";
 			}
 		}else {
-			$scanningContext->{'artistFilter'} = {'contributorTracks.role' => {'in' => [1,5]}};
-			$artists = Slim::Schema->resultset('Contributor')->search(
-				$scanningContext->{'artistFilter'},
-				{
-					'group_by' => 'me.id',
-					'join' => \@joins
-				}
-			);
+			$scanningContext->{'artistFilter'} = " LEFT JOIN contributor_track on contributors.id=contributor_track.contributor and contributor_track.role in (1,5) ";
 		}
 		$scanningContext->{'currentArtistNo'} = 0;
-		$scanningContext->{'noOfArtists'} = $artists->count;
+		$scanningContext->{'noOfArtists'} = getNoOfArtists($scanningContext->{'artistFilter'});
 		$log->info("Got ".$scanningContext->{'noOfArtists'}." artists\n");
-		if($artists->count>0 && defined($scanningContext->{'progressReporting'})) {
+		if($scanningContext->{'noOfArtists'}>0 && defined($scanningContext->{'progressReporting'})) {
 			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
 					'type' => 'importer',
 					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_ARTISTS',
-					'total' => $artists->count,
+					'total' => $scanningContext->{'noOfArtists'},
 					'bar'   => 1,
 				});
 		}
@@ -1267,18 +1238,9 @@ sub initScanArtist {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my @joins = ();
-		push @joins, 'contributorTracks';
-		my $artists = Slim::Schema->resultset('Contributor')->search(
-				$scanningContext->{'artistFilter'},
-				{
-					'group_by' => 'me.id',
-					'join' => \@joins
-				}
-			);
-		my @changedArtists = $artists->all;
+		my $changedArtists = getAllArtists($scanningContext->{'artistFilter'});
 		$incrementalContext = {
-			'artists' => \@changedArtists
+			'artists' => $changedArtists
 		};
 	}
 
@@ -1465,25 +1427,22 @@ sub initAlbumScan {
 		my $albums = undef;
 		if(defined($scanningContext->{'changedTrack'})) {
 			if(defined($album)) {
-				$scanningContext->{'albumFilter'} = {'id' => $album->id};
-				$albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'});
+				$scanningContext->{'albumFilter'} = " where id = ".$album->id;
 			}else {
 				# Just a dummy to make sure we don't get any matches
-				$scanningContext->{'albumFilter'} = {'id' => -1};
-				$albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'});
+				$scanningContext->{'albumFilter'} = " where id = -1";
 			}
 		}else {
-			$scanningContext->{'albumFilter'} = {};
-			$albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'});
+			$scanningContext->{'albumFilter'} = "";
 		}
 		$scanningContext->{'currentAlbumNo'} = 0;
-		$scanningContext->{'noOfAlbums'} = $albums->count;
-		$log->info("Got ".$albums->count." albums\n");
-		if($albums->count>0 && defined($scanningContext->{'progressReporting'})) {
+		$scanningContext->{'noOfAlbums'} = getNoOfAlbums($scanningContext->{'albumFilter'});
+		$log->info("Got ".$scanningContext->{'noOfAlbums'}." albums\n");
+		if($scanningContext->{'noOfAlbums'}>0 && defined($scanningContext->{'progressReporting'})) {
 			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
 					'type' => 'importer',
 					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_ALBUMS',
-					'total' => $albums->count,
+					'total' => $scanningContext->{'noOfAlbums'},
 					'bar'   => 1,
 				});
 		}
@@ -1506,10 +1465,9 @@ sub initScanAlbum {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'});
-		my @changedAlbums = $albums->all;
+		my $changedAlbums = getAllAlbums($scanningContext->{'albumFilter'});
 		$incrementalContext = {
-			'albums' => \@changedAlbums
+			'albums' => $changedAlbums
 		};
 	}
 
@@ -1696,24 +1654,22 @@ sub initTrackScan {
 		my $tracks = undef;
 		if(defined($track)) {
 			if(!defined($scanningContext->{'deletedTrack'})) {
-				$scanningContext->{'trackFilter'} = {'id' => $track->id,'audio' => 1};
-				$tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
+				$scanningContext->{'trackFilter'} = " WHERE id=".$track->id." and audio=1 ";
 			}else {
 				# Just a dummy to make sure we don't get any matches
-				$scanningContext->{'trackFilter'} = {'id' => -1,'audio' => 1};
-				$tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
+				$scanningContext->{'trackFilter'} = " WHERE id=-1 and audio=1 ";
 			}
 		}else {
-			$tracks = Slim::Schema->resultset('Track')->search({'audio' => 1});
+			$scanningContext->{'trackFilter'} = " WHERE audio=1 ";
 		}
 		$scanningContext->{'currentTrackNo'} = 0;
-		$scanningContext->{'noOfTracks'} = $tracks->count;
+		$scanningContext->{'noOfTracks'} = getNoOfTracks($scanningContext->{'trackFilter'});
 		$log->info("Got ".$scanningContext->{'noOfTracks'}." tracks\n");
-		if($tracks->count>0 && defined($scanningContext->{'progressReporting'})) {
+		if($scanningContext->{'noOfTracks'}>0 && defined($scanningContext->{'progressReporting'})) {
 			$scanningContext->{'progress'} = Slim::Utils::Progress->new({
 					'type' => 'importer',
 					'name' => 'PLUGIN_CUSTOMSCAN_SCANNER_TRACKS',
-					'total' => $tracks->count,
+					'total' => $scanningContext->{'noOfTracks'},
 					'bar'   => 1,
 				});
 		}
@@ -1736,8 +1692,11 @@ sub initScanTrack {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
-		my @changedTracks = $tracks->all;
+		my @changedTracks = ();
+		my $track = getNextTrack($scanningContext->{'trackFilter'},0);
+		if(defined($track)) {
+			push @changedTracks,Slim::Schema->rs('Track')->find($track->{'id'});
+		}
 		$incrementalContext = {
 			'tracks' => \@changedTracks
 		};
@@ -1814,6 +1773,55 @@ sub initScanTrack {
 	}
 }
 
+sub getNoOfArtists {
+	my $filter = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT count(distinct id) from contributors $filter");
+	my $count;
+	$sth->bind_col( 1, \$count);
+	$sth->execute();
+	if($sth->fetch()) {
+		return $count;
+	}
+	return 0;
+}
+
+sub getAllArtists {
+	my $filter = shift;
+
+	my @changedArtists = ();
+	my $i = 0;
+	my $artist = getNextArtist($filter,$i++);
+	while(defined($artist)) {
+		push @changedArtists,Slim::Schema->rs('Contributor')->find($artist->{'id'});
+		$artist = getNextArtist($filter,$i++);
+	}
+	return \@changedArtists;
+}
+
+sub getNextArtist {
+	my $filter = shift;
+	my $number = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT distinct id,name from contributors $filter limit 1 offset ?");
+	$sth->bind_param(1,$number,SQL_INTEGER);
+	my $id;
+	my $name;
+	$sth->bind_col( 1, \$id);
+	$sth->bind_col( 2, \$name);
+	$sth->execute();
+	my $artist = undef;
+	if($sth->fetch()) {
+		$artist = {
+			'id' => $id,
+			'name' => $name,
+		};
+	}
+	return $artist;
+}
+
 sub scanArtist {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
@@ -1832,39 +1840,22 @@ sub scanArtist {
 
 		my $artist = undef;
 		if(defined($scanningContext->{'currentArtistNo'})) {
-			my @joins = ();
-			push @joins, 'contributorTracks';
-			my $artists = Slim::Schema->resultset('Contributor')->search(
-				$scanningContext->{'artistFilter'},
-				{
-					'group_by' => 'me.id',
-					'join' => \@joins
-				}
-			)->slice($scanningContext->{'currentArtistNo'},$scanningContext->{'currentArtistNo'});
-			$artist = $artists->next;
+			$artist = getNextArtist($scanningContext->{'artistFilter'},$scanningContext->{'currentArtistNo'});
 			$scanningContext->{'currentArtistNo'}++;
-			if(defined($artist) && $artist->id eq Slim::Schema->variousArtistsObject->id) {
-				$log->debug("CustomScan: Skipping artist ".$artist->name."\n");
-				my $artists = Slim::Schema->resultset('Contributor')->search(
-					$scanningContext->{'artistFilter'},
-					{
-						'group_by' => 'me.id',
-						'join' => \@joins
-					}
-				)->slice($scanningContext->{'currentArtistNo'},$scanningContext->{'currentArtistNo'});
-				$artist = $artists->next;
+			if(defined($artist) && $artist->{'id'} eq Slim::Schema->variousArtistsObject->id) {
+				$log->debug("CustomScan: Skipping artist ".$artist->name);
+				$artist = getNextArtist($scanningContext->{'artistFilter'},$scanningContext->{'currentArtistNo'});
 				$scanningContext->{'currentArtistNo'}++;
 			}
 		}
 		if(defined($artist)) {
 			my $dbh = getCurrentDBH();
-			if(scalar(@moduleKeys)>0) {
-				$log->debug("Scanning artist: ".$artist->name."\n");
-			}
+			$artist = Slim::Schema->rs('Contributor')->find($artist->{'id'});
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
 				if(defined($module->{'scanArtist'})) {
+					$log->debug("Scanning artist: ".$artist->name."\n");
 					my $scan = 1;
 					if(!defined($module->{'alwaysRescanArtist'}) || !$module->{'alwaysRescanArtist'}) {
 						my $sth = $dbh->prepare("SELECT id from customscan_contributor_attributes where module=? and contributor=?");
@@ -1965,18 +1956,9 @@ sub exitScanArtist {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my @joins = ();
-		push @joins, 'contributorTracks';
-		my $artists = Slim::Schema->resultset('Contributor')->search(
-				$scanningContext->{'artistFilter'},
-				{
-					'group_by' => 'me.id',
-					'join' => \@joins
-				}
-			);
-		my @changedArtists = $artists->all;
+		my $changedArtists = getAllArtists($scanningContext->{'artistFilter'});
 		$incrementalContext = {
-			'artists' => \@changedArtists
+			'artists' => $changedArtists
 		};
 	}
 
@@ -2037,6 +2019,53 @@ sub exitScanArtist {
 	}
 }
 
+sub getNoOfAlbums {
+	my $filter = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT count(distinct id) from albums $filter");
+	my $count;
+	$sth->bind_col( 1, \$count);
+	$sth->execute();
+	if($sth->fetch()) {
+		return $count;
+	}
+	return 0;
+}
+
+sub getAllAlbums {
+	my $filter = shift;
+	my @changedAlbums = ();
+	my $album = getNextAlbum($filter,0);
+	if(defined($album)) {
+		push @changedAlbums,Slim::Schema->rs('Album')->find($album->{'id'});
+	}
+	return \@changedAlbums;
+}
+
+sub getNextAlbum {
+	my $filter = shift;
+	my $number = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT id,title from albums ".$filter." limit 1 offset ?");
+	$sth->bind_param(1,$number,SQL_INTEGER);
+	my $id;
+	my $title;
+	$sth->bind_col( 1, \$id);
+	$sth->bind_col( 2, \$title);
+	$sth->execute();
+	my $album = undef;
+	if($sth->fetch()) {
+		$album = {
+			'id' => $id,
+			'title' => $title,
+		};
+	}
+	$sth->finish();
+	return undef;
+}
+
 sub scanAlbum {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
@@ -2055,29 +2084,26 @@ sub scanAlbum {
 
 		my $album = undef;
 		if(defined($scanningContext->{'currentAlbumNo'})) {
-			my $albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'})->slice($scanningContext->{'currentAlbumNo'},$scanningContext->{'currentAlbumNo'});
-			$album = $albums->next;
+			$album = getNextAlbum($scanningContext->{'albumFilter'},$scanningContext->{'currentAlbumNo'});
 			$scanningContext->{'currentAlbumNo'}++;
-			while(defined($album) && (!$album->title || $album->title eq string('NO_ALBUM'))) {
-				if($album->title) {
-					$log->debug("CustomScan: Skipping album ".$album->title."\n");
+			while(defined($album) && (!$album->{'title'} || $album->{'title'} eq string('NO_ALBUM'))) {
+				if($album->{'title'}) {
+					$log->debug("CustomScan: Skipping album ".$album->{'title'});
 				}else {
-					$log->debug("CustomScan: Skipping album with no title\n");
+					$log->debug("CustomScan: Skipping album with no title");
 				}
-				my $albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'})->slice($scanningContext->{'currentAlbumNo'},$scanningContext->{'currentAlbumNo'});
-				$album = $albums->next;
+				$album = getNextAlbum($scanningContext->{'albumFilter'},$scanningContext->{'currentAlbumNo'});
 				$scanningContext->{'currentAlbumNo'}++;
 			}
 		}
 		if(defined($album)) {
 			my $dbh = getCurrentDBH();
-			if(scalar(@moduleKeys)>0) {
-				$log->debug("Scanning album: ".$album->title."\n");
-			}
+			$album = Slim::Schema->rs('Album')->find($album->{'id'});
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
 				if(defined($module->{'scanAlbum'})) {
+					$log->debug("Scanning album: ".$album->title."\n");
 					my $scan = 1;
 					if(!defined($module->{'alwaysRescanAlbum'}) || !$module->{'alwaysRescanAlbum'}) {
 						my $sth = $dbh->prepare("SELECT id from customscan_album_attributes where module=? and album=?");
@@ -2177,10 +2203,9 @@ sub exitScanAlbum {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $albums = Slim::Schema->resultset('Album')->search($scanningContext->{'albumFilter'});
-		my @changedAlbums = $albums->all;
+		my $changedAlbums = getAllAlbums($scanningContext->{'albumFilter'});
 		$incrementalContext = {
-			'albums' => \@changedAlbums
+			'albums' => $changedAlbums
 		};
 	}
 
@@ -2241,6 +2266,52 @@ sub exitScanAlbum {
 	}
 }
 
+sub getNoOfTracks {
+	my $filter = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT count(distinct id) from tracks $filter");
+	my $count;
+	$sth->bind_col( 1, \$count);
+	$sth->execute();
+	if($sth->fetch()) {
+		return $count;
+	}
+	return 0;
+}
+
+sub getAllTracks {
+	my $filter = shift;
+	my @changedTracks = ();
+	my $track = getNextTrack($filter,0);
+	if(defined($track)) {
+		push @changedTracks,Slim::Schema->rs('Track')->find($track->{'id'});
+	}
+	return \@changedTracks;
+}
+
+sub getNextTrack {
+	my $filter = shift;
+	my $number = shift;
+
+	my $dbh = getCurrentDBH();
+	my $sth = $dbh->prepare("SELECT id,url from tracks ".$filter." limit 1 offset ?");
+	$sth->bind_param(1,$number,SQL_INTEGER);
+	my $id;
+	my $url;
+	$sth->bind_col( 1, \$id);
+	$sth->bind_col( 2, \$url);
+	$sth->execute();
+	my $track = undef;
+	if($sth->fetch()) {
+		$track = {
+			'id' => $id,
+			'url' => $url,
+		};
+	}
+	return $track;
+}
+
 sub scanTrack {
 	my $moduleKey = shift;
 	my $scanningContext = shift;
@@ -2259,29 +2330,28 @@ sub scanTrack {
 
 		my $track = undef;
 		if(defined($scanningContext->{'currentTrackNo'})) {
-			my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
-			$track = $tracks->next;
+			$track = getNextTrack($scanningContext->{'trackFilter'},$scanningContext->{'currentTrackNo'});
 			$scanningContext->{'currentTrackNo'}++;
 			my $maxCharacters = ($useLongUrls?511:255);
 			# Skip non audio tracks and tracks with url longer than max number of characters
-			while(defined($track) && (!$track->audio || ($driver eq 'mysql' && length($track->url)>$maxCharacters))) {
-				my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'})->slice($scanningContext->{'currentTrackNo'},$scanningContext->{'currentTrackNo'});
-				$track = $tracks->next;
+			while(defined($track) && $driver eq 'mysql' && length($track->url)>$maxCharacters) {
+				$track = getNextTrack($scanningContext->{'trackFilter'},$scanningContext->{'currentTrackNo'});
 				$scanningContext->{'currentTrackNo'}++;
 			}
 		}
 		if(defined($track)) {
+			$track = Slim::Schema->rs('Track')->find($track->{'id'});
 			my $dbh = getCurrentDBH();
 			if(scalar(@moduleKeys)>0) {
 				if($log->is_debug || $scanningContext->{'currentTrackNo'}%100==1) {
 					$log->info("Scanning track ".$scanningContext->{'currentTrackNo'}." of ".$scanningContext->{'noOfTracks'});
 				}
-				$log->debug("Scanning track: ".$track->title."\n");
 			}
 			for my $key (@moduleKeys) {
 				my $module = $modules->{$key};
 				my $moduleId = $module->{'id'};
 				if(defined($module->{'scanTrack'})) {
+					$log->debug("Scanning track: ".$track->title);
 					my $scan = 1;
 					if(!defined($module->{'alwaysRescanTrack'}) || !$module->{'alwaysRescanTrack'}) {
 						my $sth = $dbh->prepare("SELECT id from customscan_track_attributes where module=? and track=?");
@@ -2381,10 +2451,9 @@ sub exitScanTrack {
 
 	my $incrementalContext = undef;
 	if(defined($scanningContext->{'changedTrack'})) {
-		my $tracks = Slim::Schema->resultset('Track')->search($scanningContext->{'trackFilter'});
-		my @changedTracks = $tracks->all;
+		my $changedTracks = getAllTracks($scanningContext->{'trackFilter'});
 		$incrementalContext = {
-			'tracks' => \@changedTracks
+			'tracks' => $changedTracks
 		};
 	}
 	my $stillRunning = 1;
@@ -2877,7 +2946,7 @@ sub getCurrentDBH {
 sub commit {
 	my $dbh = shift;
 	if (!$dbh->{'AutoCommit'}) {
-$log->warn("Comitting...");
+		$log->debug("Comitting...");
 		$dbh->commit();
 	}
 }
