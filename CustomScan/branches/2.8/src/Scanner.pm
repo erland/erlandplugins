@@ -1639,7 +1639,7 @@ sub scanAlbum {
 			}else {
 				$log->debug("CustomScan: Skipping album with no title");
 			}
-			$sth->bind_param(1,$scanningContext->{'currentTrackNo'});
+			$sth->bind_param(1,$scanningContext->{'currentAlbumNo'});
 			$sth->execute();
 			$album = undef;
 			if($sth->fetch()) {
