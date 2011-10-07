@@ -313,17 +313,15 @@
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.5.3487" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="SQLPlayList" version="2.5.3555" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected so decade related playlist templates works with 7.6 without Custom Browse installed
-			- Corrected so playlist still works after a full rescan, previous version could cause errors about unknown SQLite functions
-			- License Manager plugin must be installed for this version to work
+			<changes lang="EN">- Corrected so all playlist templates works in 7.6 with SQLite, this includes "Random albums", "Random artists", "Random years" and "Random rated tracks"
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3487.zip</url>
-                        <sha>b4d339547bb4cba0bf3d3779102b5a877d704863</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3555.zip</url>
+                        <sha>b3be384c8532521cfe4cc507d4a990956c9e820f</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="7.3.*">
