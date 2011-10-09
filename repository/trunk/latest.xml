@@ -100,16 +100,16 @@
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="LicenseManager" version="1.1.66" minTarget="7.4" maxTarget="*">
+                <applet name="LicenseManager" version="1.1.67" minTarget="7.4" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">License Manager applet, this is required for licensed applets to work and it will give you and overview of installed licensed applets and their licensing status.
                         </desc>
-                        <changes lang="EN">- Correction so settings aren't stored more often than necessary
+                        <changes lang="EN">- Improved account id detection on standalone Squeezebox Touch
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.66.zip</url>
-                        <sha>19c782a47342dca8b479127299c2b935ff25cc4d</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.67.zip</url>
+                        <sha>5779593f514241d8794102a3400c9876967ccf90</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
         </applets>
