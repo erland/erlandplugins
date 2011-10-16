@@ -4056,7 +4056,9 @@ sub cliJiveHandlerImpl {
 			$request->addResultLoop('item_loop',$cnt,'cacheable','true');
 		}
 		#iPeng support
-		if(defined($item->{'itemtype'})) {
+		if(defined($item->{'ipengitemtype'})) {
+			$request->addResultLoop('item_loop',$cnt,'type',$item->{'ipengitemtype'}); # This is used by iPeng
+		}elsif(defined($item->{'itemtype'})) {
 			$request->addResultLoop('item_loop',$cnt,'type',$item->{'itemtype'}); # This is used by iPeng
 		}
 
