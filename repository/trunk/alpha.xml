@@ -5,15 +5,15 @@
 		<title lang="EN">Erland's plugins and applets (ALPHA testing versions)</title>
 	</details>
 	<plugins>
-                <plugin name="CustomScan" version="3.0pre3548" minTarget="7.6.0" maxTarget="*">
+                <plugin name="CustomScan" version="3.0pre3566" minTarget="7.6.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Alpha*</title>
                         <desc lang="EN">*** ALPHA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected memory leak
+                        <changes lang="EN">- Corrected serious scanning issue
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3548.zip</url>
-                        <sha>a10ff5b900cfd3f0a402c90579a458f366f1a301</sha>
+                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3566.zip</url>
+                        <sha>abd0bdff96b6de7910204548373da867a11bbbe2</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 	</plugins>
