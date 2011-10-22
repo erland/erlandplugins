@@ -1779,8 +1779,8 @@ sub getNoOfArtists {
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare("SELECT count(distinct id) from contributors $filter");
 	my $count;
-	$sth->bind_col( 1, \$count);
 	$sth->execute();
+	$sth->bind_col( 1, \$count);
 	if($sth->fetch()) {
 		return $count;
 	}
@@ -1809,9 +1809,9 @@ sub getNextArtist {
 	$sth->bind_param(1,$number,SQL_INTEGER);
 	my $id;
 	my $name;
+	$sth->execute();
 	$sth->bind_col( 1, \$id);
 	$sth->bind_col( 2, \$name);
-	$sth->execute();
 	my $artist = undef;
 	if($sth->fetch()) {
 		$artist = {
@@ -2025,8 +2025,8 @@ sub getNoOfAlbums {
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare("SELECT count(distinct id) from albums $filter");
 	my $count;
-	$sth->bind_col( 1, \$count);
 	$sth->execute();
+	$sth->bind_col( 1, \$count);
 	if($sth->fetch()) {
 		return $count;
 	}
@@ -2052,9 +2052,9 @@ sub getNextAlbum {
 	$sth->bind_param(1,$number,SQL_INTEGER);
 	my $id;
 	my $title;
+	$sth->execute();
 	$sth->bind_col( 1, \$id);
 	$sth->bind_col( 2, \$title);
-	$sth->execute();
 	my $album = undef;
 	if($sth->fetch()) {
 		$album = {
@@ -2272,8 +2272,8 @@ sub getNoOfTracks {
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare("SELECT count(distinct id) from tracks $filter");
 	my $count;
-	$sth->bind_col( 1, \$count);
 	$sth->execute();
+	$sth->bind_col( 1, \$count);
 	if($sth->fetch()) {
 		return $count;
 	}
@@ -2299,9 +2299,9 @@ sub getNextTrack {
 	$sth->bind_param(1,$number,SQL_INTEGER);
 	my $id;
 	my $url;
+	$sth->execute();
 	$sth->bind_col( 1, \$id);
 	$sth->bind_col( 2, \$url);
-	$sth->execute();
 	my $track = undef;
 	if($sth->fetch()) {
 		$track = {
