@@ -1467,9 +1467,9 @@ sub scanArtist {
 		$sth->bind_param(1,$scanningContext->{'currentArtistNo'},SQL_INTEGER);
 		my $id;
 		my $name;
+		$sth->execute();
 		$sth->bind_col( 1, \$id);
 		$sth->bind_col( 2, \$name);
-		$sth->execute();
 		if($sth->fetch()) {
 			$artist = {
 				'id' => $id,
@@ -1623,9 +1623,9 @@ sub scanAlbum {
 		$sth->bind_param(1,$scanningContext->{'currentAlbumNo'},SQL_INTEGER);
 		my $id;
 		my $title;
+		$sth->execute();
 		$sth->bind_col( 1, \$id);
 		$sth->bind_col( 2, \$title);
-		$sth->execute();
 		if($sth->fetch()) {
 			$album = {
 				'id' => $id,
@@ -1784,9 +1784,9 @@ sub scanTrack {
 		my $url;
 		my $audio;
 		my $musicbrainz_id;
+		$sth->execute();
 		$sth->bind_col( 1, \$id);
 		$sth->bind_col( 2, \$url);
-		$sth->execute();
 		if($sth->fetch()) {
 			$track = {
 				'id' => $id,
