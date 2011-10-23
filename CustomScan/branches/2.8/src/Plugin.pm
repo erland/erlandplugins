@@ -720,12 +720,12 @@ sub getAvailableTitleFormats {
 		}
 	}
 
-	my $sth = $dbh->prepare("SELECT module,attr from customscan_track_attributes group by module,attr");
+	my $sth = $dbh->prepare("SELECT attr,module from customscan_track_attributes group by attr,module");
 	my $module;
 	my $attr;
 	$sth->execute();
-	$sth->bind_col(1,\$module);
-	$sth->bind_col(2, \$attr);
+	$sth->bind_col(1,\$attr);
+	$sth->bind_col(2, \$module);
 	while($sth->fetch()) {
 		$result{uc($module)."_".uc($attr)} = "CUSTOMSCAN_".uc($module)."_".uc($attr);
 	}
