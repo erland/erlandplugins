@@ -79,6 +79,10 @@ my %disable = (
 	'playlist' => \%disablePlaylist
 );
 
+my $historyQueue = {};
+my $deleteQueue = {};
+my $deleteAllQueues = 0;
+
 my %empty = ();
 $prefs->migrate(1, sub {
 	$prefs->set('number_of_tracks', Slim::Utils::Prefs::OldPrefs->get('plugin_dynamicplaylist_number_of_tracks') || 10  );
@@ -1765,6 +1769,46 @@ sub clientNewCallback {
 	}
 }
 
+sub rescanDone {
+	my $request = shift;
+	my $client = $request->client();
+
+	if($deleteAllQueues) {
+		$log->debug("Clearing play history for all players");
+		clearPlayListHistory();
+		$deleteAllQueues = 0;
+		$deleteQueue = {};
+	}elsif(scalar(keys %$deleteQueue)>0) {
+		my @clients = ();
+		foreach my $clientId (keys %$deleteQueue) {
+			my $deleteClient = Slim::Player::Client::getClient($clientId);
+			push @clients,$deleteClient;
+			$log->debug("Clearing play history for player: ".$deleteClient->name);
+		}
+		clearPlayListHistory(\@clients);
+		$deleteQueue = {};
+	}
+
+	if(scalar(keys %$historyQueue)>0) {	
+		foreach my $clientId (keys %$historyQueue) {
+			my $addedClient = Slim::Player::Client::getClient($clientId);
+			my $queue = $historyQueue->{$clientId};
+			if(scalar(@$queue)>0) {
+				foreach my $item (@$queue) {
+					my $track = Slim::Schema->objectForUrl({
+							'url' => $item->{'url'},
+						});
+					if(defined($track)) {
+						$log->debug("Added play history of track: ".$item->{'url'});
+						addToPlayListHistory($addedClient, $track, $item->{'skipped'}, $item->{'addedTime'});
+					}
+				}
+			}
+		}
+		$historyQueue = {};
+	}
+}
+
 sub continuePreviousPlaylist {
 	my $client = shift;
 	my $masterClient = masterOrSelf($client);
@@ -2152,6 +2196,7 @@ sub initPlugin {
 		[['playlist'], ['newsong', 'delete', keys %stopcommands]]);
 	Slim::Control::Request::subscribe(\&powerCallback,[['power']]); 
 	Slim::Control::Request::subscribe(\&clientNewCallback,[['client'],['new']]); 
+	Slim::Control::Request::subscribe(\&rescanDone,[['rescan'],['done']]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlists','_all','_start','_itemsPerResponse'], [1, 1, 0, \&cliGetPlaylists]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','play'], [1, 0, 1, \&cliPlayPlaylist]);
 	Slim::Control::Request::addDispatch(['dynamicplaylist','playlist','add'], [1, 0, 1, \&cliAddPlaylist]);
@@ -4044,6 +4089,23 @@ sub addToPlayListHistory
 {
 	my ($client,$track,$skipped,$addedTime) = @_;
 
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+		$log->debug("Adding track to queue: ".$track->url);
+		my $item = {
+			'url' => $track->url,
+			'skipped' => $skipped,
+			'addedTime' => $addedTime,
+		};
+		my $existing = $historyQueue->{$client->id};
+		if(!defined($existing)) {
+			my @empty = ();
+			$historyQueue->{$client->id} = \@empty;
+			$existing = \@empty;
+		}
+		push @$existing,$item;
+		return;
+	}
+
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
@@ -4068,6 +4130,20 @@ sub clearPlayListHistory {
 	my $ds        = getCurrentDS();
 
 	my $dbh = getCurrentDBH();
+
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+		if(defined($clients)) {
+			foreach my $client (@$clients) {
+				my @empty = ();
+				$historyQueue->{$client->id} = \@empty;
+				$deleteQueue->{$client->id} = 1;
+			}
+		}else {
+			$historyQueue = {};
+			$deleteAllQueues = 1;
+		}
+		return;
+	}
 
 	my $sth = undef;
 	if(defined($clients)) {
