@@ -4044,21 +4044,21 @@ sub commandCallback65($)
 	{
 		if(scalar(keys %$ratingQueue)>0) {
 			foreach my $url (keys %$ratingQueue) {
-				$log->warn("Setting queued rating for $url");
+				$log->debug("Setting queued rating for $url");
 				rateSong($client,$url,$ratingQueue->{$url},'user');
 			}
 			$ratingQueue = {};
 		}
 		if(scalar(keys %$statisticsQueue)>0) {
 			foreach my $url (keys %$statisticsQueue) {
-				$log->warn("Setting queued statistic for $url");
+				$log->debug("Setting queued statistic for $url");
 				setSqueezeCenterStatistics($url,$statisticsQueue->{'playCount'},$statisticsQueue->{'lastPlayed'});
 			}
 			$statisticsQueue = {};
 		}
 		if(scalar(keys %$playQueue)>0) {
 			foreach my $url (keys %$playQueue) {
-				$log->warn("Setting queued play history for $url");
+				$log->debug("Setting queued play history for $url");
 				markedAsPlayed($client,$url);
 			}
 			$playQueue = {};
