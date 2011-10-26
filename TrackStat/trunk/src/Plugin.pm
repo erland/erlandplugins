@@ -289,6 +289,11 @@ my %choiceMapping = (
 	'pause' => 'passback'
 );
 
+my $driver;
+my $statisticsQueue = {};
+my $ratingQueue = {};
+my $playQueue = {};
+
 sub defaultMap { 
 	if($prefs->get("disablenumberscroll")) { 
 		for my $key (keys %mapping) {
@@ -538,9 +543,15 @@ sub getDetailsDisplayText {
 	my ($client, $item) = @_;
 
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $item->{'itemobj'}->url,undef,$item->{'itemobj'});
+	if(defined($trackHandle) && exists $ratingQueue->{$item->{'itemobj'}->url}) {
+		$trackHandle->rating($ratingQueue->{$item->{'itemobj'}->url});
+	}
 	my $displayStr;
 	my $headerStr;
 	if($trackHandle) {
+		if(exists $ratingQueue->{$item->{'itemobj'}->url}) {
+			$trackHandle->rating = $ratingQueue->{$item->{'itemobj'}->url};
+		}
 		if($trackHandle->rating) {
 			my $rating = $trackHandle->rating;
 			if($rating) {
@@ -806,6 +817,9 @@ sub getSetModeDataForRating {
 	my $realRating;
 	if(ref($item) eq 'Slim::Schema::Track') {
 		my $trackData = Plugins::TrackStat::Storage::findTrack( $item->url,undef,$item);
+		if(defined($trackData) && exists $ratingQueue->{$item->url}) {
+			$trackData->rating($ratingQueue->{$item->url});
+		}
 		$realRating = $trackData->rating || 0;
 		
 	}elsif(ref($item) eq 'Slim::Schema::Album') {
@@ -1008,6 +1022,9 @@ sub getSetModeDataForStatistics {
 			}else {
 				if($item->{'listtype'} eq 'track') {
 					my $trackHandle = Plugins::TrackStat::Storage::findTrack( $item->{'itemobj'}->url,undef,$item->{'itemobj'});
+					if(defined($trackHandle) && exists $ratingQueue->{$item->{'itemobj'}->url}) {
+						$trackHandle->rating($ratingQueue->{$item->{'itemobj'}->url});
+					}
 					my $headerStr;
 					if($trackHandle) {
 						if($trackHandle->lastPlayed) {
@@ -1124,6 +1141,9 @@ sub getTrackInfo {
 					$log->warn("Error retrieving track: ".$playStatus->currentTrackOriginalFilename()."\n");
 				}
 				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename(),undef,$track);
+				if(defined($trackHandle) && exists $ratingQueue->{$playStatus->currentTrackOriginalFilename()}) {
+					$trackHandle->rating($ratingQueue->{$playStatus->currentTrackOriginalFilename()});
+				}
 				my $playedCount = 0;
 				my $playedDate = "";
 				my $rating = 0;
@@ -1630,6 +1650,9 @@ sub handleWebSongInfo {
 		$params->{'nowplayingtrackitem'} = \%form;
 		$params->{'nowplayingtrack'} = $nowPlayingTrack;
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $nowPlayingTrack->url,undef,$nowPlayingTrack);
+		if(defined($trackHandle) && exists $ratingQueue->{$nowPlayingTrack->url}) {
+			$trackHandle->rating($ratingQueue->{$nowPlayingTrack->url});
+		}
 		if(defined($trackHandle)) {
 			my $rating = $trackHandle->rating || 0;
 			if($prefs->get("rating_10scale")) {
@@ -1654,6 +1677,9 @@ sub handleWebSongInfo {
 		$params->{'trackitem'} = \%form;
 		$params->{'track'} = $track;
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+			$trackHandle->rating($ratingQueue->{$track->url});
+		}
 		if(defined($trackHandle)) {
 			my $rating = $trackHandle->rating || 0;
 			if($prefs->get("rating_10scale")) {
@@ -1979,6 +2005,9 @@ sub checkCustomSkipFilterType {
 				my $rating = $ratings->[0] if(defined($ratings) && scalar(@$ratings)>0);
 				
 				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+				if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+					$trackHandle->rating($ratingQueue->{$track->url});
+				}
 				if(defined($trackHandle) && defined($trackHandle->rating) && $trackHandle->rating<=$rating) {
 					return 1;
 				}
@@ -1987,6 +2016,9 @@ sub checkCustomSkipFilterType {
 		}
 	}elsif($filter->{'id'} eq 'trackstat_notrated') {
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+			$trackHandle->rating($ratingQueue->{$track->url});
+		}
 		if(!defined($trackHandle) || !defined($trackHandle->rating) || !$trackHandle->rating) {
 			return 1;
 		}
@@ -1999,6 +2031,9 @@ sub checkCustomSkipFilterType {
 				my $time = $times->[0] if(defined($times) && scalar(@$times)>0);
 
 				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+				if(defined($trackHandle) && exists $playQueue->{$track->url}) {
+					return 1;
+				}
 				if(defined($trackHandle) && $trackHandle->lastPlayed) {
 					if($currentTime - $trackHandle->lastPlayed < $time) {
 						return 1;
@@ -2359,6 +2394,8 @@ sub initPlugin
 	my $class = shift;
 	$class->SUPER::initPlugin(@_);
 	$PLUGINVERSION = Slim::Utils::PluginManager->dataForPlugin($class)->{'version'};
+	my ($source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
 	Plugins::TrackStat::Settings::Basic->new($class);
 	Plugins::TrackStat::Settings::Backup->new($class);
 	Plugins::TrackStat::Settings::EnabledStatistic->new($class);
@@ -2938,6 +2975,9 @@ sub trackInfoHandler {
         $tags ||= {};
         
         my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url, undef, $track);
+	if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+		$trackHandle->rating($ratingQueue->{$track->url});
+	}
 
         if ( $tags->{menuMode} ) {
 		my $jive = {};
@@ -4002,6 +4042,28 @@ sub commandCallback65($)
 	######################################
 	if ( $request->isCommand([['rescan'],['done']]) )
 	{
+		if(scalar(keys %$ratingQueue)>0) {
+			foreach my $url (keys %$ratingQueue) {
+				$log->warn("Setting queued rating for $url");
+				rateSong($client,$url,$ratingQueue->{$url},'user');
+			}
+			$ratingQueue = {};
+		}
+		if(scalar(keys %$statisticsQueue)>0) {
+			foreach my $url (keys %$statisticsQueue) {
+				$log->warn("Setting queued statistic for $url");
+				setSqueezeCenterStatistics($url,$statisticsQueue->{'playCount'},$statisticsQueue->{'lastPlayed'});
+			}
+			$statisticsQueue = {};
+		}
+		if(scalar(keys %$playQueue)>0) {
+			foreach my $url (keys %$playQueue) {
+				$log->warn("Setting queued play history for $url");
+				markedAsPlayed($client,$url);
+			}
+			$playQueue = {};
+		}
+
 		if($prefs->get("refresh_rescan")) {
 			Plugins::TrackStat::Storage::refreshTracks();
 		}
@@ -4218,6 +4280,9 @@ sub stopTimingSong($$)
 			my $minPlayedTime = $prefs->get("min_song_length");
 			if($totalElapsedTimeDuringPlay>=$minPlayedTime) {
 				my $trackHandle = Plugins::TrackStat::Storage::findTrack( $playStatus->currentTrackOriginalFilename);
+				if(defined($trackHandle) && exists $ratingQueue->{$playStatus->currentTrackOriginalFilename}) {
+					$trackHandle->rating($ratingQueue->{$playStatus->currentTrackOriginalFilename});
+				}
 				my $rating = undef;
 				if(defined($trackHandle)) {
 					$rating = $trackHandle->rating;
@@ -4292,6 +4357,11 @@ sub markedAsPlayed {
 	$log->debug("Entering markedAsPlayed\n");
 	my $client = shift;
 	my $url = shift;
+
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+		$playQueue->{$url} = 1;
+		return;
+	}
 	my $ds        = Plugins::TrackStat::Storage::getCurrentDS();
 	my $track     = Plugins::TrackStat::Storage::objectForUrl($url);
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
@@ -4454,6 +4524,10 @@ sub rateSong {
 		$log->warn("Failure setting rating, track does not exist: $url\n");
 		return;
 	}
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning && $type eq 'user') {
+		$ratingQueue->{$url} = $rating;
+		return;
+	}
 	Plugins::TrackStat::Storage::saveRating($url,undef,$track,$rating);
 	no strict 'refs';
 	for my $item (keys %ratingPlugins) {
@@ -4555,6 +4629,9 @@ sub getCLIRating {
 		return;
 	}
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+	if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+		$trackHandle->rating($ratingQueue->{$track->url});
+	}
 	my $resultRating = 0;
 	my $resultDigit = 0;
 	if($trackHandle && $trackHandle->rating) {
@@ -4780,6 +4857,14 @@ sub setCLIStatistic {
 sub setSqueezeCenterStatistics {
 	my ($url,$playCount, $lastPlayed)=@_;
 
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+		$statisticsQueue->{$url} = {
+			'playCount' => $playCount,
+			'lastPlayed' => $lastPlayed,
+		};
+		return;
+	}
+
 	my $track = undef;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	eval {
@@ -4859,6 +4944,9 @@ sub getRatingDynamicCustomItem
 	}else {
 		$log->debug("Entering getRatingDynamicCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+			$trackHandle->rating($ratingQueue->{$track->url});
+		}
 		if($trackHandle && $trackHandle->rating) {
 			my $rating;
 			if($prefs->get("rating_10scale")) {
@@ -4887,6 +4975,9 @@ sub getRatingStaticCustomItem
 	}else {
 		$log->debug("Entering getRatingStaticCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+			$trackHandle->rating($ratingQueue->{$track->url});
+		}
 		if($trackHandle && $trackHandle->rating) {
 			my $rating;
 			if($prefs->get("rating_10scale")) {
@@ -4920,6 +5011,9 @@ sub getRatingNumberCustomItem
 	}else {
 		$log->debug("Entering getRatingNumberCustomItem\n");
 		my $trackHandle = Plugins::TrackStat::Storage::findTrack( $track->url,undef,$track);
+		if(defined($trackHandle) && exists $ratingQueue->{$track->url}) {
+			$trackHandle->rating($ratingQueue->{$track->url});
+		}
 		if($trackHandle && $trackHandle->rating) {
 			my $rating;
 			if($prefs->get("rating_10scale")) {
