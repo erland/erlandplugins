@@ -4089,7 +4089,7 @@ sub addToPlayListHistory
 {
 	my ($client,$track,$skipped,$addedTime) = @_;
 
-	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
 		$log->debug("Adding track to queue: ".$track->url);
 		my $item = {
 			'url' => $track->url,
@@ -4131,7 +4131,7 @@ sub clearPlayListHistory {
 
 	my $dbh = getCurrentDBH();
 
-	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
 		if(defined($clients)) {
 			foreach my $client (@$clients) {
 				my @empty = ();
