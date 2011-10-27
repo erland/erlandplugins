@@ -4358,7 +4358,7 @@ sub markedAsPlayed {
 	my $client = shift;
 	my $url = shift;
 
-	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
 		$playQueue->{$url} = 1;
 		return;
 	}
@@ -4524,7 +4524,7 @@ sub rateSong {
 		$log->warn("Failure setting rating, track does not exist: $url\n");
 		return;
 	}
-	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning && $type eq 'user') {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning) && $type eq 'user') {
 		$ratingQueue->{$url} = $rating;
 		return;
 	}
@@ -4857,7 +4857,7 @@ sub setCLIStatistic {
 sub setSqueezeCenterStatistics {
 	my ($url,$playCount, $lastPlayed)=@_;
 
-	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && Slim::Music::Import->externalScannerRunning) {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
 		$statisticsQueue->{$url} = {
 			'playCount' => $playCount,
 			'lastPlayed' => $lastPlayed,
