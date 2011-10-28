@@ -93,17 +93,8 @@ sub initDatabase {
 	if($driver eq 'SQLite') {
 		createSQLiteFunctions();
 	}
-	my $st = $dbh->table_info();
-	my $tblexists;
-	while (my ( $qual, $owner, $table, $type ) = $st->fetchrow_array()) {
-		if($table eq "customscan_track_attributes") {
-			$tblexists=1;
-		}
-	}
-	unless ($tblexists) {
-		$log->warn("CustomScan: Creating database tables\n");
-		executeSQLFile("dbcreate.sql");
-	}
+	$log->warn("CustomScan: Creating database tables\n");
+	executeSQLFile("dbcreate.sql");
 
 	eval { $dbh->do("select valuesort from customscan_track_attributes limit 1;") };
 	if ($@) {
