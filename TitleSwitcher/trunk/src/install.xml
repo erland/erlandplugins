@@ -4,7 +4,7 @@
   <creator>Erland Isaksson</creator>
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_TITLESWITCHER_GROUP_DESC</description>
-  <email>erland_i@hotmail.com</email>
+  <email>erland@isaksson.info</email>
   <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>5152A008-AEE9-11DD-8F97-E86F403F04D9</id>
   <module>Plugins::TitleSwitcher::Plugin</module>
