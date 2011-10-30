@@ -4,7 +4,7 @@
   <creator>Erland Isaksson</creator>
   <defaultState>enabled</defaultState>
   <description>SETUP_PLUGIN_MAIL_GROUP_DESC</description>
-  <email>erland_i@hotmail.com</email>
+  <email>erland@isaksson.info</email>
   <homepageURL>http://wiki.erland.isaksson.info</homepageURL>
   <id>C156324E-79D1-11DE-972C-8F48A2E8DC2A</id>
   <module>Plugins::Mail::Plugin</module>
