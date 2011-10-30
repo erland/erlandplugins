@@ -16,7 +16,7 @@
 			- The License Manager applet must be installed for this version to work
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3480.zip</url>
                         <sha>04ac1fb1c555e5fcb368e7311bc6c2bcaf699eb7</sha>
                         <link>http://erland.isaksson.info</link>
@@ -27,7 +27,7 @@
                         <changes lang="EN">- Added support for non resized images (not used yet)
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-1.0.zip</url>
                         <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
                         <link>http://erland.isaksson.info</link>
@@ -38,7 +38,7 @@
                         <changes lang="EN">- Corrected crash, mysqueezebox.com proxy is now used during image retrieval
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3308.zip</url>
                         <sha>2a06ce923e506f0fb77527a33e41d32262ec689e</sha>
                         <link>http://erland.isaksson.info</link>
@@ -49,7 +49,7 @@
                         <changes lang="EN">- The License Manager applet must be installed for this version to work
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3516.zip</url>
                         <sha>dc8f4c1e49b37cb14065bf57a3345366b1ec876d</sha>
                         <link>http://erland.isaksson.info</link>
@@ -61,7 +61,7 @@
                         - Added information about creators
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
                         <sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
                         <link>http://erland.isaksson.info</link>
@@ -73,7 +73,7 @@
                         <changes lang="EN">- The License Manager applet must be installed for this version to work
 			</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3519.zip</url>
                         <sha>58edb1bf8a47ef701f838cc3db74c0e7d89828c7</sha>
                         <link>http://erland.isaksson.info</link>
@@ -83,7 +83,7 @@
                         <desc lang="EN">Make it possible to reset settings from a individual applet insteaed of doing a complete factory reset</desc>
 						<changes lang="EN">No changes since latest beta</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-1.0.30.zip</url>
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
@@ -95,7 +95,7 @@
                         <changes lang="EN">- Corrected for all non english languages
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.60.zip</url>
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
@@ -107,7 +107,7 @@
                         <changes lang="EN">- Improved account id detection on standalone Squeezebox Touch
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.67.zip</url>
                         <sha>5779593f514241d8794102a3400c9876967ccf90</sha>
                         <link>http://erland.isaksson.info</link>
@@ -120,7 +120,7 @@
                         <changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-1.1.3585.zip</url>
                         <sha>375245025b800faa24f012720b9341edb83c3e21</sha>
                         <link>http://erland.isaksson.info</link>
@@ -129,7 +129,7 @@
                         <title lang="EN">Auto Repositories</title>
                         <desc lang="EN">Automatically makes all third party plugin repositories that are listed on the Logitech wiki site available through Extension Downloader. The plugin doesn't actually read the wiki page directly since that would open up a security hole, instead it reads the repositories from a list available on the erlandplugins Google Code project. New repostories added to the wiki page will be added after they have been checked so they provide serious plugins and not spam urls. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-autorepo&amp;filename=AutoRepo-1.0.1.zip</url>
                         <sha>365ce0aed62bd73f6f6dc5a717fd30338c292311</sha>
                         <link>http://wiki.slimdevices.com/index.php/Auto_Repositories_plugin</link>
@@ -143,7 +143,7 @@
 			- Added predefiend SQL Playlist playlists for playing top rated or most played albums in a genre, artist or year
 			- Improved logic releated to finding moved tracks on multi disk albums when a TrackStat backup is restored</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
 			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.8.zip</url>
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
@@ -154,7 +154,7 @@
 			<changes lang="EN">- Corrected so it works in 7.6.0 and 7.6.1 (was accidentaly broken in previous release)
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
 			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3598.zip</url>
 			<sha>bc467870952f6cad32eb4e590f77194f61fd24b4</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
@@ -170,20 +170,20 @@
 			- Added support for showing album arts in Tags menu
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.8.zip</url>
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.12.3573" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.12.3605" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
+			<changes lang="EN">- Removed standard menu replacement in 7.6 and later since it didn't work, use new Hide Menus plugin instead
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3573.zip</url>
-                        <sha>8259ecffae71f4c3ce5258dd89ce7d8c0753c0d5</sha>
+			<email>erland@isaksson.info</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3605.zip</url>
+                        <sha>408b090727815ce43a91cc735808bfc1462f68f5</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -196,7 +196,7 @@
 			- Added support for showing duplicate text lines in album lists on Controller (for examples showing the artist for an album), requires Custom Browse 2.8 or later.
 			- Added support for showing album arts in Dyanmic Tags menu, requires Custom Browse 2.8 or later</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.6.zip</url>
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
@@ -207,7 +207,7 @@
 			<changes lang="EN">- Corrected issue where tables weren't recreated if the database got corrupt
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3601.zip</url>
                         <sha>50d398f546a23c7f5676a54522b029a7139633b2</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
@@ -217,7 +217,7 @@
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
 			<changes lang="EN">- Corrected so only local tracks can be skipped</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.5.zip</url>
                         <sha>bebd6cad35a0e74ece1c3c9bf4040800bcad75e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
@@ -228,7 +228,7 @@
                         <changes lang="EN">- Some small corrections
 			- License Manager plugin must be installed for this version to work</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3499.zip</url>
                         <sha>a2eb636fe31c994b09d677f4c48dc0630d696982</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
@@ -239,7 +239,7 @@
 			<changes lang="EN">- Added support for SqueezeCenter 7.4
 			- Added support for custom tag based Dynamic Playlist mixers</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.7.zip</url>
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
@@ -250,7 +250,7 @@
 			<changes lang="EN">- Corrected so it works in 7.6.0 and 7.6.1 (was accidentaly broken in previous release)
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3596.zip</url>
                         <sha>d2388d7c4758714e30fb568af9e0df9ae2caf232</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
@@ -261,7 +261,7 @@
 			<changes lang="EN">- Added support for SqueezeCenter 7.4
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.1.2.zip</url>
                         <sha>ef05d5f00298cf4c1a1e1426f9176567e12034f9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
@@ -272,7 +272,7 @@
 			<changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3579.zip</url>
                         <sha>263192afb098bb3bf1f94f650598b4a3576c0fe6</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
@@ -284,7 +284,7 @@
 			- Corrected so internet meta data is shown correctly on Now Playing screen if MULTILIBRARIES title format is used
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.3.1.zip</url>
                         <sha>4c18394463689af4a2ac9c68f77eb471274dc7ae</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
@@ -294,7 +294,7 @@
                         <desc lang="EN">Makes it possible to divide your SqueezeCenter library into different sub libraries, requires Custom Browse plugin to be able to browse the sub libraries. Please note that Multi Library needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
 			<changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.6.3575.zip</url>
                         <sha>b65ebd1d37569ed9625861cc1e3f937b6851f83d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
@@ -307,7 +307,7 @@
 			- Added predefined playlists for playing a random album in a genre, decade, artist, playlist or year
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.4.zip</url>
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
@@ -318,7 +318,7 @@
 			<changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
 			</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3577.zip</url>
                         <sha>f353fb838bd8bd1c59365bd26d4cf53277443396</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
@@ -328,7 +328,7 @@
                         <desc lang="EN">Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed. (Boom, Transporter, Classic, SoftSqueeze)</desc>
 			<changes lang="EN">- Corrected handling on SB1 devices with long texts</changes>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.3.zip</url>
                         <sha>d25140b9bf9038bea7c6e4728e84f6d81f5c0b59</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
@@ -338,7 +338,7 @@
                         <desc lang="EN">Makes it possible to get text information on the player screen that switches between different kind of information, for example showing artist 5 seconds and album name 5 seconds. The plugin requires that the Music Information Screen(MusicInfoSCR) plugin is installed. (Boom, Transporter, Classic, SoftSqueeze)</desc>
                         <changes lang="EN">- License Manager plugin must be installed for this version to work</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.2.3503.zip</url>
                         <sha>b33d38a8ce075265ac5557b2d25501b59e1c877c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
@@ -348,7 +348,7 @@
                         <desc lang="EN">Makes it possible to export the TrackStat statistics such as ratings and played tracks to static playlists. This is useful when you like to manually update ratings in for example J River Media Center based on a playlist that contains all 4 rated tracks. Please note that this plugin requires you to install both TrackStat and Custom Scan plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Added support for SqueezeCenter 7.4</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.0.1.zip</url>
                         <sha>d23167c3c3eb0388428e0484f4ecdfaeb3b13918</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
@@ -358,7 +358,7 @@
                         <desc lang="EN">Makes it possible to export the TrackStat statistics such as ratings and played tracks to static playlists. This is useful when you like to manually update ratings in for example J River Media Center based on a playlist that contains all 4 rated tracks. Please note that this plugin requires you to install both TrackStat and Custom Scan plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Same version as 1.1pre1</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.1.zip</url>
                         <sha>752663c7fbf465b286c86d69e30b33ea340596e5</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
@@ -368,7 +368,7 @@
                         <desc lang="EN">Makes it possible to generate static playlists based on information in SqueezeCenter database, such as ratings and played tracks. This is useful when you like to have a playlist as a .m3u file which you can export to other tools. This plugin works by itself but if you also install Custom Scan you will be able to re-generate all playlists automatically when you perform a rescan in SqueezeCenter. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Added support for SqueezeCenter 7.4</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.0.1.zip</url>
                         <sha>7ec594c94709065f0adbf9bdf5cf4513519911db</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
@@ -379,7 +379,7 @@
                         <changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
 			</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.2.3581.zip</url>
                         <sha>75b69fed066c1d4475e3f1657c193ad349cfed2c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
@@ -390,7 +390,7 @@
 			<changes lang="EN">- License Manager plugin must be installed for this version to work
 			</changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3516.zip</url>
                         <sha>553ee284e15db0f918da9b1895a5a7e7fb81c4ea</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
@@ -404,7 +404,7 @@
 			- Added som localization to settings pages
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3422.zip</url>
                         <sha>d6c9e67c84d415f5f2fb601501b27e439b75755b</sha>
                         <link>http://erland.isaksson.info</link>
@@ -415,7 +415,7 @@
                         <changes lang="EN">- Added tracking to comply to Musixmatch license aggreement 
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3445.zip</url>
                         <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
                         <link>http://erland.isaksson.info</link>
@@ -426,10 +426,21 @@
                         <changes lang="EN">- Updated so it works with SBS 7.4
                         </changes>
                         <creator>Erland Isaksson</creator>
-                        <email>erland_i@hotmail.com</email>
+                        <email>erland@isaksson.info</email>
                         <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3593.zip</url>
                         <sha>ee4472b28f1db91ccb5a130ffd6549b992c996c2</sha>
                         <link>http://erland.isaksson.info</link>
+                </plugin>
+		<plugin name="HideMenus" version="1.0.3604" minTarget="7.6.0" maxTarget="7.*">
+                        <title lang="EN">Custom Browse</title>
+                        <desc lang="EN">Makes it possible to hide standard browse menus, typically used together with Custom Browse to replace them with a customized version (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">- Initial release
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-hidemenus&amp;filename=HideMenus-1.0.3604.zip</url>
+                        <sha>f665532d67476ce16455891bf62747ccb7fe4ffc</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Hide_Menus_plugin</link>
                 </plugin>
 	</plugins>
 	<patches>
@@ -437,7 +448,7 @@
 			<title lang="EN">Custom alarm window</title>
 			<desc lang="EN">Makes it possible open a third party applet when an alarm is triggered instead of the standard alarm snooze popup, this patch doesn't add any user visible features it just adds an API which other plugins can use</desc>
 			<creator>Erland Isaksson</creator>
-			<email>erland_i@hotmail.com</email>
+			<email>erland@isaksson.info</email>
 			<url>http://erlandapplets.googlecode.com/svn/PatchInstaller/trunk/patches/CustomAlarmWindow/CustomAlarmWindow-1.0.patch</url>
 			<sha>36f4342b81fcafdce691a55d85810d1d10465156</sha>
 			<link>http://wiki.slimdevices.com/index.php/Patch_Installer_applet</link>
