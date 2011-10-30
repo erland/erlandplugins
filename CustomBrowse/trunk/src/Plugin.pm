@@ -2123,23 +2123,25 @@ sub getMenuKey {
 	my $menu = shift;
 	my $default = shift;
 
-	foreach my $key (qw(album artist genre year)) {
-		my $replaceMenu = $prefs->get('squeezecenter_'.$key.'_menu');
+	if($::VERSION lt '7.6') {
+		foreach my $key (qw(album artist genre year)) {
+			my $replaceMenu = $prefs->get('squeezecenter_'.$key.'_menu');
+			if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+				return 'BROWSE_BY_'.uc($key);
+			}
+		}
+		my $replaceMenu = $prefs->get('squeezecenter_newmusic_menu');
 		if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
-			return 'BROWSE_BY_'.uc($key);
+			return 'BROWSE_NEW_MUSIC';
+		}
+
+		$replaceMenu = $prefs->get('squeezecenter_playlist_menu');
+		if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
+			return 'SAVED_PLAYLISTS';
 		}
 	}
-	my $replaceMenu = $prefs->get('squeezecenter_newmusic_menu');
-	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
-		return 'BROWSE_NEW_MUSIC';
-	}
 
-	$replaceMenu = $prefs->get('squeezecenter_playlist_menu');
-	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
-		return 'SAVED_PLAYLISTS';
-	}
-
-	$replaceMenu = $prefs->get('squeezecenter_ipengbrowsemore_menu');
+	my $replaceMenu = $prefs->get('squeezecenter_ipengbrowsemore_menu');
 	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
 		return 'PLUGIN_IPENG_CUSTOM_BROWSE_MORE';
 	}
