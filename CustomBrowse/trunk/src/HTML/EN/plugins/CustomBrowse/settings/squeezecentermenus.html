@@ -2,6 +2,7 @@
 [% PROCESS settings/header.html %]
 
 [% PROCESS plugins/CustomBrowse/settings/subpage_chooser.html %]
+	[% IF !pluginCustomBrowseSlimserverOneBrowser %]
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS" desc="SETUP_PLUGIN_CUSTOMBROWSE_REPLACE_WEB_MENUS_DESC" %]
 		<select name="pref_replacewebmenus">
 			<option value="1" [% IF prefs.replacewebmenus %]selected[% END %]>[% "YES" | string %]</option>
@@ -22,10 +23,14 @@
 			<option value="0" [% IF NOT prefs.replacecontrollermenus %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
 	[% END %]
-
+	[% END %]
 	<div class="settingSection">
 		<div class="prefHead">[% "SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS" | string | upper %]</div>
+		[% IF pluginCustomBrowseSlimserverOneBrowser %]
+		<div class="prefDesc">[% "SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS_ONEBROWSER_DESC" | string %]</div>
+		[% ELSE %]
 		<div class="prefDesc">[% "SETUP_PLUGIN_CUSTOMBROWSE_SLIMSERVER_MENUS_DESC" | string %]</div>
+		[% END %]
 
 	<table border="0">
 		[%- FOREACH menu IN pluginCustomBrowseSlimserverMenus %]
@@ -45,5 +50,6 @@
 			</tr>
 		[%- END %]
 	</table>
+	</div>
 
 [% PROCESS settings/footer.html %]

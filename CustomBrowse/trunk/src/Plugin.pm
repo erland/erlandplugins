@@ -39,6 +39,7 @@ use SOAP::Lite;
 use Slim::Utils::PluginManager;
 use Slim::Control::Jive;
 use POSIX qw(floor);
+use Time::HiRes;
 
 use Plugins::CustomBrowse::Settings;
 use Plugins::CustomBrowse::EnabledMixers;
@@ -1726,7 +1727,7 @@ sub addPlayerMenus {
             my $name = getMenuHandler()->getItemText($client,$menu);
             my $key = getMenuKey($client,$menu,$name);
 
-            if($menu->{'enabledbrowse'} || ($name ne $key && $prefs->get('replaceplayermenus'))) {
+            if($menu->{'enabledbrowse'} || ($name ne $key && ($prefs->get('replaceplayermenus') || $::VERSION ge '7.6'))) {
 		my %submenubrowse = (
 			'useMode' => 'PLUGIN.CustomBrowse.Browse',
 			'selectedMenu' => $menu->{'id'},
@@ -1752,7 +1753,7 @@ sub addJivePlayerMenus {
         for my $menu (@$menus) {
             my $name = getMenuHandler()->getItemText($client,$menu);
             my $key = getJiveMenuKey($client,$menu,$name);
-            if($menu->{'enabledbrowse'} || ($name ne $key && $prefs->get('replacecontrollermenus'))) {
+            if($menu->{'enabledbrowse'} || ($name ne $key && ($prefs->get('replacecontrollermenus') || $::VERSION ge '7.6'))) {
 		my %itemParams = ();
 		if(defined($menu->{'contextid'})) {
 			$itemParams{'hierarchy'} = $menu->{'contextid'};
@@ -2047,7 +2048,7 @@ sub webPages {
 }
 
 sub delSlimserverWebMenus {
-	if($prefs->get('replacewebmenus')) {
+	if($prefs->get('replacewebmenus') && $::VERSION lt '7.6') {
 		if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
 			Slim::Web::Pages->addPageLinks("browse", {'BROWSE_BY_ARTIST' => undef });
 		}
@@ -2070,46 +2071,50 @@ sub delSlimserverWebMenus {
 }
 
 sub delSlimserverPlayerMenus {
-	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ARTIST');
-	}
-	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_GENRE');
-	}
-	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ALBUM');
-	}
-	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_YEAR');
-	}
-	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_NEW_MUSIC');
-	}
-	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
-		Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'SAVED_PLAYLISTS');
+	if($::VERSION lt '7.6') {
+		if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ARTIST');
+		}
+		if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_GENRE');
+		}
+		if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_ALBUM');
+		}
+		if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_BY_YEAR');
+		}
+		if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'BROWSE_NEW_MUSIC');
+		}
+		if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
+			Slim::Buttons::Home::delSubMenu("BROWSE_MUSIC", 'SAVED_PLAYLISTS');
+		}
 	}
 }
 
 sub delJivePlayerMenus {
 	my $client = shift;
 
-	if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicArtists");
-	}
-	if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicGenres");
-	}
-	if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicAlbums");
-	}
-	if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicYears");
-	}
-	if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicNewMusic");
-	}
-	if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
-		Slim::Control::Jive::deleteMenuItem("myMusicPlaylists");
+	if($::VERSION lt '7.6') {
+		if($prefs->get('squeezecenter_artist_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicArtists");
+		}
+		if($prefs->get('squeezecenter_genre_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicGenres");
+		}
+		if($prefs->get('squeezecenter_album_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicAlbums");
+		}
+		if($prefs->get('squeezecenter_year_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicYears");
+		}
+		if($prefs->get('squeezecenter_newmusic_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicNewMusic");
+		}
+		if($prefs->get('squeezecenter_playlist_menu') eq 'disabled') {
+			Slim::Control::Jive::deleteMenuItem("myMusicPlaylists");
+		}
 	}
 }
 
@@ -2146,6 +2151,9 @@ sub getJiveMenuKey {
 	my $menu = shift;
 	my $default = shift;
 
+	if($::VERSION ge '7.6') {
+		return $default;
+	}
 	my $replaceMenu = $prefs->get('squeezecenter_album_menu');
 	if(defined($replaceMenu) && $replaceMenu eq $menu->{'id'}) {
 		return 'myMusicAlbums';
@@ -2190,7 +2198,7 @@ sub addWebMenus {
             if ( !Slim::Utils::Strings::stringExists($key) ) {
                	Slim::Utils::Strings::setString( uc $key, $name );
             }
-            if($menu->{'enabledbrowse'} || ($key ne $name && $prefs->get('replacewebmenus'))) {
+            if($menu->{'enabledbrowse'} || ($key ne $name && ($prefs->get('replacewebmenus') || $::VERSION ge '7.6'))) {
 		if(defined($menu->{'menu'}) && ref($menu->{'menu'}) ne 'ARRAY' && getMenuHandler()->hasCustomUrl($client,$menu->{'menu'})) {
 			
 			my $url = getMenuHandler()->getCustomUrl($client,$menu->{'menu'});
@@ -3501,42 +3509,44 @@ sub hideMenu {
 
 sub getSlimserverMenus {
 	my @slimserverMenus = ();
-	my %browseByAlbum = (
-		'id' => 'album',
-		'name' => string('BROWSE_BY_ALBUM'),
-		'enabled' => !$prefs->get('squeezecenter_album_menu')
-	);
-	push @slimserverMenus,\%browseByAlbum;
-	my %browseByArtist = (
-		'id' => 'artist',
-		'name' => string('BROWSE_BY_ARTIST'),
-		'enabled' => !$prefs->get('squeezecenter_artist_menu')
-	);
-	push @slimserverMenus,\%browseByArtist;
-	my %browseByGenre = (
-		'id' => 'genre',
-		'name' => string('BROWSE_BY_GENRE'),
-		'enabled' => !$prefs->get('squeezecenter_genre_menu')
-	);
-	push @slimserverMenus,\%browseByGenre;
-	my %browseByYear = (
-		'id' => 'year',
-		'name' => string('BROWSE_BY_YEAR'),
-		'enabled' => !$prefs->get('squeezecenter_year_menu')
-	);
-	push @slimserverMenus,\%browseByYear;
-	my %browseNewMusic = (
-		'id' => 'newmusic',
-		'name' => string('BROWSE_NEW_MUSIC'),
-		'enabled' => !$prefs->get('squeezecenter_newmusic_menu')
-	);
-	push @slimserverMenus,\%browseNewMusic;
-	my %browsePlaylist = (
-		'id' => 'playlist',
-		'name' => string('SAVED_PLAYLISTS').' (Player menu)',
-		'enabled' => !$prefs->get('squeezecenter_playlist_menu')
-	);
-	push @slimserverMenus,\%browsePlaylist;
+	if($::VERSION lt '7.6') {
+		my %browseByAlbum = (
+			'id' => 'album',
+			'name' => string('BROWSE_BY_ALBUM'),
+			'enabled' => !$prefs->get('squeezecenter_album_menu')
+		);
+		push @slimserverMenus,\%browseByAlbum;
+		my %browseByArtist = (
+			'id' => 'artist',
+			'name' => string('BROWSE_BY_ARTIST'),
+			'enabled' => !$prefs->get('squeezecenter_artist_menu')
+		);
+		push @slimserverMenus,\%browseByArtist;
+		my %browseByGenre = (
+			'id' => 'genre',
+			'name' => string('BROWSE_BY_GENRE'),
+			'enabled' => !$prefs->get('squeezecenter_genre_menu')
+		);
+		push @slimserverMenus,\%browseByGenre;
+		my %browseByYear = (
+			'id' => 'year',
+			'name' => string('BROWSE_BY_YEAR'),
+			'enabled' => !$prefs->get('squeezecenter_year_menu')
+		);
+		push @slimserverMenus,\%browseByYear;
+		my %browseNewMusic = (
+			'id' => 'newmusic',
+			'name' => string('BROWSE_NEW_MUSIC'),
+			'enabled' => !$prefs->get('squeezecenter_newmusic_menu')
+		);
+		push @slimserverMenus,\%browseNewMusic;
+		my %browsePlaylist = (
+			'id' => 'playlist',
+			'name' => string('SAVED_PLAYLISTS').' (Player menu)',
+			'enabled' => !$prefs->get('squeezecenter_playlist_menu')
+		);
+		push @slimserverMenus,\%browsePlaylist;
+	}
 	my %iPengBrowseMore = (
 		'id' => 'ipengbrowsemore',
 		'name' => 'Browse More (iPeng skin)',
