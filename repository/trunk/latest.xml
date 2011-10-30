@@ -432,7 +432,7 @@
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 		<plugin name="HideMenus" version="1.0.3604" minTarget="7.6.0" maxTarget="7.*">
-                        <title lang="EN">Custom Browse</title>
+                        <title lang="EN">Hide Menus</title>
                         <desc lang="EN">Makes it possible to hide standard browse menus, typically used together with Custom Browse to replace them with a customized version (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <changes lang="EN">- Initial release
                         </changes>
