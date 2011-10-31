@@ -53,7 +53,7 @@
 				<option value="0" [% IF NOT prefs.rememberactiveplaylist %]selected[% END %]>[% "NO" | string %]</option>
 			</select>
 		[% END %]
-
+		[% IF supportsMixers %]
 		[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_WEB_SHOW_MIXERLINKS_DESC" %]
 			<select name="pref_web_show_mixerlinks">
 				<option value="1" [% IF prefs.web_show_mixerlinks %]selected[% END %]>[% "YES" | string %]</option>
@@ -66,6 +66,7 @@
 				<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
 				<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 			</select>
+		[% END %]
 		[% END %]
 
 		[% WRAPPER setting title="SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS" desc="SETUP_PLUGIN_DYNAMICPLAYLIST_NUMBER_OF_TRACKS_DESC" %]

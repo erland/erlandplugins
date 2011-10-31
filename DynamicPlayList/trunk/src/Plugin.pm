@@ -2173,7 +2173,7 @@ sub initPlugin {
 		}
 	}
         Slim::Hardware::IR::addModeDefaultMapping('PLUGIN.DynamicPlayList.Choice',\%choiceMapping);
-	
+	if($::VERSION lt '7.6') {
 		my %mixerMap = ();
 		if($prefs->get("web_show_mixerlinks")) {
 			$mixerMap{'mixerlink'} = \&mixerlink;
@@ -2190,6 +2190,7 @@ sub initPlugin {
 		}
 		Slim::Music::Import->addImporter($class, \%mixerMap);
 	    	Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 1);
+	}
 
 	# set up our subscription
 	Slim::Control::Request::subscribe(\&commandCallback65, 
@@ -2617,9 +2618,11 @@ sub shutdownPlugin {
 	Slim::Control::Request::unsubscribe(\&commandCallback65);
 	Slim::Control::Request::unsubscribe(\&powerCallback);
 
-	if($prefs->get("web_show_mixerlinks") ||
-		$prefs->get("enable_mixerfunction")) {
-		Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
+	if($::VERSION lt '7.6') {
+		if($prefs->get("web_show_mixerlinks") ||
+			$prefs->get("enable_mixerfunction")) {
+			Slim::Music::Import->useImporter('Plugins::DynamicPlayList::Plugin', 0);
+		}
 	}
 }
 
