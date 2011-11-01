@@ -66,6 +66,7 @@ sub handler {
 	$params->{'licensemanager'} = Plugins::CustomSkip::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomSkip']);
 	$params->{'licensed'} = $validateRequest->getResult("result");
+	$params->{'supportsMixers'} = $::VERSION lt '7.6';
 	return $class->SUPER::handler($client, $params);
 }
 		
