@@ -20,7 +20,7 @@ SETUP_PLUGIN_CUSTOMSKIP_GROUP_DESC
 	EN	Custom Skip is a plugin which makes it easy to define filters on tracks that shouldnt be played.
 
 SETUP_PLUGIN_CUSTOMSKIP_DONATE_LINK
-	EN	Click here to donate
+	EN	You have a valid license
 
 PLUGIN_CUSTOMSKIP_SHOW_MESSAGES
 	EN	Show debug messages
