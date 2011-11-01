@@ -421,15 +421,16 @@
                         <sha>182570c2adcefe72b5ebcafae50e81dca69eb239</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
-                <plugin name="LicenseManagerPlugin" version="1.0.3593" minTarget="7.4.0" maxTarget="*">
+                <plugin name="LicenseManagerPlugin" version="1.0.3654" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">License Manager</title>
                         <desc lang="EN">A plugin that's required for licensed plugins to work, it will give you an overview of licensed plugins available and their current licensing status and links to pay for them. (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Updated so it works with SBS 7.4
+                        <changes lang="EN">- Updated so it displays license period
+			- Added refresh button to refresh license status
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3593.zip</url>
-                        <sha>ee4472b28f1db91ccb5a130ffd6549b992c996c2</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3654.zip</url>
+                        <sha>88a77abdfccecd8a8c4e296ee06c5a2e79a79101</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
 		<plugin name="HideMenus" version="1.0.3604" minTarget="7.6.0" maxTarget="7.*">
