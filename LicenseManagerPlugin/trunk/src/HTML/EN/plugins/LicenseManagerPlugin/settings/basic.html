@@ -41,7 +41,7 @@
 		</td>
 		<td nowrap>
 			[% IF plugin.licensed %]
-				<a href="[% plugin.licenseLink %]" target="_blank">[% "SETUP_PLUGIN_LICENSEMANAGER_LICENSED" | string %]</a>
+				<a href="[% plugin.licenseLink %]" target="_blank">[% "SETUP_PLUGIN_LICENSEMANAGER_LICENSED" | string %]</a><br/>([% IF plugin.licenseDate %][% "SETUP_PLUGIN_LICENSEMANAGER_LICENSED_UNTIL" | string %][% plugin.licenseDate %][% ELSE %][% "SETUP_PLUGIN_LICENSEMANAGER_LICENSED_UNLIMITED_TIME" | string %][% END %])
 			[% ELSE %]
 				<a href="[% plugin.licenseLink %]" target="_blank">[% "SETUP_PLUGIN_LICENSEMANAGER_LICENSE_OPTIONS" | string %]</a>
 			[% END %]
@@ -61,6 +61,7 @@
 			[% ELSE %]
 				<p><b>[% "SETUP_PLUGIN_LICENSEMANAGER_ACCOUNT_ID_MISSING" | string %]</b></p>
 			[% END %]
+			<br/><p><b><input name="refresh" type="submit" class="stdclick" value="[% "SETUP_PLUGIN_LICENSEMANAGER_REFRESH" | string %]"></b>
 		[% END %]
 	[% END %]
 

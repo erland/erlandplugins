@@ -47,7 +47,7 @@ sub handler {
 	my $data = { remaining => scalar keys %$repos, results => {}, errors => {} };
 
 	my $forcedCheck = 0;
-	if($params->{'saveSettings'}) {
+	if($params->{'saveSettings'} || $params->{'refresh'}) {
 		$forcedCheck = 1;
 	}
 	for my $repo (keys %$repos) {

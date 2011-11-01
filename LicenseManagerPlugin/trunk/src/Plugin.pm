@@ -404,7 +404,11 @@ sub _parseXML {
 				my $request = Slim::Control::Request::executeRequest(undef,['licensemanager','validate','application:'.$entry->{'name'},'version:'.$entry->{'version'},'force:'.$forcedCheck]);
 				my $result = $request->getResult("result");
 				if($result) {
-					$new->{'licensed'} = 1
+					$new->{'licensed'} = 1;
+					my $license = $prefs->get('licenses')->{$entry->{'name'}};
+					if($license->{'date'} ne '2037-12-31') {
+						$new->{'licenseDate'} = $license->{'date'};
+					}
 				}
 
 				if ($details) {
