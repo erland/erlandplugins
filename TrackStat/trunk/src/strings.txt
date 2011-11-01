@@ -305,10 +305,16 @@ PLUGIN_TRACKSTAT_WEB_LIST_LENGTH
 	EN	Number of songs/albums/artists on web
 
 SETUP_PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH
-	EN	Number of songs/albums/artists on player
+	EN	Number of songs/albums/artists on classic player
 
 SETUP_PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH_DESC
-	EN	Number songs/albums/artists that should be shown in the player interface for TrackStat when browsing statistic information with remote
+	EN	Number songs/albums/artists that should be shown in the player interface for TrackStat when browsing statistic information with IR remote
+
+SETUP_PLUGIN_TRACKSTAT_JIVE_LIST_LENGTH
+	EN	Number of songs/albums/artists on modern player 
+
+SETUP_PLUGIN_TRACKSTAT_JIVE_LIST_LENGTH_DESC
+	EN	Number songs/albums/artists that should be shown in the player interface for TrackStat when browsing statistic information with Controller, Touch, Radio, Android, iOS remote
 
 PLUGIN_TRACKSTAT_PLAYER_LIST_LENGTH
 	EN	Number of songs/albums/artists on player

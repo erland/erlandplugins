@@ -32,6 +32,10 @@
 		<input type="text" class="stdedit" name="pref_player_list_length" id="player_list_length" value="[% prefs.player_list_length %]" size="3">
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_JIVE_LIST_LENGTH" desc="SETUP_PLUGIN_TRACKSTAT_JIVE_LIST_LENGTH_DESC" %]
+		<input type="text" class="stdedit" name="pref_jive_list_length" id="jive_list_length" value="[% prefs.jive_list_length %]" size="3">
+	[% END %]
+
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH" desc="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH_DESC" %]
 		<select name="pref_web_refresh">
 			<option value="1" [% IF prefs.web_refresh %]selected[% END %]>[% "YES" | string %]</option>
@@ -46,6 +50,7 @@
 		</select>
 	[% END %]
 
+	[% IF supportsMixers %]
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_TRACKSTAT_WEB_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="pref_web_enable_mixerfunction">
 			<option value="1" [% IF prefs.web_enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
@@ -58,6 +63,7 @@
 			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
+	[% END %]
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS" desc="SETUP_PLUGIN_TRACKSTAT_RECENT_NUMBER_OF_DAYS_DESC" %]
