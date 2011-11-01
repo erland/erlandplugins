@@ -1104,25 +1104,27 @@ sub initPlugin {
 	delSlimserverPlayerMenus();
 	addPlayerMenus();
 
-	my %mixerMap = ();
-	if($prefs->get("enable_web_mixerfunction")) {
-		$mixerMap{'mixerlink'} = \&mixerlink;
-	}
-	if($prefs->get("enable_mixerfunction")) {
-		$mixerMap{'mixer'} = \&mixerFunction;
-		$mixerMap{'cliBase'} = {
-			player => 0,
-			cmd => ['custombrowse','stdmixjive'],
-			params => {},
-			itemsParams => 'params',
-		};
-		$mixerMap{'contextToken'} = 'PLUGIN_CUSTOMBROWSE_CONTEXTMIXER';
-	}
-	if($prefs->get("enable_web_mixerfunction") ||
-		$prefs->get("enable_mixerfunction")) {
+	if($::VERSION lt '7.6') {
+		my %mixerMap = ();
+		if($prefs->get("enable_web_mixerfunction")) {
+			$mixerMap{'mixerlink'} = \&mixerlink;
+		}
+		if($prefs->get("enable_mixerfunction")) {
+			$mixerMap{'mixer'} = \&mixerFunction;
+			$mixerMap{'cliBase'} = {
+				player => 0,
+				cmd => ['custombrowse','stdmixjive'],
+				params => {},
+				itemsParams => 'params',
+			};
+			$mixerMap{'contextToken'} = 'PLUGIN_CUSTOMBROWSE_CONTEXTMIXER';
+		}
+		if($prefs->get("enable_web_mixerfunction") ||
+			$prefs->get("enable_mixerfunction")) {
 
-		Slim::Music::Import->addImporter($class, \%mixerMap);
-	    	Slim::Music::Import->useImporter('Plugins::CustomBrowse::Plugin', 1);
+			Slim::Music::Import->addImporter($class, \%mixerMap);
+		    	Slim::Music::Import->useImporter('Plugins::CustomBrowse::Plugin', 1);
+		}
 	}
 	$lastScanTime = time();
 	Slim::Control::Request::subscribe(\&Plugins::CustomBrowse::Plugin::rescanDone,[['rescan'],['done']]);

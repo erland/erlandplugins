@@ -68,6 +68,7 @@ sub handler {
 	$params->{'licensemanager'} = Plugins::CustomBrowse::Plugin::isPluginsInstalled($client,'LicenseManagerPlugin');
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:CustomBrowse']);
 	$params->{'licensed'} = $validateRequest->getResult("result");
+	$params->{'supportsMixers'} = $::VERSION lt '7.6';
 	return $class->SUPER::handler($client, $params);
 }
 		

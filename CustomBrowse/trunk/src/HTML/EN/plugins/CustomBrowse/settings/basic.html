@@ -36,6 +36,7 @@
 		</select>
 	[% END %]
 
+	[% IF supportsMixers %]
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="pref_enable_mixerfunction">
 			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
@@ -48,6 +49,7 @@
 			<option value="1" [% IF prefs.enable_web_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.enable_web_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
+	[% END %]
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON" desc="SETUP_PLUGIN_CUSTOMBROWSE_SINGLE_WEB_MIXERBUTTON_DESC" %]
