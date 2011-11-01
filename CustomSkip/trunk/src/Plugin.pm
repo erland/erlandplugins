@@ -1764,18 +1764,20 @@ sub initPlugin {
 			initFilters();
 		}
 	}
-	my %mixerMap = ();
-	if($prefs->get("web_show_mixerlinks")) {
-#		$mixerMap{'mixerlink'} = \&mixerlink;
-	}
-	if($prefs->get("enable_mixerfunction")) {
-		$mixerMap{'mixer'} = \&mixerFunction;
-	}
-	if($prefs->get("web_show_mixerlinks") ||
-		$prefs->get("enable_mixerfunction")) {
+	if($::VERSION lt '7.6') {
+		my %mixerMap = ();
+		if($prefs->get("web_show_mixerlinks")) {
+	#		$mixerMap{'mixerlink'} = \&mixerlink;
+		}
+		if($prefs->get("enable_mixerfunction")) {
+			$mixerMap{'mixer'} = \&mixerFunction;
+		}
+		if($prefs->get("web_show_mixerlinks") ||
+			$prefs->get("enable_mixerfunction")) {
 
-		Slim::Music::Import->addImporter($class, \%mixerMap);
-	    	Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 1);
+			Slim::Music::Import->addImporter($class, \%mixerMap);
+		    	Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 1);
+		}
 	}
 	$log->debug("CustomSkip: Registering hook.\n");
 	Slim::Control::Request::subscribe(\&newSongCallback, [['playlist'], ['newsong']]);
@@ -1896,10 +1898,12 @@ sub title {
 }
 
 sub shutdownPlugin {
-	if($prefs->get("web_show_mixerlinks") ||
-		$prefs->get("enable_mixerfunction")) {
+	if($::VERSION lt '7.6') {
+		if($prefs->get("web_show_mixerlinks") ||
+			$prefs->get("enable_mixerfunction")) {
 
-		Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 0);
+			Slim::Music::Import->useImporter('Plugins::CustomSkip::Plugin', 0);
+		}
 	}
 	Slim::Control::Request::unsubscribe(\&newSongCallback);
 }

@@ -60,7 +60,11 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(directory enable_mixerfunction global_skipping));
+	if($::VERSION lt '7.6') {
+	        return ($prefs, qw(directory enable_mixerfunction global_skipping));
+	}else {
+	        return ($prefs, qw(directory global_skipping));
+	}
 }
 
 sub handler {

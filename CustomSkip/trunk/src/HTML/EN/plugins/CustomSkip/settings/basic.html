@@ -12,6 +12,7 @@
 		<input type="text" class="stdedit selectFolder" name="pref_directory" id="directory" value="[% prefs.directory %]" size="40">
 	[% END %]
 
+	[% IF supportsMixers %]
 	<!--
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS" desc="SETUP_PLUGIN_CUSTOMSKIP_WEB_SHOW_MIXERLINKS_DESC" %]
 		<select name="pref_web_show_mixerlinks">
@@ -26,6 +27,7 @@
 			<option value="1" [% IF prefs.enable_mixerfunction %]selected[% END %]>[% "YES" | string %]</option>
 			<option value="0" [% IF NOT prefs.enable_mixerfunction %]selected[% END %]>[% "NO" | string %]</option>
 		</select>
+	[% END %]
 	[% END %]
 
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING" desc="SETUP_PLUGIN_CUSTOMSKIP_GLOBAL_SKIPPING_DESC" %]
