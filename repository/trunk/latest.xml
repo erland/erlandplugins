@@ -148,15 +148,16 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.11.3598" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.11.3643" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected so it works in 7.6.0 and 7.6.1 (was accidentaly broken in previous release)
+			<changes lang="EN">- Corrected conflict between LMS 7.7 scanner and context menus.
+			- Added support for configuring number of items shown in menus on Touch/Radio/Controller/Android/iOS
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3598.zip</url>
-			<sha>bc467870952f6cad32eb4e590f77194f61fd24b4</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3643.zip</url>
+			<sha>e1b93a37f9083c495ea89bc378ae3f7ef630723d</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -175,15 +176,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.12.3635" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.12.3645" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected bug which made some menus to not appear in home menu in web interface in 7.6
+			<changes lang="EN">- Corrected conflict between LMS 7.7 scanner and context menus
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3635.zip</url>
-                        <sha>d0e9784783f39269597b3cf531ff48fc7a062eb0</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3645.zip</url>
+                        <sha>eef28e0fb13ab03343481bee6bf8471838b70cd9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
@@ -222,15 +223,15 @@
                         <sha>bebd6cad35a0e74ece1c3c9bf4040800bcad75e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
-		<plugin name="CustomSkip" version="2.4.3499" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomSkip" version="2.4.3651" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Skip</title>
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Some small corrections
-			- License Manager plugin must be installed for this version to work</changes>
+                        <changes lang="EN">- Corrected conflict between LMS 7.7 scanner and context menus
+			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3499.zip</url>
-                        <sha>a2eb636fe31c994b09d677f4c48dc0630d696982</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3651.zip</url>
+                        <sha>e3f7b97d9363b8da771900f761a22cf4bf40c7ae</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
 		</plugin>
 		<plugin name="DynamicPlayList" version="2.7" minTarget="7.2.0" maxTarget="7.3.*">
@@ -312,15 +313,15 @@
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.5.3577" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="SQLPlayList" version="2.5.3648" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Updated so it doesn't break UPnP in LMS 7.7
+			<changes lang="EN">- Corrected conflict between LMS 7.7 scanner and context menus
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3577.zip</url>
-                        <sha>f353fb838bd8bd1c59365bd26d4cf53277443396</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3648.zip</url>
+                        <sha>5e71fdfcbd6c2e3d5aaa99cadd9e26660eef7c20</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="7.3.*">
