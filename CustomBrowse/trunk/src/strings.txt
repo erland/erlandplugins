@@ -44,7 +44,7 @@ SETUP_PLUGIN_CUSTOMBROWSE_GROUP_DESC
 	EN	Custom Browse is a plugin which makes it possible to create your own menus.
 
 SETUP_PLUGIN_CUSTOMBROWSE_DONATE_LINK
-	EN	Click here to donate
+	EN	You have a valid license
 
 SETUP_PLUGIN_CUSTOMBROWSE_HEADER_VALUE_SEPARATOR
 	EN	Default separator characters for header
