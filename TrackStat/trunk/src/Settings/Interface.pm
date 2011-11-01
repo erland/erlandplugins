@@ -60,7 +60,11 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(web_flatlist player_flatlist deep_hierarchy web_list_length player_list_length web_refresh web_show_mixerlinks web_enable_mixerfunction enable_mixerfunction force_grouprating recent_number_of_days recentadded_number_of_days min_artist_tracks min_album_tracks disablenumberscroll));
+	if($::VERSION lt '7.6') {
+	        return ($prefs, qw(web_flatlist player_flatlist deep_hierarchy jive_list_length web_list_length player_list_length web_refresh web_show_mixerlinks web_enable_mixerfunction enable_mixerfunction force_grouprating recent_number_of_days recentadded_number_of_days min_artist_tracks min_album_tracks disablenumberscroll));
+	}else {
+	        return ($prefs, qw(web_flatlist player_flatlist deep_hierarchy jive_list_length web_list_length player_list_length web_refresh web_show_mixerlinks force_grouprating recent_number_of_days recentadded_number_of_days min_artist_tracks min_album_tracks disablenumberscroll));
+	}
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;

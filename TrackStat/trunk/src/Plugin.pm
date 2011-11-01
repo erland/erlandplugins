@@ -145,6 +145,7 @@ $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'recent_number_of_days'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'web_list_length'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'player_list_length'  );
+$prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'jive_list_length'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'playlist_length'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    1,                 }, 'playlist_per_artist_length'  );
 $prefs->setValidate({ 'validator' => 'intlimit', 'low' =>    0, 'high' => 100 }, 'rating_auto_nonrated_value'  );
@@ -2459,6 +2460,14 @@ sub initPlugin
 				$prefs->set("player_list_length",20);
 			}
 		}
+		# set default jive list length to same as player list length or 20 if not exist
+		if (!defined($prefs->get("jive_list_length"))) {
+			if(defined($prefs->get("player_list_length"))) {
+				$prefs->set("jive_list_length",$prefs->get("player_list_length"));
+			}else {
+				$prefs->set("jive_list_length",20);
+			}
+		}
 
 		# set default playlist length to same as items per page
 		if (!defined($prefs->get("playlist_length"))) {
@@ -2650,17 +2659,19 @@ sub initPlugin
 
 		registerJiveMenu($class);
 		
-		my %mixerMap = ();
-		if($prefs->get("web_enable_mixerfunction")) {
-			$mixerMap{'mixerlink'} = \&mixerlink;
-		}
-		if($prefs->get("enable_mixerfunction")) {
-			$mixerMap{'mixer'} = \&mixerFunction;
-		}
-		if($prefs->get("web_enable_mixerfunction") ||
-			$prefs->get("enable_mixerfunction")) {
-			Slim::Music::Import->addImporter($class, \%mixerMap);
-			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
+		if($::VERSION lt '7.6') {
+			my %mixerMap = ();
+			if($prefs->get("web_enable_mixerfunction")) {
+				$mixerMap{'mixerlink'} = \&mixerlink;
+			}
+			if($prefs->get("enable_mixerfunction")) {
+				$mixerMap{'mixer'} = \&mixerFunction;
+			}
+			if($prefs->get("web_enable_mixerfunction") ||
+				$prefs->get("enable_mixerfunction")) {
+				Slim::Music::Import->addImporter($class, \%mixerMap);
+				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin', 1);
+			}
 		}
 		
 		checkAndPerformScheduledBackup();
@@ -3747,9 +3758,12 @@ sub shutdownPlugin {
         $log->debug("disabling\n");
         if ($TRACKSTAT_HOOK) {
                 uninstallHook();
-		if($prefs->get("web_enable_mixerfunction") ||
-			$prefs->get("enable_mixerfunction")) {
-			Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
+
+		if($::VERSION lt '7.6') {
+			if($prefs->get("web_enable_mixerfunction") ||
+				$prefs->get("enable_mixerfunction")) {
+				Slim::Music::Import->useImporter('Plugins::TrackStat::Plugin',0);
+			}
 		}
         }
 }
