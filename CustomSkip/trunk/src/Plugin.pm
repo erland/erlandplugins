@@ -3039,6 +3039,15 @@ sub readFiltersFromDir {
 		# read_file from File::Slurp
 		my $content = eval { read_file($path) };
 		if ( $content ) {
+			my $encoding = Slim::Utils::Unicode::encodingFromString($content);
+			if($encoding ne 'utf8') {
+				$content = Slim::Utils::Unicode::latin1toUTF8($content);
+				$content = Slim::Utils::Unicode::utf8on($content);
+				$log->debug("Loading and converting from latin1\n");
+			}else {
+				$content = Slim::Utils::Unicode::utf8decode($content,'utf8');
+				$log->debug("Loading without conversion with encoding ".$encoding."\n");
+			}
 			my $errorMsg = parseFilterContent($client,$item,$content,$localFilters,$filterTypes);
 			if($errorMsg) {
 				$log->warn("CustomSkip: Unable to open configuration file: $path\n$errorMsg\n");
