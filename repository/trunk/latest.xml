@@ -223,15 +223,16 @@
                         <sha>bebd6cad35a0e74ece1c3c9bf4040800bcad75e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
-		<plugin name="CustomSkip" version="2.4.3651" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomSkip" version="2.4.3658" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Skip</title>
                         <desc lang="EN">Makes it possible to skip tracks automatically in dynamic playlists. Makes it possible to skip tracks with low ratings, zapped tracks, short tracks and much more. (Boom, Transporter, Classic, Receiver, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected conflict between LMS 7.7 scanner and context menus
+                        <changes lang="EN">- Corrected so non us ascii parameters works as filter parameters
+			- Corrected so context menu works again on Classic, Boom, Transporter
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3651.zip</url>
-                        <sha>e3f7b97d9363b8da771900f761a22cf4bf40c7ae</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3658.zip</url>
+                        <sha>ae06625ef0b095bbbea4bf73fecef52fb2a7a0d0</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
 		</plugin>
 		<plugin name="DynamicPlayList" version="2.7" minTarget="7.2.0" maxTarget="7.3.*">
