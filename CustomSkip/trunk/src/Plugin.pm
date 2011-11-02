@@ -680,7 +680,7 @@ sub getDisplayText {
 		my $filteritem = $item->{'filteritem'};
 		if(defined($filteritem)) {
 			$name = $filteritem->{'displayname'};
-		}elsif(defined($filter)) {
+		}elsif(defined($filter) && !defined($item->{'name'})) {
 			$name = $item->{'filter'}->{'name'};
 			my $filter = getCurrentFilter($client);
 			if(defined($filter) && $item->{'id'} eq $filter->{'id'}) {
@@ -691,8 +691,10 @@ sub getDisplayText {
 					$name .= " (active secondary)";
 				}
 			}
-		}elsif($item->{'id'} eq 'disable') {
+		}elsif(defined($item->{'id'}) && $item->{'id'} eq 'disable') {
 			$name = $client->string( 'PLUGIN_CUSTOMSKIP_DISABLE_FILTER');
+		}else {
+			$name = $item->{'name'};
 		}
 	}
 	return $name;
@@ -948,8 +950,6 @@ sub setModeMix {
 		my %params = (
 			header     => '{PLUGIN_CUSTOMSKIP_SELECT_FILTER_TYPE} {count}',
 			listRef    => \@listRef,
-			name       => \&getDisplayText,
-			overlayRef => \&getOverlay,
 			modeName   => 'PLUGIN.CustomSkipMix',
 			parentMode => 'PLUGIN.CustomSkipMix',
 			onPlay     => sub {
@@ -1135,8 +1135,6 @@ sub setModeChooseParameters {
 	my %params = (
 		header     => "$name {count}",
 		listRef    => \@listRef,
-		name       => \&getDisplayText,
-		overlayRef => \&getOverlay,
 		parentName   => 'PLUGIN.CustomSkip.ChooseParameters',
 		onRight    => sub {
 			my ($client, $item) = @_;
@@ -1566,6 +1564,107 @@ sub trackMix {
 		Slim::Buttons::Common::pushModeLeft($client, 'INPUT.Choice', \%params);
 	}
 }
+
+sub registerStandardContextMenus {
+	if(UNIVERSAL::can("Slim::Menu::TrackInfo","registerInfoProvider")) {
+		Slim::Menu::TrackInfo->registerInfoProvider( customskip => (
+			above => 'favorites',
+			func => sub {
+				return objectInfoHandler(@_,undef,'track');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::AlbumInfo","registerInfoProvider")) {
+		Slim::Menu::AlbumInfo->registerInfoProvider( customskip => (
+			below => 'addalbum',
+			func => sub {
+				if(scalar(@_)<6) {
+					return objectInfoHandler(@_,undef,'album');
+				}else {
+					return objectInfoHandler(@_,'album');
+				}
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::ArtistInfo","registerInfoProvider")) {
+		Slim::Menu::ArtistInfo->registerInfoProvider( customskip => (
+			below => 'addartist',
+			func => sub {
+				return objectInfoHandler(@_,undef,'artist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::YearInfo","registerInfoProvider")) {
+		Slim::Menu::YearInfo->registerInfoProvider( customskip => (
+			below => 'addyear',
+			func => sub {
+				return objectInfoHandler(@_,undef,'year');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::PlaylistInfo","registerInfoProvider")) {
+		Slim::Menu::PlaylistInfo->registerInfoProvider( customskip => (
+			below => 'addplaylist',
+			func => sub {
+				return objectInfoHandler(@_,undef,'playlist');
+			},
+		));
+	}
+
+	if(UNIVERSAL::can("Slim::Menu::GenreInfo","registerInfoProvider")) {
+		Slim::Menu::GenreInfo->registerInfoProvider( customskip => (
+			below => 'addgenre',
+			func => sub {
+				return objectInfoHandler(@_,undef,'genre');
+			},
+		));
+	}
+}
+
+sub objectInfoHandler {
+	my ( $client, $url, $obj, $remoteMeta, $tags, $filter, $objectType) = @_;
+	$tags ||= {};
+
+	my $objectName = undef;
+	my $objectId = undef;
+	if($objectType eq 'genre' || $objectType eq 'artist') {
+		$objectName = $obj->name;
+		$objectId = $obj->id;
+	}elsif($objectType eq 'album' || $objectType eq 'playlist' || $objectType eq 'track') {
+		$objectName = $obj->title;
+		$objectId = $obj->id;
+	}elsif($objectType eq 'year') {
+		$objectName = ($obj?$obj:$client->string('UNK'));
+		$objectId = $obj;
+	}else {	
+		return undef;
+	}
+
+	if(!$tags->{menuMode} && ($objectType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $objectId)) {
+
+		return {
+			type      => 'redirect',
+			name      => $client->string('PLUGIN_CUSTOMSKIP'),
+			favorites => 0,
+
+			player => {
+				mode => 'PLUGIN.CustomSkipMix',
+				modeParams => {
+					'filtertype' => $objectType,
+					'item' => objectForId($objectType,$objectId),
+					'customskip_parameter_1' => $objectId,
+					'extrapopmode' => 1
+				},
+			},
+		};
+	}
+	return undef;
+}
+
 sub mixerFunction {
 	my ($client, $noSettings) = @_;
 	# look for parentParams (needed when multiple mixers have been used)
@@ -1785,6 +1884,7 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['customskip','setsecondaryfilter', '_filterid'], [1, 0, 0, \&setCLISecondaryFilter]);
 	Slim::Control::Request::addDispatch(['customskip','clearfilter', '_filterid'], [1, 0, 0, \&clearCLIFilter]);
 	Slim::Control::Request::addDispatch(['customskip','clearsecondaryfilter', '_filterid'], [1, 0, 0, \&clearCLISecondaryFilter]);
+	registerStandardContextMenus();
 }
 
 sub postinitPlugin {
