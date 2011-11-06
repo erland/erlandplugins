@@ -388,6 +388,9 @@ sub findAndAdd {
 
 sub masterOrSelf {
 	my $client = shift;
+	if(!defined($client)) {
+		return $client;
+	}
 	if($::VERSION lt "7.3") {
 		return $client->masterOrSelf;
 	}else {
@@ -1499,7 +1502,7 @@ sub setModeChooseParameters {
 
 	my $sorted = '0';
 	if(scalar(@listRef)>0) {
-		my $firstItem = @listRef->[0];
+		my $firstItem = @listRef[0];
 		if(defined($firstItem->{'sortlink'})) {
 			$sorted = 'L';
 		}
