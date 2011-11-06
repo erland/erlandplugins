@@ -126,7 +126,7 @@ sub _getFunctionMenu {
 	my $result = undef;
 	my @functions = split(/\|/,$item->{'menufunction'});
 	if(scalar(@functions)>0) {
-		my $dataFunction = @functions->[0];
+		my $dataFunction = @functions[0];
 		if($dataFunction =~ /^(.+)::([^:].*)$/) {
 			my $class = $1;
 			my $function = $2;
@@ -160,7 +160,7 @@ sub _getFunctionItemFormat {
 	my $result = undef;
 	my @functions = split(/\|/,$item->{'itemformatdata'});
 	if(scalar(@functions)>0) {
-		my $dataFunction = @functions->[0];
+		my $dataFunction = @functions[0];
 		if($dataFunction =~ /^(.+)::([^:].*)$/) {
 			my $class = $1;
 			my $function = $2;
@@ -379,8 +379,8 @@ sub _isMenuEnabledForCheck {
 			if($type eq 'function') {
 				my @params = split(/\|/,$data);
 				if(scalar(@params)>=2) {
-					my $object = @params->[0];
-					my $function = @params->[1];
+					my $object = @params[0];
+					my $function = @params[1];
 					if(UNIVERSAL::can($object,$function)) {
 						my %callParams = ();
 						my $i = 0;
@@ -664,7 +664,7 @@ sub _browseTo {
 		if(defined($items) && ref($items) eq 'ARRAY') {
 			my @hierarchyItems = split(/,/,$params->{'hierarchy'});
 			if(scalar(@hierarchyItems)>0)  {
-				my $nextAttr = @hierarchyItems->[0];
+				my $nextAttr = @hierarchyItems[0];
 				my $nextAttrValue = $params->{$nextAttr};
 				if(!defined($nextAttrValue)) {
 					$nextAttrValue = $nextAttr;

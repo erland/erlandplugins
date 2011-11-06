@@ -47,7 +47,7 @@ sub prepareMenu {
 
 	my $keywords = $self->combineKeywords($menu->{'keywordparameters'},undef,$item->{'parameters'});
 	my @parameters = split(/\|/,$menu->{'menudata'});
-	my $trackid = $keywords->{@parameters->[0]};
+	my $trackid = $keywords->{@parameters[0]};
 	$trackid = $self->itemParameterHandler->replaceParameters($client,$trackid,$keywords,$context);
 	my $track = Slim::Schema->resultset('Track')->find($trackid);
 	if(defined($track)) {
@@ -59,7 +59,7 @@ sub prepareMenu {
 			}			
 		);
 		if(scalar(@parameters)>1) {
-			if(@parameters->[1]) {
+			if(@parameters[1]) {
 				$params{'useMode'} ='PLUGIN.CustomBrowse.trackinfo';
 			}
 			shift @parameters;
@@ -88,11 +88,11 @@ sub getCustomUrl {
 
 	my $keywords = $self->combineKeywords($item->{'menu'}->{'keywordparameters'},undef,$item->{'parameters'});
 	my @parameters = split(/\|/,$item->{'menu'}->{'menudata'});
-	my $trackid = $keywords->{@parameters->[0]};
+	my $trackid = $keywords->{@parameters[0]};
 	$trackid = $self->itemParameterHandler->replaceParameters($client,$trackid,$keywords,$context);
 
 	my $id=$trackid;
-	if(@parameters->[1]) {
+	if(@parameters[1]) {
 		return 'songinfo.html?item='.escape($id).'&player='.$params->{'player'};
 	}else {
 		my $track = undef;
@@ -111,7 +111,7 @@ sub getOverlay {
 	my $item = shift;
 
 	my @parameters = split(/\|/,$item->{'menudata'});
-	if(scalar(@parameters)>2 && @parameters->[2]) {
+	if(scalar(@parameters)>2 && @parameters[2]) {
 		return $client->symbols('rightarrow');
 	}
 	return undef;
