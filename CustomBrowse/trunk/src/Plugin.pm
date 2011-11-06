@@ -1814,13 +1814,13 @@ sub addJivePlayerMenus {
 		);
 		# Provide icon for iPeng
 		if($name ne $key) {
-			@menuItems->[0]->{'menuIconID'} = $key;
+			@menuItems[0]->{'menuIconID'} = $key;
 		}else {
-			@menuItems->[0]->{'menuIcon'} = 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png';
+			@menuItems[0]->{'menuIcon'} = 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png';
 		}
 		# Cacheable indicator
 		if(defined($menu->{'cacheable'})) {
-			@menuItems->[0]->{'cacheable'} = 'true';
+			@menuItems[0]->{'cacheable'} = 'true';
 		}
 		if($menu->{'id'} ne $key && $prefs->get('replacecontrollermenus')) {
 			Slim::Control::Jive::deleteMenuItem($key,$client);
@@ -3286,15 +3286,15 @@ sub retreiveMixList {
 			}
 			return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_listmixes.html', $params);
 		}elsif(scalar(@$mixes)>0) {
-			if(!defined(@$mixes->[0]->{'url'})) {
-				$params->{'mix'} = @$mixes->[0]->{'id'};
+			if(!defined(@$mixes[0]->{'url'})) {
+				$params->{'mix'} = @$mixes[0]->{'id'};
 				if($contextParams) {
 					return handleWebExecuteMixContext($client,$params);
 				}else {
 					return handleWebExecuteMix($client,$params);
 				}
 			}else {
-				$params->{'pluginCustomBrowseRedirect'} = @$mixes->[0]->{'url'};
+				$params->{'pluginCustomBrowseRedirect'} = @$mixes[0]->{'url'};
 				return Slim::Web::HTTP::filltemplatefile('plugins/CustomBrowse/custombrowse_redirect.html', $params);
 			}
 		}

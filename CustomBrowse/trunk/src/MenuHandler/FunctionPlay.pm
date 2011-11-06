@@ -48,7 +48,7 @@ sub getItems {
 	if(defined($item->{'playdata'})) {
 		my @functions = split(/\|/,$item->{'playdata'});
 		if(scalar(@functions)>0) {
-			my $dataFunction = @functions->[0];
+			my $dataFunction = @functions[0];
 			if($dataFunction =~ /^(.+)::([^:].*)$/) {
 				my $class = $1;
 				my $function = $2;

@@ -47,7 +47,7 @@ sub getData {
 	my $result = undef;
 	my @functions = split(/\|/,$menudata);
 	if(scalar(@functions)>0) {
-		my $dataFunction = @functions->[0];
+		my $dataFunction = @functions[0];
 		if($dataFunction =~ /^(.+)::([^:].*)$/) {
 			my $class = $1;
 			my $function = $2;
