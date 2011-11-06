@@ -554,7 +554,7 @@ sub executeDataQuery {
 						for my $key (keys %$parameters) {
 							$itemurl .= '&'.$key.'='.$parameters->{$key};
 						}
-						$itemurl .= '&'.$queryId.'='.@resultValues->[0];
+						$itemurl .= '&'.$queryId.'='.@resultValues[0];
 						unshift @resultValues,$parameters;
 						unshift @resultValues,\@pathelements;
 						unshift @resultValues,$itemurl;
