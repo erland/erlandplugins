@@ -384,7 +384,7 @@ sub checkCustomSkipFilterType {
 				my $names = $parameter->{'value'};
 				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
 				my @genres = $track->genres();
-				if(defined(@genres)) {
+				if(@genres) {
 					for my $genre (@genres) {
 						if($genre->name eq $name) {
 							return 1;
@@ -400,7 +400,7 @@ sub checkCustomSkipFilterType {
 				my $names = $parameter->{'value'};
 				my $name = $names->[0] if(defined($names) && scalar(@$names)>0);
 				my @genres = $track->genres();
-				if(defined(@genres)) {
+				if(@genres) {
 					my $found = 0;
 					for my $genre (@genres) {
 						if($genre->name eq $name) {
@@ -2728,13 +2728,13 @@ sub addValuesToFilterParameter {
 		for my $value (@values){
 			my @idName = split(/=/,$value);
 			my %listValue = (
-				'id' => @idName->[0],
-				'name' => @idName->[1]
+				'id' => @idName[0],
+				'name' => @idName[1]
 			);
 			if(scalar(@idName)>2) {
-				$listValue{'value'} = @idName->[2];
+				$listValue{'value'} = @idName[2];
 			}else {
-				$listValue{'value'} = @idName->[0];
+				$listValue{'value'} = @idName[0];
 			}
 			push @listValues, \%listValue;
 		}
@@ -2760,18 +2760,18 @@ sub addValuesToFilterParameter {
 			my @idName = split(/=/,$value);
 			my $itemTime = undef;
 			my $itemName = undef;
-			if(@idName->[0]==0) {
+			if(@idName[0]==0) {
 				$itemTime = 0;
 				$itemName = "Forever";
 			}else {
-				$itemTime = $currentTime+@idName->[0];
-				$itemName = @idName->[1].' ('.Slim::Utils::DateTime::shortDateF($itemTime).' '.Slim::Utils::DateTime::timeF($itemTime).')';
+				$itemTime = $currentTime+@idName[0];
+				$itemName = @idName[1].' ('.Slim::Utils::DateTime::shortDateF($itemTime).' '.Slim::Utils::DateTime::timeF($itemTime).')';
 			}
 			my %listValue = (
 				'id' => $itemTime,
 				'name' => $itemName
 			);
-			if((!defined($currentValues) || defined($currentValues->{0})) && $p->{'value'} eq @idName->[0]) {
+			if((!defined($currentValues) || defined($currentValues->{0})) && $p->{'value'} eq @idName[0]) {
 				$listValue{'selected'} = 1;
 			}
 			push @listValues, \%listValue;
