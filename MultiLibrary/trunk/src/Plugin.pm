@@ -872,6 +872,30 @@ sub initPlugin {
 	addTitleFormat('PLAYING (X_OF_Y) MULTILIBRARIES');
 	addTitleFormat('MULTILIBRARIES');
 	Slim::Music::TitleFormatter::addFormat('MULTILIBRARIES',\&getTitleFormat);
+	registerInfoHandlers();
+}
+
+sub registerInfoHandlers() {
+	# Track Info handler
+	if(UNIVERSAL::can("Slim::Menu::TrackInfo","registerInfoProvider")) {
+                Slim::Menu::TrackInfo->registerInfoProvider( multilibraries => (
+			parent   => 'moreinfo',
+                        after    => 'tracknum',
+                        func     => sub {
+				my ( $client, $url, $track, $remoteMeta, $tags ) = @_;
+				$tags ||= {};
+				my $formatString = getTitleFormat($track);
+				if(defined($formatString)) {
+					return {
+						type      => 'text',
+						label     => 'PLUGIN_MULTILIBRARY_LIBRARIES',
+						name      => $formatString
+					};
+				}
+				return undef;
+			},
+                ) );
+	}
 }
 
 sub addTitleFormat
