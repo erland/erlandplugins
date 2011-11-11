@@ -61,9 +61,9 @@ sub pages {
 
 sub prefs {
 	if($::VERSION lt '7.6') {
-	        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator));
+	        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo enable_mixerfunction enable_web_mixerfunction single_web_mixerbutton showmixbeforeexecuting header_value_separator touchtoplay));
 	}else {
-	        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo single_web_mixerbutton showmixbeforeexecuting header_value_separator));
+	        return ($prefs, qw(menu_directory template_directory context_template_directory image_cache menuname menuinsidebrowse override_trackinfo single_web_mixerbutton showmixbeforeexecuting header_value_separator touchtoplay));
 	}
 }
 sub handler {

@@ -157,6 +157,10 @@ $prefs->migrate(2, sub {
                 $prefs->set('download_url','http://erland.isaksson.info/datacollection/services/DataCollection');
         }
 });
+$prefs->migrate(3, sub {
+	$prefs->set('touchtoplay',1);
+	1;
+});
 
 $prefs->setValidate('dir', 'menu_directory');
 $prefs->setValidate('dir', 'template_directory');
@@ -3853,40 +3857,42 @@ sub cliJiveHandlerImpl {
 
 	my $cnt = 0;
 	if(scalar(@$menuItems)>1 && defined($menuResult->{'playable'}) && $menuResult->{'playable'} && defined($currentContext)) {
-		$count++;
-		if($start==0) {
-			my %itemParams = ();
-			%itemParams = %{$currentContext->{'parameters'}};
-			$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
-			my $actions = {
-				'go' => {
-					'cmd' => ['custombrowse', 'play'],
-					'params' => \%itemParams,
-					'itemsParams' => 'params',
-					'nextWindow' => 'nowPlaying',
-				},
-				'add-hold' => undef,
-				'do' => {
-					'cmd' => ['custombrowse', 'play'],
-					'params' => \%itemParams,
-					'itemsParams' => 'params',
-					'nextWindow' => 'nowPlaying',
-				},
-			};
-			$request->addResultLoop('item_loop',$cnt,'playAction','do');
-			$request->addResultLoop('item_loop',$cnt,'playHoldAction','do');
-			$request->addResultLoop('item_loop',$cnt,'style','itemplay');
-			$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
+		if(!$prefs->get("touchtoplay") || !$serverPrefs->client($client)->get("playtrackalbum")) {
+			$count++;
+			if($start==0) {
+				my %itemParams = ();
+				%itemParams = %{$currentContext->{'parameters'}};
+				$itemParams{'hierarchy'} = $currentContext->{'valuePath'};
+				my $actions = {
+					'go' => {
+						'cmd' => ['custombrowse', 'play'],
+						'params' => \%itemParams,
+						'itemsParams' => 'params',
+						'nextWindow' => 'nowPlaying',
+					},
+					'add-hold' => undef,
+					'do' => {
+						'cmd' => ['custombrowse', 'play'],
+						'params' => \%itemParams,
+						'itemsParams' => 'params',
+						'nextWindow' => 'nowPlaying',
+					},
+				};
+				$request->addResultLoop('item_loop',$cnt,'playAction','do');
+				$request->addResultLoop('item_loop',$cnt,'playHoldAction','do');
+				$request->addResultLoop('item_loop',$cnt,'style','itemplay');
+				$request->addResultLoop('item_loop',$cnt,'type','playall'); # This is used by iPeng
 
-			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
-			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-			$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
-			$cnt++;
+				$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
+				$request->addResultLoop('item_loop',$cnt,'actions',$actions);
+				$request->addResultLoop('item_loop',$cnt,'text',string('JIVE_PLAY_ALL'));
+				$cnt++;
 
-			if(defined($itemsPerPage) && scalar(@$menuItems)>=$itemsPerPage) {
-				$log->debug("Removing item to make space for play all item, requested $itemsPerPage and got ".(scalar(@$menuItems))." items");
-				# Remove last menu item
-				my $popped = pop @$menuItems;
+				if(defined($itemsPerPage) && scalar(@$menuItems)>=$itemsPerPage) {
+					$log->debug("Removing item to make space for play all item, requested $itemsPerPage and got ".(scalar(@$menuItems))." items");
+					# Remove last menu item
+					my $popped = pop @$menuItems;
+				}
 			}
 		}
 	}
@@ -4101,7 +4107,11 @@ sub cliJiveHandlerImpl {
 				}
 			}
 			if($songInfo) {
-				if($::VERSION ge '7.4') {
+				if($prefs->get("touchtoplay")) {
+					if(!defined($item->{'playtype'}) || $item->{'playtype'} ne 'none') {
+						$request->addResultLoop('item_loop',$cnt,'goAction','play');
+					}
+				}else {
 					my $songInfoParams = {
 						track_id => $item->{'itemid'},
 						menu => 'nowhere',
@@ -4123,24 +4133,14 @@ sub cliJiveHandlerImpl {
 					};
 					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 
-				}else {
-					my $songInfoParams = {
-						track_id => $item->{'itemid'},
-						menu => 'nowhere',
-						cmd => 'load',
-					};
-					my $actions = {
-						'go' => {
-							'cmd' => ['songinfo'],
-							'params' => $songInfoParams,
-						},
-					};
-					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 				}
 			}elsif($mode) {
 				$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 			}
 		}elsif(!defined($item->{'menufunction'})) {
+			if(!defined($item->{'playtype'}) || $item->{'playtype'} ne 'none') {
+				$request->addResultLoop('item_loop',$cnt,'goAction','play');
+			}
 			$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
 		}
 		$cnt++;
@@ -4523,7 +4523,27 @@ sub cliHandler {
 			if($cmd =~ /context$/) {
 				getContextMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$insert,$context);
 			}else {
-				getMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$insert,undef);
+				my $parentItems = undef;
+				if($menuResult->{'playtype'} eq 'all') {
+					if(defined($params->{'hierarchy'})) {
+						if($params->{'hierarchy'} =~ /^(.*),([^,]*)$/) {
+							$params->{'hierarchy'} = $1;
+						}else {
+							$params->{'hierarchy'} = undef;
+						}
+					}
+					if($cmd =~ /context$/) {
+						$parentItems = getContextMenuHandler()->getPageItem($client,$params,$context,0,'cli');
+					}else {
+						$parentItems = getMenuHandler()->getPageItem($client,$params,undef,0,'cli');	
+					}
+					my @empty = ();
+					if(defined($parentItems) && ref($parentItems) ne 'ARRAY') {
+						push @empty,$parentItems;
+						$parentItems = \@empty;
+					}
+				}
+				getMenuHandler()->playAddItem($client,$parentItems,$menuResult,$addOnly,$insert,undef);
 			}
 		}
 	}elsif($cmd =~ /^mixes/) {
