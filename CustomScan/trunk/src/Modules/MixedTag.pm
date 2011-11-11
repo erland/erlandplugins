@@ -984,6 +984,7 @@ sub getMixedTagMenuItems {
 			'playtypeall' => 'none',
 			'playtype' => 'sql',
 			'playdata' => $trackssql,
+			'ipengitemtype' => 'playlist',
 			'menu' => \%menutracks
 		);
 		if(defined($parameters->{'showtracksafterlevel'}) && $parameters->{'showtracksafterlevel'} ne '' && $parameters->{'showtracksafterlevel'}<=$currentLevel) {
