@@ -564,6 +564,8 @@ sub getMixedTagMenuItems {
 	}
 	if(defined($currentItem->{'value'})) {
 		$trackssql .= "join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentItem->{'tag'})."' and customscan_track_attributes.extravalue='".quoteValue($currentItem->{'value'})."' ";
+	}elsif(defined($currentItem->{'id'})) {
+		$trackssql .= "join customscan_track_attributes on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($currentItem->{'tag'})."' and customscan_track_attributes.extravalue='{level".$currentLevel."_".quoteValue($currentItem->{'tag'})."}' ";
 	}
 	if(defined($parameters->{'activelibrary'}) && $parameters->{'activelibrary'}) {
 		$trackssql .= " join multilibrary_track on tracks.id=multilibrary_track.track and multilibrary_track.library=\{clientproperty.plugin_multilibrary_activelibraryno\} ";		
