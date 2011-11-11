@@ -354,3 +354,10 @@ PLUGIN_CUSTOMBROWSE_LICENSE_REQUIRED
 
 PLUGIN_CUSTOMBROWSE_LICENSE_MANAGER_REQUIRED
 	EN	License Manager plugin must be installed
+
+SETUP_PLUGIN_CUSTOMBROWSE_TOUCH_TO_PLAY
+	EN	Play when selecting a song
+
+SETUP_PLUGIN_CUSTOMBROWSE_TOUCH_TO_PLAY_DESC
+	EN	Play when selecting a song on Touch/Radio/Controller/iOS/Android, if set to No, track details will be shown instead
+

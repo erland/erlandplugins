@@ -36,6 +36,13 @@
 		</select>
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_TOUCH_TO_PLAY" desc="SETUP_PLUGIN_CUSTOMBROWSE_TOUCH_TO_PLAY_DESC" %]
+		<select name="pref_touchtoplay">
+			<option value="1" [% IF prefs.touchtoplay %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.touchtoplay %]selected[% END %]>[% "NO" | string %]</option>
+		</select>
+	[% END %]
+
 	[% IF supportsMixers %]
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION" desc="SETUP_PLUGIN_CUSTOMBROWSE_ENABLE_MIXERFUNCTION_DESC" %]
 		<select name="pref_enable_mixerfunction">

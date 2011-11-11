@@ -2097,10 +2097,11 @@ sub playAddItem {
 	}
 }
 sub _playAddItem {
-	my ($self,$client,$listRef, $item, $command, $displayString, $subCall,$context,$playAll) = @_;
+	my ($self,$client,$listRef, $item, $command, $displayString, $subCall,$context,$playAll,$pos) = @_;
 	my @items = ();
 	if($playAll) {
 		@items = @$listRef;
+		$listRef = undef;
 	}elsif(!defined($item->{'playtype'})) {
 		push @items,$item;
 	}else {
@@ -2125,7 +2126,6 @@ sub _playAddItem {
 	my $request = undef;
 	my $playedMultiple = undef;
 	my $wasShuffled = undef;
-	my $pos = undef;
 	my $selectedPos = undef;
 	my $postPlay = 0;
 	if(!defined($subCall) && $command eq 'loadtracks') {
@@ -2145,7 +2145,7 @@ sub _playAddItem {
 			$request = undef;
 			my $played = 0;
 			if($it->{'itemtype'} eq "track") {
-				$self->logHandler->debug("Adding track ".$it->{'itemname'}."\n");
+				$self->logHandler->debug("Adding track ".$it->{'itemid'}.": ".$it->{'itemname'}."\n");
 				push @tracks,$it->{'itemid'};
 				if(defined($item->{'itemid'}) && $it->{'itemid'} eq $item->{'itemid'}) {
 					$selectedPos = $pos;
@@ -2185,10 +2185,11 @@ sub _playAddItem {
 					$played = 1;
 				}
 			}
+			$listRef = undef;
 			if(!$played) {
 				my $subItems = $self->getMenuItems($client,$it,$context);
 				if(ref($subItems) eq 'ARRAY') {
-					$self->_playAddItem($client,$subItems,undef,$command,undef,1,$context,1);
+					$self->_playAddItem($client,$subItems,$item,$command,undef,1,$context,1);
 					if($command eq 'loadtracks') {
 						$command = 'addtracks';
 					}
@@ -2209,7 +2210,15 @@ sub _playAddItem {
 
 			my $subItems = $self->getMenuItems($client,$it,$context);
 			if(ref($subItems) eq 'ARRAY') {
-				$self->_playAddItem($client,$subItems,undef,$command,undef,1,$context,1);
+				if(defined($pos)) {
+					$pos = $self->_playAddItem($client,$subItems,$item,$command,undef,1,$context,1,$pos);
+					# If a track has been selected in sub call, make sure we don't override it
+					if(!defined($pos)) {
+						$selectedPos = undef;
+					}
+				}else {
+					$pos = $self->_playAddItem($client,$subItems,$item,$command,undef,1,$context,1,$pos);
+				}
 				if($command eq 'loadtracks') {
 					$command = 'addtracks';
 				}
@@ -2232,6 +2241,7 @@ sub _playAddItem {
 			# indicate request source
 			$request->source($self->requestSource);
 		}
+		$pos = undef;
 	}
 	if (!defined($subCall) && $wasShuffled) {
         	$client->execute(["playlist", "shuffle", 1]);
@@ -2239,6 +2249,7 @@ sub _playAddItem {
 	if(($playedMultiple || defined($request)) && defined($displayString) || defined($displayString)) {
 		$self->showBrieflyPlayStatus($client,$displayString,$item);
 	}
+	return $pos;
 }
 
 sub showBrieflyPlayStatus {
@@ -2274,7 +2285,19 @@ sub _playTracks {
 		$orderHash{$t}=$i;
 		$i++;
 	}
-	my @rawtracks = Slim::Schema->search('Track', { 'id' => { 'in' => $trackIds } })->all;
+	my @rawtracks = ();
+	if(scalar(@$trackIds)<=999) {
+		@rawtracks = Slim::Schema->search('Track', { 'id' => { 'in' => $trackIds } })->all;
+	}else {
+		my @handledTrackIds = ();
+		while(scalar(@$trackIds)>0) {
+			my @subTrackIds = splice(@$trackIds,0,999);
+			push @handledTrackIds,@subTrackIds;
+			my @subTracks = Slim::Schema->search('Track', { 'id' => { 'in' => \@subTrackIds } })->all;
+			push @rawtracks,@subTracks;
+		}
+		$trackIds = \@handledTrackIds;
+	}
 	@rawtracks = sort { $orderHash{$a->id()} <=> $orderHash{$b->id()} } @rawtracks;
 	$self->logHandler->debug("Execute $command on ".scalar(@rawtracks)." items of ".scalar(@$trackIds)."\n");
 	my $request = $client->execute(['playlist', $command, 'listRef',\@rawtracks]);
