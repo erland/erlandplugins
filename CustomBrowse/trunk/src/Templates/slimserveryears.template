@@ -10,9 +10,15 @@
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>browsedb</id>
+			[% IF SqueezeCenterVersion >= 7.6 %]
+			<menutype>mode</menutype>
+			<menudata>browselibrary|mode=years</menudata>
+			<menuurl>clixmlbrowser/clicmd=browselibrary+items&amp;linktitle=BROWSE_BY_YEAR&amp;mode=years/index.html?mode=years</menuurl>
+			[% ELSE %]
 			<menutype>mode</menutype>
 			<menudata>browsedb|hierarchy=year,album,track|level=0</menudata>
 			<menuurl>browsedb.html?hierarchy=year,album,track&amp;level=0</menuurl>
+			[% END %]
 		</menu>
 	</menu>
 </custombrowse>
