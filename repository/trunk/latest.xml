@@ -176,17 +176,15 @@
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
-		<plugin name="CustomBrowse" version="2.13.3691" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomBrowse" version="2.13.3695" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Browse</title>
                         <desc lang="EN">Makes it possible to customize the structure, contents and sorting of the browse menus on the Squeezebox. A new browse menu is configured as a xml file containing the structure and SQL-statements. Please note that Custom Browse needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Added support for touch to play on Touch/Radio/Controller
-			- Corrected Squeezebox Server menu templates so they work with 7.6 and later
-			- Corrected menu ordering inside Music Library menu on Classic/Boom/Transporter
+			<changes lang="EN">- Corrected incorrect SQL in genres template in the "All Songs" item
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.13.3691.zip</url>
-                        <sha>2c2111c2f4dd35c8d5aabbc1862fef39130ee557</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.13.3695.zip</url>
+                        <sha>8745c9c44e0aa6dfb32991d2463f1b79d981530f</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 		<plugin name="CustomScan" version="2.6" minTarget="7.1.0" maxTarget="7.3.*">
