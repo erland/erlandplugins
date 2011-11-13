@@ -61,6 +61,8 @@ sub reloadFormats {
 		my @formatParts = ();
 		my @parts = split(/,/,$formats->{$format});
 		foreach my $part (@parts) {
+			$part =~ s/^\s+//;
+			$part =~ s/\s+$//;
 			my $preText = '';
 			if($part =~ /^\"(.*)\"(.*)$/) {
 				$preText = $1;
@@ -110,7 +112,7 @@ sub getTitleFormat
 	my $song = shift;
 	my $tag = shift;
 
-	$log->debug("Requesting format $tag");
+	$log->debug("Requesting format $tag for ".$client->name);
 	if($tag =~ /^TITLESWITCHER(.*)$/) {
 		my $format = $1;
 
@@ -127,6 +129,7 @@ sub getTitleFormat
 		$log->debug("Parsing format $format");
 
 		if(!$client->pluginData('format')->{$format} && exists($customFormats->{$format})) {
+			$log->debug("Restarting formats for player: ".$client->name);
 			$client->pluginData('format')->{$format} = Storable::dclone($customFormats->{$format});
 		}
 
@@ -188,6 +191,7 @@ sub getTitleFormat
 				if(defined($result) && $result ne '') {
 					$client->pluginData('format')->{$format}->{'currentValue'} = $client->pluginData('format')->{$format}->{'parts'}->[$client->pluginData('format')->{$format}->{'current'}]->{'pretext'}.$result;
 				}else {
+					$log->debug("MusicInfoSCR::Info::getFormatString() didn't return any value for $currentFormat");
 					$client->pluginData('format')->{$format}->{'currentValue'} = undef;
 				}
 				$noOfChecked++;
@@ -195,6 +199,8 @@ sub getTitleFormat
 			$result = $client->pluginData('format')->{$format}->{'currentValue'};
 			$log->debug("Returning $result");
 			return $result;
+		}else {
+			$log->warn("Didn't find any configuration for $format");
 		}
 	}
 	return undef;
