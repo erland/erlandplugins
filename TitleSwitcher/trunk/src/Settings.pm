@@ -147,11 +147,14 @@ sub validateFormat {
 	my $formats = Plugins::MusicInfoSCR::Settings::getFormatStrings($client);
 	my @parts = split(/,/,$format);
 	foreach my $part (@parts) {
+		$part =~ s/^\s+//;
+		$part =~ s/\s+$//;
 		if($part =~ /^(\".*\")(.*)$/) {
 			$part = $2;
 		}
 		my ($name,$time) = split(/:/,$part);
 		if(!exists $formats->{$name}) {
+			$log->warn("Can't find $name among allowed formatting strings: ".join("\n",keys %$formats));
 			return undef;
 		}
 	}
