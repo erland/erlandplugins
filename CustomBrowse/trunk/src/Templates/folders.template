@@ -12,7 +12,7 @@
 			<id>browseitem</id>
 			[% IF SqueezeCenterVersion >= 7.6 %]
 			<menutype>mode</menutype>
-			<menudata>bmf</menudata>
+			<menudata>browselibrary|mode=bmf</menudata>
 			<menuurl>clixmlbrowser/clicmd=browselibrary+items&amp;linktitle=BROWSE_MUSIC_FOLDER&amp;mode=bmf/index.html?mode=bmf</menuurl>
 			[% ELSE %]
 			<menutype>mode</menutype>

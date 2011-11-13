@@ -10,9 +10,15 @@
 		[% IF menuorder %]<menuorder>[% menuorder %]</menuorder>[% END %]
 		<menu>
 			<id>browsedb</id>
+			[% IF SqueezeCenterVersion >= 7.6 %]
+			<menutype>mode</menutype>
+			<menudata>browselibrary|mode=artists</menudata>
+			<menuurl>clixmlbrowser/clicmd=browselibrary+items&amp;linktitle=BROWSE_BY_ARTIST&amp;mode=artists/index.html?mode=artists</menuurl>
+			[% ELSE %]
 			<menutype>mode</menutype>
 			<menudata>browsedb|hierarchy=contributor,album,track|level=0</menudata>
 			<menuurl>browsedb.html?hierarchy=contributor,album,track&amp;level=0</menuurl>
+			[% END %]
 		</menu>
 	</menu>
 </custombrowse>
