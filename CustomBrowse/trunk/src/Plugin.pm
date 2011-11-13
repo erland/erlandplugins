@@ -1103,7 +1103,7 @@ sub initPlugin {
 		Slim::Utils::Strings::setString( uc 'PLUGIN_CUSTOMBROWSE', $menuName );
 	}
 	if($prefs->get('menuinsidebrowse')) {
-		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC',string('PLUGIN_CUSTOMBROWSE'),\%submenu);
+		Slim::Buttons::Home::addSubMenu('BROWSE_MUSIC','PLUGIN_CUSTOMBROWSE',\%submenu);
 	}
 	delSlimserverPlayerMenus();
 	addPlayerMenus();
