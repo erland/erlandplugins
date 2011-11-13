@@ -153,7 +153,7 @@
 						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
 						<menudata>
-							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) albums,genre_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from albums,genre_track,tracks[% IF library or activelibrary %],multilibrary_track[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
