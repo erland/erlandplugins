@@ -338,15 +338,15 @@ sub scanTrack {
 				}
 			}
 			for my $tag (keys %$tags) {
-				$tag = uc($tag);
-				if($customTagsHash{$tag} || $virtualTagsHash{$tag} || $customSortTags{$tag}) {
+				my $ucTag = uc($tag);
+				if($customTagsHash{$ucTag} || $virtualTagsHash{$ucTag} || $customSortTags{$ucTag}) {
 					my $values = $tags->{$tag};
-					if(!defined($singleValueTagsHash{$tag}) && !defined($virtualSingleTagsHash{$tag})) {
+					if(!defined($singleValueTagsHash{$ucTag}) && !defined($virtualSingleTagsHash{$ucTag})) {
 						my @arrayValues = splitTag($tags->{$tag});
 						$values = \@arrayValues;
 					}
 					my $sortValues = undef;
-					my $sortTag = $customSortTagsHash{$tag};
+					my $sortTag = $customSortTagsHash{$ucTag};
 					if(ref($values) eq 'ARRAY') {
 						my $valueArray = $values;
 						my $index = 0;
@@ -355,7 +355,7 @@ sub scanTrack {
 							$value =~ s/\s*$//;
 							if($value ne '') {
 								my %item = (
-									'name' => $tag,
+									'name' => $ucTag,
 									'value' => $value
 								);
 								if(defined($sortTag)) {
@@ -363,12 +363,12 @@ sub scanTrack {
 									$item{'sorttagindex'} = $index;
 								}
 
-								if($customSortTags{$tag}) {
+								if($customSortTags{$ucTag}) {
 									push @resultSort,\%item;
 								}
-								if($customTagsHash{$tag}) {
+								if($customTagsHash{$ucTag}) {
 									push @result,\%item;
-								}elsif($virtualTagsHash{$tag}) {
+								}elsif($virtualTagsHash{$ucTag}) {
 									push @resultVirtual,\%item;
 								}
 							}
@@ -379,19 +379,19 @@ sub scanTrack {
 						$values =~ s/\s*$//;
 						if($values ne '') {
 							my %item = (
-								'name' => $tag,
+								'name' => $ucTag,
 								'value' => $values
 							);
 							if(defined($sortTag)) {
 								$item{'sorttag'} = $sortTag;
 								$item{'sorttagindex'} = 0;
 							}
-							if($customSortTags{$tag}) {
+							if($customSortTags{$ucTag}) {
 								push @resultSort,\%item;
 							}
-							if($customTagsHash{$tag}) {
+							if($customTagsHash{$ucTag}) {
 								push @result,\%item;
-							}elsif($virtualTagsHash{$tag}) {
+							}elsif($virtualTagsHash{$ucTag}) {
 								push @resultVirtual,\%item;
 							}
 						}
@@ -416,15 +416,15 @@ sub scanTrack {
 						$log->debug("Handling custom mapping: $customTagMapping");
 						my $mappingType = $2;
 						my @values = ();
-						my $tag = $1;
+						my $tag = uc($1);
 						my @parts = split(/\|/,$3);
 						#$log->debug("GOT: ".Dumper(\@parts));
 						my $lastPart = 0;
 						for my $part (@parts) {
 							$log->debug("Handling custom mapping part $part");
-							if($part =~ /^\s*([A-Z0-9_]+)\(exp=(.*)\)\s*$/) {
-								if(exists $resultHash->{$1}) {
-									my $partTag = $1;
+							if($part =~ /^\s*([A-Za-z0-9_\/]+)\(exp=(.*)\)\s*$/) {
+								if(exists $resultHash->{uc($1)}) {
+									my $partTag = uc($1);
 									my $partExp = $2;
 									$log->debug("Handling custom mapping exp part $partTag, $partExp");
 									my $partTagValues = $resultHash->{$partTag};
@@ -484,8 +484,8 @@ sub scanTrack {
 										}
 									}
 								}
-							}elsif($part =~ /^\s*([A-Z0-9_]+)\(text=(.*)\)\s*$/) {
-								if(exists $resultHash->{$1}) {
+							}elsif($part =~ /^\s*([A-Za-z0-9_\/]+)\(text=(.*)\)\s*$/) {
+								if(exists $resultHash->{uc($1)}) {
 									my $currentValue = $2;
 									if($mappingType eq "oneof" || $mappingType eq "as") {
 										push @values,$currentValue;
@@ -498,9 +498,9 @@ sub scanTrack {
 										}
 									}
 								}
-							}elsif($part =~ /^\s*([A-Z0-9_]+)\s*$/) {
-								if(exists $resultHash->{$1}) {
-									my $partTag = $1;
+							}elsif($part =~ /^\s*([A-Za-z0-9_\/]+)\s*$/) {
+								if(exists $resultHash->{uc($1)}) {
+									my $partTag = uc($1);
 									my $partTagValues = $resultHash->{$partTag};
 									if(ref($partTagValues) eq 'ARRAY') {
 										my $orgValue = undef;
