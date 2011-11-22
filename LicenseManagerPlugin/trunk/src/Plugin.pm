@@ -283,7 +283,7 @@ sub _getApplicationsCB {
 sub getExtensions {
 	my $args = shift;
 
-	my $cache = Slim::Utils::Cache->new;
+	my $cache = Slim::Utils::Cache->new("PluginCache/LicenseManagerPlugin",$PLUGINVERSION);
 
 	if ( my $cached = $cache->get( $args->{'name'} . '_XML' ) ) {
 
@@ -330,7 +330,7 @@ sub _parseResponse {
 
 	} else {
 
-		my $cache = Slim::Utils::Cache->new;
+		my $cache = Slim::Utils::Cache->new("PluginCache/LicenseManagerPlugin",$PLUGINVERSION);
 		
 		$cache->set( $args->{'name'} . '_XML', $xml, '5m' );
 	}
