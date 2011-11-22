@@ -65,11 +65,12 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/iPod",
 			'utf8filenames' => $prefs->get('utf8filenames')
 		);
-		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/iPod/Templates";
 		$self->templateParser(Plugins::iPod::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/iPod/Libraries";
 		$self->contentParser(Plugins::iPod::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -81,7 +82,8 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/iPod/".$self->pluginVersion."/Files",
+			'cacheName' => "PluginCache/iPod",
+			'cachePrefix' => "PluginCache/iPod/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ipod.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -103,6 +105,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getiPodTemplates";
@@ -113,7 +116,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::iPod::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/iPod/".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/iPod/Libraries";
 		$self->templateContentParser(Plugins::iPod::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "ipod.values.xml";
