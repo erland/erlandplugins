@@ -73,7 +73,7 @@ sub initPlugin {
 	$driver = $serverPrefs->get('dbsource');
 	$driver =~ s/dbi:(.*?):(.*)$/$1/;
 
-	$cache = Slim::Utils::Cache->new();
+	$cache = Slim::Utils::Cache->new("PluginCache/MythTV",$PLUGINVERSION);
     
 	if(UNIVERSAL::can("Slim::Schema","sourceInformation")) {
 		my ($source,$username,$password);
@@ -893,12 +893,14 @@ sub prepareInformationScreenData {
 
 sub getInformationScreenScreens {
 	my $client = shift;
-	return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$PLUGINVERSION,'FileCache/InformationScreen','Screens','xml','template','screen','simple',1);
+	my $pluginVersion = shift;
+	return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$pluginVersion,'PluginCache/InformationScreen','Screens','xml','template','screen','simple',1);
 }
 
 sub getInformationScreenTemplates {
         my $client = shift;
-        return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$PLUGINVERSION,'FileCache/InformationScreen','ScreenTemplates','xml');
+	my $pluginVersion = shift;
+        return Plugins::MythTV::Template::Reader::getTemplates($client,'MythTV',$pluginVersion,'PluginCache/InformationScreen','ScreenTemplates','xml');
 }
 
 sub getInformationScreenTemplateData {
