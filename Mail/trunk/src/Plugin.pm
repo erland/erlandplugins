@@ -271,7 +271,7 @@ sub getMailMessages {
 	}
 
 	if(!defined($cache)) {
-		$cache = Slim::Utils::Cache->new();
+		$cache = Slim::Utils::Cache->new("PluginCache/Mail",$PLUGINVERSION);
 	}
 
 	my @empty = ();
@@ -471,12 +471,14 @@ sub preprocessInformationScreenNewMails {
 
 sub getInformationScreenScreens {
 	my $client = shift;
-	return Plugins::Mail::Template::Reader::getTemplates($client,'Mail',$PLUGINVERSION,'FileCache/InformationScreen','Screens','xml','template','screen','simple',1);
+	my $pluginVersion = shift;
+	return Plugins::Mail::Template::Reader::getTemplates($client,'Mail',$pluginVersion,'PluginCache/InformationScreen','Screens','xml','template','screen','simple',1);
 }
 
 sub getInformationScreenTemplates {
         my $client = shift;
-        return Plugins::Mail::Template::Reader::getTemplates($client,'Mail',$PLUGINVERSION,'FileCache/InformationScreen','ScreenTemplates','xml');
+	my $pluginVersion = shift;
+        return Plugins::Mail::Template::Reader::getTemplates($client,'Mail',$pluginVersion,'PluginCache/InformationScreen','ScreenTemplates','xml');
 }
 
 sub getInformationScreenTemplateData {
