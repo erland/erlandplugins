@@ -1744,71 +1744,79 @@ sub getStatisticPlugins {
 
 sub getSQLPlayListPlaylists {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/SQLPlayList','Playlists','xml','template','playlist','simple',1);
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/SQLPlayList','Playlists','xml','template','playlist','simple',1);
 }
 
 sub getSQLPlayListTemplates {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/SQLPlayList','PlaylistTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/SQLPlayList','PlaylistTemplates','xml');
 }
 sub getDatabaseQueryTemplates {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/DatabaseQuery','DataQueryTemplates','xml');
+	my $pluginVersion = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/DatabaseQuery','DataQueryTemplates','xml');
 }
 
 sub getDatabaseQueryDataQueries {
 	my $client = shift;
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,,'FileCache/DatabaseQuery','DataQueries','xml','template','dataquery','simple',1);
+	my $pluginVersion = shift;
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/DatabaseQuery','DataQueries','xml','template','dataquery','simple',1);
 }
 
 sub getCustomBrowseTemplates {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/CustomBrowse','MenuTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/CustomBrowse','MenuTemplates','xml');
 }
 
 sub getCustomBrowseContextTemplates {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/CustomBrowse','ContextMenuTemplates','xml');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/CustomBrowse','ContextMenuTemplates','xml');
 }
 
 sub getCustomBrowseMenus {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/CustomBrowse','Menus','xml','template','menu','simple',1);
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/CustomBrowse','Menus','xml','template','menu','simple',1);
 }
 
 sub getCustomBrowseContextMenus {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/CustomBrowse','ContextMenus','xml','template','menu','simple',1);
+	my $result = Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/CustomBrowse','ContextMenus','xml','template','menu','simple',1);
 	if($result) {
 		for my $item (@$result) {
 			my $content = $item->{'menu'};
@@ -1828,12 +1836,13 @@ sub replaceMenuParameters {
 }
 sub getCustomBrowseMixes {
 	my $client = shift;
+	my $pluginVersion = shift;
 	my $validateRequest = Slim::Control::Request::executeRequest($client,['licensemanager','validate','application:TrackStat']);
 	if(!$validateRequest->getResult("result")) {
 		my @empty = ();
 		return \@empty;
 	}
-	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$PLUGINVERSION,'FileCache/CustomBrowse','Mixes','xml','mix');
+	return Plugins::TrackStat::Template::Reader::getTemplates($client,'TrackStat',$pluginVersion,'PluginCache/CustomBrowse','Mixes','xml','mix');
 }
 
 sub getSQLPlayListTemplateData {
