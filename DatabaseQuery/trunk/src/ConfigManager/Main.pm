@@ -65,10 +65,11 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/DatabaseQuery",
 		);
-		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/DatabaseQuery/Templates";
 		$self->templateParser(Plugins::DatabaseQuery::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/DataQueries";
+		$parserParameters{'cachePrefix'} = "PluginCache/DatabaseQuery/DatabaseQueries";
 		$self->contentParser(Plugins::DatabaseQuery::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -80,7 +81,9 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/DatabaseQuery/".$self->pluginVersion."/Files",
+			'pluginVersion' => $self->pluginVersion,
+			'cacheName' => "PluginCache/DatabaseQuery",
+			'cachePrefix' => "PluginCache/DatabaseQuery/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "dataquery.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -102,6 +105,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getDatabaseQueryTemplates";
@@ -112,7 +116,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::DatabaseQuery::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/DatabaseQuery/".$self->pluginVersion."/DataQueries";
+		$parserParameters{'cachePrefix'} = "PluginCache/DatabaseQuery/DatabaseQueries";
 		$self->templateContentParser(Plugins::DatabaseQuery::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "dataquery.values.xml";
