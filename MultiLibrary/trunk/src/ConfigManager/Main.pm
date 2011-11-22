@@ -65,11 +65,12 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/MultiLibrary",
 			'utf8filenames' => $prefs->get('utf8filenames')
 		);
-		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/MultiLibrary/Templates";
 		$self->templateParser(Plugins::MultiLibrary::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/MultiLibrary/Libraries";
 		$self->contentParser(Plugins::MultiLibrary::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -81,7 +82,8 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/MultiLibrary/".$self->pluginVersion."/Files",
+			'cacheName' => "PluginCache/MultiLibrary",
+			'cachePrefix' => "PluginCache/MultiLibrary/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "ml.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -103,6 +105,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getMultiLibraryTemplates";
@@ -113,7 +116,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::MultiLibrary::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/MultiLibrary".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/MultiLibrary/Libraries";
 		$self->templateContentParser(Plugins::MultiLibrary::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "ml.values.xml";
