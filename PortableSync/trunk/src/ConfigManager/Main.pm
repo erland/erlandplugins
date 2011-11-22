@@ -65,11 +65,12 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/PortableSync",
 			'utf8filenames' => $prefs->get('utf8filenames')
 		);
-		$parserParameters{'cacheName'} = "FileCache/PortableSync/".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/PortableSync/Templates";
 		$self->templateParser(Plugins::PortableSync::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/PortableSync/".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/PortableSync/Libraries";
 		$self->contentParser(Plugins::PortableSync::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -81,7 +82,9 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/PortableSync/".$self->pluginVersion."/Files",
+			'pluginVersion' => $self->pluginVersion,
+			'cacheName' => "PluginCache/PortableSync",
+			'cachePrefix' => "PluginCache/PortableSync/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "portablesync.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -103,6 +106,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getPortableSyncTemplates";
@@ -113,7 +117,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::PortableSync::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/PortableSync/".$self->pluginVersion."/Libraries";
+		$parserParameters{'cachePrefix'} = "PluginCache/PortableSync/Libraries";
 		$self->templateContentParser(Plugins::PortableSync::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "portablesync.values.xml";

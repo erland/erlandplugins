@@ -652,7 +652,9 @@ sub handleWebList {
 	# Pass on the current pref values and now playing info
 	if(!defined($params->{'donotrefresh'})) {
 		if(defined($params->{'cleancache'}) && $params->{'cleancache'}) {
-			my $cache = Slim::Utils::Cache->new("FileCache/PortableSync");
+			my $cacheVersion = $PLUGINVERSION;
+			$cacheVersion =~ s/^.*\.([^\.]+)$/\1/;
+			my $cache = Slim::Utils::Cache->new("PluginCache/PortableSync",$cacheVersion);
 			$cache->clear();
 		}
 		initLibraries($client);
