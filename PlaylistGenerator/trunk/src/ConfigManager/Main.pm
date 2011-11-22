@@ -65,10 +65,11 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/PlaylistGenerator",
 		);
-		$parserParameters{'cacheName'} = "FileCache/PlaylistGenerator/".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/PlaylistGenerator/Templates";
 		$self->templateParser(Plugins::PlaylistGenerator::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/PlaylistGenerator/".$self->pluginVersion."/PlaylistDefinitions";
+		$parserParameters{'cachePrefix'} = "PluginCache/PlaylistGenerator/PlaylistDefinitions";
 		$self->contentParser(Plugins::PlaylistGenerator::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -80,7 +81,9 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/PlaylistGenerator/".$self->pluginVersion."/Files",
+			'pluginVersion' => $self->pluginVersion,
+			'cacheName' => "PluginCache/PlaylistGenerator",
+			'cachePrefix' => "PluginCache/PlaylistGenerator/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "playlistdefinition.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -102,6 +105,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getPlaylistGeneratorTemplates";
@@ -112,7 +116,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::PlaylistGenerator::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/PlaylistGenerator/".$self->pluginVersion."/PlaylistDefinitions";
+		$parserParameters{'cachePrefix'} = "PluginCache/PlaylistGenerator/PlaylistDefinitions";
 		$self->templateContentParser(Plugins::PlaylistGenerator::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "playlistdefinition.values.xml";
