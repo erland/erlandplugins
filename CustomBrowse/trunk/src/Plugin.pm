@@ -2248,7 +2248,9 @@ sub handleWebList {
         my ($client, $params) = @_;
 	$sqlerrors = '';
 	if(defined($params->{'cleancache'}) && $params->{'cleancache'}) {
-		my $cache = Slim::Utils::Cache->new("FileCache/CustomBrowse");
+		my $cacheVersion = $PLUGINVERSION;
+		$cacheVersion =~ s/^.*\.([^\.]+)$/\1/;
+		my $cache = Slim::Utils::Cache->new("PluginCache/CustomBrowse",$cacheVersion);
 		$cache->clear();
 	}
 	if(defined($params->{'refresh'})) {

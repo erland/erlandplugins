@@ -66,10 +66,11 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/CustomBrowse",
 		);
-		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextTemplates";
+		$parserParameters{'cachePrefix'} = "PluginCache/CustomBrowse/ContextTemplates";
 		$self->templateParser(Plugins::CustomBrowse::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextMenus";
+		$parserParameters{'cachePrefix'} = "PluginCache/CustomBrowse/ContextMenus";
 		$self->contentParser(Plugins::CustomBrowse::ConfigManager::ContextContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -81,7 +82,9 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/CustomBrowse/".$self->pluginVersion."/Files",
+			'pluginVersion' => $self->pluginVersion,
+			'cacheName' => "PluginCache/CustomBrowse",
+			'cachePrefix' => "PluginCache/CustomBrowse/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "cb.context.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -103,6 +106,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getCustomBrowseContextTemplates";
@@ -113,7 +117,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::CustomBrowse::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/CustomBrowse/".$self->pluginVersion."/ContextMenus";
+		$parserParameters{'cachePrefix'} = "PluginCache/CustomBrowse/ContextMenus";
 		$self->templateContentParser(Plugins::CustomBrowse::ConfigManager::ContextTemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "cb.context.values.xml";
