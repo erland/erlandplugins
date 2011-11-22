@@ -65,11 +65,12 @@ sub init {
 			'pluginId' => $self->pluginId,
 			'pluginVersion' => $self->pluginVersion,
 			'logHandler' => $self->logHandler,
+			'cacheName' => "PluginCache/InformationScreen",
 			'utf8filenames' => $prefs->get('utf8filenames')
 		);
-		$parserParameters{'cacheName'} = "FileCache/InformationScreen".$self->pluginVersion."/Templates";
+		$parserParameters{'cachePrefix'} = "PluginCache/InformationScreen/Templates";
 		$self->templateParser(Plugins::InformationScreen::ConfigManager::TemplateParser->new(\%parserParameters));
-		$parserParameters{'cacheName'} = "FileCache/InformationScreen".$self->pluginVersion."/Screens";
+		$parserParameters{'cachePrefix'} = "PluginCache/InformationScreen/Screens";
 		$self->contentParser(Plugins::InformationScreen::ConfigManager::ContentParser->new(\%parserParameters));
 
 		my %parameters = (
@@ -81,7 +82,9 @@ sub init {
 
 		my %directoryHandlerParameters = (
 			'logHandler' => $self->logHandler,
-			'cacheName' => "FileCache/InformationScreen/".$self->pluginVersion."/Files",
+			'pluginVersion' => $self->pluginVersion,
+			'cacheName' => "PluginCache/InformationScreen",
+			'cachePrefix' => "PluginCache/InformationScreen/Files",
 		);
 		$directoryHandlerParameters{'extension'} = "screen.xml";
 		$directoryHandlerParameters{'parser'} = $self->contentParser;
@@ -103,6 +106,7 @@ sub init {
 		my %pluginHandlerParameters = (
 			'logHandler' => $self->logHandler,
 			'pluginId' => $self->pluginId,
+			'pluginVersion' => $self->pluginVersion,
 		);
 
 		$pluginHandlerParameters{'listMethod'} = "getInformationScreenTemplates";
@@ -113,7 +117,7 @@ sub init {
 		$self->templatePluginHandler(Plugins::InformationScreen::ConfigManager::PluginLoader->new(\%pluginHandlerParameters));
 
 		$parserParameters{'templatePluginHandler'} = $self->templatePluginHandler;
-		$parserParameters{'cacheName'} = "FileCache/InformationScreen".$self->pluginVersion."/Screens";
+		$parserParameters{'cachePrefix'} = "PluginCache/InformationScreen/Screens";
 		$self->templateContentParser(Plugins::InformationScreen::ConfigManager::TemplateContentParser->new(\%parserParameters));
 
 		$directoryHandlerParameters{'extension'} = "screen.values.xml";
