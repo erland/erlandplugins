@@ -557,7 +557,8 @@ sub checkCustomSkipFilterType {
 
 sub getCustomBrowseMixes {
 	my $client = shift;
-	return Plugins::CustomSkip::Template::Reader::getTemplates($client,'CustomSkip',$PLUGINVERSION,'FileCache/CustomBrowse','Mixes','xml','mix');
+	my $pluginVersion = shift;
+	return Plugins::CustomSkip::Template::Reader::getTemplates($client,'CustomSkip',$pluginVersion,'PluginCache/CustomBrowse','Mixes','xml','mix');
 }
 
 sub getDynamicPlayListFilters {
