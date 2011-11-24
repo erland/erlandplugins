@@ -73,7 +73,7 @@ sub initScanner {
 			use strict 'refs';
 		}
 	}
-	if($prefs->get("refresh_startup") && !$serverPrefs->get('autorescan')) {
+	if($prefs->get("refresh_startup") && $::VERSION lt '7.6') {
 		refreshData();
 	}
 }

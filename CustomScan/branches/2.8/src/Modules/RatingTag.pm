@@ -45,6 +45,7 @@ sub getCustomScanFunctions {
 		'developedBy' => 'Erland Isaksson',
 		'developedByLink' => 'http://erland.isaksson.info/donate',
 		'alwaysRescanTrack' => 1,
+		'requiresRefresh' => 0,
 		'scanInit' => \&scanInit,
 		'scanTrack' => \&scanTrack,
 		'licensed' => 1,
