@@ -351,7 +351,7 @@ sub handleWebNewSQLPlayList {
 
 sub getDatabaseQueryDataQueries {
 	my $client = shift;
-	my $pluginVersiono = shift;
+	my $pluginVersion = shift;
 	my $result = Plugins::CustomScan::Template::Reader::getTemplates($client,'CustomScan',$pluginVersion,'PluginCache/DatabaseQuery','DataQueries','xml','template','dataquery','simple',1);
 	my @filteredResult = ();
 	my $dbh = getCurrentDBH();
