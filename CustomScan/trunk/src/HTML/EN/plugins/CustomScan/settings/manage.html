@@ -40,7 +40,7 @@
 			<td colspan="5"><hr></td>
 		</tr>
 		<tr>
-			<td colspan="5"><div style="float:right;">([% "PLUGIN_CUSTOMSCAN" | string %] [% pluginCustomScanVersion %])</div></td>
+			<td colspan="5"><a href="[% webroot %]plugins/CustomScan/settings/manage.html?refresh=1&player=[% player |uri %]" onclick='return confirm("[% "PLUGIN_CUSTOMSCAN_REFRESH_DATABASE_WARNING" |string %]")'>[% "PLUGIN_CUSTOMSCAN_REFRESH_DATABASE" | string %]</a><div style="float:right;">([% "PLUGIN_CUSTOMSCAN" | string %] [% pluginCustomScanVersion %])</div></td>
 		</tr>
 	</table>
 
