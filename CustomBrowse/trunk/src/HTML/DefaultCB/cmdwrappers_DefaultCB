@@ -1,3 +1,4 @@
+[%- FILTER null %]
 [% 
 albumHRef = "href=\"${webroot}plugins/CustomBrowse/custombrowse_contextlist.html?contextid=$itemobj.album.id&amp;contexttype=album&amp;contextname=$itemobj.album.title&amp;player=$playerURI\"";
 songinfoHRef = "href=\"${webroot}plugins/CustomBrowse/custombrowse_contextlist.html?noitems=1&amp;contextid=$itemobj.id&amp;contexttype=track&amp;contextname=$item.title&amp;player=$playerURI\"";
@@ -30,4 +31,4 @@ href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?contextid=
 	[% END -%]
 	[% contributorsHTML.join(', ') %]
 [%- END %]
-
+[% END -%]
