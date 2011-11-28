@@ -31,4 +31,4 @@ href="[% webroot %]plugins/CustomBrowse/custombrowse_contextlist.html?contextid=
 	[% END -%]
 	[% contributorsHTML.join(', ') %]
 [%- END %]
-[% FILTER -%]
+[% END -%]
