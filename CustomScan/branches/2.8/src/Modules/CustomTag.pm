@@ -282,6 +282,11 @@ sub scanTrack {
 			$log->error("CustomScan:CustomTag: Failed to load raw tags from ".$track->url.":$@\n");
 		}
 	}
+	my $prefix = "";
+	if($track->content_type() =~ /^wma/) {
+		$prefix = "WM/";
+	}
+
 	if(defined($tags)) {
 		my $customTagProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtags");
 		my $customTagMappingProperty = Plugins::CustomScan::Plugin::getCustomScanProperty("customtagsmapping");
@@ -340,6 +345,13 @@ sub scanTrack {
 			}
 			for my $tag (keys %$tags) {
 				my $ucTag = uc($tag);
+				if($prefix ne "" && $ucTag =~ /^$prefix/) {
+					my $tagWithoutPrefix = $ucTag;
+					$tagWithoutPrefix =~ s/^$prefix(.*)$/$1/;
+					if($customTagsHash{$tagWithoutPrefix} || $virtualTagsHash{$tagWithoutPrefix} || $customSortTags{$tagWithoutPrefix}) {
+						$ucTag = $tagWithoutPrefix;
+					}
+				}
 				if($customTagsHash{$ucTag} || $virtualTagsHash{$ucTag} || $customSortTags{$ucTag}) {
 					my $values = $tags->{$tag};
 					if(!defined($singleValueTagsHash{$ucTag}) && !defined($virtualSingleTagsHash{$ucTag})) {
