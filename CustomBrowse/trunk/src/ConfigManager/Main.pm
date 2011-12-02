@@ -343,7 +343,7 @@ sub postProcessItem {
 	}
 	if(defined($item->{'menugroup'})) {
 		if($driver eq 'SQLite') {
-			$item->{'menuname'} =~ s/\'\'/\'/g;
+			$item->{'menugroup'} =~ s/\'\'/\'/g;
 		}else {
 			$item->{'menugroup'} =~ s/\\\\/\\/g;
 			$item->{'menugroup'} =~ s/\\\"/\"/g;
