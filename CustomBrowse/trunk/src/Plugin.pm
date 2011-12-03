@@ -3733,7 +3733,7 @@ sub cliJiveHandlerImpl {
 	if(!defined($start) || $start eq '') {
 		$start=0;
 	}
-	if($start>0) {
+	if($start>0 && (!$prefs->get("touchtoplay") || !$serverPrefs->client($client)->get("playtrackalbum"))) {
 		# Decrease to compensate for "Play All" item on first chunk
 		$start--;
 	}
@@ -4147,7 +4147,7 @@ sub cliJiveHandlerImpl {
 		}
 		$cnt++;
 	}
-	if($start>0) {
+	if($start>0 && (!$prefs->get("touchtoplay") || !$serverPrefs->client($client)->get("playtrackalbum"))) {
 		$start++;
 	}
 	$request->addResult('offset',$start);
