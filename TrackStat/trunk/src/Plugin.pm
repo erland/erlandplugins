@@ -138,6 +138,10 @@ $prefs->migrate(1, sub {
 	$prefs->set('long_urls',  Slim::Utils::Prefs::OldPrefs->get('plugin_trackstat_long_urls'));
 	1;
 });
+$prefs->migrate(2, sub {
+	$prefs->set('touchtoplay', 1);
+	1;
+});
 $prefs->setValidate({'validator' => \&isWritableFile }, 'backup_file'  );
 $prefs->setValidate('dir', 'backup_dir'  );
 $prefs->setValidate({ 'validator' => \&isTimeOrEmpty }, 'backup_time'  );
@@ -1532,7 +1536,10 @@ sub getStatisticItemsForContext {
 sub handlePlayAdd {
 	my ($client, $params) = @_;
 
-	if ($client = Slim::Player::Client::getClient($params->{player})) {
+	if(defined($params->{player})) {
+		$client = Slim::Player::Client::getClient($params->{player})
+	}
+	if ($client) {
 		my $first = 1;
 		if($params->{trackstatcmd} and $params->{trackstatcmd} eq 'play') {
 			$client->execute(['stop']);
@@ -2805,7 +2812,7 @@ sub objectInfoHandler {
 
 	if($statisticTypes{$objectType} && ($objectType ne 'artist' ||  Slim::Schema->variousArtistsObject->id ne $objectId)) {
 		my $jive = {};
-		
+		my $type = 'redirect';
 		if ( $tags->{menuMode} ) {
 			my $params = {
 				$parameterId => $objectId,
@@ -2817,8 +2824,16 @@ sub objectInfoHandler {
 					cmd    => [ 'trackstat', 'statisticsjive' ],
 					params => $params,
 				},
+				play => {
+					player => 0,
+					cmd    => [ 'trackstat', 'statisticsjive', 'trackstatcmd:play' ],
+					params => $params,
+				},
 			};
-
+			if($statisticsType eq 'all') {
+				#Special case for iPeng to make it behave better'
+				$type = 'playlist';
+			}
 			$jive->{actions} = $actions;
 		}
 
@@ -2828,7 +2843,7 @@ sub objectInfoHandler {
 		};
 
 		return {
-			type      => 'redirect',
+			type      => $type,
 			jive      => $jive,
 			name      => $client->string('PLUGIN_TRACKSTAT'),
 			favorites => 0,
@@ -3127,10 +3142,25 @@ sub jiveBrowse {
 					'params' => \%itemParams,
 					'itemsParams' => 'params',
 				},
+				'play' => {
+					'cmd' => ['trackstat', 'statisticsjive', 'trackstatcmd:play'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+					'nextWindow' => 'nowPlaying',
+				},
+				'add' => {
+					'cmd' => ['trackstat', 'statisticsjive', 'trackstatcmd:add'],
+					'params' => \%itemParams,
+					'itemsParams' => 'params',
+				},
 			};
 			$request->addResultLoop('item_loop',$cnt,'actions',$actions);
 			$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 			$request->addResultLoop('item_loop',$cnt,'text',$item->{'name'});
+			if(defined($item->{'item'}->{'listtype'}) && $item->{'item'}->{'listtype'} eq 'track') {
+				#Special case for iPeng to make it look better
+				$request->addResultLoop('item_loop',$cnt,'type','playlist');
+			}
 			$cnt++;
 		}
 
@@ -3205,7 +3235,19 @@ sub jiveStatistics {
 
 		my $cnt = 0;
 		my $function = $statistics->{$id}->{'webfunction'};
+		my $cmd = $params->{'trackstatcmd'};
 		$log->debug("Calling webfunction for $id\n");
+		if(defined($cmd)) {
+			eval {
+				&{$function}($params,$listLength);
+				handlePlayAdd($client,$params);
+			};
+			if( $@ ) {
+				$log->warn("Error in handleWebStatistics: $@\n");
+			}
+			$request->setStatusDone();
+			return;
+		}
 		eval {
 			&{$function}($params,$listLength);
 			if(defined($statistics->{$id}->{'namefunction'})) {
@@ -3224,18 +3266,36 @@ sub jiveStatistics {
 				push @listRef, $it;
 			}
 
-			my $baseActions = {
-				'actions' => {
-					'play' => {
-						'cmd' => ['playlist', 'loadtracks'],
-						'itemsParams' => 'baseparams',
+			my $baseActions = undef;
+			if($params->{'listtype'} eq 'track') {
+				$baseActions = {
+					'actions' => {
+						'play' => {
+							'cmd' => ['playlist', 'loadtracks'],
+							'itemsParams' => 'baseparams',
+							'nextWindow' => 'nowPlaying',
+						},
+						'add' => {
+							'cmd' => ['playlist', 'addtracks'],
+							'itemsParams' => 'baseparams',
+						},
 					},
-					'add' => {
-						'cmd' => ['playlist', 'addtracks'],
-						'itemsParams' => 'baseparams',
+				};
+			}else {
+				$baseActions = {
+					'actions' => {
+						'play' => {
+							'cmd' => ['trackstat', 'statisticsjive', 'trackstatcmd:play'],
+							'itemsParams' => 'params',
+							'nextWindow' => 'nowPlaying',
+						},
+						'add' => {
+							'cmd' => ['trackstat', 'statisticsjive', 'trackstatcmd:add'],
+							'itemsParams' => 'params',
+						},
 					},
-				},
-			};
+				};
+			}
 			my ($Imports, $mixers) = _mixers();
 			if($params->{'listtype'} eq 'album' ||$params->{'listtype'} eq 'artist' ||  $params->{'listtype'} eq 'genre' || $params->{'listtype'} eq 'track') {
 
@@ -3291,6 +3351,7 @@ sub jiveStatistics {
 						'cmd' => ['dynamicplaylist','playlist','play'],
 						'params' => \%itemParams,
 						'itemParams' => 'params',
+						'nextWindow' => 'nowPlaying',
 					},
 					'add' => {
 						'cmd' => ['dynamicplaylist','playlist','add'],
@@ -3387,11 +3448,15 @@ sub jiveStatistics {
 						track_id => $item->{'itemid'},
 						menu => 'nowhere',
 					};
-					$actions->{'go'} = {
-						'cmd' => ['trackinfo','items'],
-						'params' => $songInfoParams,
-						'itemsParams' => 'params',
-					};
+					if($prefs->get("touchtoplay")) {
+						$request->addResultLoop('item_loop',$cnt,'goAction','play');
+					}else {
+						$actions->{'go'} = {
+							'cmd' => ['trackinfo','items'],
+							'params' => $songInfoParams,
+							'itemsParams' => 'params',
+						};
+					}
 					$baseItemParams{'track.id'} = $item->{'itemid'};
 					$mixerItemParams{'track_id'} = $item->{'itemid'};
 					$itemobj = $item->{'itemobj'}->{'track'};
@@ -3433,11 +3498,20 @@ sub jiveStatistics {
 				}elsif($item->{'listtype'} eq 'track') {
 					$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'itemid'});
 				}
+				if($item->{'listtype'} eq 'album' || $item->{'listtype'} eq 'playlist') {
+					# Special case for iPeng to make it list tracks as a playlist
+					$request->addResultLoop('item_loop',$cnt,'type','playlist');
+				}
 				my $text = $item->{'text'}."\n";
 				if($item->{'rating'}) {
-					$text .= string("PLUGIN_TRACKSTAT_RATING").($RATING_CHARACTER x $item->{'rating'})." ".$item->{'ratingnumber'}."\n";
+					$text .= string("PLUGIN_TRACKSTAT_RATING").($RATING_CHARACTER x $item->{'rating'})." ".$item->{'ratingnumber'};
 				}else {
-					$text .= string("PLUGIN_TRACKSTAT_UNRATED")."\n";
+					$text .= string("PLUGIN_TRACKSTAT_UNRATED");
+				}
+				if(defined($params->{'userInterfaceIdiom'}) && $params->{'userInterfaceIdiom'} eq 'iPeng') {
+					$text .= '\n';
+				}else {
+					$text .= ' ';
 				}
 				$text .= string("PLUGIN_TRACKSTAT_PLAY_COUNT").$item->{'song_count'};
 				$request->addResultLoop('item_loop',$cnt,'text',$text);
@@ -3454,6 +3528,7 @@ sub jiveStatistics {
 		my %menuStyle = ();
 		$menuStyle{'titleStyle'} = 'mymusic';
 		$menuStyle{'menuStyle'} = 'album';
+		$menuStyle{'windowStyle'} = "icon_list";
 		$menuStyle{'text'} = $params->{'songlist'};
 		$request->addResult('window',\%menuStyle);
 		$request->addResult('offset',0);

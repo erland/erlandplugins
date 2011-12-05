@@ -48,6 +48,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my $driver;
 my $distinct;
+my $memoryCache = {};
 
 sub init {
 	$driver = $serverPrefs->get('dbsource');
@@ -125,6 +126,9 @@ sub getTracksWeb {
 	my $params = shift;
 	my $ds = Plugins::TrackStat::Storage::getCurrentDS();
 	my $dbh = Plugins::TrackStat::Storage::getCurrentDBH();
+	my $cachedObjects = $memoryCache->{"objects: ".$sql};
+	my $cachedObjectIds = $memoryCache->{"objectIds: ".$sql};
+
 	$log->debug("Executing: $sql\n");
 	my $sth = $dbh->prepare( $sql );
 	my $currenttrackstatitem = $params->{'currenttrackstatitem'};
@@ -135,35 +139,54 @@ sub getTracksWeb {
 			$params->{'statisticparameters'} = $parameters;
 		}
 	}
-	eval {
-		my $count = $sth->execute();
-		$log->debug("Got $count items\n");
+	my $objects = {};
+	my @objectIds = ();
+	if(defined($cachedObjects) && defined($cachedObjectIds)) {
+		$objects = $cachedObjects;
+		@objectIds = @$cachedObjectIds;
+	}else {
+		eval {
+			my $count = $sth->execute();
+			$log->debug("Got $count items\n");
 
-		my( $id, $playCount, $added, $lastPlayed, $rating );
-		$sth->bind_columns( undef, \$id, \$playCount, \$added, \$lastPlayed, \$rating );
-		my $itemNumber = 0;
-		my %objects = ();
-		my @objectIds = ();
-		while( $sth->fetch() ) {
-			$playCount = 0 if (!(defined($playCount)));
-			$lastPlayed = 0 if (!(defined($lastPlayed)));
-			$added = 0 if (!(defined($added)));
-			$rating = 0 if (!(defined($rating)));
-			my %objectStatisticInfo = (
-				'lastPlayed' => $lastPlayed,
-				'added' => $added,
-				'playCount' => $playCount,
-				'rating' => $rating
-			);
-			push @objectIds,$id;
-			$objects{$id} = \%objectStatisticInfo;
+			my( $id, $playCount, $added, $lastPlayed, $rating );
+			$sth->bind_columns( undef, \$id, \$playCount, \$added, \$lastPlayed, \$rating );
+			while( $sth->fetch() ) {
+				$playCount = 0 if (!(defined($playCount)));
+				$lastPlayed = 0 if (!(defined($lastPlayed)));
+				$added = 0 if (!(defined($added)));
+				$rating = 0 if (!(defined($rating)));
+				my %objectStatisticInfo = (
+					'lastPlayed' => $lastPlayed,
+					'added' => $added,
+					'playCount' => $playCount,
+					'rating' => $rating
+				);
+				push @objectIds,$id;
+				$objects->{$id} = \%objectStatisticInfo;
+			}
+			$memoryCache = {};
+			$memoryCache->{"objects: ".$sql} = Storable::dclone($objects);
+			$memoryCache->{"objectIds: ".$sql} = Storable::dclone(\@objectIds);
+		};
+		if( $@ ) {
+			if(defined($DBI::errstr)) {
+		    	$log->warn("Database error: $DBI::errstr\n");
+		    }else {
+		    	$log->warn("Database error: $@\n");
+		    }
 		}
+		$sth->finish();
+	}
+
+	eval {
 		my $objectItems = Plugins::TrackStat::Storage::objectsForId('track',\@objectIds);
 		for my $object (@$objectItems) {
-			$objects{$object->id}->{'itemobj'} = $object;
+			$objects->{$object->id}->{'itemobj'} = $object;
 		}
+		my $itemNumber = 0;
 		for my $objectId (@objectIds) {
-			my $objectData = $objects{$objectId};
+			my $objectData = $objects->{$objectId};
 			my $track = $objectData->{'itemobj'};
 			next unless defined $track;
 		  	my %trackInfo = ();
@@ -203,14 +226,6 @@ sub getTracksWeb {
 		$params->{'listtype'} = 'track';
 		$log->debug("Returning $itemNumber items\n");
 	};
-	if( $@ ) {
-		if(defined($DBI::errstr)) {
-	    	$log->warn("Database error: $DBI::errstr\n");
-	    }else {
-	    	$log->warn("Database error: $@\n");
-	    }
-	}
-	$sth->finish();
 }
 
 sub getTracks {

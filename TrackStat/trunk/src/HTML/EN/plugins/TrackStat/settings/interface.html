@@ -36,6 +36,13 @@
 		<input type="text" class="stdedit" name="pref_jive_list_length" id="jive_list_length" value="[% prefs.jive_list_length %]" size="3">
 	[% END %]
 
+        [% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_TOUCH_TO_PLAY" desc="SETUP_PLUGIN_TRACKSTAT_TOUCH_TO_PLAY_DESC" %]
+                <select name="pref_touchtoplay">
+                        <option value="1" [% IF prefs.touchtoplay %]selected[% END %]>[% "YES" | string %]</option>
+                        <option value="0" [% IF NOT prefs.touchtoplay %]selected[% END %]>[% "NO" | string %]</option>
+                </select>
+        [% END %]
+
 	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH" desc="SETUP_PLUGIN_TRACKSTAT_WEB_REFRESH_DESC" %]
 		<select name="pref_web_refresh">
 			<option value="1" [% IF prefs.web_refresh %]selected[% END %]>[% "YES" | string %]</option>
