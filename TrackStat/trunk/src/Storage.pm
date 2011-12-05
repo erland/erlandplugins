@@ -34,6 +34,7 @@ use Class::Struct;
 use FindBin qw($Bin);
 use POSIX qw(strftime ceil);
 use Slim::Schema;
+use Digest::MD5 qw(md5_hex);
 
 if ($] > 5.007) {
 	require Encode;
@@ -331,8 +332,15 @@ sub init {
 		    $log->warn("Database error: $DBI::errstr\n");
 		}
 		$sth->finish();
+	}
+	eval { $dbh->do("select urlmd5 from track_statistics limit 1;") };
+	if ($@) {
+		$log->debug("Create database table column urlmd5\n");
+		Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_urlmd5.sql");
+	}
+	if($driver eq 'mysql') {
 
-		$sth = $dbh->prepare("show index from track_statistics;");
+		my $sth = $dbh->prepare("show index from track_statistics;");
 		eval {
 			$log->debug("Checking if indexes is needed for track_statistics\n");
 			$sth->execute();
@@ -340,6 +348,7 @@ sub init {
 			$sth->bind_col( 3, \$keyname );
 			my $foundMB = 0;
 			my $foundUrl = 0;
+			my $foundUrlMd5 = 0;
 			my $foundUrlMB = 0;
 			while( $sth->fetch() ) {
 				if($keyname eq "urlIndex") {
@@ -348,6 +357,8 @@ sub init {
 					$foundMB = 1;
 				}elsif($keyname eq "url_musicbrainz") {
 					$foundUrlMB = 1;
+				}elsif($keyname eq "urlmd5Index") {
+					$foundUrlMd5 = 1;
 				}
 			}
 			if(!$foundUrl) {
@@ -371,6 +382,13 @@ sub init {
 					$log->warn("Couldn't drop index: $@\n");
 				}
 			}
+			if(!$foundUrlMd5) {
+				$log->warn("TrackStat::Storage: No urlmd5Index index found in track_statistics, creating index...\n");
+				eval { $dbh->do("create index urlmd5Index on track_statistics (urlmd5);") };
+				if ($@) {
+					$log->warn("Couldn't add index: $@\n");
+				}
+			}
 		};
 		if( $@ ) {
 		    $log->warn("Database error: $DBI::errstr\n");
@@ -385,11 +403,14 @@ sub init {
 			$sth->bind_col( 3, \$keyname );
 			my $foundUrlMB = 0;
 			my $foundMB = 0;
+			my $foundUrlMd5 = 0;
 			while( $sth->fetch() ) {
 				if($keyname eq "urlIndex") {
 					$foundUrlMB = 1;
 				}elsif($keyname eq "musicbrainzIndex") {
 					$foundMB = 1;
+				}elsif($keyname eq "urlmd5Index") {
+					$foundUrlMd5 = 1;
 				}
 			}
 			if(!$foundUrlMB) {
@@ -402,6 +423,13 @@ sub init {
 			if(!$foundMB) {
 				$log->warn("TrackStat::Storage: No musicbrainzIndex index found in track_history, creating index...\n");
 				eval { $dbh->do("create index musicbrainzIndex on track_history (musicbrainz_id);") };
+				if ($@) {
+					$log->warn("Couldn't add index: $@\n");
+				}
+			}
+			if(!$foundUrlMd5) {
+				$log->warn("TrackStat::Storage: No urlmd5Index index found in track_history, creating index...\n");
+				eval { $dbh->do("create index urlmd5Index on track_history (urlmd5);") };
 				if ($@) {
 					$log->warn("Couldn't add index: $@\n");
 				}
@@ -546,15 +574,15 @@ sub getGroupStatistic {
 	
 	my $sql;
 	if($type eq 'album') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$id group by tracks.album;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.album=$id group by tracks.album;";
 	}elsif($type eq 'artist') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$id left join track_statistics on tracks.url = track_statistics.url group by contributor_track.contributor;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.contributor=$id left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 group by contributor_track.contributor;";
 	}elsif($type eq 'playlist') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join playlist_track on tracks.url=playlist_track.track and playlist_track.playlist=$id left join track_statistics on tracks.url = track_statistics.url group by playlist_track.playlist;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join playlist_track on tracks.url=playlist_track.track and playlist_track.playlist=$id left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 group by playlist_track.playlist;";
 	}elsif($type eq 'year') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.year=$id group by tracks.year;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.year=$id group by tracks.year;";
 	}elsif($type eq 'genre') {
-		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$id left join track_statistics on tracks.url = track_statistics.url group by genre_track.genre;";
+		$sql = "select avg(case when track_statistics.rating is null then 60 else track_statistics.rating end) as avgrating, min(case when track_statistics.rating is null then 0 else track_statistics.rating end) as minrating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$id left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 group by genre_track.genre;";
 	}else {
 		return undef;
 	}
@@ -584,7 +612,7 @@ sub getUnratedTracksOnAlbum {
 	my $albumid = shift;
 	return 0 unless $albumid;
 	
-	my $sql = "select tracks.url from tracks left join track_statistics on tracks.url = track_statistics.url where tracks.album=$albumid and (track_statistics.rating is null or track_statistics.rating=0)";
+	my $sql = "select tracks.url from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.album=$albumid and (track_statistics.rating is null or track_statistics.rating=0)";
 	my $dbh = getCurrentDBH();
 	my $sth = $dbh->prepare( $sql );
 	my @unratedTracks = ();
@@ -632,6 +660,7 @@ sub saveRating {
 		$log->warn("Ignore, url is ".length($url)." characters long which longer than the $maxCharacters characters which is supported\n");
 		return;
 	}
+	my $urlmd5 = md5_hex($url);
 	
 	my $ds        = getCurrentDS();
 	if(!defined($track)) {
@@ -667,9 +696,9 @@ sub saveRating {
 	} else {
 		my $added = getAddedTime($track);
 		if(defined($mbId)) {
-			$sql = ("INSERT INTO track_statistics (musicbrainz_id,url,added,rating) values (?,?,$added,$rating)");
+			$sql = ("INSERT INTO track_statistics (musicbrainz_id,url,urlmd5,added,rating) values (?,?,'$urlmd5', $added,$rating)");
 		}else {
-			$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
+			$sql = ("INSERT INTO track_statistics (url,urlmd5,added,rating) values (?,'$urlmd5', $added,$rating)");
 		}
 	}
 	my $dbh = getCurrentDBH();
@@ -710,6 +739,7 @@ sub savePlayCountAndLastPlayed
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack( $url,undef,$track);
 	my $sql;
 	$url = $track->url;
+	my $urlmd5 = md5_hex($url);
 
 	$log->debug("Marking as played in storage\n");
 
@@ -740,12 +770,12 @@ sub savePlayCountAndLastPlayed
 		}
 		my $added = getAddedTime($track);
 		if (defined($mbId)) {
-			$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, '$mbId', $playCount, $added, $lastPlayed)";
+			$sql = "INSERT INTO track_statistics (url, urlmd5, musicbrainz_id, playCount, added, lastPlayed) values (?, '$urlmd5', '$mbId', $playCount, $added, $lastPlayed)";
 		} else {
 			if(defined($trackmbId)) {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, '$trackmbId', $playCount, $added, $lastPlayed)";
+				$sql = "INSERT INTO track_statistics (url, urlmd5, musicbrainz_id, playCount, added, lastPlayed) values (?, '$urlmd5', '$trackmbId', $playCount, $added, $lastPlayed)";
 			}else {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, NULL, $playCount, $added, $lastPlayed)";
+				$sql = "INSERT INTO track_statistics (url, urlmd5, musicbrainz_id, playCount, added, lastPlayed) values (?, '$urlmd5', NULL, $playCount, $added, $lastPlayed)";
 			}
 		}
 	}
@@ -754,6 +784,9 @@ sub savePlayCountAndLastPlayed
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $key , SQL_VARCHAR);
+		if(!$trackHandle) {
+			$sth->bind_param(2, md5_hex($url), SQL_VARCHAR);
+		}
 		$sth->execute();
 		commit($dbh);
 	};
@@ -833,6 +866,7 @@ sub addToHistory
 	$sth->finish();
 
 	my $key = $url;
+	my $urlmd5 = md5_hex($url);
 	$sql = undef;
 	if (defined($mbId)) {
 		if (defined($rating)) {
@@ -842,13 +876,13 @@ sub addToHistory
 			if($found) {
 				$sql = "UPDATE track_history set rating=$rating where (url=? or musicbrainz_id='$mbId') and played=$playedTime";
 			}else {
-				$sql = "INSERT INTO track_history (url, musicbrainz_id, played, rating) values (?, '$mbId', $playedTime, $rating)";
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played, rating) values (?, '$urlmd5', '$mbId', $playedTime, $rating)";
 			}
 		}else {
 			if($found) {
 				$sql = undef;
 			}else {
-				$sql = "INSERT INTO track_history (url, musicbrainz_id, played) values (?, '$mbId', $playedTime)";
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played) values (?, '$urlmd5', '$mbId', $playedTime)";
 			}
 		}
 	} else {
@@ -859,13 +893,13 @@ sub addToHistory
 			if($found) {
 				$sql = "UPDATE track_history set rating=$rating where url=? and played=$playedTime";
 			}else {
-				$sql = "INSERT INTO track_history (url, musicbrainz_id, played, rating) values (?, NULL, $playedTime, $rating)";
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played, rating) values (?, '$urlmd5', NULL, $playedTime, $rating)";
 			}
 		}else {
 			if($found) {
 				$sql = undef;
 			}else {
-				$sql = "INSERT INTO track_history (url, musicbrainz_id, played) values (?, NULL, $playedTime)";
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played) values (?, '$urlmd5', NULL, $playedTime)";
 			}
 		}
 	}
@@ -989,6 +1023,7 @@ sub saveTrack
 
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url, $mbId,$track,1);
 	my $sql;
+	my $urlmd5 = md5_hex($url);
 	
 	if (defined($playCount) || defined($lastPlayed) ||defined($added) ) {
 		if(!defined($playCount)) {
@@ -1003,7 +1038,6 @@ sub saveTrack
 		$log->debug("Saving play count, last played and added time in storage: $playCount, $lastPlayed, $added\n");
 
 		my $key = $url;
-
 		$lastPlayed = '0' if (!(defined($lastPlayed)));
 
 		if($trackHandle) {
@@ -1016,9 +1050,9 @@ sub saveTrack
 			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed, added=$added where $queryParameter = ?";
 		}else {
 			if (defined($mbId)) {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, '$mbId', $playCount, $added, $lastPlayed)";
+				$sql = "INSERT INTO track_statistics (url, urlmd5, musicbrainz_id, playCount, added, lastPlayed) values (?, '$urlmd5', '$mbId', $playCount, $added, $lastPlayed)";
 			}else {
-				$sql = "INSERT INTO track_statistics (url, musicbrainz_id, playCount, added, lastPlayed) values (?, NULL, $playCount, $added, $lastPlayed)";
+				$sql = "INSERT INTO track_statistics (url, urlmd5, musicbrainz_id, playCount, added, lastPlayed) values (?, '$urlmd5', NULL, $playCount, $added, $lastPlayed)";
 			}
 		}
 		my $dbh = getCurrentDBH();
@@ -1047,7 +1081,7 @@ sub saveTrack
 		if ($trackHandle) {
 			$sql = ("UPDATE track_statistics set rating=$rating where url=?");
 		} else {
-			$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
+			$sql = ("INSERT INTO track_statistics (url,urlmd5,added,rating) values (?,'$urlmd5', $added,$rating)");
 		}
 		my $dbh = getCurrentDBH();
 		my $sth = $dbh->prepare( $sql );
@@ -1095,7 +1129,7 @@ sub mergeTrack
 	}
 
 	return unless $track;
-
+	my $urlmd5 = md5_hex($url);
 	my $trackHandle = Plugins::TrackStat::Storage::findTrack($url,undef,$track);
 	my $sql;
 	
@@ -1124,15 +1158,15 @@ sub mergeTrack
 			my $added = getAddedTime($track);
 			if($lastPlayed) {
 				if (defined($mbId)) {
-					$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,playCount,added,lastPlayed) values (?,'$mbId',$playCount,$added,$lastPlayed)");
+					$sql = ("INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,playCount,added,lastPlayed) values (?,'$urlmd5', '$mbId',$playCount,$added,$lastPlayed)");
 				}else {
-					$sql = ("INSERT INTO track_statistics (url,playCount,added,lastPlayed) values (?,$playCount,$added,$lastPlayed)");
+					$sql = ("INSERT INTO track_statistics (url,urlmd5,playCount,added,lastPlayed) values (?,'$urlmd5', $playCount,$added,$lastPlayed)");
 				}
 			}else {
 				if (defined($mbId)) {
-					$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,playCount,added) values (?,'$mbId',$playCount,$added)");
+					$sql = ("INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,playCount,added) values (?,'$urlmd5', '$mbId',$playCount,$added)");
 				}else {
-					$sql = ("INSERT INTO track_statistics (url,playCount,added) values (?,$playCount,$added)");
+					$sql = ("INSERT INTO track_statistics (url,urlmd5,playCount,added) values (?,'$urlmd5', $playCount,$added)");
 				}
 			}
 		}
@@ -1166,9 +1200,9 @@ sub mergeTrack
 		} else {
 			my $added = getAddedTime($track);
 			if (defined($mbId)) {
-				$sql = ("INSERT INTO track_statistics (url,musicbrainz_id,added,rating) values (?,'$mbId',$added,$rating)");
+				$sql = ("INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,added,rating) values (?,'$urlmd5', '$mbId',$added,$rating)");
 			}else {
-				$sql = ("INSERT INTO track_statistics (url,added,rating) values (?,$added,$rating)");
+				$sql = ("INSERT INTO track_statistics (url,urlmd5,added,rating) values (?,'$urlmd5', $added,$rating)");
 			}
 		}
 		my $dbh = getCurrentDBH();
@@ -1191,7 +1225,6 @@ sub mergeTrack
 
 sub refreshTracks 
 {
-		
 	my $ds        = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $sth;
@@ -1250,7 +1283,7 @@ sub refreshTracks
 	$log->debug("Starting to update urls in statistic data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
 	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url,track_statistics.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1279,7 +1312,7 @@ sub refreshTracks
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}		
-		$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.musicbrainz_id from tracks,track_statistics where track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url";
+		$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.urlmd5,tracks.musicbrainz_id from tracks join track_statistics on tracks.musicbrainz_id=track_statistics.musicbrainz_id where track_statistics.musicbrainz_id is not null and track_statistics.urlmd5!=tracks.urlmd5";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1295,7 +1328,7 @@ sub refreshTracks
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}else {
-			$sql = "UPDATE track_statistics SET url=(select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id) where exists (select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id)";
+			$sql = "UPDATE track_statistics SET url=(select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id),urlmd5=(select urlmd5 from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id) where exists (select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id)";
 			$sth = $dbh->prepare( $sql );
 			$count = 0;
 			eval {
@@ -1339,13 +1372,14 @@ sub refreshTracks
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
+
 	$timeMeasure->start();
 	$log->debug("Starting to update musicbrainz id's in statistic data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
 	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.musicbrainz_id=tracks.musicbrainz_id where tracks.urlmd5=track_statistics.urlmd5 and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
 	}else {
-		$sql = "UPDATE track_statistics SET musicbrainz_id=(select musicbrainz_id from tracks where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null) where exists (select musicbrainz_id from tracks where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null)";
+		$sql = "UPDATE track_statistics SET musicbrainz_id=(select musicbrainz_id from tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null) where exists (select musicbrainz_id from tracks where tracks.url=track_statistics.url and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1380,18 +1414,10 @@ sub refreshTracks
 	$timeMeasure->start();
 	$log->debug("Starting to add tracks without added times in statistic data based on urls\n");
 	# Now lets set all new tracks with added times not already set
-	if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-		if($driver eq 'mysql') {
-			if(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,null,null,null,null from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-			}else {
-				$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.id=tracks_persistent.track left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-			}
-		}else {
-			$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.url=tracks_persistent.url left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
-		}
+	if($driver eq 'mysql') {
+		$sql = "INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,tracks.urlmd5,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,null,null,null,null from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
 	}else {
-		$sql = "INSERT INTO track_statistics (url,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks.playcount,tracks.timestamp,tracks.lastplayed,tracks.rating from tracks left join track_statistics on tracks.url = track_statistics.url where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
+		$sql = "INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,tracks.urlmd5,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,tracks_persistent.playcount,tracks_persistent.added,tracks_persistent.lastplayed,tracks_persistent.rating from tracks left join tracks_persistent on tracks.urlmd5=tracks_persistent.urlmd5 left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where audio=1 and track_statistics.urlmd5 is null and length(tracks.url)<".($useLongUrls?512:256);
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1428,12 +1454,12 @@ sub refreshTracks
 	# Now lets set all ratings not already set in the slimserver standards database
 	if($driver eq 'mysql') {
 		if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-			$sql = "UPDATE tracks_persistent,track_statistics set tracks_persistent.rating=track_statistics.rating where tracks_persistent.url=track_statistics.url and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null)";
+			$sql = "UPDATE tracks_persistent,track_statistics set tracks_persistent.rating=track_statistics.rating where tracks_persistent.urlmd5=track_statistics.urlmd5 and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null)";
 		}else {
-			$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.url=track_statistics.url and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
+			$sql = "UPDATE tracks,track_statistics set tracks.rating=track_statistics.rating where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.rating>0 and (tracks.rating!=track_statistics.rating or tracks.rating is null)";
 		}
 	}else {
-		$sql = "UPDATE tracks_persistent set rating=(select track_statistics.rating from track_statistics where tracks_persistent.url=track_statistics.url and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null)) where exists (select track_statistics.rating from track_statistics where tracks_persistent.url=track_statistics.url and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null))";
+		$sql = "UPDATE tracks_persistent set rating=(select track_statistics.rating from track_statistics where tracks_persistent.urlmd5=track_statistics.urlmd5 and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null)) where exists (select track_statistics.rating from track_statistics where tracks_persistent.urlmd5=track_statistics.urlmd5 and track_statistics.rating>0 and (tracks_persistent.rating!=track_statistics.rating or tracks_persistent.rating is null))";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1465,9 +1491,9 @@ sub refreshTracks
 	$log->debug("Starting to update added times in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.timestamp where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null";
+		$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.timestamp where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.added is null and tracks.timestamp is not null";
 	}else {
-		$sql = "UPDATE track_statistics SET added=(select tracks.timestamp from tracks where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null) where exists (select tracks.timestamp from tracks where tracks.url=track_statistics.url and track_statistics.added is null and tracks.timestamp is not null)";
+		$sql = "UPDATE track_statistics SET added=(select tracks.timestamp from tracks where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.added is null and tracks.timestamp is not null) where exists (select tracks.timestamp from tracks where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.added is null and tracks.timestamp is not null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1503,15 +1529,9 @@ sub refreshTracks
 	$log->debug("Starting to update play counts in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
-			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.playCount is null and tracks_persistent.playCount is not null";
-		}elsif(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null";
-		}else {
-			$sql = "UPDATE tracks,track_statistics SET track_statistics.playCount=tracks.playCount where tracks.url=track_statistics.url and track_statistics.playCount is null and tracks.playCount is not null";
-		}
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null";
 	}else {
-		$sql = "UPDATE track_statistics SET playCount=(select tracks_persistent.playCount from tracks_persistent,tracks where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null) where exists (select tracks_persistent.playCount from tracks_persistent,tracks where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null)";
+		$sql = "UPDATE track_statistics SET playCount=(select tracks_persistent.playCount from tracks_persistent join tracks on tracks.url=tracks_persistent.url where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null) where exists (select tracks_persistent.playCount from tracks_persistent join tracks on tracks.urlmd5=tracks_persistent.urlmd5 where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1538,15 +1558,9 @@ sub refreshTracks
 	$log->debug("Starting to update last played times in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		if(UNIVERSAL::can("Slim::Schema::Track","persistent")) {
-			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.url=track_statistics.url and tracks.id=tracks_persistent.track and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
-		}elsif(UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-			$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
-		}else {
-			$sql = "UPDATE tracks,track_statistics SET track_statistics.lastPlayed=tracks.lastPlayed where tracks.url=track_statistics.url and track_statistics.lastPlayed is null and tracks.lastPlayed is not null";
-		}
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
 	}else {
-		$sql = "UPDATE track_statistics SET lastPlayed=(select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null) where exists (select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.url=track_statistics.url and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null)";
+		$sql = "UPDATE track_statistics SET lastPlayed=(select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null) where exists (select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1582,13 +1596,9 @@ sub refreshTracks
 	$log->debug("Starting to update ratings in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
-			$sql = "UPDATE tracks_persistent,track_statistics SET track_statistics.rating=tracks_persistent.rating where tracks_persistent.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0";
-		}else {
-			$sql = "UPDATE tracks,track_statistics SET track_statistics.rating=tracks.rating where tracks.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks.rating>0";
-		}
+		$sql = "UPDATE tracks_persistent,track_statistics SET track_statistics.rating=tracks_persistent.rating where tracks_persistent.urlmd5=track_statistics.urlmd5 and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0";
 	}else {
-		$sql = "UPDATE track_statistics SET rating=(select tracks_persistent.rating from tracks_persistent where tracks_persistent.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0) where exists (select tracks_persistent.rating from tracks_persistent where tracks_persistent.url=track_statistics.url and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0)";
+		$sql = "UPDATE track_statistics SET rating=(select tracks_persistent.rating from tracks_persistent where tracks_persistent.urlmd5=track_statistics.urlmd5 and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0) where exists (select tracks_persistent.rating from tracks_persistent where tracks_persistent.urlmd5=track_statistics.urlmd5 and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1659,9 +1669,9 @@ sub refreshTracks
 		$log->debug("Starting to update urls in track_history based on musicbrainz ids\n");
 		# First lets refresh all urls with musicbrainz id's
 		if($driver eq 'mysql') {
-		    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
+		    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url,track_history.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256);
 		}else {
-		    	$sql = "UPDATE track_history SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256).") where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256).")";
+		    	$sql = "UPDATE track_history SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256)."),urlmd5=(select tracks.urlmd5 from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).") where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).")";
 		}
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
@@ -1697,9 +1707,9 @@ sub refreshTracks
 		$log->debug("Starting to update musicbrainz id's in track_history based on urls\n");
 		# Now lets set all musicbrainz id's not already set
 		if($driver eq 'mysql') {
-			$sql = "UPDATE tracks,track_history SET track_history.musicbrainz_id=tracks.musicbrainz_id where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
+			$sql = "UPDATE tracks,track_history SET track_history.musicbrainz_id=tracks.musicbrainz_id where tracks.urlmd5=track_history.urlmd5 and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
 		}else {
-			$sql = "UPDATE track_history SET musicbrainz_id=(select tracks.musicbrainz_id from tracks where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null) where exists (select tracks.musicbrainz_id from tracks where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null)";
+			$sql = "UPDATE track_history SET musicbrainz_id=(select tracks.musicbrainz_id from tracks where tracks.urlmd5=track_history.urlmd5 and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null) where exists (select tracks.musicbrainz_id from tracks where tracks.url=track_history.url and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null)";
 		}
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
@@ -1734,7 +1744,7 @@ sub refreshTracks
 		$timeMeasure->start();
 		$log->debug("Starting to add missing entries to history table\n");
 		# Now lets add all tracks to history table which have been played and don't exist in history table
-		$sql = "INSERT INTO track_history (url,musicbrainz_id,played,rating) select tracks.url,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null and length(tracks.url)<".($useLongUrls?512:256);
+		$sql = "INSERT INTO track_history (url,urlmd5,musicbrainz_id,played,rating) select tracks.url,tracks.urlmd5,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null and length(tracks.url)<".($useLongUrls?512:256);
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1817,9 +1827,9 @@ sub purgeTracks {
 	$log->debug("Starting to remove statistic data from track_statistics which no longer exists\n");
 	# Remove all tracks from track_statistics if they don't exist in tracks table
 	if($driver eq 'mysql') {
-		$sql = "DELETE from track_statistics USING track_statistics left join tracks on track_statistics.url=tracks.url where tracks.url is null";
+		$sql = "DELETE from track_statistics USING track_statistics left join tracks on track_statistics.urlmd5=tracks.urlmd5 where tracks.urlmd5 is null";
 	}else {
-		$sql = "DELETE from track_statistics where url not in (select url from tracks where tracks.url=track_statistics.url)";
+		$sql = "DELETE from track_statistics where urlmd5 not in (select urlmd5 from tracks where tracks.urlmd5=track_statistics.urlmd5)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1843,9 +1853,9 @@ sub purgeTracks {
 	$log->debug("Starting to remove statistic data from track_history which no longer exists\n");
 	# Remove all tracks from track_history if they don't exist in tracks table
 	if($driver eq 'mysql') {
-		$sql = "DELETE FROM track_history USING track_history left join tracks on track_history.url=tracks.url where tracks.url is null";
+		$sql = "DELETE FROM track_history USING track_history left join tracks on track_history.urlmd5=tracks.urlmd5 where tracks.id is null";
 	}else {
-		$sql = "DELETE FROM track_history where url not in (select url from tracks where tracks.url=track_history.url)";
+		$sql = "DELETE FROM track_history where urlmd5 not in (select urlmd5 from tracks where tracks.urlmd5=track_history.urlmd5)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
