@@ -396,7 +396,7 @@ function defineSettingMode(self,menuItem,mode)
 	local player = appletManager:callService("getCurrentPlayer")
 	if player then
 		local server = player:getSlimServer()
-		if server then
+		if server and not server:isSqueezeNetwork() then
 			server:userRequest(function(chunk,err)
 					if err then
 						log:warn(err)
