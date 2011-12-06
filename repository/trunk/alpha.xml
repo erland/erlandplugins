@@ -5,17 +5,37 @@
 		<title lang="EN">Erland's plugins and applets (ALPHA testing versions)</title>
 	</details>
 	<plugins>
-                <plugin name="CustomScan" version="3.0pre3566" minTarget="7.6.0" maxTarget="*">
+                <plugin name="CustomScan" version="3.0pre3742" minTarget="7.6.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Alpha*</title>
                         <desc lang="EN">*** ALPHA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected serious scanning issue
+                        <changes lang="EN">- Corrected compatibility with 7.7.1 cache handling
+			- Corrected so WMA tags can be used without specifying WM/ prefix
+			- Corrected issue with lower case tag names and tag names with /
+			- Removed refresh at server startup and instead added separate refresh button in scanning status dialog
+			- Corrected so iPeng displays Matching Songs in same way as a playlist
+			- Corrected so it's possible to play directly from an item in the menu with Play button on remote
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3566.zip</url>
-                        <sha>abd0bdff96b6de7910204548373da867a11bbbe2</sha>
+                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3742.zip</url>
+                        <sha>bfc35a13d2e485804eadd03d3206b7784f2c0e73</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
+		<plugin name="TrackStat" version="3.0pre3724" minTarget="7.6.0" maxTarget="7.*">
+			<title lang="EN">TrackStat *Alpha*</title>
+			<desc lang="EN">*** ALPHA VERSION ***. Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+			<changes lang="EN">- Corrected compatibility with 7.7.1 cache handlling
+			- Added urlmd5 column to improve performance of all TrackStat menus
+			- Improved layout in iPeng
+			- Improved layout on Touch/Radio/Controller
+			- Preliminary support for Touch to play, isn't able to play all tracks in album yet except when iPeng is used
+			</changes>
+			<creator>Erland Isaksson</creator>
+			<email>erland@isaksson.info</email>
+			<url>http://erland.isaksson.info/arkiv/alpha/TrackStat-3.0pre3724.zip</url>
+			<sha>ed97752c28a51536d5c5f936133eb2e099cfa201</sha>
+			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
+		</plugin>
 	</plugins>
 </extensions>
 
