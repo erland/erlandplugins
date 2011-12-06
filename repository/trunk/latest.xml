@@ -5,20 +5,16 @@
 		<title lang="EN">Erland's plugins and applets</title>
 	</details>
         <applets>
-                <applet name="AlbumFlow" version="1.1.3480" minTarget="7.4" maxTarget="*">
+                <applet name="AlbumFlow" version="1.1.3728" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Album Flow</title>
                         <desc lang="EN">Browse your albums with a scrolling cover art view similar to the Cover Flow view on Mac and iPod. It can also act as a screensaver scrolling through all albums in your library.
 			</desc>
-                        <changes lang="EN">- Added compatibility for 7.6
-			- Corrected issue when player isn't connected to server
-			- Some small adjustments to make settings behave better
-			- Added support for custom resolution skins on third party hardware
-			- The License Manager applet must be installed for this version to work
+                        <changes lang="EN">- Corrected crash when connected to mysqueezebox.com
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3480.zip</url>
-                        <sha>04ac1fb1c555e5fcb368e7311bc6c2bcaf699eb7</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3728.zip</url>
+                        <sha>e3bd58f363b07a74854847394dc0df8d075909f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="InformationScreen" version="1.0" minTarget="7.4" maxTarget="*">
@@ -43,15 +39,15 @@
                         <sha>2a06ce923e506f0fb77527a33e41d32262ec689e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.9.3516" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.9.3727" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- The License Manager applet must be installed for this version to work
+                        <changes lang="EN">- Corrected so it works when connected to mysqueezebox.com
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3516.zip</url>
-                        <sha>dc8f4c1e49b37cb14065bf57a3345366b1ec876d</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3727.zip</url>
+                        <sha>c557592937740552dde90d650affd1d0a1f1b900</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
