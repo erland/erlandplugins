@@ -4526,7 +4526,7 @@ sub cliHandler {
 				getContextMenuHandler()->playAddItem($client,undef,$menuResult,$addOnly,$insert,$context);
 			}else {
 				my $parentItems = undef;
-				if($menuResult->{'playtype'} eq 'all') {
+				if($menuResult->{'playtype'} eq 'all' && ($cmd eq 'play' || !$prefs->get("touchtoplay") || !$serverPrefs->client($client)->get("playtrackalbum"))) {
 					if(defined($params->{'hierarchy'})) {
 						if($params->{'hierarchy'} =~ /^(.*),([^,]*)$/) {
 							$params->{'hierarchy'} = $1;
