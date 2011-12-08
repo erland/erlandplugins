@@ -626,7 +626,7 @@ sub getMixedTagMenuItems {
 
 		if(defined($parameters->{'findcustomtag'}) && $parameters->{'findcustomtag'} ne '') {
 			# Create All customtag SQL
-			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag".$parameters->{'findcustomtag'}."'),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and module='mixedtag' and attr='".quoteValue($parameters->{'findcustomtag'})."' ";
+			$customtagsql = "select customscan_track_attributes.extravalue,customscan_track_attributes.value,substr(customscan_track_attributes.valuesort,1,1),ifnull(customscan_track_attributes.valuetype,'mixedtag".$parameters->{'findcustomtag'}."'),customscan_track_attributes.valuetype from customscan_track_attributes join tracks on tracks.id=customscan_track_attributes.track and customscan_track_attributes.module='mixedtag' and customscan_track_attributes.attr='".quoteValue($parameters->{'findcustomtag'})."' ";
 			for my $it (@items) {
 				if(defined($it->{'value'})) {
 					my $attr = "attr".$it->{'id'};
