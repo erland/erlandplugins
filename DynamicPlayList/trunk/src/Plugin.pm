@@ -1079,7 +1079,7 @@ sub addParameterValues {
 	}elsif(lc($parameter->{'type'}) eq 'genre') {
 		$sql = "select id,name,substr(namesort,1,1) from genres order by namesort";
 	}elsif(lc($parameter->{'type'}) eq 'year') {
-		$sql = "select year,year from tracks where year is not null group by year order by year desc";
+		$sql = "select year,case when year>0 then year else 'Unknown' end from tracks where year is not null group by year order by year desc";
 	}elsif(lc($parameter->{'type'}) eq 'playlist') {
 		$sql = "select playlist_track.playlist,tracks.title,substr(tracks.titlesort,1,1) from tracks, playlist_track where tracks.id=playlist_track.playlist group by playlist_track.playlist order by titlesort";
 	}elsif(lc($parameter->{'type'}) eq 'track') {
@@ -3582,6 +3582,9 @@ sub cliJivePlaylistParametersHandler {
 		
 			$request->addResultLoop('item_loop',$offsetCount,'params',\%itemParams);
 			$request->addResultLoop('item_loop',$offsetCount,'text',$item->{'name'});
+			if(defined($item->{'sortlink'})) {
+				$request->addResultLoop('item_loop',$offsetCount,'textkey',$item->{'sortlink'});
+			}
 			if(!exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
 				$request->addResultLoop('item_loop',$offsetCount,'style','itemNoAction');
 			}
