@@ -121,6 +121,10 @@ sub getLinkAttribute {
 	return $attr.'.id';
 }
 
+sub clearCache {
+	$memoryCache = {};
+}
+
 sub getTracksWeb {
 	my $sql = shift;
 	my $params = shift;
