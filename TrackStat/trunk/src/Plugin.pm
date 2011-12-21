@@ -3508,12 +3508,8 @@ sub jiveStatistics {
 				}else {
 					$text .= string("PLUGIN_TRACKSTAT_UNRATED");
 				}
-				if(defined($params->{'userInterfaceIdiom'}) && $params->{'userInterfaceIdiom'} eq 'iPeng') {
-					$text .= '\n';
-				}else {
-					$text .= ' ';
-				}
-				$text .= string("PLUGIN_TRACKSTAT_PLAY_COUNT").$item->{'song_count'};
+				$text .= ', ';
+				$text .= string("PLUGIN_TRACKSTAT_PLAY_COUNT_SHORT").$item->{'song_count'};
 				$request->addResultLoop('item_loop',$cnt,'text',$text);
 
 				$cnt++;
@@ -4488,6 +4484,7 @@ sub markedAsPlayed {
 	 
 	Plugins::TrackStat::Storage::savePlayCountAndLastPlayed($url,$mbId,$playCount,$lastPlayed);
 	Plugins::TrackStat::Storage::addToHistory($url,$mbId,$lastPlayed,$rating);
+	Plugins::TrackStat::Statistics::Base::clearCache();
 	
 	my %statistic = (
 		'url' => $url,
@@ -4636,6 +4633,7 @@ sub rateSong {
 		}
 	}
 	my $digit = floor(($rating+10)/20);
+	Plugins::TrackStat::Statistics::Base::clearCache();
 	use strict 'refs';
 	Slim::Control::Request::notifyFromArray($client, ['trackstat', 'changedrating', $url, $track->id, $digit, $rating, $type]);
 	Slim::Music::Info::clearFormatDisplayCache();
@@ -4670,6 +4668,7 @@ sub setTrackStatRating {
 			$ds->forceCommit();
 		};
 	}
+	Plugins::TrackStat::Statistics::Base::clearCache();
 	if(isPluginsInstalled($client,"CustomScan::Plugin")) {
 		Plugins::TrackStat::MusicMagic::Export::exportRating($url,$rating,$track,$type);
 		Plugins::TrackStat::iTunes::Export::exportRating($url,$rating,$track,$type);
@@ -5145,6 +5144,7 @@ sub restoreFromFile()
 {
 	my $backupfile = $prefs->get("backup_file");
 	if($backupfile) {
+		Plugins::TrackStat::Statistics::Base::clearCache();
 		Plugins::TrackStat::Backup::File::restoreFromFile($backupfile);
 	}else {
 		$log->error("No backup file specified\n");
