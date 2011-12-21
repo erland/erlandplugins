@@ -1,6 +1,6 @@
 -- PlaylistName:[% playlistname %]
 -- PlaylistGroups:[% playlistgroups %]
--- PlaylistParameter1:custom[% datasource %][% customtagname %]:Select [% customtaguserfriendlyname %]:select customscan_track_attributes.value,customscan_track_attributes.value from customscan_track_attributes where customscan_track_attributes.module='[% datasource %]' and customscan_track_attributes.attr='[% customtagname %]' group by customscan_track_attributes.value order by customscan_track_attributes.value
+-- PlaylistParameter1:custom[% datasource %][% customtagname %]:Select [% customtaguserfriendlyname %]:select customscan_track_attributes.value,customscan_track_attributes.value,substr(customscan_track_attributes.value,1,1) from customscan_track_attributes where customscan_track_attributes.module='[% datasource %]' and customscan_track_attributes.attr='[% customtagname %]' group by customscan_track_attributes.value order by customscan_track_attributes.value
 [%- IF customskipfilter %]
 -- PlaylistStartAction1:cli:customskip setsecondaryfilter [% customskipfilter %]
 -- PlaylistStopAction1:cli:customskip clearsecondaryfilter
