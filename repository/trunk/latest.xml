@@ -144,15 +144,15 @@
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-		<plugin name="TrackStat" version="2.11.3726" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="TrackStat" version="2.11.3760" minTarget="7.4.0" maxTarget="7.*">
 			<title lang="EN">TrackStat</title>
 			<desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected compatibility with 7.7.1 cache handlling
+			<changes lang="EN">- Corrected issue where playlist templates that requested a parameter didn't show alpha bar properly on SqueezePlay devices.
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3726.zip</url>
-			<sha>ed97752c28a51536d5c5f936133eb2e099cfa201</sha>
+			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3760.zip</url>
+			<sha>436fcda65d80ce98c3234978b07cc9c24b429aaa</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -244,15 +244,15 @@
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.9.3734" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DynamicPlayList" version="2.9.3755" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected compatibility with 7.7.1 cache handling
+			<changes lang="EN">- Corrected issue where playlists that requested a parameter didn't show alpha bar on SqueezePlay devices
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3734.zip</url>
-                        <sha>0a0cb86caff82b480a8f6db5767d2fde0b475e94</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3755.zip</url>
+                        <sha>13139f6ac1fec9c862026cb8487addbe11d782fc</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.2" minTarget="7.1.0" maxTarget="7.3.*">
@@ -313,15 +313,15 @@
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
-		<plugin name="SQLPlayList" version="2.5.3741" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="SQLPlayList" version="2.5.3762" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">SQL Playlist</title>
                         <desc lang="EN">Creates smart playlists based on SQL queries, its possible to create playlists similar to iTunes smart playlists if used together with ratings set with the TrackStat plugin. It requires Dynamic Playlist plugin. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected compatibility with 7.7.1 cache handling
+			<changes lang="EN">- Corrected issue where playlist templates that asked for parameters didn't show an alpha bar in SqueezePlay devices
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3741.zip</url>
-                        <sha>2d64bf2937cde0fb662ac8a214e10b27176f08bc</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3762.zip</url>
+                        <sha>b0544037d9ba6a2b509d627b805cd07045cf8dde</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
 		<plugin name="TitleSwitcher" version="1.1.3" minTarget="7.1.0" maxTarget="7.3.*">
