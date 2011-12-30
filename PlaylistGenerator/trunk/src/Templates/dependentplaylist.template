@@ -17,6 +17,13 @@
 					playlist_track.playlist=playlists.id and
 					playlists.title in ([% includedplaylists %])
 				[%- END %]
+				[%- IF orderby == 'artist' or orderby == 'artistalbum' %]
+				join contributor_track on
+					tracks.id=contributor_track.track
+				join contributors on
+					contributor_track.contributor=contributors.id 
+					and contributor_track.role in (1,5)
+				[%- END %]
 				[%- IF recentlyplayed or neverplayed or (trackstat and orderby!='random')%]
 				left join track_statistics on
 					tracks.url=track_statistics.url
@@ -24,6 +31,10 @@
 				[%- IF !trackstat and orderby!='random' %]
 				join tracks_persistent on
 					tracks.url=tracks_persistent.url
+				[%- END %]
+				[%- IF orderby == 'album' or orderby == 'artistalbum' %]
+				left join albums on
+					tracks.album=albums.id
 				[%- END %]
 				where
 					tracks.audio=1
@@ -44,10 +55,10 @@
 				[%- IF recentlyplayed %]
 					and ifnull(track_statistics.lastplayed,0)&lt;(unix_timestamp()-[% recentlyplayed %])
 				[%- END %]
-				[%- IF includedplaylists or trackstat %]
+				[%- IF includedplaylists or trackstat or orderby == 'album' or orderby == 'artist' or orderby == 'artistalbum' %]
 				group by tracks.id
 				[%- END %]
-				order by  [% IF orderby == 'random' %][% RANDOMFUNCTION %][% ELSIF trackstat %][% IF orderby == 'lastadded' %]track_statistics.added desc[% ELSIF orderby == 'toprated' %]track_statistics.rating desc[% ELSIF orderby == 'mostplayed' %]track_statistics.playcount desc[% END %][% ELSE %][% IF orderby == 'lastadded' %]tracks_persistent.added desc[% ELSIF orderby=='toprated' %]tracks_persistent.rating desc[% ELSIF orderby=='mostplayed' %]tracks_persistent.playcount desc[% END %][% END %]
+				order by  [% IF orderby == 'random' %][% RANDOMFUNCTION %][% ELSIF orderby == 'album' %]albums.titlesort,tracks.disc,tracks.tracknum[% ELSIF orderby == 'artistalbum' %]contributors.namesort,albums.titlesort,tracks.disc,tracks.tracknum[% ELSIF orderby == 'artist' %]contributors.namesort,[% RANDOMFUNCTION %][% ELSIF trackstat %][% IF orderby == 'lastadded' %]track_statistics.added desc[% ELSIF orderby == 'toprated' %]track_statistics.rating desc[% ELSIF orderby == 'mostplayed' %]track_statistics.playcount desc[% END %][% ELSE %][% IF orderby == 'lastadded' %]tracks_persistent.added desc[% ELSIF orderby=='toprated' %]tracks_persistent.rating desc[% ELSIF orderby=='mostplayed' %]tracks_persistent.playcount desc[% END %][% END %]
 				[% IF nooftracks %]limit [% nooftracks %][% END %]
 		</statement>
 		[% IF customskipfilter %]
