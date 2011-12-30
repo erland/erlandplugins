@@ -22,7 +22,7 @@
 		<parameter type="sqloptionalsinglelist" id="library" requireplugins="MultiLibrary::Plugin" name="Library" value="" data="select id,name,id from multilibrary_libraries"/>
 		<parameter type="checkbox" id="lossless" name="Only lossless format" value="0"/>
 		<parameter type="checkbox" id="trackstat" requireplugins="TrackStat::Plugin" name="Use TrackStat statistics" value="1"/>
-		<parameter type="singlelist" id="orderby" name="Order songs by" value="random" data="random=Random,lastadded=Last Added,toprated=Top Rated,mostplayed=Most Played"/>
+		<parameter type="singlelist" id="orderby" name="Order songs by" value="random" data="random=Random,lastadded=Last Added,toprated=Top Rated,mostplayed=Most Played,album=Album,artist=Artist,artistalbum=Artist/Album"/>
 		<parameter type="text" id="nooftracks" name="Number of tracks per time" value="50"/>
 	</template>
 </playlistgenerator>
