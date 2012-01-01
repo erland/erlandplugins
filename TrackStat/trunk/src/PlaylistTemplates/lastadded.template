@@ -80,6 +80,9 @@ select url from
 		[%- IF recentlyplayed %]
 			and ifnull(track_statistics.lastplayed,0)<(unix_timestamp()-[% recentlyplayed %])
 		[%- END %]
+		[%- IF minrating %]
+			and track_statistics.rating>=[% minrating %]
+		[% END %]
 		[%- IF notrepeat or requestfromuser %]
 		group by tracks.id
 		[%- END %]
