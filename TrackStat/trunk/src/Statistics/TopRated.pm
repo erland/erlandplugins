@@ -166,26 +166,26 @@ sub getTopRatedTracksWeb {
 	my $sql;
 	if(defined($params->{'artist'})) {
 		my $artist = $params->{'artist'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) and contributor_track.contributor=$artist left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 group by tracks.id order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join contributor_track on tracks.id=contributor_track.track and contributor_track.role in (1,4,5,6) and contributor_track.contributor=$artist left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and track_statistics.rating is not null group by tracks.id order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and tracks.album=$album order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and tracks.album=$album and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy;";
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join genre_track on tracks.id=genre_track.track and genre_track.genre=$genre left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&genre=$genre";
 	}elsif(defined($params->{'year'})) {
 		my $year = $params->{'year'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and tracks.year=$year order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and tracks.year=$year and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&year=$year";
 	}elsif(defined($params->{'playlist'})) {
 		my $playlist = $params->{'playlist'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join playlist_track on tracks.url=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks join playlist_track on tracks.url=playlist_track.track and playlist_track.playlist=$playlist left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	    $params->{'statisticparameters'} = "&playlist=$playlist";
 	}else {
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	}
     Plugins::TrackStat::Statistics::Base::getTracksWeb($sql,$params);
     my %currentstatisticlinks = (
@@ -203,9 +203,9 @@ sub getTopRatedTracks {
 	my $sql;
 	if($prefs->get("dynamicplaylist_norepeat")) {
 		my $clientid = $client->id;
-		$sql = "select tracks.id from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where tracks.audio=1 and dynamicplaylist_history.id is null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+		$sql = "select tracks.id from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 left join dynamicplaylist_history on tracks.id=dynamicplaylist_history.id and dynamicplaylist_history.client='$clientid' where tracks.audio=1 and dynamicplaylist_history.id is null and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	}else {
-		$sql = "select tracks.id from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
+		$sql = "select tracks.id from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.audio=1 and track_statistics.rating is not null order by track_statistics.rating desc,track_statistics.playCount desc,$orderBy limit $listLength;";
 	}
     return Plugins::TrackStat::Statistics::Base::getTracks($sql,$limit);
 }
