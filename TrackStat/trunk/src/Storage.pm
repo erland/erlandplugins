@@ -335,8 +335,9 @@ sub init {
 	}
 	eval { $dbh->do("select urlmd5 from track_statistics limit 1;") };
 	if ($@) {
-		$log->debug("Create database table column urlmd5\n");
+		$log->warn("Creating database table column urlmd5 ...");
 		Plugins::TrackStat::Storage::executeSQLFile("dbupgrade_urlmd5.sql");
+		$log->warn("Creating database table column urlmd5 finished");
 	}
 	if($driver eq 'mysql') {
 
@@ -1232,13 +1233,14 @@ sub refreshTracks
 	my $sql;
 	my $sqlupdate;
 	my $count;
+	$log->warn("TrackStat: Synchronizing TrackStat data, please wait...");
 	my $timeMeasure = Time::Stopwatch->new();
 	$timeMeasure->clear();
 	if($driver eq 'mysql') {
 		$timeMeasure->start();
 		$sth = $dbh->prepare("show index from tracks;");
 		eval {
-			$log->debug("Checking if additional indexes are needed for tracks\n");
+			$log->info("Checking if additional indexes are needed for tracks\n");
 			$sth->execute();
 			my $keyname;
 			$sth->bind_col( 3, \$keyname );
@@ -1262,7 +1264,7 @@ sub refreshTracks
 		$sth->finish();
 		$timeMeasure->stop();
 		$timeMeasure->start();
-		$log->debug("Starting to analyze indexes\n");
+		$log->info("Starting to analyze indexes\n");
 		eval {
 	    	$dbh->do("analyze table tracks;");
 	    	$dbh->do("analyze table track_statistics;");
@@ -1280,7 +1282,7 @@ sub refreshTracks
 		$timeMeasure->clear();
 	}
 	$timeMeasure->start();
-	$log->debug("Starting to update urls in statistic data based on musicbrainz ids\n");
+	$log->info("Starting to update urls in statistic data based on musicbrainz ids\n");
 	# First lets refresh all urls with musicbrainz id's
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url,track_statistics.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
@@ -1359,7 +1361,7 @@ sub refreshTracks
 		}
 	}
 	$sth->finish();
-	$log->debug("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1374,7 +1376,7 @@ sub refreshTracks
 	$timeMeasure->clear();
 
 	$timeMeasure->start();
-	$log->debug("Starting to update musicbrainz id's in statistic data based on urls\n");
+	$log->info("Starting to update musicbrainz id's in statistic data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks,track_statistics SET track_statistics.musicbrainz_id=tracks.musicbrainz_id where tracks.urlmd5=track_statistics.urlmd5 and tracks.musicbrainz_id like '%-%' and track_statistics.musicbrainz_id is null";
@@ -1398,7 +1400,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1412,7 +1414,7 @@ sub refreshTracks
 	
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to add tracks without added times in statistic data based on urls\n");
+	$log->info("Starting to add tracks without added times in statistic data based on urls\n");
 	# Now lets set all new tracks with added times not already set
 	if($driver eq 'mysql') {
 		$sql = "INSERT INTO track_statistics (url,urlmd5,musicbrainz_id,playcount,added,lastPlayed,rating) select tracks.url,tracks.urlmd5,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,null,null,null,null from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where audio=1 and track_statistics.url is null and length(tracks.url)<".($useLongUrls?512:256);
@@ -1436,7 +1438,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished adding tracks without added times in statistic data based on urls, added $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished adding tracks without added times in statistic data based on urls, added $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1450,7 +1452,7 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update ratings in standard slimserver database based on urls\n");
+	$log->info("Starting to update ratings in standard slimserver database based on urls\n");
 	# Now lets set all ratings not already set in the slimserver standards database
 	if($driver eq 'mysql') {
 		if(UNIVERSAL::can("Slim::Schema::Track","persistent") || UNIVERSAL::can("Slim::Schema::Track","retrievePersistent")) {
@@ -1474,7 +1476,7 @@ sub refreshTracks
 	    $log->warn("Database error: $DBI::errstr\n");
 	}
 	$sth->finish();
-	$log->debug("Finished updating ratings in standard slimserver database based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating ratings in standard slimserver database based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1488,7 +1490,7 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update added times in statistic data based on urls\n");
+	$log->info("Starting to update added times in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks,track_statistics SET track_statistics.added=tracks.timestamp where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.added is null and tracks.timestamp is not null";
@@ -1512,7 +1514,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating added times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating added times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1526,12 +1528,12 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update play counts in statistic data based on urls\n");
+	$log->info("Starting to update play counts in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.playCount is null and tracks_persistent.playCount is not null";
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.playCount=tracks_persistent.playCount where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null";
 	}else {
-		$sql = "UPDATE track_statistics SET playCount=(select tracks_persistent.playCount from tracks_persistent join tracks on tracks.url=tracks_persistent.url where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null) where exists (select tracks_persistent.playCount from tracks_persistent join tracks on tracks.urlmd5=tracks_persistent.urlmd5 where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null)";
+		$sql = "UPDATE track_statistics SET playCount=(select tracks_persistent.playCount from tracks_persistent join tracks on tracks.urlmd5=tracks_persistent.urlmd5 where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null) where exists (select tracks_persistent.playCount from tracks_persistent join tracks on tracks.urlmd5=tracks_persistent.urlmd5 where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.playCount is null and tracks_persistent.playCount is not null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1550,17 +1552,17 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating play counts in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating play counts in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update last played times in statistic data based on urls\n");
+	$log->info("Starting to update last played times in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
+		$sql = "UPDATE tracks,tracks_persistent,track_statistics SET track_statistics.lastPlayed=tracks_persistent.lastPlayed where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null";
 	}else {
-		$sql = "UPDATE track_statistics SET lastPlayed=(select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.url=tracks_persistent.url and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null) where exists (select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null)";
+		$sql = "UPDATE track_statistics SET lastPlayed=(select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null) where exists (select tracks_persistent.lastPlayed from tracks_persistent,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=tracks_persistent.urlmd5 and track_statistics.lastPlayed is null and tracks_persistent.lastPlayed is not null)";
 	}
 	$sth = $dbh->prepare( $sql );
 	$count = 0;
@@ -1579,7 +1581,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating last played times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating last played times in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1593,7 +1595,7 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update ratings in statistic data based on urls\n");
+	$log->info("Starting to update ratings in statistic data based on urls\n");
 	# Now lets set all added times not already set
 	if($driver eq 'mysql') {
 		$sql = "UPDATE tracks_persistent,track_statistics SET track_statistics.rating=tracks_persistent.rating where tracks_persistent.urlmd5=track_statistics.urlmd5 and (track_statistics.rating is null or track_statistics.rating=0) and tracks_persistent.rating>0";
@@ -1617,7 +1619,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating ratings in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1631,7 +1633,7 @@ sub refreshTracks
 
 	$timeMeasure->clear();
 	$timeMeasure->start();
-	$log->debug("Starting to update unrated ratings in statistic data based on null\n");
+	$log->info("Starting to update unrated ratings in statistic data based on null\n");
 	# Now lets set all added times not already set
 	$sql = "UPDATE track_statistics SET rating=null where rating=0";
 	$sth = $dbh->prepare( $sql );
@@ -1651,7 +1653,7 @@ sub refreshTracks
 	}
 
 	$sth->finish();
-	$log->debug("Finished updating unrated ratings in statistic data based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating unrated ratings in statistic data based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1666,7 +1668,7 @@ sub refreshTracks
 	if($prefs->get("history_enabled")) {
 		$timeMeasure->clear();
 		$timeMeasure->start();
-		$log->debug("Starting to update urls in track_history based on musicbrainz ids\n");
+		$log->info("Starting to update urls in track_history based on musicbrainz ids\n");
 		# First lets refresh all urls with musicbrainz id's
 		if($driver eq 'mysql') {
 		    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url,track_history.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256);
@@ -1690,7 +1692,7 @@ sub refreshTracks
 		}
 
 		$sth->finish();
-		$log->debug("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$log->info("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		if($count>0 && $driver eq 'SQLite') {
 			$timeMeasure->stop();
 
@@ -1704,7 +1706,7 @@ sub refreshTracks
 		
 		$timeMeasure->clear();
 		$timeMeasure->start();
-		$log->debug("Starting to update musicbrainz id's in track_history based on urls\n");
+		$log->info("Starting to update musicbrainz id's in track_history based on urls\n");
 		# Now lets set all musicbrainz id's not already set
 		if($driver eq 'mysql') {
 			$sql = "UPDATE tracks,track_history SET track_history.musicbrainz_id=tracks.musicbrainz_id where tracks.urlmd5=track_history.urlmd5 and tracks.musicbrainz_id like '%-%' and track_history.musicbrainz_id is null";
@@ -1728,7 +1730,7 @@ sub refreshTracks
 		}
 
 		$sth->finish();
-		$log->debug("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$log->info("Finished updating musicbrainz id's in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		if($count>0 && $driver eq 'SQLite') {
 			$timeMeasure->stop();
 
@@ -1742,7 +1744,7 @@ sub refreshTracks
 
 		$timeMeasure->clear();
 		$timeMeasure->start();
-		$log->debug("Starting to add missing entries to history table\n");
+		$log->info("Starting to add missing entries to history table\n");
 		# Now lets add all tracks to history table which have been played and don't exist in history table
 		$sql = "INSERT INTO track_history (url,urlmd5,musicbrainz_id,played,rating) select tracks.url,tracks.urlmd5,case when tracks.musicbrainz_id like '%-%' then tracks.musicbrainz_id else null end as musicbrainz_id,track_statistics.lastPlayed,track_statistics.rating from tracks join track_statistics on tracks.url=track_statistics.url and track_statistics.lastPlayed is not null left join track_history on tracks.url=track_history.url and track_statistics.lastPlayed=track_history.played where track_history.url is null and length(tracks.url)<".($useLongUrls?512:256);
 		$sth = $dbh->prepare( $sql );
@@ -1762,7 +1764,7 @@ sub refreshTracks
 		}
 
 		$sth->finish();
-		$log->debug("Finished adding missing entries to history table, adding $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$log->info("Finished adding missing entries to history table, adding $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		if($count>0 && $driver eq 'SQLite') {
 			$timeMeasure->stop();
 
@@ -1776,7 +1778,7 @@ sub refreshTracks
 
 		$timeMeasure->clear();
 		$timeMeasure->start();
-		$log->debug("Starting to update unrated ratings in history table based on null\n");
+		$log->info("Starting to update unrated ratings in history table based on null\n");
 		# Now lets set all added times not already set
 		$sql = "UPDATE track_history SET rating=null where rating=0";
 		$sth = $dbh->prepare( $sql );
@@ -1796,7 +1798,7 @@ sub refreshTracks
 		}
 
 		$sth->finish();
-		$log->debug("Finished updating unrated ratings in history table based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$log->info("Finished updating unrated ratings in history table based on null, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		if($count>0 && $driver eq 'SQLite') {
 			$timeMeasure->stop();
 
@@ -1809,7 +1811,7 @@ sub refreshTracks
 	}
 	$timeMeasure->stop();
 	$timeMeasure->clear();
-
+	$log->warn("TrackStat: Synchronizing TrackStat data finished");
 }
 
 sub purgeTracks {
