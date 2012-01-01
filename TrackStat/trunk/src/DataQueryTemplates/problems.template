@@ -7,7 +7,7 @@
 			<query>
 				select 'Missing entries in TrackStat' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt  'Number of' from 
 					(select count(*) as cnt from tracks where audio=1) t1,
-					(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and tracks.audio=1) t2
+					(select count(*) as cnt from track_statistics,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.audio=1) t2
 			</query>
 			<querytree>
 				<queryid>tracks</queryid>
@@ -16,7 +16,7 @@
 						left join albums on
 							tracks.album=albums.id
 						left join track_statistics on
-							tracks.url=track_statistics.url
+							tracks.urlmd5=track_statistics.urlmd5
 						where
 							tracks.audio=1 and
 							track_statistics.url is null
@@ -29,15 +29,15 @@
 			<query>
 				select 'Not refreshed entries in TrackStat' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt  'Number of' from 
 					(select count(*) as cnt from track_statistics,tracks where tracks.musicbrainz_id=track_statistics.musicbrainz_id and audio=1 and track_statistics.musicbrainz_id is not null) t1,
-					(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
+					(select count(*) as cnt from track_statistics,tracks where tracks.urlmd5=track_statistics.urlmd5 and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
 			</query>
 		</querytree>
 		<querytree>
 			<queryid>notrefreshedhistorytracks</queryid>
 			<query>
 				select 'Not refreshed entries in TrackStat history' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt 'Number of' from 
-					(select count(*) as cnt from track_history,track_statistics,tracks where track_history.url=track_statistics.url and tracks.musicbrainz_id=track_statistics.musicbrainz_id and audio=1 and track_statistics.musicbrainz_id is not null) t1,
-					(select count(*) as cnt from track_history,track_statistics,tracks where track_history.url=track_statistics.url and tracks.url=track_statistics.url and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
+					(select count(*) as cnt from track_history,track_statistics,tracks where track_history.urlmd5=track_statistics.urlmd5 and tracks.musicbrainz_id=track_statistics.musicbrainz_id and audio=1 and track_statistics.musicbrainz_id is not null) t1,
+					(select count(*) as cnt from track_history,track_statistics,tracks where track_history.urlmd5=track_statistics.urlmd5 and tracks.urlmd5=track_statistics.urlmd5 and track_statistics.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and tracks.audio=1) t2
 			</query>
 		</querytree>
 		<querytree>
@@ -45,14 +45,14 @@
 			<query>
 				select 'Unused entries in TrackStat data' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 					(select count(*) as cnt from track_statistics) t1,
-					(select count(*) as cnt from track_statistics,tracks where tracks.url=track_statistics.url and tracks.audio=1) t2;
+					(select count(*) as cnt from track_statistics,tracks where tracks.urlmd5=track_statistics.urlmd5 and tracks.audio=1) t2;
 			</query>
 			<querytree>
 				<queryid>tracks</queryid>
 				<query>
 					select track_statistics.rating,track_statistics.playcount,from_unixtime(track_statistics.lastplayed) as lastplayed,from_unixtime(track_statistics.added) as added,track_statistics.url from track_statistics
 						left join tracks on
-							tracks.url=track_statistics.url and
+							tracks.urlmd5=track_statistics.urlmd5 and
 							tracks.audio=1
 					where 
 						tracks.url is null
@@ -65,14 +65,14 @@
 			<query>
 				select 'Unused entries in TrackStat history' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt as 'Number of' from 
 					(select count(*) as cnt from track_history) t1,
-					(select count(*) as cnt from track_history,tracks where tracks.url=track_history.url and tracks.audio=1) t2;
+					(select count(*) as cnt from track_history,tracks where tracks.urlmd5=track_history.urlmd5 and tracks.audio=1) t2;
 			</query>
 			<querytree>
 				<queryid>tracks</queryid>
 				<query>
 					select from_unixtime(track_history.played) as played,track_history.rating,track_history.url from track_history
 						left join tracks on
-							tracks.url=track_history.url and
+							tracks.urlmd5=track_history.urlmd5 and
 							tracks.audio=1
 						where 
 							tracks.url is null
@@ -107,6 +107,38 @@
 					select tracks.id,tracks.tracknum,tracks.title,tracks.url from tracks
 					where
 						audio=1 and length(url)&gt;255 and length(url)&lt;512
+				</query>
+			</querytree>
+		</querytree>
+		<querytree>
+			<queryid>urlmd5</queryid>
+			<query>
+				select 'Songs with invalid urlmd5 entries' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_statistics 
+					where 
+						urlmd5!=md5(url)
+			</query>
+			<querytree>
+				<queryid>track</queryid>
+				<query>
+					select url,urlmd5 from track_statistics
+					where
+						track_statistics.urlmd5!=md5(url)
+				</query>
+			</querytree>
+		</querytree>
+		<querytree>
+			<queryid>urlmd5_history</queryid>
+			<query>
+				select 'History entries with invalid urlmd5 entries' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_history 
+					where 
+						urlmd5!=md5(url)
+			</query>
+			<querytree>
+				<queryid>track</queryid>
+				<query>
+					select url,urlmd5 from track_history
+					where
+						urlmd5!=md5(url)
 				</query>
 			</querytree>
 		</querytree>
