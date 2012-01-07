@@ -6,6 +6,7 @@
 		<name>TrackStat Statistics query</name>
 		<description>Query that returns different statistics from TrackStat</description>
 		<parameter type="text" id="queryname" name="Data query name" value="TrackStat Statistics"/>
+		<parameter type="checkbox" id="multilibrary" requireplugins="MultiLibrary::Plugin" name="Show MultiLibrary playback statistics" value="1"/>
 	</template>
 </databasequery>
 
