@@ -50,6 +50,14 @@
 		<query>
 			select 'Number of unrated songs' as parameter,count(*) from track_statistics,tracks where tracks.url=track_statistics.url and audio=1 and (track_statistics.rating is null or track_statistics.rating=0)
 		</query>
+		[% IF multilibrary %]
+		<query>
+			select concat('Number of played unique songs in ',multilibrary_libraries.name, ' library') as parameter,count(*) from multilibrary_libraries,multilibrary_track,track_statistics,tracks where multilibrary_libraries.id=multilibrary_track.library and multilibrary_track.track=tracks.id and tracks.url=track_statistics.url and audio=1 and track_statistics.playcount>0 group by multilibrary_libraries.id order by multilibrary_libraries.name
+		</query>
+		<query>
+			select concat('Number of totally played songs in ',multilibrary_libraries.name, ' library') as parameter,sum(track_statistics.playcount) from multilibrary_libraries,multilibrary_track,track_statistics,tracks where multilibrary_libraries.id=multilibrary_track.library and multilibrary_track.track=tracks.id and tracks.url=track_statistics.url and audio=1 and track_statistics.playcount>0 group by multilibrary_libraries.id order by multilibrary_libraries.name
+		</query>
+		[% END %]
 	</dataquery>
 </databasequery>
 
