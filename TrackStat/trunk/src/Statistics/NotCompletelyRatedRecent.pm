@@ -177,12 +177,12 @@ sub getNotCompletelyRatedRecentAlbumsWeb {
 	getNotCompletelyRatedHistoryAlbumsWeb($params,$listLength,">",getRecentTime());
     my @statisticlinks = ();
     push @statisticlinks, {
-    	'id' => 'topratedrecent',
-    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDRECENT_FORALBUM_SHORT')
+    	'id' => 'mostplayedrecent',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDRECENT_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'topratedrecent',
+    	'album' => 'mostplayedrecent',
     	'artist' => 'notcompletelyratedrecentalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
@@ -280,12 +280,12 @@ sub getNotCompletelyRatedNotRecentAlbumsWeb {
 	getNotCompletelyRatedHistoryAlbumsWeb($params,$listLength,"<",getRecentTime());
     my @statisticlinks = ();
     push @statisticlinks, {
-    	'id' => 'topratednotrecent',
-    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATEDNOTRECENT_FORALBUM_SHORT')
+    	'id' => 'mostplayednotrecent',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_MOSTPLAYEDNOTRECENT_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'topratednotrecent',
+    	'album' => 'mostplayednotrecent',
     	'artist' => 'notcompletelyratednotrecentalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
