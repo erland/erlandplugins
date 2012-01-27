@@ -144,12 +144,12 @@ sub getNotCompletelyRatedAlbumsWeb {
     Plugins::TrackStat::Statistics::Base::getAlbumsWeb($sql,$params);
     my @statisticlinks = ();
     push @statisticlinks, {
-    	'id' => 'toprated',
-    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_TOPRATED_FORALBUM_SHORT')
+    	'id' => 'all',
+    	'name' => string('PLUGIN_TRACKSTAT_SONGLIST_ALL_FORALBUM_SHORT')
     };
     $params->{'substatisticitems'} = \@statisticlinks;
     my %currentstatisticlinks = (
-    	'album' => 'toprated',
+    	'album' => 'all',
     	'artist' => 'notcompletelyratedalbums',
     );
     $params->{'currentstatisticitems'} = \%currentstatisticlinks;
