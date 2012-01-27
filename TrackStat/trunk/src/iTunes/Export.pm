@@ -217,21 +217,29 @@ sub getiTunesURL {
 	my $replaceExtension = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesextension");
 	my $replacePath = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesmusicpath");
 	my $nativeRoot = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesslimservermusicpath");
+	my $path = Slim::Utils::Misc::pathFromFileURL($url);
 	if(!defined($nativeRoot) || $nativeRoot eq '') {
 		# Use iTunes import path as backup
 		$nativeRoot = $serverPrefs->get('audiodir');
-	}
-	$nativeRoot =~ s/\\/\//isg;
-	if(defined($replacePath) && $replacePath ne '') {
-		$replacePath =~ s/\\/\//isg;
+		if(!defined($nativeRoot) || $nativeRoot eq '') {
+			my $mediaDirs = $serverPrefs->get('mediadirs');
+			if(ref($mediaDirs) eq 'ARRAY') {
+				for my $dir (@$mediaDirs) {
+					if(index($path,$dir) == 0) {
+						$nativeRoot = $dir;
+					}
+				}
+			}
+		}
 	}
 
-	my $path = Slim::Utils::Misc::pathFromFileURL($url);
 	if($replaceExtension) {
 		$path =~ s/\.[^.]*$/$replaceExtension/isg;
 	}
 
-	if(defined($replacePath) && $replacePath ne '') {
+	if(defined($replacePath) && $replacePath ne '' && defined($nativeRoot) && $nativeRoot ne '') {
+		$replacePath =~ s/\\/\//isg;
+		$nativeRoot =~ s/\\/\//isg;
 		$path =~ s/\\/\//isg;
 		$path =~ s/$nativeRoot/$replacePath/isg;
 	}
