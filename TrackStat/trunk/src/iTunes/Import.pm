@@ -669,9 +669,20 @@ sub normalize_location {
 	if(!defined($explicit_path) || $explicit_path eq '') {
 		# Use iTunes import path as backup
 		$explicit_path = $serverPrefs->get('audiodir');
+		if(!defined($explicit_path) || $explicit_path eq '') {
+			my $mediaDirs = $serverPrefs->get('mediadirs');
+			if(ref($mediaDirs) eq 'ARRAY') {
+				for my $dir (@$mediaDirs) {
+					# Just pick the first one, we can't know for sure which one it belongs to
+					$explicit_path = $dir;
+					last;
+				}
+			}
+		}
 	}
 
 	if ($explicit_path) {
+		$log->debug("Using explicit path to import to: $explicit_path");
 
 		# find the new base location.  make sure it ends with a slash.
 		my $base = Slim::Utils::Misc::fileURLFromPath($explicit_path);

@@ -238,6 +238,7 @@ sub getiTunesURL {
 	}
 
 	if(defined($replacePath) && $replacePath ne '' && defined($nativeRoot) && $nativeRoot ne '') {
+		$log->debug("Using explicit path to export to: $nativeRoot");
 		$replacePath =~ s/\\/\//isg;
 		$nativeRoot =~ s/\\/\//isg;
 		$path =~ s/\\/\//isg;
