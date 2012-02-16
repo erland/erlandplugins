@@ -80,9 +80,13 @@ sub initPlugin {
 	Slim::Control::Request::addDispatch(['licensemanager','applications'], [0, 1, 1, \&getApplications]);
 }
 
-sub getAccountId() {
+sub getAccountId {
+	my $toLower = shift;
 	my $accountId = $serverPrefs->get('sn_email');
 	if(defined($accountId) && $accountId ne '') {
+		if($toLower) {
+			$accountId = lc($accountId);
+		}
 		$accountId = sha1_hex($accountId);
 		return $accountId;
 	}else {
@@ -124,9 +128,10 @@ sub validateLicense {
 	my $licenses = $prefs->get('licenses');
 
 	my $accountId = getAccountId();
+	my $lowerCaseAccountId = getAccountId(1);
 
 	if(defined($request->getParam('force')) && $request->getParam('force')) {
-		loadLicense($accountId,$applicationId,$version);
+		loadLicense($accountId,$lowerCaseAccountId,$applicationId,$version);
 	}
 
 	if(checkValidityPeriod($licenses,$accountId,$applicationId,$version)) {
@@ -141,7 +146,7 @@ sub validateLicense {
 			(defined($licenses->{$applicationId}) && defined($licenses->{$applicationId}->{'nextcheck'}))) {
 
 			if($licenses->{$applicationId}->{'nextcheck'}<time()) {
-				loadLicense($accountId,$applicationId,$version);
+				loadLicense($accountId,$lowerCaseAccountId,$applicationId,$version);
 				if(checkValidityPeriod($licenses,$accountId,$applicationId,$version)) {
 					$request->addResult('result', 1);
 					$request->setStatusDone();
@@ -150,7 +155,7 @@ sub validateLicense {
 				}
 			}
 		}else {
-			loadLicense($accountId,$applicationId,$version);
+			loadLicense($accountId,$lowerCaseAccountId,$applicationId,$version);
 			if(checkValidityPeriod($licenses,$accountId,$applicationId,$version)) {
 				$request->addResult('result', 1);
 				$request->setStatusDone();
@@ -186,6 +191,7 @@ sub checkValidityPeriod {
 
 sub loadLicense {
 	my $accountId = shift;
+	my $lowerCaseAccountId = shift;
 	my $applicationId = shift;
 	my $version = shift;
 
@@ -212,6 +218,11 @@ sub loadLicense {
 			my $time = str2time($licenses->{$applicationId}->{'date'});
 			if($time<time()) {
 				$licenses->{$applicationId}->{'nextcheck'} = time()+3600*24;
+			}elsif(!$prefs->get('lowercasemapping')) {
+				my $response = $http->get("http://license.isaksson.info/lowercasemapping.php?user=$accountId&lcuser=$lowerCaseAccountId");
+				if($response->is_success) {
+					$prefs->set('lowercasemapping',1);
+				}
 			}
 		}else {
 			$licenses->{$applicationId} = {
