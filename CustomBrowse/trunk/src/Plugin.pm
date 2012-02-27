@@ -4006,7 +4006,7 @@ sub cliJiveHandlerImpl {
 		}
 		if($itemkey) {
 			$itemParams{'textkey'} = $itemkey;
-			#$request->addResultLoop('item_loop',$cnt,'textkey',$itemkey);
+			$request->addResultLoop('item_loop',$cnt,'textkey',$itemkey);
 		}
 		my $actions = undef;
 		if(defined($item->{'mixes'})) {
