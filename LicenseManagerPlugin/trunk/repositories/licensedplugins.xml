@@ -95,5 +95,14 @@
 			<licenseHelp>http://license.isaksson.info</licenseHelp>
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=TrackStat</licenseLink>
 		</plugin>
+		<plugin name="SugarCube">
+			<title lang="EN">Spicefly SugarCube</title>
+			<desc lang="EN">Requires a license, no functionality in Spicefly SugarCube is available for unlicensed users.
+			</desc>
+			<creator>Charles Parker</creator>
+			<email>abuse@spicefly.com</email>
+			<licenseHelp>http://www.spicefly.com/licensing</licenseHelp>
+			<licenseLink>http://www.spicefly.com/licensing/register.php?user=USER&amp;application=SugarCube</licenseLink>
+		</plugin>
 	</plugins>	
 </extensions>
