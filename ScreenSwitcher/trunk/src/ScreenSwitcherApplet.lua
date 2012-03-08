@@ -158,7 +158,7 @@ function _updateScreensaver(self, forced)
 		local timer = Timer(400,function()
 			if prevSSData then
 				local oldSSApplet = appletManager:loadApplet(prevSSData.applet)
-				if prevSSData.closeMethod then
+				if prevSSData.closeMethod and oldSSData.applet ~= ssData.applet then
 					log:debug("Closing screensaver "..self.currentScreensaver)
 					oldSSApplet[prevSSData.closeMethod](oldSSApplet, prevSSData.methodParam)
 				end
