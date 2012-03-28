@@ -887,6 +887,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 		self.offsets[cacheKey] = math.random(15)
 	end
 
+	if not self.imagefailure or minute!=self.imagefailure then
 	if (not self.imageCache[cacheKey] or not self.lasttimes[cacheKey] or self.lasttimes[cacheKey] == 0 or os.time()-self.lasttimes[cacheKey]>900) or ((minute + self.offsets[cacheKey]) % 3 == 0 and (not self.lastminutes[cacheKey] or self.lastminutes[cacheKey]!=minute)) then
 		self.lasttimes[cacheKey] = os.time()
 		log:debug("Initiating image update of "..perspectiveurl.." (offset="..self.offsets[cacheKey].. " minutes)")
@@ -919,11 +920,15 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 						zoom = height/h
 					end
 					image = image:rotozoom(0,zoom,1)
+					self.imagefailure = nil
 					self.imageCache[cacheKey] = image
 					sink(reference,image)
+				        self.copyrightLabel:setWidgetValue(self:getSettings()["copyright"])
 				        log:debug("image ready")
 				elseif err then
 				        log:error("error loading picture " .. perspectiveurl)
+				        self.copyrightLabel:setWidgetValue("copyright","Unable to fetch image from http://static.die.net")
+				        self.imagefailure = minute
 				end
 			end,
 			'GET', '/public/imageproxy?u=' .. string.urlEncode("http://static.die.net"..perspectiveurl .. "/480.jpg"))
@@ -932,6 +937,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 		self.lastminutes[cacheKey] = minute
 	else
 		sink(reference,self.imageCache[cacheKey])
+	end
 	end
 end
 
