@@ -894,7 +894,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 
 		local http = SocketHttp(jnt, jnt:getSNHostname(), 80)
 		local req = RequestHttp(function(chunk, err)
-				if chunk then
+				if chunk and #chunk>=1024 then
 				        local image = Surface:loadImageData(chunk, #chunk)
 					local w,h = image:getSize()
 					if string.find(imageType,"dawn") then
@@ -925,7 +925,7 @@ function getDaylightClockImage(self,data,reference,imageType,width,height,sink)
 					sink(reference,image)
 				        self.copyrightLabel:setWidgetValue(self:getSettings()["copyright"])
 				        log:debug("image ready")
-				elseif err then
+				elseif err or (chunk and #chunk<1024) then
 				        log:error("error loading picture " .. perspectiveurl)
 				        self.copyrightLabel:setWidgetValue("copyright","Unable to fetch image from http://static.die.net")
 				        self.imagefailure = minute
