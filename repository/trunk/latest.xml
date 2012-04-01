@@ -28,15 +28,15 @@
                         <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="DaylightClock" version="1.1.3800" minTarget="7.4" maxTarget="*">
+                <applet name="DaylightClock" version="1.1.3802" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Daylight Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock with a daylight map of the earth in the background. It's possible to configure what kind of date/time information you like to show and you can select background among a number of different perspectives.</desc>
-                        <changes lang="EN">- Corrected so it doesn't retry immediately if there is an error when the image is retrieved
+                        <changes lang="EN">- Corrected so it doesn't crash Squeezebox when mysqueezebox.com returns text instead of image
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3800.zip</url>
-                        <sha>643abf7abcfef2b9413c9427d8eb25a18497fd7c</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3802.zip</url>
+                        <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
 		<applet name="CustomClock" version="2.9.3727" minTarget="7.4" maxTarget="*">
