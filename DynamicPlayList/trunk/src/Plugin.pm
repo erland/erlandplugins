@@ -68,6 +68,7 @@ my $playLists = undef;
 my $playListTypes = undef;
 my $playListItems = undef;
 my $jiveMenu = undef;
+my $rescan = 0;
 
 my %plugins = ();
 my %filterPlugins = ();
@@ -798,7 +799,7 @@ sub getPlayList {
 	return undef unless $type;
 
 	$log->debug("Get playlist: $type\n");
-	if(!$playLists) {
+	if(!$playLists || $rescan) {
 		initPlayLists($client);
 	}
 	return undef unless $playLists;
@@ -816,7 +817,7 @@ sub getDefaultGroups {
 }
 
 sub initPlayListTypes {
-	if(!$playLists) {
+	if(!$playLists || $rescan) {
 		initPlayLists();
 	}
 	my %localPlayListTypes = ();
@@ -980,6 +981,7 @@ sub initPlayLists {
 	if($validateRequest->getResult("result")) {
 		addAlarmPlaylists(\%localPlayLists);
 	}
+	$rescan = 0;
 	$playLists = \%localPlayLists;
 	$playListItems = \%localPlayListItems;
 
@@ -1776,6 +1778,7 @@ sub rescanDone {
 	my $request = shift;
 	my $client = $request->client();
 
+	$rescan = 1;
 	if($deleteAllQueues) {
 		$log->debug("Clearing play history for all players");
 		clearPlayListHistory();
@@ -3339,7 +3342,7 @@ sub cliJiveHandler {
 	my $licensed = $validateRequest->getResult("result");
 
 	if($licenseManager && $licensed) {
-		if(!$playLists) {
+		if(!$playLists || $rescan) {
 			initPlayLists($client);
 		}
 		my $params = $request->getParamsCopy();
@@ -3491,7 +3494,7 @@ sub cliJivePlaylistParametersHandler {
 		$log->debug("Exiting cliJivePlaylistParametersHandler\n");
 		return;
 	}
-	if(!$playLists) {
+	if(!$playLists || $rescan) {
 		initPlayLists($client);
 	}
   	my $playlistId    = $request->getParam('playlistid');
@@ -3622,7 +3625,7 @@ sub cliMixJiveHandler {
 	my $licensed = $validateRequest->getResult("result");
 
 	if($licenseManager && $licensed) {
-		if(!$playListTypes) {
+		if(!$playListTypes || $rescan) {
 			initPlayLists($client);
 		}
 		my $params = $request->getParamsCopy();
