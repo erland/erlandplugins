@@ -86,10 +86,10 @@
                         <option>
                                 <id>byartist</id>
                                 <name>Sort by artist</name>
-                                <menulinks>number</menulinks>
+                                <menulinks>alpha</menulinks>
 				<itemformat>albumconcat</itemformat>
                                 <menudata>
-					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+					select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from tracks,albums,contributor_track,contributors[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
