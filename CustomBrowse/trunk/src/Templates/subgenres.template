@@ -55,9 +55,9 @@
 						<id>byartist</id>
 						<name>Sort by artist</name>
 						<itemformat>albumconcat</itemformat>
-						<menulinks>number</menulinks>
+						<menulinks>alpha</menulinks>
 						<menudata>
-							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
+							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
 							where 
 								[%- IF library or activelibrary %]
 								albums.id=multilibrary_album.album and
@@ -166,9 +166,9 @@
 							<id>byartist</id>
 							<name>Sort by artist</name>
 							<itemformat>albumconcat</itemformat>
-							<menulinks>number</menulinks>
+							<menulinks>alpha</menulinks>
 							<menudata>
-								select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
+								select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
 								where 
 									[%- IF library or activelibrary %]
 									albums.id=multilibrary_album.album and
@@ -294,9 +294,9 @@
 								<id>byartist</id>
 								<name>Sort by artist</name>
 								<itemformat>albumconcat</itemformat>
-								<menulinks>number</menulinks>
+								<menulinks>alpha</menulinks>
 								<menudata>
-									select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
+									select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
 									where 
 										[%- IF library or activelibrary %]
 										albums.id=multilibrary_album.album and
@@ -439,9 +439,9 @@
 									<id>byartist</id>
 									<name>Sort by artist</name>
 									<itemformat>albumconcat</itemformat>
-									<menulinks>number</menulinks>
+									<menulinks>alpha</menulinks>
 									<menudata>
-										select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
+										select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from albums,tracks,contributor_track,contributors,genre_track[% IF library or activelibrary %],multilibrary_album[% END %]
 										where 
 											[%- IF library or activelibrary %]
 											albums.id=multilibrary_album.album and
