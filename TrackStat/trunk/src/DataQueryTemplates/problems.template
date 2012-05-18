@@ -25,6 +25,35 @@
 			</querytree>
 		</querytree>
 		<querytree>
+			<queryid>duplicate_entries</queryid>
+			<query>
+				select 'Duplicate entries in TrackStat statistics' as 'Problem type',if(count(*)>0,'Yes','No') as 'Possible problem', count(*) as 'Number of' from track_statistics where url in (select url from track_statistics 
+					group by url having count(*)>1)
+			</query>
+			<querytree>
+				<queryid>track</queryid>
+				<query>
+					select count(*) as 'Number of duplicates',url from track_statistics
+						group by url having count(*)>1
+				</query>
+			</querytree>
+		</querytree>
+		<querytree>
+			<queryid>duplicate_history_entries</queryid>
+			<query>
+				select 'Duplicate entries in TrackStat history' as 'Problem type',if(sum(cnt)>0,'Yes','No') as 'Possible problem', sum(cnt) as 'Number of' from (select count(*) as cnt from track_history 
+						group by url,played,rating having count(*)>1) as a
+			</query>
+			<querytree>
+				<queryid>track</queryid>
+				<query>
+					select count(*),url,played,rating from track_history 
+						group by url,played,rating having count(*)>1
+						order by url,played
+				</query>
+			</querytree>
+		</querytree>
+		<querytree>
 			<queryid>notrefreshedtracks</queryid>
 			<query>
 				select 'Not refreshed entries in TrackStat' as 'Problem type',if(t1.cnt-t2.cnt>0,'Yes','No') as 'Possible problem', t1.cnt-t2.cnt  'Number of' from 
