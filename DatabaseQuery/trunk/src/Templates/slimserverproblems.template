@@ -108,7 +108,7 @@
 						albums.id=tracks.id
 					where
 						tracks.musicbrainz_id is not null and
-						tracks.musicbrainz_id not like '%-%-%-%-%'
+						exists (select t.url from tracks t where t.musicbrainz_id=tracks.musicbrainz_id and t.url!=tracks.url)
 					order by albums.titlesort,tracks.disc,tracks.tracknum
 				</query>
 			</querytree>
