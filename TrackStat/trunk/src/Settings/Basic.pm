@@ -60,7 +60,7 @@ sub pages {
 }
 
 sub prefs {
-        return ($prefs, qw(dynamicplaylist dynamicplaylist_norepeat min_song_length song_threshold_length min_song_percent refresh_startup refresh_rescan history_enabled long_urls));
+        return ($prefs, qw(dynamicplaylist dynamicplaylist_norepeat min_song_length song_threshold_length min_song_percent refresh_startup refresh_rescan history_enabled long_urls musicbrainz_enabled));
 }
 sub handler {
 	my ($class, $client, $paramRef) = @_;
