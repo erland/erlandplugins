@@ -1071,6 +1071,7 @@ sub addParameterValues {
 	my $client = shift;
 	my $listRef = shift;
 	my $parameter = shift;
+	my $parameterValues = shift;
 	
 	$log->debug("Getting values for ".$parameter->{'name'}." of type ".$parameter->{'type'}."\n");
 	my $sql = undef;
@@ -1121,8 +1122,13 @@ sub addParameterValues {
 		if(defined($parameter->{'definition'}) && lc($parameter->{'definition'}) =~ /^select/ ) {
 			$sql = $parameter->{'definition'};
 			for (my $i=1;$i<$parameter->{'id'};$i++) {
-				my $parameter = $client->modeParam('dynamicplaylist_parameter_'.$i);
-				my $value = $parameter->{'id'};
+				my $value = undef;
+				if(defined($parameterValues)) {
+					$value = $parameterValues->{$i};
+				}else {
+					my $parameter = $client->modeParam('dynamicplaylist_parameter_'.$i);
+					$value = $parameter->{'id'};
+				}
 				my $parameterid = "\'PlaylistParameter".$i."\'";
 				$log->debug("Replacing ".$parameterid." with ".$value."\n");
 				$sql =~ s/$parameterid/$value/g;
@@ -3546,7 +3552,7 @@ sub cliJivePlaylistParametersHandler {
 	my $parameter= $playlist->{'parameters'}->{$nextParameterId};
 
 	my @listRef = ();
-	addParameterValues($client,\@listRef, $parameter);
+	addParameterValues($client,\@listRef, $parameter,$parameters);
 
 	my $count = scalar(@listRef);
 	my $itemsPerResponse = $request->getParam('_itemsPerResponse') || $count;
