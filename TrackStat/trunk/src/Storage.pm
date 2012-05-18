@@ -534,7 +534,7 @@ sub findTrack {
 	$log->debug("findTrack(): mbId: ". $mbId ."\n") if (defined($mbId));
 
 	# create searchString and remove duplicate/trailing whitespace as well.
-	if (defined($mbId)) {
+	if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 		$searchString = $mbId;
 		$queryAttribute = "musicbrainz_id";
 	} else {
@@ -679,7 +679,7 @@ sub saveRating {
 	}
 
 	# create searchString and remove duplicate/trailing whitespace as well.
-	if (defined($mbId)) {
+	if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 		$searchString = $mbId;
 		$queryAttribute = "musicbrainz_id";
 	} else {
@@ -754,7 +754,7 @@ sub savePlayCountAndLastPlayed
 	$key = $mbId if (defined($mbId));
 
 	if ($trackHandle) {
-		if (defined($mbId)) {
+		if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 			$sql = "UPDATE track_statistics set playCount=$playCount, lastPlayed=$lastPlayed where musicbrainz_id = ?";
 		} else {
 			if(defined($trackmbId)) {
@@ -845,7 +845,7 @@ sub addToHistory
 		$mbId = undef;
 	}
 	
-	if(defined($mbId)) {
+	if(defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 		$sql = "SELECT url from track_history where (url=? or musicbrainz_id='$mbId') and played=$playedTime";
 	}else {
 		$sql = "SELECT url from track_history where url=? and played=$playedTime";
@@ -869,7 +869,7 @@ sub addToHistory
 	my $key = $url;
 	my $urlmd5 = md5_hex($url);
 	$sql = undef;
-	if (defined($mbId)) {
+	if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 		if (defined($rating)) {
 			if(!$rating) {
 				$rating='null';
@@ -893,12 +893,16 @@ sub addToHistory
 			}
 			if($found) {
 				$sql = "UPDATE track_history set rating=$rating where url=? and played=$playedTime";
+			}elsif(defined($mbId)) {
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played, rating) values (?, '$urlmd5', '$mbId', $playedTime, $rating)";
 			}else {
 				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played, rating) values (?, '$urlmd5', NULL, $playedTime, $rating)";
 			}
 		}else {
 			if($found) {
 				$sql = undef;
+			}elsif(defined($mbId)) {
+				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played) values (?, '$urlmd5', '$mbId', $playedTime)";
 			}else {
 				$sql = "INSERT INTO track_history (url, urlmd5, musicbrainz_id, played) values (?, '$urlmd5', NULL, $playedTime)";
 			}
@@ -1043,7 +1047,7 @@ sub saveTrack
 
 		if($trackHandle) {
 			my $queryParameter = "url";
-			if (defined($mbId)) {
+			if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
 			    $queryParameter = "musicbrainz_id";
 			    $key = $mbId;
 			}
@@ -1223,7 +1227,6 @@ sub mergeTrack
 	}
 }
 
-
 sub refreshTracks 
 {
 	my $ds        = getCurrentDS();
@@ -1281,56 +1284,12 @@ sub refreshTracks
 		$timeMeasure->stop();
 		$timeMeasure->clear();
 	}
-	$timeMeasure->start();
-	$log->info("Starting to update urls in statistic data based on musicbrainz ids\n");
-	# First lets refresh all urls with musicbrainz id's
-	if($driver eq 'mysql') {
-		$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url,track_statistics.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    $log->warn("Database error: $DBI::errstr\n");
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}
-	}else {
-		$sql = "drop table if exists temp_track_statistics";
-		$sth = $dbh->prepare( $sql );
-		eval {
-			$sth->execute();
-			commit($dbh);
-		};
-		if( $@ ) {
-		    $log->warn("Database error: $DBI::errstr\n");
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}		
-		$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.urlmd5,tracks.musicbrainz_id from tracks join track_statistics on tracks.musicbrainz_id=track_statistics.musicbrainz_id where track_statistics.musicbrainz_id is not null and track_statistics.urlmd5!=tracks.urlmd5";
-		$sth = $dbh->prepare( $sql );
-		$count = 0;
-		eval {
-			$count = $sth->execute();
-			if($count eq '0E0') {
-				$count = 0;
-			}
-			commit($dbh);
-		};
-		if( $@ ) {
-		    $log->warn("Database error: $DBI::errstr\n");
-		    eval {
-		    	rollback($dbh); #just die if rollback is failing
-		    };
-		}else {
-			$sql = "UPDATE track_statistics SET url=(select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id),urlmd5=(select urlmd5 from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id) where exists (select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id)";
+	if($prefs->get('musicbrainz_enabled')) {
+		$timeMeasure->start();
+		$log->info("Starting to update urls in statistic data based on musicbrainz ids\n");
+		# First lets refresh all urls with musicbrainz id's
+		if($driver eq 'mysql') {
+			$sql = "UPDATE tracks,track_statistics SET track_statistics.url=tracks.url,track_statistics.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_statistics.musicbrainz_id and track_statistics.url!=tracks.url and length(tracks.url)<".($useLongUrls?512:256);
 			$sth = $dbh->prepare( $sql );
 			$count = 0;
 			eval {
@@ -1345,8 +1304,9 @@ sub refreshTracks
 			    eval {
 			    	rollback($dbh); #just die if rollback is failing
 			    };
-			}		
-			$sql = "drop table temp_track_statistics";
+			}
+		}else {
+			$sql = "drop table if exists temp_track_statistics";
 			$sth = $dbh->prepare( $sql );
 			eval {
 				$sth->execute();
@@ -1358,10 +1318,88 @@ sub refreshTracks
 			    	rollback($dbh); #just die if rollback is failing
 			    };
 			}		
+			$sql = "CREATE temp table temp_track_statistics as select tracks.url,tracks.urlmd5,tracks.musicbrainz_id from tracks join track_statistics on tracks.musicbrainz_id=track_statistics.musicbrainz_id where track_statistics.musicbrainz_id is not null and track_statistics.urlmd5!=tracks.urlmd5";
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->warn("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}else {
+				$sql = "UPDATE track_statistics SET url=(select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id),urlmd5=(select urlmd5 from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id) where exists (select url from temp_track_statistics where musicbrainz_id=track_statistics.musicbrainz_id)";
+				$sth = $dbh->prepare( $sql );
+				$count = 0;
+				eval {
+					$count = $sth->execute();
+					if($count eq '0E0') {
+						$count = 0;
+					}
+					commit($dbh);
+				};
+				if( $@ ) {
+				    $log->warn("Database error: $DBI::errstr\n");
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}		
+				$sql = "drop table temp_track_statistics";
+				$sth = $dbh->prepare( $sql );
+				eval {
+					$sth->execute();
+					commit($dbh);
+				};
+				if( $@ ) {
+				    $log->warn("Database error: $DBI::errstr\n");
+				    eval {
+				    	rollback($dbh); #just die if rollback is failing
+				    };
+				}		
+			}
 		}
+		$sth->finish();
+		$log->info("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		if($count>0 && $driver eq 'SQLite') {
+			$timeMeasure->stop();
+	
+			$timeMeasure->clear();
+			$timeMeasure->start();
+			$log->debug("Starting analyzing track_statistics table\n");
+		    	$dbh->do("analyze track_statistics;");
+			$log->debug("Finished analyzing track_statistics table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		}
+		$timeMeasure->stop();
+	}
+
+	$timeMeasure->clear();
+	
+	$timeMeasure->start();
+	$log->info("Starting to update md5 in statistic data based on urls\n");
+	$sql = "UPDATE track_statistics SET urlmd5=md5(url) WHERE urlmd5!=md5(url)";
+	$sth = $dbh->prepare( $sql );
+	$count = 0;
+	eval {
+		$count = $sth->execute();
+		if($count eq '0E0') {
+			$count = 0;
+		}
+		commit($dbh);
+	};
+	if( $@ ) {
+	    $log->warn("Database error: $DBI::errstr\n");
+	    eval {
+	    	rollback($dbh); #just die if rollback is failing
+	    };
 	}
 	$sth->finish();
-	$log->info("Finished updating urls in statistic data based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+	$log->info("Finished updating md5 in statistic data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 	if($count>0 && $driver eq 'SQLite') {
 		$timeMeasure->stop();
 
@@ -1374,7 +1412,7 @@ sub refreshTracks
 	$timeMeasure->stop();
 
 	$timeMeasure->clear();
-
+	
 	$timeMeasure->start();
 	$log->info("Starting to update musicbrainz id's in statistic data based on urls\n");
 	# Now lets set all musicbrainz id's not already set
@@ -1667,14 +1705,50 @@ sub refreshTracks
 
 	if($prefs->get("history_enabled")) {
 		$timeMeasure->clear();
-		$timeMeasure->start();
-		$log->info("Starting to update urls in track_history based on musicbrainz ids\n");
-		# First lets refresh all urls with musicbrainz id's
-		if($driver eq 'mysql') {
-		    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url,track_history.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256);
-		}else {
-		    	$sql = "UPDATE track_history SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256)."),urlmd5=(select tracks.urlmd5 from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).") where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).")";
+		if($prefs->get('musicbrainz_enabled')) {
+			$timeMeasure->start();
+			$log->info("Starting to update urls in track_history based on musicbrainz ids\n");
+			# First lets refresh all urls with musicbrainz id's
+			if($driver eq 'mysql') {
+			    	$sql = "UPDATE tracks,track_history SET track_history.url=tracks.url,track_history.urlmd5=tracks.urlmd5 where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256);
+			}else {
+			    	$sql = "UPDATE track_history SET url=(select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256)."),urlmd5=(select tracks.urlmd5 from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).") where exists (select tracks.url from tracks where tracks.musicbrainz_id is not null and tracks.musicbrainz_id=track_history.musicbrainz_id and track_history.urlmd5!=tracks.urlmd5 and length(tracks.url)<".($useLongUrls?512:256).")";
+			}
+			$sth = $dbh->prepare( $sql );
+			$count = 0;
+			eval {
+				$count = $sth->execute();
+				if($count eq '0E0') {
+					$count = 0;
+				}
+				commit($dbh);
+			};
+			if( $@ ) {
+			    $log->warn("Database error: $DBI::errstr\n");
+			    eval {
+			    	rollback($dbh); #just die if rollback is failing
+			    };
+			}
+	
+			$sth->finish();
+			$log->info("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+			if($count>0 && $driver eq 'SQLite') {
+				$timeMeasure->stop();
+	
+				$timeMeasure->clear();
+				$timeMeasure->start();
+				$log->debug("Starting analyzing track_history table\n");
+			    	$dbh->do("analyze track_history;");
+				$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+			}
+			$timeMeasure->stop();
 		}
+		
+		$timeMeasure->clear();
+		
+		$timeMeasure->start();
+		$log->info("Starting to update md5 in track_history data based on urls\n");
+		$sql = "UPDATE track_history SET urlmd5=md5(url) WHERE urlmd5!=md5(url)";
 		$sth = $dbh->prepare( $sql );
 		$count = 0;
 		eval {
@@ -1690,12 +1764,11 @@ sub refreshTracks
 		    	rollback($dbh); #just die if rollback is failing
 		    };
 		}
-
 		$sth->finish();
-		$log->info("Finished updating urls in track_history based on musicbrainz ids, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
+		$log->info("Finished updating md5 in track_history data based on urls, updated $count items : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		if($count>0 && $driver eq 'SQLite') {
 			$timeMeasure->stop();
-
+	
 			$timeMeasure->clear();
 			$timeMeasure->start();
 			$log->debug("Starting analyzing track_history table\n");
@@ -1703,8 +1776,9 @@ sub refreshTracks
 			$log->debug("Finished analyzing track_history table : It took ".$timeMeasure->getElapsedTime()." seconds\n");
 		}
 		$timeMeasure->stop();
-		
+	
 		$timeMeasure->clear();
+
 		$timeMeasure->start();
 		$log->info("Starting to update musicbrainz id's in track_history based on urls\n");
 		# Now lets set all musicbrainz id's not already set

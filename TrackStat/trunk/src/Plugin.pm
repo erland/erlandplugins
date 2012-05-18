@@ -142,6 +142,10 @@ $prefs->migrate(2, sub {
 	$prefs->set('touchtoplay', 1);
 	1;
 });
+$prefs->migrate(3, sub {
+	$prefs->set('musicbrainz_enabled', 1);
+	1;
+});
 $prefs->setValidate({'validator' => \&isWritableFile }, 'backup_file'  );
 $prefs->setValidate('dir', 'backup_dir'  );
 $prefs->setValidate({ 'validator' => \&isTimeOrEmpty }, 'backup_time'  );

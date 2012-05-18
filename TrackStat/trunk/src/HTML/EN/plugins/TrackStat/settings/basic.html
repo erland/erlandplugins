@@ -56,4 +56,11 @@
 		</select>
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_TRACKSTAT_MUSICBRAINZ_ENABLED" desc="SETUP_PLUGIN_TRACKSTAT_MUSICBRAINZ_ENABLED_DESC" %]
+		<select name="pref_musicbrainz_enabled">
+			<option value="1" [% IF prefs.musicbrainz_enabled %]selected[% END %]>[% "YES" | string %]</option>
+			<option value="0" [% IF NOT prefs.musicbrainz_enabled %]selected[% END %]>[% "NO" | string %]</option>
+		</select>
+	[% END %]
+
 [% PROCESS settings/footer.html %]

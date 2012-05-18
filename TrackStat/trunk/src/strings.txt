@@ -145,6 +145,15 @@ SETUP_PLUGIN_TRACKSTAT_HISTORY_ENABLED
 SETUP_PLUGIN_TRACKSTAT_HISTORY_ENABLED_DESC
 	EN	This will activate/deactivate history logging in TrackStat. With history logging enabled TrackStat will store the exact time each time a track is played and can with this information calculate statistics such as \"Most played tracks in last month\". With history disabled TrackStat will only have information about the last time a specific track was played. You might want to try to disable history logging if you get performance problems with TrackStat.
 
+PLUGIN_TRACKSTAT_MUSICBRAINZ_ENABLED
+	EN	Enable/disable Musicbrainz tag usage
+
+SETUP_PLUGIN_TRACKSTAT_MUSICBRAINZ_ENABLED
+	EN	Enable musicbrainz tags
+
+SETUP_PLUGIN_TRACKSTAT_MUSICBRAINZ_ENABLED_DESC
+	EN	This will activate/deactivate usage of Musicbrainz tags in TrackStat. With musicbrainz tags enabled TrackStat will be able to recover ratings and play counts for moved or renamed tracks automatically. The issue that exist with musicbrainz tags is that you can end up into trouble if you have duplicate musicbrainz tags in your musicfiles, for example the same song a compilation album and normal album.
+
 PLUGIN_TRACKSTAT_DYNAMICPLAYLIST
 	EN	Enable Dynamic Playlists
 
