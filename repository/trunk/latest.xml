@@ -155,17 +155,16 @@
 			<sha>436fcda65d80ce98c3234978b07cc9c24b429aaa</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-                <plugin name="TrackStat" version="3.0.3786" minTarget="7.6.0" maxTarget="7.*">
+                <plugin name="TrackStat" version="3.1.3814" minTarget="7.6.0" maxTarget="7.*">
                         <title lang="EN">TrackStat</title>
                         <desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected issue with iTunes Export module in LMS 7.7 and later
-			- Corrected issue with unrated tracks not shown in Not Completely Rated statistics menus
-			- Added playback statistics per Multi Library library in the TrackStat Statistics query for Database Query plugin
+                        <changes lang="EN">- Added option to disable musicbrainz tags logic as it can cause issues for people with multiple tracks with same musicbrainz id
+			- Added possibility to list duplicate TrackStat entries in the Database Query template for TrackStat inconsistencies
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.0.3786.zip</url>
-                        <sha>f1af946ed5215d95ede5d5376dfae1c0acdaa14a</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.1.3814.zip</url>
+                        <sha>b1b3736faa7e9fa0d19e5cc51889fa6661115209</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
                 </plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
@@ -254,15 +253,15 @@
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
-		<plugin name="DynamicPlayList" version="2.9.3805" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DynamicPlayList" version="2.9.3813" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Dynamic Playlist</title>
                         <desc lang="EN">Make it easy to create dynamic playlists for your own plugin. You simply need to implement two methods in your own plugin which returns the playlists and the next tracks. Currently at least supported by SQL Playlist plugin, TrackStat plugin, SugarCube plugin, iTunes Party Shuffle plugins and builtin support for saved static playlists. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected issue where saved playlists didn't work after a rescan until you had accessed them through web interface or restarted server
+			<changes lang="EN">- Corrected issue where plalists with multiple parameters didn't work properly on SqueezePlay, iOS and Android
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3805.zip</url>
-                        <sha>6821ddfe62ca0d7bbe371cb0f5e0e8f35da72159</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3813.zip</url>
+                        <sha>70e8f48c4a2c3deb485380ab2f0d9de21aadc912</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
 		<plugin name="DatabaseQuery" version="2.1.2" minTarget="7.1.0" maxTarget="7.3.*">
@@ -276,15 +275,15 @@
                         <sha>ef05d5f00298cf4c1a1e1426f9176567e12034f9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
-		<plugin name="DatabaseQuery" version="2.3.3733" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DatabaseQuery" version="2.3.3816" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Database Query</title>
                         <desc lang="EN">Makes it possible to define and execute custom SQL statements towards SqueezeCenter database. The result can be displayed in the browser or exported as CSV or XML files. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected compatibility with 7.7.1 cache handling
+			<changes lang="EN">- Corrected issue with Squeezebox Server Inconsistenty query where it wasn't possible to show duplicate musicbrainz identities
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3733.zip</url>
-                        <sha>3af19ceaeeff014a1609b791f5cdd8c7b2363779</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3816.zip</url>
+                        <sha>0365b60d94458d351a3f0fc57bafe6865f8be1bc</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
 		<plugin name="MultiLibrary" version="2.3.1" minTarget="7.1.0" maxTarget="7.3.*">
