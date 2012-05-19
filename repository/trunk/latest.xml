@@ -62,16 +62,16 @@
                         <sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-                <applet name="ScreenSwitcher" version="1.1.3798" minTarget="7.4" maxTarget="*">
+                <applet name="ScreenSwitcher" version="1.1.3818" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Screen Switcher</title>
                         <desc lang="EN">Switch continuously between different screen savers.
                         </desc>
-                        <changes lang="EN">- Corrected issue with two Custom Clock screen savers after each other
+                        <changes lang="EN">- Corrected issue where a log message was produced when switching from a Custom Clock screen saver
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3798.zip</url>
-                        <sha>def98991104c26aa80ed7d7a41b0809c6f72e2df</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3818.zip</url>
+                        <sha>d542412ac8d4d9a245d73d59ef4027ab5307e3c5</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="SettingsRemover" target="jive|fab4|baby" version="1.0.30" minTarget="7.4" maxTarget="*">
