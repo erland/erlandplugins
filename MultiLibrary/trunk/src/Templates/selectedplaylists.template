@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<multilibrary>
+	<library>
+		<name>[% libraryname %]</name>
+		[%- IF menugroup %]
+		<menugroup>[% menugroup %]</menugroup>
+		[%- END %]
+		[%- IF libraryorder %]
+		<libraryorder>[% libraryorder %]</libraryorder>
+		[%- END %]
+		[%- IF includedclients %]<includedclients>[% includedclients %]</includedclients>[% END %]
+		[%- IF excludedclients %]<excludedclients>[% excludedclients %]</excludedclients>[% END %]
+		<enabledbrowse>[% enabledbrowse %]</enabledbrowse>
+		<track>
+			<data>
+				select {library},tracks.id from tracks
+				where
+					[% IF includedplaylists %]
+					exists (select track from playlist_track,tracks t where
+							playlist_track.playlist=t.id and
+							playlist_track.track=tracks.url and
+							t.title IN ([% includedplaylists %])) and
+					[% END %]
+					tracks.audio=1
+					group by tracks.id
+			</data>
+		</track>
+		<menus>[% internalmenus %][% IF custombrowsemenus %],[% custombrowsemenus %][% END %]</menus>
+		[%- IF customskipfilter %]
+		<action>
+			<type>cli</type>
+			<data>customskip setfilter [% customskipfilter %]</data>
+		</action>
+		[%- END %]
+	</library>
+</multilibrary>
