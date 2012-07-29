@@ -785,9 +785,6 @@ sub savePlayCountAndLastPlayed
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $key , SQL_VARCHAR);
-		if(!$trackHandle) {
-			$sth->bind_param(2, md5_hex($url), SQL_VARCHAR);
-		}
 		$sth->execute();
 		commit($dbh);
 	};
