@@ -25,7 +25,7 @@
 	<tr>
 		<td class="[% IF odd %]odd[% ELSE %]even[% END %]" nowrap><a href="[% webroot %]plugins/CustomSkip/customskip_newfilteritem.html?filter=[% pluginCustomSkipFilter.id %]&filtertype=[% filterType.id %]&newfilteritem=1&player=[% player | uri %]">[% filterType.name %]</a></td>
 			<td class="[% IF odd %]odd[% ELSE %]even[% END %]">&nbsp;&nbsp;&nbsp;</td>
-			<td class="[% IF odd %]odd[% ELSE %]even[% END %]"><a href="[% webroot %]plugins/CustomSkip/customskip_newfilteritem.html?filter=[% pluginCustomSkipFilter.id %]filtertype=[% filterType.id %]&newfilteritem=1&player=[% player | uri %]">[% filterType.description %]</a></td>
+			<td class="[% IF odd %]odd[% ELSE %]even[% END %]"><a href="[% webroot %]plugins/CustomSkip/customskip_newfilteritem.html?filter=[% pluginCustomSkipFilter.id %]&filtertype=[% filterType.id %]&newfilteritem=1&player=[% player | uri %]">[% filterType.description %]</a></td>
 		</tr>
 		[% odd = !odd %]
 	[%- END %]
