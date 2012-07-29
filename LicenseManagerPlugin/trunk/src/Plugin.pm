@@ -84,6 +84,8 @@ sub getAccountId {
 	my $toLower = shift;
 	my $accountId = $serverPrefs->get('sn_email');
 	if(defined($accountId) && $accountId ne '') {
+		$accountId =~ s/^\s+//;
+		$accountId =~ s/\s+$//;
 		if($toLower) {
 			$accountId = lc($accountId);
 		}
