@@ -14,6 +14,10 @@
 		<input type="text" class="stdedit selectFolder" name="pref_context_template_directory" id="context_template_directory" value="[% prefs.context_template_directory %]" size="40">
 	[% END %]
 
+	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_ICON_DIRECTORY" desc="SETUP_PLUGIN_CUSTOMBROWSE_ICON_DIRECTORY_DESC" %]
+		<input type="text" class="stdedit selectFolder" name="pref_icon_directory" id="icon_directory" value="[% prefs.icon_directory %]" size="40">
+	[% END %]
+
 	[% WRAPPER setting title="SETUP_PLUGIN_CUSTOMBROWSE_IMAGE_CACHE" desc="SETUP_PLUGIN_CUSTOMBROWSE_IMAGE_CACHE_DESC" %]
 		<input type="text" class="stdedit selectFolder" name="pref_image_cache" id="image_cache" value="[% prefs.image_cache %]" size="40">
 	[% END %]

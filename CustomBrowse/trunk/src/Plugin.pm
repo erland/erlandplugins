@@ -40,6 +40,8 @@ use Slim::Utils::PluginManager;
 use Slim::Control::Jive;
 use POSIX qw(floor);
 use Time::HiRes;
+use File::Basename;
+use File::Copy;
 
 use Plugins::CustomBrowse::Settings;
 use Plugins::CustomBrowse::EnabledMixers;
@@ -159,6 +161,10 @@ $prefs->migrate(2, sub {
 });
 $prefs->migrate(3, sub {
 	$prefs->set('touchtoplay',1);
+	1;
+});
+$prefs->migrate(4, sub {
+	$prefs->set('icon_directory','');
 	1;
 });
 
@@ -1800,7 +1806,7 @@ sub addJivePlayerMenus {
 		if(defined($itemtype) && $itemtype eq 'album') {
 			$menuStyle{'menuStyle'} = 'album';
 		}
-		$menuStyle{'icon-id'} = Plugins::CustomBrowse::Plugin->_pluginDataFor('icon');
+		$menuStyle{'icon-id'} = getIcon($name, 'EN');
 		my @menuItems = (
 			{
 				text => $name,
@@ -1820,7 +1826,7 @@ sub addJivePlayerMenus {
 		if($name ne $key) {
 			@menuItems[0]->{'menuIconID'} = $key;
 		}else {
-			@menuItems[0]->{'menuIcon'} = 'iPeng/plugins/CustomBrowse/html/images/custombrowse.png';
+			@menuItems[0]->{'menuIcon'} = getIcon($name, 'iPeng', 1);
 		}
 		# Cacheable indicator
 		if(defined($menu->{'cacheable'})) {
@@ -2213,7 +2219,7 @@ sub addWebMenus {
 			$log->debug("Adding menu: $key = $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $key => $url });
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $url });
-			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
+			Slim::Web::Pages->addPageLinks("icons", {$key => getIcon($name, 'EN') });
 			if(UNIVERSAL::can("Slim::Plugin::Base","addWeight")) {
 				Slim::Plugin::Base->addWeight($key,defined($menu->{'menuorder'})?$menu->{'menuorder'}:80);
 				if($serverPrefs->get("rank-$key")) {
@@ -2226,7 +2232,7 @@ sub addWebMenus {
 			$log->debug("Adding menu: $key = $name\n");
 		        Slim::Web::Pages->addPageLinks("browse", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
 		        Slim::Web::Pages->addPageLinks("browseiPeng", { $key => $value."?hierarchy=".$menu->{'id'}."&mainBrowseMenu=1"});
-			Slim::Web::Pages->addPageLinks("icons", {$key => 'plugins/CustomBrowse/html/images/custombrowse.png'});
+			Slim::Web::Pages->addPageLinks("icons", {$key => getIcon($name, 'EN') });
 			if(UNIVERSAL::can("Slim::Plugin::Base","addWeight")) {
 				Slim::Plugin::Base->addWeight($key,defined($menu->{'menuorder'})?$menu->{'menuorder'}:80);
 				if($serverPrefs->get("rank-$key")) {
@@ -4071,7 +4077,7 @@ sub cliJiveHandlerImpl {
 
 		#iPeng icon
 		if($menuIcon) {
-			$request->addResultLoop('item_loop',$cnt,'menuIcon','iPeng/plugins/CustomBrowse/html/images/custombrowse.png');
+			$request->addResultLoop('item_loop',$cnt,'menuIcon',getIcon($firstRowName,'iPeng', 1));
 		}
 		#Cacheable indicator
 		if(defined($item->{'cacheable'})) {
@@ -4884,6 +4890,58 @@ sub unescape {
 sub addSQLError {
 	my $error = shift;
 	$sqlerrors .= $error;
+}
+
+sub getIcon{
+	my $menuName = shift;
+	my $skin   = shift;
+	my $skinPrefix = shift;
+	
+	my $icon = $menuName.".png";
+	$icon =~ s/ /_/g;
+
+	my $iconPath;
+	my $dir = $prefs->get('icon_directory');
+	if(!defined($dir) || $dir eq '') {
+		$iconPath = dirname(__FILE__)."/HTML/$skin/plugins/CustomBrowse/html/images/custombrowse_$icon";
+		if( -e $iconPath) {
+			return ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse_$icon";
+		}else {			return ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse.png";
+		}
+	}
+	if(-e catfile($dir,$skin,$icon)) {
+		$iconPath = catfile($dir,$skin,$icon);
+	}elsif(-e catfile($dir,$icon)) {
+		$iconPath = catfile($dir,$icon);
+	}
+	if( defined($iconPath) && -e $iconPath ){
+		my $iconCopyPath;
+		$iconCopyPath = dirname(__FILE__)."/HTML/$skin/plugins/CustomBrowse/html/images/custombrowse_$icon";
+
+		my $iconUrl = ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse_$icon";
+		if(-e $iconCopyPath) {
+			if((stat($iconPath))[9]>(stat($iconCopyPath))[9]) {
+				if(File::Copy::copy($iconPath, $iconCopyPath)) {
+					my @timestamp = ( stat($iconPath)) [8,9];
+					utime @timestamp, $iconCopyPath;
+				}else {
+					$iconUrl = ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse.png";
+				}
+			}
+		}else {
+			if(File::Copy::copy($iconPath, $iconCopyPath)) {
+				my @timestamp = ( stat($iconPath)) [8,9];
+				utime @timestamp, $iconCopyPath;
+			}else {
+				$iconUrl = ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse.png";
+			}
+		}
+		$iconPath = $iconUrl;
+	}else {
+		$iconPath = ($skinPrefix?$skin."/":"")."plugins/CustomBrowse/html/images/custombrowse.png";
+	}
+	
+	return $iconPath;
 }
 
 1;
