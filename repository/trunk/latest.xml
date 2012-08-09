@@ -208,16 +208,16 @@
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
-		<plugin name="CustomScan" version="2.8.3779" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="CustomScan" version="2.9.3834" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Custom Scan</title>
                         <desc lang="EN">Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected so Random for LastFM similar artists playlist works with 7.6 and later versions
-			- Corrected issue with alpha bar with playlist templates that takes parameters
+			<changes lang="EN">- Updated so tag mapping tags can be used in a later tag mapping entry
+			- Corrected so tags with space in their name works with tag mapping entries
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3779.zip</url>
-                        <sha>7c66712c37be6df0adf2b7cd3dfae9b077fed091</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.9.3834.zip</url>
+                        <sha>43058ba3fb99b1b2a6edd16ee2283770789cb034</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 		<plugin name="CustomSkip" version="2.3.5" minTarget="7.1.0" maxTarget="7.3.*">
