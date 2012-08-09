@@ -435,7 +435,7 @@ sub scanTrack {
 						my $lastPart = 0;
 						for my $part (@parts) {
 							$log->debug("Handling custom mapping part $part");
-							if($part =~ /^\s*([A-Za-z0-9_\/]+)\(exp=(.*)\)\s*$/) {
+							if($part =~ /^\s*([A-Za-z0-9_\/ ]+)\(exp=(.*)\)\s*$/) {
 								if(exists $resultHash->{uc($1)}) {
 									my $partTag = uc($1);
 									my $partExp = $2;
@@ -497,9 +497,10 @@ sub scanTrack {
 										}
 									}
 								}
-							}elsif($part =~ /^\s*([A-Za-z0-9_\/]+)\(text=(.*)\)\s*$/) {
+							}elsif($part =~ /^\s*([A-Za-z0-9_\/ ]+)\(text=(.*)\)\s*$/) {
 								if(exists $resultHash->{uc($1)}) {
 									my $currentValue = $2;
+									$log->debug("Handling custom mapping text part ".uc($1).", $currentValue");
 									if($mappingType eq "oneof" || $mappingType eq "as") {
 										push @values,$currentValue;
 										last;
@@ -511,10 +512,11 @@ sub scanTrack {
 										}
 									}
 								}
-							}elsif($part =~ /^\s*([A-Za-z0-9_\/]+)\s*$/) {
+							}elsif($part =~ /^\s*([A-Za-z0-9_\/ ]+)\s*$/) {
 								if(exists $resultHash->{uc($1)}) {
 									my $partTag = uc($1);
 									my $partTagValues = $resultHash->{$partTag};
+									$log->debug("Handling custom mapping tag part $partTag");
 									if(ref($partTagValues) eq 'ARRAY') {
 										my $orgValue = undef;
 										if(scalar(@values)==1) {
@@ -566,6 +568,11 @@ sub scanTrack {
 						}
 						#$log->debug("Got mapping tags: ".Dumper(\@values));
 						if(scalar(@values)>0) {
+							if(scalar(@values)==1) {
+								$resultHash->{$tag} = $values[0];
+							}else {
+								$resultHash->{$tag} = \@values;
+							}
 							my $sortTag = $customSortTagsHash{$tag};
 							my $index = 0;
 							for my $value (@values) {
