@@ -5,18 +5,16 @@
 		<title lang="EN">Erland's plugins and applets (ALPHA testing versions)</title>
 	</details>
 	<plugins>
-                <plugin name="CustomScan" version="3.0pre3781" minTarget="7.6.0" maxTarget="*">
+                <plugin name="CustomScan" version="3.0pre3832" minTarget="7.6.0" maxTarget="*">
                         <title lang="EN">Custom Scan *Alpha*</title>
                         <desc lang="EN">*** ALPHA VERSION ***. Make it easier to develop modules that retreive additional information about artist, album, tracks from somehere. If used together with Custom Browse plugin, the included scanning modules for LastFM and custom tags makes it possible to browse music by LastFM tags or by a custom tag. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected so Random for LastFM similar artists playlist works with 7.6 and later version
-s
-			- Corrected issue with alpha bar with playlist templates that takes parameters
-			- Corrected SQL error in "Tags" and "Dynamic Tags" menus
+                        <changes lang="EN">- Updated so tag mapping tags can be used in a later tag mapping entry
+			- Corrected so tags with space in their name works with tag mapping entries
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3781.zip</url>
-                        <sha>4352c49a25721393b1e7d5597edacf5bd00b9c10</sha>
+                        <url>http://erland.isaksson.info/arkiv/alpha/CustomScan-3.0pre3832.zip</url>
+                        <sha>4083d442b3c0ca3b32e16666b743341eb06e1ba7</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
 	</plugins>
