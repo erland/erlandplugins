@@ -809,12 +809,12 @@ sub cliGetStatus {
   	$request->addResult('count',scalar(@resultModules));
 	my $moduleno = 0;
 	for my $key (@resultModules) {
-	  	$request->addResultLoop('@modules',$moduleno,'id',$key);
-	  	$request->addResultLoop('@modules',$moduleno,'name',$modules->{$key}->{'name'});
+	  	$request->addResultLoop('module_loop',$moduleno,'id',$key);
+	  	$request->addResultLoop('module_loop',$moduleno,'name',$modules->{$key}->{'name'});
 		if(defined(Plugins::CustomScan::Scanner::isScanning($key))) {
-		  	$request->addResultLoop('@modules',$moduleno,'status',Plugins::CustomScan::Scanner::isScanning($key));
+		  	$request->addResultLoop('module_loop',$moduleno,'status',Plugins::CustomScan::Scanner::isScanning($key));
 		}else {
-		  	$request->addResultLoop('@modules',$moduleno,'status',0);
+		  	$request->addResultLoop('module_loop',$moduleno,'status',0);
 		}
 		$moduleno++;
 	}
