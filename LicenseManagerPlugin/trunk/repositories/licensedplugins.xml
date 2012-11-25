@@ -51,8 +51,8 @@
 			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=DatabaseQuery</licenseLink>
                 </plugin>
 		<plugin name="DynamicPlayList">
-                        <title lang="EN">Dynamic Playlist</title>
-                        <desc lang="EN">Requires a license, no functionality in Dynamic Playlist is available for unlicensed users. Note that Dynamic Playlist is included for free if you purchase a license to SQL Playlist plugin.
+                        <title lang="EN">Dynamic Playlist (Incl. SQL Playlist)</title>
+                        <desc lang="EN">Requires a license, no functionality in Dynamic Playlist is available for unlicensed users. If you pay for Dynamic Playlist you currently get SQL Playlist plugin for free during the same license period. 
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
