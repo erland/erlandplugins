@@ -4778,6 +4778,303 @@
 						"posy":"10"
 					}
 				]
+			},
+			{
+				"models" :["touch"],
+				"name" : "Now Playing Alternative",
+				"background" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/background3f.png",
+				"backgrounddynamic" : "false",
+				"contributors" : "ciarpame",
+				"items" :[
+					{
+					   "align" : "bottom-right",
+					   "visibilitygroup" : "",
+					   "itemtype" : "covericon",
+					   "posy" : "72",
+					   "size" : "200",
+					   "posx" : "280"
+					},
+					{
+					   "itemtype" : "tracktext",
+					   "color" : "white",
+					   "fontsize" : "30",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "TITLE",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "10",
+					   "fontfile" : "FreeSansBold.ttf"
+					},
+					{
+					   "width" : "245",
+					   "itemtype" : "tracktext",
+					   "color" : "white",
+					   "fontsize" : "26",
+					   "text" : "ARTIST",
+					   "animate" : "false",
+					   "align" : "left",
+					   "posy" : "73"
+					},
+					{
+					   "width" : "245",
+					   "itemtype" : "tracktext",
+					   "color" : "lightgray",
+					   "fontsize" : "22",
+					   "text" : "ALBUM",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "107"
+					},
+					{
+					   "width" : "100",
+					   "itemtype" : "tracktext",
+					   "color" : "white",
+					   "fontsize" : "20",
+					   "text" : "X_Y",
+					   "animate" : "true",
+					   "align" : "right",
+					   "posy" : "170",
+					   "posx" : "146"
+					},
+					{
+					   "url.stop" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/stop-30.png",
+					   "itemtype" : "playstatusicon",
+					   "url.play" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/play-30.png",
+					   "posy" : "168",
+					   "url.pause" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/pause-30.png",
+					   "posx" : "10"
+					},
+					{
+					   "width" : "105",
+					   "itemtype" : "elapsedimage",
+					   "url.playingslidingx" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/progress.png",
+					   "url.stoppedslidingx" : "http://erlandplugins.googlecode.com/svn/CustomClock/trunk/images/NowPlayingAlternative/progress.png",
+					   "posy" : "233",
+					   "dynamic" : "false",
+					   "posx" : "69"
+					},
+					{
+					   "width" : "50",
+					   "itemtype" : "trackplayingtext",
+					   "color" : "white",
+					   "fontsize" : "20",
+					   "text" : "REMAINING",
+					   "animate" : "true",
+					   "align" : "right",
+					   "posy" : "230",
+					   "posx" : "195"
+					},
+					{
+					   "itemtype" : "trackplayingtext",
+					   "color" : "white",
+					   "fontsize" : "20",
+					   "text" : "ELAPSED",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "230",
+					   "posx" : "1"
+					},
+					{
+					   "width" : "50",
+					   "itemtype" : "trackstoppedtext",
+					   "color" : "white",
+					   "fontsize" : "20",
+					   "text" : "REMAINING",
+					   "animate" : "true",
+					   "align" : "right",
+					   "posy" : "230",
+					   "posx" : "195"
+					},
+					{
+					   "itemtype" : "trackstoppedtext",
+					   "color" : "white",
+					   "fontsize" : "20",
+					   "text" : "ELAPSED",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "230",
+					   "posx" : "1"
+					},
+					{
+					   "width" : "135",
+					   "itemtype" : "spectrummeter",
+					   "barcolor" : "gray",
+					   "order" : "",
+					   "capcolor" : "white",
+					   "channels" : "left+right",
+					   "posy" : "160",
+					   "height" : "45",
+					   "posx" : "66"
+					}
+				]
+			},
+			{
+				"models" :["radio"],
+				"name" : "SDT Weather Fahrenheit - Static",
+				"backgroundtype" : "black",
+				"contributors" : "tcutting, ajkidle",
+				"items" :
+				[
+					{
+					   "align" : "center",
+					   "itemtype" : "timetext",
+					   "posy" : "5",
+					   "color" : "lightgray",
+					   "fontsize" : "22",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "%B %e - %A",
+					   "animate" : "true",
+					   "fontfile" : "FreeSansBold.ttf"
+					},
+					{
+					   "itemtype" : "timetext",
+					   "color" : "lightgray",
+					   "fontsize" : "95",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "%l:%M",
+					   "animate" : "true",
+					   "align" : "center",
+					   "posy" : "20",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "-15"
+					},
+					{
+					   "itemtype" : "timetext",
+					   "color" : "lightgray",
+					   "fontsize" : "25",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "%p",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "85",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "255"
+					},
+					{
+					   "url.set" : "http://home.roadrunner.com/~tcutting/images/AlarmIcon.png",
+					   "url.active" : "http://home.roadrunner.com/~tcutting/images/AlarmIcon_Active.png",
+					   "free" : "1",
+					   "itemtype" : "alarmicon",
+					   "posy" : "220",
+					   "url.snooze" : "http://home.roadrunner.com/~tcutting/images/AlarmIconSnooze.png",
+					   "posx" : "130"
+					},
+					{
+					   "align" : "left",
+					   "itemtype" : "alarmtimetext",
+					   "posy" : "221",
+					   "color" : "lightgray",
+					   "fontsize" : "15",
+					   "free" : "1",
+					   "text" : "%l:%M %p",
+					   "animate" : "true",
+					   "posx" : "140"
+					},
+					{
+					   "url.2" : "http://home.roadrunner.com/~tcutting/images/icon_wireless_2.png",
+					   "itemtype" : "wirelessicon",
+					   "posy" : "219",
+					   "url.1" : "http://home.roadrunner.com/~tcutting/images/icon_wireless_1.png",
+					   "free" : "1",
+					   "url.3" : "http://home.roadrunner.com/~tcutting/images/icon_wireless_3.png",
+					   "url" : "http://home.roadrunner.com/~tcutting/images/icon_wireless_4.png",
+					   "posx" : "294"
+					},
+					{
+					   "url.stop" : "http://home.roadrunner.com/~tcutting/images/icon_mode_stop.png",
+					   "free" : "1",
+					   "itemtype" : "playstatusicon",
+					   "url.play" : "http://home.roadrunner.com/~tcutting/images/icon_mode_play.png",
+					   "posy" : "219",
+					   "url.pause" : "http://home.roadrunner.com/~tcutting/images/icon_mode_pause.png",
+					   "posx" : "10"
+					},
+					{
+					   "url.2" : "http://home.roadrunner.com/~tcutting/images/icon_battery_2.png",
+					   "itemtype" : "batteryicon",
+					   "url.3" : "http://home.roadrunner.com/~tcutting/images/icon_battery_3.png",
+					   "url" : "http://home.roadrunner.com/~tcutting/images/icon_wireless_0.png",
+					   "url.NONE" : "",
+					   "framewidth" : "24",
+					   "url.CHARGING" : "http://home.roadrunner.com/~tcutting/images/icon_battery_charging.png",
+					   "posy" : "223",
+					   "url.1" : "http://home.roadrunner.com/~tcutting/images/icon_battery_1.png",
+					   "visibilityorder" : "",
+					   "url.4" : "http://home.roadrunner.com/~tcutting/images/icon_battery_4.png",
+					   "framerate" : "1",
+					   "url.0" : "http://home.roadrunner.com/~tcutting/images/icon_battery_0.png",
+					   "url.AC" : "http://home.roadrunner.com/~tcutting/images/icon_battery_AC.png",
+					   "posx" : "260"
+					},
+					{
+					   "itemtype" : "sdttext",
+					   "sdtformat" : "%t",
+					   "color" : "lightgray",
+					   "fontsize" : "45",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "animate" : "true",
+					   "align" : "center",
+					   "period" : "-1",
+					   "posy" : "158",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "-20"
+					},
+					{
+					   "itemtype" : "sdttext",
+					   "sdtformat" : "%y: %v",
+					   "color" : "lightgray",
+					   "fontsize" : "20",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "animate" : "true",
+					   "align" : "center",
+					   "period" : "0",
+					   "posy" : "135",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : ""
+					},
+					{
+					   "width" : "45",
+					   "period" : "0",
+					   "itemtype" : "sdticon",
+					   "posy" : "163",
+					   "dynamic" : "false",
+					   "height" : "45",
+					   "posx" : "30"
+					},
+					{
+					   "itemtype" : "sdttext",
+					   "sdtformat" : "%z",
+					   "color" : "lightgray",
+					   "fontsize" : "18",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "animate" : "true",
+					   "align" : "center",
+					   "period" : "0",
+					   "posy" : "165",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "80"
+					},
+					{
+					   "itemtype" : "sdttext",
+					   "sdtformat" : "Prec %x",
+					   "color" : "lightgray",
+					   "fontsize" : "18",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "animate" : "true",
+					   "align" : "center",
+					   "period" : "0",
+					   "posy" : "187",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "80"
+					},
+					{
+					   "itemtype" : "sleepicon",
+					   "url.OFF" : "",
+					   "posy" : "220",
+					   "url.ON" : "http://home.roadrunner.com/~tcutting/images/icon_mode_sleep_on.png",
+					   "posx" : "225"
+					}
+				]
 			}
 		]
 	}
