@@ -5075,6 +5075,71 @@
 					   "posx" : "225"
 					}
 				]
+			},
+			{
+				"models" :["touch"],
+				"name" : "Simple Cover and Clock",
+				"backgrounddynamic" : "false",
+				"contributors" : "bonze",
+				"items" : [
+					{
+					   "order" : "1",
+					   "itemtype" : "covericon",
+					   "posy" : "75",
+					   "size" : "190",
+					   "posx" : "5"
+					},
+					{
+					   "itemtype" : "timetext",
+					   "color" : "yellow",
+					   "fontsize" : "85",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "%H:%M",
+					   "animate" : "true",
+					   "align" : "center",
+					   "posy" : "85",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "100"
+					},
+					{
+					   "itemtype" : "timetext",
+					   "color" : "yellow",
+					   "fontsize" : "22",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "%a %d %b",
+					   "animate" : "true",
+					   "align" : "center",
+					   "posy" : "175",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "100"
+					},
+					{
+					   "width" : "480",
+					   "itemtype" : "tracktext",
+					   "color" : "lightgray",
+					   "fontsize" : "30",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "TITLE",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "7",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "1"
+					},
+					{
+					   "width" : "480",
+					   "itemtype" : "tracktext",
+					   "color" : "lightgray",
+					   "fontsize" : "30",
+					   "fonturl" : "FreeSansBold.ttf",
+					   "text" : "ARTIST  ALBUM",
+					   "animate" : "true",
+					   "align" : "left",
+					   "posy" : "40",
+					   "fontfile" : "FreeSansBold.ttf",
+					   "posx" : "1"
+					}
+				]
 			}
 		]
 	}
