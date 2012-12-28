@@ -3456,7 +3456,7 @@ sub cliJiveHandler {
 						},
 					};
 					$request->addResultLoop('item_loop',$cnt,'actions',$actions);
-					$request->addResultLoop('item_loop',$cnt,'style','itemNoAction');
+					$request->addResultLoop('item_loop',$cnt,'style','itemplay');
 				}
 				$request->addResultLoop('item_loop',$cnt,'params',\%itemParams);
 				$request->addResultLoop('item_loop',$cnt,'text',$name);
@@ -3595,7 +3595,7 @@ sub cliJivePlaylistParametersHandler {
 				$request->addResultLoop('item_loop',$offsetCount,'textkey',$item->{'sortlink'});
 			}
 			if(!exists $playlist->{'parameters'}->{($nextParameterId+1)}) {
-				$request->addResultLoop('item_loop',$offsetCount,'style','itemNoAction');
+				$request->addResultLoop('item_loop',$offsetCount,'style','itemplay');
 			}
 			$offsetCount++;
 		}
