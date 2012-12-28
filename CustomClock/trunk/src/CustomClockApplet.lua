@@ -1388,7 +1388,7 @@ function defineSettingStyleSink(self,title,mode,data)
 						log:debug("Supported on all models")
 					end 
 			
-					if isCompliant then
+					if isCompliant and entry.name then
 						local name = entry.name.."\n"
 						if _getString(entry.contributors,nil) then
 							name = name.."("..entry.contributors..")"
@@ -1442,8 +1442,10 @@ function defineSettingStyleSink(self,title,mode,data)
 								style == entry.name
 							),
 						})
-					else
+					elseif entry.name then
 						log:debug("Skipping "..entry.name..", isn't supported on "..self.model)
+					else
+						log:warn("Skipping style without name, styles without names aren't permitted")
 					end
 				end
 			end
