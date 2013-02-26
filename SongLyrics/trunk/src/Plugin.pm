@@ -55,7 +55,7 @@ my $KEY = undef;
 
 my @lyricsHandlers = (
 #	\&Plugins::SongLyrics::Modules::LyricsFly::getLyrics, 
-	\&Plugins::SongLyrics::Modules::Musixmatch::getLyrics, 
+#	\&Plugins::SongLyrics::Modules::Musixmatch::getLyrics, 
 	\&Plugins::SongLyrics::Modules::ChartLyrics::getLyrics,
 );
 
@@ -86,7 +86,7 @@ sub initPlugin
                         'description' => string('PLUGIN_SONGLYRICS_MODULE_DESC'),
                         'developedBy' => 'Erland Isaksson',
 			'developedByLink' => 'http://erland.isaksson.info/donate',
-			'dataprovidername' => 'musixmatch.com or chartlyrics.com',
+			'dataprovidername' => 'chartlyrics.com',
                         'function' => \&getSongLyrics,
                         'type' => 'text',
                         'context' => 'track',
