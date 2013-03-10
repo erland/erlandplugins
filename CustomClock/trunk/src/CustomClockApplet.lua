@@ -1156,6 +1156,7 @@ function _updateTitleFormatInfo(self,player)
 					log:warn(err)
 				else
 					local index = chunk.data.playlist_cur_index
+					local licensed = appletManager:callService("isLicensedApplet","CustomClock")
 					if index and chunk.data.playlist_loop[index+1] and licensed then
 						self.titleformats["BAND"] = chunk.data.playlist_loop[index+1].band
 						self.titleformats["COMPOSER"] = chunk.data.playlist_loop[index+1].composer
