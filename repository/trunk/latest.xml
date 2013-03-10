@@ -39,15 +39,15 @@
                         <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.9.3849" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.9.3861" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected issue where styles without name caused style selection to not be displayed
+                        <changes lang="EN">- Corrected issue where some title format keywords like TRACKNUM did not work
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3849.zip</url>
-                        <sha>f07f80e6466a70e58d32b2b4e3ea8b3811103fc8</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3861.zip</url>
+                        <sha>554b89f57b060e16f3583c6846f8dda58a2d19d8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
