@@ -213,9 +213,10 @@ sub getTopRatedRecentTracksWeb {
 }
 
 sub getTopRatedRecentTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = shift;
-	return getTopRatedHistoryTracks($listLength,$limit,">",getRecentTime());
+	return getTopRatedHistoryTracks($client, $listLength,$limit,">",getRecentTime());
 }
 
 sub getTopRatedRecentAlbumsName {
@@ -299,9 +300,10 @@ sub getTopRatedRecentAlbumsWeb {
 }
 
 sub getTopRatedRecentAlbumTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = undef;
-	return getTopRatedHistoryAlbumTracks($listLength,$limit,">",getRecentTime());
+	return getTopRatedHistoryAlbumTracks($client, $listLength,$limit,">",getRecentTime());
 }
 
 
@@ -380,9 +382,10 @@ sub getTopRatedRecentArtistsWeb {
 }
 
 sub getTopRatedRecentArtistTracks {
+	my $client = shift;
 	my $listLength = shift;
 	my $limit = Plugins::TrackStat::Statistics::Base::getNumberOfTypeTracks();
-	return getTopRatedHistoryArtistTracks($listLength,$limit,">",getRecentTime());
+	return getTopRatedHistoryArtistTracks($client,$listLength,$limit,">",getRecentTime());
 }
 
 sub getTopRatedNotRecentTracksWeb {
