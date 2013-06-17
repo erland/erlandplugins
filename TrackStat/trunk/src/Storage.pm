@@ -751,7 +751,7 @@ sub savePlayCountAndLastPlayed
 	}
 
 	my $key = $url;
-	$key = $mbId if (defined($mbId));
+	$key = $mbId if (defined($mbId) && $prefs->get('musicbrainz_enabled'));
 
 	if ($trackHandle) {
 		if (defined($mbId) && $prefs->get('musicbrainz_enabled')) {
@@ -782,6 +782,7 @@ sub savePlayCountAndLastPlayed
 	}
 
 	my $dbh = getCurrentDBH();
+	$log->debug("Executing \"$sql\" with parameter: $key\n");
 	my $sth = $dbh->prepare( $sql );
 	eval {
 		$sth->bind_param(1, $key , SQL_VARCHAR);
