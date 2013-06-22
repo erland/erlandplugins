@@ -425,7 +425,7 @@ sub scanTrack {
 					# handle MONTH=combine DATE(exp=^(\d\d\d\d))|DATE(exp=^\d\d\d\d-(\d\d))
 					# handle DECADE=combine YEAR(exp=^\d\d\d)|YEAR(text=0)					
 					# handle ARTISTSORT=combine ARTIST(exp=^.*\s(.*)$)|ARTIST(text= )|ARTIST(exp=^(.*)\s) 
-					if($customTagMapping =~ /^\s*(.*)\s*=\s*(oneof|combine|as)\s+(.+)\s*$/) {
+					if($customTagMapping =~ /^\s*(.*?)\s*=\s*(oneof|combine|as)\s+(.+)\s*$/) {
 						$log->debug("Handling custom mapping: $customTagMapping");
 						my $mappingType = $2;
 						my @values = ();
