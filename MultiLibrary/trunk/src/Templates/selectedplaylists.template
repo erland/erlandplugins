@@ -13,12 +13,12 @@
 		<enabledbrowse>[% enabledbrowse %]</enabledbrowse>
 		<track>
 			<data>
-				select {library},tracks.id from tracks
+				select {library},tracks.id from tracks[% IF includedplaylists %],playlist_track[% END %]
 				where
 					[% IF includedplaylists %]
-					exists (select track from playlist_track,tracks t where
+					playlist_track.track=tracks.url and
+					playlist_track.playlist in (select id from tracks t where
 							playlist_track.playlist=t.id and
-							playlist_track.track=tracks.url and
 							t.title IN ([% includedplaylists %])) and
 					[% END %]
 					tracks.audio=1
