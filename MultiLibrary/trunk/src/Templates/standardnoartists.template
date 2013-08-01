@@ -13,8 +13,16 @@
 		<enabledbrowse>[% enabledbrowse %]</enabledbrowse>
 		<track>
 			<data>
-				select {library},tracks.id from tracks[% IF includedcomment %],comments[% END %]
+				select {library},tracks.id from tracks[% IF includedcomment %],comments[% END %][% IF onlyCompilations or onlyNormalAlbums %],albums[% END %]
 				where
+					[% IF onlyCompilations or onlyNormalAlbums %]
+					albums.id=tracks.album and
+					[% IF onlyCompilations %]
+					albums.compilation=1 and
+					[% ELSIF onlyNormalAlbums %]
+					albums.compilation=0 and
+					[% END %]
+					[% END %]
 					[% IF playlist %]
 					exists (select track from playlist_track,tracks t where
 							playlist_track.playlist=t.id and
