@@ -440,8 +440,12 @@ sub getArtistImages {
 		params => $params,
 		default => $artistName,
         });
-	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artistName)."&api_key=$API_KEY");
-	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getimages&artist=".escape($artistName)."&api_key=$API_KEY");
+	my $musicbrainz_id = "";
+	if($artist && $artist->musicbrainz_id) {
+		$musicbrainz_id="&mbid=".$artist->musicbrainz_id;
+	}
+	$log->info("Making call to: http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artistName)."&api_key=$API_KEY");
+	$http->get("http://ws.audioscrobbler.com/2.0/?method=artist.getinfo$musicbrainz_id&artist=".escape($artistName)."&api_key=$API_KEY");
 }
 
 sub getArtistInfoBiography {
@@ -731,20 +735,23 @@ sub getImagesResponse {
 	my $content = $http->content();
 	my @result = ();
 	if(defined($content)) {
-		my $xml = eval { XMLin($content, forcearray => ["image"], keyattr => ["name"]) };
-		my $images = $xml->{'images'}->{'image'};
+		my $xml = eval { XMLin($content, forcearray => ["image"], keyattr => []) };
+		my $images = $xml->{'artist'}->{'image'};
 		if($images) {
+			my $title = $xml->{'artist'}->{'name'};
+			if(!defined($title) || ref($title) eq 'HASH') {
+				$title = $params->{'default'};
+			}
+			my $item = undef;
 			for my $image (@$images) {
-				my $title = $image->{'title'};
-				if(!defined($title) || ref($title) eq 'HASH') {
-					$title = $params->{'default'};
-				}
-				my %item = (
+				$item = {
 					'type' => 'image',
 					'text' => $title,
-					'url' => $image->{'sizes'}->{'size'}->{'original'}->{'content'},
-				);
-				push @result,\%item;
+					'url' => $image->{'content'},
+				};
+			}
+			if(defined($item)) {
+				push @result,$item;
 			}
 		}
 	}
