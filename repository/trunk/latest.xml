@@ -406,18 +406,15 @@
                         <sha>553ee284e15db0f918da9b1895a5a7e7fb81c4ea</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
-				<plugin name="SongInfo" version="1.1.3422" minTarget="7.4.0" maxTarget="*">
+		<plugin name="SongInfo" version="1.1.3883" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Song Info</title>
                         <desc lang="EN">A plugin to make it possible to get various information about a song, can for example be used to get artist images from LastFM (Boom, Transporter, Classic, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected albums context menu in 7.6
-			- Added support for showing artist events from LastFM
-			- Corrected so it's possible to enable/disable specific information items
-			- Added som localization to settings pages
+                        <changes lang="EN">- Adjusted due to LastFM API change, only a single artist image is now supported
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3422.zip</url>
-                        <sha>d6c9e67c84d415f5f2fb601501b27e439b75755b</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3883.zip</url>
+                        <sha>2afec7be743af76d8ecb49184ba6b5c92895a015</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
                 <plugin name="SongLyrics" version="1.1.3856" minTarget="7.4.0" maxTarget="*">
