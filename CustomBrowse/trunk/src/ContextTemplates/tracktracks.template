@@ -29,6 +29,7 @@
 		</menudata>
 		<menu>
 			<itemtype>artist</itemtype>
+			<itemformat>artist</itemformat>
 			<contextid>artist</contextid>
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
