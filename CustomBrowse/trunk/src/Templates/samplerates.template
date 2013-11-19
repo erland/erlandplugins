@@ -53,6 +53,7 @@
 				<id>artist</id>
 				<menuname>Albums</menuname>
 				<itemtype>artist</itemtype>
+				<itemformat>artist</itemformat>
 				<playtype>sql</playtype>
 				<playdata>
 					select tracks.id,tracks.title from tracks,contributor_track[% IF library or activelibrary %],multilibrary_track[% END %]

@@ -13,6 +13,7 @@
 			<id>artist</id>
 			<menuname>Albums</menuname>
 			<itemtype>artist</itemtype>
+				<itemformat>artist</itemformat>
 		        <menutype>sql</menutype>
 	        	<menudata>
 				select contributors.id,contributors.name from contributors

@@ -15,6 +15,8 @@
 			<menu>
 				<id>variousartist</id>
 				<menuname>[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]</menuname>
+				<itemformat>artist</itemformat>
+				<itemtype>artist</itemtype>
 				<menutype>sql</menutype>
 				<menudata>
 					select contributors.id,contributors.name from contributors
@@ -105,6 +107,7 @@
 				<id>artist</id>
 				<menuname>Albums</menuname>
 				<itemtype>artist</itemtype>
+				<itemformat>artist</itemformat>
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
@@ -349,6 +352,8 @@
 				<menu>
 					<id>variousartist</id>
 					<menuname>[% IF variousartisttext %][% variousartisttext %][% ELSE %]Various Artists[% END %]</menuname>
+					<itemformat>artist</itemformat>
+					<itemtype>artist</itemtype>
 					<menutype>sql</menutype>
 					<menudata>
 						select contributors.id,contributors.name from contributors
@@ -446,6 +451,7 @@
 					<id>artist</id>
 					<menuname>Albums</menuname>
 					<itemtype>artist</itemtype>
+					<itemformat>artist</itemformat>
 				        <menutype>sql</menutype>
 					<menulinks>alpha</menulinks>
 			        	<menudata>

@@ -53,7 +53,7 @@
 		[%- END -%]
 
 	        <div class="artworkImage" style="width: [% item.size %];">
-	                [% IF item.coverThumb %]
+	                [% IF item.coverThumb OR item.image %]
 	                        <div style="width:[% item.size %]px;height:[% item.size %]px;">
 				<a href="[% webroot %]plugins/CustomBrowse/custombrowse_list.html?player=[% player | uri %]&[% item.url %]" target="browser">[% PROCESS thumbnailItemImg height="$item.size" %]</a>
 	                        </div>

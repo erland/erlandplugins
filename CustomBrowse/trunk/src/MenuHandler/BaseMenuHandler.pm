@@ -31,7 +31,7 @@ use Slim::Utils::Prefs;
 use Slim::Utils::Strings;
 use Plugins::CustomBrowse::MenuHandler::WrappedMix;
 
-__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler) );
+__PACKAGE__->mk_accessor( rw => qw(logHandler pluginId pluginVersion mixHandler propertyHandler itemParameterHandler items menuTitle menuMode menuHandlers overlayCallback displayTextCallback requestSource playHandlers showMixBeforeExecuting sqlHandler artistImages) );
 
 use Data::Dumper;
 
@@ -70,6 +70,9 @@ sub new {
 	$self->mixHandler(Plugins::CustomBrowse::MenuHandler::MixHandler->new(\%parameters));
 	if(UNIVERSAL::can("Slim::Utils::Unicode","hasEDD")) {
 		$newUnicodeHandling = 1;
+	}
+	if($::VERSION ge '7.8') {
+		$self->artistImages(grep(/MusicArtistInfo/, Slim::Utils::PluginManager->enabledPlugins(undef)));
 	}
 
 	return $self;
@@ -1085,6 +1088,10 @@ sub getPageItemsForContext {
 					if(!defined($result{'artwork'})) {
 						 $result{'artwork'} = 1;
 					}
+				}elsif($format eq 'artist' && $it->{'itemtype'} eq 'artist' && defined($self->artistImages)) {
+					$it->{'image'} = 'imageproxy/mai/artist/'.$it->{'itemid'}.'/image.png';
+					$it->{'size'} = $serverPrefs->get('thumbSize');
+					$result{'artwork'} = 1;
 				}elsif($format eq 'titleformat' && defined($it->{'itemformatdata'})) {
 					if(!defined($result{'artwork'}) || $result{'artwork'}) {
 						$result{'artwork'} = 0;

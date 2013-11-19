@@ -81,6 +81,8 @@ my $contextMenuHandler = undef;
 
 my $parameterHandler = undef;
 
+my $artistImages = undef;
+
 my $DOWNLOAD_VERSION = 2;
 my $prefs = preferences('plugin.custombrowse');
 my $trackstatPrefs = preferences('plugin.trackstat');
@@ -1245,6 +1247,9 @@ sub registerTitleFormats {
 sub postinitPlugin {
 	my $class = shift;
 	eval {
+		if($::VERSION ge '7.8') {
+			$artistImages = grep(/MusicArtistInfo/, Slim::Utils::PluginManager->enabledPlugins(undef));
+		}
 		getConfigManager();
 		getMenuHandler();
 		readBrowseConfiguration();
@@ -3968,14 +3973,27 @@ sub cliJiveHandlerImpl {
 			}
 		}
 		if((defined($itemtype) && $itemtype eq 'album')) {
-			if($menuResult->{'artwork'}) {
+			if($item->{'image'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon' => $item->{'image'}});
+				$request->addResultLoop('item_loop',$cnt,'icon',$item->{'image'});
+			}elsif($menuResult->{'artwork'}) {
 				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'menuStyle' => 'album'});
 			}elsif($item->{'coverThumb'}) {
 				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
 			}else {
 				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album'});
 			}
-
+		}elsif((defined($itemtype) && $itemtype eq 'artist')) {
+			if($menuResult->{'artwork'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'menuStyle' => 'album'});
+			}elsif($item->{'coverThumb'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon-id' => $item->{'coverThumb'}});
+			}elsif($item->{'image'}) {
+				$request->addResultLoop('item_loop',$cnt,'window',{'titleStyle' => 'album', 'icon' => $item->{'image'}});
+				$request->addResultLoop('item_loop',$cnt,'icon', $item->{'image'});
+			}else {
+				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album'});
+			}
 		}elsif($menuResult->{'artwork'} && defined($item->{'coverThumb'})) {
 			if(defined($item->{'itemsubtype'}) && $item->{'itemsubtype'} eq 'album') {
 				$request->addResultLoop('item_loop',$cnt,'window',{'menuStyle' => 'album','text'=>$firstRowName,'icon-id'=>''});

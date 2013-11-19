@@ -12,6 +12,7 @@
 			<id>artist</id>
 			<menuname>Albums</menuname>
 			<itemtype>artist</itemtype>
+			<itemformat>artist</itemformat>
 		        <menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 	        	<menudata>
