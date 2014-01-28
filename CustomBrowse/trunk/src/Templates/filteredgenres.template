@@ -15,8 +15,8 @@
 			<menutype>sql</menutype>
 			<menulinks>alpha</menulinks>
 			<menudata>
-				[%- IF excludedgenres or includedcomment or excludedcomment or lossless or neverplayed or library or activelibrary %]
-				select genres.id,genres.name,substr(genres.namesort,1,1) from genres,tracks,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %] 
+				[%- IF excludedgenres or includedcomment or excludedcomment or lossless or neverplayed or minrating or nullrating or exactrating or library or activelibrary %]
+				select genres.id,genres.name,substr(genres.namesort,1,1) from genres,tracks,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %] 
 				where 
 					tracks.id=genre_track.track and
 					genre_track.genre=genres.id and
@@ -24,9 +24,17 @@
 					tracks.id=multilibrary_track.track and
 					multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 					[%- END %]
+					[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
+					tracks.url=track_statistics.url and
+					[%- END %]
 					[%- IF neverplayed %]
-					tracks.url=track_statistics.url and 
-					ifnull(track_statistics.playcount,0)=0 and 
+					ifnull(track_statistics.playcount,0)=0 and
+					[%- END %]
+					[%- IF minrating OR nullrating %]
+					([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+					[%- END %]
+					[%- IF exactrating %]
+					track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 					[%- END %]
 					[%- IF lossless %]
 					tracks.lossless=1 and
@@ -79,15 +87,23 @@
 						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
 						<menudata>
-							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
@@ -143,15 +159,23 @@
 						<itemformat>albumconcat</itemformat>
 						<menulinks>alpha</menulinks>
 						<menudata>
-							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from tracks,albums,genre_track,contributor_track,contributors[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select albums.id,if(albums.compilation,' ',concat('(', group_concat(distinct contributors.name) ,')')),substr(contributors.namesort,1,1) from tracks,albums,genre_track,contributor_track,contributors[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.id=contributor_track.track and
@@ -200,15 +224,23 @@
 					</option>
 					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
-							[%- IF neverplayed %]
+							[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 							tracks.url=track_statistics.url and
+							[%- END %]
+							[%- IF neverplayed %]
 							ifnull(track_statistics.playcount,0)=0 and
+							[%- END %]
+							[%- IF minrating OR nullrating %]
+							([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+							[%- END %]
+							[%- IF exactrating %]
+							track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
@@ -260,15 +292,23 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select tracks.id,tracks.title from tracks,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
@@ -346,15 +386,23 @@
 						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
 						<menudata>
-							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
@@ -406,15 +454,23 @@
 						<keyword name="orderby" value="albums.titlesort asc,albums.disc asc"/>
 					</option>
 					<menudata>
-						select albums.id,albums.title from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+						select albums.id,albums.title from albums,genre_track,tracks,genres[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
-							[%- IF neverplayed %]
+							[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 							tracks.url=track_statistics.url and
+							[%- END %]
+							[%- IF neverplayed %]
 							ifnull(track_statistics.playcount,0)=0 and
+							[%- END %]
+							[%- IF minrating OR nullrating %]
+							([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+							[%- END %]
+							[%- IF exactrating %]
+							track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
@@ -467,15 +523,23 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select tracks.id,tracks.title from tracks,albums,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
@@ -535,15 +599,23 @@
 			        <menutype>sql</menutype>
 				<menulinks>alpha</menulinks>
 		        	<menudata>
-					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF variousartists %],albums[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+					select contributors.id,contributors.name,substr(contributors.namesort,1,1) from tracks,contributor_track,contributors,genre_track[% IF variousartists %],albums[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 					where
 						[%- IF library or activelibrary %]
 						tracks.id=multilibrary_track.track and
 						multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 						[%- END %]
-						[%- IF neverplayed %]
+						[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 						tracks.url=track_statistics.url and
+						[%- END %]
+						[%- IF neverplayed %]
 						ifnull(track_statistics.playcount,0)=0 and
+						[%- END %]
+						[%- IF minrating OR nullrating %]
+						([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+						[%- END %]
+						[%- IF exactrating %]
+						track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 						[%- END %]
 						[%- IF lossless %]
 						tracks.lossless=1 and
@@ -609,15 +681,23 @@
 						<itemformat>albumconcat</itemformat>
 						<menulinks>number</menulinks>
 						<menudata>
-							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select albums.id,if(albums.year=0,' ',concat('(',albums.year,')')) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
@@ -672,15 +752,23 @@
 	                                </option>
 					<jivepattern>^(.*)\s\((.*)\)$</jivepattern>
 					<menudata>
-						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+						select albums.id,albums.title,substr(albums.titlesort,1,1) from tracks,albums,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 						where
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
-							[%- IF neverplayed %]
+							[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 							tracks.url=track_statistics.url and
+							[%- END %]
+							[%- IF neverplayed %]
 							ifnull(track_statistics.playcount,0)=0 and
+							[%- END %]
+							[%- IF minrating OR nullrating %]
+							([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+							[%- END %]
+							[%- IF exactrating %]
+							track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 							[%- END %]
 							[%- IF lossless %]
 							tracks.lossless=1 and
@@ -735,15 +823,23 @@
 						[%- END %]
 						<menutype>sql</menutype>
 						<menudata>
-							select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed %],track_statistics[% END %]
+							select tracks.id,tracks.title from tracks,contributor_track,genre_track[% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 							where
 								[%- IF library or activelibrary %]
 								tracks.id=multilibrary_track.track and
 								multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 								[%- END %]
-								[%- IF neverplayed %]
+								[%- IF neverplayed OR minrating OR nullrating OR exactrating %]
 								tracks.url=track_statistics.url and
+								[%- END %]
+								[%- IF neverplayed %]
 								ifnull(track_statistics.playcount,0)=0 and
+								[%- END %]
+								[%- IF minrating OR nullrating %]
+								([%- IF nullrating -%]ifnull(track_statistics.rating,0)=0 or [%- END -%]track_statistics.rating&gt;=[% minrating %]) and
+								[%- END %]
+								[%- IF exactrating %]
+								track_statistics.rating&gt;=[% exactrating - 10 %] and track_statistics.rating&lt;=[% exactrating + 9 %] and
 								[%- END %]
 								[%- IF lossless %]
 								tracks.lossless=1 and
