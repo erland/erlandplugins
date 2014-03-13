@@ -5036,8 +5036,15 @@ sub ratingStringFormat {
 sub getRatingDynamicCustomItem
 {
 	my $track = shift;
+	my $url;
 	if(ref($track) eq 'HASH') {
-		return undef;
+		if(!defined($track->{'hasmetadata'}) || $track->{'hasmetadata'} ne 'track' || !defined($track->{'id'})) {
+			return undef;
+		}
+		$track = Plugins::TrackStat::Storage::objectForId('track',$track->{'id'});
+		if(!defined($track)) {
+			return undef;
+		}
 	}
 	my $string = '';
 	if(defined($ratingDynamicLastUrl) && $track->url eq $ratingDynamicLastUrl) {
@@ -5068,7 +5075,13 @@ sub getRatingStaticCustomItem
 {
 	my $track = shift;
 	if(ref($track) eq 'HASH') {
-		return undef;
+		if(!defined($track->{'hasmetadata'}) || $track->{'hasmetadata'} ne 'track' || !defined($track->{'id'})) {
+			return undef;
+		}
+		$track = Plugins::TrackStat::Storage::objectForId('track',$track->{'id'});
+		if(!defined($track)) {
+			return undef;
+		}
 	}
 	my $string = $NO_RATING_CHARACTER x 5;
 	if(defined($ratingStaticLastUrl) && $track->url eq $ratingStaticLastUrl) {
@@ -5104,7 +5117,13 @@ sub getRatingNumberCustomItem
 {
 	my $track = shift;
 	if(ref($track) eq 'HASH') {
-		return undef;
+		if(!defined($track->{'hasmetadata'}) || $track->{'hasmetadata'} ne 'track' || !defined($track->{'id'})) {
+			return undef;
+		}
+		$track = Plugins::TrackStat::Storage::objectForId('track',$track->{'id'});
+		if(!defined($track)) {
+			return undef;
+		}
 	}
 	my $string = '';
 	if(defined($ratingNumberLastUrl) && $track->url eq $ratingNumberLastUrl) {
