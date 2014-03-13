@@ -155,15 +155,15 @@
 			<sha>436fcda65d80ce98c3234978b07cc9c24b429aaa</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-                <plugin name="TrackStat" version="3.1.3869" minTarget="7.6.0" maxTarget="7.*">
+                <plugin name="TrackStat" version="3.1.3906" minTarget="7.6.0" maxTarget="7.*">
                         <title lang="EN">TrackStat</title>
                         <desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Corrected issue where last played time was not set if musicbrainz logic was disabled
+                        <changes lang="EN">- Added support for ratings in title formats in browse menus
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.1.3869.zip</url>
-                        <sha>69843de6f635536e20a48a55666a084a0a690f38</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.1.3906.zip</url>
+                        <sha>d12a2adfe6bba971e010ddb590ce26cc3df55160</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
                 </plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
