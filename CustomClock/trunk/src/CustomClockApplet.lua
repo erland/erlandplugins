@@ -525,6 +525,7 @@ function openScreensaver(self,mode, transition)
 				end
 				local player = appletManager:callService("getCurrentPlayer")
 				if player then
+					self:_checkAndUpdateTitleFormatInfo(player)
 					self:_updateCustomTitleFormatInfo(player)
 				end
 			end,
@@ -920,6 +921,13 @@ function _updateVisibilityGroups(self)
 					currentorder = item.order
 					if not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
+						if string.find(item.itemtype,"text$") then
+							if _getString(item.animate,"true") == "true" then
+								self.items[no]:getWidget("itemno"):animate(true)
+							else 
+								self.items[no]:getWidget("itemno"):animate(false)
+							end
+						end
 					end
 				elseif self.items[item.item]:getWindow() then
 					self.window:removeWidget(self.items[item.item])
@@ -1089,7 +1097,7 @@ function _checkAndUpdateTitleFormatInfo(self,player)
 	if self.configItems then
 		for _,item in pairs(self.configItems) do
 			if string.find(item.itemtype,"^track") and string.find(item.itemtype,"text$") then
-				if string.find(item.text,"BAND") or string.find(item.text,"COMPOSER") or string.find(item.text,"CONDUCTOR") or string.find(item.text,"ALBUMARTIST") or string.find(item.text,"TRACKARTIST") or string.find(item.text,"TRACKNUM") or string.find(item.text,"DISC") or string.find(item.text,"DISCCOUNT") then
+				if string.find(item.text,"BAND") or string.find(item.text,"COMPOSER") or string.find(item.text,"CONDUCTOR") or string.find(item.text,"ALBUMARTIST") or string.find(item.text,"TRACKARTIST") or string.find(item.text,"TRACKNUM") or string.find(item.text,"DISC") or string.find(item.text,"DISCCOUNT") or string.find(item.text,"RATING")then
 					requestData = true
 					break
 				end
@@ -1726,7 +1734,12 @@ function _updateStaticNowPlaying(self,widget,id,format,mode,free)
 		local playerStatus = player:getPlayerStatus()
 		if not mode or (mode == 'play' and playerStatus.mode == 'play') or (mode != 'play' and playerStatus.mode != 'play') then
 			if playerStatus.item_loop then
-				local text = self:_replaceTitleKeywords(playerStatus.item_loop[1], format ,playerStatus.item_loop[1].track)
+				if playerStatus.item_loop[2] and playerStatus.item_loop[2].track then
+					text = self:_replaceNextTitleKeywords(playerStatus.item_loop[2], format)
+				else
+					text = self:_replaceNextTitleKeywords(nil, format)
+				end
+				local text = self:_replaceTitleKeywords(playerStatus.item_loop[1], text ,playerStatus.item_loop[1].track)
 				text = self:_replaceCustomTitleFormats(text)
 				text = self:_replaceTitleFormatKeyword(text,"BAND")
 				text = self:_replaceTitleFormatKeyword(text,"CONDUCTOR")
@@ -1736,6 +1749,13 @@ function _updateStaticNowPlaying(self,widget,id,format,mode,free)
 				text = self:_replaceTitleFormatKeyword(text,"TRACKNUM")
 				text = self:_replaceTitleFormatKeyword(text,"DISCCOUNT")
 				text = self:_replaceTitleFormatKeyword(text,"DISC")
+
+				if self.titleformats["RATING"] then
+					local rating = math.floor((self.titleformats["RATING"] + 10)/ 20)
+					text = string.gsub(text,"RATING",rating)
+				else
+					text = string.gsub(text,"RATING","")
+				end
 
 				local elapsed, duration = player:getTrackElapsed()
 				
@@ -1810,6 +1830,19 @@ function _replaceTitleKeywords(self,_track, text, replaceNonTracks)
 		text = _track.text
 	else
 		text = ""
+	end
+	return text
+end
+
+function _replaceNextTitleKeywords(self,_track, text)
+	if _track and _track.track then
+		text = string.gsub(text,"NEXTARTIST",_track.artist)
+		text = string.gsub(text,"NEXTALBUM",_track.album)
+		text = string.gsub(text,"NEXTTITLE",_track.track)
+	else
+		text = string.gsub(text,"NEXTARTIST","")
+		text = string.gsub(text,"NEXTALBUM","")
+		text = string.gsub(text,"NEXTTITLE","")
 	end
 	return text
 end
