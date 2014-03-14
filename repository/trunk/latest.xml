@@ -39,15 +39,16 @@
                         <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.9.3861" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.10.3908" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected issue where some title format keywords like TRACKNUM did not work
+                        <changes lang="EN">- Added support for NEXTALBUM, NEXTTITLE, NEXTARTIST in tracktext items
+			- Corrected so RATING keyword can be used in tracktext item to show rating number
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.9.3861.zip</url>
-                        <sha>554b89f57b060e16f3583c6846f8dda58a2d19d8</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3908.zip</url>
+                        <sha>9f4a12c4d5b81c1054d96a37f19f261a1e7b443d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
