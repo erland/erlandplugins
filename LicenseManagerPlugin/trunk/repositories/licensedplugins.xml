@@ -7,7 +7,7 @@
 	<plugins>
 		<plugin name="CustomBrowse">
                         <title lang="EN">Custom Browse</title>
-			<desc lang="EN">Requires a license, no functionality in Custom Browse is available for unlicensed users.
+			<desc lang="EN">Requires a license, no functionality in Custom Browse is available for unlicensed users. If you plan to use this plugin and are running LMS on a NAS or have a large library, please verify that you think the performance is good enough by applying for a free 30-day evaluation license before you purchase a real license.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
@@ -25,7 +25,7 @@
                 </plugin>
 		<plugin name="CustomScan">
                         <title lang="EN">Custom Scan</title>
-			<desc lang="EN">The LastFM scanning module is available free of charge, the other scanning modules provided by Custom Scan requires a license and isn't available to unlicensed users.
+			<desc lang="EN">The LastFM scanning module is available free of charge, the other scanning modules provided by Custom Scan requires a license and isn't available to unlicensed users. If you plan to use this plugin and are running LMS on a NAS or have a large library, please verify that you think the performance is good enough by applying for a free 30-day evaluation license before you purchase a real license.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
@@ -61,7 +61,7 @@
                 </plugin>
 		<plugin name="MultiLibrary">
                         <title lang="EN">Multi Library</title>
-                        <desc lang="EN">Requires a license, no functionality in MultiLibrary is available for unlicensed users.
+                        <desc lang="EN">Requires a license, no functionality in MultiLibrary is available for unlicensed users. If you plan to use this plugin and are running LMS on a NAS or have a large library, please verify that you think the performance is good enough by applying for a free 30-day evaluation license before you purchase a real license.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
@@ -70,7 +70,7 @@
                 </plugin>
 		<plugin name="SQLPlayList">
                         <title lang="EN">SQL Playlist (Incl. Dynamic Playlist)</title>
-                        <desc lang="EN">Requires a license, no functionality is available to unlicensed users. If you pay for SQL Playlist you currently get Dynamic Playlist plugin for free during the same license period.
+                        <desc lang="EN">Requires a license, no functionality is available to unlicensed users. If you pay for SQL Playlist you currently get Dynamic Playlist plugin for free during the same license period. If you plan to use this plugin and are running LMS on a NAS or have a large library, please verify that you think the performance is good enough by applying for a free 30-day evaluation license before you purchase a real license.
 			</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
@@ -88,7 +88,7 @@
                 </plugin>
 		<plugin name="TrackStat">
 			<title lang="EN">TrackStat</title>
-			<desc lang="EN">Changing and viewing rating for a single song is currently free of charge but this might change in the future. All possibilities to browse TrackStat data, import/export to iTunes/MusicIP, dynamic playlists and statistic related Custom Skip filters and Custom Browse menus will require a license already now.
+			<desc lang="EN">Changing and viewing rating for a single song is currently free of charge but this might change in the future. All possibilities to browse TrackStat data, import/export to iTunes/MusicIP, dynamic playlists and statistic related Custom Skip filters and Custom Browse menus will require a license already now. If you plan to use this plugin and are running LMS on a NAS or have a large library, please verify that you think the performance is good enough by applying for a free 30-day evaluation license before you purchase a real license.
 			</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
