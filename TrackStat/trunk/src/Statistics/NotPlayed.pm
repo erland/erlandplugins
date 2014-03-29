@@ -135,7 +135,7 @@ sub getNotPlayedTracksWeb {
 	    $params->{'statisticparameters'} = "&artist=$artist";
 	}elsif(defined($params->{'album'})) {
 		my $album = $params->{'album'};
-	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.album=$album and tracks.audio=1 and (track_statistics.playCount=0 or track_statistics.playCount is null) order by track_statistics.playCount asc,$orderBy;";
+	    $sql = "select tracks.id,track_statistics.playCount,track_statistics.added,track_statistics.lastPlayed,track_statistics.rating from tracks left join track_statistics on tracks.urlmd5 = track_statistics.urlmd5 where tracks.album=$album and tracks.audio=1 and (track_statistics.playCount=0 or track_statistics.playCount is null) order by tracks.disc asc,tracks.tracknum asc";
 	    $params->{'statisticparameters'} = "&album=$album";
 	}elsif(defined($params->{'genre'})) {
 		my $genre = $params->{'genre'};
