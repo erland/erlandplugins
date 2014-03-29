@@ -3501,6 +3501,8 @@ sub jiveStatistics {
 					$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'coverThumb'});
 				}elsif($item->{'listtype'} eq 'track') {
 					$request->addResultLoop('item_loop',$cnt,'icon-id',$item->{'itemid'});
+				}elsif($item->{'listtype'} eq 'artist' && isPluginsInstalled($client,"MusicArtistInfo::Plugin") && $::VERSION ge '7.8') {
+					$request->addResultLoop('item_loop',$cnt,'icon','imageproxy/mai/artist/'.$item->{'itemid'}.'/image.png');
 				}
 				if($item->{'listtype'} eq 'album' || $item->{'listtype'} eq 'playlist') {
 					# Special case for iPeng to make it list tracks as a playlist
