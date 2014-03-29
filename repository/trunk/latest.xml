@@ -39,16 +39,15 @@
                         <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.10.3908" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.10.3913" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Added support for NEXTALBUM, NEXTTITLE, NEXTARTIST in tracktext items
-			- Corrected so RATING keyword can be used in tracktext item to show rating number
+                        <changes lang="EN">- Corrected bug introduced in previuos version where visibilitygroup/order did not work properly
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3908.zip</url>
-                        <sha>9f4a12c4d5b81c1054d96a37f19f261a1e7b443d</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3913.zip</url>
+                        <sha>6ca58147578096bc4c459eec633741c9723e02e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
@@ -156,15 +155,15 @@
 			<sha>436fcda65d80ce98c3234978b07cc9c24b429aaa</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
-                <plugin name="TrackStat" version="3.1.3906" minTarget="7.6.0" maxTarget="7.*">
+                <plugin name="TrackStat" version="3.2.3914" minTarget="7.6.0" maxTarget="7.*">
                         <title lang="EN">TrackStat</title>
                         <desc lang="EN">Store statistics such as rating, last played time and play counts so it survives a rescan and allows to to browse your library based on the statistic information. You can set the ratings via the Squeezebox player, CLI, Squeezebox Controller or web interface, ratings and statistic data can also be imported/exported from/to iTunes, Amarok and MusicIP Mixer. It also supports Dynamic Playlist plugin by adding dynamic playlists for all its statistics. Please note that TrackStat needs a bit more resources than small plugins and might also slow down startup of SqueezeCenter a bit, so you might get problems if you are running SqueezeCenter on slow hardware. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-                        <changes lang="EN">- Added support for ratings in title formats in browse menus
+                        <changes lang="EN">- Added support for artist images if 7.8 and Music and Artist Information plugin is used
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.1.3906.zip</url>
-                        <sha>d12a2adfe6bba971e010ddb590ce26cc3df55160</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.2.3914.zip</url>
+                        <sha>5c2ea186d8717a1e8e21ea6b269a3498cfc105ed</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
                 </plugin>
 		<plugin name="CustomBrowse" version="2.8" minTarget="7.1.0" maxTarget="7.3.*">
