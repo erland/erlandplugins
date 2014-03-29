@@ -921,13 +921,6 @@ function _updateVisibilityGroups(self)
 					currentorder = item.order
 					if not self.items[item.item]:getWindow() then
 						self.window:addWidget(self.items[item.item])
-						if string.find(item.itemtype,"text$") then
-							if _getString(item.animate,"true") == "true" then
-								self.items[no]:getWidget("itemno"):animate(true)
-							else 
-								self.items[no]:getWidget("itemno"):animate(false)
-							end
-						end
 					end
 				elseif self.items[item.item]:getWindow() then
 					self.window:removeWidget(self.items[item.item])
