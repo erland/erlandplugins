@@ -164,7 +164,7 @@ sub handler {
 		if($item->{'id'} =~ /^models$/) {
 			$item->{'type'} = 'checkboxes';
 			my @values;
-			foreach my $value qw(controller radio touch) {
+			foreach my $value (qw(controller radio touch)) {
 				my %v = (
 					'value' => $value
 				);
@@ -967,7 +967,7 @@ sub saveHandler {
 	my $oldStyleName = $styleName;
 	my $name = $params->{'property_name'};
 	my $models = "";
-	foreach my $model qw(controller radio touch) {
+	foreach my $model (qw(controller radio touch)) {
 		if($params->{'property_models_'.$model}) {
 			if($models ne "") {
 				$models.=",";
