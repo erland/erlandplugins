@@ -156,6 +156,10 @@ sub createSQLiteFunctions {
 		my ($str1, $str2, $str3,$str4) = @_;
 		return $str1.$str2.$str3.$str4;
 	    }, 'create_function');
+	$dbh->func('path', 1, sub {
+		my ($str1) = @_;
+		return Slim::Utils::Misc::pathFromFileURL($str1);
+	    }, 'create_function');
 }
 
 sub postinitPlugin {
