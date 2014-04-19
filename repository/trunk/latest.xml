@@ -273,15 +273,15 @@
                         <sha>ef05d5f00298cf4c1a1e1426f9176567e12034f9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
-		<plugin name="DatabaseQuery" version="2.3.3816" minTarget="7.4.0" maxTarget="7.*">
+		<plugin name="DatabaseQuery" version="2.4.3920" minTarget="7.4.0" maxTarget="7.*">
                         <title lang="EN">Database Query</title>
                         <desc lang="EN">Makes it possible to define and execute custom SQL statements towards SqueezeCenter database. The result can be displayed in the browser or exported as CSV or XML files. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
-			<changes lang="EN">- Corrected issue with Squeezebox Server Inconsistenty query where it wasn't possible to show duplicate musicbrainz identities
+			<changes lang="EN">- Added path function if SQLite is used to be able to urldecode urls into paths
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.3.3816.zip</url>
-                        <sha>0365b60d94458d351a3f0fc57bafe6865f8be1bc</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.4.3920.zip</url>
+                        <sha>66f0a71f38b1935daec3f65eafb3876fd6ee04a9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
 		<plugin name="MultiLibrary" version="2.3.1" minTarget="7.1.0" maxTarget="7.3.*">
