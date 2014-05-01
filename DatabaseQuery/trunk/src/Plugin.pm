@@ -107,6 +107,15 @@ sub initPlugin {
 
 	if($driver eq 'SQLite') {
 		createSQLiteFunctions();
+		Slim::Control::Request::subscribe(\&Plugins::DatabaseQuery::Plugin::rescanDone,[['rescan'],['done']]);
+	}
+}
+
+sub rescanDone {
+	my ($driver,$source,$username,$password);
+	($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	if($driver eq 'SQLite') {
+		createSQLiteFunctions();
 	}
 }
 
