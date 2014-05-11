@@ -121,6 +121,13 @@ sub getCustomScanFunctions {
 				'value' => $prefs->get("itunes_replace_extension")
 			},
 			{
+				'id' => 'itunesimportmusicpath',
+				'name' => 'Music path in iTunes',
+				'description' => 'Path to main music directory in iTunes, empty means that it is automatically detected which works on older iTunes versions. ',
+				'type' => 'text',
+				'value' => ''
+			},
+			{
 				'id' => 'itunesslimservermusicpath',
 				'name' => 'Music path in Squeezebox Server',
 				'description' => 'Path to main music directory in Squeezebox Server, empty means same music path as in Squeezebox Server',
@@ -544,6 +551,17 @@ sub handleCharElement {
 		$iBase =~ s/\(/\\\(/;
 		$iBase =~ s/\)/\\\)/;
 		$log->debug("found the music folder: $iBase\n");
+		my $explicitPath = Plugins::CustomScan::Plugin::getCustomScanProperty("itunesimportmusicpath");
+		if(defined($explicitPath) && $explicitPath ne '') {
+			$log->warn("Overriding iTunes music folder with: ".$explicitPath);
+			my $uri = URI::file->new($explicitPath);
+	        $uri->host('');
+	        $uri->scheme('');
+	        my $url = $uri->as_string;
+	        $url =~ s/^\/\///;
+			$iBase = "file://localhost".$url;
+			$log->warn("By using URL: ".$iBase);
+		}
 
 		return;
 	}
