@@ -104,13 +104,13 @@
 			<licenseHelp>http://www.spicefly.com/licensing</licenseHelp>
 			<licenseLink>http://www.spicefly.com/licensing/register.php?user=USER&amp;application=SugarCube</licenseLink>
 		</plugin>
-		<plugin name="VirtualLibraries">
-			<title lang="EN">Virtual Libraries</title>
+		<plugin name="CustomLibraries">
+			<title lang="EN">Custom Libraries</title>
 			<desc lang="EN">Free during beta period but might be licensed under same license as Multi Library plugin after beta period has finished</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
 			<licenseHelp>http://license.isaksson.info</licenseHelp>
-			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=VirtualLibraries</licenseLink>
+			<licenseLink>http://license.isaksson.info/register.php?user=USER&amp;application=CustomLibraries</licenseLink>
 		</plugin>
 	</plugins>	
 </extensions>
