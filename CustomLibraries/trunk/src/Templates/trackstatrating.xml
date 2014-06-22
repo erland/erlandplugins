@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <customlibraries>
-	<minpluginversion>1.0</minpluginversion>
+	<minpluginversion>0.1</minpluginversion>
 	<requireplugins>TrackStat</requireplugins>
 	<template>
 		<name>TrackStat rating library</name>

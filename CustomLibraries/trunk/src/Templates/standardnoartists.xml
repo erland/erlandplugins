@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <customlibraries>
-	<minpluginversion>1.0</minpluginversion>
+	<minpluginversion>0.1</minpluginversion>
 	<template>
 		<name>Standard library without artist selection</name>
 		<description>Standard library with some different options</description>
