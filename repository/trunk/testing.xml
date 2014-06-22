@@ -223,6 +223,19 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
 -->
+
+                <plugin name="CustomLibraries" version="0.1.3932" minTarget="7.9.0" maxTarget="*">
+                        <title lang="EN">Custom Libraries *Beta*</title>
+                        <desc lang="EN">*** BETA VERSION ***. Makes it possible to divide your SqueezeCenter library into different sub libraries, requires latest LMS 7.9 beta version. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
+                        <changes lang="EN">- Initial BETA version
+                        </changes>
+                        <creator>Erland Isaksson</creator>
+                        <email>erland@isaksson.info</email>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=CustomLibraries-0.1.3932.zip</url>
+                        <sha>c876239b6cf077cbffdd79d0024d3ffb1ba42485</sha>
+                        <link>http://wiki.slimdevices.com/index.php/Custom_Libraries_plugin</link>
+                </plugin>
+
 <!--
                 <plugin name="DatabaseQuery" version="2.2pre2" minTarget="7.4.0" maxTarget="*">
                         <title lang="EN">Database Query *Beta*</title>
