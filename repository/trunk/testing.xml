@@ -231,7 +231,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=CustomLibraries-0.1.3932.zip</url>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customlibraries&amp;filename=CustomLibraries-0.1.3932.zip</url>
                         <sha>c876239b6cf077cbffdd79d0024d3ffb1ba42485</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Libraries_plugin</link>
                 </plugin>
