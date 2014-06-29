@@ -56,17 +56,17 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,contributor_track,albums[% IF library or activelibrary %],multilibrary_track[% END %] 
+						select tracks.id,tracks.title from tracks,contributor_track[% IF library or activelibrary %],multilibrary_track[% END %] 
 						where 
+							tracks.album={album} and 
+							contributor_track.contributor={artist} and
+							contributor_track.track=tracks.id and 
+							contributor_track.role in (4) and
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
 							[%- END %]
-							tracks.audio=1 and 
-							contributor_track.track=tracks.id and 
-							tracks.album={album} and 
-							contributor_track.role in (4) and
-							contributor_track.contributor={artist} 
+							tracks.audio=1
 						group by tracks.id 
 						order by tracks.disc,tracks.tracknum asc,tracks.titlesort asc
 					</menudata>
