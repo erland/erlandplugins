@@ -166,8 +166,9 @@
 					[%- END %]
 					<menutype>sql</menutype>
 					<menudata>
-						select tracks.id,tracks.title from tracks,albums[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
+						select tracks.id,tracks.title from tracks[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 						where
+							tracks.album={album} and
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
@@ -187,8 +188,7 @@
 							[%- IF lossless %]
 							tracks.lossless=1 and
 							[%- END %]
-							tracks.audio=1 and
-							tracks.album={album}
+							tracks.audio=1
 							[%- IF includedgenres %]
 							and tracks.id=genre_track.track and
 							genre_track.genre=genres.id and
@@ -453,6 +453,7 @@
 					<menudata>
 						select tracks.id,tracks.title from tracks,contributor_track[% IF includedgenres %],genre_track,genres[% END %][% IF includedcomment %],comments[% END %][% IF library or activelibrary %],multilibrary_track[% END %][% IF neverplayed OR minrating OR nullrating OR exactrating %],track_statistics[% END %]
 						where
+							tracks.album={album} and
 							[%- IF library or activelibrary %]
 							tracks.id=multilibrary_track.track and
 							multilibrary_track.library=[% IF activelibrary %]{clientproperty:plugin.multilibrary:activelibraryno}[% ELSE %][% library %][% END %] and
@@ -488,7 +489,6 @@
 							comments.value='[% includedcomment %]'
 							[%- END %]
 							[%- END %]
-							and tracks.album={album}
 							[%- IF excludedgenres %]
 							and not exists(select * from genre_track,genres 
 								where 
