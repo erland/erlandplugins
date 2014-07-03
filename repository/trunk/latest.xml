@@ -39,15 +39,16 @@
                         <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
-		<applet name="CustomClock" version="2.10.3913" minTarget="7.4" maxTarget="*">
+		<applet name="CustomClock" version="2.10.3938" minTarget="7.4" maxTarget="*">
                         <title lang="EN">Custom Clock</title>
                         <desc lang="EN">A screensaver for Squeezebox Controller/Touch/Radio devices that shows a clock. It is possible to select among a number of different styles and you can configure what kind of date/time information you like to show.</desc>
-                        <changes lang="EN">- Corrected bug introduced in previuos version where visibilitygroup/order did not work properly
+                        <changes lang="EN">- Corrected bug when using ALBUMARTIST title format
+			- Corrected bug causing custom title format to not be displayed when Custom Clock screen saver is initially activated
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3913.zip</url>
-                        <sha>6ca58147578096bc4c459eec633741c9723e02e2</sha>
+                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3938.zip</url>
+                        <sha>e7e07090666ff5e208f0538ba986c4f67aaadf3e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
                 <applet name="PatchInstaller" version="1.1.55" minTarget="7.5" maxTarget="*">
