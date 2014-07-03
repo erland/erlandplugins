@@ -728,10 +728,10 @@ function openScreensaver(self,mode, transition)
 		self.images = {}
 		self.vumeterimages = {}
 		self.referenceimages = {}
-		if player then
-			self:_checkAndUpdateTitleFormatInfo(player)
-			self:_updateCustomTitleFormatInfo(player)
-		end
+	end
+	if player then
+		self:_checkAndUpdateTitleFormatInfo(player)
+		self:_updateCustomTitleFormatInfo(player)
 	end
 	self.sdtSuperDateTimeChecked = false
 	self.sdtMacroChecked = false
@@ -1079,7 +1079,7 @@ function _updateSongInfoIcons(self,player)
 		local width,height = Framework.getScreenSize()
 		for no,item in pairs(self.configItems) do
 			if item.itemtype == "songinfoicon" then
-				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true",_updateSongInfoIcon(item.allowproxy,"true"))
+				self:_updateSongInfoIcon(self.items[no],no,_getNumber(item.width,width),_getNumber(item.height,height),item.songinfomodule,"true",_getString(item.allowproxy,"true"))
 			end
 		end
 	end
@@ -1745,28 +1745,28 @@ function _updateStaticNowPlaying(self,widget,id,format,mode,free)
 
 				if self.titleformats["RATING"] then
 					local rating = math.floor((self.titleformats["RATING"] + 10)/ 20)
-					text = string.gsub(text,"RATING",rating)
+					text = string.gsub(text,"(%w+)", function(w) if w=="RATING" then return rating else return w end end)
 				else
-					text = string.gsub(text,"RATING","")
+					text = string.gsub(text,"(%w+)", function(w) if w=="RATING" then return "" else return w end end)
 				end
 
 				local elapsed, duration = player:getTrackElapsed()
 				
 				if duration then
-					text = string.gsub(text,"DURATION",_secondsToString(duration))
+					text = string.gsub(text,"(%w+)", function(w) if w=="DURATION" then return _secondsToString(duration) else return w end end)
 				else
-					text = string.gsub(text,"DURATION","")
+					text = string.gsub(text,"(%w+)", function(w) if w=="DURATION" then return "" else return w end end)
 				end
 				if elapsed then
-					text = string.gsub(text,"ELAPSED",_secondsToString(elapsed))
+					text = string.gsub(text,"(%w+)", function(w) if w=="ELAPSED" then return _secondsToString(elapsed) else return w end end)
 					if duration then
-						text = string.gsub(text,"REMAINING",_secondsToString(duration-elapsed))
+						text = string.gsub(text,"(%w+)", function(w) if w=="REMAINING" then return _secondsToString(duration-elapsed) else return w end end)
 					else
-						text = string.gsub(text,"REMAINING","")
+						text = string.gsub(text,"(%w+)", function(w) if w=="REMAINING" then return "" else return w end end)
 					end
 				else
-					text = string.gsub(text,"ELAPSED","")
-					text = string.gsub(text,"REMAINING","")
+					text = string.gsub(text,"(%w+)", function(w) if w=="ELAPSED" then return "" else return w end end)
+					text = string.gsub(text,"(%w+)", function(w) if w=="REMAINING" then return "" else return w end end)
 				end
 
 				local playlistsize = player:getPlaylistSize()
@@ -1798,9 +1798,9 @@ end
 
 function _replaceTitleFormatKeyword(self,text,keyword)
 	if self.titleformats[keyword] then
-		text = string.gsub(text,keyword,self.titleformats[keyword])
+		text = string.gsub(text,"(%w+)", function(w) if w==keyword then return self.titleformats[keyword] else return w end end)
 	else
-		text = string.gsub(text,keyword,"")
+		text = string.gsub(text,"(%w+)", function(w) if w==keyword then return "" else return w end end)
 	end
 	return text
 end
@@ -1808,7 +1808,7 @@ end
 function _replaceCustomTitleFormats(self,text)
 	if self.customtitleformats then
 		for attr,value in pairs(self.customtitleformats) do
-			text = string.gsub(text,attr,value)
+			text = string.gsub(text,"(%w+)", function(w) if w==attr then return value else return w end end)
 		end
 	end
 	return text
@@ -1816,9 +1816,9 @@ end
 
 function _replaceTitleKeywords(self,_track, text, replaceNonTracks)
 	if _track.track then
-		text = string.gsub(text,"ARTIST",_track.artist)
-		text = string.gsub(text,"ALBUM",_track.album)
-		text = string.gsub(text,"TITLE",_track.track)
+		text = string.gsub(text,"(%w+)", function(w) if w=="ARTIST" then return _track.artist else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="ALBUM" then return _track.album else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="TITLE" then return _track.track else return w end end)
 	elseif replaceNoneTracks then
 		text = _track.text
 	else
@@ -1829,13 +1829,13 @@ end
 
 function _replaceNextTitleKeywords(self,_track, text)
 	if _track and _track.track then
-		text = string.gsub(text,"NEXTARTIST",_track.artist)
-		text = string.gsub(text,"NEXTALBUM",_track.album)
-		text = string.gsub(text,"NEXTTITLE",_track.track)
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTARTIST" then return _track.artist else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTALBUM" then return _track.album else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTTITLE" then return _track.track else return w end end)
 	else
-		text = string.gsub(text,"NEXTARTIST","")
-		text = string.gsub(text,"NEXTALBUM","")
-		text = string.gsub(text,"NEXTTITLE","")
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTARTIST" then return "" else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTALBUM" then return "" else return w end end)
+		text = string.gsub(text,"(%w+)", function(w) if w=="NEXTTITLE" then return "" else return w end end)
 	end
 	return text
 end
