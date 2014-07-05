@@ -4137,6 +4137,8 @@ sub commandCallback65($)
 	my $request=shift;
 	my $client = $request->client();
 
+	$log->debug("Triggered by ".$request->getRequestString());
+
 	######################################
 	## Rescan finished
 	######################################
@@ -4183,9 +4185,10 @@ sub commandCallback65($)
 
 	# This is the chief way we detect a new song being played, NOT play.
 	# should be using playlist,newsong now...
-	if ($request->isCommand([['playlist'],['open']]) )
+	if ($request->isCommand([['playlist'],['newsong']]) )
 	{
-		openCommand($client,$playStatus,$request->getParam('_path'));
+		my $url = Slim::Player::Playlist::url($client);
+		openCommand($client,$playStatus,$url);
 	}
 
 	######################################
@@ -4216,7 +4219,7 @@ sub commandCallback65($)
 	### Stop command
 	######################################
 
-	if ( ($request->isCommand([["stop"]])) or ($request->isCommand([['mode'],['stop']])) )
+	if ( ($request->isCommand([["stop"]])) or ($request->isCommand([['mode'],['stop']])) or ($request->isCommand([['playlist'],['stop']])))
 	{
 		stopCommand($client,$playStatus);
 	}
