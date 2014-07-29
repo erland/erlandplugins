@@ -153,15 +153,11 @@ sub initLibraries {
 		my $library = {
 			id => 'customlibraries_'.$libraryid,
 			name => $localLibrary->{'name'},
-			sql => 'INSERT OR IGNORE INTO library_track (library, track) '.$sql
+			sql => 'INSERT OR IGNORE INTO library_track (library, track) '.$sql,
+			priority => $localLibrary->{'libraryorder'},
 		};
 		$log->debug("Registering library using: ".Dumper($library));
-		my $id = Slim::Music::VirtualLibraries->getRealId('customlibraries_'.$libraryid);
-		if(defined($id)) {
-			$log->debug("Found existing with id: ".$id);
-			my $existingLibraries = Slim::Music::VirtualLibraries->getLibraries();
-			delete $existingLibraries->{$id};
-		}
+		Slim::Music::VirtualLibraries->unregisterLibrary('customlibraries_'.$libraryid);
 		Slim::Music::VirtualLibraries->registerLibrary($library);
 		
 		Slim::Menu::BrowseLibrary->deregisterNode('customlibraries_'.$libraryid);
@@ -471,17 +467,11 @@ sub getConfigManager {
 sub refreshLibraries {
 	$log->info("CustomLibraries: Synchronizing libraries data, please wait...\n");
 	my $dbh = getCurrentDBH();
-	for my $libraryid (keys %$libraries) {
-		if(defined(Slim::Music::VirtualLibraries->getRealId('customlibraries_'.$libraryid))) {
-			my $id = Slim::Music::VirtualLibraries->getRealId('customlibraries_'.$libraryid);
-			$log->info("CustomLibraries: Deleting entries for ".Slim::Music::VirtualLibraries->getNameForId($id));
-			my $delete_sth = $dbh->prepare_cached('DELETE FROM library_track WHERE library = ?');
-		    $delete_sth->execute($id);
-		    $delete_sth->finish();
-			$log->info("CustomLibraries: Creating entries for ".Slim::Music::VirtualLibraries->getNameForId($id));
-			$log->debug("CustomLibraries: Using: ".Slim::Music::VirtualLibraries::getLibraries()->{$id}->{sql});
-		    $dbh->do(sprintf(Slim::Music::VirtualLibraries::getLibraries()->{$id}->{sql},$id));
-		}
+	my @orderedLibs = values %$libraries;
+	@orderedLibs = sort { $a->{'libraryorder'} <=> $b->{'libraryorder'} } @orderedLibs;
+	foreach my $library (@orderedLibs) {
+		$log->info("CustomLibraries: Rebuilding ".Slim::Music::VirtualLibraries->getNameForId(Slim::Music::VirtualLibraries->getRealId('customlibraries_'.$library->{'id'})));
+		Slim::Music::VirtualLibraries->rebuild(Slim::Music::VirtualLibraries->getRealId('customlibraries_'.$library->{'id'}));
 	}
 	
 	$log->info("CustomLibraries: Synchronization finished\n");
