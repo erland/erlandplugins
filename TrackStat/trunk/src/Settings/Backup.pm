@@ -66,6 +66,7 @@ sub handler {
 	my ($class, $client, $paramRef) = @_;
 	my $result = undef;
 	my $callHandler = 1;
+	isScanningInProcess($paramRef);
 	if ($paramRef->{'saveSettings'}) {
 		$result = $class->SUPER::handler($client, $paramRef);
 		$callHandler = 0;
@@ -115,6 +116,19 @@ sub handler {
 	}
 		
 	return $result;
+}
+
+sub isScanningInProcess {
+	my $params = shift;
+	my ($source,$username,$password);
+	my ($driver,$source,$username,$password) = Slim::Schema->sourceInformation;
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning) && ($params->{'refresh_tracks'} || $params->{'purge_tracks'} || $params->{'clear'} || $params->{'restore'})) {
+		$params->{'warning'} = "Not allowed while scanning is in progress, please wait for scanning to complete";
+		$params->{'validated'}->{'valid'} = 0;
+		$log->warn("Not allowed while scanning is in progres");
+		return 1;
+	}
+	return 0;
 }
 
 sub validatedOk {
