@@ -1068,6 +1068,10 @@ sub powerCallback($)
 }
 
 sub refreshLibraries {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
+		$log->warn("MultiLibrary: Ignore refresh while scanning is in progress");
+		return;
+	}
 	$log->info("MultiLibrary: Synchronizing libraries data, please wait...\n");
 	eval {
 		initLibraries();
