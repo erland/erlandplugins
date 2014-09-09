@@ -1227,6 +1227,11 @@ sub mergeTrack
 
 sub refreshTracks 
 {
+	if($driver eq 'SQLite' && Slim::Music::Import->stillScanning && (!UNIVERSAL::can("Slim::Music::Import","externalScannerRunning") || Slim::Music::Import->externalScannerRunning)) {
+		$log->warn("TrackStat: Ignore refresh while scanning is in progress");
+		return;
+	}
+
 	my $ds        = getCurrentDS();
 	my $dbh = getCurrentDBH();
 	my $sth;
