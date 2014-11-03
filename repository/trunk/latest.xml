@@ -13,7 +13,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3728.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3728.zip</url>
                         <sha>e3bd58f363b07a74854847394dc0df8d075909f2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -24,7 +24,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-1.0.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreenApplet-1.0.zip</url>
                         <sha>d2203b10ed8e02fdffb4fad96a37f951f5e9df91</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -35,7 +35,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3802.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-daylightclock&amp;filename=DaylightClock-1.1.3802.zip</url>
                         <sha>e5d27db8cd6ffb3407d68aed7997a39b22c3287d</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -47,7 +47,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3938.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customclock&amp;filename=CustomClock-2.10.3938.zip</url>
                         <sha>e7e07090666ff5e208f0538ba986c4f67aaadf3e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -59,7 +59,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-1.1.55.zip</url>
                         <sha>f42a97a2e188cee31315981c4c2a54c509c7f64e</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -71,7 +71,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3818.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-1.1.3818.zip</url>
                         <sha>d542412ac8d4d9a245d73d59ef4027ab5307e3c5</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -81,7 +81,7 @@
 						<changes lang="EN">No changes since latest beta</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-1.0.30.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-1.0.30.zip</url>
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -93,7 +93,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.60.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-textclock&amp;filename=TextClock-1.0.60.zip</url>
                         <sha>e741cd9687bcf0610edc3d966b037302223133b8</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -105,7 +105,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.67.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanager&amp;filename=LicenseManager-1.1.67.zip</url>
                         <sha>5779593f514241d8794102a3400c9876967ccf90</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -118,7 +118,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-1.1.3735.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-informationscreen&amp;filename=InformationScreen-1.1.3735.zip</url>
                         <sha>38529cd0d3675a0faf97b31cbd16052ecfd2df36</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -127,7 +127,7 @@
                         <desc lang="EN">Automatically makes all third party plugin repositories that are listed on the Logitech wiki site available through Extension Downloader. The plugin doesn't actually read the wiki page directly since that would open up a security hole, instead it reads the repositories from a list available on the erlandplugins Google Code project. New repostories added to the wiki page will be added after they have been checked so they provide serious plugins and not spam urls. (Boom, Transporter, Classic, Receiver, Controller, Radio, Touch, SoftSqueeze, SqueezePlay)</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-autorepo&amp;filename=AutoRepo-1.0.1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-autorepo&amp;filename=AutoRepo-1.0.1.zip</url>
                         <sha>365ce0aed62bd73f6f6dc5a717fd30338c292311</sha>
                         <link>http://wiki.slimdevices.com/index.php/Auto_Repositories_plugin</link>
                 </plugin>
@@ -141,7 +141,7 @@
 			- Improved logic releated to finding moved tracks on multi disk albums when a TrackStat backup is restored</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.8.zip</url>
+			<url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.8.zip</url>
 			<sha>d1330f4c5747ed65bc2c1e86d97431d7fe2165ab</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
@@ -152,7 +152,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3760.zip</url>
+			<url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.11.3760.zip</url>
 			<sha>436fcda65d80ce98c3234978b07cc9c24b429aaa</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
@@ -163,7 +163,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.2.3945.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-3.2.3945.zip</url>
                         <sha>a88f17bec0e715381cfc3bec095d1bf3dd45074d</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
                 </plugin>
@@ -179,7 +179,7 @@
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.8.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.8.zip</url>
                         <sha>7c67dc318c68d4b925d4d4fb5457297edc9d9e75</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
@@ -190,7 +190,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.14.3936.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.14.3936.zip</url>
                         <sha>607209a7453449c244fc509e18b3242e7d814d5e</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
@@ -205,7 +205,7 @@
 			- Added support for showing album arts in Dyanmic Tags menu, requires Custom Browse 2.8 or later</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.6.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.6.zip</url>
                         <sha>60e51583f832ebe6515f5481363b97cb51153785</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
@@ -216,7 +216,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.9.3901.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.9.3901.zip</url>
                         <sha>533d0c65ce7ef8aeebd30bf14d1c290530b509b7</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
@@ -226,7 +226,7 @@
 			<changes lang="EN">- Corrected so only local tracks can be skipped</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.5.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.3.5.zip</url>
                         <sha>bebd6cad35a0e74ece1c3c9bf4040800bcad75e8</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
                 </plugin>
@@ -237,7 +237,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3827.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customskip&amp;filename=CustomSkip-2.4.3827.zip</url>
                         <sha>c574c4ad2ce17009d66223bacf99966ee8504075</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Skip_plugin</link>
 		</plugin>
@@ -248,7 +248,7 @@
 			- Added support for custom tag based Dynamic Playlist mixers</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.7.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.7.zip</url>
                         <sha>087471a37a44bfe6b2542b00ec4929581f8679ff</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
@@ -259,7 +259,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3853.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.9.3853.zip</url>
                         <sha>edf4fddf7c4d7c0ab46529b25905572fba5a8ccf</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
@@ -270,7 +270,7 @@
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.1.2.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.1.2.zip</url>
                         <sha>ef05d5f00298cf4c1a1e1426f9176567e12034f9</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
@@ -281,7 +281,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.4.3923.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.4.3923.zip</url>
                         <sha>0e7848f3a6e25dc41e1ab38e17fdb5837641afad</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
@@ -293,7 +293,7 @@
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.3.1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.3.1.zip</url>
                         <sha>4c18394463689af4a2ac9c68f77eb471274dc7ae</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
@@ -304,7 +304,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.7.3947.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.7.3947.zip</url>
                         <sha>bae501051db92a82256404dfeff15de75a5bf803</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
@@ -317,7 +317,7 @@
 			- Corrected some small bugs</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.4.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.4.zip</url>
                         <sha>78736678bb157d1d8b15a2c080173e845f2f2a55</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
@@ -328,7 +328,7 @@
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3859.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3859.zip</url>
                         <sha>d01dba16d24745121992e0f2547f0f0aba0ac647</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
@@ -338,7 +338,7 @@
 			<changes lang="EN">- Corrected handling on SB1 devices with long texts</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.3.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.1.3.zip</url>
                         <sha>d25140b9bf9038bea7c6e4728e84f6d81f5c0b59</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
                 </plugin>
@@ -350,7 +350,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.2.3688.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-titleswitcher&amp;filename=TitleSwitcher-1.2.3688.zip</url>
                         <sha>af005df261cff3a4af8ceed79044f145e3d2ebcb</sha>
                         <link>http://wiki.slimdevices.com/index.php/Title_Switcher_plugin</link>
                 </plugin>
@@ -360,7 +360,7 @@
                         <changes lang="EN">- Added support for SqueezeCenter 7.4</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.0.1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.0.1.zip</url>
                         <sha>d23167c3c3eb0388428e0484f4ecdfaeb3b13918</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
@@ -370,7 +370,7 @@
                         <changes lang="EN">- Same version as 1.1pre1</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.1.zip</url>
                         <sha>752663c7fbf465b286c86d69e30b33ea340596e5</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
@@ -380,7 +380,7 @@
                         <changes lang="EN">- Added support for SqueezeCenter 7.4</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.0.1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.0.1.zip</url>
                         <sha>7ec594c94709065f0adbf9bdf5cf4513519911db</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
@@ -392,7 +392,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.2.3739.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.2.3739.zip</url>
                         <sha>26d0aeb1f77bf5e893ec7a535832eee0791db70b</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
@@ -403,7 +403,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3917.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customclockhelper&amp;filename=CustomClockHelper-2.9.3917.zip</url>
                         <sha>220f403f8d900f29ef4d8c27b419cc61b710534d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Clock_applet</link>
                 </plugin>
@@ -414,7 +414,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3883.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-1.1.3883.zip</url>
                         <sha>2afec7be743af76d8ecb49184ba6b5c92895a015</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -425,7 +425,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3856.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-1.1.3856.zip</url>
                         <sha>e95b571c9d4cdcbb93c0d3caddc395df4ec925b0</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -436,7 +436,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3827.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-licensemanagerplugin&amp;filename=LicenseManagerPlugin-1.0.3827.zip</url>
                         <sha>4274be85fd3a8896a49fa80b557c8933e20525bc</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -447,7 +447,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-hidemenus&amp;filename=HideMenus-1.0.3604.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-hidemenus&amp;filename=HideMenus-1.0.3604.zip</url>
                         <sha>f665532d67476ce16455891bf62747ccb7fe4ffc</sha>
                         <link>http://wiki.slimdevices.com/index.php/Hide_Menus_plugin</link>
                 </plugin>

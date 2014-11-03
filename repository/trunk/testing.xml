@@ -15,7 +15,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3462.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-albumflow&amp;filename=AlbumFlow-1.1.3462.zip</url>
                         <sha>520f61fa5472310ec4db75595970c9cca6bc7988</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -29,7 +29,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-0.1.2867.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-screenswitcher&amp;filename=ScreenSwitcher-0.1.2867.zip</url>
                         <sha>94cf778aabd84d982e868a988b0d7538857b743a</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -41,7 +41,7 @@
 			<changes lang="EN">Corrected so replacement patches are reinstalled correctly</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.28.zip</url>
+			<url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-patchinstaller&amp;filename=PatchInstaller-0.1.28.zip</url>
 			<sha>9bd0a9da8aebd886a9843db67857acf5f6b64a8b</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
@@ -51,7 +51,7 @@
 			<desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to configure any screen saver as alarm popup window instead of the standard snooze window</desc>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-alarmsavers&amp;filename=AlarmSavers-0.1.14.zip</url>
+			<url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-alarmsavers&amp;filename=AlarmSavers-0.1.14.zip</url>
 			<sha>3506116ab2aa63bfd2b29028e170e439bfe463c4</sha>
 			<link>http://erland.isaksson.info</link>
 		</applet>
@@ -63,7 +63,7 @@
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.2.30.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-settingsremover&amp;filename=SettingsRemover-0.2.30.zip</url>
                         <sha>3c6393b0082e543eed5416a53a99a926ff9839e2</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -73,7 +73,7 @@
                         <desc lang="EN">*** THIS IS A BETA VERSION ***. Make it possible to remotely access preferences and files on a Radio, Touch or Controller</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdmin-0.1.39.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdmin-0.1.39.zip</url>
                         <sha>bea4a8dfe3d01b0f4b1375621e3b0da88313a400</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -82,7 +82,7 @@
                         <desc lang="EN">*** THIS IS A ALPHA VERSION ***. Make it possible to stop a message when you are getting close to a Touch</desc>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-proximityaction&amp;filename=ProximityAction-0.1.57.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-proximityaction&amp;filename=ProximityAction-0.1.57.zip</url>
                         <sha>72b3e845a4f8c97603063504a7b729976494e0f5</sha>
                         <link>http://erland.isaksson.info</link>
                 </applet>
@@ -96,7 +96,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-webproxy&amp;filename=WebProxy-0.1.3182.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-webproxy&amp;filename=WebProxy-0.1.3182.zip</url>
                         <sha>ea293df05d421ba7a63b708370eb69925b3c6c82</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -107,7 +107,7 @@
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mythtv&amp;filename=MythTV-0.2.3184.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-mythtv&amp;filename=MythTV-0.2.3184.zip</url>
                         <sha>495f09ec92cd629fe90a41e8be8336564eedf755</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -119,7 +119,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-mail&amp;filename=Mail-0.2.3183.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-mail&amp;filename=Mail-0.2.3183.zip</url>
                         <sha>a2c13b1ff2755dabfcc97d16aac45cb34c2c0a04</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -131,7 +131,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-0.3.2999.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-songinfo&amp;filename=SongInfo-0.3.2999.zip</url>
                         <sha>f23e60eaf9aee238ab3c06ba3aebae7cd999673f</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -145,7 +145,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.2.2997.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-songlyrics&amp;filename=SongLyrics-0.2.2997.zip</url>
                         <sha>65ea498b79d13cff321ca8f275ab466abe5ef588</sha>
                         <link>http://erland.isaksson.info</link>
                 </plugin>
@@ -161,7 +161,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			</changes>
 			<creator>Erland Isaksson</creator>
 			<email>erland@isaksson.info</email>
-			<url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9pre5.zip</url>
+			<url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstat&amp;filename=TrackStat-2.9pre5.zip</url>
 			<sha>a98cb3bd9495faa7d5abf8f59df8b9f0d55e7d8c</sha>
 			<link>http://wiki.slimdevices.com/index.php/TrackStat_plugin</link>
 		</plugin>
@@ -175,7 +175,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8pre3.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-dynamicplaylist&amp;filename=DynamicPlayList-2.8pre3.zip</url>
                         <sha>2227859600dad23a893abf5f029de163e8cbc004</sha>
                         <link>http://wiki.slimdevices.com/index.php/Dynamic_Playlist_plugin</link>
                 </plugin>
@@ -189,7 +189,7 @@ e SSL connection options you will need to have the Net::SSLeay library installed
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3465.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-sqlplaylist&amp;filename=SQLPlayList-2.5.3465.zip</url>
                         <sha>c00fae98fbc3ce8905a650b638e9ab2b16dd9e99</sha>
                         <link>http://wiki.slimdevices.com/index.php/SQL_Playlist_plugin</link>
                 </plugin>
@@ -205,7 +205,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3478.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customscan&amp;filename=CustomScan-2.8.3478.zip</url>
                         <sha>f09ea2c71933cb430c82ad779b7273023ed9148d</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Scan_plugin</link>
                 </plugin>
@@ -218,7 +218,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3468.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-custombrowse&amp;filename=CustomBrowse-2.12.3468.zip</url>
                         <sha>b8779627cc1cab9c6fcd77711ab903d7df2658e6</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Browse_plugin</link>
                 </plugin>
@@ -231,7 +231,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-customlibraries&amp;filename=CustomLibraries-0.1.3932.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-customlibraries&amp;filename=CustomLibraries-0.1.3932.zip</url>
                         <sha>c876239b6cf077cbffdd79d0024d3ffb1ba42485</sha>
                         <link>http://wiki.slimdevices.com/index.php/Custom_Libraries_plugin</link>
                 </plugin>
@@ -245,7 +245,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.2pre2.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-databasequery&amp;filename=DatabaseQuery-2.2pre2.zip</url>
                         <sha>63208a511eb4f1922a12bc180bc33877e04043f3</sha>
                         <link>http://wiki.slimdevices.com/index.php/Database_Query_plugin</link>
                 </plugin>
@@ -260,7 +260,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.4pre2.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-multilibrary&amp;filename=MultiLibrary-2.4pre2.zip</url>
                         <sha>5fa68288905527cb9a965d362c5132361e4149b5</sha>
                         <link>http://wiki.slimdevices.com/index.php/Multi_Library_plugin</link>
                 </plugin>
@@ -275,7 +275,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.1pre2.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-playlistgenerator&amp;filename=PlaylistGenerator-1.1pre2.zip</url>
                         <sha>4c434b296bcd46cd70ebbc11bd84ca23e9a80844</sha>
                         <link>http://wiki.slimdevices.com/index.php/Playlist_Generator_plugin</link>
                 </plugin>
@@ -289,7 +289,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.1pre1.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-trackstatplaylist&amp;filename=TrackStatPlaylist-1.1pre1.zip</url>
                         <sha>212e9d1ec9acac4fdea2778b4a781a948de38fd7</sha>
                         <link>http://wiki.slimdevices.com/index.php/TrackStat_Playlist_plugin</link>
                 </plugin>
@@ -301,7 +301,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
                         </changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdminClient-0.1.3018.zip</url>
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=slimserver-squeezeplayadmin&amp;filename=SqueezePlayAdminClient-0.1.3018.zip</url>
                         <sha>49f7903c44247dc5b221affd4c8e9259fcd5844d</sha>
                         <link>http://wiki.slimdevices.com/index.php/SqueezePlay_Admin_plugin</link>
                 </plugin>
@@ -312,7 +312,7 @@ Corrected issue where a lot of temporary harddrive space were used during scanni
 			</changes>
                         <creator>Erland Isaksson</creator>
                         <email>erland@isaksson.info</email>
-                        <url>http://erland.isaksson.info/download/do/downloadapplication?name=smd-duplicatedetector&amp;filename=DuplicateDetector-0.3.zip</url>                        
+                        <url>http://downloads.isaksson.info/download/do/downloadapplication?name=smd-duplicatedetector&amp;filename=DuplicateDetector-0.3.zip</url>                        
 			<sha>9c7a601bcca4ff4d003ccaa9dca61301bbbd8d7c</sha>
                         <link>http://wiki.slimdevices.com/index.php/Duplicate_Detector_plugin</link>
                 </plugin>
