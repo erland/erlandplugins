@@ -4698,6 +4698,9 @@ sub getCLIRating {
 	}
 	# get our parameters
   	my $trackId    = $request->getParam('_trackid');
+  	if(defined($request->getParam('trackid'))) {
+  		$trackId = $request->getParam('trackid');
+  	}
   	if(!defined $trackId || $trackId eq '') {
 		$log->warn("_trackid not defined\n");
 		$request->setStatusBadParams();
@@ -4770,9 +4773,14 @@ sub setCLIRating {
 
 	# get our parameters
   	my $trackId    = $request->getParam('_trackid');
+  	if(defined($request->getParam('trackid'))) {
+  		$trackId = $request->getParam('trackid');
+  	}
   	my $rating    = $request->getParam('_rating');
 	if(defined($rating) && $rating =~ /^rating:(.*)$/) {
 		$rating = $1;
+	}elsif(defined($request->getParam('rating'))) {
+		$rating = $request->getParam('rating');
 	}
   	if(!defined $trackId || $trackId eq '' || !defined $rating || $rating eq '') {
 		$log->warn("_trackid and _rating not defined\n");
@@ -4848,7 +4856,15 @@ sub setCLIAlbumRating {
 
 	# get our parameters
   	my $albumId    = $request->getParam('_albumid');
+  	if(defined($request->getParam('albumid'))) {
+  		$albumId = $request->getParam('albumid');
+  	}
   	my $rating    = $request->getParam('_rating');
+	if(defined($rating) && $rating =~ /^rating:(.*)$/) {
+		$rating = $1;
+	}elsif(defined($request->getParam('rating'))) {
+		$rating = $request->getParam('rating');
+	}
   	if(!defined $albumId || $albumId eq '' || !defined $rating || $rating eq '') {
 		$log->warn("_albumid and _rating not defined\n");
 		$request->setStatusBadParams();
